@@ -1,0 +1,11 @@
+*.DS_Store
+*.[oa]
+*.mod
+bin/
+*.eps
+*.pyc
+output*
+plots*
+*.png
+.metadata
+non-tracked_files/

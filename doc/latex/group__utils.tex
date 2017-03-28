@@ -1,0 +1,125 @@
+\hypertarget{group__utils}{}\section{gmtb\+\_\+scm\+\_\+utils}
+\label{group__utils}\index{gmtb\+\_\+scm\+\_\+utils@{gmtb\+\_\+scm\+\_\+utils}}
+
+
+Contains miscellaneous helper subroutines.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bfseries gmtb\+\_\+scm\+\_\+utils\+::w\+\_\+to\+\_\+omega} (n\+\_\+col, n\+\_\+lev, w, p, T, omega)\hypertarget{group__utils_ga71de1dc39c1fd3d956cd6aaf5ed91c38}{}\label{group__utils_ga71de1dc39c1fd3d956cd6aaf5ed91c38}
+
+\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+subroutine \hyperlink{group__utils_gabb63e1dee42e85425c1a636a6b5449b0}{gmtb\+\_\+scm\+\_\+utils\+::copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir} (dir\+\_\+name)
+\begin{DoxyCompactList}\small\item\em Subroutine to copy data needed by the main program to the working directory. \end{DoxyCompactList}\item 
+subroutine \hyperlink{group__utils_ga86425fa83391b0ce1719fa1def3d46e5}{gmtb\+\_\+scm\+\_\+utils\+::remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir} ()
+\begin{DoxyCompactList}\small\item\em Subroutine to remove data needed by the main program from the working directory. \end{DoxyCompactList}\item 
+subroutine \hyperlink{group__utils_gadaa5d6afea19af5a67f29f4cde5a94af}{gmtb\+\_\+scm\+\_\+utils\+::interpolate\+\_\+to\+\_\+grid\+\_\+centers} (n\+\_\+input\+\_\+levels, input\+\_\+pres, input\+\_\+field, pres\+\_\+l, n\+\_\+model\+\_\+levels, model\+\_\+field,   last\+\_\+initialized)
+\begin{DoxyCompactList}\small\item\em Subroutine to interpolate a generic input field to the model vertical grid. The index of the last model level initialized is returned so that the calling procedure can patch in a reference profile above. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Contains miscellaneous helper subroutines. 
+
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{gmtb\+\_\+scm\+\_\+utils@{gmtb\+\_\+scm\+\_\+utils}!copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir@{copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir}}
+\index{copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir@{copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir}!gmtb\+\_\+scm\+\_\+utils@{gmtb\+\_\+scm\+\_\+utils}}
+\subsubsection[{\texorpdfstring{copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir(dir\+\_\+name)}{copy_data_to_working_dir(dir_name)}}]{\setlength{\rightskip}{0pt plus 5cm}subroutine gmtb\+\_\+scm\+\_\+utils\+::copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir (
+\begin{DoxyParamCaption}
+\item[{character(len=$\ast$), intent(in)}]{dir\+\_\+name}
+\end{DoxyParamCaption}
+)}\hypertarget{group__utils_gabb63e1dee42e85425c1a636a6b5449b0}{}\label{group__utils_gabb63e1dee42e85425c1a636a6b5449b0}
+
+
+Subroutine to copy data needed by the main program to the working directory. 
+
+The G\+FS radiation code requires files containing aerosol, C\+O2, and solar constant data to be in the working directory at runtime. This subroutine temporarily copies the data to the working directory to be removed after the S\+CM runs.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dir\+\_\+name} & the directory where the data is located \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 24 of file gmtb\+\_\+scm\+\_\+utils.\+f90.
+
+
+
+Referenced by gmtb\+\_\+scm\+\_\+main\+::gmtb\+\_\+scm\+\_\+main\+\_\+sub().
+
+\index{gmtb\+\_\+scm\+\_\+utils@{gmtb\+\_\+scm\+\_\+utils}!interpolate\+\_\+to\+\_\+grid\+\_\+centers@{interpolate\+\_\+to\+\_\+grid\+\_\+centers}}
+\index{interpolate\+\_\+to\+\_\+grid\+\_\+centers@{interpolate\+\_\+to\+\_\+grid\+\_\+centers}!gmtb\+\_\+scm\+\_\+utils@{gmtb\+\_\+scm\+\_\+utils}}
+\subsubsection[{\texorpdfstring{interpolate\+\_\+to\+\_\+grid\+\_\+centers(n\+\_\+input\+\_\+levels, input\+\_\+pres, input\+\_\+field, pres\+\_\+l, n\+\_\+model\+\_\+levels, model\+\_\+field,   last\+\_\+initialized)}{interpolate_to_grid_centers(n_input_levels, input_pres, input_field, pres_l, n_model_levels, model_field,   last_initialized)}}]{\setlength{\rightskip}{0pt plus 5cm}subroutine gmtb\+\_\+scm\+\_\+utils\+::interpolate\+\_\+to\+\_\+grid\+\_\+centers (
+\begin{DoxyParamCaption}
+\item[{integer, intent(in)}]{n\+\_\+input\+\_\+levels, }
+\item[{real(kind=dp), dimension(\+:), intent(in)}]{input\+\_\+pres, }
+\item[{real(kind=dp), dimension(\+:), intent(in)}]{input\+\_\+field, }
+\item[{real(kind=dp), dimension(\+:), intent(in)}]{pres\+\_\+l, }
+\item[{integer, intent(in)}]{n\+\_\+model\+\_\+levels, }
+\item[{real(kind=dp), dimension(\+:), intent(out)}]{model\+\_\+field, }
+\item[{integer, intent(out)}]{last\+\_\+initialized}
+\end{DoxyParamCaption}
+)}\hypertarget{group__utils_gadaa5d6afea19af5a67f29f4cde5a94af}{}\label{group__utils_gadaa5d6afea19af5a67f29f4cde5a94af}
+
+
+Subroutine to interpolate a generic input field to the model vertical grid. The index of the last model level initialized is returned so that the calling procedure can patch in a reference profile above. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n\+\_\+input\+\_\+levels} & number of levels in the input profile\\
+\hline
+\mbox{\tt in}  & {\em n\+\_\+model\+\_\+levels} & number of model levels\\
+\hline
+\mbox{\tt in}  & {\em input\+\_\+pres} & pressure levels for the input profile (Pa)\\
+\hline
+\mbox{\tt in}  & {\em input\+\_\+field} & data from the input profile\\
+\hline
+\mbox{\tt in}  & {\em pres\+\_\+l} & model pressure levels (Pa)\\
+\hline
+\mbox{\tt out}  & {\em model\+\_\+field} & interpolated model data profile\\
+\hline
+\mbox{\tt out}  & {\em last\+\_\+initialized} & last vertical model index that was properly initialized \\
+\hline
+\end{DoxyParams}
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000015}{Todo}]Given the exponential decrease in pressure, this routine should probably be converted to using a different method of interpolation (rather tha linear). \end{DoxyRefDesc}
+\hypertarget{group__utils_interpolate_to_grid_centers_alg}{}\subsection{Algorithm}\label{group__utils_interpolate_to_grid_centers_alg}
+
+\begin{DoxyItemize}
+\item Find level where input\+\_\+pres $<$ pres\+\_\+l(i)
+\item Once found, calculate the linear interpolation fraction.
+\item Calculate the model field at level i using linear interpolation.
+\item If no level is found, the input sounding does not reach to top of model domain; return the index of the last level initialized.
+\end{DoxyItemize}
+
+Definition at line 40 of file gmtb\+\_\+scm\+\_\+utils.\+f90.
+
+
+
+Referenced by gmtb\+\_\+scm\+\_\+forcing\+::interpolate\+\_\+forcing(), and gmtb\+\_\+scm\+\_\+setup\+::set\+\_\+state().
+
+\index{gmtb\+\_\+scm\+\_\+utils@{gmtb\+\_\+scm\+\_\+utils}!remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir@{remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir}}
+\index{remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir@{remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir}!gmtb\+\_\+scm\+\_\+utils@{gmtb\+\_\+scm\+\_\+utils}}
+\subsubsection[{\texorpdfstring{remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir()}{remove_data_from_working_dir()}}]{\setlength{\rightskip}{0pt plus 5cm}subroutine gmtb\+\_\+scm\+\_\+utils\+::remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{group__utils_ga86425fa83391b0ce1719fa1def3d46e5}{}\label{group__utils_ga86425fa83391b0ce1719fa1def3d46e5}
+
+
+Subroutine to remove data needed by the main program from the working directory. 
+
+This subroutine deletes the data that was temporarily copied to the working directory for file cleanliness. 
+
+Definition at line 33 of file gmtb\+\_\+scm\+\_\+utils.\+f90.
+
+
+
+Referenced by gmtb\+\_\+scm\+\_\+main\+::gmtb\+\_\+scm\+\_\+main\+\_\+sub().
+

@@ -1,0 +1,38 @@
+v0.19:
+    - Array patching is now supported
+    - Numpy primitives can be converted to Fortran types
+    - File objects can now be used as input arguments
+
+v0.18:
+    - File object read and write support
+    - Escape (\) character support in strings
+    - Fortran floating point `E` symbol is now optional (with +/- exponent)
+
+v0.17:
+    - `f90nml.write()` works for normal (non-`Namelist`) dicts
+    - `Parser` properties moved outside of function arguments, and are now
+      handled with property decorators (as in `Namelist`)
+    - Namelists built from (unsorted) dicts are now pre-sorted by key
+
+v0.16:
+    - User-defined comment delimiters (e.g. `#` comment support)
+
+v0.15:
+    - Null values are now always followed by commas
+
+v0.14:
+    - Default logical parsing is now more strict.  Only `true`, `false`, `t`,
+      and `f` (and with surrounding `.`) are now parsed to equivalent values.
+    - Extensive documentation update
+
+v0.13:
+    - Multidimensional array support
+
+v0.12:
+    - Namelist output formatting (column width, indent, etc.)
+    - Improved user-defined type output support
+    - Arch (AUR) distribution configuration
+    - Setuptools is now the install default
+
+v0.11:
+    - TODO

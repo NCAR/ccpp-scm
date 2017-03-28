@@ -1,0 +1,182 @@
+/**
+\mainpage GMTB Single Column Model
+
+\author Grant J. Firl
+\date March-Nov 2016
+
+The GMTB SCM is designed to be a generalized model, capable of using any combination of physics parameterizations through the
+use of the interoperable physics driver (initially the NUOPC driver from Patrick Tripp). Initially, the SCM model uses the GFS
+time-stepping and vertical grid, although it is understood that the SCM will be updated to use other "host" models' time-stepping
+and vertical coordinates at some point so as not to be exclusively tied to the GFS. As of Nov 2016, the model is set up to run
+idealized cases but is not capable of running from GFS output.
+
+\section dir_str Directory Structure
+\subsection bin /bin
+ - directory where the makefile places object files and the executable
+\subsection case_config /case_config
+ - directory containing experiment configuration namelist files
+ - each file contains:
+  - host model name (currently only GFS supported)
+  - physics suite name (will eventually support named suites; GFS operational "suite" is configured using namelist variables currently)
+  - case name (identifier for the initialization/forcing dataset to use)
+  - time step in seconds (dynamics and physics time step are the same for the SCM right now)
+  - time stepping scheme (1 = forward Euler, 2 = filtered leapfrog)
+  - experiment runtime in seconds
+  - output frequency in seconds
+  - shortwave radiation call frequency in seconds
+  - longwave radiation call frequency in seconds
+  - number of vertical levels (28, 42, 60, 64, 91 supported)
+  - directory where to write SCM output
+  - name of the output file
+  - type of thermodynamic forcing to use (1= total advective tendencies, 2= horizontal advective tendencies with prescribed vertical motion, 3= relaxation to observed profiles with vertical motion prescribed)
+  - type of momentum forcing to use (options are same as thermodynamic forcing)
+  - timescale in seconds for the relaxation forcing (if used)
+\subsection doc /doc
+ - directory containing documentation in the form of Doxygen output (html, LaTeX)
+\subsection model_config /model_config
+ - directory containing namelist file to configure the GFS physics (filename corresponds to experiment configuration file)
+ - also contains files needed to set up GFS vertical coordinate
+\subsection comparison_data /comparison_data
+ - directory containing netCDF files used to compared model output to
+\subsection processed_case_input /processed_case_input
+ - directory containing netCDF files with case initialization and forcing data (all case netCDF data must conform to defined format)
+\subsection raw_case_input /raw_case_input
+ - directory containing case input data in non-standardized format; this data must be processed into the correct netCDF format
+\subsection scripts /scripts
+ - directory containing python scripts for producing case input files and for analyzing SCM output
+\subsection src /src
+ - directory containing all source code
+  - files in the top level src directory are GMTB-generated source code (SCM infrastructure)
+  - other source code is organized into subdirectories:
+   - /w3nco_v2.0.6
+    - directory contains the NOAA w3 library (NCO v.2.0.6)
+   - /NEMSLegacy_trunk_rXXXXX
+    - directory contains the rXXXXX of NEMSLegacy trunk (checked out SVN repo)
+   - /gf_test_new
+    - directory contains a test branch for the GF test (checked out SVN repo)
+   - /cmake
+    - directory containing cmake modules needed for compilation
+\subsection standalone_data /standalone_data
+ - directory containing data originally used by the standalone NUOPC driver:
+   - GFS output for 8 columns
+   - aerosol dataset
+   - CO2 dataset
+   - solar constant dataset
+\subsection other Other files
+ - gmtb_scm_dox -- doxygen configuration file for generating documentation
+ - readme -- link to this documentation
+ - gmtb_scm_run.py -- python run script for submitting a SCM job to NOAA's Theia batch system (can also be modified to run an ensemble or to run the plotting routines)
+ - gmtb_scm_ens.py -- python script for running a SCM forcing ensemble
+ - Theia_setup -- file used to set up the computing environment on NOAA's Theia machine for the SCM
+
+
+\section obtain How to Obtain the Code
+Version 1.0 of the code is housed in a NOAA VLab git repository under the project name gmtb-scm. Although the code base is not available to the public due to ongoing development, you may contact the author (grantf@ucar.edu) for access to the repository or a compressed file containing the code as a "friendly user".
+
+If you have access to the NOAA VLab system, the following steps can be done to gain access to the code:
+- If you're a first time VLab user, you need to log on to all three components of the VLab system before being added to a project:
+ - [VLab collaborative interface](https://vlab.ncep.noaa.gov/)
+ - [VLab Gerrit interface](https://vlab.ncep.noaa.gov/code-review/)
+ - [VLab Redmine interface](https://vlab.ncep.noaa.gov/redmine/)
+ - Note: use NOAA email credentials (without @noaa.gov)
+- Send a request to grantf@ucar.edu to be added to the gmtb-scm project on VLab.
+- Once added, log in to the [VLab Gerrit interface](https://vlab.ncep.noaa.gov/code-review/) and configure some settings by following the instructions at the following webpage:
+ - [Gerrit configuration](https://vlab.ncep.noaa.gov/redmine/projects/vlab/wiki/Gerrit_Configuration)
+ - This involves setting up SSH keys and configs to allow SSH access to the repos.
+ - If you create a custom ssh-key for this project, you will need to add it to your local ssh agent with:
+  - \code{.sh} ssh-add ~/.ssh/id_rsa.vlab \endcode
+ - If you want to interact with the repo using HTTPS, this step may not be necessary, although you would need to use your HTTP password every time an interaction with the repo takes place.
+- Clone the gmtb-scm repo using one of two methods:
+ -# SSH
+  - Issue the following command from the directory where you want the code to be located on your local machine:
+  - \code{.sh} git clone ssh://First.Last@vlab.ncep.noaa.gov:29418/gmtb-scm \endcode where First.Last is your NOAA logon credentials
+ -# HTTPS
+  - Once logged in to the [VLab Gerrit interface](https://vlab.ncep.noaa.gov/code-review/), click on your user name in the upper right hand corner and click "Settings."
+  - Click on the "HTTP Password" menu item on the left. Click on generate password if one is not present.
+  - Issue the following command from the directory where you want the code to be located on your local machine:
+  - \code{.sh} git clone https://First.Last@vlab.ncep.noaa.gov/code-review/gmtb-scm \endcode where First.Last is your NOAA logon credentials
+  - When prompted, enter your HTTP password from Gerrit.
+
+If you want to checkout a stable, tagged version of the code (recommended) rather than the latest development on the master branch, use the following command within the repo directory after it has been cloned:
+\code{.sh} git checkout -b new_branch_name v#.# \endcode where v#.# is the desired tag. This will create and check out a new branch called "new_branch_name" that loads the code from the specified tagged version.
+
+\section how_to How to Set Up, Compile, Run, and Plot
+\subsection set_up Case Setup
+ - For using initialization and forcing data for a case that has already been set up:
+  -# Copy and edit the default experiment configuration file in the case_config directory to suite your needs.
+  -# Copy and edit the default namelist file in the model_config directory to suite your needs. The model_config namelist must have the same name as the case_config file.
+ - For a new case:
+  -# Process the new case data such that a netCDF file with the same format as that supplied is produced. A python script is supplied as an example of how to do so.
+  -# Perform the two steps above.
+\subsection Compile
+  - Building and compilation is accomplished using the CMake utility. To build (out-of-source), perform the following:
+   -# cd to the bin directory (or make another build directory and cd into it)
+   -# For a standard build, use: \code{.sh} cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ../src \endcode
+   -# For a debugging build, use: \code{.sh} cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../src \endcode
+   -# For a debugging build using an IDE (like Eclipse), use: \code{.sh} cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../src \endcode
+   -# For a special build using a different NEMS directory (e.g., for the Grell-Freitas test), use: \code{.sh} cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DNEMS_SRC:STRING=subdirectory_with_NEMS_atmos_source ../src \endcode
+  - A working netCDF installation is required. CMake will attempt to find the netCDF installation so that it will be linked during compilation.
+  - To compile, simply invoke \code{.sh} make \endcode
+ - The code has been built and compiled on a Mac and on the NOAA R&D HPC named Theia. For using Theia, do the following before performing the steps above:
+  - From the top level gmtb-scm directory, \code{.sh} source Theia_setup \endcode loads the default intel module (intel compiler version 14.0.2), the default netcdf module compiled with intel (version 4.3.0), sets the FC environment variable to 'ifort', prepends the path to the Anaconda python distribution for using the supplied python scripts, and installs the python package 'f90nml' in the user's local space (if necessary)
+  - Run cmake and make as above depending on desired build.
+\subsection Run
+  - After successful compilation, issue the command:
+   - ./gmtb_scm experiment_name (where experiment_name is the filename of the experiment configuration file in the case_config directory without the extension.)
+  - For Theia or another HPC machine, a python run script is provided (gmtb_scm_run.py). Copy from the top-level directory to the bin directory and edit as necessary. The script contains options for:
+   - the account to charge for the processing time
+   - the job name, estimated wall clock time (typically less than 1 minute, depending on the case), email address and options
+   - the actual run command: (./gmtb_scm experiment_name)
+\subsection Plot
+  - The gmtb_scm_analysis.py script is included within the scripts directory to plot SCM output from one run, to compare more than one run, and to compare to observations or other data. It uses a configuration file to control which plots are made and how they look. To run, use \code{.sh} ./gmtb_scm_analysis.py name_of_config_file.ini \endcode
+  \subsubsection plot_config Configuration File
+   - An example configuration file (example.ini) is included in the scripts directory. Copy and modify this configuration file to generate plots. The following information is contained within a configuration file:
+    - The following variables control which SCM output files are read, what they're called in the plots, where to put the plots, where to find comparison data, and other plotting options.
+     - gmtb_scm_datasets: a list of output files to read. Specify relative paths from the scripts directory. Enter one or more files, separated by commas.
+     - gmtb_scm_datasets_labels: a list of labels corresponding to the output files specified above. These labels are used to differentiate plotted data in legends, etc. Enter exactly one label for each output file to be read, separated by commas.
+     - plot_dir: a string specifying where to put the plots (relative path from the scripts dir)
+     - obs_file: a string specifying the path (relative to the scripts dir) to the file containing data with which to compare the model output. The script reads the case_config namelist corresponding to the first listed output file to find the case name. Based on the case name, the script tries to read the specified file using a routine found in gmtb_scm_read_obs.py. For a new case type, one must write a new routine in gmtb_scm_read_obs.py to read the desired file and fill in the observation dictionary passed back to gmtb_scm_analysis.py.
+     - obs_compare: a boolean value controlling whether observations from obs_file are plotted alongside the model output. The gmtb_scm_analysis.py script attempts to find observation data corresponding to each requested plot's variable. If there are observations corresponding to the requested variable, they are plotted. Otherwise, observations are ignored for that particular plot.
+     - plot_ind_datasets: a boolean value controlling whether plots are generated for individual output datasets. If true, directories are created to contain plots for each individual dataset (named using gmtb_scm_datasets_labels). If more than one dataset is specified, a 'comp' directory is created to contain plots comparing the datasets.
+     - time_series_resample: a boolean value controlling whether resampling is performed on time series data. This is useful if the observational dataset frequency is different than the model output frequency. If true, the data or observations are resampled to the lowest frequency among them. If false, the model data and observations are plotted as is, with their respective frequencies.
+    - The next sections control the following types of plots: profiles, time series, and contour plots (time-vertical cross-sections).
+     - [time_slices] section: this section controls which times in the output files are used to generate the plots. If one is interested in the entire SCM run, enter information about the start and end times of the run. If one is interested in a particular time period in the SCM run, these can be specified by their start/end times too. Enter at least one time slice. A separate directory is created for each time slice.
+      - each time slice is given a name within two brackets [[time_slice_name]] on its own line
+      - each time slice must have two lists of 4 integers in the format:
+       - \code{.sh} start = year, month, day, hour
+ end = year, month, day, hour \endcode
+     - [plots] section: this section controls each type of plot in its own subsection
+      - [[profiles_mean]]: this section controls the plotting of mean profiles for all time slices. Mean profiles representing the mean over each time slice are calculated.
+       - vars: list of strings corresponding to variable names in the SCM output netCDF files. The strings must match the variable names in that file to be plotted.
+       - vars_labels: list of strings corresponding to the variables listed above; the string for each variable will appear as the abscissa's label, so it should include units as appropriate.
+       - vert_axis: string containing the name of the SCM output netCDF variable to use as the ordinate axis
+       - vert_axis_label: string corresponding to the vertical axis; will appear as ordinate axis label, so should include units as appropriate
+       - y_inverted: boolean to control whether the ordinate axis should be inverted (top-to-bottom)
+       - y_log: boolean to control whether the ordinate axis should be logarithmic
+       - y_min_option: choice of min, max, val (if val is specified, include y_min = floating point value in this subsection)
+       - y_max_option: choice of min, max, val (if val is specified, include y_max = floating point value in this subsection)
+       \image html mean_profile_ex.png "example of a plot generated from the profiles_mean section"
+      - [[profiles_mean_multi]]: this section controls the plotting of mean profiles for all time slices for multiple variables on the same plot. Mean profiles representing the mean over each time slice are calculated for each variable and plotted together.
+       - each multi-variable profile plot is given its own subsection, named within triple brackets: [[[multi_variable_profile_plot_name]]]
+       - vars: list of strings corresponding to variable names in the SCM output netCDF files that should be plotted together. The strings must match the variable names in that file to be plotted.
+       - vars_labels: list of string corresponding to the variables listed above; the labels will appear in a legend (no units necessary)
+       - x_label: string used to label the ordinate axis of the plot (should contain units)
+       \image html mean_profile_multi_ex.png "example of a plot generated from the profiles_mean_multi section; different variables are denoted by colors, output datasets by line style"
+      - [[time_series]]: this section controls the plotting of time series for all time slices.
+       - vars: list of strings corresponding to variable names in the SCM output netCDF files. These variables must be time-dependent only (for now).
+       - vars_labels: list of strings corresponding to the variables listed above; the string for each variable will appear as the ordinate's label, so it should include units as appropriate.
+       \image html time_series_ex.png "example of a plot generated from the time_series section"
+      - [[contours]]: this section controls contour plots for all time slices; these will plot a time-vertical cross-section.
+       - vars: list of strings corresponding to variable names in the SCM output netCDF files. The strings must match the variable names in that file to be plotted.
+       - vars_labels: list of strings corresponding to the variables listed above; the string for each variable will appear as a title, so it should include units as appropriate.
+       - vert_axis: string containing the name of the SCM output netCDF variable to use as the ordinate axis
+       - vert_axis_label: string corresponding to the vertical axis; will appear as ordinate axis label, so should include units as appropriate
+       - y_inverted: boolean to control whether the ordinate axis should be inverted (top-to-bottom)
+       - y_log: boolean to control whether the ordinate axis should be logarithmic
+       - y_min_option: choice of min, max, val (if val is specified, include y_min = floating point value in this subsection)
+       - y_max_option: choice of min, max, val (if val is specified, include y_max = floating point value in this subsection)
+       - x_ticks_num: integer of the number of labeled ticks on the abscissa axis
+       - y_ticks_num: integer of the number of labeled ticks on the ordinate axis
+       \image html contour_ex.png "example of a plot generated from the contours section"
+
+*/

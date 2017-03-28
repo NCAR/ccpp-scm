@@ -1,0 +1,49 @@
+&vector_nml
+
+    ! Standard vector
+    v = 1,2,3,4,5
+
+    ! Component test
+    v_idx(1) = 1
+    v_idx(2) = 2
+    v_idx(3) = 3
+    v_idx(4) = 4
+
+    ! Out-of-order test
+    v_idx_ooo(2) = 2
+    v_idx_ooo(4) = 4
+    v_idx_ooo(3) = 3
+    v_idx_ooo(1) = 1
+
+    ! Range test
+    v_range(1:4) = 1,2,3,4
+
+    ! Implicit range test
+    v_implicit_start(1:) = 1,2,3,4
+    v_implicit_end(:4) = 1,2,3,4
+    v_implicit_all(:) = 1,2,3,4,
+
+    ! Null vector component
+    v_null_start = ,2,3,4
+    v_null_end = 1,2,3,,
+    v_null_interior = 1,2,,4
+
+    ! Zero merge_list check
+    v_zero(1) = 1
+    v_zero(2) = 0
+    v_zero(3) = 3
+
+    ! Stride check
+    v_stride(1:7:2) = 1, 3, 5, 7
+
+    ! Single element check
+    v_single(1) = 1
+
+    ! Implicit merge
+    v_implicit_merge(2) = 2
+    v_implicit_merge = 1
+
+    ! Explicit merge
+    v_explicit_merge = 1
+    v_explicit_merge(2) = 2
+/

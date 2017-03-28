@@ -1,0 +1,20 @@
+Marshall Ward <f90nml@marshallward.org>
+    - Maintainer, Creator
+
+Jacob Williams
+    - Derived type support and testing
+
+Michael Lamparski
+    - File object support
+
+Martin Dix
+    - Sparse array support
+
+Huziy Oleksander
+    - Streamlined namelist output interface
+
+Kai Li
+    - Python 2.6 output support
+
+dwwork
+    - Multidimensional support

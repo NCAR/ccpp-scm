@@ -1,0 +1,95 @@
+\hypertarget{namespacegmtb__scm__main}{}\section{gmtb\+\_\+scm\+\_\+main Module Reference}
+\label{namespacegmtb__scm__main}\index{gmtb\+\_\+scm\+\_\+main@{gmtb\+\_\+scm\+\_\+main}}
+
+
+Main S\+CM program.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine \hyperlink{namespacegmtb__scm__main_af2e62134ed0a98729f7dbc2d5753e547}{gmtb\+\_\+scm\+\_\+main\+\_\+sub} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Main S\+CM program. 
+
+\begin{DoxyAuthor}{Author}
+Grant J. Firl 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+March-\/\+April 2016
+\end{DoxyDate}
+The prototype S\+CM relies heavily on the standalone driver provided by Patrick Tripp. The standalone driver demonstrates how to use the nuopc\+\_\+physics module to calculate tendencies due to radiation and the rest of the physics suite once, including initialization. It uses 8 columns and it initializes G\+FS state variables from unformatted binary output files that are (I believe) generated from a G\+FS model run.
+
+The S\+CM prototype differs from the standalone driver in several important ways. First, although the state arrays will maintain a \char`\"{}horizontal\char`\"{} dimension (be capable of representing more than one column), the code is designed to use a single column. Second, in order to avoid becoming a G\+F\+S-\/only S\+CM, input is achieved through host-\/model agnostic net\+C\+DF files. In addition, variables needed to initialize or configure the physics suite are obtained through external namelist files to avoid using G\+FS output files. Third, the model will have the ability to use different vertical grids and coordinates as well as different time-\/stepping schemes (initial capability follows the G\+FS, however). Fourth, the S\+CM includes functionality to advance through time, calling physics repeatedly, and to replace dynamics/advection with specified large-\/scale forcing.
+
+The code is organized as follows\+:
+\begin{DoxyItemize}
+\item Modules are loaded, G\+M\+TB S\+CM modules first, followed by modules needed for N\+U\+O\+PC driver and G\+FS physics\+\_\+suite
+\item Variable definition
+\item Namelist definition
+\item Model configuration either read from file or from command line
+\item Case initialization and forcing file read in
+\item Reference profile for use above initialization data read in
+\item Vertical grid is set up
+\item Array allocation
+\item Interpolate initial conditions to model vertical grid
+\item Read external physics configuration namelist
+\item Follow standalone driver procedure
+\begin{DoxyItemize}
+\item call gfuncphys to initialize physics lookup tables, etc.
+\item call nuopc\+\_\+phys\+\_\+init with parameters read in from namelist
+\item call \char`\"{}set\char`\"{} routines for N\+E\+MS derived data types needed by radiation
+\item call nuopc\+\_\+rad\+\_\+update and nuopc\+\_\+rad\+\_\+run to calculate radiation
+\item call \char`\"{}set\char`\"{} routines for N\+E\+MS derived data types needed by remainder of physics
+\item call nuopc\+\_\+phys\+\_\+run to calculate remainder of physics 
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{group__input_detailed}{}\subsection{Detailed Algorithm}\label{group__input_detailed}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{gmtb\+\_\+scm\+\_\+main@{gmtb\+\_\+scm\+\_\+main}!gmtb\+\_\+scm\+\_\+main\+\_\+sub@{gmtb\+\_\+scm\+\_\+main\+\_\+sub}}
+\index{gmtb\+\_\+scm\+\_\+main\+\_\+sub@{gmtb\+\_\+scm\+\_\+main\+\_\+sub}!gmtb\+\_\+scm\+\_\+main@{gmtb\+\_\+scm\+\_\+main}}
+\subsubsection[{\texorpdfstring{gmtb\+\_\+scm\+\_\+main\+\_\+sub()}{gmtb_scm_main_sub()}}]{\setlength{\rightskip}{0pt plus 5cm}subroutine gmtb\+\_\+scm\+\_\+main\+::gmtb\+\_\+scm\+\_\+main\+\_\+sub (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{namespacegmtb__scm__main_af2e62134ed0a98729f7dbc2d5753e547}{}\label{namespacegmtb__scm__main_af2e62134ed0a98729f7dbc2d5753e547}
+case-\/specific initialization and forcing variables
+
+reference profile variables
+
+S\+CM state variables (variables with appended \char`\"{}i\char`\"{} are interface; variables with appended \char`\"{}l\char`\"{} are layer centered) index order for grid is (horizontal, vertical); index order for state variables is (horizontal, vertical, timesteps); index order for tracer is (horizontal, vertical, tracer\+\_\+index, timesteps)
+
+interpolated forcing variables
+
+grid coefficients from file
+
+The rest of the variables declared here are from the standalone driver
+
+get\+\_\+config returns the basic model configuration variables (file or command line)
+
+get\+\_\+case\+\_\+init reads and returns case input data
+
+get\+\_\+reference\+\_\+profile returns a reference profile to use above the case profile
+
+set up the vertical grid based on the host model (in G\+FS case, there are also logical flags that set the type of vertical grid)
+
+set up time scheme and number of time steps to keep
+
+once all dimensions are known, allocate the necessary arrays
+
+set\+\_\+state interpolates the case input data to the model grid and patches in the reference sounding above the case data as necessary
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000001}{Todo}]need to convert w\+\_\+ls to omega and pass it into state\+\_\+fldin (is pointer) \end{DoxyRefDesc}
+
+
+Definition at line 79 of file gmtb\+\_\+scm.\+f90.
+
+
+
+References gmtb\+\_\+scm\+\_\+vgrid\+::calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner(), gmtb\+\_\+scm\+\_\+utils\+::copy\+\_\+data\+\_\+to\+\_\+working\+\_\+dir(), gmtb\+\_\+scm\+\_\+input\+::get\+\_\+case\+\_\+init(), gmtb\+\_\+scm\+\_\+input\+::get\+\_\+config(), gmtb\+\_\+scm\+\_\+vgrid\+::get\+\_\+gfs\+\_\+vgrid(), gmtb\+\_\+scm\+\_\+input\+::get\+\_\+reference\+\_\+profile(), gmtb\+\_\+scm\+\_\+forcing\+::interpolate\+\_\+forcing(), gmtb\+\_\+scm\+\_\+output\+::output\+\_\+append(), gmtb\+\_\+scm\+\_\+output\+::output\+\_\+init(), gmtb\+\_\+scm\+\_\+utils\+::remove\+\_\+data\+\_\+from\+\_\+working\+\_\+dir(), and gmtb\+\_\+scm\+\_\+setup\+::set\+\_\+state().
+

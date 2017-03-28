@@ -1,0 +1,310 @@
+\begin{DoxyAuthor}{Author}
+Grant J. Firl 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+March-\/\+Nov 2016
+\end{DoxyDate}
+The G\+M\+TB S\+CM is designed to be a generalized model, capable of using any combination of physics parameterizations through the use of the interoperable physics driver (initially the N\+U\+O\+PC driver from Patrick Tripp). Initially, the S\+CM model uses the G\+FS time-\/stepping and vertical grid, although it is understood that the S\+CM will be updated to use other \char`\"{}host\char`\"{} models\textquotesingle{} time-\/stepping and vertical coordinates at some point so as not to be exclusively tied to the G\+FS. As of Nov 2016, the model is set up to run idealized cases but is not capable of running from G\+FS output.\hypertarget{index_dir_str}{}\section{Directory Structure}\label{index_dir_str}
+\hypertarget{index_bin}{}\subsection{/bin}\label{index_bin}
+
+\begin{DoxyItemize}
+\item directory where the makefile places object files and the executable 
+\end{DoxyItemize}\hypertarget{index_case_config}{}\subsection{/case\+\_\+config}\label{index_case_config}
+
+\begin{DoxyItemize}
+\item directory containing experiment configuration namelist files
+\item each file contains\+:
+\begin{DoxyItemize}
+\item host model name (currently only G\+FS supported)
+\item physics suite name (will eventually support named suites; G\+FS operational \char`\"{}suite\char`\"{} is configured using namelist variables currently)
+\item case name (identifier for the initialization/forcing dataset to use)
+\item time step in seconds (dynamics and physics time step are the same for the S\+CM right now)
+\item time stepping scheme (1 = forward Euler, 2 = filtered leapfrog)
+\item experiment runtime in seconds
+\item output frequency in seconds
+\item shortwave radiation call frequency in seconds
+\item longwave radiation call frequency in seconds
+\item number of vertical levels (28, 42, 60, 64, 91 supported)
+\item directory where to write S\+CM output
+\item name of the output file
+\item type of thermodynamic forcing to use (1= total advective tendencies, 2= horizontal advective tendencies with prescribed vertical motion, 3= relaxation to observed profiles with vertical motion prescribed)
+\item type of momentum forcing to use (options are same as thermodynamic forcing)
+\item timescale in seconds for the relaxation forcing (if used) 
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{index_doc}{}\subsection{/doc}\label{index_doc}
+
+\begin{DoxyItemize}
+\item directory containing documentation in the form of Doxygen output (html, La\+TeX) 
+\end{DoxyItemize}\hypertarget{index_model_config}{}\subsection{/model\+\_\+config}\label{index_model_config}
+
+\begin{DoxyItemize}
+\item directory containing namelist file to configure the G\+FS physics (filename corresponds to experiment configuration file)
+\item also contains files needed to set up G\+FS vertical coordinate 
+\end{DoxyItemize}\hypertarget{index_comparison_data}{}\subsection{/comparison\+\_\+data}\label{index_comparison_data}
+
+\begin{DoxyItemize}
+\item directory containing net\+C\+DF files used to compared model output to 
+\end{DoxyItemize}\hypertarget{index_processed_case_input}{}\subsection{/processed\+\_\+case\+\_\+input}\label{index_processed_case_input}
+
+\begin{DoxyItemize}
+\item directory containing net\+C\+DF files with case initialization and forcing data (all case net\+C\+DF data must conform to defined format) 
+\end{DoxyItemize}\hypertarget{index_raw_case_input}{}\subsection{/raw\+\_\+case\+\_\+input}\label{index_raw_case_input}
+
+\begin{DoxyItemize}
+\item directory containing case input data in non-\/standardized format; this data must be processed into the correct net\+C\+DF format 
+\end{DoxyItemize}\hypertarget{index_scripts}{}\subsection{/scripts}\label{index_scripts}
+
+\begin{DoxyItemize}
+\item directory containing python scripts for producing case input files and for analyzing S\+CM output 
+\end{DoxyItemize}\hypertarget{index_src}{}\subsection{/src}\label{index_src}
+
+\begin{DoxyItemize}
+\item directory containing all source code
+\begin{DoxyItemize}
+\item files in the top level src directory are G\+M\+T\+B-\/generated source code (S\+CM infrastructure)
+\item other source code is organized into subdirectories\+:
+\begin{DoxyItemize}
+\item /w3nco\+\_\+v2.0.\+6
+\begin{DoxyItemize}
+\item directory contains the N\+O\+AA w3 library (N\+CO v.\+2.\+0.\+6)
+\end{DoxyItemize}
+\item /\+N\+E\+M\+S\+Legacy\+\_\+trunk\+\_\+r\+X\+X\+X\+XX
+\begin{DoxyItemize}
+\item directory contains the r\+X\+X\+X\+XX of N\+E\+M\+S\+Legacy trunk (checked out S\+VN repo)
+\end{DoxyItemize}
+\item /gf\+\_\+test\+\_\+new
+\begin{DoxyItemize}
+\item directory contains a test branch for the GF test (checked out S\+VN repo)
+\end{DoxyItemize}
+\item /cmake
+\begin{DoxyItemize}
+\item directory containing cmake modules needed for compilation 
+\end{DoxyItemize}
+\end{DoxyItemize}
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{index_standalone_data}{}\subsection{/standalone\+\_\+data}\label{index_standalone_data}
+
+\begin{DoxyItemize}
+\item directory containing data originally used by the standalone N\+U\+O\+PC driver\+:
+\begin{DoxyItemize}
+\item G\+FS output for 8 columns
+\item aerosol dataset
+\item C\+O2 dataset
+\item solar constant dataset 
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{index_other}{}\subsection{Other files}\label{index_other}
+
+\begin{DoxyItemize}
+\item gmtb\+\_\+scm\+\_\+dox -- doxygen configuration file for generating documentation
+\item readme -- link to this documentation
+\item gmtb\+\_\+scm\+\_\+run.\+py -- python run script for submitting a S\+CM job to N\+O\+AA\textquotesingle{}s Theia batch system (can also be modified to run an ensemble or to run the plotting routines)
+\item gmtb\+\_\+scm\+\_\+ens.\+py -- python script for running a S\+CM forcing ensemble
+\item Theia\+\_\+setup -- file used to set up the computing environment on N\+O\+AA\textquotesingle{}s Theia machine for the S\+CM
+\end{DoxyItemize}\hypertarget{index_obtain}{}\section{How to Obtain the Code}\label{index_obtain}
+Version 1.\+0 of the code is housed in a N\+O\+AA V\+Lab git repository under the project name gmtb-\/scm. Although the code base is not available to the public due to ongoing development, you may contact the author (\href{mailto:grantf@ucar.edu}{\tt grantf@ucar.\+edu}) for access to the repository or a compressed file containing the code as a \char`\"{}friendly user\char`\"{}.
+
+If you have access to the N\+O\+AA V\+Lab system, the following steps can be done to gain access to the code\+:
+\begin{DoxyItemize}
+\item If you\textquotesingle{}re a first time V\+Lab user, you need to log on to all three components of the V\+Lab system before being added to a project\+:
+\begin{DoxyItemize}
+\item \href{https://vlab.ncep.noaa.gov/}{\tt V\+Lab collaborative interface}
+\item \href{https://vlab.ncep.noaa.gov/code-review/}{\tt V\+Lab Gerrit interface}
+\item \href{https://vlab.ncep.noaa.gov/redmine/}{\tt V\+Lab Redmine interface}
+\item Note\+: use N\+O\+AA email credentials (without .gov)
+\end{DoxyItemize}
+\item Send a request to \href{mailto:grantf@ucar.edu}{\tt grantf@ucar.\+edu} to be added to the gmtb-\/scm project on V\+Lab.
+\item Once added, log in to the \href{https://vlab.ncep.noaa.gov/code-review/}{\tt V\+Lab Gerrit interface} and configure some settings by following the instructions at the following webpage\+:
+\begin{DoxyItemize}
+\item \href{https://vlab.ncep.noaa.gov/redmine/projects/vlab/wiki/Gerrit_Configuration}{\tt Gerrit configuration}
+\item This involves setting up S\+SH keys and configs to allow S\+SH access to the repos.
+\item If you create a custom ssh-\/key for this project, you will need to add it to your local ssh agent with\+:
+\begin{DoxyItemize}
+\item 
+\begin{DoxyCode}
+1 ssh-add ~/.ssh/id\_rsa.vlab 
+\end{DoxyCode}
+
+\end{DoxyItemize}
+\item If you want to interact with the repo using H\+T\+T\+PS, this step may not be necessary, although you would need to use your H\+T\+TP password every time an interaction with the repo takes place.
+\end{DoxyItemize}
+\item Clone the gmtb-\/scm repo using one of two methods\+:
+\begin{DoxyEnumerate}
+\item S\+SH
+\begin{DoxyItemize}
+\item Issue the following command from the directory where you want the code to be located on your local machine\+:
+\item 
+\begin{DoxyCode}
+1 git clone ssh://First.Last@vlab.ncep.noaa.gov:29418/gmtb-scm 
+\end{DoxyCode}
+ where First.\+Last is your N\+O\+AA logon credentials
+\end{DoxyItemize}
+\item H\+T\+T\+PS
+\begin{DoxyItemize}
+\item Once logged in to the \href{https://vlab.ncep.noaa.gov/code-review/}{\tt V\+Lab Gerrit interface}, click on your user name in the upper right hand corner and click \char`\"{}\+Settings.\char`\"{}
+\item Click on the \char`\"{}\+H\+T\+T\+P Password\char`\"{} menu item on the left. Click on generate password if one is not present.
+\item Issue the following command from the directory where you want the code to be located on your local machine\+:
+\item 
+\begin{DoxyCode}
+1 git clone https://First.Last@vlab.ncep.noaa.gov/code-review/gmtb-scm 
+\end{DoxyCode}
+ where First.\+Last is your N\+O\+AA logon credentials
+\item When prompted, enter your H\+T\+TP password from Gerrit.
+\end{DoxyItemize}
+\end{DoxyEnumerate}
+\end{DoxyItemize}
+
+If you want to checkout a stable, tagged version of the code (recommended) rather than the latest development on the master branch, use the following command within the repo directory after it has been cloned\+: 
+\begin{DoxyCode}
+1 git checkout -b new\_branch\_name v#.# 
+\end{DoxyCode}
+ where v\#.\# is the desired tag. This will create and check out a new branch called \char`\"{}new\+\_\+branch\+\_\+name\char`\"{} that loads the code from the specified tagged version.\hypertarget{index_how_to}{}\section{How to Set Up, Compile, Run, and Plot}\label{index_how_to}
+\hypertarget{index_set_up}{}\subsection{Case Setup}\label{index_set_up}
+
+\begin{DoxyItemize}
+\item For using initialization and forcing data for a case that has already been set up\+:
+\begin{DoxyEnumerate}
+\item Copy and edit the default experiment configuration file in the case\+\_\+config directory to suite your needs.
+\item Copy and edit the default namelist file in the model\+\_\+config directory to suite your needs. The model\+\_\+config namelist must have the same name as the case\+\_\+config file.
+\end{DoxyEnumerate}
+\item For a new case\+:
+\begin{DoxyEnumerate}
+\item Process the new case data such that a net\+C\+DF file with the same format as that supplied is produced. A python script is supplied as an example of how to do so.
+\item Perform the two steps above. 
+\end{DoxyEnumerate}
+\end{DoxyItemize}\hypertarget{index_Compile}{}\subsection{Compile}\label{index_Compile}
+
+\begin{DoxyItemize}
+\item Building and compilation is accomplished using the C\+Make utility. To build (out-\/of-\/source), perform the following\+:
+\begin{DoxyEnumerate}
+\item cd to the bin directory (or make another build directory and cd into it)
+\item For a standard build, use\+:
+\begin{DoxyCode}
+1 cmake -G"Unix Makefiles" -DCMAKE\_BUILD\_TYPE=Release ../src 
+\end{DoxyCode}
+
+\item For a debugging build, use\+:
+\begin{DoxyCode}
+1 cmake -G"Unix Makefiles" -DCMAKE\_BUILD\_TYPE=Debug ../src 
+\end{DoxyCode}
+
+\item For a debugging build using an I\+DE (like Eclipse), use\+:
+\begin{DoxyCode}
+1 cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE\_BUILD\_TYPE=Debug ../src 
+\end{DoxyCode}
+
+\item For a special build using a different N\+E\+MS directory (e.\+g., for the Grell-\/\+Freitas test), use\+:
+\begin{DoxyCode}
+1 cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE\_BUILD\_TYPE=Debug
+       -DNEMS\_SRC:STRING=subdirectory\_with\_NEMS\_atmos\_source ../src 
+\end{DoxyCode}
+
+\end{DoxyEnumerate}
+\item A working net\+C\+DF installation is required. C\+Make will attempt to find the net\+C\+DF installation so that it will be linked during compilation.
+\item To compile, simply invoke
+\begin{DoxyCode}
+1 make 
+\end{DoxyCode}
+
+\end{DoxyItemize}
+
+The code has been built and compiled on a Mac and on the N\+O\+AA R\&D H\+PC named Theia. For using Theia, do the following before performing the steps above\+:
+\begin{DoxyItemize}
+\item From the top level gmtb-\/scm directory,
+\begin{DoxyCode}
+1 source Theia\_setup 
+\end{DoxyCode}
+ loads the default intel module (intel compiler version 14.\+0.\+2), the default netcdf module compiled with intel (version 4.\+3.\+0), sets the FC environment variable to \textquotesingle{}ifort\textquotesingle{}, prepends the path to the Anaconda python distribution for using the supplied python scripts, and installs the python package \textquotesingle{}f90nml\textquotesingle{} in the user\textquotesingle{}s local space (if necessary)
+\item Run cmake and make as above depending on desired build. 
+\end{DoxyItemize}\hypertarget{index_Run}{}\subsection{Run}\label{index_Run}
+
+\begin{DoxyItemize}
+\item After successful compilation, issue the command\+:
+\begin{DoxyItemize}
+\item ./gmtb\+\_\+scm experiment\+\_\+name (where experiment\+\_\+name is the filename of the experiment configuration file in the case\+\_\+config directory without the extension.)
+\end{DoxyItemize}
+\item For Theia or another H\+PC machine, a python run script is provided (gmtb\+\_\+scm\+\_\+run.\+py). Copy from the top-\/level directory to the bin directory and edit as necessary. The script contains options for\+:
+\begin{DoxyItemize}
+\item the account to charge for the processing time
+\item the job name, estimated wall clock time (typically less than 1 minute, depending on the case), email address and options
+\item the actual run command\+: (./gmtb\+\_\+scm experiment\+\_\+name) 
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{index_Plot}{}\subsection{Plot}\label{index_Plot}
+
+\begin{DoxyItemize}
+\item The gmtb\+\_\+scm\+\_\+analysis.\+py script is included within the scripts directory to plot S\+CM output from one run, to compare more than one run, and to compare to observations or other data. It uses a configuration file to control which plots are made and how they look. To run, use
+\begin{DoxyCode}
+1 ./gmtb\_scm\_analysis.py name\_of\_config\_file.ini 
+\end{DoxyCode}
+ 
+\end{DoxyItemize}\hypertarget{index_plot_config}{}\subsubsection{Configuration File}\label{index_plot_config}
+
+\begin{DoxyItemize}
+\item An example configuration file (example.\+ini) is included in the scripts directory. Copy and modify this configuration file to generate plots. The following information is contained within a configuration file\+:
+\begin{DoxyItemize}
+\item The following variables control which S\+CM output files are read, what they\textquotesingle{}re called in the plots, where to put the plots, where to find comparison data, and other plotting options.
+\begin{DoxyItemize}
+\item gmtb\+\_\+scm\+\_\+datasets\+: a list of output files to read. Specify relative paths from the scripts directory. Enter one or more files, separated by commas.
+\item gmtb\+\_\+scm\+\_\+datasets\+\_\+labels\+: a list of labels corresponding to the output files specified above. These labels are used to differentiate plotted data in legends, etc. Enter exactly one label for each output file to be read, separated by commas.
+\item plot\+\_\+dir\+: a string specifying where to put the plots (relative path from the scripts dir)
+\item obs\+\_\+file\+: a string specifying the path (relative to the scripts dir) to the file containing data with which to compare the model output. The script reads the case\+\_\+config namelist corresponding to the first listed output file to find the case name. Based on the case name, the script tries to read the specified file using a routine found in gmtb\+\_\+scm\+\_\+read\+\_\+obs.\+py. For a new case type, one must write a new routine in gmtb\+\_\+scm\+\_\+read\+\_\+obs.\+py to read the desired file and fill in the observation dictionary passed back to gmtb\+\_\+scm\+\_\+analysis.\+py.
+\item obs\+\_\+compare\+: a boolean value controlling whether observations from obs\+\_\+file are plotted alongside the model output. The gmtb\+\_\+scm\+\_\+analysis.\+py script attempts to find observation data corresponding to each requested plot\textquotesingle{}s variable. If there are observations corresponding to the requested variable, they are plotted. Otherwise, observations are ignored for that particular plot.
+\item plot\+\_\+ind\+\_\+datasets\+: a boolean value controlling whether plots are generated for individual output datasets. If true, directories are created to contain plots for each individual dataset (named using gmtb\+\_\+scm\+\_\+datasets\+\_\+labels). If more than one dataset is specified, a \textquotesingle{}comp\textquotesingle{} directory is created to contain plots comparing the datasets.
+\item time\+\_\+series\+\_\+resample\+: a boolean value controlling whether resampling is performed on time series data. This is useful if the observational dataset frequency is different than the model output frequency. If true, the data or observations are resampled to the lowest frequency among them. If false, the model data and observations are plotted as is, with their respective frequencies.
+\end{DoxyItemize}
+\item The next sections control the following types of plots\+: profiles, time series, and contour plots (time-\/vertical cross-\/sections).
+\begin{DoxyItemize}
+\item \mbox{[}time\+\_\+slices\mbox{]} section\+: this section controls which times in the output files are used to generate the plots. If one is interested in the entire S\+CM run, enter information about the start and end times of the run. If one is interested in a particular time period in the S\+CM run, these can be specified by their start/end times too. Enter at least one time slice. A separate directory is created for each time slice.
+\begin{DoxyItemize}
+\item each time slice is given a name within two brackets \mbox{[}\mbox{[}time\+\_\+slice\+\_\+name\mbox{]}\mbox{]} on its own line
+\item each time slice must have two lists of 4 integers in the format\+:
+\begin{DoxyItemize}
+\item 
+\begin{DoxyCode}
+1 start = year, month, day, hour
+2 end = year, month, day, hour 
+\end{DoxyCode}
+
+\end{DoxyItemize}
+\end{DoxyItemize}
+\item \mbox{[}plots\mbox{]} section\+: this section controls each type of plot in its own subsection
+\begin{DoxyItemize}
+\item \mbox{[}\mbox{[}profiles\+\_\+mean\mbox{]}\mbox{]}\+: this section controls the plotting of mean profiles for all time slices. Mean profiles representing the mean over each time slice are calculated.
+\begin{DoxyItemize}
+\item vars\+: list of strings corresponding to variable names in the S\+CM output net\+C\+DF files. The strings must match the variable names in that file to be plotted.
+\item vars\+\_\+labels\+: list of strings corresponding to the variables listed above; the string for each variable will appear as the abscissa\textquotesingle{}s label, so it should include units as appropriate.
+\item vert\+\_\+axis\+: string containing the name of the S\+CM output net\+C\+DF variable to use as the ordinate axis
+\item vert\+\_\+axis\+\_\+label\+: string corresponding to the vertical axis; will appear as ordinate axis label, so should include units as appropriate
+\item y\+\_\+inverted\+: boolean to control whether the ordinate axis should be inverted (top-\/to-\/bottom)
+\item y\+\_\+log\+: boolean to control whether the ordinate axis should be logarithmic
+\item y\+\_\+min\+\_\+option\+: choice of min, max, val (if val is specified, include y\+\_\+min = floating point value in this subsection)
+\item y\+\_\+max\+\_\+option\+: choice of min, max, val (if val is specified, include y\+\_\+max = floating point value in this subsection) 
+\end{DoxyItemize}
+\item \mbox{[}\mbox{[}profiles\+\_\+mean\+\_\+multi\mbox{]}\mbox{]}\+: this section controls the plotting of mean profiles for all time slices for multiple variables on the same plot. Mean profiles representing the mean over each time slice are calculated for each variable and plotted together.
+\begin{DoxyItemize}
+\item each multi-\/variable profile plot is given its own subsection, named within triple brackets\+: \mbox{[}\mbox{[}\mbox{[}multi\+\_\+variable\+\_\+profile\+\_\+plot\+\_\+name\mbox{]}\mbox{]}\mbox{]}
+\item vars\+: list of strings corresponding to variable names in the S\+CM output net\+C\+DF files that should be plotted together. The strings must match the variable names in that file to be plotted.
+\item vars\+\_\+labels\+: list of string corresponding to the variables listed above; the labels will appear in a legend (no units necessary)
+\item x\+\_\+label\+: string used to label the ordinate axis of the plot (should contain units) 
+\end{DoxyItemize}
+\item \mbox{[}\mbox{[}time\+\_\+series\mbox{]}\mbox{]}\+: this section controls the plotting of time series for all time slices.
+\begin{DoxyItemize}
+\item vars\+: list of strings corresponding to variable names in the S\+CM output net\+C\+DF files. These variables must be time-\/dependent only (for now).
+\item vars\+\_\+labels\+: list of strings corresponding to the variables listed above; the string for each variable will appear as the ordinate\textquotesingle{}s label, so it should include units as appropriate. 
+\end{DoxyItemize}
+\item \mbox{[}\mbox{[}contours\mbox{]}\mbox{]}\+: this section controls contour plots for all time slices; these will plot a time-\/vertical cross-\/section.
+\begin{DoxyItemize}
+\item vars\+: list of strings corresponding to variable names in the S\+CM output net\+C\+DF files. The strings must match the variable names in that file to be plotted.
+\item vars\+\_\+labels\+: list of strings corresponding to the variables listed above; the string for each variable will appear as a title, so it should include units as appropriate.
+\item vert\+\_\+axis\+: string containing the name of the S\+CM output net\+C\+DF variable to use as the ordinate axis
+\item vert\+\_\+axis\+\_\+label\+: string corresponding to the vertical axis; will appear as ordinate axis label, so should include units as appropriate
+\item y\+\_\+inverted\+: boolean to control whether the ordinate axis should be inverted (top-\/to-\/bottom)
+\item y\+\_\+log\+: boolean to control whether the ordinate axis should be logarithmic
+\item y\+\_\+min\+\_\+option\+: choice of min, max, val (if val is specified, include y\+\_\+min = floating point value in this subsection)
+\item y\+\_\+max\+\_\+option\+: choice of min, max, val (if val is specified, include y\+\_\+max = floating point value in this subsection)
+\item x\+\_\+ticks\+\_\+num\+: integer of the number of labeled ticks on the abscissa axis
+\item y\+\_\+ticks\+\_\+num\+: integer of the number of labeled ticks on the ordinate axis 
+\end{DoxyItemize}
+\end{DoxyItemize}
+\end{DoxyItemize}
+\end{DoxyItemize}
+\end{DoxyItemize}
