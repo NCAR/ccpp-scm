@@ -23,12 +23,11 @@ contains
 !! override those that are specified in the external namelist file. The case configuration namelist variables are also written out to
 !! a namelist file placed in the output directory. Note: This routine uses GET_COMMAND which is an intrinsic routine in the Fortran 2003 standard. This
 !! requires that the compiler supports this standard.
-subroutine get_config_nml(experiment_name, model_name, physics_suite, case_name, dt, time_scheme, runtime, output_frequency, &
-  swrad_frequency, lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, &
-  sfc_flux_spec, reference_profile_choice, year, month, day, hour)
+subroutine get_config_nml(experiment_name, model_name, n_columns, case_name, dt, time_scheme, runtime, &
+  output_frequency, swrad_frequency, lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, &
+  relax_time, sfc_flux_spec, reference_profile_choice, year, month, day, hour, physics_suite, physics_suite_dir, n_phy_fields)
   character(len=80), intent(out)    :: experiment_name !< name of the experiment configuration file (usually case name)
   character(len=80), intent(out)    :: model_name !< name of the host model (currently only GFS supported)
-  character(len=80), intent(out)    :: physics_suite !< name of the physics suite name (currently only GFS_operational supported)
   character(len=80), intent(out)    :: case_name !< name of case initialization and forcing dataset
   real(kind=dp), intent(out)              :: dt !< time step in seconds
   real(kind=dp), intent(out)              :: runtime !< total runtime in seconds
@@ -36,6 +35,7 @@ subroutine get_config_nml(experiment_name, model_name, physics_suite, case_name,
   real(kind=dp), intent(out)              :: swrad_frequency !< freqency of calling SW radiation in seconds
   real(kind=dp), intent(out)              :: lwrad_frequency !< freqency of calling SW radiation in seconds
   integer, intent(out)              :: n_levels !< number of model levels (currently only 64 supported)
+  integer, intent(out)              :: n_columns !< number of columns to use
   integer, intent(out)              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
   character(len=80), intent(out)    :: output_dir !< name of the output directory
   character(len=80), intent(out)    :: output_file !< name of the output file (without the file extension)
@@ -46,23 +46,29 @@ subroutine get_config_nml(experiment_name, model_name, physics_suite, case_name,
   integer, intent(out)              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer, intent(out)              :: year, month, day, hour
 
-  integer                           :: i
-  integer                        :: ioerror(4)
+  character(len=80), intent(out), allocatable    :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
+  character(len=80), intent(out)                 :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
+  integer, intent(out), allocatable              :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
+
+  integer                           :: i, last_physics_specified
+  integer                        :: ioerror(5)
 
   INTEGER, PARAMETER    :: buflen = 255
   CHARACTER(LEN=buflen) :: buf, opt_namelist_vals
   CHARACTER(1)             :: response
 
-  NAMELIST /case_config/ model_name, physics_suite, case_name, dt, time_scheme, runtime, output_frequency, swrad_frequency, &
+  NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, swrad_frequency, &
     lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, sfc_flux_spec, &
     reference_profile_choice, year, month, day, hour
+
+  NAMELIST /physics_config/ physics_suite, physics_suite_dir, n_phy_fields
 
   !>  \section get_config_alg Algorithm
   !!  @{
 
   !> Define default values for case configuration (to be overridden by external namelist file or command line arguments)
   model_name = 'GFS'
-  physics_suite = 'GFS_operational'
+  n_columns = 1
   case_name = 'twpice'
   dt = 600.0
   time_scheme = 2
@@ -82,6 +88,10 @@ subroutine get_config_nml(experiment_name, model_name, physics_suite, case_name,
   month = 1
   day = 19
   hour = 3
+
+  physics_suite_dir = '../src/ccpp/tests/'
+
+  last_physics_specified = -1
 
   !> Parse the command line arguments.
   opt_namelist_vals = ''
@@ -111,28 +121,86 @@ subroutine get_config_nml(experiment_name, model_name, physics_suite, case_name,
         Error code = ',ioerror(2)
     else
       read(1, NML=case_config, iostat=ioerror(3))
-    endif
-    close(1)
+    end if
 
     if(ioerror(3) /= 0) then
-      write(*,*) 'There was an error reading the file '//'../case_config/'//trim(experiment_name)//'.nml'//'&
+      write(*,*) 'There was an error reading the namelist case_config in the file '&
+        //'../case_config/'//trim(experiment_name)//'.nml'//'&
         Error code = ',ioerror(3)
     end if
 
-    if(ioerror(2) /= 0 .or. ioerror(3) /=0) then
+    !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
+    !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
+    !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
+    allocate(physics_suite(n_columns), n_phy_fields(n_columns))
+
+    do i=1, n_columns
+      physics_suite(i) = 'none'
+      n_phy_fields(i) = -999
+    end do
+
+    if(ioerror(2) == 0) then
+      read(1, NML=physics_config, iostat=ioerror(4))
+    end if
+    close(1)
+
+    if(ioerror(4) /= 0) then
+      write(*,*) 'There was an error reading the namelist physics_config in the file '&
+        //'../case_config/'//trim(experiment_name)//'.nml'//'&
+        Error code = ',ioerror(4)
+      write(*,*) 'Check to make sure that the number of specified physics suites and n_phy_fields are not greater than n_columns '&
+        //'in the case_config namelist. Stopping...'
+      STOP
+    else
+      !check to see if the number of physics_suite_names matches n_cols; if physics_suite_names is less than n_cols, assume that there are multiple columns using the same physics
+      do i=1, n_columns
+        if (physics_suite(i) == 'none') then
+          if(i == 1 ) then
+            write(*,*) 'No physics suites were specified in ../case_config/'//trim(experiment_name)//'.nml. Please edit this file '&
+              //'and start again.'
+            STOP
+          else
+            if(last_physics_specified < 0) last_physics_specified = i-1
+            !only ask for response the first time an unspecified physics suite is found for a column
+            if(last_physics_specified == i-1) then
+              write(*,*) 'Too few physics suites were specified for the number of columns in '&
+                //'../case_config/'//trim(experiment_name)//'.nml. All columns with unspecified physics are set to the last '&
+                //'specified suite. Is this the desired behavior (y/n)?'
+              read(*,*) response
+            end if
+            if (response == 'y' .or. response == 'Y') then
+              physics_suite(i) = physics_suite(last_physics_specified)
+              n_phy_fields(i) = n_phy_fields(last_physics_specified)
+            else
+              write(*,*) 'Please edit ../case_config/'//trim(experiment_name)//'.nml to contain the same number of physics suites '&
+                //'as columns and start again. Stopping...'
+              STOP
+            end if
+          end if !check on i
+        else
+          !check to see if n_phy_fields was initialized for this suites
+          if (n_phy_fields(i) < 0) then
+            write(*,*) 'The variable n_phy_fields was not initialized for the physics suite '//trim(physics_suite(i))//'. Please '&
+              //'edit ../case_config/'//trim(experiment_name)//'.nml to contain values of this variable for each suite.'
+          end if
+        end if !check on physics_suite
+      end do
+    end if
+
+    if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /=0) then
       write(*,*) 'Since there was an error reading in the ../case_config/'//trim(experiment_name)//'.nml'//' file, the default&
          values of the namelist variables will be used, modified by any values contained on the command line.'
     end if
 
     !> "Read" in internal namelist variables from command line.
     write(*,*) 'Loading optional namelist variables from command line...'
-    read(opt_namelist_vals, NML=case_config, IOSTAT=ioerror(4))
+    read(opt_namelist_vals, NML=case_config, IOSTAT=ioerror(5))
 
     !> Check for namelist reading errors. If errors are found, output the namelist variables that were loaded to console and ask user for input on whether to proceed.
-    if(ioerror(4) /= 0) then
-      write(*,*) 'There was an error reading the optional namelist variables from the command line: error code ',ioerror(4)
+    if(ioerror(5) /= 0) then
+      write(*,*) 'There was an error reading the optional namelist variables from the command line: error code ',ioerror(5)
     end if
-    if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /= 0) then
+    if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /= 0 .or. ioerror(5) /= 0) then
       write(*,*) 'Since there was an error either reading the namelist file or an error reading namelist variables from the &
         command line, the namelist variables that are available to use are some combination of the default values and the values &
         that were able to be read. Please look over the namelist variables below to make sure they are set as intended.'

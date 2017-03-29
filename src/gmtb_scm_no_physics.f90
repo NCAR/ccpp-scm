@@ -14,7 +14,7 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_output
 
   use, intrinsic :: iso_c_binding,               &
-                    only: c_loc, c_f_pointer
+                    only: c_loc!, c_f_pointer
   ! use            :: kinds,                       &
   !                   only: i_sp, r_dp
   use            :: types,                       &
@@ -29,23 +29,25 @@ subroutine gmtb_scm_main_sub()
 
   character(len=80)                 :: experiment_name !> name of model configuration file
   character(len=80)                 :: model_name !< name of "host" model (must be "GFS" for prototype)
-  character(len=80)                 :: physics_suite !< name of physics suite (must be "GFS_operational" for prototype)
+  character(len=80), allocatable    :: physics_suite_name(:) !< name of physics suite (must be "GFS_operational" for prototype)
   character(len=80)                 :: output_dir !< name of output directory to place netCDF file
+  character(len=80)                 :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
   character(len=80)                 :: output_file !< name of output file (without the file extension)
   character(len=80)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
+  character(len=5)                  :: i_string
 
   integer                           :: i, k, ioerror, allocate_status, grid_error !< dummy indices and error statuses
   integer                           :: n_levels !< number of model levels (must be 64 for prototype)
   integer                           :: itt !< current model iteration
   integer                           :: itt_out  !< output iteration counter
   integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
+  integer                           :: n_cols !< number of columns
   integer                           :: n_timesteps !< number of timesteps needed to integrate over runtime
   integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme (2 for leapfrog)
   integer                           :: n_itt_swrad !< number of iterations between calls to SW rad
   integer                           :: n_itt_lwrad !< number of iterations between calls to LW rad
   integer                           :: n_itt_out !< number of iterations between calls to write the output
   integer, parameter                :: n_levels_smooth = 5 !< the number of levels over which the input profiles are smoothed into the reference profiles
-  integer, parameter                :: n_cols = 1 !< number of columns
   integer, parameter                :: n_tracers = 3 !< number of tracers
   integer, parameter                :: ozone_index = 2 !< index for ozone in the tracer array
   integer, parameter                :: cloud_water_index = 3 !< index for cloud water in the tracer array
@@ -125,7 +127,7 @@ subroutine gmtb_scm_main_sub()
   real(kind=dp), allocatable, target              :: state_u(:,:,:), state_v(:,:,:) !< model state horizontal winds at grid centers (m/s)
   real(kind=dp), allocatable, target              :: state_tracer(:,:,:,:) !< model state tracer at grid centers
   real(kind=dp), allocatable              :: temp_T(:,:,:), temp_u(:,:,:), temp_v(:,:,:), temp_tracer(:,:,:,:) !< used for time-filtering
-  real(kind=dp), dimension(n_cols)        :: lat, lon !< latitude and longitude (radians)
+  real(kind=dp), allocatable              :: lat(:), lon(:) !< latitude and longitude (radians)
 
   !> - Define forcing-related variables (indexing is (horizontal, vertical)).
   real(kind=dp), allocatable              :: u_force_tend(:,:), v_force_tend(:,:), T_force_tend(:,:), qv_force_tend(:,:) !< total u, v, T, q forcing (units/s) (horizontal, vertical)
@@ -136,21 +138,22 @@ subroutine gmtb_scm_main_sub()
 
   real(kind=dp), allocatable              :: a_k(:), b_k(:) !< used to determine grid sigma and pressure levels
 
-  type(aip_t), target                                    :: ap_data(n_cols)
-  type(suite_t)                                          :: suite(n_cols)
-  character(len=STR_LEN)                                 :: suite_file(n_cols)
+  type(aip_t), allocatable, target                       :: ap_data(:)
+  type(suite_t), allocatable                             :: suite(:)
   integer                                                :: ipd_loop
 
-  integer                                                :: n_phy_fields
+  real, target  :: gravity
+
+  integer, allocatable                                   :: n_phy_fields(:)
   integer                                                :: ap_data_time_index
 
   use_IPD = .true.
-  suite_file(1) = "../src/ccpp/tests/suite_DUMMY_scm.xml"
-  n_phy_fields = 4
 
-  call get_config_nml(experiment_name, model_name, physics_suite, case_name, dt, time_scheme, runtime, output_frequency, &
+
+  call get_config_nml(experiment_name, model_name, n_cols, case_name, dt, time_scheme, runtime, output_frequency, &
     swrad_frequency, lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, &
-    sfc_flux_spec, reference_profile_choice, init_year, init_month, init_day, init_hour)
+    sfc_flux_spec, reference_profile_choice, init_year, init_month, init_day, init_hour, physics_suite_name, physics_suite_dir, &
+    n_phy_fields)
 
   call get_case_init(case_name, sfc_flux_spec, input_nlev, input_ntimes, input_pres, input_time, input_height, input_thetail, &
     input_qt, input_ql, input_qi, input_u, input_v, input_tke, input_ozone, input_lat, input_lon, input_pres_surf, input_T_surf, &
@@ -186,6 +189,10 @@ subroutine gmtb_scm_main_sub()
     case default
       n_time_levels = 2
   end select
+
+  allocate(lat(n_cols), lon(n_cols))
+
+  allocate(ap_data(n_cols), suite(n_cols))
 
   allocate(state_T(n_cols, n_levels, n_time_levels), &
     state_u(n_cols, n_levels, n_time_levels), state_v(n_cols, n_levels, n_time_levels), &
@@ -246,20 +253,39 @@ subroutine gmtb_scm_main_sub()
   end select
 
   do i = 1, n_cols
-    call phy_field_init(ap_data(i), n_phy_fields)
+    !set up each column's physics suite (which may be different)
 
-    call phy_field_add(ap_data(i), 'temperature', 'K', c_loc(state_T(i,:,ap_data_time_index)), &
-      rank(state_T(i,:,ap_data_time_index)), shape(state_T(i,:,ap_data_time_index)))
-    call phy_field_add(ap_data(i), 'eastward_wind', 'm s-1', c_loc(state_u(i,:,ap_data_time_index)), &
-      rank(state_u(i,:,ap_data_time_index)), shape(state_u(i,:,ap_data_time_index)))
-    call phy_field_add(ap_data(i), 'northward_wind', 'm s-1', c_loc(state_v(i,:,ap_data_time_index)), &
-      rank(state_v(i,:,ap_data_time_index)), shape(state_v(i,:,ap_data_time_index)))
-    call phy_field_add(ap_data(i), 'water_vapor_specific_humidity', 'kg kg-1', c_loc(state_tracer(i,:,1,ap_data_time_index)), &
-      rank(state_tracer(i,:,1,ap_data_time_index)), shape(state_tracer(i,:,1,ap_data_time_index)))
+    call phy_field_init(ap_data(i), n_phy_fields(i))
+
+    select case(physics_suite_name(i))
+      case ('suite_DUMMY_scm')
+        call phy_field_add(ap_data(i), 'temperature', 'K', c_loc(state_T(i,:,ap_data_time_index)), &
+          rank(state_T(i,:,ap_data_time_index)), shape(state_T(i,:,ap_data_time_index)))
+        call phy_field_add(ap_data(i), 'eastward_wind', 'm s-1', c_loc(state_u(i,:,ap_data_time_index)), &
+          rank(state_u(i,:,ap_data_time_index)), shape(state_u(i,:,ap_data_time_index)))
+        call phy_field_add(ap_data(i), 'northward_wind', 'm s-1', c_loc(state_v(i,:,ap_data_time_index)), &
+          rank(state_v(i,:,ap_data_time_index)), shape(state_v(i,:,ap_data_time_index)))
+        call phy_field_add(ap_data(i), 'water_vapor_specific_humidity', 'kg kg-1', c_loc(state_tracer(i,:,1,ap_data_time_index)), &
+          rank(state_tracer(i,:,1,ap_data_time_index)), shape(state_tracer(i,:,1,ap_data_time_index)))
+      case ('suite_DUMMY_scm2')
+        call phy_field_add(ap_data(i), 'temperature', 'K', c_loc(state_T(i,:,ap_data_time_index)), &
+          rank(state_T(i,:,ap_data_time_index)), shape(state_T(i,:,ap_data_time_index)))
+        call phy_field_add(ap_data(i), 'eastward_wind', 'm s-1', c_loc(state_u(i,:,ap_data_time_index)), &
+          rank(state_u(i,:,ap_data_time_index)), shape(state_u(i,:,ap_data_time_index)))
+        call phy_field_add(ap_data(i), 'northward_wind', 'm s-1', c_loc(state_v(i,:,ap_data_time_index)), &
+          rank(state_v(i,:,ap_data_time_index)), shape(state_v(i,:,ap_data_time_index)))
+        call phy_field_add(ap_data(i), 'water_vapor_specific_humidity', 'kg kg-1', c_loc(state_tracer(i,:,1,ap_data_time_index)), &
+          rank(state_tracer(i,:,1,ap_data_time_index)), shape(state_tracer(i,:,1,ap_data_time_index)))
+      case default
+        write(i_string,'(I5)') i
+        write(*,*) 'The physics suite '//trim(physics_suite_name(i))//' specified for column #'//i_string&
+          //' is not set up yet to be used in this model. Stopping...'
+        STOP
+    end select
 
     call phy_field_sort(ap_data(i))
 
-    call ipd_init(suite_file(i), ap_data(i)%suite)
+    call ipd_init(trim(adjustl(physics_suite_dir))//trim(adjustl(physics_suite_name(i)))//'.xml', ap_data(i)%suite)
   end do
 
   !first time step (call once)

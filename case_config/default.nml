@@ -1,6 +1,6 @@
-&case_config
+$case_config
 model_name = 'GFS',
-physics_suite = 'GFS_operational',
+n_columns = 1,
 case_name = 'astex',
 dt = 600.0,
 time_scheme = 2,
@@ -20,4 +20,10 @@ year = 1992,
 month = 6,
 day = 13,
 hour = 0,
-/
+$end
+
+$physics_config
+physics_suite = 'suite_DUMMY_scm',
+physics_suite_dir = '../src/ccpp/tests/',
+n_phy_fields = 4,
+$end

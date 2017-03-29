@@ -1,6 +1,6 @@
-&case_config
+$case_config
 model_name = 'GFS',
-physics_suite = 'GFS_operational',
+n_columns = 2,
 case_name = 'arm_sgp_summer_1997',
 dt = 600.0,
 time_scheme = 2,
@@ -19,5 +19,11 @@ reference_profile_choice = 2,
 year = 1997,
 month = 6,
 day = 18,
-hour = 23,
-/
+hour = 23
+$end
+
+$physics_config
+physics_suite = 'suite_DUMMY_scm','suite_DUMMY_scm2'
+physics_suite_dir = '../src/ccpp/tests/',
+n_phy_fields = 4,4
+$end

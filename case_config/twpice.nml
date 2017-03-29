@@ -1,6 +1,6 @@
-&case_config
+$case_config
 model_name = 'GFS',
-physics_suite = 'GFS_operational',
+n_columns = 1,
 case_name = 'twpice',
 dt = 600.0,
 time_scheme = 1,
@@ -20,4 +20,10 @@ year = 2006,
 month = 1,
 day = 19,
 hour = 3,
-/
+$end
+
+$physics_config
+physics_suite = 'suite_DUMMY_scm',
+physics_suite_dir = '../src/ccpp/tests/',
+n_phy_fields = 4,
+$end
