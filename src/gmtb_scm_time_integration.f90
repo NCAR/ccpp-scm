@@ -7,8 +7,8 @@ use gmtb_scm_kinds, only: sp, dp, qp
 !use nuopc_physics
 use gmtb_scm_forcing
 
-use            :: types, only: aip_t
-use            :: ipd, only: ipd_run
+use            :: ccpp_types, only: ccpp_t
+use            :: ccpp_ipd, only: ccpp_ipd_run
 
 implicit none
 
@@ -55,7 +55,7 @@ end subroutine
 !   thil_nudge, qt_nudge, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, u_force_tend, v_force_tend, T_force_tend, &
 !   qv_force_tend, exner_l, phii, pres_l, lat, dt, lsswr, lslwr, thermo_forcing_type, mom_forcing_type, relax_time)
 subroutine do_time_step(n_levels, n_columns, time_scheme, &
-  state_tracer, state_T, state_u, state_v, ap_data, w_ls, omega, u_g, v_g, u_nudge, v_nudge, T_nudge,&
+  state_tracer, state_T, state_u, state_v, cdata, w_ls, omega, u_g, v_g, u_nudge, v_nudge, T_nudge,&
   thil_nudge, qt_nudge, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, u_force_tend, v_force_tend, T_force_tend, &
   qv_force_tend, exner_l, phii, pres_l, lat, dt, thermo_forcing_type, mom_forcing_type, relax_time)
 
@@ -77,7 +77,7 @@ subroutine do_time_step(n_levels, n_columns, time_scheme, &
   real(kind=dp), intent(inout)                 :: state_T(:,:,:) !< model state temperature
   real(kind=dp), intent(inout)                 :: state_u(:,:,:) !< model state zonal wind
   real(kind=dp), intent(inout)                 :: state_v(:,:,:) !< model state meridional wind
-  type(aip_t), intent(inout)                   :: ap_data(:)
+  type(ccpp_t), intent(inout)                  :: cdata(:)
   real(kind=dp), intent(in)                    :: w_ls(:,:) !< large scale w (m/s) (horizontal, vertical)
   real(kind=dp), intent(in)                    :: omega(:,:) !< large scale pressure velocity (Pa/s) (horizontal, vertical)
   real(kind=dp), intent(in)                    :: u_g(:,:) !< geostrophic zonal wind (m/s) (horizontal, vertical)
@@ -143,7 +143,7 @@ subroutine do_time_step(n_levels, n_columns, time_scheme, &
   end select
 
   if (time_scheme == 2) then
-    !IPD ap_data points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
+    !IPD cdata points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
     state_T(:,:,2) = state_T(:,:,1)
     state_tracer(:,:,:,2) = state_tracer(:,:,:,1)
     state_u(:,:,2) = state_u(:,:,1)
@@ -151,9 +151,9 @@ subroutine do_time_step(n_levels, n_columns, time_scheme, &
   end if
 
   do i=1, n_columns
-    do ipd_loop = 1 , ap_data(i)%suite%ipds_max
-        ap_data(i)%suite%ipd_n = ipd_loop
-        call ipd_run(ap_data(i))
+    do ipd_loop = 1 , cdata(i)%suite%ipds_max
+        cdata(i)%suite%ipd_n = ipd_loop
+        call ccpp_ipd_run(cdata(i))
     end do
   end do
 

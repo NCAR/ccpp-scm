@@ -13,17 +13,14 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_time_integration
   use gmtb_scm_output
 
-  use, intrinsic :: iso_c_binding,               &
-                    only: c_loc!, c_f_pointer
-  ! use            :: kinds,                       &
-  !                   only: i_sp, r_dp
-  use            :: types,                       &
-                    only: STR_LEN, aip_t, suite_t
-  use            :: ipd,                         &
-                    only: ipd_init, ipd_run
-  use            :: phy_fields,                          &
-                    only: phy_field_init, phy_field_add, &
-                          phy_field_sort
+  use            :: ccpp_types,                         &
+                    only: STR_LEN, ccpp_t, ccpp_suite_t
+  use            :: ccpp,                               &
+                    only: ccpp_init
+  use            :: ccpp_ipd,                           &
+                    only: ccpp_ipd_run
+  use            :: ccpp_fields,                        &
+                    only: ccpp_fields_add
 
   implicit none
 
@@ -138,14 +135,15 @@ subroutine gmtb_scm_main_sub()
 
   real(kind=dp), allocatable              :: a_k(:), b_k(:) !< used to determine grid sigma and pressure levels
 
-  type(aip_t), allocatable, target                       :: ap_data(:)
-  type(suite_t), allocatable                             :: suite(:)
+  type(ccpp_t), allocatable, target                      :: cdata(:)
+  type(ccpp_suite_t), allocatable                        :: suite(:)
   integer                                                :: ipd_loop
 
   real, target  :: gravity
 
   integer, allocatable                                   :: n_phy_fields(:)
-  integer                                                :: ap_data_time_index
+  integer                                                :: cdata_time_index
+  integer                                                :: ierr !< Integer error flag
 
   use_IPD = .true.
 
@@ -192,7 +190,7 @@ subroutine gmtb_scm_main_sub()
 
   allocate(lat(n_cols), lon(n_cols))
 
-  allocate(ap_data(n_cols), suite(n_cols))
+  allocate(cdata(n_cols), suite(n_cols))
 
   allocate(state_T(n_cols, n_levels, n_time_levels), &
     state_u(n_cols, n_levels, n_time_levels), state_v(n_cols, n_levels, n_time_levels), &
@@ -242,50 +240,52 @@ subroutine gmtb_scm_main_sub()
 
   !physics initialization section
 
-  !set the array index of the time level of the state variables that the ap_data points to (this is the time level that will be updated during ipd_run; if suite returns tendencies, SCM must apply them to this time level)
+  !set the array index of the time level of the state variables that the cdata
+  !points to (this is the time level that will be updated during ipd_run;
+  !if suite returns tendencies, SCM must apply them to this time level)
   select case(time_scheme)
     case(1)
-      ap_data_time_index = 1
+      cdata_time_index = 1
     case(2)
-      ap_data_time_index = 2
+      cdata_time_index = 2
     case default
-      ap_data_time_index = 2
+      cdata_time_index = 2
   end select
 
   do i = 1, n_cols
     !set up each column's physics suite (which may be different)
 
-    call phy_field_init(ap_data(i), n_phy_fields(i))
+    call ccpp_init( &
+         trim(adjustl(physics_suite_dir))//trim(adjustl(physics_suite_name(i)))//'.xml', &
+         cdata(i), ierr)
 
     select case(physics_suite_name(i))
       case ('suite_DUMMY_scm')
-        call phy_field_add(ap_data(i), 'temperature', 'K', c_loc(state_T(i,:,ap_data_time_index)), &
-          rank(state_T(i,:,ap_data_time_index)), shape(state_T(i,:,ap_data_time_index)))
-        call phy_field_add(ap_data(i), 'eastward_wind', 'm s-1', c_loc(state_u(i,:,ap_data_time_index)), &
-          rank(state_u(i,:,ap_data_time_index)), shape(state_u(i,:,ap_data_time_index)))
-        call phy_field_add(ap_data(i), 'northward_wind', 'm s-1', c_loc(state_v(i,:,ap_data_time_index)), &
-          rank(state_v(i,:,ap_data_time_index)), shape(state_v(i,:,ap_data_time_index)))
-        call phy_field_add(ap_data(i), 'water_vapor_specific_humidity', 'kg kg-1', c_loc(state_tracer(i,:,1,ap_data_time_index)), &
-          rank(state_tracer(i,:,1,ap_data_time_index)), shape(state_tracer(i,:,1,ap_data_time_index)))
+        call ccpp_fields_add(cdata(i), 'temperature', 'K', &
+                             state_T(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'eastward_wind', 'm s-1', &
+                             state_u(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'northward_wind', 'm s-1', &
+                             state_v(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'water_vapor_specific_humidity', &
+                             'kg kg-1', state_tracer(i,:,1,cdata_time_index), &
+                             ierr)
       case ('suite_DUMMY_scm2')
-        call phy_field_add(ap_data(i), 'temperature', 'K', c_loc(state_T(i,:,ap_data_time_index)), &
-          rank(state_T(i,:,ap_data_time_index)), shape(state_T(i,:,ap_data_time_index)))
-        call phy_field_add(ap_data(i), 'eastward_wind', 'm s-1', c_loc(state_u(i,:,ap_data_time_index)), &
-          rank(state_u(i,:,ap_data_time_index)), shape(state_u(i,:,ap_data_time_index)))
-        call phy_field_add(ap_data(i), 'northward_wind', 'm s-1', c_loc(state_v(i,:,ap_data_time_index)), &
-          rank(state_v(i,:,ap_data_time_index)), shape(state_v(i,:,ap_data_time_index)))
-        call phy_field_add(ap_data(i), 'water_vapor_specific_humidity', 'kg kg-1', c_loc(state_tracer(i,:,1,ap_data_time_index)), &
-          rank(state_tracer(i,:,1,ap_data_time_index)), shape(state_tracer(i,:,1,ap_data_time_index)))
+        call ccpp_fields_add(cdata(i), 'temperature', 'K', &
+                             state_T(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'eastward_wind', 'm s-1', &
+                             state_u(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'northward_wind', 'm s-1', &
+                             state_v(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'water_vapor_specific_humidity', &
+                             'kg kg-1', state_tracer(i,:,1,cdata_time_index), &
+                             ierr)
       case default
         write(i_string,'(I5)') i
         write(*,*) 'The physics suite '//trim(physics_suite_name(i))//' specified for column #'//i_string&
           //' is not set up yet to be used in this model. Stopping...'
         STOP
     end select
-
-    call phy_field_sort(ap_data(i))
-
-    call ipd_init(trim(adjustl(physics_suite_dir))//trim(adjustl(physics_suite_name(i)))//'.xml', ap_data(i)%suite)
   end do
 
   !first time step (call once)
@@ -305,7 +305,7 @@ subroutine gmtb_scm_main_sub()
       pres_l, si, sl, exner_l, exner_i, geopotential_l, geopotential_i)
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(n_levels, n_cols, time_scheme, state_tracer, state_T, state_u, state_v, ap_data, w_ls, omega, u_g, v_g, &
+    call do_time_step(n_levels, n_cols, time_scheme, state_tracer, state_T, state_u, state_v, cdata, w_ls, omega, u_g, v_g, &
       u_nudge, v_nudge, T_nudge, thil_nudge, qt_nudge, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, u_force_tend,&
       v_force_tend, T_force_tend, qv_force_tend, exner_l, geopotential_i, pres_l, lat, dt_now, thermo_forcing_type, &
       mom_forcing_type, relax_time)
@@ -336,16 +336,16 @@ subroutine gmtb_scm_main_sub()
       geopotential_i, pres_l, lat, dt, thermo_forcing_type, mom_forcing_type, relax_time, u_force_tend, v_force_tend, T_force_tend,&
       qv_force_tend)
 
-    !apply_forcing_forward_Euler updates state variables time level 1, so must copy this data to time_level 2 (where ap_data points)
+    !apply_forcing_forward_Euler updates state variables time level 1, so must copy this data to time_level 2 (where cdata points)
     state_T(:,:,2) = state_T(:,:,1)
     state_tracer(:,:,:,2) = state_tracer(:,:,:,1)
     state_u(:,:,2) = state_u(:,:,1)
     state_v(:,:,2) = state_v(:,:,1)
 
     do i=1, n_cols
-      do ipd_loop = 1 , ap_data(i)%suite%ipds_max
-          ap_data(i)%suite%ipd_n = ipd_loop
-          call ipd_run(ap_data(i))
+      do ipd_loop = 1 , cdata(i)%suite%ipds_max
+          cdata(i)%suite%ipd_n = ipd_loop
+          call ccpp_ipd_run(cdata(i))
       end do
     end do
 
@@ -374,7 +374,7 @@ subroutine gmtb_scm_main_sub()
     state_tracer(:,:,:,1) = temp_tracer(:,:,:,1)
 
     !go forward one leapfrog time step
-    call do_time_step(n_levels, n_cols, time_scheme, state_tracer, state_T, state_u, state_v, ap_data, w_ls, omega, u_g, v_g, &
+    call do_time_step(n_levels, n_cols, time_scheme, state_tracer, state_T, state_u, state_v, cdata, w_ls, omega, u_g, v_g, &
       u_nudge, v_nudge, T_nudge, thil_nudge, qt_nudge, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, u_force_tend,&
       v_force_tend, T_force_tend, qv_force_tend, exner_l, geopotential_i, pres_l, lat, dt_now, thermo_forcing_type, &
       mom_forcing_type, relax_time)
@@ -418,7 +418,7 @@ subroutine gmtb_scm_main_sub()
       pres_l, si, sl, exner_l, exner_i, geopotential_l, geopotential_i)
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(n_levels, n_cols, time_scheme, state_tracer, state_T, state_u, state_v, ap_data, w_ls, omega, u_g, v_g, &
+    call do_time_step(n_levels, n_cols, time_scheme, state_tracer, state_T, state_u, state_v, cdata, w_ls, omega, u_g, v_g, &
       u_nudge, v_nudge, T_nudge, thil_nudge, qt_nudge, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, u_force_tend,&
       v_force_tend, T_force_tend, qv_force_tend, exner_l, geopotential_i, pres_l, lat, dt_now, thermo_forcing_type, &
       mom_forcing_type, relax_time)
