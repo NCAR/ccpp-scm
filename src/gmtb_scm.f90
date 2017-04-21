@@ -261,25 +261,25 @@ subroutine gmtb_scm_main_sub()
 
     select case(physics_suite_name(i))
       case ('suite_DUMMY_scm')
-        call ccpp_fields_add(cdata(i), 'temperature', 'K', &
-                             state_T(i,:,cdata_time_index), ierr)
-        call ccpp_fields_add(cdata(i), 'eastward_wind', 'm s-1', &
-                             state_u(i,:,cdata_time_index), ierr)
-        call ccpp_fields_add(cdata(i), 'northward_wind', 'm s-1', &
-                             state_v(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'temperature', &
+                             state_T(i,:,cdata_time_index), ierr, 'K')
+        call ccpp_fields_add(cdata(i), 'eastward_wind', &
+                             state_u(i,:,cdata_time_index), ierr, 'm s-1')
+        call ccpp_fields_add(cdata(i), 'northward_wind', &
+                             state_v(i,:,cdata_time_index), ierr, 'm s-1')
         call ccpp_fields_add(cdata(i), 'water_vapor_specific_humidity', &
-                             'kg kg-1', state_tracer(i,:,1,cdata_time_index), &
-                             ierr)
+                             state_tracer(i,:,1,cdata_time_index), &
+                             ierr, 'k kg-1')
       case ('suite_DUMMY_scm2')
-        call ccpp_fields_add(cdata(i), 'temperature', 'K', &
-                             state_T(i,:,cdata_time_index), ierr)
-        call ccpp_fields_add(cdata(i), 'eastward_wind', 'm s-1', &
-                             state_u(i,:,cdata_time_index), ierr)
-        call ccpp_fields_add(cdata(i), 'northward_wind', 'm s-1', &
-                             state_v(i,:,cdata_time_index), ierr)
+        call ccpp_fields_add(cdata(i), 'temperature', &
+                             state_T(i,:,cdata_time_index), ierr, 'K')
+        call ccpp_fields_add(cdata(i), 'eastward_wind', &
+                             state_u(i,:,cdata_time_index), ierr, 'm s-1')
+        call ccpp_fields_add(cdata(i), 'northward_wind', &
+                             state_v(i,:,cdata_time_index), ierr, 'm s-1')
         call ccpp_fields_add(cdata(i), 'water_vapor_specific_humidity', &
-                             'kg kg-1', state_tracer(i,:,1,cdata_time_index), &
-                             ierr)
+                             state_tracer(i,:,1,cdata_time_index), &
+                             ierr, 'k kg-1')
       case default
         write(i_string,'(I5)') i
         write(*,*) 'The physics suite '//trim(physics_suite_name(i))//' specified for column #'//i_string&
