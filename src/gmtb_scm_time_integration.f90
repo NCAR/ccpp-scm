@@ -108,7 +108,7 @@ subroutine do_time_step(n_levels, n_columns, time_scheme, &
   real(kind=dp), intent(out)                   :: T_force_tend(:,:) !< sum of all forcing for temperature (horizontal, vertical)
   real(kind=dp), intent(out)                   :: qv_force_tend(:,:) !< sum of all forcing for water vapor (horizontal, vertical)
 
-  integer :: i, ipd_loop
+  integer :: i, ipd_index, subcycle_index, scheme_index, ierr
 
   !> \section do_time_step_alg Algorithm
   !! @{
@@ -151,11 +151,14 @@ subroutine do_time_step(n_levels, n_columns, time_scheme, &
   end if
 
   do i=1, n_columns
-    do ipd_loop = 1 , cdata(i)%suite%ipds_max
-        cdata(i)%suite%ipd_n = ipd_loop
-        call ccpp_ipd_run(cdata(i))
-    end do
-  end do
+    do ipd_index = 1 , cdata(i)%suite%ipds_max
+      do subcycle_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles_max
+        do scheme_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes_max
+          call ccpp_ipd_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
+        end do !ipd parts
+      end do !subcycles
+    end do !schemes
+  end do !columns
 
 
   !> - Call nuopc_phys_run to complete the forward time step. The unfiltered, updated state variables are in the NUOPC DDT state_fldout, which points to state_var(:,:,2).

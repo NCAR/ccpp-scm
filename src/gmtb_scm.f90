@@ -137,7 +137,7 @@ subroutine gmtb_scm_main_sub()
 
   type(ccpp_t), allocatable, target                      :: cdata(:)
   type(ccpp_suite_t), allocatable                        :: suite(:)
-  integer                                                :: ipd_loop
+  integer                                                :: ipd_index, subcycle_index, scheme_index
 
   real, target  :: gravity
 
@@ -343,11 +343,14 @@ subroutine gmtb_scm_main_sub()
     state_v(:,:,2) = state_v(:,:,1)
 
     do i=1, n_cols
-      do ipd_loop = 1 , cdata(i)%suite%ipds_max
-          cdata(i)%suite%ipd_n = ipd_loop
-          call ccpp_ipd_run(cdata(i))
-      end do
-    end do
+      do ipd_index = 1 , cdata(i)%suite%ipds_max
+        do subcycle_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles_max
+          do scheme_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes_max
+            call ccpp_ipd_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
+          end do !ipd parts
+        end do !subcycles
+      end do !schemes
+    end do !columns
 
     !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
     temp_tracer(:,:,:,2) = state_tracer(:,:,:,2)
