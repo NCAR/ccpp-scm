@@ -1,5 +1,4 @@
-# gmtb-scm
-GMTB Single Column Model
+# User's Guide
 
 ## Obtaining Code
 1. Download a compressed file or clone the source using

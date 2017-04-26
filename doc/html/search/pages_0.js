@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['gmtb_20single_20column_20model',['GMTB Single Column Model',['../index.html',1,'']]]
+  ['user_27s_20guide',['User&apos;s Guide',['../index.html',1,'']]]
 ];
