@@ -14,11 +14,11 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_output
 
   use            :: ccpp_types,                         &
-                    only: STR_LEN, ccpp_t, ccpp_suite_t
+                    only: ccpp_t, ccpp_suite_t
   use            :: ccpp,                               &
                     only: ccpp_init
-  use            :: ccpp_ipd,                           &
-                    only: ccpp_ipd_run
+  use            :: ccpp_fcall,                           &
+                    only: ccpp_run
   use            :: ccpp_fields,                        &
                     only: ccpp_fields_add
 
@@ -346,7 +346,7 @@ subroutine gmtb_scm_main_sub()
       do ipd_index = 1 , cdata(i)%suite%ipds_max
         do subcycle_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles_max
           do scheme_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes_max
-            call ccpp_ipd_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
+            call ccpp_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
           end do !ipd parts
         end do !subcycles
       end do !schemes

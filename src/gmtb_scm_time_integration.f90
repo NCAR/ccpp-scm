@@ -8,7 +8,7 @@ use gmtb_scm_kinds, only: sp, dp, qp
 use gmtb_scm_forcing
 
 use            :: ccpp_types, only: ccpp_t
-use            :: ccpp_ipd, only: ccpp_ipd_run
+use            :: ccpp_fcall, only: ccpp_run
 
 implicit none
 
@@ -154,7 +154,7 @@ subroutine do_time_step(n_levels, n_columns, time_scheme, &
     do ipd_index = 1 , cdata(i)%suite%ipds_max
       do subcycle_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles_max
         do scheme_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes_max
-          call ccpp_ipd_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
+          call ccpp_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
         end do !ipd parts
       end do !subcycles
     end do !schemes
