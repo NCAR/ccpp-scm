@@ -1,3 +1,6 @@
 [submodule "src/ccpp"]
 	path = src/ccpp
-	url = https://github.com/NCAR/gmtb-ccpp
+	url = https://github.com/grantfirl/gmtb-ccpp
+[submodule "src/gfsphysics"]
+        path = src/gfsphysics
+        url = https://github.com/grantfirl/gmtb-gfsphysics
