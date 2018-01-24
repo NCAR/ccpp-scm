@@ -145,8 +145,10 @@ subroutine gmtb_scm_main_sub()
   integer                                                :: cdata_time_index
   integer                                                :: ierr !< Integer error flag
 
-  use_IPD = .true.
+  integer :: ks
+  real(kind=dp) :: p_top
 
+  use_IPD = .true.
 
   call get_config_nml(experiment_name, model_name, n_cols, case_name, dt, time_scheme, runtime, output_frequency, &
     swrad_frequency, lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, &
@@ -161,6 +163,10 @@ subroutine gmtb_scm_main_sub()
 
   call get_reference_profile(ref_nlev, ref_pres, ref_T, ref_qv, ref_ozone, reference_profile_choice)
 
+  allocate(pres_l(n_cols, n_levels), pres_i(n_cols, n_levels+1), exner_l(n_cols, n_levels), &
+    exner_i(n_cols, n_levels+1))
+  allocate(a_k(n_levels+1), b_k(n_levels+1), si(n_cols, n_levels+1), sl(n_cols, n_levels))
+
   select case(trim(adjustl(model_name)))
     case("GFS")
       !>  - Call get_GFS_grid in \ref vgrid to read in the necessary coefficients and calculate the pressure-related variables on the grid.
@@ -174,10 +180,21 @@ subroutine gmtb_scm_main_sub()
         write(*,*) 'The grid coefficient file could not be opened. Exiting...'
         stop
       end if
+    case("FV3")
+      call get_FV3_vgrid(n_levels, n_cols, input_pres_surf(1), ks, a_k, b_k, p_top, pres_i, pres_l, si, sl, exner_l, exner_i)
+      write(*,*) p_top
+      do k = 1, n_levels
+        write(*,*) k, pres_l(1,k), sl(1,k), exner_l(1,k)
+      end do
+      do k = 1, n_levels+1
+        write(*,*) k, pres_i(1,k), si(1,k), exner_i(1,k)
+      end do
     case default
-      write(*,*) 'Only the GFS model is currently supported. Exiting...'
+      write(*,*) 'Only the GFS (GSM) and FV3 vertical coordinates are currently supported. Exiting...'
       stop
   end select
+
+  STOP
 
   select case(time_scheme)
     case(1)

@@ -21,7 +21,7 @@ ADD_SUBDIRECTORY(${CCPP_SRC})
 SET(scm_source_files gmtb_scm.f90
             gmtb_scm_input.f90
             gmtb_scm_utils.f90
-            gmtb_scm_vgrid.f90
+            gmtb_scm_vgrid.F90
             gmtb_scm_setup.f90
             gmtb_scm_forcing.f90
             gmtb_scm_time_integration.f90

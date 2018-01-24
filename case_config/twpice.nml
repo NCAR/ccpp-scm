@@ -1,5 +1,5 @@
 $case_config
-model_name = 'GFS',
+model_name = 'FV3',
 n_columns = 1,
 case_name = 'twpice',
 dt = 600.0,
