@@ -1,0 +1,29 @@
+$case_config
+model_name = 'FV3',
+n_columns = 1,
+case_name = 'twpice',
+dt = 600.0,
+time_scheme = 1,
+runtime = 2138400,
+output_frequency = 600.0,
+swrad_frequency = 1200.0,
+lwrad_frequency = 1200.0,
+n_levels = 64,
+output_dir = '../output_twpice',
+output_file = 'output',
+thermo_forcing_type = 2,
+mom_forcing_type = 3,
+relax_time = 7200.0,
+sfc_flux_spec = .false.,
+reference_profile_choice = 1,
+year = 2006,
+month = 1,
+day = 19,
+hour = 3,
+$end
+
+$physics_config
+physics_suite = 'suite_GFS_operational_2017',
+physics_suite_dir = '../src/ccpp/examples/',
+n_phy_fields = 4,
+$end

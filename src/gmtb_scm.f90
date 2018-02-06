@@ -14,7 +14,7 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_output
 
   use            :: ccpp_types,                         &
-                    only: ccpp_t, ccpp_suite_t
+                    only: ccpp_t
   use            :: ccpp,                               &
                     only: ccpp_init
   use            :: ccpp_fcall,                           &
@@ -49,7 +49,6 @@ subroutine gmtb_scm_main_sub()
   integer, parameter                :: ozone_index = 2 !< index for ozone in the tracer array
   integer, parameter                :: cloud_water_index = 3 !< index for cloud water in the tracer array
 
-  logical                           :: use_IPD !< flag for using the GMTB IPD
   logical                           :: use_leapfrog !< flag for using the leapfrog as the time-integration scheme for the forcing
   logical                           :: use_forward !< flag for using the forward Euler scheme for time-stepping the forcing
   logical                           :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
@@ -136,7 +135,6 @@ subroutine gmtb_scm_main_sub()
   real(kind=dp), allocatable              :: a_k(:), b_k(:) !< used to determine grid sigma and pressure levels
 
   type(ccpp_t), allocatable, target                      :: cdata(:)
-  type(ccpp_suite_t), allocatable                        :: suite(:)
   integer                                                :: ipd_index, subcycle_index, scheme_index
 
   real, target  :: gravity
@@ -147,8 +145,6 @@ subroutine gmtb_scm_main_sub()
 
   integer :: ks
   real(kind=dp) :: p_top
-
-  use_IPD = .true.
 
   call get_config_nml(experiment_name, model_name, n_cols, case_name, dt, time_scheme, runtime, output_frequency, &
     swrad_frequency, lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, &
@@ -181,20 +177,11 @@ subroutine gmtb_scm_main_sub()
         stop
       end if
     case("FV3")
-      call get_FV3_vgrid(n_levels, n_cols, input_pres_surf(1), ks, a_k, b_k, p_top, pres_i, pres_l, si, sl, exner_l, exner_i)
-      write(*,*) p_top
-      do k = 1, n_levels
-        write(*,*) k, pres_l(1,k), sl(1,k), exner_l(1,k)
-      end do
-      do k = 1, n_levels+1
-        write(*,*) k, pres_i(1,k), si(1,k), exner_i(1,k)
-      end do
+      call get_FV3_vgrid(n_levels, n_cols, input_pres_surf(1), a_k, b_k, pres_i, pres_l, si, sl, exner_l, exner_i, ks, p_top)
     case default
       write(*,*) 'Only the GFS (GSM) and FV3 vertical coordinates are currently supported. Exiting...'
       stop
   end select
-
-  STOP
 
   select case(time_scheme)
     case(1)
@@ -207,7 +194,7 @@ subroutine gmtb_scm_main_sub()
 
   allocate(lat(n_cols), lon(n_cols))
 
-  allocate(cdata(n_cols), suite(n_cols))
+  allocate(cdata(n_cols))
 
   allocate(state_T(n_cols, n_levels, n_time_levels), &
     state_u(n_cols, n_levels, n_time_levels), state_v(n_cols, n_levels, n_time_levels), &
@@ -275,6 +262,8 @@ subroutine gmtb_scm_main_sub()
     call ccpp_init( &
          trim(adjustl(physics_suite_dir))//trim(adjustl(physics_suite_name(i)))//'.xml', &
          cdata(i), ierr)
+
+    STOP
 
     select case(physics_suite_name(i))
       case ('suite_DUMMY_scm')

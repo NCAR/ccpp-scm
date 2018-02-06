@@ -115,11 +115,10 @@ subroutine get_GFS_vgrid(pres_sfc, n_levels, n_columns, pres_i, pres_l, sigi, si
 end subroutine get_GFS_vgrid
 
 !most of this was obtained from FV3/atmos_cubed_sphere/tools/fv_eta.F90 from FV3 v0 release
-subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ks, ak, bk, ptop, pres_i, pres_l, sigi, sigl, exner_l, exner_i)
+subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, sigl, exner_l, exner_i, ks, ptop)
       integer,  intent(in)::  km           ! vertical dimension
       integer,  intent(in) :: n_columns !< number of columns
       real(kind=dp), intent(in) :: pres_sfc !< surface pressure (Pa)
-      integer,  intent(out):: ks           ! number of pure p layers
       real(kind=dp), intent(inout):: ak(km+1)
       real(kind=dp), intent(inout):: bk(km+1)
       real(kind=dp), intent(inout) :: pres_l(n_columns,km)  !< pressure at model level centers
@@ -128,6 +127,7 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ks, ak, bk, ptop, pres_i, pres
       real(kind=dp), intent(inout) :: sigl(n_columns,km) !< sigma at model layers
       real(kind=dp), intent(inout) :: exner_l(n_columns,km) !< exner function at model level centers
       real(kind=dp), intent(inout) :: exner_i(n_columns,km+1) !< exner function at model interfaces
+      integer,  intent(out):: ks           ! number of pure p layers
       real(kind=dp), intent(out):: ptop         ! model top (Pa)
 
 
