@@ -23,7 +23,7 @@ hour = 3,
 $end
 
 $physics_config
-physics_suite = 'suite_GFS_operational_2017',
+physics_suite = 'suite_gfsphysics',
 physics_suite_dir = '../src/ccpp/examples/',
 n_phy_fields = 4,
 $end

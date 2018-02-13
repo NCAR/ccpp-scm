@@ -5,6 +5,7 @@ contains
 subroutine gmtb_scm_main_sub()
 
   use gmtb_scm_kinds, only: sp, dp, qp
+  use gmtb_scm_type_defs, only: scm_state_type
   use gmtb_scm_input
   use gmtb_scm_utils
   use gmtb_scm_vgrid
@@ -24,14 +25,9 @@ subroutine gmtb_scm_main_sub()
 
   implicit none
 
-  character(len=80)                 :: experiment_name !> name of model configuration file
-  character(len=80)                 :: model_name !< name of "host" model (must be "GFS" for prototype)
+  type(scm_state_type), target :: scm_state
   character(len=80), allocatable    :: physics_suite_name(:) !< name of physics suite (must be "GFS_operational" for prototype)
-  character(len=80)                 :: output_dir !< name of output directory to place netCDF file
-  character(len=80)                 :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
-  character(len=80)                 :: output_file !< name of output file (without the file extension)
-  character(len=80)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
-  character(len=5)                  :: i_string
+  character(len=5) :: i_string
 
   integer                           :: i, k, ioerror, allocate_status, grid_error !< dummy indices and error statuses
   integer                           :: n_levels !< number of model levels (must be 64 for prototype)
@@ -146,12 +142,15 @@ subroutine gmtb_scm_main_sub()
   integer :: ks
   real(kind=dp) :: p_top
 
-  call get_config_nml(experiment_name, model_name, n_cols, case_name, dt, time_scheme, runtime, output_frequency, &
-    swrad_frequency, lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, &
-    sfc_flux_spec, reference_profile_choice, init_year, init_month, init_day, init_hour, physics_suite_name, physics_suite_dir, &
-    n_phy_fields)
+  call scm_state%create()
 
-  call get_case_init(case_name, sfc_flux_spec, input_nlev, input_ntimes, input_pres, input_time, input_height, input_thetail, &
+  call get_config_nml(scm_state%experiment_name, scm_state%model_name, n_cols, scm_state%case_name, dt, time_scheme, runtime, &
+    output_frequency, swrad_frequency, lwrad_frequency, n_levels, scm_state%output_dir, scm_state%output_file, thermo_forcing_type,&
+    mom_forcing_type, relax_time, sfc_flux_spec, reference_profile_choice, init_year, init_month, init_day, init_hour, &
+    physics_suite_name, scm_state%physics_suite_dir, n_phy_fields)
+
+  call get_case_init(scm_state%case_name, sfc_flux_spec, input_nlev, input_ntimes, input_pres, input_time, input_height, &
+    input_thetail, &
     input_qt, input_ql, input_qi, input_u, input_v, input_tke, input_ozone, input_lat, input_lon, input_pres_surf, input_T_surf, &
     input_sh_flux_sfc, input_lh_flux_sfc, input_w_ls, input_omega, input_u_g, input_v_g, input_u_nudge, input_v_nudge, &
     input_T_nudge, input_thil_nudge, input_qt_nudge, input_dT_dt_rad, input_h_advec_thetail, input_h_advec_qt, &
@@ -163,7 +162,7 @@ subroutine gmtb_scm_main_sub()
     exner_i(n_cols, n_levels+1))
   allocate(a_k(n_levels+1), b_k(n_levels+1), si(n_cols, n_levels+1), sl(n_cols, n_levels))
 
-  select case(trim(adjustl(model_name)))
+  select case(trim(adjustl(scm_state%model_name)))
     case("GFS")
       !>  - Call get_GFS_grid in \ref vgrid to read in the necessary coefficients and calculate the pressure-related variables on the grid.
       call get_GFS_vgrid(input_pres_surf(1), n_levels, n_cols, pres_i, pres_l, si, sl, exner_l, exner_i, a_k, b_k, grid_error)
@@ -234,11 +233,12 @@ subroutine gmtb_scm_main_sub()
     thil_nudge, qt_nudge, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, lat, lon, pres_surf, T_surf, sh_flux, &
     lh_flux)
 
-  call output_init(output_dir, output_file, n_cols, n_levels, init_year, init_month, init_day, init_hour)
+  call output_init(scm_state%output_dir, scm_state%output_file, n_cols, n_levels, init_year, init_month, init_day, init_hour)
 
   itt_out = 1
 
-  call output_append(output_dir, output_file, itt_out, model_time, pres_l, pres_i, sl, si, state_tracer(:,:,1,1), &
+  call output_append(scm_state%output_dir, scm_state%output_file, itt_out, model_time, pres_l, pres_i, sl, si, &
+    state_tracer(:,:,1,1), &
     state_T(:,:,1), state_u(:,:,1), state_v(:,:,1), state_tracer(:,:,3,1), u_force_tend, v_force_tend, T_force_tend, &
     qv_force_tend, w_ls, u_g, v_g, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, T_surf, pres_surf)
 
@@ -260,7 +260,7 @@ subroutine gmtb_scm_main_sub()
     !set up each column's physics suite (which may be different)
 
     call ccpp_init( &
-         trim(adjustl(physics_suite_dir))//trim(adjustl(physics_suite_name(i)))//'.xml', &
+         trim(adjustl(scm_state%physics_suite_dir))//trim(adjustl(physics_suite_name(i)))//'.xml', &
          cdata(i), ierr)
 
     STOP
@@ -454,7 +454,8 @@ subroutine gmtb_scm_main_sub()
       write(*,*) "model time (s) = ",model_time
       write(*,*) "calling output routine..."
 
-      call output_append(output_dir, output_file, itt_out, model_time, pres_l, pres_i, sl, si, state_tracer(:,:,1,1), &
+      call output_append(scm_state%output_dir, scm_state%output_file, itt_out, model_time, pres_l, pres_i, sl, si, &
+        state_tracer(:,:,1,1), &
         state_T(:,:,1), state_u(:,:,1), state_v(:,:,1), state_tracer(:,:,3,1), u_force_tend, v_force_tend, T_force_tend, &
         qv_force_tend, w_ls, u_g, v_g, dT_dt_rad, h_advec_thil, h_advec_qt, v_advec_thil, v_advec_qt, T_surf, pres_surf)
 

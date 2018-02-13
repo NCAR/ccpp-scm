@@ -28,6 +28,7 @@ SET(scm_source_files gmtb_scm.f90
             gmtb_scm_output.f90
             gmtb_scm_kinds.f90
             gmtb_scm_physical_constants.f90
+            gmtb_scm_type_defs.f90
 )
 
 #this should call the custome FindNetCDF.cmake file in /src/cmake/modules and populate the NETCDF_INCLUDES and NETCDF_LIBRARIES variables with the appropriate values
