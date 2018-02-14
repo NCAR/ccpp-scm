@@ -23,7 +23,7 @@ hour = 3,
 $end
 
 $physics_config
-physics_suite = 'suite_DUMMY_scm',
+physics_suite = 'suite_scm_test',
 physics_suite_dir = '../src/ccpp/examples/',
 n_phy_fields = 4,
 $end

@@ -1,5 +1,19 @@
 module gmtb_scm_main
 
+use gmtb_scm_kinds, only: sp, dp, qp
+
+implicit none
+!> \section arg_table_gmtb_scm_main
+!! | local var name                   | longname                                               | description                                        | units         | rank | type    |    kind   | intent | optional |
+!! |----------------------------------|--------------------------------------------------------|----------------------------------------------------|---------------|------|---------|-----------|--------|----------|
+!! | state_u(1,:,1)        | x_wind                                                 | zonal wind                                         | m s-1         |    1 | real    | dp | none   | F        |
+!! | state_v(1,:,1)        | y_wind                                                 | meridional wind                                    | m s-1         |    1 | real    | dp | none   | F        |
+!! | state_T(1,:,1)        | air_temperature                                        | model layer mean temperature                       | K             |    1 | real    | dp | none   | F        |
+!!
+
+real(kind=dp), allocatable, target              :: state_T(:,:,:) !< model state absolute temperature at grid centers (K)
+real(kind=dp), allocatable, target              :: state_u(:,:,:), state_v(:,:,:) !< model state horizontal winds at grid centers (m/s)
+
 contains
 
 subroutine gmtb_scm_main_sub()
@@ -22,6 +36,7 @@ subroutine gmtb_scm_main_sub()
                     only: ccpp_run
   use            :: ccpp_fields,                        &
                     only: ccpp_fields_add
+  use ccpp_errors, only: ccpp_error
 
   implicit none
 
@@ -107,6 +122,8 @@ subroutine gmtb_scm_main_sub()
   real(kind=dp), allocatable              :: ref_qv(:) !< water vapor specific humidity (kg/kg) of the reference profile levels
   real(kind=dp), allocatable              :: ref_ozone(:) !< ozone mass mixing ratio (kg/kg) of the reference profile levels
 
+
+
   !> - Define the SCM state variables; variables with appended "i" are interface; variables with appended "l" are layer-centered.
   !!  - index order for grid is (horizontal, vertical);
   !!  - index order for state variables is (horizontal, vertical, timesteps);
@@ -115,8 +132,7 @@ subroutine gmtb_scm_main_sub()
   real(kind=dp), allocatable              :: si(:,:), sl(:,:) !< sigma on grid interfaces, centers
   real(kind=dp), allocatable              :: exner_i(:,:), exner_l(:,:) !< exner function on grid interfaces, centers
   real(kind=dp), allocatable              :: geopotential_i(:,:), geopotential_l(:,:) !< geopotential on grid interfaces, centers
-  real(kind=dp), allocatable, target              :: state_T(:,:,:) !< model state absolute temperature at grid centers (K)
-  real(kind=dp), allocatable, target              :: state_u(:,:,:), state_v(:,:,:) !< model state horizontal winds at grid centers (m/s)
+
   real(kind=dp), allocatable, target              :: state_tracer(:,:,:,:) !< model state tracer at grid centers
   real(kind=dp), allocatable              :: temp_T(:,:,:), temp_u(:,:,:), temp_v(:,:,:), temp_tracer(:,:,:,:) !< used for time-filtering
   real(kind=dp), allocatable              :: lat(:), lon(:) !< latitude and longitude (radians)
@@ -263,8 +279,6 @@ subroutine gmtb_scm_main_sub()
          trim(adjustl(scm_state%physics_suite_dir))//trim(adjustl(physics_suite_name(i)))//'.xml', &
          cdata(i), ierr)
 
-    STOP
-
     select case(physics_suite_name(i))
       case ('suite_DUMMY_scm')
         call ccpp_fields_add(cdata(i), 'temperature', &
@@ -286,6 +300,22 @@ subroutine gmtb_scm_main_sub()
         call ccpp_fields_add(cdata(i), 'water_vapor_specific_humidity', &
                              state_tracer(i,:,1,cdata_time_index), &
                              ierr, 'k kg-1')
+      case ('suite_scm_test')
+        call ccpp_fields_add(cdata(i), 'air_temperature', state_T(i,:,1), ierr, 'K')
+        if (ierr /= 0) then
+            call ccpp_error('Unable to add field "air_temperature" to CCPP data structure')
+            return
+        end if
+        call ccpp_fields_add(cdata(i), 'x_wind', state_u(i,:,1), ierr, 'm s-1')
+        if (ierr /= 0) then
+            call ccpp_error('Unable to add field "x_wind" to CCPP data structure')
+            return
+        end if
+        call ccpp_fields_add(cdata(i), 'y_wind', state_v(i,:,1), ierr, 'm s-1')
+        if (ierr /= 0) then
+            call ccpp_error('Unable to add field "y_wind" to CCPP data structure')
+            return
+        end if
       case default
         write(i_string,'(I5)') i
         write(*,*) 'The physics suite '//trim(physics_suite_name(i))//' specified for column #'//i_string&
