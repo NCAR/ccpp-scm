@@ -9,7 +9,7 @@ use gmtb_scm_physical_constants, only : con_cp, con_rocp, con_fvirt, con_g, con_
 implicit none
 
 private
-public get_GFS_vgrid, get_FV3_vgrid, calc_GFS_pres_exner_geopotential, calc_GFS_geopotential
+public get_GFS_vgrid, get_FV3_vgrid, calc_pres_exner_geopotential, calc_geopotential
 
 logical :: verbose = .true.
 
@@ -26,19 +26,13 @@ contains
 !! 60, 64, and 91 levels. If a different number of levels are specified, an error is returned. Using the A_k and B_k coefficients, the
 !! model level pressures, sigma values, and exner function (at interfaces and layer centers) are calculated and returned to the calling
 !! procedure.
-subroutine get_GFS_vgrid(pres_sfc, n_levels, n_columns, pres_i, pres_l, sigi, sigl, exner_l, exner_i, a_k, b_k, error)
+subroutine get_GFS_vgrid(scm_input, scm_state, error)
+  use gmtb_scm_type_defs, only: scm_input_type, scm_state_type
+
+  type(scm_input_type), intent(in) :: scm_input
+  type(scm_state_type), intent(inout) :: scm_state
+
   !create GFS hybrid coordinate vertical grid
-  integer, intent(in) :: n_levels !< number of model levels
-  integer, intent(in) :: n_columns !< number of columns
-  real(kind=dp), intent(in) :: pres_sfc !< surface pressure (Pa)
-  real(kind=dp), intent(inout) :: pres_l(:,:)  !< pressure at model level centers
-  real(kind=dp), intent(inout) :: pres_i(:,:) !< pressure at model interfaces
-  real(kind=dp), intent(inout) :: sigi(:,:) !< sigma at model interfaces
-  real(kind=dp), intent(inout) :: sigl(:,:) !< sigma at model layers
-  real(kind=dp), intent(inout) :: exner_l(:,:) !< exner function at model level centers
-  real(kind=dp), intent(inout) :: exner_i(:,:) !< exner function at model interfaces
-  real(kind=dp), intent(inout) :: a_k(:) !< GFS hybrid pressure coordinate coefficients
-  real(kind=dp), intent(inout) :: b_k(:) !< GFS hybrid pressure coordinate coefficients
   integer, intent(out) :: error !< error code
 
   integer               :: i, ierr
@@ -58,7 +52,7 @@ subroutine get_GFS_vgrid(pres_sfc, n_levels, n_columns, pres_i, pres_l, sigi, si
 
 
   !> - Check to see if the desired number of grid levels is available. If not, return an error code.
-  select case (n_levels)
+  select case (scm_state%n_levels)
     case(28)
       filename = "../model_config/global_hyblev.l28.txt"
     case(42)
@@ -87,48 +81,44 @@ subroutine get_GFS_vgrid(pres_sfc, n_levels, n_columns, pres_i, pres_l, sigi, si
   !> - The first line contains the number of coefficients and number of levels (these should already by known; discard this info)
   read(1,'(a)',iostat=ierr) line
   !> - Read in the coefficient data.
-  do i=1, n_levels+1
-    read(1,file_format)  a_k(i), b_k(i)
+  do i=1, scm_state%n_levels+1
+    read(1,file_format)  scm_state%a_k(i), scm_state%b_k(i)
   end do
   close(1)
 
   !> - Calculate interface pressures, sigma, and exner function.
 
-  p0 = pres_sfc
+  p0 = scm_input%input_pres_surf(1)
   pres_sfc_inv = 1.0/p0
-  do i=1, n_levels+1
-    pres_i(:,i) = a_k(i) + b_k(i)*p0
-    sigi(:,i) = a_k(i)*pres_sfc_inv + b_k(i)
-    exner_i(:,i) = (pres_i(:,i)/1.0E5)**con_rocp
+  do i=1, scm_state%n_levels+1
+    scm_state%pres_i(:,i) = scm_state%a_k(i) + scm_state%b_k(i)*p0
+    scm_state%si(:,i) = scm_state%a_k(i)*pres_sfc_inv + scm_state%b_k(i)
+    scm_state%exner_i(:,i) = (scm_state%pres_i(:,i)/1.0E5)**con_rocp
   end do
 
   !> - Calculate layer center pressures, sigma, and exner function.
-  do i=1, n_levels
-    pres_l(:,i) = ((1.0/(con_rocp+1.0))*(pres_i(:,i)**(con_rocp+1.0) - pres_i(:,i+1)**(con_rocp+1.0))/ &
-      (pres_i(:,i) - pres_i(:,i+1)))**(1.0/con_rocp)
-    sigl(:,i) = 0.5*(sigi(:,i) + sigi(:,i+1))
+  do i=1, scm_state%n_levels
+    scm_state%pres_l(:,i) = ((1.0/(con_rocp+1.0))*&
+      (scm_state%pres_i(:,i)**(con_rocp+1.0) - scm_state%pres_i(:,i+1)**(con_rocp+1.0))/ &
+      (scm_state%pres_i(:,i) - scm_state%pres_i(:,i+1)))**(1.0/con_rocp)
+    scm_state%sl(:,i) = 0.5*(scm_state%si(:,i) + scm_state%si(:,i+1))
 
-    exner_l(:,i) = (pres_l(:,i)/1.0E5)**con_rocp
+    scm_state%exner_l(:,i) = (scm_state%pres_l(:,i)/1.0E5)**con_rocp
 
   end do
   !> @}
 end subroutine get_GFS_vgrid
 
 !most of this was obtained from FV3/atmos_cubed_sphere/tools/fv_eta.F90 from FV3 v0 release
-subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, sigl, exner_l, exner_i, ks, ptop)
-      integer,  intent(in)::  km           ! vertical dimension
-      integer,  intent(in) :: n_columns !< number of columns
-      real(kind=dp), intent(in) :: pres_sfc !< surface pressure (Pa)
-      real(kind=dp), intent(inout):: ak(km+1)
-      real(kind=dp), intent(inout):: bk(km+1)
-      real(kind=dp), intent(inout) :: pres_l(n_columns,km)  !< pressure at model level centers
-      real(kind=dp), intent(inout) :: pres_i(n_columns,km+1) !< pressure at model interfaces
-      real(kind=dp), intent(inout) :: sigi(n_columns,km+1) !< sigma at model interfaces
-      real(kind=dp), intent(inout) :: sigl(n_columns,km) !< sigma at model layers
-      real(kind=dp), intent(inout) :: exner_l(n_columns,km) !< exner function at model level centers
-      real(kind=dp), intent(inout) :: exner_i(n_columns,km+1) !< exner function at model interfaces
-      integer,  intent(out):: ks           ! number of pure p layers
-      real(kind=dp), intent(out):: ptop         ! model top (Pa)
+subroutine get_FV3_vgrid(scm_input, scm_state)
+  use gmtb_scm_type_defs, only: scm_input_type, scm_state_type
+
+      type(scm_input_type), intent(in) :: scm_input
+      type(scm_state_type), intent(inout) :: scm_state
+
+      integer ::  km           ! vertical dimension
+      integer :: ks           ! number of pure p layers
+      real(kind=dp) :: ptop         ! model top (Pa)
 
 
 ! local
@@ -156,8 +146,10 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
       real:: pc=200.E2
 
       real pt, pint, lnpe, dlnp
-      real press(km+1), pt1(km)
+      real press(scm_state%n_levels+1), pt1(scm_state%n_levels)
       integer  k, last_index, mid_index
+
+      km = scm_state%n_levels
 
 ! Definition: press(i,j,k) = ak(k) + bk(k) * ps(i,j)
 
@@ -964,16 +956,16 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
 
             ks = 5
             do k=1,km+1
-              ak(k) = a24(k)
-              bk(k) = b24(k)
+              scm_state%a_k(k) = a24(k)
+              scm_state%b_k(k) = b24(k)
             enddo
 
          case (26)
 
             ks = 7
             do k=1,km+1
-              ak(k) = a26(k)
-              bk(k) = b26(k)
+              scm_state%a_k(k) = a26(k)
+              scm_state%b_k(k) = b26(k)
             enddo
 
           case (32)
@@ -983,51 +975,51 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
             ks = 7
 #endif
             do k=1,km+1
-              ak(k) = a32(k)
-              bk(k) = b32(k)
+              scm_state%a_k(k) = a32(k)
+              scm_state%b_k(k) = b32(k)
             enddo
 
           case (47)
       !         ks = 27       ! high-res trop-strat
             ks = 20       ! Oct 23, 2012
             do k=1,km+1
-              ak(k) = a47(k)
-              bk(k) = b47(k)
+              scm_state%a_k(k) = a47(k)
+              scm_state%b_k(k) = b47(k)
             enddo
 
           case (48)
             ks = 28
             do k=1,km+1
-              ak(k) = a48(k)
-              bk(k) = b48(k)
+              scm_state%a_k(k) = a48(k)
+              scm_state%b_k(k) = b48(k)
             enddo
 
           case (52)
             ks = 35         ! pint = 223
             do k=1,km+1
-              ak(k) = a52(k)
-              bk(k) = b52(k)
+              scm_state%a_k(k) = a52(k)
+              scm_state%b_k(k) = b52(k)
             enddo
 
           case (54)
             ks = 11         ! pint =  109.4
             do k=1,km+1
-              ak(k) = a54(k)
-              bk(k) = b54(k)
+              scm_state%a_k(k) = a54(k)
+              scm_state%b_k(k) = b54(k)
             enddo
 
           case (56)
             ks = 26
             do k=1,km+1
-              ak(k) = a56(k)
-              bk(k) = b56(k)
+              scm_state%a_k(k) = a56(k)
+              scm_state%b_k(k) = b56(k)
             enddo
 
           case (60)
             ks = 37
             do k=1,km+1
-              ak(k) = a60(k)
-              bk(k) = b60(k)
+              scm_state%a_k(k) = a60(k)
+              scm_state%b_k(k) = b60(k)
             enddo
 
 
@@ -1038,37 +1030,37 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
             ks = 46
 #endif
             do k=1,km+1
-              ak(k) = a64(k)
-              bk(k) = b64(k)
+              scm_state%a_k(k) = a64(k)
+              scm_state%b_k(k) = b64(k)
             enddo
       !-->cjg
           case (68)
             ks = 27
             do k=1,km+1
-              ak(k) = a68(k)
-              bk(k) = b68(k)
+              scm_state%a_k(k) = a68(k)
+              scm_state%b_k(k) = b68(k)
             enddo
 
           case (96)
             ks = 27
             do k=1,km+1
-              ak(k) = a96(k)
-              bk(k) = b96(k)
+              scm_state%a_k(k) = a96(k)
+              scm_state%b_k(k) = b96(k)
             enddo
       !<--cjg
 
           case (100)
             ks = 38
             do k=1,km+1
-              ak(k) = a100(k)
-              bk(k) = b100(k)
+              scm_state%a_k(k) = a100(k)
+              scm_state%b_k(k) = b100(k)
             enddo
 
           case (104)
             ks = 73
             do k=1,km+1
-              ak(k) = a104(k)
-              bk(k) = b104(k)
+              scm_state%a_k(k) = a104(k)
+              scm_state%b_k(k) = b104(k)
             enddo
 
 #ifndef TEST_GWAVES
@@ -1101,22 +1093,22 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
 
            if(ks /= 0) then
               do k=1,ks
-                 ak(k) = press(k)
-                 bk(k) = 0.
+                 scm_state%a_k(k) = press(k)
+                 scm_state%b_k(k) = 0.
               enddo
             endif
 
                pint = press(ks+1)
             do k=ks+1,km
-               ak(k) =  pint*(press(km)-press(k))/(press(km)-pint)
-               bk(k) = (press(k) - ak(k)) / press(km+1)
+               scm_state%a_k(k) =  pint*(press(km)-press(k))/(press(km)-pint)
+               scm_state%b_k(k) = (press(k) - scm_state%a_k(k)) / press(km+1)
             enddo
-               ak(km+1) = 0.
-               bk(km+1) = 1.
+               scm_state%a_k(km+1) = 0.
+               scm_state%b_k(km+1) = 1.
 
   !         do k=2,km
-  !            bk(k) = real(k-1) / real(km)
-  !            ak(k) = pt * ( 1. - bk(k) )
+  !            scm_state%b_k(k) = real(k-1) / real(km)
+  !            scm_state%a_k(k) = pt * ( 1. - scm_state%b_k(k) )
   !         enddo
 #endif
 
@@ -1125,23 +1117,23 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
           case (31)
                ptop = 300.
                pint = 100.E2
-               call var_dz(km, ak, bk, ptop, ks, pint, 1.035)
+               call var_dz(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.035)
 #ifndef TEST_GWAVES
           case (41)
                ptop = 100.
                pint = 100.E2
-               call var_hi(km, ak, bk, ptop, ks, pint, 1.035)
+               call var_hi(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.035)
 #endif
           case (51)
                ptop = 100.
                pint = 100.E2
-               call var_hi(km, ak, bk, ptop, ks, pint, 1.035)
+               call var_hi(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.035)
   ! Mid-top:
           case (55)
                ptop = 10.
                pint = 100.E2
-  !            call var_dz(km, ak, bk, ptop, ks, pint, 1.035)
-               call var_hi(km, ak, bk, ptop, ks, pint, 1.035)
+  !            call var_dz(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.035)
+               call var_hi(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.035)
 #ifdef USE_GFSL63
 ! GFS L64 equivalent setting
           case (63)
@@ -1149,37 +1141,37 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
             ptop = a63(1)
             pint = a63(ks+1)
             do k=1,km+1
-              ak(k) = a63(k)
-              bk(k) = b63(k)
+              scm_state%a_k(k) = a63(k)
+              scm_state%b_k(k) = b63(k)
             enddo
 #else
           case (63)
                ptop = 1.   ! high top
                pint = 100.E2
-               call var_hi(km, ak, bk, ptop, ks, pint, 1.035)
+               call var_hi(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.035)
 #endif
 ! NGGPS_GFS
           case (91)
                pint = 100.E2
                ptop = 40.
-               call var_gfs(km, ak, bk, ptop, ks, pint, 1.029)
+               call var_gfs(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.029)
           case (95)
   ! Mid-top settings:
                pint = 100.E2
                ptop = 20.
-               call var_gfs(km, ak, bk, ptop, ks, pint, 1.028)
+               call var_gfs(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.028)
           case (127)
                ptop = 1.
                pint = 75.E2
-               call var_gfs(km, ak, bk, ptop, ks, pint, 1.028)
+               call var_gfs(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, 1.028)
   ! IFS-like L125
           case (125)
             ks = 33
             ptop = a125(1)
             pint = a125(ks+1)
             do k=1,km+1
-              ak(k) = a125(k)
-              bk(k) = b125(k)
+              scm_state%a_k(k) = a125(k)
+              scm_state%b_k(k) = b125(k)
             enddo
           case default
 
@@ -1187,9 +1179,9 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
 !--------------------------------------------------
 ! Pure sigma-coordinate with uniform spacing in "z"
 !--------------------------------------------------
-            call gw_1d(km, 1000.E2, ak, bk, ptop, 10.E3, pt1)
+            call gw_1d(km, 1000.E2, scm_state%a_k, scm_state%b_k, ptop, 10.E3, pt1)
               ks = 0
-            pint = ak(1)
+            pint = scm_state%a_k(1)
 #else
 
 !----------------------------------------------------------------
@@ -1201,53 +1193,54 @@ subroutine get_FV3_vgrid(km, n_columns, pres_sfc, ak, bk, pres_i, pres_l, sigi, 
   !        pint = pt + 0.5*1.E5/real(km)     ! SJL: 20120327
            pint = pt + 1.E5/real(km)
 
-           ak(1) = pt
-           bk(1) = 0.
-           ak(2) = pint
-           bk(2) = 0.
+           scm_state%a_k(1) = pt
+           scm_state%b_k(1) = 0.
+           scm_state%a_k(2) = pint
+           scm_state%b_k(2) = 0.
 
             do k=3,km+1
-               bk(k) = real(k-2) / real(km-1)
-               ak(k) = pint - bk(k)*pint
+               scm_state%b_k(k) = real(k-2) / real(km-1)
+               scm_state%a_k(k) = pint - scm_state%b_k(k)*pint
             enddo
-            ak(km+1) = 0.
-            bk(km+1) = 1.
+            scm_state%a_k(km+1) = 0.
+            scm_state%b_k(km+1) = 1.
 #endif
       end select
 
-      ptop = ak(1)
-      pint = ak(ks+1)
+      ptop = scm_state%a_k(1)
+      pint = scm_state%a_k(ks+1)
 
       !> - Calculate interface pressures, sigma, and exner function.
 
-      ! flip ak, bk in vertical
+      ! flip scm_state%a_k, scm_state%b_k in vertical
       mid_index = (km+1)/2
       last_index = km+1
       do k = 1, mid_index
-          ak_tmp = ak(k)
-          bk_tmp = bk(k)
-          ak(k) = ak(last_index)
-          bk(k) = bk(last_index)
-          ak(last_index) = ak_tmp
-          bk(last_index) = bk_tmp
+          ak_tmp = scm_state%a_k(k)
+          bk_tmp = scm_state%b_k(k)
+          scm_state%a_k(k) = scm_state%a_k(last_index)
+          scm_state%b_k(k) = scm_state%b_k(last_index)
+          scm_state%a_k(last_index) = ak_tmp
+          scm_state%b_k(last_index) = bk_tmp
           last_index = last_index - 1
       end do
 
-      p_ref = pres_sfc
+      p_ref = scm_input%input_pres_surf(1)
       pres_sfc_inv = 1.0/p_ref
       do k=1, km+1
-        pres_i(:,k) = ak(k) + bk(k)*p_ref
-        sigi(:,k) = ak(k)*pres_sfc_inv + bk(k)
-        exner_i(:,k) = (pres_i(:,k)/1.0E5)**con_rocp
+        scm_state%pres_i(:,k) = scm_state%a_k(k) + scm_state%b_k(k)*p_ref
+        scm_state%si(:,k) = scm_state%a_k(k)*pres_sfc_inv + scm_state%b_k(k)
+        scm_state%exner_i(:,k) = (scm_state%pres_i(:,k)/1.0E5)**con_rocp
       end do
 
       !> - Calculate layer center pressures, sigma, and exner function.
       do k=1, km
-        pres_l(:,k) = ((1.0/(con_rocp+1.0))*(pres_i(:,k)**(con_rocp+1.0) - pres_i(:,k+1)**(con_rocp+1.0))/ &
-          (pres_i(:,k) - pres_i(:,k+1)))**(1.0/con_rocp)
-        sigl(:,k) = 0.5*(sigi(:,k) + sigi(:,k+1))
+        scm_state%pres_l(:,k) = ((1.0/(con_rocp+1.0))*&
+          (scm_state%pres_i(:,k)**(con_rocp+1.0) - scm_state%pres_i(:,k+1)**(con_rocp+1.0))/ &
+          (scm_state%pres_i(:,k) - scm_state%pres_i(:,k+1)))**(1.0/con_rocp)
+        scm_state%sl(:,k) = 0.5*(scm_state%si(:,k) + scm_state%si(:,k+1))
 
-        exner_l(:,k) = (pres_l(:,k)/1.0E5)**con_rocp
+        scm_state%exner_l(:,k) = (scm_state%pres_l(:,k)/1.0E5)**con_rocp
 
       end do
 
@@ -1851,88 +1844,78 @@ subroutine var_dz(km, ak, bk, ptop, ks, pint, s_rate)
 
 !> This subroutine calculates the pressure and exner function at grid centers and interface levels given a surface pressure and interface-level GFS grid coefficients.
 !! This subroutine should be called to update the pressures of the model levels as the surface pressure of the column changes.
-subroutine calc_GFS_pres_exner_geopotential(pres_sfc, n_levels, n_columns, a_k, b_k, T, qv, pres_i, pres_l, sigi, sigl, exner_l, &
-  exner_i, geopotential_l, geopotential_i)
+subroutine calc_pres_exner_geopotential(time_level, scm_state)
+  use gmtb_scm_type_defs, only: scm_state_type
 
-  integer, intent(in) :: n_levels !< number of model levels
-  integer, intent(in) :: n_columns !< number of columns
-  real(kind=dp), intent(in) :: pres_sfc(:) !< surface pressure (Pa)
-  real(kind=dp), intent(in) :: a_k(:), b_k(:) !< GFS hybrid pressure coordinate coefficients
-  real(kind=dp), intent(in) :: T(:,:), qv(:,:)
-  real(kind=dp), intent(inout) :: pres_l(:,:)  !< pressure at model level centers
-  real(kind=dp), intent(inout) :: pres_i(:,:) !< pressure at model interfaces
-  real(kind=dp), intent(inout) :: sigi(:,:) !< sigma at model interfaces
-  real(kind=dp), intent(inout) :: sigl(:,:) !< sigma at model layers
-  real(kind=dp), intent(inout) :: exner_l(:,:) !< exner function at model level centers
-  real(kind=dp), intent(inout) :: exner_i(:,:) !< exner function at model interfaces
-  real(kind=dp), intent(inout) :: geopotential_l(:,:) !< geopotential at model level centers
-  real(kind=dp), intent(inout) :: geopotential_i(:,:) !< geopotential function at model interfaces
+  integer, intent(in) :: time_level
+  type(scm_state_type), intent(inout) :: scm_state
 
   real(kind=dp)               :: pres_sfc_inv, tem, dgeopotential_lower_half, dgeopotential_upper_half
   integer               :: i,k
 
   !> - Calculate interface pressures, sigma, and exner function.
-  do i=1, n_columns
-    pres_sfc_inv = 1.0/pres_sfc(i)
-    do k=1, n_levels+1
-      pres_i(i,k) = a_k(k) + b_k(k)*pres_sfc(i)
-      sigi(i,k) = a_k(k)*pres_sfc_inv + b_k(k)
-      exner_i(i,k) = (pres_i(i,k)*1.0E-5)**con_rocp
+  do i=1, scm_state%n_cols
+    pres_sfc_inv = 1.0/scm_state%pres_surf(i)
+    do k=1, scm_state%n_levels+1
+      scm_state%pres_i(i,k) = scm_state%a_k(k) + scm_state%b_k(k)*scm_state%pres_surf(i)
+      scm_state%si(i,k) = scm_state%a_k(k)*pres_sfc_inv + scm_state%b_k(k)
+      scm_state%exner_i(i,k) = (scm_state%pres_i(i,k)*1.0E-5)**con_rocp
     end do
   end do
 
   !> - Calculate layer center pressures, sigma, and exner function.
-  do i=1, n_columns
-    do k=1, n_levels
-      pres_l(i,k) = ((1.0/(con_rocp+1.0))*(pres_i(i,k)**(con_rocp+1.0) - pres_i(i,k+1)**(con_rocp+1.0))/ &
-        (pres_i(i,k) - pres_i(i,k+1)))**(1.0/con_rocp)
-      sigl(i,k) = 0.5*(sigi(i,k) + sigi(i,k+1))
-      exner_l(i,k) = (pres_l(i,k)*1.0E-5)**con_rocp
+  do i=1, scm_state%n_cols
+    do k=1, scm_state%n_levels
+      scm_state%pres_l(i,k) = ((1.0/(con_rocp+1.0))*&
+        (scm_state%pres_i(i,k)**(con_rocp+1.0) - scm_state%pres_i(i,k+1)**(con_rocp+1.0))/ &
+        (scm_state%pres_i(i,k) - scm_state%pres_i(i,k+1)))**(1.0/con_rocp)
+      scm_state%sl(i,k) = 0.5*(scm_state%si(i,k) + scm_state%si(i,k+1))
+      scm_state%exner_l(i,k) = (scm_state%pres_l(i,k)*1.0E-5)**con_rocp
     end do
   end do
 
-  do i=1, n_columns
-    geopotential_i(i,1) = 0.0
+  do i=1, scm_state%n_cols
+    scm_state%geopotential_i(i,1) = 0.0
   end do
 
-  do i=1, n_columns
-    do k=1, n_levels
-      tem = con_cp*T(i,k)*(1.0 + con_fvirt*max(qv(i,k), 0.0))/exner_l(i,k)
-      dgeopotential_lower_half = (exner_i(i,k) - exner_l(i,k))*tem
-      dgeopotential_upper_half = (exner_l(i,k) - exner_i(i,k+1))*tem
-      geopotential_l(i,k) = geopotential_i(i,k) + dgeopotential_lower_half
-      geopotential_i(i,k+1) = geopotential_l(i,k) + dgeopotential_upper_half
+  do i=1, scm_state%n_cols
+    do k=1, scm_state%n_levels
+      tem = con_cp*scm_state%state_T(i,k,time_level)*&
+        (1.0 + con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,k)
+      dgeopotential_lower_half = (scm_state%exner_i(i,k) - scm_state%exner_l(i,k))*tem
+      dgeopotential_upper_half = (scm_state%exner_l(i,k) - scm_state%exner_i(i,k+1))*tem
+      scm_state%geopotential_l(i,k) = scm_state%geopotential_i(i,k) + dgeopotential_lower_half
+      scm_state%geopotential_i(i,k+1) = scm_state%geopotential_l(i,k) + dgeopotential_upper_half
     end do
   end do
 
-end subroutine calc_GFS_pres_exner_geopotential
+end subroutine calc_pres_exner_geopotential
 
-subroutine calc_GFS_geopotential(n_levels, n_columns, T, qv, exner_i, exner_l, geopotential_i, geopotential_l)
-  integer, intent(in) :: n_levels, n_columns
-  real(kind=dp), intent(in) :: T(:,:), qv(:,:)
-  real(kind=dp), intent(in) :: exner_i(:,:), exner_l(:,:)
-  real(kind=dp), allocatable, intent(out) :: geopotential_i(:,:), geopotential_l(:,:)
+subroutine calc_geopotential(time_level, scm_state)
+  use gmtb_scm_type_defs, only: scm_state_type
+
+  integer, intent(in) :: time_level
+  type(scm_state_type), intent(inout) :: scm_state
 
   integer i,k
   real(kind=dp) :: tem, dgeopotential_lower_half, dgeopotential_upper_half
 
-  allocate(geopotential_l(n_columns, n_levels), geopotential_i(n_columns, n_levels+1))
-
-  do i=1, n_columns
-    geopotential_i(i,1) = 0.0
+  do i=1, scm_state%n_cols
+    scm_state%geopotential_i(i,1) = 0.0
   end do
 
-  do i=1, n_columns
-    do k=1, n_levels
-      tem = con_cp*T(i,k)*(1.0 + con_fvirt*max(qv(i,k), 0.0))/exner_l(i,k)
-      dgeopotential_lower_half = (exner_i(i,k) - exner_l(i,k))*tem
-      dgeopotential_upper_half = (exner_l(i,k) - exner_i(i,k+1))*tem
-      geopotential_l(i,k) = geopotential_i(i,k) + dgeopotential_lower_half
-      geopotential_i(i,k+1) = geopotential_l(i,k) + dgeopotential_upper_half
+  do i=1, scm_state%n_cols
+    do k=1, scm_state%n_levels
+      tem = con_cp*scm_state%state_T(i,k,time_level)*(1.0 + &
+        con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,k)
+      dgeopotential_lower_half = (scm_state%exner_i(i,k) - scm_state%exner_l(i,k))*tem
+      dgeopotential_upper_half = (scm_state%exner_l(i,k) - scm_state%exner_i(i,k+1))*tem
+      scm_state%geopotential_l(i,k) = scm_state%geopotential_i(i,k) + dgeopotential_lower_half
+      scm_state%geopotential_i(i,k+1) = scm_state%geopotential_l(i,k) + dgeopotential_upper_half
     end do
   end do
 
-end subroutine calc_GFS_geopotential
+end subroutine calc_geopotential
 !> @}
 !> @}
 end module gmtb_scm_vgrid

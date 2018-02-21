@@ -18,7 +18,7 @@ ADD_COMPILE_OPTIONS(-O0)
 
 ADD_SUBDIRECTORY(${CCPP_SRC})
 
-SET(scm_source_files gmtb_scm.f90
+SET(scm_source_files gmtb_scm.F90
             gmtb_scm_input.f90
             gmtb_scm_utils.f90
             gmtb_scm_vgrid.F90

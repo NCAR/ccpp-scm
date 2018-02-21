@@ -25,5 +25,4 @@ $end
 $physics_config
 physics_suite = 'suite_scm_test',
 physics_suite_dir = '../src/ccpp/examples/',
-n_phy_fields = 4,
 $end
