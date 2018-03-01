@@ -33,16 +33,16 @@ subroutine filter(scm_state)
   !! \f]
   !! where \f$\overline{x^\tau}\f$ is the filtered value of variable \f$x\f$ at the current iteration, \f$x^\tau\f$ is the unfiltered value of the previous time step, \f$x^{\tau +1}\f$ is the unfiltered
   !! value that was just updated by the forcing and physics, and \f$\overline{x^{\tau - 1}}\f$ is the filtered value of the variable from the previous iteration, and \f$c\f$ is the filtering constant.
-  scm_state%state_tracer(:,:,scm_state%water_vapor_index,1) = &
-    (1.0 - scm_state%c_filter)*scm_state%temp_tracer(:,:,scm_state%water_vapor_index,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_tracer(:,:,scm_state%water_vapor_index,2) + &
-    scm_state%temp_tracer(:,:,scm_state%water_vapor_index,1))
-  scm_state%state_T(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_T(:,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_T(:,:,2) + scm_state%temp_T(:,:,1))
-  scm_state%state_u(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_u(:,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_u(:,:,2) + scm_state%temp_u(:,:,1))
-  scm_state%state_v(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_v(:,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_v(:,:,2) + scm_state%temp_v(:,:,1))
+  scm_state%state_tracer(:,1,:,scm_state%water_vapor_index,1) = &
+    (1.0 - scm_state%c_filter)*scm_state%temp_tracer(:,1,:,scm_state%water_vapor_index,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_tracer(:,1,:,scm_state%water_vapor_index,2) + &
+    scm_state%temp_tracer(:,1,:,scm_state%water_vapor_index,1))
+  scm_state%state_T(:,1,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_T(:,1,:,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_T(:,1,:,2) + scm_state%temp_T(:,1,:,1))
+  scm_state%state_u(:,1,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_u(:,1,:,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_u(:,1,:,2) + scm_state%temp_u(:,1,:,1))
+  scm_state%state_v(:,1,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_v(:,1,:,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_v(:,1,:,2) + scm_state%temp_v(:,1,:,1))
 
 end subroutine
 
@@ -73,10 +73,10 @@ subroutine do_time_step(scm_state, cdata)
 
   if (scm_state%time_scheme == 2) then
     !IPD cdata points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
-    scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
-    scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
-    scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
-    scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
+    scm_state%state_T(:,1,:,2) = scm_state%state_T(:,1,:,1)
+    scm_state%state_tracer(:,1,:,:,2) = scm_state%state_tracer(:,1,:,:,1)
+    scm_state%state_u(:,1,:,2) = scm_state%state_u(:,1,:,1)
+    scm_state%state_v(:,1,:,2) = scm_state%state_v(:,1,:,1)
   end if
 
   do i=1, scm_state%n_cols

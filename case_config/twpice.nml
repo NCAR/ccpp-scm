@@ -23,6 +23,7 @@ hour = 3,
 $end
 
 $physics_config
-physics_suite = 'suite_scm_test',
+physics_suite = 'suite_scm_GFS_test',
 physics_suite_dir = '../src/ccpp/examples/',
+physics_nml = '../src/ccpp/schemes/gfsphysics/input.nml'
 $end

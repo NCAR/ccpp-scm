@@ -13,10 +13,12 @@ get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/ccpp)
+SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/ccpp/schemes/gfsphysics)
 
 ADD_COMPILE_OPTIONS(-O0)
 
 ADD_SUBDIRECTORY(${CCPP_SRC})
+ADD_SUBDIRECTORY(${GFSPHYSICS_SRC})
 
 SET(scm_source_files gmtb_scm.F90
             gmtb_scm_input.f90
@@ -37,6 +39,7 @@ FIND_PACKAGE(NetCDF)
 
 INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/src)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/schemes/gfsphysics)
 
 if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 #  # gfortran
@@ -45,6 +48,8 @@ if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
   ADD_COMPILE_OPTIONS(-fbacktrace)
   ADD_COMPILE_OPTIONS(-ffpe-trap=zero)
   ADD_COMPILE_OPTIONS(-finit-real=nan)
+  ADD_COMPILE_OPTIONS(-ggdb)
+  ADD_COMPILE_OPTIONS(-ffree-line-length-none)
 elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
 #  # ifort (untested)
 #  MESSAGE("ifort being used.")
@@ -65,4 +70,4 @@ else (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
 ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
-TARGET_LINK_LIBRARIES(gmtb_scm ccpp ${NETCDF_LIBRARIES})
+TARGET_LINK_LIBRARIES(gmtb_scm gfsphysics ccpp ${NETCDF_LIBRARIES})

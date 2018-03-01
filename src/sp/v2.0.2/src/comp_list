@@ -1,0 +1,660 @@
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spanaly.f
+ar -ruv    ../splib_v2/libsp_4.a spanaly.o
+r - spanaly.o
+rm -f spanaly.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spdz2uv.f
+ar -ruv    ../splib_v2/libsp_4.a spdz2uv.o
+r - spdz2uv.o
+rm -f spdz2uv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX speps.f
+ar -ruv    ../splib_v2/libsp_4.a speps.o
+r - speps.o
+rm -f speps.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spfft1.f
+ar -ruv    ../splib_v2/libsp_4.a spfft1.o
+r - spfft1.o
+rm -f spfft1.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spffte.f
+ar -ruv    ../splib_v2/libsp_4.a spffte.o
+r - spffte.o
+rm -f spffte.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spfft.f
+ar -ruv    ../splib_v2/libsp_4.a spfft.o
+r - spfft.o
+rm -f spfft.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spfftpt.f
+ar -ruv    ../splib_v2/libsp_4.a spfftpt.o
+r - spfftpt.o
+rm -f spfftpt.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spgradq.f
+ar -ruv    ../splib_v2/libsp_4.a spgradq.o
+r - spgradq.o
+rm -f spgradq.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spgradx.f
+ar -ruv    ../splib_v2/libsp_4.a spgradx.o
+r - spgradx.o
+rm -f spgradx.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spgrady.f
+ar -ruv    ../splib_v2/libsp_4.a spgrady.o
+r - spgrady.o
+rm -f spgrady.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX splaplac.f
+ar -ruv    ../splib_v2/libsp_4.a splaplac.o
+r - splaplac.o
+rm -f splaplac.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX splegend.f
+ar -ruv    ../splib_v2/libsp_4.a splegend.o
+r - splegend.o
+rm -f splegend.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sppad.f
+ar -ruv    ../splib_v2/libsp_4.a sppad.o
+r - sppad.o
+rm -f sppad.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spsynth.f
+ar -ruv    ../splib_v2/libsp_4.a spsynth.o
+r - spsynth.o
+rm -f spsynth.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptezd.f
+ar -ruv    ../splib_v2/libsp_4.a sptezd.o
+r - sptezd.o
+rm -f sptezd.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptez.f
+ar -ruv    ../splib_v2/libsp_4.a sptez.o
+r - sptez.o
+rm -f sptez.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptezmd.f
+ar -ruv    ../splib_v2/libsp_4.a sptezmd.o
+r - sptezmd.o
+rm -f sptezmd.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptezm.f
+ar -ruv    ../splib_v2/libsp_4.a sptezm.o
+r - sptezm.o
+rm -f sptezm.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptezmv.f
+ar -ruv    ../splib_v2/libsp_4.a sptezmv.o
+r - sptezmv.o
+rm -f sptezmv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptezv.f
+ar -ruv    ../splib_v2/libsp_4.a sptezv.o
+r - sptezv.o
+rm -f sptezv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgpmd.f
+ar -ruv    ../splib_v2/libsp_4.a sptgpmd.o
+r - sptgpmd.o
+rm -f sptgpmd.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgpm.f
+ar -ruv    ../splib_v2/libsp_4.a sptgpm.o
+r - sptgpm.o
+rm -f sptgpm.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgpmv.f
+ar -ruv    ../splib_v2/libsp_4.a sptgpmv.o
+r - sptgpmv.o
+rm -f sptgpmv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgpsd.f
+ar -ruv    ../splib_v2/libsp_4.a sptgpsd.o
+r - sptgpsd.o
+rm -f sptgpsd.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgps.f
+ar -ruv    ../splib_v2/libsp_4.a sptgps.o
+r - sptgps.o
+rm -f sptgps.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgpsv.f
+ar -ruv    ../splib_v2/libsp_4.a sptgpsv.o
+r - sptgpsv.o
+rm -f sptgpsv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgptd.f
+ar -ruv    ../splib_v2/libsp_4.a sptgptd.o
+r - sptgptd.o
+rm -f sptgptd.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgpt.f
+ar -ruv    ../splib_v2/libsp_4.a sptgpt.o
+r - sptgpt.o
+rm -f sptgpt.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgptsd.f
+ar -ruv    ../splib_v2/libsp_4.a sptgptsd.o
+r - sptgptsd.o
+rm -f sptgptsd.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgptvd.f
+ar -ruv    ../splib_v2/libsp_4.a sptgptvd.o
+r - sptgptvd.o
+rm -f sptgptvd.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptgptv.f
+ar -ruv    ../splib_v2/libsp_4.a sptgptv.o
+r - sptgptv.o
+rm -f sptgptv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrand.f
+ar -ruv    ../splib_v2/libsp_4.a sptrand.o
+r - sptrand.o
+rm -f sptrand.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptran.f
+ar -ruv    ../splib_v2/libsp_4.a sptran.o
+r - sptran.o
+rm -f sptran.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptranf0.f
+ar -ruv    ../splib_v2/libsp_4.a sptranf0.o
+r - sptranf0.o
+rm -f sptranf0.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptranf1.f
+ar -ruv    ../splib_v2/libsp_4.a sptranf1.o
+r - sptranf1.o
+rm -f sptranf1.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptranf.f
+ar -ruv    ../splib_v2/libsp_4.a sptranf.o
+r - sptranf.o
+rm -f sptranf.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptranfv.f
+ar -ruv    ../splib_v2/libsp_4.a sptranfv.o
+r - sptranfv.o
+rm -f sptranfv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptranv.f
+ar -ruv    ../splib_v2/libsp_4.a sptranv.o
+r - sptranv.o
+rm -f sptranv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrund.f
+ar -ruv    ../splib_v2/libsp_4.a sptrund.o
+r - sptrund.o
+rm -f sptrund.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrun.f
+ar -ruv    ../splib_v2/libsp_4.a sptrun.o
+r - sptrun.o
+rm -f sptrun.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrung.f
+ar -ruv    ../splib_v2/libsp_4.a sptrung.o
+r - sptrung.o
+rm -f sptrung.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrungv.f
+ar -ruv    ../splib_v2/libsp_4.a sptrungv.o
+r - sptrungv.o
+rm -f sptrungv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrunl.f
+ar -ruv    ../splib_v2/libsp_4.a sptrunl.o
+r - sptrunl.o
+rm -f sptrunl.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrunm.f
+ar -ruv    ../splib_v2/libsp_4.a sptrunm.o
+r - sptrunm.o
+rm -f sptrunm.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrunmv.f
+ar -ruv    ../splib_v2/libsp_4.a sptrunmv.o
+r - sptrunmv.o
+rm -f sptrunmv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptruns.f
+ar -ruv    ../splib_v2/libsp_4.a sptruns.o
+r - sptruns.o
+rm -f sptruns.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrunsv.f
+ar -ruv    ../splib_v2/libsp_4.a sptrunsv.o
+r - sptrunsv.o
+rm -f sptrunsv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX sptrunv.f
+ar -ruv    ../splib_v2/libsp_4.a sptrunv.o
+r - sptrunv.o
+rm -f sptrunv.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spuv2dz.f
+ar -ruv    ../splib_v2/libsp_4.a spuv2dz.o
+r - spuv2dz.o
+rm -f spuv2dz.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spvar.f
+ar -ruv    ../splib_v2/libsp_4.a spvar.o
+r - spvar.o
+rm -f spvar.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX spwget.f
+ar -ruv    ../splib_v2/libsp_4.a spwget.o
+r - spwget.o
+rm -f spwget.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX fftpack.F
+ar -ruv    ../splib_v2/libsp_4.a fftpack.o
+r - fftpack.o
+rm -f fftpack.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX lapack_gen.F
+ar -ruv    ../splib_v2/libsp_4.a lapack_gen.o
+r - lapack_gen.o
+rm -f lapack_gen.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX ncpus.F
+ar -ruv    ../splib_v2/libsp_4.a ncpus.o
+r - ncpus.o
+rm -f ncpus.o
+ifort -c -O3 -auto -openmp -i4 -convert big_endian -assume byterecl -fp-model strict -real-size 32 -fpp -DLINUX splat.F
+ar -ruv    ../splib_v2/libsp_4.a splat.o
+r - splat.o
+rm -f splat.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spanaly.f
+ar -ruv    ../splib_v2/libsp_8.a spanaly.o
+r - spanaly.o
+rm -f spanaly.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spdz2uv.f
+ar -ruv    ../splib_v2/libsp_8.a spdz2uv.o
+r - spdz2uv.o
+rm -f spdz2uv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX speps.f
+ar -ruv    ../splib_v2/libsp_8.a speps.o
+r - speps.o
+rm -f speps.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spfft1.f
+ar -ruv    ../splib_v2/libsp_8.a spfft1.o
+r - spfft1.o
+rm -f spfft1.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spffte.f
+ar -ruv    ../splib_v2/libsp_8.a spffte.o
+r - spffte.o
+rm -f spffte.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spfft.f
+ar -ruv    ../splib_v2/libsp_8.a spfft.o
+r - spfft.o
+rm -f spfft.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spfftpt.f
+ar -ruv    ../splib_v2/libsp_8.a spfftpt.o
+r - spfftpt.o
+rm -f spfftpt.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spgradq.f
+ar -ruv    ../splib_v2/libsp_8.a spgradq.o
+r - spgradq.o
+rm -f spgradq.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spgradx.f
+ar -ruv    ../splib_v2/libsp_8.a spgradx.o
+r - spgradx.o
+rm -f spgradx.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spgrady.f
+ar -ruv    ../splib_v2/libsp_8.a spgrady.o
+r - spgrady.o
+rm -f spgrady.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX splaplac.f
+ar -ruv    ../splib_v2/libsp_8.a splaplac.o
+r - splaplac.o
+rm -f splaplac.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX splegend.f
+ar -ruv    ../splib_v2/libsp_8.a splegend.o
+r - splegend.o
+rm -f splegend.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sppad.f
+ar -ruv    ../splib_v2/libsp_8.a sppad.o
+r - sppad.o
+rm -f sppad.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spsynth.f
+ar -ruv    ../splib_v2/libsp_8.a spsynth.o
+r - spsynth.o
+rm -f spsynth.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezd.f
+ar -ruv    ../splib_v2/libsp_8.a sptezd.o
+r - sptezd.o
+rm -f sptezd.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptez.f
+ar -ruv    ../splib_v2/libsp_8.a sptez.o
+r - sptez.o
+rm -f sptez.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezmd.f
+ar -ruv    ../splib_v2/libsp_8.a sptezmd.o
+r - sptezmd.o
+rm -f sptezmd.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezm.f
+ar -ruv    ../splib_v2/libsp_8.a sptezm.o
+r - sptezm.o
+rm -f sptezm.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezmv.f
+ar -ruv    ../splib_v2/libsp_8.a sptezmv.o
+r - sptezmv.o
+rm -f sptezmv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezv.f
+ar -ruv    ../splib_v2/libsp_8.a sptezv.o
+r - sptezv.o
+rm -f sptezv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpmd.f
+ar -ruv    ../splib_v2/libsp_8.a sptgpmd.o
+r - sptgpmd.o
+rm -f sptgpmd.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpm.f
+ar -ruv    ../splib_v2/libsp_8.a sptgpm.o
+r - sptgpm.o
+rm -f sptgpm.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpmv.f
+ar -ruv    ../splib_v2/libsp_8.a sptgpmv.o
+r - sptgpmv.o
+rm -f sptgpmv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpsd.f
+ar -ruv    ../splib_v2/libsp_8.a sptgpsd.o
+r - sptgpsd.o
+rm -f sptgpsd.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgps.f
+ar -ruv    ../splib_v2/libsp_8.a sptgps.o
+r - sptgps.o
+rm -f sptgps.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpsv.f
+ar -ruv    ../splib_v2/libsp_8.a sptgpsv.o
+r - sptgpsv.o
+rm -f sptgpsv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptd.f
+ar -ruv    ../splib_v2/libsp_8.a sptgptd.o
+r - sptgptd.o
+rm -f sptgptd.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpt.f
+ar -ruv    ../splib_v2/libsp_8.a sptgpt.o
+r - sptgpt.o
+rm -f sptgpt.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptsd.f
+ar -ruv    ../splib_v2/libsp_8.a sptgptsd.o
+r - sptgptsd.o
+rm -f sptgptsd.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptvd.f
+ar -ruv    ../splib_v2/libsp_8.a sptgptvd.o
+r - sptgptvd.o
+rm -f sptgptvd.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptv.f
+ar -ruv    ../splib_v2/libsp_8.a sptgptv.o
+r - sptgptv.o
+rm -f sptgptv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrand.f
+ar -ruv    ../splib_v2/libsp_8.a sptrand.o
+r - sptrand.o
+rm -f sptrand.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptran.f
+ar -ruv    ../splib_v2/libsp_8.a sptran.o
+r - sptran.o
+rm -f sptran.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranf0.f
+ar -ruv    ../splib_v2/libsp_8.a sptranf0.o
+r - sptranf0.o
+rm -f sptranf0.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranf1.f
+ar -ruv    ../splib_v2/libsp_8.a sptranf1.o
+r - sptranf1.o
+rm -f sptranf1.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranf.f
+ar -ruv    ../splib_v2/libsp_8.a sptranf.o
+r - sptranf.o
+rm -f sptranf.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranfv.f
+ar -ruv    ../splib_v2/libsp_8.a sptranfv.o
+r - sptranfv.o
+rm -f sptranfv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranv.f
+ar -ruv    ../splib_v2/libsp_8.a sptranv.o
+r - sptranv.o
+rm -f sptranv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrund.f
+ar -ruv    ../splib_v2/libsp_8.a sptrund.o
+r - sptrund.o
+rm -f sptrund.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrun.f
+ar -ruv    ../splib_v2/libsp_8.a sptrun.o
+r - sptrun.o
+rm -f sptrun.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrung.f
+ar -ruv    ../splib_v2/libsp_8.a sptrung.o
+r - sptrung.o
+rm -f sptrung.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrungv.f
+ar -ruv    ../splib_v2/libsp_8.a sptrungv.o
+r - sptrungv.o
+rm -f sptrungv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunl.f
+ar -ruv    ../splib_v2/libsp_8.a sptrunl.o
+r - sptrunl.o
+rm -f sptrunl.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunm.f
+ar -ruv    ../splib_v2/libsp_8.a sptrunm.o
+r - sptrunm.o
+rm -f sptrunm.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunmv.f
+ar -ruv    ../splib_v2/libsp_8.a sptrunmv.o
+r - sptrunmv.o
+rm -f sptrunmv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptruns.f
+ar -ruv    ../splib_v2/libsp_8.a sptruns.o
+r - sptruns.o
+rm -f sptruns.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunsv.f
+ar -ruv    ../splib_v2/libsp_8.a sptrunsv.o
+r - sptrunsv.o
+rm -f sptrunsv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunv.f
+ar -ruv    ../splib_v2/libsp_8.a sptrunv.o
+r - sptrunv.o
+rm -f sptrunv.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spuv2dz.f
+ar -ruv    ../splib_v2/libsp_8.a spuv2dz.o
+r - spuv2dz.o
+rm -f spuv2dz.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spvar.f
+ar -ruv    ../splib_v2/libsp_8.a spvar.o
+r - spvar.o
+rm -f spvar.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spwget.f
+ar -ruv    ../splib_v2/libsp_8.a spwget.o
+r - spwget.o
+rm -f spwget.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX fftpack.F
+ar -ruv    ../splib_v2/libsp_8.a fftpack.o
+r - fftpack.o
+rm -f fftpack.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX lapack_gen.F
+ar -ruv    ../splib_v2/libsp_8.a lapack_gen.o
+r - lapack_gen.o
+rm -f lapack_gen.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX ncpus.F
+ar -ruv    ../splib_v2/libsp_8.a ncpus.o
+r - ncpus.o
+rm -f ncpus.o
+ifort -c  -O3 -auto -openmp -i8 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX splat.F
+ar -ruv    ../splib_v2/libsp_8.a splat.o
+r - splat.o
+rm -f splat.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spanaly.f
+ar -ruv    ../splib_v2/libsp_d.a spanaly.o
+r - spanaly.o
+rm -f spanaly.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spdz2uv.f
+ar -ruv    ../splib_v2/libsp_d.a spdz2uv.o
+r - spdz2uv.o
+rm -f spdz2uv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX speps.f
+ar -ruv    ../splib_v2/libsp_d.a speps.o
+r - speps.o
+rm -f speps.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spfft1.f
+ar -ruv    ../splib_v2/libsp_d.a spfft1.o
+r - spfft1.o
+rm -f spfft1.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spffte.f
+ar -ruv    ../splib_v2/libsp_d.a spffte.o
+r - spffte.o
+rm -f spffte.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spfft.f
+ar -ruv    ../splib_v2/libsp_d.a spfft.o
+r - spfft.o
+rm -f spfft.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spfftpt.f
+ar -ruv    ../splib_v2/libsp_d.a spfftpt.o
+r - spfftpt.o
+rm -f spfftpt.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spgradq.f
+ar -ruv    ../splib_v2/libsp_d.a spgradq.o
+r - spgradq.o
+rm -f spgradq.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spgradx.f
+ar -ruv    ../splib_v2/libsp_d.a spgradx.o
+r - spgradx.o
+rm -f spgradx.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spgrady.f
+ar -ruv    ../splib_v2/libsp_d.a spgrady.o
+r - spgrady.o
+rm -f spgrady.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX splaplac.f
+ar -ruv    ../splib_v2/libsp_d.a splaplac.o
+r - splaplac.o
+rm -f splaplac.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX splegend.f
+ar -ruv    ../splib_v2/libsp_d.a splegend.o
+r - splegend.o
+rm -f splegend.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sppad.f
+ar -ruv    ../splib_v2/libsp_d.a sppad.o
+r - sppad.o
+rm -f sppad.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spsynth.f
+ar -ruv    ../splib_v2/libsp_d.a spsynth.o
+r - spsynth.o
+rm -f spsynth.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezd.f
+ar -ruv    ../splib_v2/libsp_d.a sptezd.o
+r - sptezd.o
+rm -f sptezd.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptez.f
+ar -ruv    ../splib_v2/libsp_d.a sptez.o
+r - sptez.o
+rm -f sptez.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezmd.f
+ar -ruv    ../splib_v2/libsp_d.a sptezmd.o
+r - sptezmd.o
+rm -f sptezmd.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezm.f
+ar -ruv    ../splib_v2/libsp_d.a sptezm.o
+r - sptezm.o
+rm -f sptezm.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezmv.f
+ar -ruv    ../splib_v2/libsp_d.a sptezmv.o
+r - sptezmv.o
+rm -f sptezmv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptezv.f
+ar -ruv    ../splib_v2/libsp_d.a sptezv.o
+r - sptezv.o
+rm -f sptezv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpmd.f
+ar -ruv    ../splib_v2/libsp_d.a sptgpmd.o
+r - sptgpmd.o
+rm -f sptgpmd.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpm.f
+ar -ruv    ../splib_v2/libsp_d.a sptgpm.o
+r - sptgpm.o
+rm -f sptgpm.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpmv.f
+ar -ruv    ../splib_v2/libsp_d.a sptgpmv.o
+r - sptgpmv.o
+rm -f sptgpmv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpsd.f
+ar -ruv    ../splib_v2/libsp_d.a sptgpsd.o
+r - sptgpsd.o
+rm -f sptgpsd.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgps.f
+ar -ruv    ../splib_v2/libsp_d.a sptgps.o
+r - sptgps.o
+rm -f sptgps.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpsv.f
+ar -ruv    ../splib_v2/libsp_d.a sptgpsv.o
+r - sptgpsv.o
+rm -f sptgpsv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptd.f
+ar -ruv    ../splib_v2/libsp_d.a sptgptd.o
+r - sptgptd.o
+rm -f sptgptd.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgpt.f
+ar -ruv    ../splib_v2/libsp_d.a sptgpt.o
+r - sptgpt.o
+rm -f sptgpt.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptsd.f
+ar -ruv    ../splib_v2/libsp_d.a sptgptsd.o
+r - sptgptsd.o
+rm -f sptgptsd.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptvd.f
+ar -ruv    ../splib_v2/libsp_d.a sptgptvd.o
+r - sptgptvd.o
+rm -f sptgptvd.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptgptv.f
+ar -ruv    ../splib_v2/libsp_d.a sptgptv.o
+r - sptgptv.o
+rm -f sptgptv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrand.f
+ar -ruv    ../splib_v2/libsp_d.a sptrand.o
+r - sptrand.o
+rm -f sptrand.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptran.f
+ar -ruv    ../splib_v2/libsp_d.a sptran.o
+r - sptran.o
+rm -f sptran.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranf0.f
+ar -ruv    ../splib_v2/libsp_d.a sptranf0.o
+r - sptranf0.o
+rm -f sptranf0.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranf1.f
+ar -ruv    ../splib_v2/libsp_d.a sptranf1.o
+r - sptranf1.o
+rm -f sptranf1.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranf.f
+ar -ruv    ../splib_v2/libsp_d.a sptranf.o
+r - sptranf.o
+rm -f sptranf.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranfv.f
+ar -ruv    ../splib_v2/libsp_d.a sptranfv.o
+r - sptranfv.o
+rm -f sptranfv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptranv.f
+ar -ruv    ../splib_v2/libsp_d.a sptranv.o
+r - sptranv.o
+rm -f sptranv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrund.f
+ar -ruv    ../splib_v2/libsp_d.a sptrund.o
+r - sptrund.o
+rm -f sptrund.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrun.f
+ar -ruv    ../splib_v2/libsp_d.a sptrun.o
+r - sptrun.o
+rm -f sptrun.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrung.f
+ar -ruv    ../splib_v2/libsp_d.a sptrung.o
+r - sptrung.o
+rm -f sptrung.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrungv.f
+ar -ruv    ../splib_v2/libsp_d.a sptrungv.o
+r - sptrungv.o
+rm -f sptrungv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunl.f
+ar -ruv    ../splib_v2/libsp_d.a sptrunl.o
+r - sptrunl.o
+rm -f sptrunl.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunm.f
+ar -ruv    ../splib_v2/libsp_d.a sptrunm.o
+r - sptrunm.o
+rm -f sptrunm.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunmv.f
+ar -ruv    ../splib_v2/libsp_d.a sptrunmv.o
+r - sptrunmv.o
+rm -f sptrunmv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptruns.f
+ar -ruv    ../splib_v2/libsp_d.a sptruns.o
+r - sptruns.o
+rm -f sptruns.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunsv.f
+ar -ruv    ../splib_v2/libsp_d.a sptrunsv.o
+r - sptrunsv.o
+rm -f sptrunsv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX sptrunv.f
+ar -ruv    ../splib_v2/libsp_d.a sptrunv.o
+r - sptrunv.o
+rm -f sptrunv.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spuv2dz.f
+ar -ruv    ../splib_v2/libsp_d.a spuv2dz.o
+r - spuv2dz.o
+rm -f spuv2dz.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spvar.f
+ar -ruv    ../splib_v2/libsp_d.a spvar.o
+r - spvar.o
+rm -f spvar.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX spwget.f
+ar -ruv    ../splib_v2/libsp_d.a spwget.o
+r - spwget.o
+rm -f spwget.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX fftpack.F
+ar -ruv    ../splib_v2/libsp_d.a fftpack.o
+r - fftpack.o
+rm -f fftpack.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX lapack_gen.F
+ar -ruv    ../splib_v2/libsp_d.a lapack_gen.o
+r - lapack_gen.o
+rm -f lapack_gen.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX ncpus.F
+ar -ruv    ../splib_v2/libsp_d.a ncpus.o
+r - ncpus.o
+rm -f ncpus.o
+ifort -c  -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX splat.F
+ar -ruv    ../splib_v2/libsp_d.a splat.o
+r - splat.o
+rm -f splat.o

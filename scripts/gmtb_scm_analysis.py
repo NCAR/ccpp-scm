@@ -186,8 +186,8 @@ for i in range(len(gmtb_scm_datasets)):
     pres_i.append(nc_fid.variables['pres_i'][:])
     sigma_l.append(nc_fid.variables['sigma'][:])
     sigma_i.append(nc_fid.variables['sigma_i'][:])
-    phi_l.append(nc_fid.variables['phi'][:])
-    phi_i.append(nc_fid.variables['phi_i'][:])
+    #phi_l.append(nc_fid.variables['phi'][:])
+    #phi_i.append(nc_fid.variables['phi_i'][:])
     qv.append(nc_fid.variables['qv'][:])
     T.append(nc_fid.variables['T'][:])
     u.append(nc_fid.variables['u'][:])
@@ -205,46 +205,46 @@ for i in range(len(gmtb_scm_datasets)):
     h_advec_qt.append(nc_fid.variables['h_advec_qt'][:])
     T_s.append(nc_fid.variables['T_s'][:])
     pres_s.append(nc_fid.variables['pres_s'][:])
-    lhf.append(nc_fid.variables['lhf'][:])
-    shf.append(nc_fid.variables['shf'][:])
-    tau_u.append(nc_fid.variables['tau_u'][:])
-    tau_v.append(nc_fid.variables['tau_v'][:])
-    cld.append(nc_fid.variables['cldcov'][:])
-    sw_rad_heating_rate.append(nc_fid.variables['sw_rad_heating_rate'][:])
-    lw_rad_heating_rate.append(nc_fid.variables['lw_rad_heating_rate'][:])
-    precip.append(nc_fid.variables['precip'][:]*3600.0) #convert to mm/hr
-    rain.append(nc_fid.variables['rain'][:]*1000.0*3600.0) #convert to mm/hr from m/s
-    rainc.append(nc_fid.variables['rainc'][:]*1000.0*3600.0) #convert to mm/hr from m/s
-    pwat.append(nc_fid.variables['pwat'][:]/(1.0E3)*100.0) #convert to cm
-    dT_dt_lwrad.append(nc_fid.variables['dT_dt_lwrad'][:]*86400.0)
-    dT_dt_swrad.append(nc_fid.variables['dT_dt_swrad'][:]*86400.0)
-    dT_dt_PBL.append(nc_fid.variables['dT_dt_PBL'][:]*86400.0)
-    dT_dt_deepconv.append(nc_fid.variables['dT_dt_deepconv'][:]*86400.0)
-    dT_dt_shalconv.append(nc_fid.variables['dT_dt_shalconv'][:]*86400.0)
-    dT_dt_micro.append(nc_fid.variables['dT_dt_micro'][:]*86400.0)
-    dT_dt_conv.append(dT_dt_deepconv[-1] + dT_dt_shalconv[-1])
-    dq_dt_PBL.append(nc_fid.variables['dq_dt_PBL'][:]*86400.0*1.0E3)
-    dq_dt_deepconv.append(nc_fid.variables['dq_dt_deepconv'][:]*86400.0*1.0E3)
-    dq_dt_shalconv.append(nc_fid.variables['dq_dt_shalconv'][:]*86400.0*1.0E3)
-    dq_dt_micro.append(nc_fid.variables['dq_dt_micro'][:]*86400.0*1.0E3)
-    dq_dt_conv.append(dq_dt_deepconv[-1] + dq_dt_shalconv[-1])
-    upd_mf.append(nc_fid.variables['upd_mf'][:])
-    dwn_mf.append(nc_fid.variables['dwn_mf'][:])
-    det_mf.append(nc_fid.variables['det_mf'][:])
-    PBL_height.append(nc_fid.variables['PBL_height'][:])
-    sw_up_TOA_tot.append(nc_fid.variables['sw_up_TOA_tot'][:])
-    sw_dn_TOA_tot.append(nc_fid.variables['sw_dn_TOA_tot'][:])
-    sw_up_TOA_clr.append(nc_fid.variables['sw_up_TOA_clr'][:])
-    sw_up_sfc_tot.append(nc_fid.variables['sw_up_sfc_tot'][:])
-    sw_dn_sfc_tot.append(nc_fid.variables['sw_dn_sfc_tot'][:])
-    sw_up_sfc_clr.append(nc_fid.variables['sw_up_sfc_clr'][:])
-    sw_dn_sfc_clr.append(nc_fid.variables['sw_dn_sfc_clr'][:])
-    lw_up_TOA_tot.append(nc_fid.variables['lw_up_TOA_tot'][:])
-    lw_up_TOA_clr.append(nc_fid.variables['lw_up_TOA_clr'][:])
-    lw_up_sfc_tot.append(nc_fid.variables['lw_up_sfc_tot'][:])
-    lw_up_sfc_clr.append(nc_fid.variables['lw_up_sfc_clr'][:])
-    lw_dn_sfc_tot.append(nc_fid.variables['lw_dn_sfc_tot'][:])
-    lw_dn_sfc_clr.append(nc_fid.variables['lw_dn_sfc_clr'][:])
+    # lhf.append(nc_fid.variables['lhf'][:])
+    # shf.append(nc_fid.variables['shf'][:])
+    # tau_u.append(nc_fid.variables['tau_u'][:])
+    # tau_v.append(nc_fid.variables['tau_v'][:])
+    # cld.append(nc_fid.variables['cldcov'][:])
+    # sw_rad_heating_rate.append(nc_fid.variables['sw_rad_heating_rate'][:])
+    # lw_rad_heating_rate.append(nc_fid.variables['lw_rad_heating_rate'][:])
+    # precip.append(nc_fid.variables['precip'][:]*3600.0) #convert to mm/hr
+    # rain.append(nc_fid.variables['rain'][:]*1000.0*3600.0) #convert to mm/hr from m/s
+    # rainc.append(nc_fid.variables['rainc'][:]*1000.0*3600.0) #convert to mm/hr from m/s
+    # pwat.append(nc_fid.variables['pwat'][:]/(1.0E3)*100.0) #convert to cm
+    # dT_dt_lwrad.append(nc_fid.variables['dT_dt_lwrad'][:]*86400.0)
+    # dT_dt_swrad.append(nc_fid.variables['dT_dt_swrad'][:]*86400.0)
+    # dT_dt_PBL.append(nc_fid.variables['dT_dt_PBL'][:]*86400.0)
+    # dT_dt_deepconv.append(nc_fid.variables['dT_dt_deepconv'][:]*86400.0)
+    # dT_dt_shalconv.append(nc_fid.variables['dT_dt_shalconv'][:]*86400.0)
+    # dT_dt_micro.append(nc_fid.variables['dT_dt_micro'][:]*86400.0)
+    # dT_dt_conv.append(dT_dt_deepconv[-1] + dT_dt_shalconv[-1])
+    # dq_dt_PBL.append(nc_fid.variables['dq_dt_PBL'][:]*86400.0*1.0E3)
+    # dq_dt_deepconv.append(nc_fid.variables['dq_dt_deepconv'][:]*86400.0*1.0E3)
+    # dq_dt_shalconv.append(nc_fid.variables['dq_dt_shalconv'][:]*86400.0*1.0E3)
+    # dq_dt_micro.append(nc_fid.variables['dq_dt_micro'][:]*86400.0*1.0E3)
+    # dq_dt_conv.append(dq_dt_deepconv[-1] + dq_dt_shalconv[-1])
+    # upd_mf.append(nc_fid.variables['upd_mf'][:])
+    # dwn_mf.append(nc_fid.variables['dwn_mf'][:])
+    # det_mf.append(nc_fid.variables['det_mf'][:])
+    # PBL_height.append(nc_fid.variables['PBL_height'][:])
+    # sw_up_TOA_tot.append(nc_fid.variables['sw_up_TOA_tot'][:])
+    # sw_dn_TOA_tot.append(nc_fid.variables['sw_dn_TOA_tot'][:])
+    # sw_up_TOA_clr.append(nc_fid.variables['sw_up_TOA_clr'][:])
+    # sw_up_sfc_tot.append(nc_fid.variables['sw_up_sfc_tot'][:])
+    # sw_dn_sfc_tot.append(nc_fid.variables['sw_dn_sfc_tot'][:])
+    # sw_up_sfc_clr.append(nc_fid.variables['sw_up_sfc_clr'][:])
+    # sw_dn_sfc_clr.append(nc_fid.variables['sw_dn_sfc_clr'][:])
+    # lw_up_TOA_tot.append(nc_fid.variables['lw_up_TOA_tot'][:])
+    # lw_up_TOA_clr.append(nc_fid.variables['lw_up_TOA_clr'][:])
+    # lw_up_sfc_tot.append(nc_fid.variables['lw_up_sfc_tot'][:])
+    # lw_up_sfc_clr.append(nc_fid.variables['lw_up_sfc_clr'][:])
+    # lw_dn_sfc_tot.append(nc_fid.variables['lw_dn_sfc_tot'][:])
+    # lw_dn_sfc_clr.append(nc_fid.variables['lw_dn_sfc_clr'][:])
 
     initial_date = datetime.datetime(year[i], month[i], day[i], hour[i], 0, 0, 0)
 
@@ -254,26 +254,26 @@ for i in range(len(gmtb_scm_datasets)):
     nc_fid.close()
 
     #calculate diagnostic values from model output
-    e_s = 6.1078*np.exp(17.2693882*(T[-1] - 273.16)/(T[-1] - 35.86))*100.0 #Tetens formula produces e_s in mb (convert to Pa)
-    e = qv[-1]*pres_l[-1]/(qv[-1] + (Rd/Rv)*(1.0 - qv[-1])) #compute vapor pressure from specific humidity
-    rh.append(np.clip(e/e_s, 0.0, 1.0))
-
-    rh_500_kj = np.zeros((pres_l[-1].shape[0],pres_l[-1].shape[2]))
-    lwp_kj = np.zeros((pres_l[-1].shape[0],pres_l[-1].shape[2]))
-    for j in range(pres_l[-1].shape[0]): #loop over times
-        for k in range(pres_l[-1].shape[2]): #loop over hor. index
-            index_500 = np.where(pres_l[-1][j,:,k]*0.01 < 500.0)[0][0]
-            lifrac = (pres_l[-1][j,index_500-1,k] - 50000.0)/(pres_l[-1][j,index_500-1,k] - pres_l[-1][j,index_500,k])
-            rh_500_kj[j,k] = rh[-1][j,index_500-1,k] + lifrac*(rh[-1][j,index_500,k] - rh[-1][j,index_500-1,k])
-            #print index_500, pres_l[-1][j,index_500,k], pres_l[-1][j,index_500-1,k], rh_500_kj, rh[-1][j,index_500,k], rh[-1][j,index_500-1,k]
-            temp_lwp = 0.0
-            for l in range(pres_l[-1].shape[1]):
-                temp_lwp += qc[-1][j,l,k]*(pres_i[-1][j,l,k]-pres_i[-1][j,l+1,k])/g
-            lwp_kj[j,k] = temp_lwp
-    rh_500.append(rh_500_kj)
-    lwp.append(lwp_kj)
-
-    rad_net_srf.append((sw_dn_sfc_tot[-1] - sw_up_sfc_tot[-1]) + (lw_dn_sfc_tot[-1] - lw_up_sfc_tot[-1]))
+    # e_s = 6.1078*np.exp(17.2693882*(T[-1] - 273.16)/(T[-1] - 35.86))*100.0 #Tetens formula produces e_s in mb (convert to Pa)
+    # e = qv[-1]*pres_l[-1]/(qv[-1] + (Rd/Rv)*(1.0 - qv[-1])) #compute vapor pressure from specific humidity
+    # rh.append(np.clip(e/e_s, 0.0, 1.0))
+    #
+    # rh_500_kj = np.zeros((pres_l[-1].shape[0],pres_l[-1].shape[2]))
+    # lwp_kj = np.zeros((pres_l[-1].shape[0],pres_l[-1].shape[2]))
+    # for j in range(pres_l[-1].shape[0]): #loop over times
+    #     for k in range(pres_l[-1].shape[2]): #loop over hor. index
+    #         index_500 = np.where(pres_l[-1][j,:,k]*0.01 < 500.0)[0][0]
+    #         lifrac = (pres_l[-1][j,index_500-1,k] - 50000.0)/(pres_l[-1][j,index_500-1,k] - pres_l[-1][j,index_500,k])
+    #         rh_500_kj[j,k] = rh[-1][j,index_500-1,k] + lifrac*(rh[-1][j,index_500,k] - rh[-1][j,index_500-1,k])
+    #         #print index_500, pres_l[-1][j,index_500,k], pres_l[-1][j,index_500-1,k], rh_500_kj, rh[-1][j,index_500,k], rh[-1][j,index_500-1,k]
+    #         temp_lwp = 0.0
+    #         for l in range(pres_l[-1].shape[1]):
+    #             temp_lwp += qc[-1][j,l,k]*(pres_i[-1][j,l,k]-pres_i[-1][j,l+1,k])/g
+    #         lwp_kj[j,k] = temp_lwp
+    # rh_500.append(rh_500_kj)
+    # lwp.append(lwp_kj)
+    #
+    # rad_net_srf.append((sw_dn_sfc_tot[-1] - sw_up_sfc_tot[-1]) + (lw_dn_sfc_tot[-1] - lw_up_sfc_tot[-1]))
 
 
 time_h = [x/3600.0 for x in time]

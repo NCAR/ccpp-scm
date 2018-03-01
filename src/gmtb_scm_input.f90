@@ -52,6 +52,7 @@ subroutine get_config_nml(scm_state)
   integer              :: year, month, day, hour
 
   character(len=80), allocatable    :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
+  character(len=65), allocatable    :: physics_nml(:)
   character(len=80)                :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
   !integer, allocatable              :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
 
@@ -66,7 +67,7 @@ subroutine get_config_nml(scm_state)
     lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, sfc_flux_spec, &
     reference_profile_choice, year, month, day, hour
 
-  NAMELIST /physics_config/ physics_suite, physics_suite_dir
+  NAMELIST /physics_config/ physics_suite, physics_suite_dir, physics_nml
 
   !>  \section get_config_alg Algorithm
   !!  @{
@@ -137,7 +138,7 @@ subroutine get_config_nml(scm_state)
     !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
     !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
     !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
-    allocate(physics_suite(n_columns))
+    allocate(physics_suite(n_columns), physics_nml(n_columns))
 
     do i=1, n_columns
       physics_suite(i) = 'none'
@@ -174,6 +175,7 @@ subroutine get_config_nml(scm_state)
             end if
             if (response == 'y' .or. response == 'Y') then
               physics_suite(i) = physics_suite(last_physics_specified)
+              physics_nml(i) = physics_nml(last_physics_specified)
               !n_phy_fields(i) = n_phy_fields(last_physics_specified)
             else
               write(*,*) 'Please edit ../case_config/'//trim(experiment_name)//'.nml to contain the same number of physics suites '&
@@ -256,6 +258,7 @@ subroutine get_config_nml(scm_state)
   scm_state%output_file = output_file
   scm_state%case_name = case_name
   scm_state%physics_suite_name = physics_suite
+  scm_state%physics_nml = physics_nml
 
   scm_state%n_cols = n_columns
   scm_state%n_levels = n_levels

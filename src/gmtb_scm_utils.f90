@@ -23,7 +23,7 @@ contains
 subroutine copy_data_to_working_dir(dir_name)
   character(len=*),intent(in) :: dir_name !< the directory where the data is located
   call system('cp '//dir_name//'/* ./')
-  call system('ln -s ./solarconstant_noaa_a0.txt ./fort.102')
+  call system('ln -s ./solarconstant_noaa_an.txt ./fort.102')
 end subroutine copy_data_to_working_dir
 
 !> Subroutine to remove data needed by the main program from the working directory
