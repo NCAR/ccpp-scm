@@ -126,10 +126,8 @@ subroutine interpolate_forcing(scm_input, scm_state)
         scm_state%v_advec_qt(i,:) = v_advec_qt_bracket(1,:)
 
         !>  - Set the surface parameters to the last available data.
-        scm_state%lat(i) = scm_input%input_lat(scm_input%input_ntimes)
-        scm_state%lon(i) = scm_input%input_lon(scm_input%input_ntimes)
-        scm_state%lat_2D(i,:) = scm_state%lat(i)
-        scm_state%lon_2D(i,:) = scm_state%lon(i)
+        scm_state%lat(i,1) = scm_input%input_lat(scm_input%input_ntimes)
+        scm_state%lon(i,1) = scm_input%input_lon(scm_input%input_ntimes)
         scm_state%pres_surf(i,1) = scm_input%input_pres_surf(scm_input%input_ntimes)
         scm_state%T_surf(i,1) = scm_input%input_T_surf(scm_input%input_ntimes)
         scm_state%sh_flux(i) = scm_input%input_sh_flux_sfc(scm_input%input_ntimes)
@@ -138,8 +136,6 @@ subroutine interpolate_forcing(scm_input, scm_state)
       !>  - Convert lat, lon to radians.
       scm_state%lat = scm_state%lat*deg_to_rad_const
       scm_state%lon = scm_state%lon*deg_to_rad_const
-      scm_state%lat_2D = scm_state%lat_2D*deg_to_rad_const
-      scm_state%lon_2D = scm_state%lon_2D*deg_to_rad_const
   else
   !> - When the model elapsed time is within the time-frame specified by the input forcing, the forcing must be interpolated in time and space.
     !>  - Determine the index in the input file for the time immediately preceeding the model time and determine the linear interpolation value.
@@ -263,10 +259,8 @@ subroutine interpolate_forcing(scm_input, scm_state)
       scm_state%v_advec_qt(i,:) = (1.0 - lifrac)*v_advec_qt_bracket(1,:) + lifrac*v_advec_qt_bracket(2,:)
 
       !>  - Interpolate the surface parameters in time.
-      scm_state%lat(i) = (1.0 - lifrac)*scm_input%input_lat(low_t_index) + lifrac*scm_input%input_lat(low_t_index+1)
-      scm_state%lon(i) = (1.0 - lifrac)*scm_input%input_lon(low_t_index) + lifrac*scm_input%input_lon(low_t_index+1)
-      scm_state%lat_2D(i,:) = scm_state%lat(i)
-      scm_state%lon_2D(i,:) = scm_state%lon(i)
+      scm_state%lat(i,1) = (1.0 - lifrac)*scm_input%input_lat(low_t_index) + lifrac*scm_input%input_lat(low_t_index+1)
+      scm_state%lon(i,1) = (1.0 - lifrac)*scm_input%input_lon(low_t_index) + lifrac*scm_input%input_lon(low_t_index+1)
       scm_state%pres_surf(i,1) = (1.0 - lifrac)*scm_input%input_pres_surf(low_t_index) + &
         lifrac*scm_input%input_pres_surf(low_t_index+1)
       scm_state%T_surf(i,1) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
@@ -278,8 +272,6 @@ subroutine interpolate_forcing(scm_input, scm_state)
     !>  - Convert lat, lon to radians.
     scm_state%lat = scm_state%lat*deg_to_rad_const
     scm_state%lon = scm_state%lon*deg_to_rad_const
-    scm_state%lat_2D = scm_state%lat_2D*deg_to_rad_const
-    scm_state%lon_2D = scm_state%lon_2D*deg_to_rad_const
   end if
 
   !> @}
@@ -364,7 +356,7 @@ subroutine apply_forcing_leapfrog(scm_state)
 
         !> - Add forcing due to geostrophic wind
         !>  - Calculate Coriolis parameter.
-        f_coriolis = 2.0*con_omega*sin(scm_state%lat(i))
+        f_coriolis = 2.0*con_omega*sin(scm_state%lat(i,1))
         do k=1, scm_state%n_levels
           !accumulate forcing tendencies
           scm_state%u_force_tend(i,k) = scm_state%u_force_tend(i,k) +  f_coriolis*(old_v(i,k) - scm_state%v_g(i,k))
@@ -623,7 +615,7 @@ subroutine apply_forcing_forward_Euler(scm_state)
 
         !> - Add forcing due to geostrophic wind
         !>  - Calculate Coriolis parameter.
-        f_coriolis = 2.0*con_omega*sin(scm_state%lat(i))
+        f_coriolis = 2.0*con_omega*sin(scm_state%lat(i,1))
         do k=1, scm_state%n_levels
           !accumulate forcing tendencies
           scm_state%u_force_tend(i,k) = scm_state%u_force_tend(i,k) +  f_coriolis*(old_v(i,k) - scm_state%v_g(i,k))

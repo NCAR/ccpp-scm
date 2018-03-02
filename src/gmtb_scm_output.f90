@@ -83,8 +83,8 @@ subroutine output_init(scm_state)
     VARID=dummy_id))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_s',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pres_s',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lhf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='shf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lhf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='shf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_u',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_v',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
 
@@ -162,11 +162,14 @@ subroutine output_init(scm_state)
 end subroutine output_init
 
 !> This subroutine appends data to the "output.nc" file.
-subroutine output_append(scm_state)
+subroutine output_append(scm_state, physics)
 
-  use gmtb_scm_type_defs, only: scm_state_type
+  use gmtb_scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(in) :: scm_state
+  type(physics_type), intent(in) :: physics
+
+  real(kind=dp), allocatable :: dummy_1D(:)
 
   ! real(kind=dp), intent(in)          :: cldcov(:,:) !< cloud fraction (horizontal, vertical)
   ! real(kind=dp), intent(in)          :: lhf(:) !< surface latent heat flux (W/m^2) (horizontal)
@@ -210,7 +213,9 @@ subroutine output_append(scm_state)
   ! real(kind=dp), intent(in)          :: lw_dn_sfc_clr(:) !< clear sky downward LW flux at sfc (\f$W/m^2\f$) (horizontal)
 
 
-  integer :: ncid, var_id
+  integer :: ncid, var_id, i
+
+  allocate(dummy_1D(scm_state%n_cols))
 
   !> \section output_append_alg Algorithm
   !! @{
@@ -274,10 +279,16 @@ subroutine output_append(scm_state)
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%T_surf(:,1),START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pres_s",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_surf(:,1),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lhf",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lhf(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="shf",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=shf(:),START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lhf",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_1D(i) = physics%Interstitial(i)%dqsfc1(1)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="shf",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_1D(i) = physics%Interstitial(i)%dtsfc1(1)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_u",VARID=var_id))
   ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=tau_u(:),START=(/1,scm_state%itt_out /)))
   ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_v",VARID=var_id))

@@ -50,6 +50,8 @@ module gmtb_scm_type_defs
     integer, allocatable              :: blksz(:)
 
     logical                           :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
+    integer                           :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
+    real(kind=dp)                     :: sfc_type_real(1)
     integer                           :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
     integer                           :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
     integer                           :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
@@ -75,10 +77,8 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: geopotential_i(:,:,:), geopotential_l(:,:,:) !< geopotential on grid interfaces, centers
     real(kind=dp), allocatable              :: a_k(:,:), b_k(:,:) !< used to determine grid sigma and pressure levels
 
-    real(kind=dp), allocatable              :: lat(:), lon(:) !< latitude and longitude (radians)
-    real(kind=dp), allocatable              :: lat_2D(:,:), lon_2D(:,:) !< latitude and longitude (radians)
-    real(kind=dp), allocatable              :: area(:) !< area over which the column represents a mean (analogous to grid size or observational array area)
-    real(kind=dp), allocatable              :: area_2D(:,:) !< area over which the column represents a mean (analogous to grid size or observational array area)
+    real(kind=dp), allocatable              :: lat(:,:), lon(:,:) !< latitude and longitude (radians)
+    real(kind=dp), allocatable              :: area(:,:) !< area over which the column represents a mean (analogous to grid size or observational array area)
 
     real(kind=dp), allocatable              :: state_T(:,:,:,:) !< model state absolute temperature at grid centers (K)
     real(kind=dp), allocatable              :: state_u(:,:,:,:), state_v(:,:,:,:) !< model state horizontal winds at grid centers (m/s)
@@ -900,6 +900,8 @@ module gmtb_scm_type_defs
     scm_state%blksz = int_one
 
     scm_state%sfc_flux_spec = .false.
+    scm_state%sfc_type = int_zero
+    scm_state%sfc_type_real = real_zero
     scm_state%mom_forcing_type = int_zero
     scm_state%thermo_forcing_type = int_zero
     scm_state%reference_profile_choice = int_zero
@@ -935,15 +937,10 @@ module gmtb_scm_type_defs
     scm_state%si = real_zero
     scm_state%sl = real_zero
 
-    allocate(scm_state%lat(n_columns), scm_state%lon(n_columns), scm_state%area(n_columns))
+    allocate(scm_state%lat(n_columns,1), scm_state%lon(n_columns,1), scm_state%area(n_columns,1))
     scm_state%lat = real_zero
     scm_state%lon = real_zero
     scm_state%area = real_one
-
-    allocate(scm_state%lat_2D(n_columns,1), scm_state%lon_2D(n_columns,1), scm_state%area_2D(n_columns, 1))
-    scm_state%lat_2D = real_zero
-    scm_state%lon_2D = real_zero
-    scm_state%area_2D = real_one
 
     allocate(scm_state%state_T(n_columns, 1, n_levels, n_time_levels), &
       scm_state%state_u(n_columns, 1, n_levels, n_time_levels), scm_state%state_v(n_columns, 1, n_levels, n_time_levels), &
@@ -1199,6 +1196,8 @@ module gmtb_scm_type_defs
     physics%Statein(col)%qgrs => scm_state%state_tracer(col,:,:,:,1)
 
     physics%Sfcprop(col)%tsfc => scm_state%T_surf(col,:)
+    physics%Sfcprop(col)%tref => scm_state%T_surf(col,:)
+    physics%Sfcprop(col)%slmsk => scm_state%sfc_type_real
 
     if(scm_state%time_scheme == 2) then
       physics%Stateout(col)%gu0 => scm_state%state_u(col,:,:,2)

@@ -48,12 +48,14 @@ subroutine get_config_nml(scm_state)
   integer              :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   real(kind=dp)              :: relax_time !< relaxation time scale (s)
   logical              :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
+  integer              :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour
 
   character(len=80), allocatable    :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
   character(len=65), allocatable    :: physics_nml(:)
   character(len=80)                :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
+  real(kind=dp), allocatable       :: column_area(:)
   !integer, allocatable              :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
 
   integer                           :: i, last_physics_specified
@@ -64,10 +66,10 @@ subroutine get_config_nml(scm_state)
   CHARACTER(1)             :: response
 
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, swrad_frequency, &
-    lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, sfc_flux_spec, &
-    reference_profile_choice, year, month, day, hour
+    lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, sfc_type, &
+    sfc_flux_spec, reference_profile_choice, year, month, day, hour
 
-  NAMELIST /physics_config/ physics_suite, physics_suite_dir, physics_nml
+  NAMELIST /physics_config/ physics_suite, physics_suite_dir, physics_nml, column_area
 
   !>  \section get_config_alg Algorithm
   !!  @{
@@ -89,6 +91,7 @@ subroutine get_config_nml(scm_state)
   mom_forcing_type = 3
   relax_time = 7200.0
   sfc_flux_spec = .false.
+  sfc_type = 0
   reference_profile_choice = 1
   year = 2006
   month = 1
@@ -138,7 +141,7 @@ subroutine get_config_nml(scm_state)
     !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
     !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
     !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
-    allocate(physics_suite(n_columns), physics_nml(n_columns))
+    allocate(physics_suite(n_columns), physics_nml(n_columns), column_area(n_columns))
 
     do i=1, n_columns
       physics_suite(i) = 'none'
@@ -259,6 +262,7 @@ subroutine get_config_nml(scm_state)
   scm_state%case_name = case_name
   scm_state%physics_suite_name = physics_suite
   scm_state%physics_nml = physics_nml
+  scm_state%area(:,1) = column_area
 
   scm_state%n_cols = n_columns
   scm_state%n_levels = n_levels
@@ -275,6 +279,8 @@ subroutine get_config_nml(scm_state)
   scm_state%thermo_forcing_type = thermo_forcing_type
   scm_state%mom_forcing_type = mom_forcing_type
   scm_state%sfc_flux_spec = sfc_flux_spec
+  scm_state%sfc_type = sfc_type
+  scm_state%sfc_type_real = DBLE(sfc_type)
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
 

@@ -89,17 +89,15 @@ subroutine gmtb_scm_main_sub()
 
   scm_state%itt_out = 1
 
-  call output_append(scm_state)
+  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%n_tracers)
 
   !physics initialization section
 
   !temporary - move to run script?
   call copy_data_to_working_dir('../standalone_data')
 
-  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%n_tracers)
-
   !same ozone and h20 forcing setup for all columns
-  call GFS_ozone_and_h20_setup(scm_state%n_cols, scm_state%n_levels, scm_state%lat, scm_state%pres_l(1,1,:), &
+  call GFS_ozone_and_h20_setup(scm_state%n_cols, scm_state%n_levels, scm_state%lat(:,1), scm_state%pres_l(1,1,:), &
     physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_coefficients, physics%n_ozone_times, &
     physics%ozone_lat, physics%ozone_pres, physics%ozone_time, physics%ozone_forcing_in)
 
@@ -131,9 +129,9 @@ subroutine gmtb_scm_main_sub()
       physics%Init_parm(i)%dt_phys = scm_state%dt
       physics%Init_parm(i)%ak => scm_state%a_k(1,:)
       physics%Init_parm(i)%bk => scm_state%b_k(1,:)
-      physics%Init_parm(i)%xlon => scm_state%lon_2D
-      physics%Init_parm(i)%xlat => scm_state%lat_2D
-      physics%Init_parm(i)%area => scm_state%area_2D
+      physics%Init_parm(i)%xlon => scm_state%lon
+      physics%Init_parm(i)%xlat => scm_state%lat
+      physics%Init_parm(i)%area => scm_state%area
       physics%Init_parm(i)%tracer_names => scm_state%tracer_names
       physics%Init_parm(i)%fn_nml = scm_state%physics_nml(1)
       physics%Init_parm(i)%blksz => scm_state%blksz
@@ -149,6 +147,8 @@ subroutine gmtb_scm_main_sub()
       write(*,*) 'after ccpp_fields_add'
 
   end do
+
+  call output_append(scm_state, physics)
 
   !first time step (call once)
 
@@ -285,7 +285,7 @@ subroutine gmtb_scm_main_sub()
       write(*,*) "model time (s) = ",scm_state%model_time
       write(*,*) "calling output routine..."
 
-      call output_append(scm_state)
+      call output_append(scm_state, physics)
 
     end if
   end do
