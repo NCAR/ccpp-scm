@@ -23,7 +23,7 @@ $end
 
 $physics_config
 physics_suite = 'suite_scm_GFS_test',
-physics_suite_dir = '../src/ccpp/examples/',
-physics_nml = '../src/ccpp/schemes/gfsphysics/input.nml',
+physics_suite_dir = '../../gmtb-ccpp/examples/',
+physics_nml = '../../gmtb-gfsphysics/input.nml',
 column_area = 2.0E9,
 $end
