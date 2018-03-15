@@ -288,13 +288,7 @@ subroutine get_case_init(scm_state, scm_input)
   use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
-  ! input_nlev, input_ntimes, input_pres, input_time, input_height, input_thetail, &
-  !   input_qt, input_ql, input_qi, input_u, input_v, input_tke, input_ozone, input_lat, input_lon, input_pres_surf, input_T_surf, &
-  !   input_sh_flux_sfc, input_lh_flux_sfc, input_w_ls, input_omega, input_u_g, input_v_g, input_u_nudge, input_v_nudge, input_T_nudge,&
-  !   input_thil_nudge, input_qt_nudge, input_dT_dt_rad, input_h_advec_thetail, input_h_advec_qt, input_v_advec_thetail,&
-  !   input_v_advec_qt
-
-
+  
   integer               :: input_nlev !< number of levels in the input file
   integer               :: input_ntimes !< number of times represented in the input file
 

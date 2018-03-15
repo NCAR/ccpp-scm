@@ -851,17 +851,6 @@ module gmtb_scm_type_defs
     real(kind=kind_phys), allocatable :: ozone_lat(:), ozone_pres(:), ozone_time(:)
     real(kind=kind_phys), allocatable :: ozone_forcing_in(:,:,:,:)
 
-    !real(kind=kind_phys), allocatable :: crit_rh_sfc(:), crit_rh_PBL(:), crit_rh_TOA(:)
-
-    ! integer, allocatable, target :: int_sea_land_mask(:), flag_dcnv(:)
-    ! real(kind=kind_phys), allocatable, target :: grid_size_coeff(:), grid_size_coeff_comp(:)
-    ! real(kind=kind_phys), allocatable, target :: x_wind_tend_phys(:,:), y_wind_tend_phys(:,:), T_tend_phys(:,:), &
-    !   clear_rad_T_tend_phys(:,:), tracer_tend_phys(:,:,:)
-    ! real(kind=kind_phys), allocatable, target :: inst_cos_zen(:), adj_zen(:)
-    ! real(kind=kind_phys), allocatable, target :: lw_flux_dn_sfc(:), sw_flux_dn_sfc(:), lw_flux_up_sfc(:)
-    ! real(kind=kind_phys), allocatable, target :: sens_heat_flux_sfc_kin(:), lat_heat_flux_sfc_kin(:)
-    ! real(kind=kind_phys), allocatable, target :: cnv_tracers(:,:,:)
-
     contains
       procedure :: create => physics_create
       procedure :: associate => physics_associate
@@ -1125,63 +1114,6 @@ module gmtb_scm_type_defs
     physics%ozone_pres = log(pres)
     physics%ozone_time = (/12.0, 13.0, 14.0/)
     physics%ozone_forcing_in = real_zero
-
-    ! allocate(physics%crit_rh_sfc(n_columns), physics%crit_rh_PBL(n_columns), physics%crit_rh_TOA(n_columns))
-    ! physics%crit_rh_sfc = kind_phys_zero
-    ! physics%crit_rh_PBL = kind_phys_zero
-    ! physics%crit_rh_TOA = kind_phys_zero
-
-    ! allocate(physics%int_sea_land_mask(n_columns), physics%flag_dcnv(n_columns))
-    ! physics%int_sea_land_mask = int_zero
-    ! physics%flag_dcnv = int_zero
-    !
-    ! allocate(physics%grid_size_coeff(n_columns), physics%grid_size_coeff_comp(n_columns))
-    ! physics%grid_size_coeff = kind_phys_zero
-    ! physics%grid_size_coeff_comp = kind_phys_zero
-    !
-    ! allocate(physics%x_wind_tend_phys(n_columns, n_levels), physics%y_wind_tend_phys(n_columns, n_levels), &
-    !   physics%T_tend_phys(n_columns, n_levels), physics%clear_rad_T_tend_phys(n_columns, n_levels), &
-    !   physics%tracer_tend_phys(n_columns, n_levels, n_tracers))
-    ! physics%x_wind_tend_phys = kind_phys_zero
-    ! physics%y_wind_tend_phys = kind_phys_zero
-    ! physics%T_tend_phys = kind_phys_zero
-    ! physics%clear_rad_T_tend_phys = kind_phys_zero
-    ! physics%tracer_tend_phys = kind_phys_zero
-    !
-    ! allocate(physics%inst_cos_zen(n_columns), physics%adj_zen(n_columns))
-    ! physics%inst_cos_zen = kind_phys_zero
-    ! physics%adj_zen = kind_phys_zero
-    !
-    ! allocate(physics%lw_flux_dn_sfc(n_columns), physics%sw_flux_dn_sfc(n_columns), physics%lw_flux_up_sfc(n_columns))
-    ! physics%lw_flux_dn_sfc = kind_phys_zero
-    ! physics%sw_flux_dn_sfc = kind_phys_zero
-    ! physics%lw_flux_up_sfc = kind_phys_zero
-    !
-    ! allocate(physics%sens_heat_flux_sfc_kin(n_columns), physics%lat_heat_flux_sfc_kin(n_columns))
-    ! physics%sens_heat_flux_sfc_kin = kind_phys_zero
-    ! physics%lat_heat_flux_sfc_kin = kind_phys_zero
-    !
-    !
-    !
-    ! do i=1, n_columns
-    !   physics%Interstitial(i)%islmsk => physics%int_sea_land_mask(i)
-    !   physics%Interstitial(i)%kcnv => physics%flag_dcnv(i)
-    !   physics%Interstitial(i)%work1 => physics%grid_size_coeff(i)
-    !   physics%Interstitial(i)%work2 => physics%grid_size_coeff_comp(i)
-    !   physics%Interstitial(i)%dudt => physics%x_wind_tend_phys(i)
-    !   physics%Interstitial(i)%dvdt => physics%y_wind_tend_phys(i)
-    !   physics%Interstitial(i)%dtdt => physics%T_tend_phys(i)
-    !   physics%Interstitial(i)%dtdtc => physics%clear_rad_T_tend_phys(i)
-    !   physics%Interstitial(i)%dqdt => physics%tracer_tend_phys(i)
-    !   physics%Interstitial(i)%xcosz => physics%inst_cos_zen(i)
-    !   physics%Interstitial(i)%xmy => physics%adj_zen(i)
-    !   physics%Interstitial(i)%adjsfcdlw => physics%lw_flux_dn_sfc(i)
-    !   physics%Interstitial(i)%adjsfcdsw => physics%sw_flux_dn_sfc(i)
-    !   physics%Interstitial(i)%adjsfculw => physics%lw_flux_up_sfc(i)
-    !   physics%Interstitial(i)%heat => physics%sens_heat_flux_sfc_kin(i)
-    !   physics%Interstitial(i)%heat => physics%lat_heat_flux_sfc_kin(i)
-    ! end do
-
 
   end subroutine physics_create
 
