@@ -4,7 +4,6 @@
 module gmtb_scm_time_integration
 
 use gmtb_scm_kinds, only: sp, dp, qp
-!use nuopc_physics
 use gmtb_scm_forcing
 
 use            :: ccpp_types, only: ccpp_t
@@ -80,14 +79,8 @@ subroutine do_time_step(scm_state, cdata)
   end if
 
   do i=1, scm_state%n_cols
-    do ipd_index = 1 , cdata(i)%suite%ipds_max
-      do subcycle_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles_max
-        do scheme_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes_max
-          call ccpp_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
-        end do !ipd parts
-      end do !subcycles
-    end do !schemes
-  end do !columns
+    call ccpp_run(cdata(i)%suite, cdata(i), ierr)
+  end do
 
 
   !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)

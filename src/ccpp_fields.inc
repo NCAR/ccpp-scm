@@ -24,6 +24,11 @@
                 call ccpp_error('Unable to add field "FV3-GFS_Grid_type" to CCPP data structure')
                 return
             end if
+            call ccpp_fields_add(cdata(i), 'FV3-GFS_Init_type', '', c_loc(physics%Init_parm(i)), ierr)
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "FV3-GFS_Init_type" to CCPP data structure')
+                return
+            end if
             call ccpp_fields_add(cdata(i), 'FV3-GFS_Interstitial_type', '', c_loc(physics%Interstitial(i)), ierr)
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "FV3-GFS_Interstitial_type" to CCPP data structure')
@@ -314,7 +319,7 @@
                 call ccpp_error('Unable to add field "cloud_condensed_water_specific_humidity_save" to CCPP data structure')
                 return
             end if
-            call ccpp_fields_add(cdata(i), 'cloud_condensed_water_specific_humidity_updated_by_physics', physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntcw), ierr, 'kg kg-1')
+            call ccpp_fields_add(cdata(i), 'cloud_condensed_water_specific_humidity_updated_by_physics', physics%Stateout(i)%gq0(:,:,scm_state%cloud_water_index), ierr, 'kg kg-1')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "cloud_condensed_water_specific_humidity_updated_by_physics" to CCPP data structure')
                 return
@@ -854,6 +859,11 @@
                 call ccpp_error('Unable to add field "latitude_index_in_debug_printouts" to CCPP data structure')
                 return
             end if
+            call ccpp_fields_add(cdata(i), 'latitude_of_ozone_forcing_data_from_host', physics%ozone_lat, ierr, 'degree')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "latitude_of_ozone_forcing_data_from_host" to CCPP data structure')
+                return
+            end if
             call ccpp_fields_add(cdata(i), 'longitude', physics%Grid(i)%xlon, ierr, 'radians')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "longitude" to CCPP data structure')
@@ -969,6 +979,11 @@
                 call ccpp_error('Unable to add field "natural_log_of_ozone_forcing_data_pressure_levels" to CCPP data structure')
                 return
             end if
+            call ccpp_fields_add(cdata(i), 'natural_log_of_ozone_forcing_data_pressure_levels_from_host', physics%ozone_pres, ierr, 'Pa')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "natural_log_of_ozone_forcing_data_pressure_levels_from_host" to CCPP data structure')
+                return
+            end if
             call ccpp_fields_add(cdata(i), 'nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep', physics%Sfcprop(i)%tprcp, ierr, 'm')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep" to CCPP data structure')
@@ -984,6 +999,11 @@
                 call ccpp_error('Unable to add field "number_of_coefficients_in_ozone_forcing_data" to CCPP data structure')
                 return
             end if
+            call ccpp_fields_add(cdata(i), 'number_of_coefficients_in_ozone_forcing_data_from_host', physics%n_ozone_coefficients, ierr, 'count')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "number_of_coefficients_in_ozone_forcing_data_from_host" to CCPP data structure')
+                return
+            end if
             call ccpp_fields_add(cdata(i), 'number_of_equatorial_longitude_points', physics%Model(i)%lonr, ierr, 'count')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "number_of_equatorial_longitude_points" to CCPP data structure')
@@ -994,9 +1014,19 @@
                 call ccpp_error('Unable to add field "number_of_hydrometeors" to CCPP data structure')
                 return
             end if
+            call ccpp_fields_add(cdata(i), 'number_of_latitutde_points_in_ozone_forcing_data_from_host', physics%n_ozone_lats, ierr, 'count')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "number_of_latitutde_points_in_ozone_forcing_data_from_host" to CCPP data structure')
+                return
+            end if
             call ccpp_fields_add(cdata(i), 'number_of_statistical_measures_of_subgrid_orography', physics%Model(i)%nmtvr, ierr, 'count')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "number_of_statistical_measures_of_subgrid_orography" to CCPP data structure')
+                return
+            end if
+            call ccpp_fields_add(cdata(i), 'number_of_time_levels_in_ozone_forcing_data_from_host', physics%n_ozone_times, ierr, 'count')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "number_of_time_levels_in_ozone_forcing_data_from_host" to CCPP data structure')
                 return
             end if
             call ccpp_fields_add(cdata(i), 'number_of_vertical_diffusion_tracers', physics%Interstitial(i)%nvdiff, ierr, 'count')
@@ -1034,7 +1064,7 @@
                 call ccpp_error('Unable to add field "ozone_concentration_at_layer_for_radiation" to CCPP data structure')
                 return
             end if
-            call ccpp_fields_add(cdata(i), 'ozone_concentration_updated_by_physics', physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntoz), ierr, 'kg kg-1')
+            call ccpp_fields_add(cdata(i), 'ozone_concentration_updated_by_physics', physics%Stateout(i)%gq0(:,:,scm_state%ozone_index), ierr, 'kg kg-1')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "ozone_concentration_updated_by_physics" to CCPP data structure')
                 return
@@ -1042,6 +1072,11 @@
             call ccpp_fields_add(cdata(i), 'ozone_forcing', physics%Tbd(i)%ozpl, ierr, 'various')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "ozone_forcing" to CCPP data structure')
+                return
+            end if
+            call ccpp_fields_add(cdata(i), 'ozone_forcing_from_host', physics%ozone_forcing_in, ierr, 'various')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "ozone_forcing_from_host" to CCPP data structure')
                 return
             end if
             call ccpp_fields_add(cdata(i), 'pi', con_pi, ierr, 'radians')
@@ -1634,6 +1669,11 @@
                 call ccpp_error('Unable to add field "time_integral_of_y_stress_due_to_gravity_wave_drag" to CCPP data structure')
                 return
             end if
+            call ccpp_fields_add(cdata(i), 'time_levels_in_ozone_forcing_data_from_host', physics%ozone_time, ierr, 'day')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "time_levels_in_ozone_forcing_data_from_host" to CCPP data structure')
+                return
+            end if
             call ccpp_fields_add(cdata(i), 'time_scale_for_rayleigh_damping', physics%Model(i)%ral_ts, ierr, 'd')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "time_scale_for_rayleigh_damping" to CCPP data structure')
@@ -1702,6 +1742,11 @@
             call ccpp_fields_add(cdata(i), 'vertical_dimension_of_ozone_forcing_data', physics%Interstitial(i)%levozp, ierr, 'count')
             if (ierr /= 0) then
                 call ccpp_error('Unable to add field "vertical_dimension_of_ozone_forcing_data" to CCPP data structure')
+                return
+            end if
+            call ccpp_fields_add(cdata(i), 'vertical_dimension_of_ozone_forcing_data_from_host', physics%n_ozone_layers, ierr, 'count')
+            if (ierr /= 0) then
+                call ccpp_error('Unable to add field "vertical_dimension_of_ozone_forcing_data_from_host" to CCPP data structure')
                 return
             end if
             call ccpp_fields_add(cdata(i), 'vertical_index_at_cloud_base', physics%Interstitial(i)%kbot, ierr, 'index')

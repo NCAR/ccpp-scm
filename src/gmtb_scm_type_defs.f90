@@ -166,6 +166,7 @@ module gmtb_scm_type_defs
 !! | physics%Stateout(i)                  | FV3-GFS_Stateout_type                                  | derived type GFS_stateout_type in FV3                   | DDT           |    0 | GFS_stateout_type     |           | none   | F        |
 !! | physics%Tbd(i)                       | FV3-GFS_Tbd_type                                       | derived type GFS_tbd_type in FV3                        | DDT           |    0 | GFS_tbd_type          |           | none   | F        |
 !! | physics%Interstitial(i)              | FV3-GFS_Interstitial_type                              | derived type GFS_interstitial_type in FV3               | DDT           |    0 | GFS_interstitial_type |           | none   | F        |
+!! | physics%Init_parm(i)                 | FV3-GFS_Init_type                                      | dervied type GFS_init_type in FV3                       | DDT           |    0 | GFS_init_type         |           | none   | F        |
 !! | physics%Interstitial(i)%adjnirbmd                     | surface_downwelling_direct_near_infrared_shortwave_flux                                        | surface downwelling beam near-infrared shortwave flux at current time               | W m-2         |    1 | real        | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%adjnirbmu                     | surface_upwelling_direct_near_infrared_shortwave_flux                                          | surface upwelling beam near-infrared shortwave flux at current time                 | W m-2         |    1 | real        | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%adjnirdfd                     | surface_downwelling_diffuse_near_infrared_shortwave_flux                                       | surface downwelling diffuse near-infrared shortwave flux at current time            | W m-2         |    1 | real        | kind_phys | none   | F        |
@@ -379,8 +380,8 @@ module gmtb_scm_type_defs
 !! | physics%Stateout(i)%gt0                       | air_temperature_updated_by_physics                         | temperature updated by physics                             | K             |    2 | real    | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0                       | tracer_concentration_updated_by_physics                    | tracer concentration updated by physics                    | kg kg-1       |    3 | real    | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%water_vapor_index)                | water_vapor_specific_humidity_updated_by_physics           | water vapor specific humidity updated by physics           | kg kg-1       |    2 | real    | kind_phys | none   | F        |
-!! | physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntcw) | cloud_condensed_water_specific_humidity_updated_by_physics | cloud condensed water specific humidity updated by physics | kg kg-1       |    2 | real    | kind_phys | none   | F        |
-!! | physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntoz) | ozone_concentration_updated_by_physics                     | ozone concentration updated by physics                     | kg kg-1       |    2 | real    | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%cloud_water_index) | cloud_condensed_water_specific_humidity_updated_by_physics | cloud condensed water specific humidity updated by physics | kg kg-1       |    2 | real    | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%ozone_index) | ozone_concentration_updated_by_physics                     | ozone concentration updated by physics                     | kg kg-1       |    2 | real    | kind_phys | none   | F        |
 !! | physics%Model(i)%me                       | mpi_rank                                                                      | current MPI-rank                                        | index         |    0 | integer   |           | none   | F        |
 !! | physics%Model(i)%master                   |                                                                               | master MPI-rank                                         | index         |    0 | integer   |           | none   | F        |
 !! | physics%Model(i)%nlunit                   |                                                                               | fortran unit number for file opens                      | none          |    0 | integer   |           | none   | F        |
@@ -818,6 +819,14 @@ module gmtb_scm_type_defs
 !! | physics%Cldprop(i)%cv                   | fraction_of_convective_cloud                            | fraction of convective cloud                            | frac          |    1 | real    | kind_phys | none   | F        |
 !! | physics%Cldprop(i)%cvt                  | pressure_at_top_of_convective_cloud                     | convective cloud top pressure                           | Pa            |    1 | real    | kind_phys | none   | F        |
 !! | physics%Cldprop(i)%cvb                  | pressure_at_bottom_of_convective_cloud                  | convective cloud bottom pressure                        | Pa            |    1 | real    | kind_phys | none   | F        |
+!! | physics%n_ozone_layers       | vertical_dimension_of_ozone_forcing_data_from_host          | number of vertical layers in ozone forcing data coming from host        | count         |    0 | integer                       |           | none     | F        |
+!! | physics%n_ozone_lats         | number_of_latitutde_points_in_ozone_forcing_data_from_host  | number of latitude points in ozone forcing data coming from host        | count         |    0 | integer                       |           | none     | F        |
+!! | physics%n_ozone_times        | number_of_time_levels_in_ozone_forcing_data_from_host       | number of time levels in ozone forcing data coming from host            | count         |    0 | integer                       |           | none     | F        |
+!! | physics%n_ozone_coefficients | number_of_coefficients_in_ozone_forcing_data_from_host      | number of coeffcients in ozone forcing data coming from host            | count         |    0 | integer                       |           | none     | F        |
+!! | physics%ozone_lat           | latitude_of_ozone_forcing_data_from_host                    | latitude value of the ozone forcing data coming from host               | degree        |    1 | real                          | kind_phys | none     | F        |
+!! | physics%ozone_pres           | natural_log_of_ozone_forcing_data_pressure_levels_from_host | natural logarithm of the pressure levels of the ozone forcing data      | Pa            |    1 | real                          | kind_phys | none     | F        |
+!! | physics%ozone_time           | time_levels_in_ozone_forcing_data_from_host                 | time values of the ozone forcing data coming from host                  | day           |    1 | real                          | kind_phys | none     | F        |
+!! | physics%ozone_forcing_in     | ozone_forcing_from_host                                     | ozone forcing data from host                                            | various       |    4 | real                          | kind_phys | none     | F        |
 !!
   type physics_type
 
@@ -1060,9 +1069,10 @@ module gmtb_scm_type_defs
 
   end subroutine scm_reference_create
 
-  subroutine physics_create(physics, n_columns, n_levels, n_tracers)
+  subroutine physics_create(physics, n_columns, n_levels, n_tracers, lats, pres)
     class(physics_type) :: physics
     integer, intent(in) :: n_columns, n_levels, n_tracers
+    real(kind=kind_phys), intent(in) :: lats(:), pres(:)
 
     real(kind=kind_phys) :: kind_phys_zero
 
@@ -1104,17 +1114,18 @@ module gmtb_scm_type_defs
       physics%Init_parm(i)%blksz => null()
     end do
 
-    physics%n_ozone_coefficients = int_one
-    physics%n_ozone_layers = int_one
-    physics%n_ozone_lats = int_one
-    physics%n_ozone_times = int_one
+    !set ozone forcing array dimensions
+    physics%n_ozone_coefficients = 4
+    physics%n_ozone_layers = n_levels
+    physics%n_ozone_lats = n_columns
+    physics%n_ozone_times = 2
 
     allocate(physics%ozone_lat(physics%n_ozone_lats), physics%ozone_pres(physics%n_ozone_layers), &
-      physics%ozone_time(physics%n_ozone_times), &
+      physics%ozone_time(physics%n_ozone_times+1), &
       physics%ozone_forcing_in(physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_coefficients, physics%n_ozone_times))
-    physics%ozone_lat = real_zero
-    physics%ozone_pres = real_zero
-    physics%ozone_time = real_zero
+    physics%ozone_lat = lats
+    physics%ozone_pres = log(pres)
+    physics%ozone_time = (/12.0, 13.0, 14.0/)
     physics%ozone_forcing_in = real_zero
 
     ! allocate(physics%crit_rh_sfc(n_columns), physics%crit_rh_PBL(n_columns), physics%crit_rh_TOA(n_columns))

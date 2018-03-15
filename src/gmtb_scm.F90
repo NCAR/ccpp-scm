@@ -15,9 +15,6 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_forcing
   use gmtb_scm_time_integration
   use gmtb_scm_output
-  use gmtb_scm_physical_constants
-
-  use GFS_driver_gmtb_scm, only: GFS_ozone_and_h20_setup, GFS_initialize
 
   use            :: ccpp_types,                         &
                     only: ccpp_t
@@ -27,9 +24,10 @@ subroutine gmtb_scm_main_sub()
                     only: ccpp_run
   use            :: ccpp_fields,                        &
                     only: ccpp_fields_add
-  use ccpp_errors, only: ccpp_error
 
   use iso_c_binding,      only: c_loc
+
+#include "ccpp_modules.inc"
 
   implicit none
 
@@ -38,15 +36,14 @@ subroutine gmtb_scm_main_sub()
   type(scm_reference_type), target :: scm_reference
   type(physics_type), target :: physics
 
-  integer                           :: i, j, grid_error !< dummy indices and error statuses
+  integer                           :: i, j, grid_error
   real(kind=8)                            :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer              :: jdat(1:8)
 
   type(ccpp_t), allocatable, target                      :: cdata(:)
-  integer                                                :: ipd_index, subcycle_index, scheme_index
 
   integer                                                :: cdata_time_index
-  integer                                                :: ierr !< Integer error flag
+  integer                                                :: ierr
 
   call get_config_nml(scm_state)
 
@@ -89,17 +86,12 @@ subroutine gmtb_scm_main_sub()
 
   scm_state%itt_out = 1
 
-  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%n_tracers)
+  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%n_tracers, scm_state%lat(:,1), scm_state%pres_l(1,1,:))
 
   !physics initialization section
 
   !temporary - move to run script?
   call copy_data_to_working_dir('../standalone_data')
-
-  !same ozone and h20 forcing setup for all columns
-  call GFS_ozone_and_h20_setup(scm_state%n_cols, scm_state%n_levels, scm_state%lat(:,1), scm_state%pres_l(1,1,:), &
-    physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_coefficients, physics%n_ozone_times, &
-    physics%ozone_lat, physics%ozone_pres, physics%ozone_time, physics%ozone_forcing_in)
 
   !set the array index of the time level of the state variables that the cdata
   !points to (this is the time level that will be updated during ipd_run;
@@ -136,15 +128,34 @@ subroutine gmtb_scm_main_sub()
       physics%Init_parm(i)%fn_nml = scm_state%physics_nml(1)
       physics%Init_parm(i)%blksz => scm_state%blksz
 
-      call GFS_initialize(physics%Model(i), physics%Statein(i), physics%Stateout(i), physics%Sfcprop(i),     &
-                          physics%Coupling(i), physics%Grid(i), physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i), &
-                          physics%Diag(i), physics%Sfccycle(i), physics%Interstitial(i), physics%Init_parm(i), scm_state%n_cols)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Control_type', '', c_loc(physics%Model(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Statein_type', '', c_loc(physics%Statein(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Stateout_type', '', c_loc(physics%Stateout(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Sfcprop_type', '', c_loc(physics%Sfcprop(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Coupling_type', '', c_loc(physics%Coupling(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Grid_type', '', c_loc(physics%Grid(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Tbd_type', '', c_loc(physics%Tbd(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Cldprop_type', '', c_loc(physics%Cldprop(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Radtend_type', '', c_loc(physics%Radtend(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Diag_type', '', c_loc(physics%Diag(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Sfccycle_type', '', c_loc(physics%Sfccycle(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Interstitial_type', '', c_loc(physics%Interstitial(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'FV3-GFS_Init_type', '', c_loc(physics%Init_parm(i)), ierr)
+      call ccpp_fields_add(cdata(i), 'number_of_latitutde_points_in_ozone_forcing_data_from_host', physics%n_ozone_lats, ierr, 'count')
+      call ccpp_fields_add(cdata(i), 'vertical_dimension_of_ozone_forcing_data_from_host', physics%n_ozone_layers, ierr, 'count')
+      call ccpp_fields_add(cdata(i), 'number_of_time_levels_in_ozone_forcing_data_from_host', physics%n_ozone_times, ierr, 'count')
+      call ccpp_fields_add(cdata(i), 'number_of_coefficients_in_ozone_forcing_data_from_host', physics%n_ozone_coefficients, ierr, 'count')
+      call ccpp_fields_add(cdata(i), 'latitude_of_ozone_forcing_data_from_host', physics%ozone_lat, ierr, 'degree')
+      call ccpp_fields_add(cdata(i), 'natural_log_of_ozone_forcing_data_pressure_levels_from_host', physics%ozone_pres, ierr, 'Pa')
+      call ccpp_fields_add(cdata(i), 'time_levels_in_ozone_forcing_data_from_host', physics%ozone_time, ierr, 'day')
+      call ccpp_fields_add(cdata(i), 'ozone_forcing_from_host', physics%ozone_forcing_in, ierr, 'various')
+
+      call ccpp_run(cdata(i)%suite%init, cdata(i), ierr)
 
       call physics%associate(scm_state, i)
     !use ccpp_fields.inc to call ccpp_fields_add for all variables to be exposed to CCPP (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in gmtb_scm_type_defs.f90)
 
 #include "ccpp_fields.inc"
-      write(*,*) 'after ccpp_fields_add'
 
   end do
 
@@ -180,8 +191,6 @@ subroutine gmtb_scm_main_sub()
 
     call apply_forcing_forward_Euler(scm_state)
 
-
-
     !apply_forcing_forward_Euler updates state variables time level 1, so must copy this data to time_level 2 (where cdata points)
     scm_state%state_T(:,:,:,2) = scm_state%state_T(:,:,:,1)
     scm_state%state_tracer(:,:,:,:,2) = scm_state%state_tracer(:,:,:,:,1)
@@ -189,14 +198,8 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_v(:,:,:,2) = scm_state%state_v(:,:,:,1)
 
     do i=1, scm_state%n_cols
-      do ipd_index = 1 , cdata(i)%suite%ipds_max
-        do subcycle_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles_max
-          do scheme_index = 1, cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes_max
-            call ccpp_run(cdata(i)%suite%ipds(ipd_index)%subcycles(subcycle_index)%schemes(scheme_index), cdata(i), ierr)
-          end do !ipd parts
-        end do !subcycles
-      end do !schemes
-    end do !columns
+      call ccpp_run(cdata(i)%suite, cdata(i), ierr)
+    end do
 
     !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
     scm_state%temp_tracer(:,:,:,:,2) = scm_state%state_tracer(:,:,:,:,2)
@@ -229,8 +232,6 @@ subroutine gmtb_scm_main_sub()
 
   !prepare for time loop
   scm_state%n_timesteps = ceiling(scm_state%runtime/scm_state%dt)
-  ! n_itt_swrad = floor(swrad_frequency/dt)
-  ! n_itt_lwrad = floor(lwrad_frequency/dt)
   scm_state%n_itt_out = floor(scm_state%output_frequency/scm_state%dt)
 
   scm_state%dt_now = scm_state%dt
@@ -263,21 +264,14 @@ subroutine gmtb_scm_main_sub()
     !pass in state variables to be modified by forcing and physics
     call do_time_step(scm_state, cdata)
 
-    select case(scm_state%time_scheme)
-      case (1)
-        !for forward Euler scheme, no filtering is done; simply transfer output state variables from slot 2 to slot 1
-        ! scm_state%state_T(:,:,1) = scm_state%state_T(:,:,2)
-        ! scm_state%state_u(:,:,1) = scm_state%state_u(:,:,2)
-        ! scm_state%state_v(:,:,1) = scm_state%state_v(:,:,2)
-        ! scm_state%state_tracer(:,:,:,1) = scm_state%state_tracer(:,:,:,2)
-      case (2)
-        !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
-        call filter(scm_state)
+    if (scm_state%time_scheme == 2) then
+      !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
+      call filter(scm_state)
 
-        !> \todo tracers besides water vapor do not need to be filtered (is this right?)
-        scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,2)
-        scm_state%state_tracer(:,:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,:,scm_state%ozone_index,2)
-    end select
+      !> \todo tracers besides water vapor do not need to be filtered (is this right?)
+      scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,2)
+      scm_state%state_tracer(:,:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,:,scm_state%ozone_index,2)
+    end if
 
     if(mod(scm_state%itt, scm_state%n_itt_out)==0) then
       scm_state%itt_out = scm_state%itt_out+1
