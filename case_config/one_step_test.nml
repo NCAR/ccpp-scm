@@ -1,6 +1,0 @@
-&one_step_config
-one_step_data_dir = '../standalone_data'
-physinit_file = 'init_savein.dat',
-physrun_file = 'phyrun_savein.dat'
-radrun_file = 'radrun_savein.dat'
-/

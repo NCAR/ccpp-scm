@@ -27,8 +27,6 @@ subroutine get_config_nml(scm_state)
   use gmtb_scm_type_defs, only : scm_state_type
 
   type(scm_state_type), target, intent(inout) :: scm_state
-  !   swrad_frequency, lwrad_frequency,
-
 
   character(len=80)    :: experiment_name !< name of the experiment configuration file (usually case name)
   character(len=80)    :: model_name !< name of the host model (currently only GFS supported)
@@ -36,8 +34,6 @@ subroutine get_config_nml(scm_state)
   real(kind=dp)           :: dt !< time step in seconds
   real(kind=dp)             :: runtime !< total runtime in seconds
   real(kind=dp)             :: output_frequency !< freqency of output writing in seconds
-  real(kind=dp)             :: swrad_frequency !< freqency of calling SW radiation in seconds
-  real(kind=dp)             :: lwrad_frequency !< freqency of calling SW radiation in seconds
   integer             :: n_levels !< number of model levels (currently only 64 supported)
   integer              :: n_columns !< number of columns to use
   integer              :: n_time_levels
@@ -65,8 +61,8 @@ subroutine get_config_nml(scm_state)
   CHARACTER(LEN=buflen) :: buf, opt_namelist_vals
   CHARACTER(1)             :: response
 
-  NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, swrad_frequency, &
-    lwrad_frequency, n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, sfc_type, &
+  NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
+    n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, sfc_type, &
     sfc_flux_spec, reference_profile_choice, year, month, day, hour
 
   NAMELIST /physics_config/ physics_suite, physics_suite_dir, physics_nml, column_area
@@ -82,8 +78,6 @@ subroutine get_config_nml(scm_state)
   time_scheme = 2
   runtime = 2138400.0
   output_frequency = 600.0
-  swrad_frequency = 1200.0
-  lwrad_frequency = 1200.0
   n_levels = 64
   output_dir = '../output'
   output_file = 'output'

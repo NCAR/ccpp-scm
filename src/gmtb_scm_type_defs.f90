@@ -61,8 +61,6 @@ module gmtb_scm_type_defs
     real(kind=dp)                           :: dt_now !< time step currently being used (if it changes due to time-stepping scheme)
     real(kind=dp)                           :: runtime !< total runtime (s)
     real(kind=dp)                           :: output_frequency !< how often output is written (s)
-    ! real(kind=dp)                           :: swrad_frequency !< how often SW radiation is called
-    ! real(kind=dp)                           :: lwrad_frequency !< how often LW radiation is called
     real(kind=dp)                           :: relax_time !< time scale for hor. wind nudging (s)
     real(kind=dp)                           :: deg_to_rad_const !< conversion constant from degrees to radians
     real(kind=dp)                           :: c_filter !< parameter that controls the amount of damping in the leapfrog filter
