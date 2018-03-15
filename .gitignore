@@ -1,11 +1,11 @@
 *.DS_Store
 *.[oa]
 *.mod
-bin/
+gmtb-scm/bin/
 *.eps
 *.pyc
-output*
-plots*
+gmtb-scm/output*
+gmtb-scm/plots*
 *.png
 .metadata
 non-tracked_files/
