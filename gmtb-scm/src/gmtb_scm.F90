@@ -23,7 +23,7 @@ subroutine gmtb_scm_main_sub()
   use            :: ccpp_fcall,                           &
                     only: ccpp_run
   use            :: ccpp_fields,                        &
-                    only: ccpp_fields_add
+                    only: ccpp_field_add
 
   use iso_c_binding,      only: c_loc
 
@@ -128,32 +128,34 @@ subroutine gmtb_scm_main_sub()
       physics%Init_parm(i)%fn_nml = scm_state%physics_nml(1)
       physics%Init_parm(i)%blksz => scm_state%blksz
 
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Control_type', '', c_loc(physics%Model(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Statein_type', '', c_loc(physics%Statein(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Stateout_type', '', c_loc(physics%Stateout(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Sfcprop_type', '', c_loc(physics%Sfcprop(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Coupling_type', '', c_loc(physics%Coupling(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Grid_type', '', c_loc(physics%Grid(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Tbd_type', '', c_loc(physics%Tbd(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Cldprop_type', '', c_loc(physics%Cldprop(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Radtend_type', '', c_loc(physics%Radtend(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Diag_type', '', c_loc(physics%Diag(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Sfccycle_type', '', c_loc(physics%Sfccycle(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Interstitial_type', '', c_loc(physics%Interstitial(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'FV3-GFS_Init_type', '', c_loc(physics%Init_parm(i)), ierr)
-      call ccpp_fields_add(cdata(i), 'number_of_latitutde_points_in_ozone_forcing_data_from_host', physics%n_ozone_lats, ierr, 'count')
-      call ccpp_fields_add(cdata(i), 'vertical_dimension_of_ozone_forcing_data_from_host', physics%n_ozone_layers, ierr, 'count')
-      call ccpp_fields_add(cdata(i), 'number_of_time_levels_in_ozone_forcing_data_from_host', physics%n_ozone_times, ierr, 'count')
-      call ccpp_fields_add(cdata(i), 'number_of_coefficients_in_ozone_forcing_data_from_host', physics%n_ozone_coefficients, ierr, 'count')
-      call ccpp_fields_add(cdata(i), 'latitude_of_ozone_forcing_data_from_host', physics%ozone_lat, ierr, 'degree')
-      call ccpp_fields_add(cdata(i), 'natural_log_of_ozone_forcing_data_pressure_levels_from_host', physics%ozone_pres, ierr, 'Pa')
-      call ccpp_fields_add(cdata(i), 'time_levels_in_ozone_forcing_data_from_host', physics%ozone_time, ierr, 'day')
-      call ccpp_fields_add(cdata(i), 'ozone_forcing_from_host', physics%ozone_forcing_in, ierr, 'various')
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Control_type', '', c_loc(physics%Model(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Statein_type', '', c_loc(physics%Statein(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Stateout_type', '', c_loc(physics%Stateout(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Sfcprop_type', '', c_loc(physics%Sfcprop(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Coupling_type', '', c_loc(physics%Coupling(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Grid_type', '', c_loc(physics%Grid(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Tbd_type', '', c_loc(physics%Tbd(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Cldprop_type', '', c_loc(physics%Cldprop(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Radtend_type', '', c_loc(physics%Radtend(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Diag_type', '', c_loc(physics%Diag(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Sfccycle_type', '', c_loc(physics%Sfccycle(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Interstitial_type', '', c_loc(physics%Interstitial(i)), ierr)
+      call ccpp_field_add(cdata(i), 'FV3-GFS_Init_type', '', c_loc(physics%Init_parm(i)), ierr)
+      call ccpp_field_add(cdata(i), 'number_of_latitutde_points_in_ozone_forcing_data_from_host', physics%n_ozone_lats, ierr, 'count')
+      call ccpp_field_add(cdata(i), 'vertical_dimension_of_ozone_forcing_data_from_host', physics%n_ozone_layers, ierr, 'count')
+      call ccpp_field_add(cdata(i), 'number_of_time_levels_in_ozone_forcing_data_from_host', physics%n_ozone_times, ierr, 'count')
+      call ccpp_field_add(cdata(i), 'number_of_coefficients_in_ozone_forcing_data_from_host', physics%n_ozone_coefficients, ierr, 'count')
+      call ccpp_field_add(cdata(i), 'latitude_of_ozone_forcing_data_from_host', physics%ozone_lat, ierr, 'degree')
+      call ccpp_field_add(cdata(i), 'natural_log_of_ozone_forcing_data_pressure_levels_from_host', physics%ozone_pres, ierr, 'Pa')
+      call ccpp_field_add(cdata(i), 'time_levels_in_ozone_forcing_data_from_host', physics%ozone_time, ierr, 'day')
+      call ccpp_field_add(cdata(i), 'ozone_forcing_from_host', physics%ozone_forcing_in, ierr, 'various')
+      call ccpp_field_add(cdata(i), 'error_message', physics%Interstitial(i)%errmsg, ierr, 'none')
+      call ccpp_field_add(cdata(i), 'error_flag', physics%Interstitial(i)%errflg, ierr, 'flag')
 
       call ccpp_run(cdata(i)%suite%init, cdata(i), ierr)
 
       call physics%associate(scm_state, i)
-    !use ccpp_fields.inc to call ccpp_fields_add for all variables to be exposed to CCPP (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in gmtb_scm_type_defs.f90)
+    !use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in gmtb_scm_type_defs.f90)
 
 #include "ccpp_fields.inc"
 
