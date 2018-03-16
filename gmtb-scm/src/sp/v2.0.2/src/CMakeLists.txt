@@ -7,7 +7,7 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   set(f_flags -O3 -fdefault-real-8 -fconvert=big-endian -cpp -DLINUX -fPIC)
   # -fp-model strict -real-size 32
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
-  set(f_flags -O3 -auto -openmp -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX)
+  set(f_flags -O3 -auto -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX -fPIC)
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message ("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
   message ("Fortran compiler: " ${CMAKE_Fortran_COMPILER_ID})
