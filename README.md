@@ -27,8 +27,8 @@ for an atmospheric model to interact with physics through the CCPP.
 1. Run the CCPP prebuild script to match required physics variables with those
 available from the dycore (SCM) and to generate physics caps and makefile
 segments.
-  * cd gmtb-ccpp/scripts
-  * ./ccpp_prebuild.py
+  * `cd gmtb-ccpp/scripts`
+  * `./ccpp_prebuild.py`
 2. Change directory to the top-level SCM directory.
   * `cd ../../gmtb-scm`
 3. [Optional] Run the machine setup script if necessary. This script loads
