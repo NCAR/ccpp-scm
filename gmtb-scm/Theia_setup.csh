@@ -1,7 +1,12 @@
+#!/bin/tcsh
+
+echo "Setting environment variables for SCM-CCPP on Theia with icc/ifort"
+
 #load the modules in order to compile the GMTB SCM
 echo "Loading intel and netcdf modules..."
-module load intel
-module load netcdf
+module purge
+module load intel/14.0.2
+module load netcdf/4.3.0
 
 #set the FC environment variable to ifort
 echo "Setting the FC environment variable to use ifort"
@@ -12,7 +17,7 @@ echo "Checking if the path to the anaconda python distribution is in PATH"
 echo $PATH | grep '/contrib/ananconda/2.3.0/bin$' >&/dev/null
 if ( $? != 0 ) then
 	echo "anaconda path not found in PATH; prepending anaconda path to PATH environment variable"
-	setenv PATH /contrib/anaconda/2.3.0/bin\:$PATH
+	setenv PATH /contrib/anaconda/2.3.0/bin:$PATH
 else
 	echo "PATH already has the anaconda path in it"
 endif
@@ -23,7 +28,6 @@ endif
 echo "Checking if f90nml python module is installed"
 python -c "import f90nml"
 
-#
 if ( $? != 0 ) then
 	echo "Not found; installing f90nml"
 	cd scripts/f90nml-0.19

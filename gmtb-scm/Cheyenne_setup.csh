@@ -1,13 +1,14 @@
+#!/bin/tcsh
+
+echo "Setting environment variables for SCM-CCPP on Cheyenne with icc/ifort"
+
 #load the modules in order to compile the GMTB SCM
-echo "Loading intel, netcdf, cmake, python, libxml2, and mpi modules..."
-module load intel/16.0.2
-module load netcdf
-module load cmake/3.0.2
-module load python
-module load all-python-libs
-module load libxml2
-module load mpitest
-module load openmpi/1.10.2/intel/16.0.2
+echo "Loading intel and netcdf modules..."
+module purge
+module load ncarenv/1.2
+module load intel/17.0.1
+module load ncarcompilers/0.4.1
+module load netcdf/4.4.1.1
 
 #set the FC environment variable to ifort
 echo "Setting the FC environment variable to use ifort"
@@ -19,7 +20,6 @@ setenv FC ifort
 echo "Checking if f90nml python module is installed"
 python -c "import f90nml"
 
-#
 if ( $? != 0 ) then
 	echo "Not found; installing f90nml"
 	cd scripts/f90nml-0.19
