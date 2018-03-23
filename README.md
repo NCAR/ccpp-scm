@@ -37,7 +37,7 @@ compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets
 compiler environment variables.
   * `source Theia_setup.csh` (for csh) or `. Theia_setup.sh` (for bash)
   * `source Cheyenne_setup.csh` (for csh) or `. Cheyenne_setup.sh` (for bash)
-  * `source MACOSX_setup.csh` (for csh) or `. MACOSX_setup.sh` (for bash) if following the instructions in README_MACOSX.txt
+  * `source MACOSX_setup.csh` (for csh) or `. MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
 3. Make a build directory and change into it.
   * `mkdir bin && cd bin`
 4. Invoke cmake on the source code to build.
