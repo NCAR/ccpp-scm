@@ -6,14 +6,27 @@ include(CMakeForceCompiler)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
-# FFLAGS depend on the compiler; set this variable name so that other CMakeLists.txt use the correct flags given the compiler
-get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-
 #MESSAGE("The NETCDF env. variable is $ENV{NETCDF}")
 SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../gmtb-ccpp)
 SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../gmtb-gfsphysics)
+
+# Use rpaths on MacOSX
+set(CMAKE_MACOSX_RPATH 1)
+
+#------------------------------------------------------------------------------
+# Set a default build type if none was specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    #message(STATUS "Setting build type to 'Debug' as none was specified.")
+    #set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+    message(STATUS "Setting build type to 'Release' as none was specified.")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+                 "MinSizeRel" "RelWithDebInfo")
+endif()
 
 ADD_COMPILE_OPTIONS(-O0)
 
@@ -41,8 +54,8 @@ INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/gmtb-ccpp/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/gmtb-gfsphysics)
 
-if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
-#  # gfortran
+if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
+#  gfortran
 #  MESSAGE("gfortran being used.")
   ADD_COMPILE_OPTIONS(-fcheck=all)
   ADD_COMPILE_OPTIONS(-fbacktrace)
@@ -50,24 +63,33 @@ if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
   ADD_COMPILE_OPTIONS(-finit-real=nan)
   ADD_COMPILE_OPTIONS(-ggdb)
   ADD_COMPILE_OPTIONS(-ffree-line-length-none)
-elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
-#  # ifort (untested)
+elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
+#  ifort
 #  MESSAGE("ifort being used.")
   #ADD_COMPILE_OPTIONS(-check all)
   ADD_COMPILE_OPTIONS(-fpe0)
   ADD_COMPILE_OPTIONS(-warn)
   ADD_COMPILE_OPTIONS(-traceback)
   ADD_COMPILE_OPTIONS(-debug extended)
-elseif (Fortran_COMPILER_NAME MATCHES "g77")
-#  # g77
-#  MESSAGE("g77 being used.")
-else (Fortran_COMPILER_NAME MATCHES "gfortran.*")
-#  message ("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
-#  message ("Fortran compiler: " ${Fortran_COMPILER_NAME})
-#  message ("No optimized Fortran compiler flags are known, we just try -O2...")
-#  #set (CMAKE_Fortran_FLAGS_RELEASE "-O2")
-#  #set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g")
-endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
+else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
+  message (FATAL_ERROR "This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
+endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
+
+#------------------------------------------------------------------------------
+# Find OpenMP for C/C++/Fortran
+if (OPENMP)
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
+    message(STATUS "Enabled OpenMP support for C/C++/Fortran compiler")
+  else(OPENMP_FOUND)
+    message (FATAL_ERROR "C/C++/Fortran compiler does not support OpenMP")
+  endif()
+else(OPENMP)
+  message (STATUS "Disable OpenMP support for C/C++/Fortran compiler")
+endif()
 
 ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
 TARGET_LINK_LIBRARIES(gmtb_scm gfsphysics ccpp ${NETCDF_LIBRARIES})

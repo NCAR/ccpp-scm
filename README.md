@@ -17,7 +17,7 @@ for an atmospheric model to interact with physics through the CCPP.
   * `git submodule init`
 4. Update (download) the submodules.
   * `git submodule update`
-  and enter your github credentials again. If the machine is running an older
+  and, if asked, enter your github credentials again. If the machine is running an older
   version of git and you are denied access, you may need to configure the
   submodule URLs before repeating step 4 by executing this command:
     * `git config submodule.src/ccpp.url https://[username]@github.com/NCAR/gmtb-ccpp.git`
@@ -29,36 +29,32 @@ available from the dycore (SCM) and to generate physics caps and makefile
 segments.
   * `cd gmtb-ccpp/scripts`
   * `./ccpp_prebuild.py`
+  Note: use `./ccpp_prebuild.py --debug` to see the full output of the script.
 2. Change directory to the top-level SCM directory.
   * `cd ../../gmtb-scm`
 3. [Optional] Run the machine setup script if necessary. This script loads
 compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets
 compiler environment variables.
-  * `source Theia_setup` or
-  * `source Yellowstone_setup` or
-  * `source Cheyenne_setup`
+  * `source Theia_setup.csh` (for csh) or `. Theia_setup.sh` (for bash)
+  * `source Cheyenne_setup.csh` (for csh) or `. Cheyenne_setup.sh` (for bash)
+  * `source MACOSX_setup.csh` (for csh) or `. MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
 3. Make a build directory and change into it.
   * `mkdir bin && cd bin`
 4. Invoke cmake on the source code to build.
-  * `cmake ../src`
-5. Compile.
+  * `cmake ../src` (without threading/OpenMP)
+  * `cmake -DOPENMP=1 ../src` (with threading/OpenMP)
+
+  For extensive debugging output, add `-DCMAKE_BUILD_TYPE=Debug` to the `cmake` command.
+5. Compile. Add `VERBOSE=1` to obtain more information on the build process.
   * `make`
 
 ## Running the SCM with CCPP
-1. First append the library path to the physics suite libraries that you need
-within the CCPP. For example, for the gmtb-gfsphysics suite, use
-  * for sh, bash
-    * `export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:[/path/to/build/directory/]gmtb-gfsphysics`
-  * for csh
-    * if appending: `setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:[/path/to/build/directory/]gmtb-gfsphysics`
-    * if setting: `setenv LD_LIBRARY_PATH [/path/to/build/directory/]gmtb-gfsphysics`
-2. Run the SCM with the supplied case (twpice). The SCM will go through the time
+1. Run the SCM with the supplied case (twpice). The SCM will go through the time
  steps, applying forcing and calling the physics defined in the suite definition
  file.
   * `./gmtb_scm twpice`
-3. A netcdf output file is generated in the location specified in the case
-configuration file. For the twpice case, it is located in
-gmtb-scm/output_twpice/output.nc
+2. A netcdf output file is generated in the location specified in the case
+configuration file. For the twpice case, it is located in `../output_twpice/output.nc`
 
 ## Setting up the physics suite
 First, a physics suite is defined using an XML file located in
@@ -74,8 +70,7 @@ configuration file to be used. For example, for the twpice case
 (case_config/twpice.nml), the variable 'physics suite' is set to the desired
 suite name. NOTE: As mentioned in the 'Running' section above, since the schemes
  are in their own libraries, you must specify the path to the compiled scheme
- libraries that are being used in the suite by appending the LD_LIBRARY_PATH
- (or DYLD_LIBRARY_PATH for Mac OS). Without this step, the scheme libraries will
-  not be found at runtime.
+ libraries that are being used in the suite by appending the `LD_LIBRARY_PATH`.
+ Without this step, the scheme libraries will not be found at runtime.
 
 ## CCPP Implementation Notes
