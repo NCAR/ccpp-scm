@@ -40,6 +40,9 @@ subroutine get_config_nml(scm_state)
   integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
   character(len=80)    :: output_dir !< name of the output directory
   character(len=80)    :: output_file !< name of the output file (without the file extension)
+  character(len=80)    :: case_data_dir !< path to the directory containing case initialization and forcing data
+  character(len=80)    :: vert_coord_data_dir !< path to the directory containing vertical coordinate data
+  character(len=80)    :: case_config_dir !< path to the directory containing case configuration files (relative to build dir)
   integer              :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   real(kind=dp)              :: relax_time !< relaxation time scale (s)
@@ -62,8 +65,8 @@ subroutine get_config_nml(scm_state)
   CHARACTER(1)             :: response
 
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
-    n_levels, output_dir, output_file, thermo_forcing_type, mom_forcing_type, relax_time, sfc_type, &
-    sfc_flux_spec, reference_profile_choice, year, month, day, hour
+    n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, mom_forcing_type, relax_time, &
+    sfc_type, sfc_flux_spec, reference_profile_choice, year, month, day, hour
 
   NAMELIST /physics_config/ physics_suite, physics_suite_dir, physics_nml, column_area
 
@@ -71,6 +74,8 @@ subroutine get_config_nml(scm_state)
   !!  @{
 
   !> Define default values for case configuration (to be overridden by external namelist file or command line arguments)
+  case_config_dir = '../etc/case_config'
+
   model_name = 'GFS'
   n_columns = 1
   case_name = 'twpice'
@@ -79,8 +84,10 @@ subroutine get_config_nml(scm_state)
   runtime = 2138400.0
   output_frequency = 600.0
   n_levels = 64
-  output_dir = '../output'
+  output_dir = 'output'
   output_file = 'output'
+  case_data_dir = '../data/processed_case_input'
+  vert_coord_data_dir = '../data/vert_coord_data'
   thermo_forcing_type = 2
   mom_forcing_type = 3
   relax_time = 7200.0
@@ -92,7 +99,7 @@ subroutine get_config_nml(scm_state)
   day = 19
   hour = 3
 
-  physics_suite_dir = '../src/ccpp/tests/'
+  physics_suite_dir = '../../gmtb-ccpp/examples/'
 
   last_physics_specified = -1
 
@@ -118,9 +125,10 @@ subroutine get_config_nml(scm_state)
     opt_namelist_vals = '&case_config '//trim(buf)//' /' !assigns rest of command line into case_config namelist
 
     !> Attempt to read in external namelist file.
-    open(unit=1, file='../case_config/'//trim(experiment_name)//'.nml', status='old', action='read', iostat=ioerror(2))
+    open(unit=1, file=trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml', status='old', action='read', &
+      iostat=ioerror(2))
     if(ioerror(2) /= 0) then
-      write(*,*) 'There was an error opening the file '//'../case_config/'//trim(experiment_name)//'.nml'//'&
+      write(*,*) 'There was an error opening the file '//trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml '//'&
         Error code = ',ioerror(2)
     else
       read(1, NML=case_config, iostat=ioerror(3))
@@ -128,7 +136,7 @@ subroutine get_config_nml(scm_state)
 
     if(ioerror(3) /= 0) then
       write(*,*) 'There was an error reading the namelist case_config in the file '&
-        //'../case_config/'//trim(experiment_name)//'.nml'//'&
+        //trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml'//'&
         Error code = ',ioerror(3)
     end if
 
@@ -148,7 +156,7 @@ subroutine get_config_nml(scm_state)
 
     if(ioerror(4) /= 0) then
       write(*,*) 'There was an error reading the namelist physics_config in the file '&
-        //'../case_config/'//trim(experiment_name)//'.nml'//'&
+        //trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml'//'&
         Error code = ',ioerror(4)
       write(*,*) 'Check to make sure that the number of specified physics suites is not greater than n_columns '&
         //'in the case_config namelist. Stopping...'
@@ -158,16 +166,16 @@ subroutine get_config_nml(scm_state)
       do i=1, n_columns
         if (physics_suite(i) == 'none') then
           if(i == 1 ) then
-            write(*,*) 'No physics suites were specified in ../case_config/'//trim(experiment_name)//'.nml. Please edit this file '&
-              //'and start again.'
+            write(*,*) 'No physics suites were specified in '//trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml. '&
+              //'Please edit this file and start again.'
             STOP
           else
             if(last_physics_specified < 0) last_physics_specified = i-1
             !only ask for response the first time an unspecified physics suite is found for a column
             if(last_physics_specified == i-1) then
               write(*,*) 'Too few physics suites were specified for the number of columns in '&
-                //'../case_config/'//trim(experiment_name)//'.nml. All columns with unspecified physics are set to the last '&
-                //'specified suite. Is this the desired behavior (y/n)?'
+                //trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml. All columns with unspecified physics are set '&
+                //'to the last specified suite. Is this the desired behavior (y/n)?'
               read(*,*) response
             end if
             if (response == 'y' .or. response == 'Y') then
@@ -175,8 +183,8 @@ subroutine get_config_nml(scm_state)
               physics_nml(i) = physics_nml(last_physics_specified)
               !n_phy_fields(i) = n_phy_fields(last_physics_specified)
             else
-              write(*,*) 'Please edit ../case_config/'//trim(experiment_name)//'.nml to contain the same number of physics suites '&
-                //'as columns and start again. Stopping...'
+              write(*,*) 'Please edit '//trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml to contain the same '&
+                //' number of physics suites as columns and start again. Stopping...'
               STOP
             end if
           end if !check on i
@@ -184,15 +192,16 @@ subroutine get_config_nml(scm_state)
         !   !check to see if n_phy_fields was initialized for this suites
         !   if (n_phy_fields(i) < 0) then
         !     write(*,*) 'The variable n_phy_fields was not initialized for the physics suite '//trim(physics_suite(i))//'. Please '&
-        !       //'edit ../case_config/'//trim(experiment_name)//'.nml to contain values of this variable for each suite.'
+        !       //'edit '//trim(adjustl(case_config_dir))//'/''//trim(experiment_name)//'.nml to contain values of this variable '&
+        !       //'for each suite.'
         !   end if
         end if !check on physics_suite
       end do
     end if
 
     if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /=0) then
-      write(*,*) 'Since there was an error reading in the ../case_config/'//trim(experiment_name)//'.nml'//' file, the default&
-         values of the namelist variables will be used, modified by any values contained on the command line.'
+      write(*,*) 'Since there was an error reading in the '//trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml'&
+        //' file, the default values of the namelist variables will be used, modified by any values contained on the command line.'
     end if
 
     !> "Read" in internal namelist variables from command line.
@@ -252,6 +261,8 @@ subroutine get_config_nml(scm_state)
   scm_state%model_name = model_name
   scm_state%output_dir = output_dir
   scm_state%physics_suite_dir = physics_suite_dir
+  scm_state%case_data_dir = case_data_dir
+  scm_state%vert_coord_data_dir = vert_coord_data_dir
   scm_state%output_file = output_file
   scm_state%case_name = case_name
   scm_state%physics_suite_name = physics_suite
@@ -288,7 +299,7 @@ subroutine get_case_init(scm_state, scm_input)
   use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
-  
+
   integer               :: input_nlev !< number of levels in the input file
   integer               :: input_ntimes !< number of times represented in the input file
 
@@ -338,7 +349,7 @@ subroutine get_case_init(scm_state, scm_input)
   !!  @{
 
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
-  call check(NF90_OPEN('../processed_case_input/'//trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
 
   !> - Get the dimensions (global group).
 
@@ -513,7 +524,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
 
   select case (scm_state%reference_profile_choice)
     case (1)
-      open(unit=1, file='../processed_case_input/McCProfiles.dat', status='old', action='read', iostat=ioerror)
+      open(unit=1, file=trim(adjustl(scm_state%case_data_dir))//'/'//'McCProfiles.dat', status='old', action='read', iostat=ioerror)
       if(ioerror /= 0) then
         write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
           Error code = ',ioerror
@@ -538,7 +549,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
       END DO
       close(1)
     case (2)
-      call check(NF90_OPEN('../processed_case_input/mid_lat_summer_std.nc',nf90_nowrite,ncid))
+      call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//'mid_lat_summer_std.nc',nf90_nowrite,ncid))
 
       call check(NF90_INQ_DIMID(ncid,"height",varID))
       call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, nlev))

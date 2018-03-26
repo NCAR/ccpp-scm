@@ -54,15 +54,15 @@ subroutine get_GFS_vgrid(scm_input, scm_state, error)
   !> - Check to see if the desired number of grid levels is available. If not, return an error code.
   select case (scm_state%n_levels)
     case(28)
-      filename = "../model_config/global_hyblev.l28.txt"
+      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l28.txt"
     case(42)
-      filename = "../model_config/global_hyblev.l42.txt"
+      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l42.txt"
     case(60)
-      filename = "../model_config/global_hyblev.l60.txt"
+      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l60.txt"
     case(64)
-      filename = "../model_config/global_hyblev.l64.txt"
+      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l64.txt"
     case(91)
-      filename = "../model_config/global_hyblev.l91.txt"
+      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l91.txt"
       !file format for the 91-level file is different
       file_format = '(1F14.6, 1F10.6)'
     case default

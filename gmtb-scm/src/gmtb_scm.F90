@@ -90,9 +90,6 @@ subroutine gmtb_scm_main_sub()
 
   !physics initialization section
 
-  !temporary - move to run script?
-  call copy_data_to_working_dir('../standalone_data')
-
   !set the array index of the time level of the state variables that the cdata
   !points to (this is the time level that will be updated during ipd_run;
   !if suite returns tendencies, SCM must apply them to this time level)
@@ -285,8 +282,6 @@ subroutine gmtb_scm_main_sub()
 
     end if
   end do
-
-  call remove_data_from_working_dir()
 
 end subroutine gmtb_scm_main_sub
 

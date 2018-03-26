@@ -16,23 +16,6 @@ contains
 !! @{
 !! Contains miscellaneous helper subroutines.
 
-!> Subroutine to copy data needed by the main program to the working directory
-!!
-!! The GFS radiation code requires files containing aerosol, CO2, and solar constant data to be in the working directory at runtime.
-!! This subroutine temporarily copies the data to the working directory to be removed after the SCM runs.
-subroutine copy_data_to_working_dir(dir_name)
-  character(len=*),intent(in) :: dir_name !< the directory where the data is located
-  call system('cp '//dir_name//'/* ./')
-  call system('ln -s ./solarconstant_noaa_an.txt ./fort.102')
-end subroutine copy_data_to_working_dir
-
-!> Subroutine to remove data needed by the main program from the working directory
-!!
-!! This subroutine deletes the data that was temporarily copied to the working directory for file cleanliness.
-subroutine remove_data_from_working_dir()
-  call system('rm -rfd ./aerosol.dat ./co2*.txt ./solarconstant*.txt twp.dat *savein.dat fort.102 ')
-end subroutine remove_data_from_working_dir
-
 !> Subroutine to interpolate a generic input field to the model vertical grid. The index of the last model level initialized is returned
 !! so that the calling procedure can patch in a reference profile above.
 subroutine interpolate_to_grid_centers(n_input_levels, input_pres, input_field, pres_l, n_model_levels, model_field, &
