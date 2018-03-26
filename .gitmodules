@@ -1,12 +1,3 @@
-
-[submodule "src/ccpp"]
-	path = ccpp-framework
-	url = https://github.com/NCAR/ccpp-framework
-	branch = master
-[submodule "gmtb-gfsphysics"]
-	path = ccpp-physics
-	url = https://github.com/NCAR/ccpp-physics
-	branch = master
 [submodule "ccpp-framework"]
 	path = ccpp-framework
 	url = https://github.com/NCAR/ccpp-framework
