@@ -20,24 +20,24 @@ for an atmospheric model to interact with physics through the CCPP.
   and, if asked, enter your github credentials again. If the machine is running an older
   version of git and you are denied access, you may need to configure the
   submodule URLs before repeating step 4 by executing this command:
-    * `git config submodule.src/ccpp.url https://[username]@github.com/NCAR/gmtb-ccpp.git`
-    * `git config submodule.gmtb-gfsphysics.url https://[username]@github.com/NCAR/gmtb-gfsphysics.git`
+    * `git config submodule.ccpp-framework.url https://[username]@github.com/NCAR/ccpp-framework.git`
+    * `git config submodule.ccpp-physics.url https://[username]@github.com/NCAR/ccpp-physics.git`
 
 ## Building and Compiling the SCM with CCPP
 1. Run the CCPP prebuild script to match required physics variables with those
 available from the dycore (SCM) and to generate physics caps and makefile
 segments.
-  * `cd gmtb-ccpp/scripts`
+  * `cd ccpp-framework/scripts`
   * `./ccpp_prebuild.py`
   Note: use `./ccpp_prebuild.py --debug` to see the full output of the script.
 2. Change directory to the top-level SCM directory.
-  * `cd ../../gmtb-scm`
+  * `cd ../../scm`
 3. [Optional] Run the machine setup script if necessary. This script loads
 compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets
 compiler environment variables.
-  * `source Theia_setup.csh` (for csh) or `. Theia_setup.sh` (for bash)
-  * `source Cheyenne_setup.csh` (for csh) or `. Cheyenne_setup.sh` (for bash)
-  * `source MACOSX_setup.csh` (for csh) or `. MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
+  * `source etc/Theia_setup.csh` (for csh) or `. etc/Theia_setup.sh` (for bash)
+  * `source etc/Cheyenne_setup.csh` (for csh) or `. etc/Cheyenne_setup.sh` (for bash)
+  * `source etc/MACOSX_setup.csh` (for csh) or `. etc/MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
 3. Make a build directory and change into it.
   * `mkdir bin && cd bin`
 4. Invoke cmake on the source code to build.
@@ -54,7 +54,7 @@ compiler environment variables.
  file.
   * `./gmtb_scm twpice`
 2. A netcdf output file is generated in the location specified in the case
-configuration file. For the twpice case, it is located in `../output_twpice/output.nc`
+configuration file. For the twpice case, it is located in `./output_twpice/output.nc`
 
 ## Setting up the physics suite
 First, a physics suite is defined using an XML file located in
