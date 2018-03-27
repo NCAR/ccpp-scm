@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(scm_ipd)
+PROJECT(scm)
 ENABLE_LANGUAGE(Fortran)
 
 include(CMakeForceCompiler)
@@ -9,8 +9,8 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 #MESSAGE("The NETCDF env. variable is $ENV{NETCDF}")
 SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 
-SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../gmtb-ccpp)
-SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../gmtb-gfsphysics)
+SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp-framework)
+SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp-physics)
 
 # Use rpaths on MacOSX
 set(CMAKE_MACOSX_RPATH 1)
@@ -35,8 +35,8 @@ endif()
 
 ADD_COMPILE_OPTIONS(-O0)
 
-ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/gmtb-ccpp)
-ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/gmtb-gfsphysics)
+ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp-framework)
+ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp-physics)
 
 SET(scm_source_files gmtb_scm.F90
             gmtb_scm_input.f90
@@ -56,8 +56,8 @@ SET(NETCDF_F90 "YES")
 FIND_PACKAGE(NetCDF)
 
 INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/gmtb-ccpp/src)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/gmtb-gfsphysics)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp-framework/src)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp-physics)
 
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 #  gfortran
@@ -97,4 +97,4 @@ else(OPENMP)
 endif()
 
 ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
-TARGET_LINK_LIBRARIES(gmtb_scm gfsphysics ccpp ${NETCDF_LIBRARIES})
+TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${NETCDF_LIBRARIES})

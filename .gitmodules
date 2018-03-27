@@ -1,9 +1,6 @@
-
-[submodule "src/ccpp"]
-	path = gmtb-ccpp
-	url = https://github.com/NCAR/gmtb-ccpp
-	branch = scm_integration
-[submodule "gmtb-gfsphysics"]
-	path = gmtb-gfsphysics
-	url = https://github.com/NCAR/gmtb-gfsphysics
-	branch = features/ccpp_scm
+[submodule "ccpp-framework"]
+	path = ccpp-framework
+	url = https://github.com/NCAR/ccpp-framework
+[submodule "ccpp-physics"]
+	path = ccpp-physics
+	url = https://github.com/NCAR/ccpp-physics
