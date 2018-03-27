@@ -7,7 +7,7 @@ time_scheme = 1,
 runtime = 2138400,
 output_frequency = 600.0,
 n_levels = 64,
-output_dir = '../output_twpice',
+output_dir = 'output_twpice',
 output_file = 'output',
 thermo_forcing_type = 2,
 mom_forcing_type = 3,
@@ -23,7 +23,7 @@ $end
 
 $physics_config
 physics_suite = 'suite_scm_GFS_test',
-physics_suite_dir = '../../gmtb-ccpp/examples/',
-physics_nml = '../../gmtb-gfsphysics/input.nml',
+physics_suite_dir = '../../ccpp-framework/examples/',
+physics_nml = '../../ccpp-physics/input.nml',
 column_area = 2.0E9,
 $end
