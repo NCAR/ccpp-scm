@@ -1,0 +1,31 @@
+\hypertarget{gmtb__scm__forcing_8f90}{}\section{src/gmtb\+\_\+scm\+\_\+forcing.f90 File Reference}
+\label{gmtb__scm__forcing_8f90}\index{src/gmtb\+\_\+scm\+\_\+forcing.\+f90@{src/gmtb\+\_\+scm\+\_\+forcing.\+f90}}
+
+
+Contains subroutines to handle the S\+CM forcing -- interpolating in space and time, etc.  
+
+
+\subsection*{Functions/\+Subroutines}
+{\bf }\par
+\begin{DoxyCompactItemize}
+\item 
+subroutine \hyperlink{group__forcing_gaee4d8a92d081863df4499f2e1dce82bd}{gmtb\+\_\+scm\+\_\+forcing\+::interpolate\+\_\+forcing} (input\+\_\+ntimes, input\+\_\+nlev, input\+\_\+w\+\_\+ls, input\+\_\+omega, input\+\_\+u\+\_\+g, input\+\_\+v\+\_\+g, input\+\_\+u\+\_\+nudge,           input\+\_\+v\+\_\+nudge, input\+\_\+\+T\+\_\+nudge, input\+\_\+thil\+\_\+nudge, input\+\_\+qt\+\_\+nudge, input\+\_\+d\+T\+\_\+dt\+\_\+rad, input\+\_\+h\+\_\+advec\+\_\+thetail, input\+\_\+h\+\_\+advec\+\_\+qt,           input\+\_\+v\+\_\+advec\+\_\+thetail, input\+\_\+v\+\_\+advec\+\_\+qt, input\+\_\+pres, input\+\_\+time, input\+\_\+lat, input\+\_\+lon, input\+\_\+pres\+\_\+surf, input\+\_\+\+T\+\_\+surf, n\+\_\+levels,       n\+\_\+columns, grid\+\_\+pres, model\+\_\+time, w\+\_\+ls, omega, u\+\_\+g, v\+\_\+g, u\+\_\+nudge, v\+\_\+nudge, T\+\_\+nudge, thil\+\_\+nudge, qt\+\_\+nudge, d\+T\+\_\+dt\+\_\+rad,           h\+\_\+advec\+\_\+thil, h\+\_\+advec\+\_\+qt, v\+\_\+advec\+\_\+thil, v\+\_\+advec\+\_\+qt, lat, lon, pres\+\_\+surf, T\+\_\+surf)
+\begin{DoxyCompactList}\small\item\em This subroutine interpolates the model forcing, column position, and surface properties to the current model time and to the model grid. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+{\bf }\par
+\begin{DoxyCompactItemize}
+\item 
+subroutine \hyperlink{group__forcing_gaa9a429a52d986be1bc2458f56e8f77aa}{gmtb\+\_\+scm\+\_\+forcing\+::apply\+\_\+forcing\+\_\+leapfrog} (n\+\_\+levels, n\+\_\+columns, state\+\_\+tracer, state\+\_\+T, state\+\_\+u, state\+\_\+v, w\+\_\+ls, omega, u\+\_\+g, v\+\_\+g, u\+\_\+nudge,   v\+\_\+nudge, T\+\_\+nudge, thil\+\_\+nudge, qt\+\_\+nudge, d\+T\+\_\+dt\+\_\+rad, h\+\_\+advec\+\_\+thil, h\+\_\+advec\+\_\+qt, v\+\_\+advec\+\_\+thil, v\+\_\+advec\+\_\+qt, exner\+\_\+l, phii, pres\+\_\+l,   lat, dt, thermo\+\_\+forcing\+\_\+type, mom\+\_\+forcing\+\_\+type, relax\+\_\+time, u\+\_\+force\+\_\+tend, v\+\_\+force\+\_\+tend, T\+\_\+force\+\_\+tend, qv\+\_\+force\+\_\+tend)
+\begin{DoxyCompactList}\small\item\em This subroutine updates the state variables due to the model forcing using the leapfrog time integration scheme. It overwrites the state variable arrays where the filtered values from the previous time step are kept. These parts of the state variable arrays are pointed to by the state\+\_\+fields\+\_\+in D\+DT and are later updated by calling nuopc\+\_\+phys\+\_\+run. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+{\bf }\par
+\begin{DoxyCompactItemize}
+\item 
+subroutine \hyperlink{group__forcing_ga9f9e7db891365f55c3ce79e70a8fe580}{gmtb\+\_\+scm\+\_\+forcing\+::apply\+\_\+forcing\+\_\+forward\+\_\+euler} (n\+\_\+levels, n\+\_\+columns, state\+\_\+tracer, state\+\_\+T, state\+\_\+u, state\+\_\+v, w\+\_\+ls, omega, u\+\_\+g, v\+\_\+g,   u\+\_\+nudge, v\+\_\+nudge, T\+\_\+nudge, thil\+\_\+nudge, qt\+\_\+nudge, d\+T\+\_\+dt\+\_\+rad, h\+\_\+advec\+\_\+thil, h\+\_\+advec\+\_\+qt, v\+\_\+advec\+\_\+thil, v\+\_\+advec\+\_\+qt, exner\+\_\+l, phii,   pres\+\_\+l, lat, dt, thermo\+\_\+forcing\+\_\+type, mom\+\_\+forcing\+\_\+type, relax\+\_\+time, u\+\_\+force\+\_\+tend, v\+\_\+force\+\_\+tend, T\+\_\+force\+\_\+tend, qv\+\_\+force\+\_\+tend)
+\end{DoxyCompactItemize}
+
+
+
+\subsection{Detailed Description}
+Contains subroutines to handle the S\+CM forcing -- interpolating in space and time, etc. 
+

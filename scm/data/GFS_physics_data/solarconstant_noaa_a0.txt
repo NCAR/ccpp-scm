@@ -1,0 +1,93 @@
+ 1944 2006 1954 1996     .00 AS BASE VALUE YEARLY TSI (W/M2) IN ABS SCALE
+2006 1365.7000
+2005 1365.9000
+2004 1366.1000
+2003 1366.3000
+2002 1366.7000
+2001 1366.8000
+2000 1366.7000
+1999 1366.7000
+1998 1366.4000
+1997 1365.9000
+1996 1365.7000
+1995 1365.7000
+1994 1365.8000
+1993 1366.0000
+1992 1366.3000
+1991 1366.5000
+1990 1366.6000
+1989 1366.5000
+1988 1366.1000
+1987 1365.8000
+1986 1365.7000
+1985 1365.7000
+1984 1365.9000
+1983 1366.3000
+1982 1366.5000
+1981 1366.8000
+1980 1366.7000
+1979 1366.6000
+1978 1366.4000
+1977 1366.0000
+1976 1365.7000
+1975 1365.8000
+1974 1366.0000
+1973 1366.1000
+1972 1366.3000
+1971 1366.4000
+1970 1366.6000
+1969 1366.7000
+1968 1366.4000
+1967 1366.2000
+1966 1366.0000
+1965 1365.7000
+1964 1365.7000
+1963 1365.9000
+1962 1366.1000
+1961 1366.3000
+1960 1366.5000
+1959 1366.8000
+1958 1367.0000
+1957 1366.7000
+1956 1366.4000
+1955 1366.1000
+1954 1365.7000
+1953 1365.8000
+1952 1366.1000
+1951 1366.4000
+1950 1366.7000
+1949 1366.9000
+1948 1367.0000
+1947 1366.6000
+1946 1366.2000
+1945 1365.7000
+1944 1365.7000
+
+
+*******************************************************************
+Data arrangement:
+1st line: yr_start, yr_end, yr_cyc1, yr_cyc2, base_value (4i5,f8.2):
+  yr_start, yr_end : starting and ending year of the table
+  yr_cyc1, yr_cyc2 : marks for 1st and last cycles used for data beyond table range
+  base_value       : base value to be added
+2nd line and so on: year, solcon in w/m2 (i4,f10.4)
+
+Total Solar Irradiance (W/m*m) in absolute scale (annual mean).  The
+original table (minus 1360) was gestimated by Van den Dool, Feb 3, 2006.
+
+"Values for 1979-1999 were read from a satelliet graph. Using a maximum 
+of 6.8 and a minimum of 5.7 during the last two cycles I anchored the 
+maxes and mins for 1940s thru 1970's using monthly sunspots, increasing
+the strong maxes in the forties and fifties to 7.0, and reducing the 
+weak max in the seventies to 6.7.  Then interpolated by eye in between. 
+2006 is a minimum in sunspots and radiation. Values after 2000-2005 
+also interpolated by eye. A formal procedure would not be much better.
+Only the approximate 11 year cycle is dealt with here. If a continous 
+value is sought, just do a harmonic analysis to interpolate to month, 
+day, whatever.
+
+The overall mean can be changed. Just keep the ups and downs. I did
+not include the secular change which was estimated to be more than
+1W/m*m from 1947 to present by Lean at one time, but apparently she
+is revising this down."
+

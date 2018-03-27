@@ -1,0 +1,146 @@
+\hypertarget{group__vgrid}{}\section{gmtb\+\_\+scm\+\_\+vgrid}
+\label{group__vgrid}\index{gmtb\+\_\+scm\+\_\+vgrid@{gmtb\+\_\+scm\+\_\+vgrid}}
+
+
+Contains the vertical grid setup routines.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine \hyperlink{group__vgrid_ga20af2c87714fbaa962ec9be7fae493d2}{gmtb\+\_\+scm\+\_\+vgrid\+::calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner} (pres\+\_\+sfc, n\+\_\+levels, n\+\_\+columns, a\+\_\+k, b\+\_\+k, pres\+\_\+i, pres\+\_\+l, sigi, sigl, exner\+\_\+l, exner\+\_\+i)
+\begin{DoxyCompactList}\small\item\em This subroutine calculates the pressure and exner function at grid centers and interface levels given a surface pressure and interface-\/level G\+FS grid coefficients. This subroutine should be called to update the pressures of the model levels as the surface pressure of the column changes. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+subroutine \hyperlink{group__vgrid_ga1086e1f828a0bafa38299bdc17fde6fe}{gmtb\+\_\+scm\+\_\+vgrid\+::get\+\_\+gfs\+\_\+vgrid} (pres\+\_\+sfc, n\+\_\+levels, n\+\_\+columns, pres\+\_\+i, pres\+\_\+l, sigi, sigl, exner\+\_\+l, exner\+\_\+i, a\+\_\+k, b\+\_\+k, error)
+\begin{DoxyCompactList}\small\item\em Subroutine for setting up the G\+FS hybrid coordinate vertical grid. Files with precalculated coefficients (A\+\_\+k and B\+\_\+k) from the \char`\"{}fix\char`\"{} directory in Patrick Tripp\textquotesingle{}s V2 code are used; their filenames start with \char`\"{}global\+\_\+hyblev\char`\"{}. There are only files for 28, 42, 60, 64, and 91 levels. If a different number of levels are specified, an error is returned. Using the A\+\_\+k and B\+\_\+k coefficients, the model level pressures, sigma values, and exner function (at interfaces and layer centers) are calculated and returned to the calling procedure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Contains the vertical grid setup routines. 
+
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{gmtb\+\_\+scm\+\_\+vgrid@{gmtb\+\_\+scm\+\_\+vgrid}!calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner@{calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner}}
+\index{calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner@{calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner}!gmtb\+\_\+scm\+\_\+vgrid@{gmtb\+\_\+scm\+\_\+vgrid}}
+\subsubsection[{\texorpdfstring{calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner(pres\+\_\+sfc, n\+\_\+levels, n\+\_\+columns, a\+\_\+k, b\+\_\+k, pres\+\_\+i, pres\+\_\+l, sigi, sigl, exner\+\_\+l, exner\+\_\+i)}{calc_gfs_pres_and_exner(pres_sfc, n_levels, n_columns, a_k, b_k, pres_i, pres_l, sigi, sigl, exner_l, exner_i)}}]{\setlength{\rightskip}{0pt plus 5cm}subroutine gmtb\+\_\+scm\+\_\+vgrid\+::calc\+\_\+gfs\+\_\+pres\+\_\+and\+\_\+exner (
+\begin{DoxyParamCaption}
+\item[{real(kind=dp), dimension(\+:), intent(in)}]{pres\+\_\+sfc, }
+\item[{integer, intent(in)}]{n\+\_\+levels, }
+\item[{integer, intent(in)}]{n\+\_\+columns, }
+\item[{real(kind=dp), dimension(\+:), intent(in)}]{a\+\_\+k, }
+\item[{real(kind=dp), dimension(\+:), intent(in)}]{b\+\_\+k, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(inout), allocatable}]{pres\+\_\+i, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(inout), allocatable}]{pres\+\_\+l, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(inout), allocatable}]{sigi, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(inout), allocatable}]{sigl, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(inout), allocatable}]{exner\+\_\+l, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(inout), allocatable}]{exner\+\_\+i}
+\end{DoxyParamCaption}
+)}\hypertarget{group__vgrid_ga20af2c87714fbaa962ec9be7fae493d2}{}\label{group__vgrid_ga20af2c87714fbaa962ec9be7fae493d2}
+
+
+This subroutine calculates the pressure and exner function at grid centers and interface levels given a surface pressure and interface-\/level G\+FS grid coefficients. This subroutine should be called to update the pressures of the model levels as the surface pressure of the column changes. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n\+\_\+levels} & number of model levels\\
+\hline
+\mbox{\tt in}  & {\em n\+\_\+columns} & number of columns\\
+\hline
+\mbox{\tt in}  & {\em pres\+\_\+sfc} & surface pressure (Pa)\\
+\hline
+\mbox{\tt in}  & {\em b\+\_\+k} & G\+FS hybrid pressure coordinate coefficients\\
+\hline
+\mbox{\tt in,out}  & {\em pres\+\_\+l} & pressure at model level centers\\
+\hline
+\mbox{\tt in,out}  & {\em pres\+\_\+i} & pressure at model interfaces\\
+\hline
+\mbox{\tt in,out}  & {\em sigi} & sigma at model interfaces\\
+\hline
+\mbox{\tt in,out}  & {\em sigl} & sigma at model layers\\
+\hline
+\mbox{\tt in,out}  & {\em exner\+\_\+l} & exner function at model level centers\\
+\hline
+\mbox{\tt in,out}  & {\em exner\+\_\+i} & exner function at model interfaces \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyItemize}
+\item Calculate interface pressures, sigma, and exner function.
+\item Calculate layer center pressures, sigma, and exner function. 
+\end{DoxyItemize}
+
+Definition at line 119 of file gmtb\+\_\+scm\+\_\+vgrid.\+f90.
+
+
+
+Referenced by gmtb\+\_\+scm\+\_\+main\+::gmtb\+\_\+scm\+\_\+main\+\_\+sub().
+
+\index{gmtb\+\_\+scm\+\_\+vgrid@{gmtb\+\_\+scm\+\_\+vgrid}!get\+\_\+gfs\+\_\+vgrid@{get\+\_\+gfs\+\_\+vgrid}}
+\index{get\+\_\+gfs\+\_\+vgrid@{get\+\_\+gfs\+\_\+vgrid}!gmtb\+\_\+scm\+\_\+vgrid@{gmtb\+\_\+scm\+\_\+vgrid}}
+\subsubsection[{\texorpdfstring{get\+\_\+gfs\+\_\+vgrid(pres\+\_\+sfc, n\+\_\+levels, n\+\_\+columns, pres\+\_\+i, pres\+\_\+l, sigi, sigl, exner\+\_\+l, exner\+\_\+i, a\+\_\+k, b\+\_\+k, error)}{get_gfs_vgrid(pres_sfc, n_levels, n_columns, pres_i, pres_l, sigi, sigl, exner_l, exner_i, a_k, b_k, error)}}]{\setlength{\rightskip}{0pt plus 5cm}subroutine gmtb\+\_\+scm\+\_\+vgrid\+::get\+\_\+gfs\+\_\+vgrid (
+\begin{DoxyParamCaption}
+\item[{real(kind=dp), intent(in)}]{pres\+\_\+sfc, }
+\item[{integer, intent(in)}]{n\+\_\+levels, }
+\item[{integer, intent(in)}]{n\+\_\+columns, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(out), allocatable}]{pres\+\_\+i, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(out), allocatable}]{pres\+\_\+l, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(out), allocatable}]{sigi, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(out), allocatable}]{sigl, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(out), allocatable}]{exner\+\_\+l, }
+\item[{real(kind=dp), dimension(\+:,\+:), intent(out), allocatable}]{exner\+\_\+i, }
+\item[{real(kind=dp), dimension(\+:), intent(out), allocatable}]{a\+\_\+k, }
+\item[{real(kind=dp), dimension(\+:), intent(out), allocatable}]{b\+\_\+k, }
+\item[{integer, intent(out)}]{error}
+\end{DoxyParamCaption}
+)}\hypertarget{group__vgrid_ga1086e1f828a0bafa38299bdc17fde6fe}{}\label{group__vgrid_ga1086e1f828a0bafa38299bdc17fde6fe}
+
+
+Subroutine for setting up the G\+FS hybrid coordinate vertical grid. Files with precalculated coefficients (A\+\_\+k and B\+\_\+k) from the \char`\"{}fix\char`\"{} directory in Patrick Tripp\textquotesingle{}s V2 code are used; their filenames start with \char`\"{}global\+\_\+hyblev\char`\"{}. There are only files for 28, 42, 60, 64, and 91 levels. If a different number of levels are specified, an error is returned. Using the A\+\_\+k and B\+\_\+k coefficients, the model level pressures, sigma values, and exner function (at interfaces and layer centers) are calculated and returned to the calling procedure. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n\+\_\+levels} & number of model levels\\
+\hline
+\mbox{\tt in}  & {\em n\+\_\+columns} & number of columns\\
+\hline
+\mbox{\tt in}  & {\em pres\+\_\+sfc} & surface pressure (Pa)\\
+\hline
+\mbox{\tt out}  & {\em pres\+\_\+l} & pressure at model level centers\\
+\hline
+\mbox{\tt out}  & {\em pres\+\_\+i} & pressure at model interfaces\\
+\hline
+\mbox{\tt out}  & {\em sigi} & sigma at model interfaces\\
+\hline
+\mbox{\tt out}  & {\em sigl} & sigma at model layers\\
+\hline
+\mbox{\tt out}  & {\em exner\+\_\+l} & exner function at model level centers\\
+\hline
+\mbox{\tt out}  & {\em exner\+\_\+i} & exner function at model interfaces\\
+\hline
+\mbox{\tt out}  & {\em a\+\_\+k} & G\+FS hybrid pressure coordinate coefficients\\
+\hline
+\mbox{\tt out}  & {\em b\+\_\+k} & G\+FS hybrid pressure coordinate coefficients\\
+\hline
+\mbox{\tt out}  & {\em error} & error code \\
+\hline
+\end{DoxyParams}
+\hypertarget{group__vgrid_get_GFS_vgrid_alg}{}\subsection{Algorithm}\label{group__vgrid_get_GFS_vgrid_alg}
+
+\begin{DoxyItemize}
+\item Check to see if the desired number of grid levels is available. If not, return an error code.
+\item Open the appropriate file.
+\item The first line contains the number of coefficients and number of levels (these should already by known; discard this info)
+\item Read in the coefficient data.
+\item Calculate interface pressures, sigma, and exner function.
+\item Calculate layer center pressures, sigma, and exner function.
+\end{DoxyItemize}
+
+Definition at line 25 of file gmtb\+\_\+scm\+\_\+vgrid.\+f90.
+
+
+
+Referenced by gmtb\+\_\+scm\+\_\+main\+::gmtb\+\_\+scm\+\_\+main\+\_\+sub().
+
