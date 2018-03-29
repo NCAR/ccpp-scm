@@ -3,7 +3,9 @@
 \usepackage[english]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
+\usepackage{pstricks}
 \usepackage{color}
+\usepackage{colortbl}
 \usepackage[automark,nouppercase]{scrpage2}
 %\usepackage{bera}
 \usepackage{baskervald}
@@ -32,6 +34,7 @@
 \usepackage{tikz}
 \usetikzlibrary{calc}
 \usepackage{hyperref}
+\usepackage{rotating}
 
 % Colours
 \definecolor{white}{rgb}{1.0,1.0,1.0}
@@ -86,13 +89,16 @@
 
 % Commands for writing code
 \newcommand{\exec}[1]{% What to type and execute
-{\small\fontfamily{qcr}\fontshape{n}\fontseries{bx}\selectfont{#1}}}
+{\ttfamily\fontshape{n}\fontseries{bx}\selectfont{#1}}}
+%{\small\fontfamily{qcr}\fontshape{n}\fontseries{bx}\selectfont{#1}}}
 
 \newcommand{\execout}[1]{% Output on a terminal
-{\small\fontfamily{qcr}\fontshape{n}\fontseries{l}\selectfont{#1}}}
+{\ttfamily\fontshape{n}\fontseries{l}\selectfont{#1}}}
+%{\small\fontfamily{qcr}\fontshape{n}\fontseries{l}\selectfont{#1}}}
 
 \newcommand{\execsub}[1]{% Variable that needs subsituting
-{\small\fontfamily{qcr}\fontshape{sl}\fontseries{m}\selectfont{#1}}}
+{\ttfamily\fontshape{sl}\fontseries{m}\selectfont{#1}}}
+%{\small\fontfamily{qcr}\fontshape{sl}\fontseries{m}\selectfont{#1}}}
 
 \newcommand{\vf}[1]{% Variable in a file
 {\fontfamily{cmss}\fontshape{sl}\fontseries{m}\selectfont{#1}}}
@@ -110,6 +116,6 @@
 
 % Shorthand degree symbol
 \newcommand{\dgr}{$^{\circ}$}
-% Change the default font to be Sans Serif 
+% Change the default font to be Sans Serif
 %\renewcommand{\familydefault}{\sfdefault}
 \sloppy
