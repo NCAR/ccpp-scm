@@ -1,0 +1,181 @@
+\chapter{Quick Start Guide}
+\label{chapter: quick}
+\setlength{\parskip}{12pt}
+
+This chapter provides instructions for obtaining and compiling 
+the GMTB SCM. The SCM code calls CCPP-compliant
+physics schemes through the CCPP framework code. As such, it requires the
+CCPP framework code and physics code, both of which are included as 
+subdirectories within the SCM code. This package can be considered a simple example
+for an atmospheric model to interact with physics through the CCPP.
+
+\section{Obtaining Code}
+
+The source code bundle for the CCPP and SCM is provided using github.com.  This release repository contains the tested and supported version for general use.  
+
+\begin{enumerate}
+
+	\item Download a compressed file or clone the source using\\
+
+	\exec{git clone \url{https://[username]@github.com/NCAR/gmtb-scm-release}}\\
+
+	and enter your github password when prompted.\\
+
+	\item Change directory into the project.\\
+
+	\exec{cd gmtb-scm}
+
+\end{enumerate}
+
+The CCPP framework can be found in the ccpp-framework subdirectory at this level.  The CCPP physics parameterizations can be found in the ccpp-physics subdirectory.
+
+If you would like to contribute as a developer to this project, please see the Developers Guide at:\\
+
+\url{https://dtcenter.org/gmtb/users/ccpp/developers/index.php}
+
+
+\section{System Requirements, Libraries, and Tools}
+\label{section: systemrequirements}
+
+The source code for the SCM and CCPP component is in the form
+of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the netCDF
+libraries. Beyond the standard scripts, the build system relies
+on use of the Python scripting language, along with cmake, GNU make and date.
+
+The basic requirements for building and running the CCPP and SCM bundle are
+listed below:
+
+\begin{itemize}
+	\item FORTRAN 90+ compiler
+	\item C compiler
+	\item cmake 
+	\item netCDF v3.6+
+        \begin{itemize}
+	\item if netCDF v4.1+ is used, HDF5 and SZIP libs may also be required
+\end{itemize}
+	\item Python
+\end{itemize}
+
+
+Because these tools and libraries are typically the purview of
+system administrators to install and maintain, they are considered 
+part of the basic system requirements.
+
+
+There are several utility libraries provided in the SCM bundle, as external packages.  These
+are built during the compilation phase, and include
+
+
+\begin{itemize}
+	\item bacio
+	\item sp
+	\item w3
+	\item w3nco
+\end{itemize}
+
+
+
+\subsection{Compilers}
+The CCPP and SCM have been tested on a variety of
+computing platforms. Currently the CCPP system is actively supported
+on Linux and MacOS computing platforms using the Intel, PGI or GNU Fortran
+compilers. Unforeseen build issues may occur when using older
+compiler versions. Typically the best results come from using the
+most recent version of a compiler. The "Known Issues" section of the
+community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownIssues.php}) provides notes regarding compiler support and known issues.
+
+
+
+\section{Compiling SCM with CCPP}
+
+The first step in compiling the CCPP and SCM is to match the physics variables, and build the physics caps needed to use them.  Following this step, the top level build system will use \exec{cmake} to query system parameters and \exec{make} to compile the components.  A platform-specific script is provided to load modules and set the user environment for common platforms.  If you are not using one of these platforms, you will need to set up the same environment on your platform.
+
+\begin{enumerate}
+	\item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments.\\
+  \exec{cd ccpp-framework/scripts} \\
+  \exec{./ccpp\_prebuild.py}\\
+
+	\item Change directory to the top-level SCM directory.\\
+  \exec{cd ../../gmtb-scm} \\
+	\item Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets compiler environment variables.  \\
+For t/csh shell, \\
+  \exec{source Theia\_setup.csh} or\\
+  \exec{source Cheyenne\_setup.csh}\\
+
+For bourne/bash shells,\\
+  \exec{source Theia\_setup.sh} or\\
+  \exec{source Cheyenne\_setup.sh}\\
+
+	\item Make a build directory and change into it.  \\
+  \exec{mkdir bin \&\& cd bin}\\
+
+	\item Invoke cmake on the source code to build.  \\
+  \exec{cmake ../src}\\
+	\item Compile.  \\
+  \exec{make}\\
+
+\end{enumerate}
+
+The resulting executable may be found at: 
+
+\exec{./bin/gmtb-scm}
+
+If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \exec{gmtb-help@ucar.edu}
+
+\section{A sample test case}
+
+The CCPP uses a runtime, dynamically loaded physics library from which physical parameterizations can be selected at runtime.  To utilize a given library (of CCPP-compliant!) physics parameterizations, first append the path to the physics suite libraries that you need
+within the CCPP. For example, for the library that contains the CCPP-compliant parameterizations of the GFS that went operational in July 2017,
+called gmtb-gfsphysics, use:
+\begin{itemize}
+	\item for sh, bash
+
+     \exec{export LD\_LIBRARY\_PATH=\$\{LD\_LIBRARY\_PATH\}:/path/to/build/directory/ccpp-physics}\\
+
+	\item for csh
+
+     if appending: \\
+	\exec{setenv LD\_LIBRARY\_PATH \$\{LD\_LIBRARY\_PATH\}:/path/to/build/directory/ccpp-physics}
+
+     if setting: \\
+	\exec{setenv LD\_LIBRARY\_PATH path/to/build/directory/ccpp-physics}
+\end{itemize}
+
+
+\section{Run the SCM with the supplied case} 
+The test case provided with this version of the SCM is TWP-ICE, the Tropical Warm Pool-International Cloud Experiment. The SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file.
+There is a single command line argument required, which is the name of the case configuration file.  For the provided case, that name is \exec{twpice}.
+
+  \exec{./gmtb\_scm twpice}
+
+A netcdf output file is generated in the location specified in the case
+configuration file. Any standard NetCDF file viewing or analysis tools may be used to 
+examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is located in:
+
+\exec{gmtb-scm/output\_twpice/output.nc}
+
+Additional details may be found in the SCM technical documention, including setting physics parameters, examining the output files, etc.  
+
+\url{https://dtcenter.org/gmtb/users/ccpp/index.php}
+
+
+\section{Setting up the physics suite}
+A physics suite is defined using a Suite Definition File (SDF) located in
+src/ccpp/examples. The SDF file is in XML format and contains the following information: a) suite name, b) number of suite
+"parts" (suite parts exist so that an atmosphere "cap" can execute code between
+calls to the physics driver), c) number of subcycles for each scheme (if
+physics schemes require smaller time steps than the dynamics), and d) the scheme
+names. Scheme names found in the SDF must correspond to schemes
+located within the physics directory.
+
+Using a SDF in the SCM framework involves specifying its name in the case
+configuration file to be used. For example, for the twpice case
+(case\_config/twpice.nml), the variable 'physics suite' is set to the 
+suite name for using the GFS Physics with this case. 
+
+
+
+
+
+
+
