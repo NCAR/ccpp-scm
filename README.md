@@ -54,23 +54,4 @@ compiler environment variables.
  file.
   * `./gmtb_scm twpice`
 2. A netcdf output file is generated in the location specified in the case
-configuration file. For the twpice case, it is located in `./output_twpice/output.nc`
-
-## Setting up the physics suite
-First, a physics suite is defined using an XML file located in
-src/ccpp/examples. The XML file contains the suite name, the number of suite
-"parts" (suite parts exist so that an atmosphere "cap" can execute code between
-calls to the physics driver), the number of subcycles for each scheme (if
-physics schemes require smaller time steps than the dynamics), and the scheme
-names. Scheme names found in the suite XML files must correspond to schemes
-located within the physics directory.
-
-Using a suite in the SCM framework involves specifying its name in the case
-configuration file to be used. For example, for the twpice case
-(case_config/twpice.nml), the variable 'physics suite' is set to the desired
-suite name. NOTE: As mentioned in the 'Running' section above, since the schemes
- are in their own libraries, you must specify the path to the compiled scheme
- libraries that are being used in the suite by appending the `LD_LIBRARY_PATH`.
- Without this step, the scheme libraries will not be found at runtime.
-
-## CCPP Implementation Notes
+configuration file. For the twpice case, it is located in `./bin/output_twpice/output.nc`
