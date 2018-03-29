@@ -2,13 +2,23 @@
 \label{chapter: introduction}
 \setlength{\parskip}{12pt}
 
+A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. This SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. The initial physics schemes included in the CCPP are the operational NOAA Global Forecast System (GFS) suite components that were implemented operationally in July 2017. The number of schemes that have met CCPP-compliance criteria is expected to grow significantly after the initial release. This expansion is expected to include many parameterizations to be considered for eventual operational implementation and their use within this model can provide evidence of performance improvement.
 
-\section{Overview}
+This document serves as the both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
 
-\section{History}
+Please refer to the release web page for further documentation and user notes.
 
+\url{https://dtcenter.org/gmtb/users/ccpp/index.php}
 
+\section{Release Notes}
 
+The following components are included in this release:
+
+\begin{itemize}
+	\item CCPP physics
+	\item CCPP framework
+	\item GMTB Single Column Model
+\end{itemize} 
 
 
 
