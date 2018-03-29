@@ -4,6 +4,126 @@
 
 \section{How to run cases}
 
+The SCM expects one argument to run -- the name of an experiment that corresponds to a configuration file in \execout{gmtb-scm/scm/etc/case\_config}. Each case configuration file contains two fortran namelists, one called \execout{case\_config} that contains parameters for the SCM infrastructure and out called \execout{physics\_config} that contains parameters for the physics suite(s).
+
+\subsection{Case configuration namelist parameters}
+
+The \execout{case\_config} namelist expects the following parameters:
+
+\begin{itemize}
+\item \execout{model\_name}
+	\begin{itemize}
+	\item This controls which vertical coordinates to use. Valid values are \exec{'FV3'} or \exec{'GFS'}. Here, \exec{'GFS'} refers to vertical coordinates used in the GSM.
+	\end{itemize}
+\item \execout{n\_columns}
+	\begin{itemize}
+	\item The code can be used to run a single column or multiple \emph{independent} columns using the same or different physics suites. Specify an integer, \exec{n}.
+	\end{itemize}
+\item \execout{case\_name}
+	\begin{itemize}
+	\item Identifier for which dataset (initialization and forcing) to load. This string must correspond to a dataset included in \execout{gmtb-scm/scm/data/processed\_case\_input/} (without the file extension).
+	\end{itemize}
+\item \execout{dt}
+	\begin{itemize}
+	\item Time step in seconds (floating point)
+	\end{itemize}
+\item \execout{time\_scheme}
+	\begin{itemize}
+	\item Specify 1 for the forward-Euler time-stepping scheme or 2 for the filtered leapfrog scheme.
+	\end{itemize}
+\item \execout{runtime}
+	\begin{itemize}
+	\item Specify the model runtime in seconds (integer). This should correspond with the forcing dataset used. If a runtime is specified that is longer than the supplied forcing, the forcing is held constant at the last specified values.
+	\end{itemize}
+\item \execout{output\_frequency}
+	\begin{itemize}
+	\item Specify the frequency of the model output in seconds (floating point). Currently, no averaging of the output fields is done if \execout{output\_frequency} $\neq$ \execout{dt}; only instantaneous output at the supplied frequency is implemented.
+	\end{itemize}
+\item \execout{n\_levels}
+	\begin{itemize}
+	\item Specify the integer number of vertical levels. If \execout{model\_name} = \exec{'GFS'}, only values of 28, 42, 60, 64, 91 are supported.
+	\end{itemize}
+\item \execout{output\_dir}
+	\begin{itemize}
+	\item A string representing the path (relative to the build directory) to which output should be written.
+	\end{itemize}
+\item \execout{output\_file}
+	\begin{itemize}
+	\item A string representing the name of the netCDF output file to be written (no \exec{.nc} extension expected).
+	\end{itemize}
+\item \execout{case\_data\_dir}
+	\begin{itemize}
+	\item A string representing the path (relative to the build directory) where case initialization and forcing data files can be found.
+	\end{itemize}
+\item \execout{vert\_coord\_data\_dir}
+	\begin{itemize}
+	\item A string representing the path (relative to the build directory) where vertical coordinate data files can be found (for \execout{model\_name} = \exec{'GFS'} only).
+	\end{itemize}
+\item \execout{thermo\_forcing\_type}
+	\begin{itemize}
+	\item An integer representing how forcing for temperature and moisture state variables is applied (1= total advective tendencies, 2= horizontal advective tendencies with prescribed vertical motion, 3= relaxation to observed profiles with vertical motion prescribed)
+	\end{itemize}
+\item \execout{mom\_forcing\_type}
+	\begin{itemize}
+	\item An integer representing how forcing for horizontal momentum state variables is applied (1= total advective tendencies, 2= horizontal advective tendencies with prescribed vertical motion, 3= relaxation to observed profiles with vertical motion prescribed)
+	\end{itemize}
+\item \execout{relax\_time}
+	\begin{itemize}
+	\item A floating point number representing the timescale in seconds for the relaxation forcing (only used if \execout{thermo\_forcing\_type} = \exec{3} or \execout{mom\_forcing\_type} = \exec{3})
+	\end{itemize}
+\item \execout{sfc\_flux\_spec}
+	\begin{itemize}
+	\item A boolean set to \exec{.true.} if surface flux are specified from the forcing data (remove any surface schemes from the suite definition file if so)
+	\end{itemize}
+\item \execout{sfc\_type}
+	\begin{itemize}
+	\item An integer representing the character of the surface (0: sea surface, 1: land surface, 2: sea-ice surface)
+	\end{itemize}
+\item \execout{reference\_profile\_choice}
+	\begin{itemize}
+	\item An integer representing the choice of reference profile to use above the supplied initialization and forcing data (1= "McClatchey" profile, 2: mid-latitude summer standard atmosphere)
+	\end{itemize}
+\item \execout{year}
+	\begin{itemize}
+	\item An integer representing the year of the initialization time
+	\end{itemize}
+\item \execout{month}
+	\begin{itemize}
+	\item An integer representing the month of the initialization time
+	\end{itemize}
+\item \execout{day}
+	\begin{itemize}
+	\item An integer representing the day of the initialization time
+	\end{itemize}
+\item \execout{hour}
+	\begin{itemize}
+	\item An integer representing the hour of the initialization time
+	\end{itemize}
+\end{itemize}
+
+\subsection{Physics configuration namelist parameters}
+
+The \execout{physics\_config} namelist expects the following parameters:
+
+\begin{itemize}
+\item \execout{physics\_suite}
+	\begin{itemize}
+	\item A string list representing the names of the physics suite for each column (must correspond a suite definition file name; if using multiple columns, you may specify an equal number of physics suites)
+	\end{itemize}
+\item \execout{physics\_suite\_dir}
+	\begin{itemize}
+	\item A string representing the path (relative to the build directory) where suite definition files files can be found.
+	\end{itemize}
+\item \execout{physics\_nml}
+	\begin{itemize}
+	\item A string list representing the paths (relative to the build directory) to the physics namelist files.
+	\end{itemize}
+\item \execout{column\_area}
+	\begin{itemize}
+	\item A list of floating point values representing the characteristic horizontal domain area of each atmospheric column in square meters (this could be analogous to a 3D model's horizontal grid size or the characteristic horizontal scale of an observation array; these values are used in scale-aware schemes; if using multiple columns, you may specify an equal number of column areas)
+	\end{itemize}
+\end{itemize}
+
 \section{How to set up new cases}
 
 
