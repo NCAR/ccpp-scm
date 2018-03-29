@@ -126,6 +126,10 @@ endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 #set C compiler flags
 set(c_flags -O3 -DLINUX -fPIC)
 
+#add OpenMP
+set(c_flags ${c_flags} ${OpenMP_C_FLAGS})
+set(f_flags ${f_flags} ${OpenMP_Fortran_FLAGS})
+
 if(${CMAKE_VERSION} LESS 3.3)
   file(GLOB f_files *.f)
   string (REPLACE ";" " " f_flags_str "${f_flags}")

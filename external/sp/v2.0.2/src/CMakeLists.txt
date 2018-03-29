@@ -14,6 +14,10 @@ else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message ("This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${SPLIB_SRC}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
+#add OpenMP
+set(c_flags ${c_flags} ${OpenMP_C_FLAGS})
+set(f_flags ${f_flags} ${OpenMP_Fortran_FLAGS})
+
 if(${CMAKE_VERSION} LESS 3.3)
   string (REPLACE ";" " " f_flags_str "${f_flags}")
   SET_SOURCE_FILES_PROPERTIES(${sp_source_code} PROPERTIES COMPILE_FLAGS ${f_flags_str})
