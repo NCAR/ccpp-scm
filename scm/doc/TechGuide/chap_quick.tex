@@ -92,26 +92,35 @@ The first step in compiling the CCPP and SCM is to match the physics variables, 
 
 \begin{enumerate}
 	\item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments.\\
-  \exec{cd ccpp-framework/scripts} \\
-  \exec{./ccpp\_prebuild.py}\\
+  		\exec{./ccpp-framework/scripts/ccpp\_prebuild.py}\\
+  		\begin{itemize}
+  			\item Note: add \exec{--debug} to see the full output of the script.\\
+		\end{itemize}
 
 	\item Change directory to the top-level SCM directory.\\
-  \exec{cd ../../gmtb-scm} \\
-	\item Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets compiler environment variables.  \\
+  		\exec{cd scm} \\
+	\item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets compiler environment variables.  \\
 For t/csh shell, \\
-  \exec{source Theia\_setup.csh} or\\
-  \exec{source Cheyenne\_setup.csh}\\
+  		\exec{source etc/Theia\_setup.csh} or\\
+ 		\exec{source etc/Cheyenne\_setup.csh}\\
+		\exec{source etc/MACOSX\_setup.csh}\\
 
 For bourne/bash shells,\\
-  \exec{source Theia\_setup.sh} or\\
-  \exec{source Cheyenne\_setup.sh}\\
+  \exec{. etc/Theia\_setup.sh} or\\
+  \exec{. etc/Cheyenne\_setup.sh}\\
+  \exec{. etc/MACOSX\_setup.sh}\\
+  
+  	\begin{itemize}
+		\item Note: If using a Mac, you may only need to run the MACOSX\_setup script if you're following the instructions in doc/README\_MACOSX.txt. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary.
+	\end{itemize}
 
 	\item Make a build directory and change into it.  \\
   \exec{mkdir bin \&\& cd bin}\\
 
 	\item Invoke cmake on the source code to build.  \\
-  \exec{cmake ../src}\\
-	\item Compile.  \\
+  \exec{cmake ../src} (without threading/OpenMP)\\
+  \exec{cmake -DOPENMP=1 ../src} (with threading/OpenMP)\\
+	\item Compile. Add \exec{VERBOSE=1} to obtain more information on the build process. \\
   \exec{make}\\
 
 \end{enumerate}
@@ -122,29 +131,9 @@ The resulting executable may be found at:
 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \exec{gmtb-help@ucar.edu}
 
-\section{A sample test case}
-
-The CCPP uses a runtime, dynamically loaded physics library from which physical parameterizations can be selected at runtime.  To utilize a given library (of CCPP-compliant!) physics parameterizations, first append the path to the physics suite libraries that you need
-within the CCPP. For example, for the library that contains the CCPP-compliant parameterizations of the GFS that went operational in July 2017,
-called gmtb-gfsphysics, use:
-\begin{itemize}
-	\item for sh, bash
-
-     \exec{export LD\_LIBRARY\_PATH=\$\{LD\_LIBRARY\_PATH\}:/path/to/build/directory/ccpp-physics}\\
-
-	\item for csh
-
-     if appending: \\
-	\exec{setenv LD\_LIBRARY\_PATH \$\{LD\_LIBRARY\_PATH\}:/path/to/build/directory/ccpp-physics}
-
-     if setting: \\
-	\exec{setenv LD\_LIBRARY\_PATH path/to/build/directory/ccpp-physics}
-\end{itemize}
-
-
 \section{Run the SCM with the supplied case} 
 The test case provided with this version of the SCM is TWP-ICE, the Tropical Warm Pool-International Cloud Experiment. The SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file.
-There is a single command line argument required, which is the name of the case configuration file.  For the provided case, that name is \exec{twpice}.
+There is a single command line argument required, which is the name of the case configuration file (without the .nml extension).  For the provided case, that name is \exec{twpice}.
 
   \exec{./gmtb\_scm twpice}
 
@@ -152,26 +141,11 @@ A netcdf output file is generated in the location specified in the case
 configuration file. Any standard NetCDF file viewing or analysis tools may be used to 
 examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is located in:
 
-\exec{gmtb-scm/output\_twpice/output.nc}
+\exec{gmtb-scm/scm/bin/output\_twpice/output.nc}
 
-Additional details may be found in the SCM technical documention, including setting physics parameters, examining the output files, etc.  
+Additional details may be found in the \hl{SCM technical documention, including setting physics parameters, examining the output files, etc.  }
 
 \url{https://dtcenter.org/gmtb/users/ccpp/index.php}
-
-
-\section{Setting up the physics suite}
-A physics suite is defined using a Suite Definition File (SDF) located in
-src/ccpp/examples. The SDF file is in XML format and contains the following information: a) suite name, b) number of suite
-"parts" (suite parts exist so that an atmosphere "cap" can execute code between
-calls to the physics driver), c) number of subcycles for each scheme (if
-physics schemes require smaller time steps than the dynamics), and d) the scheme
-names. Scheme names found in the SDF must correspond to schemes
-located within the physics directory.
-
-Using a SDF in the SCM framework involves specifying its name in the case
-configuration file to be used. For example, for the twpice case
-(case\_config/twpice.nml), the variable 'physics suite' is set to the 
-suite name for using the GFS Physics with this case. 
 
 
 
