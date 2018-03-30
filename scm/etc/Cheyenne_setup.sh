@@ -22,7 +22,7 @@ python -c "import f90nml"
 
 if [ $? -ne 0 ]; then
 	echo "Not found; installing f90nml"
-	cd scripts/f90nml-0.19
+	cd etc/scripts/f90nml-0.19
 	python setup.py install --user
 	cd ../..
 else
