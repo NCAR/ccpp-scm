@@ -10,8 +10,9 @@ module load intel/17.0.1
 module load ncarcompilers/0.4.1
 module load netcdf/4.4.1.1
 
-#set the FC environment variable to ifort
-echo "Setting the FC environment variable to use ifort"
+echo "Setting CC/CXX/FC environment variables"
+export CC=icc
+export CXX=icpc
 export FC=ifort
 
 #install f90nml for the local user
