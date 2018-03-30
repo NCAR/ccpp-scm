@@ -1,3 +1,9 @@
+# WARNING
+
+In preparation for the SCM+CCPP release, all development related to the release,
+including the documentation, is done on the "release" branch. As such, the
+documentation (including this README.md) in the "master" branch is out of date.
+
 # User's Guide
 
 This guide provides instructions for obtaining, compiling and running a simple
