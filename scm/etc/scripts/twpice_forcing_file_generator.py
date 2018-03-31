@@ -8,7 +8,7 @@ import gmtb_scm_plotting_routines as gspr
 
 reload(ffc)
 
-#read in raw ASTEX input file
+#read in raw input file
 
 nc_fid = Dataset("../raw_case_input/twp180iopsndgvarana_v2.1_C3.c1.20060117.000000.cdf", 'r')
 
@@ -126,7 +126,7 @@ z_sfc = nc_fid.variables['alt'][:]
 
 height = ffc.get_height_from_pres(T_abs[:,0],levels,z_sfc)
 
-#the following variables are not in the astex forcing file, but are included in other cases
+#the following variables are not in this forcing file, but are included in other cases
 rad_heating = np.zeros((levels.size,time.size),dtype=float)
 u_g = np.zeros((levels.size,time.size),dtype=float)
 v_g = np.zeros((levels.size,time.size),dtype=float)
