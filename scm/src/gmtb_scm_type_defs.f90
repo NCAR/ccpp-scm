@@ -1063,9 +1063,9 @@ module gmtb_scm_type_defs
 
   end subroutine scm_reference_create
 
-  subroutine physics_create(physics, n_columns, n_levels, n_tracers, lats, pres)
+  subroutine physics_create(physics, n_columns, n_levels, lats, pres)
     class(physics_type) :: physics
-    integer, intent(in) :: n_columns, n_levels, n_tracers
+    integer, intent(in) :: n_columns, n_levels
     real(kind=kind_phys), intent(in) :: lats(:), pres(:)
 
     real(kind=kind_phys) :: kind_phys_zero
