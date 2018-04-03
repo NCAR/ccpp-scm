@@ -28,6 +28,7 @@ The GMTB SCM uses pressure for the vertical coordinate (lowest index is the surf
 After the vertical grid has been set up, the state variable profiles stored in the \execout{scm\_state} derived data type are interpolated from the input and reference profiles in the \execout{set\_state} subroutine of the \execout{gmtb\_scm\_setup} module.
 
 \section{Physics suite initialization}
+\label{section: physics init}
 For this model, it is possible to run several columns, each with a different physics suite. Therefore, suite initialization needs to be performed for each column. With the CCPP framework, initializing a physics suite is a 5-step process:
 \begin{enumerate}
 \item Call \execout{ccpp\_init()} with the path to the suite definition file and the CCPP derived data type (\execout{cdata}) as arguments. This call will read and parse the suite definition file and initialize the \execout{cdata} derived data type.
@@ -38,6 +39,7 @@ For this model, it is possible to run several columns, each with a different phy
 \end{enumerate}
 
 \section{Time integration}
+\label{section: time integration}
 Two time-stepping schemes have been implemented within the GMTB SCM: forward Euler (\execout{time\_scheme} = \exec{1} in the \execout{case\_config} namelist) and filtered leapfrog (\execout{time\_scheme} = \exec{2} in the \execout{case\_config} namelist). If the leapfrog scheme is chosen, two time levels of state variables are saved and the first time step is implemented as a forward time step over $\frac{\Delta t}{2}$.
 
 During each step of the time integration, the following sequence occurs:
