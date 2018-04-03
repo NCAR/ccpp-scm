@@ -36,6 +36,7 @@ compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets
 compiler environment variables.
   * `source etc/Theia_setup.csh` (for csh) or `. etc/Theia_setup.sh` (for bash)
   * `source etc/Cheyenne_setup.csh` (for csh) or `. etc/Cheyenne_setup.sh` (for bash)
+  * `source etc/UBUNTU_setup.csh` (for csh) or `. etc/UBUNTU_setup.sh` (for bash) if following the instructions in doc/README_UBUNTU.txt
   * `source etc/MACOSX_setup.csh` (for csh) or `. etc/MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
 4. Make a build directory and change into it.
   * `mkdir bin && cd bin`
@@ -53,4 +54,4 @@ compiler environment variables.
  file.
   * `./gmtb_scm twpice`
 2. A netcdf output file is generated in the location specified in the case
-configuration file. For the twpice case, it is located in `./bin/output_twpice/output.nc`
+configuration file. For the twpice case, it is located in `./output_twpice/output.nc`
