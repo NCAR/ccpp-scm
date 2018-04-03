@@ -81,6 +81,19 @@ else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
 #------------------------------------------------------------------------------
+# The Fortran compiler/linker flag inserted by cmake to create shared libraries
+# with the Intel compiler is deprecated (-i_dynamic), correct here.
+# CMAKE_Fortran_COMPILER_ID = {"Intel", "PGI", "GNU", "Clang", "MSVC", ...}
+if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+    string(REPLACE "-i_dynamic" "-shared-intel"
+           CMAKE_SHARED_LIBRARY_CREATE_Fortran_FLAGS
+           "${CMAKE_SHARED_LIBRARY_CREATE_Fortran_FLAGS}")
+    string(REPLACE "-i_dynamic" "-shared-intel"
+           CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS
+           "${CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS}")
+endif()
+
+#------------------------------------------------------------------------------
 # CMake Modules
 # Set the CMake module path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp-framework/cmake")
