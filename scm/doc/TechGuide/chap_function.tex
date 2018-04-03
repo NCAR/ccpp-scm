@@ -2,4 +2,61 @@
 \label{chapter: algorithm}
 \setlength{\parskip}{12pt}
 
-\section{Algorithm Description}
+\section{Algorithm Overview}
+
+Like most SCMs, the algorithm for the GMTB SCM is quite simple. In a nutshell, the SCM code performs the following:
+\begin{itemize}
+\item Read in an initial profile and the forcing data.
+\item Create a vertical grid and interpolate the initial profile and forcing data to it.
+\item Initialize the physics suite.
+\item Perform the time integration, applying forcing and calling the physics suite each time step.
+\item Output the state and physics data.
+\end{itemize}
+In this chapter, it will briefly be described how each of these tasks is performed.
+
+\section{Reading input}
+The following steps are performed at the beginning of program execution:
+\begin{enumerate}
+\item Call \execout{get\_config\_nml()} in the \execout{gmtb\_scm\_input} module to read in the \hyperref[subsection: case config]{\execout{case\_config}} and \hyperref[subsection: physics config]{\execout{physics\_config}} namelists. This subroutine also sets some variables within the \execout{scm\_state} derived type from the data that was read.
+\item Call \execout{get\_case\_init()} in the \execout{gmtb\_scm\_input} module to read in the \hyperref[subsection: case input]{case input data file}. This subroutine also sets some variables within the \execout{scm\_input} derived type from the data that was read.
+\item Call \execout{get\_reference\_profile()} in the \execout{gmtb\_scm\_input} module to read in the reference profile data. This subroutine also sets some variables within the \execout{scm\_reference} derived type from the data that was read. At this time, there is no ``standard'' format for the reference profile data file. There is a \execout{select case} statement within the \execout{get\_reference\_profile()} subroutine that reads in differently-formatted data. If adding a new reference profile, it will be required to add a section that reads its data in this subroutine.
+\end{enumerate}
+
+\section{Setting up vertical grid and interpolating input data}
+The GMTB SCM uses pressure for the vertical coordinate (lowest index is the surface). There are two choices for generating the vertical coordinate corresponding to the GSM-based GFS (set \execout{model\_name} = \exec{`GFS'} in the \execout{case\_config} file) and the FV3-based GFS (set \execout{model\_name} = \exec{`FV3'} in the \execout{case\_config} file). For both methods, the pressure levels are calculated using the surface pressure and coefficients ($a_k$ and $b_k$). For the GSM-based vertical coordinate, the coefficient data is read from an external file. Only 28, 42, 60, 64, and 91 levels are supported. If using the FV3-based vertical coordinate, it is possible to use potentially any (integer) number of vertical levels. Depending on the vertical levels specified, however, the method of specification of the coefficients may change. Please see the subroutine \execout{get\_FV3\_vgrid} in the source file \execout{gmtb-scm/scm/src/gmtb\_scm\_vgrid.F90} for details. This subroutine was minimally adapted from the source file \execout{fv\_eta.F90} from the FV3 v0 public release version of the FV3 model.
+
+After the vertical grid has been set up, the state variable profiles stored in the \execout{scm\_state} derived data type are interpolated from the input and reference profiles in the \execout{set\_state} subroutine of the \execout{gmtb\_scm\_setup} module.
+
+\section{Physics suite initialization}
+For this model, it is possible to run several columns, each with a different physics suite. Therefore, suite initialization needs to be performed for each column. With the CCPP framework, initializing a physics suite is a 5-step process:
+\begin{enumerate}
+\item Call \execout{ccpp\_init()} with the path to the suite definition file and the CCPP derived data type (\execout{cdata}) as arguments. This call will read and parse the suite definition file and initialize the \execout{cdata} derived data type.
+\item Initialize variables needed for the suite initialization routine. For suites based on the GFS operational suite, this involves setting some values in a derived data type used in the initialization subroutine and manually adding \execout{ccpp\_field\_add()} calls for all data needed in the initialization subroutine.
+\item Call \execout{ccpp\_run()} on the suite initialization subroutine, passing in the \execout{cdata} derived data type (this subroutine should be listed in the \execout{<init>} tag of the suite definition file.).
+\item Associate the \execout{scm\_state} variables with the appropriate pointers in the \execout{physics} derived data type. Note: It is important that this step be performed before the next step to avoid segmentation faults.
+\item Execute the \execout{ccpp\_field\_add()} calls for the remaining variables to be used by the physics schemes. This step makes all physics variables that are exposed by the host application available to all physics schemes in the suite. This is done through an inclusion of an external file, \execout{ccpp\_fields.inc} that is automatically generated from the \execout{ccpp\_prebuild.py} script using the metadata contained in the host application cap (\execout{/gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90} in the current implementation).
+\end{enumerate}
+
+\section{Time integration}
+Two time-stepping schemes have been implemented within the GMTB SCM: forward Euler (\execout{time\_scheme} = \exec{1} in the \execout{case\_config} namelist) and filtered leapfrog (\execout{time\_scheme} = \exec{2} in the \execout{case\_config} namelist). If the leapfrog scheme is chosen, two time levels of state variables are saved and the first time step is implemented as a forward time step over $\frac{\Delta t}{2}$.
+
+During each step of the time integration, the following sequence occurs:
+\begin{enumerate}
+\item Update the elapsed model time.
+\item Calculate the current date and time given the initial date and time and the elapsed time.
+\item If the leapfrog scheme is used, save the unfiltered model state from the previous time step.
+\item Call the \execout{interpolate\_forcing()} subroutine in the \execout{gmtb\_scm\_forcing} module to interpolate the forcing data in space and time.
+\item Recalculate the pressure variables (pressure, exner, geopotential) in case the surface pressure has changed.
+\item Call \execout{do\_time\_step()} in the \execout{gmtb\_scm\_time\_integration} module. Within this subroutine:
+\begin{itemize}
+\item Call the appropriate \execout{apply\_forcing\_*} subroutine from the \execout{gmtb\_scm\_forcing} module.
+\item If using the leapfrog scheme, transfer the model state from one memory slot to the other.
+\item For each column, call \execout{ccpp\_run()} to call all physics schemes within the suite (this assumes that all suite parts are called sequentially without intervening code execution)
+\end{itemize}
+\item If using the leapfrog scheme, call \execout{filter()} in the \execout{gmtb\_scm\_time\_integration} module to time filter the model state.
+\item Check to see if output should be written during the current time step and call \execout{output\_append()} in the \execout{gmtb\_scm\_output} module if necessary.
+\end{enumerate}
+
+\section{Writing output}
+
+As of this release, the SCM output is only instantaneous. Specifying an \execout{output\_frequency} in the case configuration file greater than the timestep will result in data loss. Prior to the physics suite being initialized, the \execout{output\_init()} subroutine in the \execout{gmtb\_scm\_output} module is called to create the netCDF output file and define all dimensions and variables. Immediately after the physics suite initialization and at the defined frequency within the time integration loop, the \execout{output\_append()} subroutine is called and instantaneous data values are appended to the netCDF file. Any variables defined in the \execout{scm\_state} and/or \execout{physics} derived data types are accessible to the output subroutines. Writing new variables to the output involves hard-coding lines in the \execout{output\_init()} and \execout{output\_append()} subroutines. 
