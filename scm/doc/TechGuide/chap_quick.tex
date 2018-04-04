@@ -130,13 +130,13 @@ For bourne/bash shells,\\
 
 The resulting executable may be found at: 
 
-\exec{./bin/gmtb-scm}
+\exec{./gmtb-scm}
 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \exec{gmtb-help@ucar.edu}
 
 \section{Run the SCM with the supplied case} 
 The test case provided with this version of the SCM is TWP-ICE, the Tropical Warm Pool-International Cloud Experiment. The SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file.
-There is a single command line argument required, which is the name of the case configuration file (without the .nml extension).  For the provided case, that name is \exec{twpice}.
+There is a single command line argument required, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/}.  For the provided case, that name is \exec{twpice}.
 
   \exec{./gmtb\_scm twpice}
 
@@ -146,9 +146,8 @@ examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is 
 
 \exec{gmtb-scm/scm/bin/output\_twpice/output.nc}
 
-Additional details may be found in the \hl{SCM technical documention, including setting physics parameters, examining the output files, etc.  }
-
-\url{https://dtcenter.org/gmtb/users/ccpp/index.php}
+Additional details regarding the SCM may be found in the remainder of this Technical Guide and more information on the CCPP can be found in the CCPP Developers' Guide and at the following link: 
+\url{https://dtcenter.org/gmtb/users/ccpp/index.php}.
 
 
 
