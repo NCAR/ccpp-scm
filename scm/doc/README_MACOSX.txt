@@ -2,7 +2,9 @@
 
 In order to build and run SCM-CCPP v1 on Mac OS X, the following installation steps are suggested:
 
-1. install homebrew (enter sudo password when requested)
+(tested on macOS High Sierra 10.13.3 with Xcode 9.3, llvm-clang 5.0.0, gfortran 7.3.0)
+
+1. Install homebrew (enter sudo password when requested)
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 2. Install gcc-7.2.0, gfortran-7.2.0
