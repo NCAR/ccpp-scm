@@ -12,12 +12,46 @@ Please refer to the release web page for further documentation and user notes.
 
 \section{Release Notes}
 
-The following components are included in this release:
+The Bundle CCPP-SCM v1.0 contains the CCPP v1.0 and the GMTB SCM v2.0.
+
+Physics parameterizations within v1.0 of CCPP are CCPP-compliant members of the operational 2017 GFS physics suite and include the following:
+\begin{itemize}
+	\item GFS RRTMG shortwave and longwave radiation
+	\item GFS ozone
+	\item GFS Zhao-Carr microphysics
+	\item GFS scale-aware mass-flux deep convection
+	\item GFS scale-aware mass-flux shallow convection
+	\item GFS hybrid eddy diffusivity-mass-flux PBL and free atmosphere turbulence
+	\item GFS orographic gravity wave drag
+	\item GFS convective gravity wave drag
+	\item GFS surface layer
+	\item GFS Noah Land Surface Model
+	\item GFS near-sea-surface temperature
+	\item GFS sea ice
+	\item Additional diagnostics and interstitial computations needed for the GFS suite
+\end{itemize}
+
+The CCPP framework contains the following
+\begin{itemize}
+\item Metadata standards for defining variables provided by the host application (in this case SCM) and needed by each parameterization
+\item \execout{ccpp\_prebuild.py} script to read and parse SCM and parameterizations metadata tables, compare the two and alert if incompatible, manufacture Fortran code for SCM and physics caps, and generate makefile snippets
+\item Suite Definition File that allows choosing parameterizations at runtime
+\end{itemize}
+
+GMTB SCM v2.0 is a major update to v1.3. The fundamental difference is how it calls physics. While v1.3 relied on IPDv2 from the GSM-based GFS to call physics, v2.0 calls physics through the CCPP framework. It includes the following:
 
 \begin{itemize}
-	\item CCPP physics
-	\item CCPP framework
-	\item GMTB Single Column Model
+\item Cmake build system to compile needed NCEP libraries, SCM, CCPP framework, and parameterizations
+\item Physics variable metadata as part of a host model cap to the CCPP
+\item Test case of the Tropical Warm Pool - International Cloud Experiment (TWP-ICE)
 \end{itemize}
 
 \subsection{Limitations}
+
+This release bundle has several known limitations:
+
+\begin{itemize}
+\item GMTB SCM v2.0 can only run one case. The other cases that had been working with v1.3 required specified surface fluxes, bypassing the surface schemes within the physics suite. This functionality will be restored in the next minor update, v2.1, which will include a new suite definition file that replaces the GFS surface schemes with a replacement scheme that ``backs out'' surface-related variables needed in PBL schemes from prescribed surface fluxes.
+\item The CCPP physics in this release only includes one scheme of each type, which makes it impossible to swap schemes within a suite. Additional schemes will be added soon to enable this functionality.
+\item The CCPP physics suite in this release contains several short ``interstitial'' schemes that mostly consist of short code sections that appeared in the antecedent GFS physics driver between calls to individual schemes. These were required to achieve bit-for-bit reproducibility between the physics called through the CCPP framework and those which were called through the IPDv4. The existence of these schemes limits the portability in the current release and these will be consolidated in a subsequent release to achieve greater portability of schemes.
+\end{itemize}
