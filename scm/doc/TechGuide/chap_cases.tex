@@ -70,7 +70,7 @@ The \execout{case\_config} namelist expects the following parameters:
 	\end{itemize}
 \item \execout{sfc\_flux\_spec}
 	\begin{itemize}
-	\item A boolean set to \exec{.true.} if surface flux are specified from the forcing data (remove any surface schemes from the suite definition file if so)
+	\item A boolean set to \exec{.true.} if surface flux are specified from the forcing data (there is no need to have surface schemes in a suite definition file if so)
 	\end{itemize}
 \item \execout{sfc\_type}
 	\begin{itemize}
@@ -165,7 +165,7 @@ Although it is expected that all variables are in the netCDF file, only those th
 	\end{itemize}
 \item \execout{thermo\_forcing\_type} $=$ \exec{1}
 	\begin{itemize}
-		\item horizontal and vertical advective tendencies of $\theta_{il}$ and $q_t$ and prescribed radiative heating (can be zero if radiation scheme is active)"
+		\item horizontal and vertical advective tendencies of $\theta_{il}$ and $q_t$ and prescribed radiative heating (can be zero if radiation scheme is active)
 	\end{itemize}
 \item \execout{thermo\_forcing\_type} $=$ \exec{2}
 	\begin{itemize}
