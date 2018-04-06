@@ -6,7 +6,7 @@
 
 \section{What is included in the repository?}
 
-The repository contains all code and data required to run the GMTB SCM. It is functionally separated into 4 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp-framework} directory), the CCPP physics schemes (\execout{ccpp-physics} directory), and any necessary external library code (\execout{external} directory). The entire \execout{gmtb-scm} repository resides on github's NCAR account, and the \execout{ccpp-framework} and \execout{ccpp-physics} directories are git submodules that point to repositories on the same account. The structure of the entire repository is represented below.
+The repository contains all code and data required to run the GMTB SCM. It is functionally separated into 4 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp-framework} directory), the CCPP physics schemes (\execout{ccpp-physics} directory), and any necessary external library code (\execout{external} directory). The entire \execout{gmtb-scm} repository resides on github's NCAR account, and the \execout{ccpp-framework} and \execout{ccpp-physics} directories are git submodules that point to repositories on the same account. The structure of the entire repository is represented below. Note that the ccpp\_physics repository contains files needed for using the CCPP with the experimental version of the Global Forecast System (GFS) that uses the Finite-Volume Cubed-Sphere (FV3) model (FV3GFS), even though the use of CCPP with FV3GFS is not supported in this release.
 
 \justify
 \dirtree{%
@@ -21,13 +21,13 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.3 schemes/\DTcomment{contains schemes used for testing and obsolete scripts}.
 	.3 scripts/\DTcomment{contains ccpp\_prebuild and other python scripts for parsing metadata}.
 	.3 src/\DTcomment{contains CCPP framework code}.
-	.2 ccpp-physics/\DTcomment{contains all physics schemes and IPDv4-related code}.
+	.2 ccpp-physics/\DTcomment{contains all physics schemes}.
 	.3 CCPP\_CAPS.mk\DTcomment{auto-generated makefile section for physics caps}.
 	.3 CCPP\_schemes.mk\DTcomment{auto-generated makefile section for physics schemes}.
 	.3 CMakeLists.txt\DTcomment{cmake configuration file for ccpp-physics}.
-	.3 GFS\_layer/\DTcomment{driving routines used in IPDv4}.
+	.3 GFS\_layer/\DTcomment{driving routines}.
 	.3 input.nml\DTcomment{namelist containing parameters for operational GFS physics}.
-	.3 IPD\_layer\DTcomment{IPDv4 routines}.
+	.3 IPD\_layer\DTcomment{routines associated with the cap for FV3}.
 	.3 LICENSE.
 	.3 makefile\DTcomment{makefile to compile ccpp-physics used with FV3}.
 	.3 pgifix.py.
@@ -48,9 +48,9 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.4 vert\_coord\_data/\DTcomment{contains data to calculate vertical coordinates}.
 	.3 doc/\DTcomment{contains doxygen configuration file, images, and output}.
 	.4 html/\DTcomment{contains HTML output from doxygen}.
-	.4 images/\DTcomment{contains images used in the documentation}.
 	.4 README\_MACOSX.txt.
 	.4 README\_UBUNTU.txt.
+	.4 README\_CENTOS.txt.
 	.3 etc/\DTcomment{contains case configuration, machine setup scripts, and plotting scripts}.
 	.4 case\_config/\DTcomment{contains case configuration files}.
 	.4 Cheyenne\_setup.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
@@ -61,6 +61,8 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.4 MACOSX\_setup.sh\DTcomment{setup script for Mac OS X for sh, bash}.
 	.4 UBUNTU\_setup.csh\DTcomment{setup script for Ubuntu Linux for csh, tcsh}.
 	.4 UBUNTU\_setup.sh\DTcomment{setup script for Ubuntu Linux for sh, bash}.
+	.4 CENTOS\_setup.csh\DTcomment{setup script for CentOS Linux for csh, tcsh}.
+	.4 CENTOS\_setup.sh\DTcomment{setup script for CentOS Linux for sh, bash}.
 	.4 scripts/\DTcomment{python scripts for setting up cases and plotting}.
 	.5 f90nml.0.19/\DTcomment{f90nml python package}.
 	.5 plot\_configs/\DTcomment{plot configuration files}.
