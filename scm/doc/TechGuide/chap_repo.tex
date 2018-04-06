@@ -1,14 +1,10 @@
 \chapter{Repository}
 \label{chapter: repository}
-\setlength{\parskip}{12pt}
-
-
 
 \section{What is included in the repository?}
+The repository contains all code and data required to run the GMTB SCM. It is functionally separated into 4 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp-framework} directory), the CCPP physics schemes (\execout{ccpp-physics} directory), and any necessary external library code (\execout{external} directory). The entire \execout{gmtb-scm} repository resides on github's NCAR account, and the \execout{ccpp-framework} and \execout{ccpp-physics} directories are git submodules that point to repositories on the same account. The structure of the entire repository is represented below. Note that the \execout{ccpp\_physics} repository contains files needed for using the CCPP with the experimental version of the Global Forecast System (GFS) that uses the Finite-Volume Cubed-Sphere (FV3) model (FV3GFS), even though the use of CCPP with FV3GFS is not supported in this release.
 
-The repository contains all code and data required to run the GMTB SCM. It is functionally separated into 4 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp-framework} directory), the CCPP physics schemes (\execout{ccpp-physics} directory), and any necessary external library code (\execout{external} directory). The entire \execout{gmtb-scm} repository resides on github's NCAR account, and the \execout{ccpp-framework} and \execout{ccpp-physics} directories are git submodules that point to repositories on the same account. The structure of the entire repository is represented below. Note that the ccpp\_physics repository contains files needed for using the CCPP with the experimental version of the Global Forecast System (GFS) that uses the Finite-Volume Cubed-Sphere (FV3) model (FV3GFS), even though the use of CCPP with FV3GFS is not supported in this release.
-
-\justify
+{\small\justify
 \dirtree{%
 	.1 gmtb-scm/.
 	.2 ccpp-framework/.
@@ -72,7 +68,4 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.3 README.html\DTcomment{link to doxygen generated documentation}.
 	.3 src/\DTcomment{source code for SCM infrastructure}.
 	.4 cmake/\DTcomment{contains custom FindNetCDF.cmake}.
-}
-
-
-
+}}
