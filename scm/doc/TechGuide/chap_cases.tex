@@ -14,7 +14,7 @@ The \execout{case\_config} namelist expects the following parameters:
 \begin{itemize}
 \item \execout{model\_name}
 	\begin{itemize}
-	\item This controls which vertical coordinates to use. Valid values are \exec{'FV3'} or \exec{'GFS'}. Here, \exec{'GFS'} refers to vertical coordinates used in the GSM.
+	\item This controls which vertical coordinates to use. Valid values are \exec{'FV3'} or \exec{`GFS'}. Here, \exec{`GFS'} refers to vertical coordinates used in the GSM.
 	\end{itemize}
 \item \execout{n\_columns}
 	\begin{itemize}
@@ -42,7 +42,7 @@ The \execout{case\_config} namelist expects the following parameters:
 	\end{itemize}
 \item \execout{n\_levels}
 	\begin{itemize}
-	\item Specify the integer number of vertical levels. If \execout{model\_name} = \exec{'GFS'}, only values of 28, 42, 60, 64, 91 are supported.
+	\item Specify the integer number of vertical levels. If \execout{model\_name} = \exec{`GFS'}, only values of 28, 42, 60, 64, 91 are supported.
 	\end{itemize}
 \item \execout{output\_dir}
 	\begin{itemize}
@@ -58,7 +58,7 @@ The \execout{case\_config} namelist expects the following parameters:
 	\end{itemize}
 \item \execout{vert\_coord\_data\_dir}
 	\begin{itemize}
-	\item A string representing the path (relative to the build directory) where vertical coordinate data files can be found (for \execout{model\_name} = \exec{'GFS'} only).
+	\item A string representing the path (relative to the build directory) where vertical coordinate data files can be found (for \execout{model\_name} = \exec{`GFS'} only).
 	\end{itemize}
 \item \execout{thermo\_forcing\_type}
 	\begin{itemize}
@@ -66,7 +66,7 @@ The \execout{case\_config} namelist expects the following parameters:
 	\end{itemize}
 \item \execout{mom\_forcing\_type}
 	\begin{itemize}
-	\item An integer representing how forcing for horizontal momentum state variables is applied (1= total advective tendencies, 2= horizontal advective tendencies with prescribed vertical motion, 3= relaxation to observed profiles with vertical motion prescribed)
+	\item An integer representing how forcing for horizontal momentum state variables is applied (1= total advective tendencies; not implemented yet, 2= horizontal advective tendencies with prescribed vertical motion, 3= relaxation to observed profiles with vertical motion prescribed)
 	\end{itemize}
 \item \execout{relax\_time}
 	\begin{itemize}
@@ -146,7 +146,7 @@ Setting up a new case involves preparing the two types of files listed above. Fo
 \begin{equation}
 q_t = q_v + q_l + q_i
 \end{equation}
-where $\theta_{il}$ is the ice-liquid water potential temperature, $\theta$ is the potential temperature, $L_v$ is the latent heat of vaporization, $L_s$ is the latent heat of sublimation $c_p$ is the specific heat capacity of air at constant pressure, $T$ is absolute temperature in K, $q_t$ is the total water specific humidity, $q_v$ is the water vapor specific humidity, $q_l$ is the suspended liquid water specific humidity, and $q_i$ is the suspended ice water specific humidity.
+where $\theta_{il}$ is the ice-liquid water potential temperature, $\theta$ is the potential temperature, $L_v$ is the latent heat of vaporization, $L_s$ is the latent heat of sublimation $c_p$ is the specific heat capacity of air at constant pressure, $T$ is absolute temperature, $q_t$ is the total water specific humidity, $q_v$ is the water vapor specific humidity, $q_l$ is the suspended liquid water specific humidity, and $q_i$ is the suspended ice water specific humidity.
 
 As shown in the example netCDF header, the SCM expects that the vertical dimension is pressure levels (index 1 is the surface) and the time dimension is in seconds. The initial conditions expected are the height of the pressure levels in meters, and arrays representing vertical columns of $\theta_{il}$ in K, $q_t$, $q_l$, and $q_i$ in kg kg$^{-1}$, $u$ and $v$ in m s$^{-1}$, turbulence kinetic energy in m$^2$ s$^{-2}$ and ozone mass mixing ratio in kg kg$^{-1}$. 
 
@@ -185,5 +185,5 @@ For the case configuration file, it is most efficient to copy an existing file i
 
 To control the forcing method, one must choose how the momentum and scalar variable forcing are applied. The three methods of Randall and Cripe (1999, JGR) have been implemented: ``revealed forcing'' where total (horizontal + vertical) advective tendencies are applied (type 1), ``horizontal advective forcing'' where horizontal advective tendencies are applied and vertical advective tendencies are calculated from a prescribed vertical velocity and the calculated (modeled) profiles (type 2), and ``relaxation forcing'' where nudging to observed profiles replaces horizontal advective forcing combined with vertical advective forcing from prescribed vertical velocity (type 3). If relaxation forcing is chosen, a \execout{relaxation\_time} that represents the timescale over which the profile would return to the nudging profiles must be specified.
 
-The \execout{physics\_config} namelist portion of the case configuration file provides a place to specify what physics are called. One needs to specify the path where the CCPP suite definition file is located in the \execout{physics\_suite\_dir} parameter. If one has specified that more than one (independent) columns be simulated, one also need to specify the name of the physics suite to be used for each column (corresponding to a suite definition file without the file extension) and a namelist that contains physics suite parameters for each column. The physics suite parameter namelist files are read as part of the suite initialization subroutine specified in the suite definition file. In addition, one must specify a \execout{column\_area} for each column. As of this release, multiple column functionality is limited to changes in the physics -- one can run multiple different physics suites using the same initial conditions and forcing, perform sensitivity test through multiple physics suite parameter namelists, and/or sensitivity tests with different representative column areas.
+The \execout{physics\_config} namelist portion of the case configuration file provides a place to specify which physics are called. One needs to specify the path where the CCPP suite definition file is located in the \execout{physics\_suite\_dir} parameter. If one has specified that more than one (independent) columns be simulated, one also need to specify the name of the physics suite to be used for each column (corresponding to a suite definition file without the file extension) and a namelist that contains physics suite parameters for each column. The physics suite parameter namelist files are read as part of the suite initialization subroutine specified in the suite definition file. In addition, one must specify a \execout{column\_area} for each column. As of this release, multiple column functionality is limited to changes in the physics -- one can run multiple different physics suites using the same initial conditions and forcing, perform sensitivity test through multiple physics suite parameter namelists, and/or sensitivity tests with different representative column areas.
 

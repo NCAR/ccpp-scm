@@ -11,7 +11,7 @@ for an atmospheric model to interact with physics through the CCPP.
 
 \section{Obtaining Code}
 
-The source code bundle for the CCPP and SCM is provided using github.com.  This release repository contains the tested and supported version for general use.  
+The source code bundle for the CCPP and SCM is provided through github.com.  This release repository contains the tested and supported version for general use.  
 
 \begin{enumerate}
 
@@ -68,10 +68,9 @@ are built during the compilation phase, and include
 
 
 \begin{itemize}
-	\item bacio
-	\item sp
-	\item w3
-	\item w3nco
+	\item bacio - Binary I/O Library
+	\item sp - Spectral Transformation Library
+	\item w3nco - GRIB decoder and encoder library
 \end{itemize}
 
 
@@ -103,14 +102,19 @@ For \textit{t/csh} shell, \\
   		\exec{source etc/Theia\_setup.csh} or\\
  		\exec{source etc/Cheyenne\_setup.csh} or\\
 		\exec{source etc/UBUNTU\_setup.csh} or\\
-		\exec{source etc/MACOSX\_setup.csh}\\  \\
-\textbf{Note:} It is not sufficient to just run the t/csh scripts at the command line. They must be sourced.  \\ \\
-For \textit{bourne/bash} shells,\\
-                 \exec{./etc/Theia\_setup.sh} or\\
-                 \exec{./etc/Cheyenne\_setup.sh} or\\
-                 \exec{./etc/UBUNTU\_setup.sh} or\\
-                 \exec{./etc/MACOSX\_setup.sh}\\ \\
-		\textbf{Note:} If using a Mac, you may only need to run the MACOSX\_setup script if you're following the instructions in doc/README\_MACOSX.txt. Similar, if you are using Ubuntu Linux, you may only need to run the UBUNTU\_setup script if you're following the instructions in doc/README\_UBUNTU.txt. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary. \\
+		\exec{source etc/CENTOS\_setup.csh} or\\
+		\exec{source etc/MACOSX\_setup.csh}\\
+
+For bourne/bash shells,\\
+  \exec{. etc/Theia\_setup.sh} or\\
+  \exec{. etc/Cheyenne\_setup.sh} or\\
+  \exec{. etc/UBUNTU\_setup.sh} or\\
+  \exec{. etc/CENTOS\_setup.sh} or\\
+  \exec{. etc/MACOSX\_setup.sh}\\
+  
+  	\begin{itemize}
+		\item Note: If using a Mac, you may only need to run the MACOSX\_setup script if you're following the instructions in doc/README\_MACOSX.txt. Similar, if you are using Ubuntu/CentOS Linux, you may only need to run the UBUNTU\_setup/CENTOS\_setup script if you're following the instructions in doc/README\_UBUNTU.txt / doc/README\_CENTOS.txt. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary.
+	\end{itemize}
 
 	\item Make a build directory and change into it.  \\
   \exec{mkdir bin \&\& cd bin}\\
@@ -135,14 +139,13 @@ There is a single command line argument required, which is the name of the case 
 
   \exec{./gmtb\_scm twpice}
 
-A netcdf output file is generated in the location specified in the case
-configuration file. Any standard NetCDF file viewing or analysis tools may be used to 
+A netCDF output file is generated in the location specified in the case
+configuration file. Any standard netCDF file viewing or analysis tools may be used to 
 examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is located in:
 
 \exec{gmtb-scm/scm/bin/output\_twpice/output.nc}
 
-Additional details regarding the SCM may be found in the remainder of this Technical Guide and more information on the CCPP can be found in the CCPP Developers' Guide and at the following link: \\ \\
-\url{https://dtcenter.org/gmtb/users/ccpp/docs/index.php}.
+Additional details regarding the SCM may be found in the remainder of this guide and more information on the CCPP can be found in the CCPP Developers' Corner\\ (\url{https://dtcenter.org/gmtb/users/ccpp/developers}) and in the CCPP Developers' Guide (\url{https://dtcenter.org/gmtb/users/ccpp/docs}).
 
 
 
