@@ -29,10 +29,11 @@ The source code bundle for the CCPP and SCM is provided through github.com.  Thi
 
 The CCPP framework can be found in the ccpp-framework subdirectory at this level.  The CCPP physics parameterizations can be found in the ccpp-physics subdirectory.
 
-If you would like to contribute as a developer to this project, please see the Developers Guide at:\\
+If you would like to contribute as a developer to this project, please see CCPP Developers Corner of the project website:\\
 
 \url{https://dtcenter.org/gmtb/users/ccpp/developers/index.php}
 
+There you will find links to all of the documentation pertinent to developers. 
 
 \section{System Requirements, Libraries, and Tools}
 \label{section: systemrequirements}
@@ -92,15 +93,12 @@ The first step in compiling the CCPP and SCM is to match the physics variables, 
 
 \begin{enumerate}
 	\item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments.\\
-  		\exec{./ccpp-framework/scripts/ccpp\_prebuild.py}\\
-  		\begin{itemize}
-  			\item Note: add \exec{--debug} to see the full output of the script.\\
-		\end{itemize}
-
+  		\exec{./ccpp-framework/scripts/ccpp\_prebuild.py}\\ \\
+  	\textbf{Note:} Add \exec{--debug} to see the full output of the script.\\ 
 	\item Change directory to the top-level SCM directory.\\
   		\exec{cd scm} \\
 	\item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets compiler environment variables.  \\
-For t/csh shell, \\
+For \textit{t/csh} shell, \\
   		\exec{source etc/Theia\_setup.csh} or\\
  		\exec{source etc/Cheyenne\_setup.csh} or\\
 		\exec{source etc/UBUNTU\_setup.csh} or\\
@@ -137,7 +135,7 @@ If you encounter errors, please capture a log file from all of the steps, and co
 
 \section{Run the SCM with the supplied case} 
 The test case provided with this version of the SCM is TWP-ICE, the Tropical Warm Pool-International Cloud Experiment. The SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file.
-There is a single command line argument required, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/}.  For the provided case, that name is \exec{twpice}.
+There is a single command line argument required, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}.  For the provided case, that name is \exec{twpice}.
 
   \exec{./gmtb\_scm twpice}
 
