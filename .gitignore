@@ -2,8 +2,6 @@
 *.[oa]
 *.mod
 scm/bin/*
-*.eps
 *.pyc
-*.png
 .metadata
 non-tracked_files/
