@@ -11,7 +11,7 @@ for an atmospheric model to interact with physics through the CCPP.
 
 \section{Obtaining Code}
 
-The source code bundle for the CCPP and SCM is provided using github.com.  This release repository contains the tested and supported version for general use.  
+The source code bundle for the CCPP and SCM is provided through github.com.  This release repository contains the tested and supported version for general use.  
 
 \begin{enumerate}
 
@@ -67,10 +67,9 @@ are built during the compilation phase, and include
 
 
 \begin{itemize}
-	\item bacio
-	\item sp
-	\item w3
-	\item w3nco
+	\item bacio - Binary I/O Library
+	\item sp - Spectral Transformation Library
+	\item w3nco - GRIB decoder and encoder library
 \end{itemize}
 
 
@@ -140,14 +139,13 @@ There is a single command line argument required, which is the name of the case 
 
   \exec{./gmtb\_scm twpice}
 
-A netcdf output file is generated in the location specified in the case
-configuration file. Any standard NetCDF file viewing or analysis tools may be used to 
+A netCDF output file is generated in the location specified in the case
+configuration file. Any standard netCDF file viewing or analysis tools may be used to 
 examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is located in:
 
 \exec{gmtb-scm/scm/bin/output\_twpice/output.nc}
 
-Additional details regarding the SCM may be found in the remainder of this Technical Guide and more information on the CCPP can be found in the CCPP Developers' Guide and at the following link: 
-\url{https://dtcenter.org/gmtb/users/ccpp/index.php}.
+Additional details regarding the SCM may be found in the remainder of this guide and more information on the CCPP can be found in the CCPP Developers' Corner\\ (\url{https://dtcenter.org/gmtb/users/ccpp/developers}) and in the CCPP Developers' Guide (\url{https://dtcenter.org/gmtb/users/ccpp/docs}).
 
 
 
