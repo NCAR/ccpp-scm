@@ -13,6 +13,7 @@ In order to build and run SCM-CCPP v1 on CentOS Linux, the following installatio
     yum install autogen
     yum install libxml2-devel
     yum install libaec-devel
+    yum install libcurl-devel
     yum install cmake
     yum install dejagnu
     yum install texinfo
