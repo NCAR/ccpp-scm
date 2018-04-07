@@ -41,7 +41,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
         \begin{itemize}
     \item if netCDF v4.1+ is used, HDF5 and SZIP libs may also be required
 \end{itemize}
-    \item Python
+    \item Python v2.x (not 3.x)
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements.
@@ -56,11 +56,11 @@ There are several utility libraries provided in the SCM bundle, as external pack
 \subsection{Compilers}
 The CCPP and SCM have been tested on a variety of
 computing platforms. Currently the CCPP system is actively supported
-on Linux and MacOS computing platforms using the Intel, PGI or GNU Fortran
+on Linux and MacOS computing platforms using the Intel or GNU Fortran
 compilers. Unforeseen build issues may occur when using older
 compiler versions. Typically the best results come from using the
-most recent version of a compiler. The ``Known Issues'' section of the
-community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownIssues.php}) provides notes regarding compiler support and known issues.
+most recent version of a compiler. If you have problems with compilers, please check the ``Known Issues'' section of the
+community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownIssues.php}).
 
 \section{Compiling SCM with CCPP}
 \label{section: compiling}
