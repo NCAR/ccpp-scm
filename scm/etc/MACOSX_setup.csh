@@ -13,8 +13,8 @@ setenv LDFLAGS "-L/usr/local/opt/zlib/lib -L/usr/local/opt/llvm/lib"
 setenv CPPFLAGS "-I/usr/local/opt/zlib/include -I/usr/local/opt/llvm/include"
 setenv CFLAGS "-I/usr/local/opt/zlib/include -I/usr/local/opt/llvm/include"
 setenv CXXFLAGS "-I/usr/local/opt/zlib/include -I/usr/local/opt/llvm/include"
-setenv FFLAGS "-L/usr/local/opt/llvm/lib -lomp -I/usr/local/opt/zlib/include -I/usr/local/opt/llvm/include"
-setenv FCFLAGS "-L/usr/local/opt/llvm/lib -lomp -I/usr/local/opt/zlib/include -I/usr/local/opt/llvm/include"
+setenv FFLAGS "-I/usr/local/opt/zlib/include -I/usr/local/opt/llvm/include"
+setenv FCFLAGS " -I/usr/local/opt/zlib/include -I/usr/local/opt/llvm/include"
 
 if (! $?PATH) then
   setenv PATH "/usr/local/opt/llvm/bin"

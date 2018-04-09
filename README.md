@@ -33,25 +33,26 @@ for an atmospheric model to interact with physics through the CCPP.
 1. Run the CCPP prebuild script to match required physics variables with those
 available from the dycore (SCM) and to generate physics caps and makefile
 segments.
-  * `cd ccpp-framework/scripts`
-  * `./ccpp_prebuild.py`
-  Note: use `./ccpp_prebuild.py --debug` to see the full output of the script.
+  * `./ccpp-framework/scripts/ccpp_prebuild.py`
+  Note: add `--debug` to see the full output of the script.
 2. Change directory to the top-level SCM directory.
-  * `cd ../../scm`
+  * `cd scm`
 3. [Optional] Run the machine setup script if necessary. This script loads
 compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets
 compiler environment variables.
   * `source etc/Theia_setup.csh` (for csh) or `. etc/Theia_setup.sh` (for bash)
   * `source etc/Cheyenne_setup.csh` (for csh) or `. etc/Cheyenne_setup.sh` (for bash)
+  * `source etc/UBUNTU_setup.csh` (for csh) or `. etc/UBUNTU_setup.sh` (for bash) if following the instructions in doc/README_UBUNTU.txt
+  * `source etc/CENTOS_setup.csh` (for csh) or `. etc/CENTOS_setup.sh` (for bash) if following the instructions in doc/README_CENTOS.txt
   * `source etc/MACOSX_setup.csh` (for csh) or `. etc/MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
-3. Make a build directory and change into it.
+4. Make a build directory and change into it.
   * `mkdir bin && cd bin`
-4. Invoke cmake on the source code to build.
+5. Invoke cmake on the source code to build.
   * `cmake ../src` (without threading/OpenMP)
   * `cmake -DOPENMP=1 ../src` (with threading/OpenMP)
 
   For extensive debugging output, add `-DCMAKE_BUILD_TYPE=Debug` to the `cmake` command.
-5. Compile. Add `VERBOSE=1` to obtain more information on the build process.
+6. Compile. Add `VERBOSE=1` to obtain more information on the build process.
   * `make`
 
 ## Running the SCM with CCPP
@@ -60,4 +61,4 @@ compiler environment variables.
  file.
   * `./gmtb_scm twpice`
 2. A netcdf output file is generated in the location specified in the case
-configuration file. For the twpice case, it is located in `./bin/output_twpice/output.nc`
+configuration file. For the twpice case, it is located in `./output_twpice/output.nc`

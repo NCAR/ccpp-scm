@@ -55,7 +55,7 @@ subroutine do_time_step(scm_state, cdata)
   type(scm_state_type), intent(inout)          :: scm_state
   type(ccpp_t), intent(inout)                  :: cdata(:)
 
-  integer :: i, ipd_index, subcycle_index, scheme_index, ierr
+  integer :: i, ierr
 
   !> \section do_time_step_alg Algorithm
   !! @{

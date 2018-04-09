@@ -1,13 +1,63 @@
 \chapter{CCPP Interface}
 \label{chapter: ccpp_interface}
-\setlength{\parskip}{12pt}
+
+Chapter 3 of the CCPP Developers' Guide provides a wealth of information on the overall process of connecting a host model to the CCPP framework for calling physics. This chapter describes the particular implementation within the GMTB SCM, including how to set up, initialize, call, and change a physics suite using the CCPP framework.
 
 \section{Setting up a suite}
 
-\section{Initializing a suite}
+Setting up a physics suite for use in the GMTB SCM with the CCPP framework involves three steps: preparing data to be made available to physics through the CCPP, running the \execout{ccpp\_prebuild.py} script to reconcile SCM-provided variables with physics-required variables, and preparing a suite definition file.
 
-\section{Running a suite}
+\subsection{Preparing data from the SCM}
+
+As described in sections 3.1 and 3.2 of the CCPP Developers' Guide a host model must allocate memory and provide metadata for variables that are passed into and out of the schemes within the physics suite. As of this release, in practice this means that a host model must do this for all variables needed by all physics schemes that are expected to be used with the host model. For the GMTB SCM, all variables needed by the physics schemes are allocated and documented in the file \execout{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90} and are contained within the \execout{physics} derived data type. This derived data type initializes its component variables in a \execout{create} type-bound procedure. As mentioned in section 3.2 of the CCPP Developers' Guide, a table containing all required metadata was constructed for describing all variables in the \execout{physics} derived data type. The standard names of all variables in this table must match with a corresponding variable within one or more of the physics schemes. A list of all standard names used can be found in \execout{ccpp-framework/doc/DevelopersGuide/CCPP\_VARIABLES\_SCM.pdf}. The \execout{local\_name} for each variable corresponds to how a variable is referenced from the point in the code where \execout{ccpp\_field\_add()} statements are made. For the GMTB SCM, then, all \execout{local\_name}s begin with the \execout{physics} derived data type. Nested within most of the \execout{local\_name}s is also the name of a derived data type used within the FV3GFS cap (re-used here for expediency). Since the \execout{ccpp\_field\_add()} statements are made within a loop over all columns within \execout{gmtb\_scm.F90}, most \execout{local\_name}s are also referenced with \execout{i} as an array index.
+
+\subsection{Editing and running \exec{ccpp\_prebuild.py}}
+
+General instructions for configuring and running the \execout{ccpp\_prebuild.py} script can be found in section 3.4 of the CCPP Developers' Guide. The script expects to be run with a host-model-dependent configuration file. The \execout{HOST\_MODEL} variable within the script determines which configuration file is read. If \execout{HOST\_MODEL} $=$ \exec{``SCM''} (the default value in this release), the file \execout{gmtb-scm/ccpp-framework/scripts/ccpp\_prebuild\_config\_SCM.py} is used. Within this configuration file are variables that hold paths to the variable definition files (where metadata tables can be found on the host model side), the scheme files (a list of paths to all source files containing scheme entry points), the auto-generated physics schemes makefile snippet, the auto-generated physics scheme caps makefile snippet, the file where \execout{ccpp\_modules.inc} and \execout{ccpp\_fields.inc} are included, and the directory where the auto-generated physics caps should be written out to. Other variables less likely to be modified by a user are included in this configuration file as well, such as code sections to be included in the auto-generated scheme caps. As mentioned in section \ref{section: compiling}, this script must be run to reconcile data provided by the SCM with data required by the physics schemes before compilation by following step 1 in that section.
+
+\subsection{Preparing a suite definition file}
+The suite definition file is a text file read by the model at run time. It is used to specify the physical parameterization suite, and includes information about the number of parameterization groupings, which parameterizations that are part of each of the groups, the order in which the parameterizations should be run, and whether subcycling will be used to run any of the parameterizations with shorter timesteps.
+
+In addition to the six or so major parameterization categories (such as radiation, boundary layer, deep convection, resolved moist physics, etc.), the suite definition file can also have an arbitrary number of additional interstitial schemes in between the parameterizations to prepare or postprocess data. In many models, this interstitial code is not known to the model user but with the suite definition file, both the physical parameterizations and the interstitial processing are listed explicitly. 
+
+The suite definition file also invokes an initialization step, which is run only once when the model is first initialized. Finally, the name of the suite is listed in the suite definition file. By default, this suite name is used to compose the name of the shared library (.so file) that contains the code for the physical parameterizations and that must be dynamically linked at run time.
+
+For this release, the suite definition file used with the GMTB SCM is found in \execout{gmtb-scm/ccpp-framework/examples/suite\_scm\_GFS\_test.xml}. The suite has been named \exec{``GFS\_operational\_2017''} and an initialization routine of \execout{GFS\_initialize\_scm\_run} has been specified. The physics schemes have been organized into 3 groupings following how the physics are called in the FV3GFS model, although no code is executed in the SCM time loop between execution of the grouped schemes. Several ``interstitial'' schemes are included in the suite definition file to execute code that previously was part of a hard-coded physics driver. Many of these schemes will eventually be rolled into the schemes themselves, improving portability.
+
+\section{Initializing/running a suite}
+The process for initializing and running a suite in the GMTB SCM is described in sections \ref{section: physics init} and \ref{section: time integration}, respectively. A more general description of the process for performing suite initialization and running can also be found in section 3.3 of the CCPP Developers' Guide.
 
 \section{Changing a suite}
+
+\subsection{Replacing a scheme with another}
+
+When the CCPP has reached a state of maturity, the process for modifying the contents of an existing physics suite will be a very straightforward process, consisting of merely changing the name of the scheme in the suite definition file. As of this release, which consists of one scheme of each ``type'' in the pool of CCPP-compliant physics schemes with many short interstitial schemes, the process requires some consideration. Of course, prior to being able to swap a scheme within a suite, one must first add a CCPP-compliant scheme to the pool of available schemes in the CCPP physics repository. This process is described in section 2.2 of the CCPP Developers' Guide.
+
+Once a CCPP-compliant scheme has been added to the CCPP physics repository, the process for modifying an existing suite should take the following steps into account:
+
+\begin{itemize}
+\item Examine and compare the arguments of the scheme being replaced and the replacement scheme.
+\begin{itemize}
+\item Are there any new variables that the replacement scheme needs from the host application? If so, these new variables must be added to the host model cap. For the SCM, this involves adding a component variable to the \execout{physics} derived data type and a corresponding entry in the metadata table. The new variables must also be allocated and initialized in the \execout{physics\%create} type-bound procedure. 
+\item Do any of the new variables need to be calculated in an interstitial scheme? If so, one must be written and made CCPP-compliant itself. The CCPP Developers' Guide will help in this endeavor, and the process outlined in its section 2.2 should be followed. 
+\item Do other schemes in the suite rely on output variables from the scheme being replaced that are no longer being supplied by the replacement scheme? Do these output variables need to be derived/calculated in an interstitial scheme? If so, see the previous bullet about adding one.
+\end{itemize}
+\item Examine existing interstitial schemes related to the scheme being replaced. 
+\begin{itemize}
+\item There may be scheme-specific interstitial schemes (needed for one specific scheme) and/or type-generic interstitial schemes (those that are called for all schemes of a given type, i.e. all PBL schemes). Does one need to write analogous scheme-specific interstitial schemes for the replacement? 
+\item Are the type-generic interstitial schemes relevant or do they need to be modified?
+\end{itemize}
+\item Depending on the answers to the above considerations, edit the suite definition file as necessary. Typically, this would involve finding the \execout{<scheme>} elements associated with the scheme to be replaced and its associated interstitial \execout{<scheme>} elements and simply replacing the scheme names to reflect their replacements.
+\end{itemize}
+
+\subsection{Modifying ``groups'' of parameterizations}
+
+The concept of grouping physics in the suite definition file (currently reflected in the \execout{<ipd part=``n''>} elements) enables ``groups'' of parameterizations to be called with other computation (perhaps related to the dycore, I/O, etc.) in between. In the suite definition file included in this release, three groups are specified, but currently no computation happens between \execout{ccpp\_run} calls for these groups. However, one can edit the groups to suit the needs of the host application. For example, if a subset of physics schemes needs to be more tightly connected with the dynamics and called more frequently, one could create a group consisting of that subset and place a \execout{ccpp\_run} call in the appropriate place in the host application. The remainder of the parameterizations groups could be called using \execout{ccpp\_run} calls in a different part of the host application code.
+
+\subsection{Subcycling parameterizations}
+
+The suite definition file allows subcycling of schemes, or calling a subset of schemes at a smaller time step than others. The \execout{<subcycle loop = }\exec{n}\execout{>} element in the suite definition file controls this function. All schemes within such an element are called \exec{n} times during one \execout{ccpp\_run} call. All schemes within the included suite definition file are within \execout{<subcycle loop = }\exec{1}\execout{>} elements, meaning that they are only called once. Note that no time step information is included in the suite definition file. If subcycling is used for a set of parameterizations, the smaller time step must be an input argument for those schemes. 
+
+
 
 

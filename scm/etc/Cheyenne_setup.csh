@@ -10,8 +10,9 @@ module load intel/17.0.1
 module load ncarcompilers/0.4.1
 module load netcdf/4.4.1.1
 
-#set the FC environment variable to ifort
-echo "Setting the FC environment variable to use ifort"
+echo "Setting CC/CXX/FC environment variables"
+setenv CC icc
+setenv CXX icpc
 setenv FC ifort
 
 #install f90nml for the local user
@@ -22,7 +23,7 @@ python -c "import f90nml"
 
 if ( $? != 0 ) then
 	echo "Not found; installing f90nml"
-	cd scripts/f90nml-0.19
+	cd etc/scripts/f90nml-0.19
 	python setup.py install --user
 	cd ../..
 else

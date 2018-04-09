@@ -1,14 +1,24 @@
 \documentclass[12pt,letterpaper,oneside]{scrbook}
 
 \usepackage{import}
-\usepackage{gmtb}
+\usepackage{soul}
+\import{../../../ccpp-framework/doc/common/}{gmtb.sty}
 
 \makeindex
+
+\hypersetup{
+        pdfauthor={Grant Firl / Laurie Carson / Ligia Bernardet / Dom Heinzeller},
+        pdftitle={Global Model Test Bed Single Column Model (SCM)},
+}
 
 \begin{document}
 
 \frontmatter
 \import{./}{title.tex}
+
+\clearpage
+\thispagestyle{empty}
+\import{./}{acknow.tex}
  
 \tableofcontents
 
@@ -17,6 +27,7 @@
 \mainmatter
 
 \import{./}{chap_intro.tex}
+\import{./}{chap_quick.tex}
 \import{./}{chap_repo.tex}
 \import{./}{chap_function.tex}
 \import{./}{chap_cases.tex}

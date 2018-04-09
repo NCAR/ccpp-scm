@@ -514,12 +514,11 @@ subroutine get_reference_profile(scm_state, scm_reference)
   real(kind=dp), allocatable :: qv(:) !< reference profile specific humidity (kg kg^-1)
   real(kind=dp), allocatable :: ozone(:) !< reference profile ozone concentration (kg kg^-1)
 
-  integer :: reference_file_choice
   integer :: i, ioerror
   character(len=120)                 :: line
   real :: dummy
 
-  integer                           :: ncid, varID, grp_ncid, allocate_status
+  integer                           :: ncid, varID, allocate_status
   CHARACTER(LEN=nf90_max_name)      :: tmpName
 
   select case (scm_state%reference_profile_choice)

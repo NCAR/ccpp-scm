@@ -7,7 +7,6 @@ contains
 subroutine gmtb_scm_main_sub()
 
   use gmtb_scm_kinds, only: sp, dp, qp
-  use gmtb_scm_type_defs, only: scm_state_type, scm_input_type, scm_reference_type, physics_type
   use gmtb_scm_input
   use gmtb_scm_utils
   use gmtb_scm_vgrid
@@ -86,7 +85,7 @@ subroutine gmtb_scm_main_sub()
 
   scm_state%itt_out = 1
 
-  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%n_tracers, scm_state%lat(:,1), scm_state%pres_l(1,1,:))
+  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%lat(:,1), scm_state%pres_l(1,1,:))
 
   !physics initialization section
 

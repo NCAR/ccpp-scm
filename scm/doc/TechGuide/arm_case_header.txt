@@ -1,0 +1,113 @@
+netcdf arm_sgp_summer_1997 {
+dimensions:
+	time = UNLIMITED ; // (233 currently)
+	levels = UNLIMITED ; // (35 currently)
+variables:
+	float time(time) ;
+		time:units = "s" ;
+		time:description = "elapsed time since the beginning of the simulation" ;
+	float levels(levels) ;
+		levels:units = "Pa" ;
+		levels:description = "pressure levels" ;
+
+// global attributes:
+		:description = "GMTB SCM forcing file for the ARM SGP Summer of 1997 case" ;
+
+group: scalars {
+  } // group scalars
+
+group: initial {
+  variables:
+  	float height(levels) ;
+  		height:units = "m" ;
+  		height:description = "physical height at pressure levels" ;
+  	float thetail(levels) ;
+  		thetail:units = "K" ;
+  		thetail:description = "initial profile of ice-liquid water potential temperature" ;
+  	float qt(levels) ;
+  		qt:units = "kg kg^-1" ;
+  		qt:description = "initial profile of total water specific humidity" ;
+  	float ql(levels) ;
+  		ql:units = "kg kg^-1" ;
+  		ql:description = "initial profile of liquid water specific humidity" ;
+  	float qi(levels) ;
+  		qi:units = "kg kg^-1" ;
+  		qi:description = "initial profile of ice water specific humidity" ;
+  	float u(levels) ;
+  		u:units = "m s^-1" ;
+  		u:description = "initial profile of E-W horizontal wind" ;
+  	float v(levels) ;
+  		v:units = "m s^-1" ;
+  		v:description = "initial profile of N-S horizontal wind" ;
+  	float tke(levels) ;
+  		tke:units = "m^2 s^-2" ;
+  		tke:description = "initial profile of turbulence kinetic energy" ;
+  	float ozone(levels) ;
+  		ozone:units = "kg kg^-1" ;
+  		ozone:description = "initial profile of ozone mass mixing ratio" ;
+  } // group initial
+
+group: forcing {
+  variables:
+  	float lat(time) ;
+  		lat:units = "degrees N" ;
+  		lat:description = "latitude of column" ;
+  	float lon(time) ;
+  		lon:units = "degrees E" ;
+  		lon:description = "longitude of column" ;
+  	float p_surf(time) ;
+  		p_surf:units = "Pa" ;
+  		p_surf:description = "surface pressure" ;
+  	float T_surf(time) ;
+  		T_surf:units = "K" ;
+  		T_surf:description = "surface absolute temperature" ;
+  	float sh_flux_sfc(time) ;
+  		sh_flux_sfc:units = "K m s^-1" ;
+  		sh_flux_sfc:description = "surface sensible heat flux" ;
+  	float lh_flux_sfc(time) ;
+  		lh_flux_sfc:units = "kg kg^-1 m s^-1" ;
+  		lh_flux_sfc:description = "surface latent heat flux" ;
+  	float w_ls(levels, time) ;
+  		w_ls:units = "m s^-1" ;
+  		w_ls:description = "large scale vertical velocity" ;
+  	float omega(levels, time) ;
+  		omega:units = "Pa s^-1" ;
+  		omega:description = "large scale pressure vertical velocity" ;
+  	float u_g(levels, time) ;
+  		u_g:units = "m s^-1" ;
+  		u_g:description = "large scale geostrophic E-W wind" ;
+  	float v_g(levels, time) ;
+  		v_g:units = "m s^-1" ;
+  		v_g:description = "large scale geostrophic N-S wind" ;
+  	float u_nudge(levels, time) ;
+  		u_nudge:units = "m s^-1" ;
+  		u_nudge:description = "E-W wind to nudge toward" ;
+  	float v_nudge(levels, time) ;
+  		v_nudge:units = "m s^-1" ;
+  		v_nudge:description = "N-S wind to nudge toward" ;
+  	float T_nudge(levels, time) ;
+  		T_nudge:units = "K" ;
+  		T_nudge:description = "absolute temperature to nudge toward" ;
+  	float thil_nudge(levels, time) ;
+  		thil_nudge:units = "K" ;
+  		thil_nudge:description = "potential temperature to nudge toward" ;
+  	float qt_nudge(levels, time) ;
+  		qt_nudge:units = "kg kg^-1" ;
+  		qt_nudge:description = "q_t to nudge toward" ;
+  	float dT_dt_rad(levels, time) ;
+  		dT_dt_rad:units = "K s^-1" ;
+  		dT_dt_rad:description = "prescribed radiative heating rate" ;
+  	float h_advec_thetail(levels, time) ;
+  		h_advec_thetail:units = "K s^-1" ;
+  		h_advec_thetail:description = "prescribed theta_il tendency due to horizontal advection" ;
+  	float v_advec_thetail(levels, time) ;
+  		v_advec_thetail:units = "K s^-1" ;
+  		v_advec_thetail:description = "prescribed theta_il tendency due to vertical advection" ;
+  	float h_advec_qt(levels, time) ;
+  		h_advec_qt:units = "kg kg^-1 s^-1" ;
+  		h_advec_qt:description = "prescribed q_t tendency due to horizontal advection" ;
+  	float v_advec_qt(levels, time) ;
+  		v_advec_qt:units = "kg kg^-1 s^-1" ;
+  		v_advec_qt:description = "prescribed q_t tendency due to vertical advection" ;
+  } // group forcing
+}
