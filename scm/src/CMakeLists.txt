@@ -68,6 +68,8 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   ADD_COMPILE_OPTIONS(-finit-real=nan)
   ADD_COMPILE_OPTIONS(-ggdb)
   ADD_COMPILE_OPTIONS(-ffree-line-length-none)
+  ADD_COMPILE_OPTIONS(-cpp)
+  #set(f_flags -fcheck=all -fbacktrace -ffpe-trap=zero -finit-real=nan -ggdb -ffree-line-length-none -g -cpp)
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
 #  ifort
 #  MESSAGE("ifort being used.")
@@ -76,9 +78,29 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   ADD_COMPILE_OPTIONS(-warn)
   ADD_COMPILE_OPTIONS(-traceback)
   ADD_COMPILE_OPTIONS(-debug extended)
+  ADD_COMPILE_OPTIONS(-fpp)
+  #set(f_flags -g -fpe0 -warn -traceback -debug extended -fpp)
+elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "PGI")
+#  pgf90
+#  MESSAGE("pgf90 being used.")
+  ADD_COMPILE_OPTIONS(-g)
+  ADD_COMPILE_OPTIONS(-Mipa=noconst)
+  ADD_COMPILE_OPTIONS(-traceback)
+  ADD_COMPILE_OPTIONS(-Mfree)
+  ADD_COMPILE_OPTIONS(-Mfptrap)
+  ADD_COMPILE_OPTIONS(-Mpreprocess)
+  #set(f_flags -g -Mipa=noconst -traceback -Mfree -Mfptrap -Mpreprocess)
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-  message (FATAL_ERROR "This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
+  message (FATAL_ERROR "This program has only been compiled with gfortran, pgf90 and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
+
+#if(${CMAKE_VERSION} LESS 3.3)
+#  string (REPLACE ";" " " f_flags_str "${f_flags}")
+#  set(CMAKE_Fortran_FLAGS "${f_flags_str}")
+#  message (STATUS "CMAKE_Fortran_FLAGS: ${CMAKE_Fortran_FLAGS}")
+#else(${CMAKE_VERSION} LESS 3.3)
+#  add_compile_options("$<$<COMPILE_LANGUAGE:Fortran>:${f_flags}>")
+#endif (${CMAKE_VERSION} LESS 3.3)
 
 #------------------------------------------------------------------------------
 # The Fortran compiler/linker flag inserted by cmake to create shared libraries
@@ -112,3 +134,7 @@ endif()
 
 ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
 TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${NETCDF_LIBRARIES})
+#set_target_properties(gmtb_scm PROPERTIES
+#                               COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
+#                               LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
+
