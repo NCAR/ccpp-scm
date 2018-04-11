@@ -1,9 +1,3 @@
-# WARNING
-
-In preparation for the SCM+CCPP release, all development related to the release,
-including the documentation, is done on the "release" branch. As such, the
-documentation (including this README.md) in the "master" branch is out of date.
-
 # User's Guide
 
 This guide provides instructions for obtaining, compiling and running a simple
@@ -38,10 +32,12 @@ segments.
 2. Change directory to the top-level SCM directory.
   * `cd scm`
 3. [Optional] Run the machine setup script if necessary. This script loads
-compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets
+compiler modules (Fortran 2003-compliant), netCDF module, etc. and sets
 compiler environment variables.
-  * `source etc/Theia_setup.csh` (for csh) or `. etc/Theia_setup.sh` (for bash)
-  * `source etc/Cheyenne_setup.csh` (for csh) or `. etc/Cheyenne_setup.sh` (for bash)
+  * `source etc/Theia_setup_intel.csh` (for csh) or `. etc/Theia_setup_intel.sh` (for bash)
+  * `source etc/Theia_setup_pgi.csh` (for csh) or `. etc/Theia_setup_pgi.sh` (for bash)
+  * `source etc/Cheyenne_setup_intel.csh` (for csh) or `. etc/Cheyenne_setup_intel.sh` (for bash)
+  * `source etc/Cheyenne_setup_pgi.csh` (for csh) or `. etc/Cheyenne_setup_pgi.sh` (for bash)
   * `source etc/UBUNTU_setup.csh` (for csh) or `. etc/UBUNTU_setup.sh` (for bash) if following the instructions in doc/README_UBUNTU.txt
   * `source etc/CENTOS_setup.csh` (for csh) or `. etc/CENTOS_setup.sh` (for bash) if following the instructions in doc/README_CENTOS.txt
   * `source etc/MACOSX_setup.csh` (for csh) or `. etc/MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
