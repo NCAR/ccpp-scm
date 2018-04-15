@@ -5,7 +5,7 @@ module gmtb_scm_type_defs
 
   use gmtb_scm_kinds, only : sp, dp, qp
   use GFS_typedefs, only: GFS_control_type, GFS_statein_type, GFS_stateout_type, GFS_sfcprop_type, GFS_coupling_type, &
-    GFS_grid_type, GFS_tbd_type, GFS_cldprop_type, GFS_radtend_type, GFS_diag_type, GFS_sfccycle_type, GFS_interstitial_type, &
+    GFS_grid_type, GFS_tbd_type, GFS_cldprop_type, GFS_radtend_type, GFS_diag_type, GFS_interstitial_type, &
     GFS_init_type, LTP
   use machine, only: kind_phys
 
@@ -156,13 +156,18 @@ module gmtb_scm_type_defs
 !> \section arg_table_physics_type
 !! | local_name                                            | standard_name                                                                                     | long_name                                                                           | units         | rank | type                  |    kind   | intent | optional |
 !! |-------------------------------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------------|------|-----------------------|-----------|--------|----------|
+!! | physics%Cldprop(:)                                    | FV3-GFS_Cldprop_type_all_blocks                                                                   | derived type GFS_cldprop_type in FV3 for all blocks                                 | DDT           |    1 | GFS_cldprop_type      |           | none   | F        |
+!! | physics%Diag(:)                                       | FV3-GFS_Diag_type_all_blocks                                                                      | derived type GFS_diag_type in FV3 for all blocks                                    | DDT           |    1 | GFS_diag_type         |           | none   | F        |
+!! | physics%Grid(:)                                       | FV3-GFS_Grid_type_all_blocks                                                                      | derived type GFS_grid_type in FV3 for all blocks                                    | DDT           |    1 | GFS_grid_type         |           | none   | F        |
+!! | physics%Sfcprop(:)                                    | FV3-GFS_Sfcprop_type_all_blocks                                                                   | derived type GFS_sfcprop_type in FV3 for all blocks                                 | DDT           |    1 | GFS_sfcprop_type      |           | none   | F        |
+!! | physics%Statein(:)                                    | FV3-GFS_Statein_type_all_blocks                                                                   | derived type GFS_statein_type in FV3 for all blocks                                 | DDT           |    1 | GFS_statein_type      |           | none   | F        |
+!! | physics%Tbd(:)                                        | FV3-GFS_Tbd_type_all_blocks                                                                       | derived type GFS_tbd_type in FV3 for all blocks                                     | DDT           |    1 | GFS_tbd_type          |           | none   | F        |
 !! | physics%Model(i)                                      | FV3-GFS_Control_type                                                                              | derived type GFS_control_type in FV3                                                | DDT           |    0 | GFS_control_type      |           | none   | F        |
 !! | physics%Cldprop(i)                                    | FV3-GFS_Cldprop_type                                                                              | derived type GFS_cldprop_type in FV3                                                | DDT           |    0 | GFS_cldprop_type      |           | none   | F        |
 !! | physics%Coupling(i)                                   | FV3-GFS_Coupling_type                                                                             | derived type GFS_coupling_type in FV3                                               | DDT           |    0 | GFS_coupling_type     |           | none   | F        |
 !! | physics%Diag(i)                                       | FV3-GFS_Diag_type                                                                                 | derived type GFS_diag_type in FV3                                                   | DDT           |    0 | GFS_diag_type         |           | none   | F        |
 !! | physics%Grid(i)                                       | FV3-GFS_Grid_type                                                                                 | derived type GFS_grid_type in FV3                                                   | DDT           |    0 | GFS_grid_type         |           | none   | F        |
 !! | physics%Radtend(i)                                    | FV3-GFS_Radtend_type                                                                              | derived type GFS_radtend_type in FV3                                                | DDT           |    0 | GFS_radtend_type      |           | none   | F        |
-!! | physics%Sfccycle(i)                                   | FV3-GFS_Sfccycle_type                                                                             | derived type GFS_sfccycle_type in FV3                                               | DDT           |    0 | GFS_sfccycle_type     |           | none   | F        |
 !! | physics%Sfcprop(i)                                    | FV3-GFS_Sfcprop_type                                                                              | derived type GFS_sfcprop_type in FV3                                                | DDT           |    0 | GFS_sfcprop_type      |           | none   | F        |
 !! | physics%Statein(i)                                    | FV3-GFS_Statein_type                                                                              | derived type GFS_statein_type in FV3                                                | DDT           |    0 | GFS_statein_type      |           | none   | F        |
 !! | physics%Stateout(i)                                   | FV3-GFS_Stateout_type                                                                             | derived type GFS_stateout_type in FV3                                               | DDT           |    0 | GFS_stateout_type     |           | none   | F        |
@@ -845,7 +850,6 @@ module gmtb_scm_type_defs
     type(GFS_cldprop_type), allocatable      :: Cldprop(:)
     type(GFS_radtend_type), allocatable      :: Radtend(:)
     type(GFS_diag_type), allocatable         :: Diag(:)
-    type(GFS_sfccycle_type), allocatable     :: Sfccycle(:)
     type(GFS_interstitial_type), allocatable :: Interstitial(:)
     type(GFS_init_type), allocatable         :: Init_parm(:)
     integer                                  :: LTP
@@ -1080,7 +1084,7 @@ module gmtb_scm_type_defs
 
     allocate(physics%Model(n_columns), physics%Statein(n_columns), physics%Stateout(n_columns), physics%Sfcprop(n_columns), &
       physics%Coupling(n_columns), physics%Grid(n_columns), physics%Tbd(n_columns), physics%Cldprop(n_columns), &
-      physics%Radtend(n_columns), physics%Diag(n_columns), physics%Sfccycle(n_columns), physics%Interstitial(n_columns), &
+      physics%Radtend(n_columns), physics%Diag(n_columns), physics%Interstitial(n_columns), &
       physics%Init_parm(n_columns))
 
     do i=1, n_columns
