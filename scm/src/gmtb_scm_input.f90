@@ -99,7 +99,7 @@ subroutine get_config_nml(scm_state)
   day = 19
   hour = 3
 
-  physics_suite_dir = '../../gmtb-ccpp/examples/'
+  physics_suite_dir = '../../ccpp-framework/examples/'
 
   last_physics_specified = -1
 
