@@ -8,10 +8,12 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   # -fp-model strict -real-size 32
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set(f_flags -O3 -auto -i4 -r8 -convert big_endian -assume byterecl -fp-model strict -fpp -DLINUX -fPIC)
+elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "PGI")
+  set(f_flags -O3 -Mrecursive -i4 -r8 -byteswapio -Kieee -Mpreprocess -DLINUX -fPIC)
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message ("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
   message ("Fortran compiler: " ${CMAKE_Fortran_COMPILER_ID})
-  message ("This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${SPLIB_SRC}/CMakeLists.txt")
+  message ("This program has only been compiled with gfortran, pgf90 and ifort. If another compiler is needed, the appropriate flags must be added in ${SPLIB_SRC}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
 #add OpenMP

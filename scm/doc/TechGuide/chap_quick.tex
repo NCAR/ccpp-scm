@@ -56,7 +56,7 @@ There are several utility libraries provided in the SCM bundle, as external pack
 \subsection{Compilers}
 The CCPP and SCM have been tested on a variety of
 computing platforms. Currently the CCPP system is actively supported
-on Linux and MacOS computing platforms using the Intel or GNU Fortran
+on Linux and MacOS computing platforms using the Intel, PGI or GNU Fortran
 compilers. Unforeseen build issues may occur when using older
 compiler versions. Typically the best results come from using the
 most recent version of a compiler. If you have problems with compilers, please check the ``Known Issues'' section of the
@@ -74,18 +74,22 @@ The first step in compiling the CCPP and SCM is to match the physics variables, 
 \begin{lstlisting}[language=bash]
 cd scm
 \end{lstlisting}
-    \item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets compiler environment variables. For \textit{t/csh} shells,
+    \item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant), netCDF module, etc. and sets compiler environment variables. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
-source etc/Theia_setup.csh
-source etc/Cheyenne_setup.csh
+source etc/Theia_setup_intel.csh
+source etc/Theia_setup_pgi.csh
+source etc/Cheyenne_setup_intel.csh
+source etc/Cheyenne_setup_pgi.csh
 source etc/UBUNTU_setup.csh
 source etc/CENTOS_setup.csh
 source etc/MACOSX_setup.csh
 \end{lstlisting}
 For bourne/bash shells,
 \begin{lstlisting}[language=bash]
-. etc/Theia_setup.sh
-. etc/Cheyenne_setup.sh
+. etc/Theia_setup_intel.sh
+. etc/Theia_setup_pgi.sh
+. etc/Cheyenne_setup_intel.sh
+. etc/Cheyenne_setup_pgi.sh
 . etc/UBUNTU_setup.sh
 . etc/CENTOS_setup.sh
 . etc/MACOSX_setup.sh

@@ -150,7 +150,9 @@ subroutine interpolate_forcing(scm_input, scm_state)
     end do
 
     do i=1, scm_state%n_cols
-      !>  - For all forcing terms, call interpolate_to_grid_centers from \ref utils for each variable for each time level that "bracket" around the current model time. This subroutine returns the last vertical index calculated in case forcing terms above the case input needs to be specified.
+      !>  - For all forcing terms, call interpolate_to_grid_centers from \ref utils for each variable for each time level that "bracket" around
+      !>    the current model time. This subroutine returns the last vertical index calculated in case forcing terms above the case input needs
+      !>    to be specified.
       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_w_ls(low_t_index,:), &
         scm_state%pres_l(i,1,:), scm_state%n_levels, w_ls_bracket(1,:), top_index, 3)
       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_w_ls(low_t_index+1,:), &
