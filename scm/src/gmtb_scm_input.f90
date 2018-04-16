@@ -140,6 +140,15 @@ subroutine get_config_nml(scm_state)
         Error code = ',ioerror(3)
     end if
 
+    !The current implementation of GFS physics does not support more than one column, since radiation sub schemes use
+    !internal module variables. This means that one cannot specify different ways to treat O3, CO2 etc., and also that
+    !the code crashes in GFS_initialize_scm_run and later in radiation_gases.f, because it tries to allocate module
+    !variables that are already allocated. For now, throw an error and abort.
+    if (n_columns>1) then
+      write(*,*) 'The current implementation does not allow to run more than one column at a time.'
+      stop
+    end if
+
     !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
     !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
     !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
