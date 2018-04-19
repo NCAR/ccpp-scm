@@ -27,7 +27,7 @@ for an atmospheric model to interact with physics through the CCPP.
 1. Run the CCPP prebuild script to match required physics variables with those
 available from the dycore (SCM) and to generate physics caps and makefile
 segments.
-  * `./ccpp-framework/scripts/ccpp_prebuild.py`
+  * `./ccpp-framework/scripts/ccpp_prebuild.py --model=SCM`
   Note: add `--debug` to see the full output of the script.
 2. Change directory to the top-level SCM directory.
   * `cd scm`

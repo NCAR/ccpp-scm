@@ -65,7 +65,7 @@ The first step in compiling the CCPP and SCM is to match the physics variables, 
 \begin{enumerate}
     \item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments.
 \begin{lstlisting}[language=bash]
-./ccpp-framework/scripts/ccpp_prebuild.py [--debug]
+./ccpp-framework/scripts/ccpp_prebuild.py --model=SCM [--debug]
 \end{lstlisting}
     \item Change directory to the top-level SCM directory.
 \begin{lstlisting}[language=bash]
