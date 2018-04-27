@@ -227,6 +227,9 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_tracer(:,:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,:,scm_state%ozone_index,2)
   end if
 
+  scm_state%itt_out = scm_state%itt_out + 1
+  call output_append(scm_state, physics)
+
   !prepare for time loop
   scm_state%n_timesteps = ceiling(scm_state%runtime/scm_state%dt)
   scm_state%n_itt_out = floor(scm_state%output_frequency/scm_state%dt)
