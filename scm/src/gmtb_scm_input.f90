@@ -47,6 +47,7 @@ subroutine get_config_nml(scm_state)
   integer              :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   real(kind=dp)              :: relax_time !< relaxation time scale (s)
   logical              :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
+  real(kind=dp)        :: sfc_roughness_length_cm !< surface roughness length used for calculating surface layer parameters from specified fluxes
   integer              :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour
@@ -66,7 +67,7 @@ subroutine get_config_nml(scm_state)
 
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
     n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, mom_forcing_type, relax_time, &
-    sfc_type, sfc_flux_spec, reference_profile_choice, year, month, day, hour
+    sfc_type, sfc_flux_spec, sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour
 
   NAMELIST /physics_config/ physics_suite, physics_suite_dir, physics_nml, column_area
 
@@ -92,6 +93,7 @@ subroutine get_config_nml(scm_state)
   mom_forcing_type = 3
   relax_time = 7200.0
   sfc_flux_spec = .false.
+  sfc_roughness_length_cm = 1.0
   sfc_type = 0
   reference_profile_choice = 1
   year = 2006
@@ -293,6 +295,7 @@ subroutine get_config_nml(scm_state)
   scm_state%thermo_forcing_type = thermo_forcing_type
   scm_state%mom_forcing_type = mom_forcing_type
   scm_state%sfc_flux_spec = sfc_flux_spec
+  scm_state%sfc_roughness_length_cm(:) = sfc_roughness_length_cm
   scm_state%sfc_type = sfc_type
   scm_state%sfc_type_real = DBLE(sfc_type)
   scm_state%reference_profile_choice = reference_profile_choice
