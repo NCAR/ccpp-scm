@@ -1,0 +1,32 @@
+$case_config
+model_name = 'FV3',
+n_columns = 1,
+case_name = 'arm_sgp_summer_1997_T',
+dt = 600.0,
+time_scheme = 1,
+runtime = 259200,
+output_frequency = 600.0,
+n_levels = 64,
+output_dir = 'output_arm_sgp_summer_1997_T',
+output_file = 'output',
+case_data_dir = '../data/processed_case_input',
+vert_coord_data_dir = '../data/vert_coord_data',
+thermo_forcing_type = 1,
+mom_forcing_type = 3,
+relax_time = 7200.0,
+sfc_flux_spec = .true.,
+sfc_roughness_length_cm = 10.0
+sfc_type = 1,
+reference_profile_choice = 2,
+year = 1997,
+month = 6,
+day = 30,
+hour = 23,
+$end
+
+$physics_config
+physics_suite = 'suite_scm_GFS_test_prescribed_surface',
+physics_suite_dir = '../../ccpp-framework/examples/',
+physics_nml = '../../ccpp-physics/input.nml',
+column_area = 2.0E9,
+$end
