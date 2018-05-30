@@ -117,10 +117,12 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   set(f_flags -O0 -g -fdefault-real-8 -fno-range-check -ffixed-form -fPIC)
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set(f_flags -O0 -g -r8 -fixed -fPIC)
+elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "PGI")
+  set(f_flags -O0 -g -r8 -Mfixed -fPIC)
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message ("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
   message ("Fortran compiler: " ${CMAKE_Fortran_COMPILER_ID})
-  message (FATAL_ERROR "This library has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${W3LIB_SRC}/CMakeLists.txt")
+  message (FATAL_ERROR "This library has only been compiled with gfortran, pgf90 and ifort. If another compiler is needed, the appropriate flags must be added in ${W3LIB_SRC}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
 #set C compiler flags

@@ -15,16 +15,16 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_time_integration
   use gmtb_scm_output
 
-  use            :: ccpp_types,                         &
-                    only: ccpp_t
-  use            :: ccpp,                               &
-                    only: ccpp_init
-  use            :: ccpp_fcall,                           &
-                    only: ccpp_run
-  use            :: ccpp_fields,                        &
-                    only: ccpp_field_add
+  use :: ccpp_api,                           &
+         only: ccpp_t,                       &
+               ccpp_init,                    &
+               ccpp_finalize,                &
+               ccpp_physics_init,            &
+               ccpp_physics_run,             &
+               ccpp_physics_finalize,        &
+               ccpp_field_add
 
-  use iso_c_binding,      only: c_loc
+  use :: iso_c_binding, only: c_loc
 
 #include "ccpp_modules.inc"
 
@@ -103,9 +103,13 @@ subroutine gmtb_scm_main_sub()
 
   do i = 1, scm_state%n_cols
      !set up each column's physics suite (which may be different)
-    call ccpp_init( &
-      trim(adjustl(scm_state%physics_suite_dir))//trim(adjustl(scm_state%physics_suite_name(i)))//'.xml', &
-      cdata(i), ierr)
+      call ccpp_init( &
+          trim(adjustl(scm_state%physics_suite_dir))//trim(adjustl(scm_state%physics_suite_name(i)))//'.xml', &
+          cdata(i), ierr)
+      if (ierr/=0) then
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
+          stop
+      end if
 
       physics%Init_parm(i)%levs = scm_state%n_levels
       physics%Init_parm(i)%bdat(1) = scm_state%init_year
@@ -134,7 +138,6 @@ subroutine gmtb_scm_main_sub()
       call ccpp_field_add(cdata(i), 'FV3-GFS_Cldprop_type', '', c_loc(physics%Cldprop(i)), ierr)
       call ccpp_field_add(cdata(i), 'FV3-GFS_Radtend_type', '', c_loc(physics%Radtend(i)), ierr)
       call ccpp_field_add(cdata(i), 'FV3-GFS_Diag_type', '', c_loc(physics%Diag(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Sfccycle_type', '', c_loc(physics%Sfccycle(i)), ierr)
       call ccpp_field_add(cdata(i), 'FV3-GFS_Interstitial_type', '', c_loc(physics%Interstitial(i)), ierr)
       call ccpp_field_add(cdata(i), 'FV3-GFS_Init_type', '', c_loc(physics%Init_parm(i)), ierr)
       call ccpp_field_add(cdata(i), 'number_of_latitutde_points_in_ozone_forcing_data_from_host', physics%n_ozone_lats, ierr, 'count')
@@ -148,7 +151,12 @@ subroutine gmtb_scm_main_sub()
       call ccpp_field_add(cdata(i), 'error_message', physics%Interstitial(i)%errmsg, ierr, 'none')
       call ccpp_field_add(cdata(i), 'error_flag', physics%Interstitial(i)%errflg, ierr, 'flag')
 
-      call ccpp_run(cdata(i)%suite%init, cdata(i), ierr)
+      !initialize easch column's physics
+      call ccpp_physics_init(cdata(i), ierr=ierr)
+      if (ierr/=0) then
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
+          stop
+      end if
 
       call physics%associate(scm_state, i)
     !use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in gmtb_scm_type_defs.f90)
@@ -196,7 +204,11 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_v(:,:,:,2) = scm_state%state_v(:,:,:,1)
 
     do i=1, scm_state%n_cols
-      call ccpp_run(cdata(i)%suite, cdata(i), ierr)
+      call ccpp_physics_run(cdata(i), ierr=ierr)
+      if (ierr/=0) then
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
+          stop
+      end if
     end do
 
     !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
@@ -280,6 +292,22 @@ subroutine gmtb_scm_main_sub()
       call output_append(scm_state, physics)
 
     end if
+  end do
+
+  do i=1, scm_state%n_cols
+      call ccpp_physics_finalize(cdata(i), ierr=ierr)
+      if (ierr/=0) then
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, '. Exiting...'
+          stop
+      end if
+  end do
+
+  do i=1, scm_state%n_cols
+      call ccpp_finalize(cdata(i), ierr)
+      if (ierr/=0) then
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_finalize for column ', i, '. Exiting...'
+          stop
+      end if
   end do
 
 end subroutine gmtb_scm_main_sub

@@ -25,7 +25,7 @@ If you would like to contribute as a developer to this project, please see CCPP 
 
 \url{https://dtcenter.org/gmtb/users/ccpp/developers/index.php}
 
-There you will find links to all of the documentation pertinent to developers. 
+There you will find links to all of the documentation pertinent to developers.
 
 \section{System Requirements, Libraries, and Tools}
 \label{section: systemrequirements}
@@ -34,14 +34,12 @@ The source code for the SCM and CCPP component is in the form of programs writte
 
 The basic requirements for building and running the CCPP and SCM bundle are listed below:
 \begin{itemize}
-    \item FORTRAN 90+ compiler
-    \item C compiler
-    \item cmake 
-    \item netCDF v3.6+
-        \begin{itemize}
-    \item if netCDF v4.1+ is used, HDF5 and SZIP libs may also be required
-\end{itemize}
-    \item Python v2.x (not 3.x)
+    \item FORTRAN 90+ compiler (ifort v15+, gfortran v5.4+, pgf90 v17.9+)
+    \item C compiler (icc v15+, gcc v5.4+, pgcc v17.9+)
+    \item cmake v2.8.11+
+    \item netCDF v4.x (not v3.x) with HDF5, ZLIB and SZIP
+    \item Python v2.x (not v3.x)
+    \item Libxml2 (tested with 2.2 and 2.9.1)
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements.
@@ -56,9 +54,9 @@ There are several utility libraries provided in the SCM bundle, as external pack
 \subsection{Compilers}
 The CCPP and SCM have been tested on a variety of
 computing platforms. Currently the CCPP system is actively supported
-on Linux and MacOS computing platforms using the Intel or GNU Fortran
-compilers. Unforeseen build issues may occur when using older
-compiler versions. Typically the best results come from using the
+on Linux and MacOS computing platforms using the Intel, PGI or GNU Fortran
+compilers. Please use versions listed in the previous section as unforeseen
+build issues may occur when using older compiler versions. Typically the best results come from using the
 most recent version of a compiler. If you have problems with compilers, please check the ``Known Issues'' section of the
 community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownIssues.php}).
 
@@ -68,24 +66,28 @@ The first step in compiling the CCPP and SCM is to match the physics variables, 
 \begin{enumerate}
     \item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments.
 \begin{lstlisting}[language=bash]
-./ccpp-framework/scripts/ccpp_prebuild.py [--debug]
+./ccpp-framework/scripts/ccpp_prebuild.py --model=SCM [--debug]
 \end{lstlisting}
     \item Change directory to the top-level SCM directory.
 \begin{lstlisting}[language=bash]
 cd scm
 \end{lstlisting}
-    \item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant Intel), netCDF module, etc. and sets compiler environment variables. For \textit{t/csh} shells,
+    \item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant), netCDF module, etc. and sets compiler environment variables. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
-source etc/Theia_setup.csh
-source etc/Cheyenne_setup.csh
+source etc/Theia_setup_intel.csh
+source etc/Theia_setup_pgi.csh
+source etc/Cheyenne_setup_intel.csh
+source etc/Cheyenne_setup_pgi.csh
 source etc/UBUNTU_setup.csh
 source etc/CENTOS_setup.csh
 source etc/MACOSX_setup.csh
 \end{lstlisting}
 For bourne/bash shells,
 \begin{lstlisting}[language=bash]
-. etc/Theia_setup.sh
-. etc/Cheyenne_setup.sh
+. etc/Theia_setup_intel.sh
+. etc/Theia_setup_pgi.sh
+. etc/Cheyenne_setup_intel.sh
+. etc/Cheyenne_setup_pgi.sh
 . etc/UBUNTU_setup.sh
 . etc/CENTOS_setup.sh
 . etc/MACOSX_setup.sh
@@ -102,6 +104,11 @@ cmake ../src                          # without threading/OpenMP
 cmake -DOPENMP=1 ../src               # with threading/OpenMP
 cmake -DCMAKE_BUILD_TYPE=Debug ../src # debug mode
 \end{lstlisting}
+    \item If cmake cannot find \execout{libxml2} because it is installed in a non-standard location, add
+\begin{lstlisting}[language=bash]
+-DPC_LIBXML_INCLUDEDIR=... -DPC_LIBXML_LIBDIR=...
+\end{lstlisting}
+    to the cmake command.
     \item Compile. Add \execout{VERBOSE=1} to obtain more information on the build process.
 \begin{lstlisting}[language=bash]
 make
@@ -112,13 +119,13 @@ The resulting executable may be found at \execout{./gmtb-scm}.
 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
-\section{Run the SCM with the supplied case} 
+\section{Run the SCM with the supplied case}
 The test case provided with this version of the SCM is TWP-ICE, the Tropical Warm Pool-International Cloud Experiment. The SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. A single command line argument is required, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For the provided case, that name is \execout{twpice}:
 \begin{lstlisting}[language=bash]
 ./gmtb_scm twpice
 \end{lstlisting}
 A netCDF output file is generated in the location specified in the case
-configuration file. Any standard netCDF file viewing or analysis tools may be used to 
+configuration file. Any standard netCDF file viewing or analysis tools may be used to
 examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is located in:
 \begin{lstlisting}[language=bash]
 gmtb-scm/scm/bin/output_twpice/output.nc

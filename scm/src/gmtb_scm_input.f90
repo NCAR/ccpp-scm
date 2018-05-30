@@ -99,7 +99,7 @@ subroutine get_config_nml(scm_state)
   day = 19
   hour = 3
 
-  physics_suite_dir = '../../gmtb-ccpp/examples/'
+  physics_suite_dir = '../../ccpp-framework/examples/'
 
   last_physics_specified = -1
 
@@ -138,6 +138,15 @@ subroutine get_config_nml(scm_state)
       write(*,*) 'There was an error reading the namelist case_config in the file '&
         //trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml'//'&
         Error code = ',ioerror(3)
+    end if
+
+    !The current implementation of GFS physics does not support more than one column, since radiation sub schemes use
+    !internal module variables. This means that one cannot specify different ways to treat O3, CO2 etc., and also that
+    !the code crashes in GFS_initialize_scm_run and later in radiation_gases.f, because it tries to allocate module
+    !variables that are already allocated. For now, throw an error and abort.
+    if (n_columns>1) then
+      write(*,*) 'The current implementation does not allow to run more than one column at a time.'
+      stop
     end if
 
     !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
