@@ -91,6 +91,7 @@ module gmtb_scm_type_defs
       h_advec_qt(:,:), v_advec_thil(:,:), v_advec_qt(:,:), u_nudge(:,:), v_nudge(:,:), T_nudge(:,:), thil_nudge(:,:), qt_nudge(:,:) !< forcing terms interpolated to the model time and grid
     real(kind=dp), allocatable              :: T_surf(:,:), pres_surf(:,:) !< surface temperature and pressure interpolated to the model time
     real(kind=dp), allocatable              :: sh_flux(:), lh_flux(:) !< surface sensible and latent heat fluxes interpolated to the model time
+    real(kind=dp), allocatable              :: sfc_roughness_length_cm(:) !< surface roughness length used for calculating surface layer parameters from specified fluxes
 
     contains
       procedure :: create  => scm_state_create
@@ -710,6 +711,8 @@ module gmtb_scm_type_defs
 !! | physics%Sfcprop(i)%uustar    | surface_friction_velocity                                              | boundary layer parameter                             | m s-1         |    1 | real    | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%oro       | orography                                                              | orography                                            | m             |    1 | real    | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%oro_uf    | orography_unfiltered                                                   | unfiltered orography                                 | m             |    1 | real    | kind_phys | none   | F        |
+!! | physics%Sfcprop(i)%spec_sh_flux | specified_kinematic_surface_upward_sensible_heat_flux                  | specified kinematic surface upward sensible heat flux| K m s-1       |    1 | real    | kind_phys | none   | F        |
+!! | physics%Sfcprop(i)%spec_lh_flux | specified_kinematic_surface_upward_latent_heat_flux                    | specified kinematic surface upward latent heat flux  | kg kg-1 m s-1 |    1 | real    | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%hice      | sea_ice_thickness                                                      | sea ice thickness                                    | m             |    1 | real    | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%weasd     | water_equivalent_accumulated_snow_depth                                | water equiv of acc snow depth over land and sea ice  | mm            |    1 | real    | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%canopy    | canopy_water_amount                                                    | canopy water amount                                  | kg m-2        |    1 | real    | kind_phys | none   | F        |
@@ -975,7 +978,8 @@ module gmtb_scm_type_defs
       scm_state%T_nudge(n_columns, n_levels), scm_state%thil_nudge(n_columns, n_levels), &
       scm_state%qt_nudge(n_columns, n_levels), scm_state%sh_flux(n_columns), scm_state%lh_flux(n_columns), &
       scm_state%u_force_tend(n_columns,n_levels), scm_state%v_force_tend(n_columns,n_levels), &
-      scm_state%T_force_tend(n_columns,n_levels), scm_state%qv_force_tend(n_columns,n_levels))
+      scm_state%T_force_tend(n_columns,n_levels), scm_state%qv_force_tend(n_columns,n_levels), &
+      scm_state%sfc_roughness_length_cm(n_columns))
     scm_state%w_ls = real_zero
     scm_state%omega = real_zero
     scm_state%u_g = real_zero
@@ -998,6 +1002,7 @@ module gmtb_scm_type_defs
     scm_state%v_force_tend = real_zero
     scm_state%T_force_tend = real_zero
     scm_state%qv_force_tend = real_zero
+    scm_state%sfc_roughness_length_cm = real_one
 
   end subroutine scm_state_create
 
@@ -1163,6 +1168,12 @@ module gmtb_scm_type_defs
       physics%Stateout(col)%gv0 => scm_state%state_v(col,:,:,1)
       physics%Stateout(col)%gt0 => scm_state%state_T(col,:,:,1)
       physics%Stateout(col)%gq0 => scm_state%state_tracer(col,:,:,:,1)
+    endif
+
+    if(scm_state%sfc_flux_spec) then
+      physics%Sfcprop(col)%spec_sh_flux => scm_state%sh_flux
+      physics%Sfcprop(col)%spec_lh_flux => scm_state%lh_flux
+      physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
     endif
 
 
