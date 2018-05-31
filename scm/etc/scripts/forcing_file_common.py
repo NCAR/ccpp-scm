@@ -8,6 +8,7 @@ R_dry = 287.0
 c_p = 1004.0
 p0 = 100000.0
 L_v = 2.5E6
+L_s = 2.834E6
 
 def ncdump(nc_fid, verb=True):
     '''

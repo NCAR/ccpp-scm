@@ -293,7 +293,7 @@ for time_slice in time_slices:
 if(obs_compare and obs_file):
     if(case_name.strip() == 'twpice'):
         obs_dict = gsro.read_twpice_obs(obs_file, time_slices, date)
-    elif(case_name.strip() == 'arm_sgp_summer_1997'):
+    elif(case_name.strip() == 'arm_sgp_summer_1997_A'):
         obs_dict = gsro.read_arm_sgp_summer_1997_obs(obs_file, time_slices, date)
 
 try:
