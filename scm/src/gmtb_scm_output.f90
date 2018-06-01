@@ -40,95 +40,219 @@ subroutine output_init(scm_state)
 
   !> - Define the dimension variables.
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME="time",XTYPE=NF90_FLOAT,DIMIDS=(/ time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="model elapsed time"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="s"))
 
   !> - Define the pressure-related variables.
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pres',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="pressure on model layer centers"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pres_i',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_i_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="pressure on model layer interfaces"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sigma',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="sigma (p/p_s) on model layer centers"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sigma_i',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_i_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="sigma (p/p_s) on model layer interfaces"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='phi',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='phi_i',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_i_id, time_id /), &
   !   VARID=dummy_id))
 
   !> - Define the state variables.
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="water vapor specific humidity on model layer centers"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="absolute temperature on model layer centers"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='u',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="x-wind on model layer centers"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="y-wind on model layer centers"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="suspended total cloud water on model layer centers"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
 
   !> - Define the forcing-related variables.
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qv_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="total forcing tendency for water vapor specific humidity"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="total forcing tendency for absolute temperature"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='u_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="total forcing tendency for x-wind"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="total forcing tendency for y-wind"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='w_ls',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="large-scale vertical velocity forcing"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='u_g',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="geostrophic x-wind forcing"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_g',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="geostrophic y-wind forcing"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_rad_forc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="prescribed radiative heating rate forcing"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='h_advec_thil',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="large-scale horizontal advective heating rate for ice-liquid water potential temperature"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='h_advec_qt',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="large-scale horizontal advective moistening rate for total water specific humidity"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_advec_thil',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="large-scale vertical advective heating rate for ice-liquid water potential temperature"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_advec_qt',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="large-scale vertical advective moistening rate for total water specific humidity"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_s',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface temperature"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pres_s',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface pressure"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lhf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface latent heat flux"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="W m-2"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='shf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_u',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_v',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface sensible heat flux"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="W m-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_u',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface x-wind stress"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_v',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface y-wind stress"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
 
   !> - Define the diagnostics variables.
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='cldcov',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_rad_heating_rate',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_rad_heating_rate',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='precip',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='rain',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='rainc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pwat',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_lwrad',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_swrad',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /),&
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_micro',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_micro',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='upd_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dwn_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-  !   VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='det_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-  !   VARID=dummy_id))
-  ! ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='forcet',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-  ! !   VARID=dummy_id))
-  ! ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='forceq',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-  ! !   VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='cldcov',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="cloud fraction"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='cldcov_conv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="convective cloud fraction"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='ql',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="cloud liquid water"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qi',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="cloud ice water"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qc_conv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="convective total cloud water"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_rad_heating_rate',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="shortwave radiative heating rate"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_rad_heating_rate',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="longwave radiative heating rate"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='rain',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface total rain rate"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='rainc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface convective rain rate"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pwat',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="column precipitable water"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_lwrad',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+    VALUES="temperature tendency due to longwave radiation scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_swrad',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /),&
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="temperature tendency due to shortwave radiation scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="temperature tendency due to PBL scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="temperature tendency due to deep convection scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="temperature tendency due to shallow convection scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_micro',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+     VALUES="temperature tendency due to microphysics scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+     VALUES="moisture tendency due to PBL scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+     VALUES="moisture tendency due to deep convection scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+     VALUES="moisture tendency due to shallow convection scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_micro',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+     VALUES="moisture tendency due to microphysics scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='upd_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="updraft mass flux"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dwn_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="downdraft mass flux"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='det_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
+     VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="detrainment mass flux"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2 s-1"))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='PBL_height',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
@@ -145,9 +269,17 @@ subroutine output_init(scm_state)
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
 
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_year',XTYPE=NF90_FLOAT,VARID=year_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="description",VALUES="model initialization year"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="units",VALUES=""))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_month',XTYPE=NF90_FLOAT,VARID=month_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=month_id,NAME="description",VALUES="model initialization month"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=month_id,NAME="units",VALUES=""))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_day',XTYPE=NF90_FLOAT,VARID=day_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=day_id,NAME="description",VALUES="model initialization day"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=day_id,NAME="units",VALUES=""))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_hour',XTYPE=NF90_FLOAT,VARID=hour_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=hour_id,NAME="description",VALUES="model initialization hour"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=hour_id,NAME="units",VALUES=""))
 
 
   !> - Close variable definition and the file.
@@ -169,34 +301,8 @@ subroutine output_append(scm_state, physics)
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type), intent(in) :: physics
 
-  real(kind=dp), allocatable :: dummy_1D(:)
+  real(kind=dp), allocatable :: dummy_1D(:), dummy_2d(:,:)
 
-  ! real(kind=dp), intent(in)          :: cldcov(:,:) !< cloud fraction (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: lhf(:) !< surface latent heat flux (W/m^2) (horizontal)
-  ! real(kind=dp), intent(in)          :: shf(:) !< surface sensible heat flux (W/m^2) (horizontal)
-  ! real(kind=dp), intent(in)          :: tau_u(:) !< surface zonal wind stress (horizontal)
-  ! real(kind=dp), intent(in)          :: tau_v(:) !< surface meridional wind stress (horizontal)
-  ! real(kind=dp), intent(in)          :: swh(:,:) !< calculated SW radiative heating rate (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: hlw(:,:) !< calculated LW radiative heating rate (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: tprcp(:) !< surface precipitation (horizontal)
-  ! real(kind=dp), intent(in)          :: rain(:) !< surface total rain (m/s) (horizontal)
-  ! real(kind=dp), intent(in)          :: rainc(:) !< surface convective rain (m/s) (horizontal)
-  ! real(kind=dp), intent(in)          :: pwat(:) !< surface rain (horizontal)
-  ! real(kind=dp), intent(in)          :: dT_dt_lwrad(:,:) !< change in temperature due to lw rad scheme (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dT_dt_swrad(:,:) !< change in temperature due to sw rad scheme (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dT_dt_PBL(:,:) !< change in temperature due to PBL scheme (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dT_dt_deepconv(:,:) !< change in temperature due to deep conv scheme (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dT_dt_shalconv(:,:) !< change in temperature due to shal conv scheme (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dT_dt_micro(:,:) !< change in temperature due to micro scheme (K/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dq_dt_PBL(:,:) !< change in moisture due to PBL scheme (kg/kg/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dq_dt_deepconv(:,:) !< change in moisture due to deep conv scheme (kg/kg/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dq_dt_shalconv(:,:) !< change in moisture due to shal conv scheme (kg/kg/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dq_dt_micro(:,:) !< change in moisture due to micro scheme (kg/kg/s) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: upd_mf(:,:) !< updraft mass flux (kg m^-2 s^-1) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: dwn_mf(:,:) !< downdraft mass flux (kg m^-2 s^-1) (horizontal, vertical)
-  ! real(kind=dp), intent(in)          :: det_mf(:,:) !< detrainment mass flux (kg m^-2 s^-1) (horizontal, vertical)
-  ! !real(kind=dp), intent(in)          :: forcet(:,:)
-  ! !real(kind=dp), intent(in)          :: forceq(:,:)
   ! real(kind=dp), intent(in)          :: hpbl(:) !< PBL height (m) (horizontal)
   ! real(kind=dp), intent(in)          :: sw_up_TOA_tot(:) !< total sky upward sw flux at toa (\f$W/m^2\f$) (horizontal)
   ! real(kind=dp), intent(in)          :: sw_dn_TOA_tot(:) !< total sky downward sw flux at toa (\f$W/m^2\f$) (horizontal)
@@ -215,7 +321,7 @@ subroutine output_append(scm_state, physics)
 
   integer :: ncid, var_id, i
 
-  allocate(dummy_1D(scm_state%n_cols))
+  allocate(dummy_1D(scm_state%n_cols), dummy_2d(scm_state%n_cols, scm_state%n_levels))
 
   !> \section output_append_alg Algorithm
   !! @{
@@ -235,10 +341,6 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%sl(:,1,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sigma_i",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%si(:,1,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="phi",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=phi_l(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="phi_i",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=phi_i(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_tracer(:,1,:,scm_state%water_vapor_index,1),&
     START=(/1,1,scm_state%itt_out /)))
@@ -289,54 +391,134 @@ subroutine output_append(scm_state, physics)
     dummy_1D(i) = physics%Interstitial(i)%dtsfc1(1)
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_u",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=tau_u(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_v",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=tau_v(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="cldcov",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=cldcov(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_rad_heating_rate",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=swh(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_rad_heating_rate",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=hlw(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="precip",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=tprcp(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rain",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=rain(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rainc",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=rainc(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pwat",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=pwat(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_lwrad",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dT_dt_lwrad(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_swrad",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dT_dt_swrad(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_PBL",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dT_dt_PBL(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_deepconv",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dT_dt_deepconv(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_shalconv",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dT_dt_shalconv(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_micro",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dT_dt_micro(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_PBL",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dq_dt_PBL(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_deepconv",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dq_dt_deepconv(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_shalconv",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dq_dt_shalconv(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_micro",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dq_dt_micro(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="upd_mf",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=upd_mf(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dwn_mf",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dwn_mf(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="det_mf",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=det_mf(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="forcet",VARID=var_id))
-  ! ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=forcet(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="forceq",VARID=var_id))
-  ! ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=forceq(:,:),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_u",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_1D(i) = physics%Interstitial(i)%dusfc1(1)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_v",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_1D(i) = physics%Interstitial(i)%dvsfc1(1)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="cldcov",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%clouds(1,:,1)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="cldcov_conv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%cnvc(1,:)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="ql",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%clw(1,:,2)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qi",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%clw(1,:,1)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qc_conv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%cnvw(1,:)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rain",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_1D(i) = physics%Diag(i)%rain(1)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rainc",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_1D(i) = physics%Diag(i)%rainc(1)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pwat",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_1D(i) = physics%Diag(i)%pwat(1)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_rad_heating_rate",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Radtend(i)%htrsw(1,:)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_rad_heating_rate",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Radtend(i)%htrlw(1,:)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_lwrad",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,1)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_swrad",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,2)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_PBL",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,3)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_deepconv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,4)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_shalconv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,5)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_micro",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,6)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_PBL",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,1)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_deepconv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,2)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_shalconv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,3)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_micro",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,4)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="upd_mf",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%ud_mf(1,:)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dwn_mf",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%dd_mf(1,:)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="det_mf",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Interstitial(i)%dt_mf(1,:)
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="PBL_height",VARID=var_id))
   ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=hpbl(:),START=(/1,scm_state%itt_out /)))
   ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_tot",VARID=var_id))
