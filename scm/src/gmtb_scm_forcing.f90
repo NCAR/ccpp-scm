@@ -93,8 +93,8 @@ subroutine interpolate_forcing(scm_input, scm_state)
 
         !>  - If the input forcing file does not reach to the model domain top, fill in values above the input forcing file domain with those from the top level.
         if (top_index < scm_state%n_levels) then
-          w_ls_bracket(1,top_index+1:scm_state%n_levels) = w_ls_bracket(1,top_index)
-          omega_bracket(1,top_index+1:scm_state%n_levels) = omega_bracket(1,top_index)
+          w_ls_bracket(1,top_index+1:scm_state%n_levels) = 0.0!w_ls_bracket(1,top_index)
+          omega_bracket(1,top_index+1:scm_state%n_levels) = 0.0!omega_bracket(1,top_index)
           u_g_bracket(1,top_index+1:scm_state%n_levels) = u_g_bracket(1,top_index)
           v_g_bracket(1,top_index+1:scm_state%n_levels) = v_g_bracket(1,top_index)
           u_nudge_bracket(1,top_index+1:scm_state%n_levels) = u_nudge_bracket(1,top_index)
@@ -214,10 +214,10 @@ subroutine interpolate_forcing(scm_input, scm_state)
 
       !>  - If the input forcing file does not reach to the model domain top, fill in values above the input forcing file domain with those from the top level.
       if (top_index < scm_state%n_levels) then
-        w_ls_bracket(1,top_index+1:scm_state%n_levels) = w_ls_bracket(1,top_index)
-        w_ls_bracket(2,top_index+1:scm_state%n_levels) = w_ls_bracket(2,top_index)
-        omega_bracket(1,top_index+1:scm_state%n_levels) = omega_bracket(1,top_index)
-        omega_bracket(2,top_index+1:scm_state%n_levels) = omega_bracket(2,top_index)
+        w_ls_bracket(1,top_index+1:scm_state%n_levels) = 0.0!w_ls_bracket(1,top_index)
+        w_ls_bracket(2,top_index+1:scm_state%n_levels) = 0.0!w_ls_bracket(2,top_index)
+        omega_bracket(1,top_index+1:scm_state%n_levels) = 0.0!omega_bracket(1,top_index)
+        omega_bracket(2,top_index+1:scm_state%n_levels) = 0.0!omega_bracket(2,top_index)
         u_g_bracket(1,top_index+1:scm_state%n_levels) = u_g_bracket(1,top_index)
         u_g_bracket(2,top_index+1:scm_state%n_levels) = u_g_bracket(2,top_index)
         v_g_bracket(1,top_index+1:scm_state%n_levels) = v_g_bracket(1,top_index)
@@ -293,7 +293,8 @@ subroutine apply_forcing_leapfrog(scm_state)
   real(kind=dp) :: theta(scm_state%n_cols, scm_state%n_levels)
 
   integer :: i,k
-  real(kind=dp) :: f_coriolis, grav_inv, g_over_cp
+  real(kind=dp) :: f_coriolis, grav_inv, g_over_cp, omega_plus, omega_minus, dth_dp_plus, dth_dp_minus, &
+    dqv_dp_plus, dqv_dp_minus
 
   !> \section apply_leapfrog_forcing_alg Algorithm
   !! @{
@@ -391,50 +392,18 @@ subroutine apply_forcing_leapfrog(scm_state)
       end do
     case (2)
       do i=1, scm_state%n_cols
-        ! do k=2, scm_state%n_levels-1
-        !
-        !   scm_state%qv_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_qv(i,k+1) - old_qv(i,k)) + w_ls_i(i,k)*(old_qv(i,k) - old_qv(i,k-1)))/&
-        !     (zi(i,k+1)-zi(i,k))
-        !   !scm_state%T_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_T(i,k+1) - old_T(i,k)) + w_ls_i(i,k)*(old_T(i,k) - old_T(i,k-1)))/(zi(i,k+1)-zi(i,k)) - &
-        !   !  0.5*(w_ls_i(i,k+1) + w_ls_i(i,k))*g_over_cp
-        !   scm_state%T_force_tend(i,k) = scm_state%exner_l(i,k)*(-0.5*(w_ls_i(i,k+1)*(theta(i,k+1) - theta(i,k)) + &
-        !     w_ls_i(i,k)*(theta(i,k) - theta(i,k-1))))/(zi(i,k+1)-zi(i,k))
-        ! end do
-        ! !>  - Handle the top and bottom levels separately using special discretizations.
-        ! scm_state%qv_force_tend(i,1) = -w_ls_i(i,2)*(old_qv(i,2) - old_qv(i,1))/(zi(i,2)-zi(i,1))
-        ! scm_state%qv_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*(old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
-        ! scm_state%T_force_tend(i,1) = -w_ls_i(i,2)*(old_T(i,2) - old_T(i,1))/(zi(i,2)-zi(i,1)) !- 0.5*(w_ls_i(2) + w_ls_i(1))*g_over_cp
-        ! scm_state%T_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*(old_T(i,scm_state%n_levels) - old_T(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels)) - &
-        !   0.5*(w_ls_i(i,scm_state%n_levels+1) + w_ls_i(i,scm_state%n_levels))*g_over_cp
-
         do k=2, scm_state%n_levels-1
-          !upstream scheme
-          if(scm_state%omega(i,1,k) < 0.0) then
-            scm_state%qv_force_tend(i,k) = -scm_state%omega(i,1,k)*(old_qv(i,k)-old_qv(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
-            scm_state%T_force_tend(i,k) =  scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k) - theta(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1)))
+          !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
+          omega_plus = MAX(scm_state%omega(i,1,k), 0.0)
+          omega_minus = MIN(scm_state%omega(i,1,k), 0.0)
+          dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          scm_state%qv_force_tend(i,k) = -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
+          scm_state%T_force_tend(i,k) = scm_state%exner_l(i,1,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
 
-          else
-            scm_state%qv_force_tend(i,k) = -scm_state%omega(i,1,k)*(old_qv(i,k+1)-old_qv(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
-            scm_state%T_force_tend(i,k) = scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k+1) - theta(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k)))
-
-          end if
         end do
-        scm_state%T_force_tend(i,1) = scm_state%exner_l(i,1,1)*(-0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*&
-          (theta(i,2) - theta(i,1))/(scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1)))
-        scm_state%T_force_tend(i,scm_state%n_levels) = scm_state%exner_l(i,1,scm_state%n_levels)*&
-          (-0.5*(scm_state%omega(i,1,scm_state%n_levels-1)+scm_state%omega(i,1,scm_state%n_levels))*&
-          (theta(i,scm_state%n_levels) - theta(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1)))
-        scm_state%qv_force_tend(i,1) = -0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*(old_qv(i,2) - old_qv(i,1))/&
-          (scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1))
-        scm_state%qv_force_tend(i,scm_state%n_levels) = -0.5*&
-          (scm_state%omega(i,1,scm_state%n_levels-1)+scm_state%omega(i,1,scm_state%n_levels))*&
-          (old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1))
 
         !> - Add forcing due to prescribed radiation and horizontal advection
         do k=1, scm_state%n_levels
@@ -453,67 +422,20 @@ subroutine apply_forcing_leapfrog(scm_state)
         end do
 
         do k=2, scm_state%n_levels-1
-          !upstream scheme
-          if(scm_state%omega(i,1,k) < 0.0) then
-            scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,1,k)*(old_qv(i,k)-old_qv(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
-            scm_state%T_force_tend(i,k) =  scm_state%T_force_tend(i,k) + &
-              scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k) - theta(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1)))
-
-          else
-            scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,1,k)*(old_qv(i,k+1)-old_qv(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
-            scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + &
-              scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k+1) - theta(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k)))
-
-          end if
+          !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
+          omega_plus = MAX(scm_state%omega(i,1,k), 0.0)
+          omega_minus = MIN(scm_state%omega(i,1,k), 0.0)
+          dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
+          scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + &
+            scm_state%exner_l(i,1,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
         end do
-        scm_state%T_force_tend(i,1) = scm_state%T_force_tend(i,1) + &
-          scm_state%exner_l(i,1,1)*(-0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*(theta(i,2) - theta(i,1))/&
-          (scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1)))
-        scm_state%T_force_tend(i,scm_state%n_levels) = scm_state%T_force_tend(i,scm_state%n_levels) + &
-          scm_state%exner_l(i,1,scm_state%n_levels)*&
-          (-0.5*(scm_state%omega(i,1,scm_state%n_levels-1)+scm_state%omega(i,1,scm_state%n_levels))*&
-          (theta(i,scm_state%n_levels) - theta(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1)))
-        scm_state%qv_force_tend(i,1) = scm_state%qv_force_tend(i,1) - &
-          0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*(old_qv(i,2) - old_qv(i,1))/(scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1))
-        scm_state%qv_force_tend(i,scm_state%n_levels) = scm_state%qv_force_tend(i,scm_state%n_levels) - &
-          0.5*(scm_state%omega(i,1,scm_state%n_levels-1)+scm_state%omega(i,1,scm_state%n_levels))*&
-          (old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1))
+
 
       end do
-
-      ! do i=1, scm_state%n_cols
-      !   do k=2, scm_state%n_levels-1
-      !     if(scm_state%omega(i,k) < 0.0) then !need to bring in scm_state%pres_l
-      !       scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,k)*(old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
-      !       scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) - scm_state%omega(i,k)*(old_T(i,k) - old_T(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1) + &
-      !         old_T(i,k)*con_rd/(scm_state%pres_l(i,k)*con_cp))
-      !     else
-      !       scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,k)*(old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
-      !       scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) - scm_state%omega(i,k)*(old_T(i,k+1) - old_T(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k) + &
-      !         old_T(i,k)*con_rd/(scm_state%pres_l(i,k)*con_cp))
-      !     end if
-      !     ! scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - 0.5*(w_ls_i(i,k+1)*(old_qv(i,k+1) - old_qv(i,k)) + &
-      !     !   w_ls_i(i,k)*(old_qv(i,k) - old_qv(i,k-1)))/(zi(i,k+1)-zi(i,k))
-      !     ! !scm_state%T_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_T(i,k+1) - old_T(i,k)) + w_ls_i(i,k)*(old_T(i,k) - old_T(i,k-1)))/(zi(i,k+1)-zi(i,k)) - &
-      !     ! !  0.5*(w_ls_i(i,k+1) + w_ls_i(i,k))*g_over_cp
-      !     ! scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + scm_state%exner_l(i,k)*(-0.5*(w_ls_i(i,k+1)*(theta(i,k+1) - theta(i,k)) + &
-      !     !   w_ls_i(i,k)*(theta(i,k) - theta(i,k-1))))/(zi(i,k+1)-zi(i,k))
-      !   end do
-      !   !>  - Handle the top and bottom levels separately using special discretizations.
-      !   ! scm_state%qv_force_tend(i,1) = scm_state%qv_force_tend(i,1) - w_ls_i(i,2)*(old_qv(i,2) - old_qv(i,1))/(zi(i,2)-zi(i,1))
-      !   ! scm_state%qv_force_tend(i,scm_state%n_levels) = scm_state%qv_force_tend(i,scm_state%n_levels) - w_ls_i(i,scm_state%n_levels)*(old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/&
-      !   !   (zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
-      !   ! scm_state%T_force_tend(i,1) = scm_state%T_force_tend(i,1) - w_ls_i(i,2)*(old_T(i,2) - old_T(i,1))/(zi(i,2)-zi(i,1)) !- 0.5*(w_ls_i(2) + w_ls_i(1))*g_over_cp
-      !   ! scm_state%T_force_tend(i,scm_state%n_levels) = scm_state%T_force_tend(i,scm_state%n_levels) - w_ls_i(i,scm_state%n_levels)*(old_T(i,scm_state%n_levels) - old_T(i,scm_state%n_levels-1))/&
-      !   !   (zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels)) - 0.5*(w_ls_i(i,scm_state%n_levels+1) + w_ls_i(i,scm_state%n_levels))*g_over_cp
-      !
-      ! end do
     case default
       scm_state%T_force_tend = 0.0
       scm_state%qv_force_tend = 0.0
@@ -552,7 +474,8 @@ subroutine apply_forcing_forward_Euler(scm_state)
   real(kind=dp) :: theta(scm_state%n_cols, scm_state%n_levels)
 
   integer :: i,k
-  real(kind=dp) :: f_coriolis, grav_inv, g_over_cp
+  real(kind=dp) :: f_coriolis, grav_inv, g_over_cp, omega_plus, omega_minus, dth_dp_plus, dth_dp_minus, &
+    dqv_dp_plus, dqv_dp_minus
 
   !> \section apply_leapfrog_forcing_alg Algorithm
   !! @{
@@ -650,50 +573,17 @@ subroutine apply_forcing_forward_Euler(scm_state)
       end do
     case (2)
       do i=1, scm_state%n_cols
-        ! do k=2, scm_state%n_levels-1
-        !
-        !   scm_state%qv_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_qv(i,k+1) - old_qv(i,k)) + w_ls_i(i,k)*(old_qv(i,k) - old_qv(i,k-1)))/&
-        !     (zi(i,k+1)-zi(i,k))
-        !   !scm_state%T_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_T(i,k+1) - old_T(i,k)) + w_ls_i(i,k)*(old_T(i,k) - old_T(i,k-1)))/(zi(i,k+1)-zi(i,k)) - &
-        !   !  0.5*(w_ls_i(i,k+1) + w_ls_i(i,k))*g_over_cp
-        !   scm_state%T_force_tend(i,k) = scm_state%exner_l(i,k)*(-0.5*(w_ls_i(i,k+1)*(theta(i,k+1) - theta(i,k)) + &
-        !     w_ls_i(i,k)*(theta(i,k) - theta(i,k-1))))/(zi(i,k+1)-zi(i,k))
-        ! end do
-        ! !>  - Handle the top and bottom levels separately using special discretizations.
-        ! scm_state%qv_force_tend(i,1) = -w_ls_i(i,2)*(old_qv(i,2) - old_qv(i,1))/(zi(i,2)-zi(i,1))
-        ! scm_state%qv_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*(old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
-        ! scm_state%T_force_tend(i,1) = -w_ls_i(i,2)*(old_T(i,2) - old_T(i,1))/(zi(i,2)-zi(i,1)) !- 0.5*(w_ls_i(2) + w_ls_i(1))*g_over_cp
-        ! scm_state%T_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*(old_T(i,scm_state%n_levels) - old_T(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels)) - &
-        !   0.5*(w_ls_i(i,scm_state%n_levels+1) + w_ls_i(i,scm_state%n_levels))*g_over_cp
-
         do k=2, scm_state%n_levels-1
-          !upstream scheme
-          if(scm_state%omega(i,1,k) < 0.0) then
-            scm_state%qv_force_tend(i,k) = -scm_state%omega(i,1,k)*(old_qv(i,k)-old_qv(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
-            scm_state%T_force_tend(i,k) =  scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k) - theta(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1)))
-
-          else
-            scm_state%qv_force_tend(i,k) = -scm_state%omega(i,1,k)*(old_qv(i,k+1)-old_qv(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
-            scm_state%T_force_tend(i,k) = scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k+1) - theta(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k)))
-
-          end if
+          !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
+          omega_plus = MAX(scm_state%omega(i,1,k), 0.0)
+          omega_minus = MIN(scm_state%omega(i,1,k), 0.0)
+          dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          scm_state%qv_force_tend(i,k) = -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
+          scm_state%T_force_tend(i,k) = scm_state%exner_l(i,1,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
         end do
-        scm_state%T_force_tend(i,1) = scm_state%exner_l(i,1,1)*(-0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*&
-          (theta(i,2) - theta(i,1))/(scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1)))
-        scm_state%T_force_tend(i,scm_state%n_levels) = scm_state%exner_l(i,1,scm_state%n_levels)*&
-          (-0.5*(scm_state%omega(i,1,scm_state%n_levels-1)+scm_state%omega(i,1,scm_state%n_levels))*&
-          (theta(i,scm_state%n_levels) - theta(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1)))
-        scm_state%qv_force_tend(i,1) = -0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*(old_qv(i,2) - old_qv(i,1))/&
-          (scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1))
-        scm_state%qv_force_tend(i,scm_state%n_levels) = -0.5*(scm_state%omega(i,1,scm_state%n_levels-1)+&
-          scm_state%omega(i,1,scm_state%n_levels))*&
-          (old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1))
 
         !> - Add forcing due to prescribed radiation and horizontal advection
         do k=1, scm_state%n_levels
@@ -712,67 +602,18 @@ subroutine apply_forcing_forward_Euler(scm_state)
         end do
 
         do k=2, scm_state%n_levels-1
-          !upstream scheme
-          if(scm_state%omega(i,1,k) < 0.0) then
-            scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,1,k)*(old_qv(i,k)-old_qv(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
-            scm_state%T_force_tend(i,k) =  scm_state%T_force_tend(i,k) + &
-              scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k) - theta(i,k-1))/&
-              (scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1)))
-
-          else
-            scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,1,k)*(old_qv(i,k+1)-old_qv(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
-            scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + &
-              scm_state%exner_l(i,1,k)*(-scm_state%omega(i,1,k)*(theta(i,k+1) - theta(i,k))/&
-              (scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k)))
-
-          end if
+          !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
+          omega_plus = MAX(scm_state%omega(i,1,k), 0.0)
+          omega_minus = MIN(scm_state%omega(i,1,k), 0.0)
+          dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,1,k)-scm_state%pres_l(i,1,k-1))
+          dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,1,k+1)-scm_state%pres_l(i,1,k))
+          scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
+          scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + &
+            scm_state%exner_l(i,1,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
         end do
-        scm_state%T_force_tend(i,1) = scm_state%T_force_tend(i,1) + &
-          scm_state%exner_l(i,1,1)*(-0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*(theta(i,2) - theta(i,1))/&
-          (scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1)))
-        scm_state%T_force_tend(i,scm_state%n_levels) = scm_state%T_force_tend(i,scm_state%n_levels) + &
-          scm_state%exner_l(i,1,scm_state%n_levels)*(-0.5*(scm_state%omega(i,1,scm_state%n_levels-1)+&
-          scm_state%omega(i,1,scm_state%n_levels))*&
-          (theta(i,scm_state%n_levels) - theta(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1)))
-        scm_state%qv_force_tend(i,1) = scm_state%qv_force_tend(i,1) - 0.5*(scm_state%omega(i,1,2)+scm_state%omega(i,1,1))*&
-          (old_qv(i,2) - old_qv(i,1))/(scm_state%pres_l(i,1,2)-scm_state%pres_l(i,1,1))
-        scm_state%qv_force_tend(i,scm_state%n_levels) = scm_state%qv_force_tend(i,scm_state%n_levels) - &
-          0.5*(scm_state%omega(i,1,scm_state%n_levels-1)+scm_state%omega(i,1,scm_state%n_levels))*&
-          (old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/&
-          (scm_state%pres_l(i,1,scm_state%n_levels)-scm_state%pres_l(i,1,scm_state%n_levels-1))
-
       end do
-
-      ! do i=1, scm_state%n_cols
-      !   do k=2, scm_state%n_levels-1
-      !     if(scm_state%omega(i,k) < 0.0) then !need to bring in scm_state%pres_l
-      !       scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,k)*(old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
-      !       scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) - scm_state%omega(i,k)*(old_T(i,k) - old_T(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1) + &
-      !         old_T(i,k)*con_rd/(scm_state%pres_l(i,k)*con_cp))
-      !     else
-      !       scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - scm_state%omega(i,k)*(old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
-      !       scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) - scm_state%omega(i,k)*(old_T(i,k+1) - old_T(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k) + &
-      !         old_T(i,k)*con_rd/(scm_state%pres_l(i,k)*con_cp))
-      !     end if
-      !     ! scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) - 0.5*(w_ls_i(i,k+1)*(old_qv(i,k+1) - old_qv(i,k)) + &
-      !     !   w_ls_i(i,k)*(old_qv(i,k) - old_qv(i,k-1)))/(zi(i,k+1)-zi(i,k))
-      !     ! !scm_state%T_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_T(i,k+1) - old_T(i,k)) + w_ls_i(i,k)*(old_T(i,k) - old_T(i,k-1)))/(zi(i,k+1)-zi(i,k)) - &
-      !     ! !  0.5*(w_ls_i(i,k+1) + w_ls_i(i,k))*g_over_cp
-      !     ! scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + scm_state%exner_l(i,k)*(-0.5*(w_ls_i(i,k+1)*(theta(i,k+1) - theta(i,k)) + &
-      !     !   w_ls_i(i,k)*(theta(i,k) - theta(i,k-1))))/(zi(i,k+1)-zi(i,k))
-      !   end do
-      !   !>  - Handle the top and bottom levels separately using special discretizations.
-      !   ! scm_state%qv_force_tend(i,1) = scm_state%qv_force_tend(i,1) - w_ls_i(i,2)*(old_qv(i,2) - old_qv(i,1))/(zi(i,2)-zi(i,1))
-      !   ! scm_state%qv_force_tend(i,scm_state%n_levels) = scm_state%qv_force_tend(i,scm_state%n_levels) - w_ls_i(i,scm_state%n_levels)*(old_qv(i,scm_state%n_levels) - old_qv(i,scm_state%n_levels-1))/&
-      !   !   (zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
-      !   ! scm_state%T_force_tend(i,1) = scm_state%T_force_tend(i,1) - w_ls_i(i,2)*(old_T(i,2) - old_T(i,1))/(zi(i,2)-zi(i,1)) !- 0.5*(w_ls_i(2) + w_ls_i(1))*g_over_cp
-      !   ! scm_state%T_force_tend(i,scm_state%n_levels) = scm_state%T_force_tend(i,scm_state%n_levels) - w_ls_i(i,scm_state%n_levels)*(old_T(i,scm_state%n_levels) - old_T(i,scm_state%n_levels-1))/&
-      !   !   (zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels)) - 0.5*(w_ls_i(i,scm_state%n_levels+1) + w_ls_i(i,scm_state%n_levels))*g_over_cp
-      !
-      ! end do
     case default
       scm_state%T_force_tend = 0.0
       scm_state%qv_force_tend = 0.0
