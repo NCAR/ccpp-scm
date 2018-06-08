@@ -241,6 +241,46 @@ subroutine output_init(scm_state)
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
      VALUES="moisture tendency due to microphysics scheme"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="x-wind tendency due to PBL scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_OGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="x-wind tendency due to orographic GWD scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="x-wind tendency due to deep convection scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_CGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="x-wind tendency due to convective GWD scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="y-wind tendency due to PBL scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_OGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="y-wind tendency due to orographic GWD scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="y-wind tendency due to deep convection scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_CGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
+    VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
+   VALUES="y-wind tendency due to convective GWD scheme"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='upd_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
      VARID=dummy_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="updraft mass flux"))
@@ -502,6 +542,46 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_micro",VARID=var_id))
   do i=1, scm_state%n_cols
     dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,4)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_PBL",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,1)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_OGWD",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,2)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_deepconv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,3)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_CGWD",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,4)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_PBL",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,1)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_OGWD",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,2)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_deepconv",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,3)/scm_state%dt
+  end do
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_CGWD",VARID=var_id))
+  do i=1, scm_state%n_cols
+    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,4)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="upd_mf",VARID=var_id))

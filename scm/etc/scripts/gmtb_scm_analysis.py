@@ -146,6 +146,14 @@ dq_dt_deepconv = []
 dq_dt_shalconv = []
 dq_dt_micro = []
 dq_dt_conv = []
+du_dt_PBL = []
+du_dt_OGWD = []
+du_dt_deepconv = []
+du_dt_CGWD = []
+dv_dt_PBL = []
+dv_dt_OGWD = []
+dv_dt_deepconv = []
+dv_dt_CGWD = []
 upd_mf = []
 dwn_mf = []
 det_mf = []
@@ -228,6 +236,14 @@ for i in range(len(gmtb_scm_datasets)):
     dq_dt_shalconv.append(nc_fid.variables['dq_dt_shalconv'][:]*86400.0*1.0E3)
     dq_dt_micro.append(nc_fid.variables['dq_dt_micro'][:]*86400.0*1.0E3)
     dq_dt_conv.append(dq_dt_deepconv[-1] + dq_dt_shalconv[-1])
+    du_dt_PBL.append(nc_fid.variables['du_dt_PBL'][:]*86400.0)
+    du_dt_OGWD.append(nc_fid.variables['du_dt_OGWD'][:]*86400.0)
+    du_dt_deepconv.append(nc_fid.variables['du_dt_deepconv'][:]*86400.0)
+    du_dt_CGWD.append(nc_fid.variables['du_dt_CGWD'][:]*86400.0)
+    dv_dt_PBL.append(nc_fid.variables['dv_dt_PBL'][:]*86400.0)
+    dv_dt_OGWD.append(nc_fid.variables['dv_dt_OGWD'][:]*86400.0)
+    dv_dt_deepconv.append(nc_fid.variables['dv_dt_deepconv'][:]*86400.0)
+    dv_dt_CGWD.append(nc_fid.variables['dv_dt_CGWD'][:]*86400.0)
     upd_mf.append(nc_fid.variables['upd_mf'][:])
     dwn_mf.append(nc_fid.variables['dwn_mf'][:])
     det_mf.append(nc_fid.variables['det_mf'][:])
@@ -275,7 +291,6 @@ for i in range(len(gmtb_scm_datasets)):
     #
     # rad_net_srf.append((sw_dn_sfc_tot[-1] - sw_up_sfc_tot[-1]) + (lw_dn_sfc_tot[-1] - lw_up_sfc_tot[-1]))
 
-
 time_h = [x/3600.0 for x in time]
 
 #find the indices corresponding to the start and end times of the time slices defined in the config file
@@ -295,6 +310,8 @@ if(obs_compare and obs_file):
         obs_dict = gsro.read_twpice_obs(obs_file, time_slices, date)
     elif(case_name.strip() == 'arm_sgp_summer_1997_A'):
         obs_dict = gsro.read_arm_sgp_summer_1997_obs(obs_file, time_slices, date)
+    elif('LASSO' in case_name.strip()):
+        obs_dict = gsro.read_LASSO_obs(obs_file, time_slices, date)
 
 try:
     os.makedirs(plot_dir)

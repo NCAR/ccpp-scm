@@ -188,6 +188,24 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
         plt.yscale('log')
     if y_lim:
         plt.gca().set_ylim([y_lim[0],y_lim[1]])
+        #change x axis to suit reduced y axis
+        min_x = []
+        max_x = []
+        for i in range(len(values)):
+            include_y = np.intersect1d(np.where(z >= y_lim[0])[0], np.where(z <= y_lim[1])[0])
+            start_y = include_y[0]
+            end_y = include_y[-1]
+            min_x.append(np.min(values[i][start_y:end_y]))
+            max_x.append(np.max(values[i][start_y:end_y]))
+        if obs_values is not None and obs_z is not None:
+            include_y = np.intersect1d(np.where(obs_z >= y_lim[0])[0], np.where(obs_z <= y_lim[1])[0])
+            start_y = include_y[0]
+            end_y = include_y[-1]
+            min_x.append(np.min(obs_values[start_y:end_y]))
+            max_x.append(np.max(obs_values[start_y:end_y]))
+        min_x_all = min(min_x)
+        max_x_all = max(max_x)
+        plt.gca().set_xlim([min_x_all, max_x_all])
     if y_inverted:
         plt.gca().invert_yaxis()
     if xticks:
