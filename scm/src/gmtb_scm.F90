@@ -274,6 +274,12 @@ subroutine gmtb_scm_main_sub()
 
     call calc_pres_exner_geopotential(1, scm_state)
 
+    !zero out diagnostics output on EVERY time step - breaks diagnostics averaged over many timesteps
+    do j=1, scm_state%n_cols
+      call physics%Diag(j)%rad_zero(physics%Model(j))
+      call physics%Diag(j)%phys_zero(physics%Model(j))
+    end do
+
     !pass in state variables to be modified by forcing and physics
     call do_time_step(scm_state, cdata)
 
