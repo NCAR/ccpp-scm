@@ -24,7 +24,7 @@ hour = 0,
 $end
 
 $physics_config
-physics_suite = 'suite_scm_GFS_test',
+physics_suite = 'suite_GFS_operational_2017_scm',
 physics_suite_dir = '../../ccpp-framework/examples/',
 physics_nml = '../../ccpp-physics/input.nml',
 column_area = 3.7E5,
