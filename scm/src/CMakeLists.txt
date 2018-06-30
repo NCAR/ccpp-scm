@@ -1,5 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(scm)
+set(PROJECT "CCPP-SCM")
 ENABLE_LANGUAGE(Fortran)
 
 include(CMakeForceCompiler)
