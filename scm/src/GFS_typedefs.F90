@@ -588,7 +588,19 @@ module GFS_typedefs
                                             !< Nccn: CCN number concentration in cm^(-3)
                                             !< Until a realistic Nccn is provided, Nccns are assumed
                                             !< as Nccn=100 for sea and Nccn=1000 for land
-
+    !--- mass flux shallow convection
+    real(kind=kind_phys) :: clam_shal       !< c_e for shallow convection (Han and Pan, 2011, eq(6))
+    real(kind=kind_phys) :: c0s_shal        !< convective rain conversion parameter
+    real(kind=kind_phys) :: c1_shal         !< conversion parameter of detrainment from liquid water into grid-scale cloud water
+    real(kind=kind_phys) :: pgcon_shal      !< reduction factor in momentum transport due to convection induced pressure gradient force
+                                            !< 0.7 : Gregory et al. (1997, QJRMS)
+                                            !< 0.55: Zhang & Wu (2003, JAS)
+    real(kind=kind_phys) :: asolfac_shal    !< aerosol-aware parameter based on Lim (2011)
+                                            !< asolfac= cx / c0s(=.002)
+                                            !< cx = min([-0.7 ln(Nccn) + 24]*1.e-4, c0s)
+                                            !< Nccn: CCN number concentration in cm^(-3)
+                                            !< Until a realistic Nccn is provided, Nccns are assumed
+                                            !< as Nccn=100 for sea and Nccn=1000 for land
     !--- near surface temperature model
     logical              :: nst_anl         !< flag for NSSTM analysis in gcycle/sfcsub
     integer              :: lsea
@@ -1847,7 +1859,19 @@ module GFS_typedefs
                                                              !< Nccn: CCN number concentration in cm^(-3)
                                                              !< Until a realistic Nccn is provided, Nccns are assumed
                                                              !< as Nccn=100 for sea and Nccn=1000 for land
-
+                                                             !--- mass flux shallow convection
+    real(kind=kind_phys) :: clam_shal      = 0.3             !< c_e for shallow convection (Han and Pan, 2011, eq(6))
+    real(kind=kind_phys) :: c0s_shal       = 0.002           !< conversion parameter of detrainment from liquid water into convetive precipitaiton
+    real(kind=kind_phys) :: c1_shal        = 5.e-4           !< conversion parameter of detrainment from liquid water into grid-scale cloud water
+    real(kind=kind_phys) :: pgcon_shal     = 0.55            !< reduction factor in momentum transport due to convection induced pressure gradient force
+                                                            !< 0.7 : Gregory et al. (1997, QJRMS)
+                                                            !< 0.55: Zhang & Wu (2003, JAS)
+    real(kind=kind_phys) :: asolfac_shal   = 0.958           !< aerosol-aware parameter based on Lim (2011)
+                                                            !< asolfac= cx / c0s(=.002)
+                                                            !< cx = min([-0.7 ln(Nccn) + 24]*1.e-4, c0s)
+                                                            !< Nccn: CCN number concentration in cm^(-3)
+                                                            !< Until a realistic Nccn is provided, Nccns are assumed
+                                                            !< as Nccn=100 for sea and Nccn=1000 for land
     !--- near surface temperature model
     logical              :: nst_anl        = .false.         !< flag for NSSTM analysis in gcycle/sfcsub
     integer              :: lsea           = 0
@@ -1921,6 +1945,8 @@ module GFS_typedefs
                                clam_deep, c0s_deep, c1_deep, betal_deep,                    &
                                betas_deep, evfact_deep, evfactl_deep, pgcon_deep,           &
                                asolfac_deep,                                                &
+                          !--- mass flux shallow convection
+                               clam_shal, c0s_shal, c1_shal, pgcon_shal, asolfac_shal,      &
                           !--- near surface temperature model
                                nst_anl, lsea, xkzm_m, xkzm_h, xkzm_s, nstf_name,            &
                                xkzminv, moninq_fac,                                         &
@@ -2148,6 +2174,13 @@ module GFS_typedefs
     Model%evfactl_deep     = evfactl_deep
     Model%pgcon_deep       = pgcon_deep
     Model%asolfac_deep     = asolfac_deep
+
+    !--- mass flux shallow convection
+    Model%clam_shal        = clam_shal
+    Model%c0s_shal         = c0s_shal
+    Model%c1_shal          = c1_shal
+    Model%pgcon_shal       = pgcon_shal
+    Model%asolfac_shal     = asolfac_shal
 
     !--- near surface temperature model
     Model%nst_anl          = nst_anl
@@ -2696,6 +2729,14 @@ module GFS_typedefs
         print *, ' pgcon_deep        : ', Model%pgcon_deep
         print *, ' asolfac_deep      : ', Model%asolfac_deep
         print *, ' '
+      endif
+      if (Model%imfshalcnv >= 0) then
+        print *, 'mass flux shallow convection'
+        print *, ' clam_shal         : ', Model%clam_shal
+        print *, ' c0s_shal          : ', Model%c0s_shal
+        print *, ' c1_shal           : ', Model%c1_shal
+        print *, ' pgcon_shal        : ', Model%pgcon_shal
+        print *, ' asolfac_shal      : ', Model%asolfac_shal
       endif
       print *, 'near surface temperature model'
       print *, ' nst_anl           : ', Model%nst_anl
