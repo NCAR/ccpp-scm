@@ -977,6 +977,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: adjvisdfd(:)     => null()  !<
     real (kind=kind_phys), pointer      :: aerodp(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: alb1d(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: bexp1d(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cd(:)            => null()  !<
     real (kind=kind_phys), pointer      :: cdq(:)           => null()  !<
     real (kind=kind_phys), pointer      :: cice(:)          => null()  !<
@@ -1095,7 +1096,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: sigma(:)         => null()  !<
     real (kind=kind_phys), pointer      :: sigmaf(:)        => null()  !<
     logical                             :: skip_macro                  !<
-    real (kind=kind_phys), pointer      :: slopetype(:)     => null()  !<
+    integer, pointer                    :: slopetype(:)     => null()  !<
     real (kind=kind_phys), pointer      :: snowc(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snohf(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snowmt(:)        => null()  !<
@@ -1115,14 +1116,18 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tsnow(:)         => null()  !<
     real (kind=kind_phys), pointer      :: tsurf(:)         => null()  !<
     real (kind=kind_phys), pointer      :: ud_mf(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: vegf1d(:)        => null()  !<
     integer, pointer                    :: vegtype(:)       => null()  !<
     real (kind=kind_phys), pointer      :: wind(:)          => null()  !<
     real (kind=kind_phys), pointer      :: work1(:)         => null()  !<
     real (kind=kind_phys), pointer      :: work2(:)         => null()  !<
     real (kind=kind_phys), pointer      :: work3(:)         => null()  !<
     real (kind=kind_phys), pointer      :: xcosz(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: xlai1d(:)        => null()  !<
     real (kind=kind_phys), pointer      :: xmu(:)           => null()  !<
+    real (kind=kind_phys), pointer      :: z01d(:)          => null()  !<
     real (kind=kind_phys), pointer      :: zice(:)          => null()  !<
+    real (kind=kind_phys), pointer      :: zt1d(:)          => null()  !<
 
     contains
       procedure :: create      => interstitial_create     !<   allocate array data
@@ -1859,19 +1864,20 @@ module GFS_typedefs
                                                              !< Nccn: CCN number concentration in cm^(-3)
                                                              !< Until a realistic Nccn is provided, Nccns are assumed
                                                              !< as Nccn=100 for sea and Nccn=1000 for land
-                                                             !--- mass flux shallow convection
+
+    !--- mass flux shallow convection
     real(kind=kind_phys) :: clam_shal      = 0.3             !< c_e for shallow convection (Han and Pan, 2011, eq(6))
     real(kind=kind_phys) :: c0s_shal       = 0.002           !< conversion parameter of detrainment from liquid water into convetive precipitaiton
     real(kind=kind_phys) :: c1_shal        = 5.e-4           !< conversion parameter of detrainment from liquid water into grid-scale cloud water
     real(kind=kind_phys) :: pgcon_shal     = 0.55            !< reduction factor in momentum transport due to convection induced pressure gradient force
-                                                            !< 0.7 : Gregory et al. (1997, QJRMS)
-                                                            !< 0.55: Zhang & Wu (2003, JAS)
+                                                             !< 0.7 : Gregory et al. (1997, QJRMS)
+                                                             !< 0.55: Zhang & Wu (2003, JAS)
     real(kind=kind_phys) :: asolfac_shal   = 0.958           !< aerosol-aware parameter based on Lim (2011)
-                                                            !< asolfac= cx / c0s(=.002)
-                                                            !< cx = min([-0.7 ln(Nccn) + 24]*1.e-4, c0s)
-                                                            !< Nccn: CCN number concentration in cm^(-3)
-                                                            !< Until a realistic Nccn is provided, Nccns are assumed
-                                                            !< as Nccn=100 for sea and Nccn=1000 for land
+                                                             !< asolfac= cx / c0s(=.002)
+                                                             !< cx = min([-0.7 ln(Nccn) + 24]*1.e-4, c0s)
+                                                             !< Nccn: CCN number concentration in cm^(-3)
+                                                             !< Until a realistic Nccn is provided, Nccns are assumed
+                                                             !< as Nccn=100 for sea and Nccn=1000 for land
     !--- near surface temperature model
     logical              :: nst_anl        = .false.         !< flag for NSSTM analysis in gcycle/sfcsub
     integer              :: lsea           = 0
@@ -2738,6 +2744,7 @@ module GFS_typedefs
         print *, ' pgcon_shal        : ', Model%pgcon_shal
         print *, ' asolfac_shal      : ', Model%asolfac_shal
       endif
+      print *, ' '
       print *, 'near surface temperature model'
       print *, ' nst_anl           : ', Model%nst_anl
       print *, ' nstf_name         : ', Model%nstf_name
@@ -3109,15 +3116,15 @@ module GFS_typedefs
     !--- 3D diagnostics
     allocate (Diag%zmtnblck(IM))
     if (Model%ldiag3d) then
-    allocate (Diag%du3dt  (IM,Model%levs,4))
-    allocate (Diag%dv3dt  (IM,Model%levs,4))
-    allocate (Diag%dt3dt  (IM,Model%levs,6))
-    allocate (Diag%dq3dt  (IM,Model%levs,oz_coeff+5))
+      allocate (Diag%du3dt  (IM,Model%levs,4))
+      allocate (Diag%dv3dt  (IM,Model%levs,4))
+      allocate (Diag%dt3dt  (IM,Model%levs,6))
+      allocate (Diag%dq3dt  (IM,Model%levs,oz_coeff+5))
     !--- needed to allocate GoCart coupling fields
-    allocate (Diag%upd_mf (IM,Model%levs))
-    allocate (Diag%dwn_mf (IM,Model%levs))
-    allocate (Diag%det_mf (IM,Model%levs))
-    allocate (Diag%cldcov (IM,Model%levs))
+      allocate (Diag%upd_mf (IM,Model%levs))
+      allocate (Diag%dwn_mf (IM,Model%levs))
+      allocate (Diag%det_mf (IM,Model%levs))
+      allocate (Diag%cldcov (IM,Model%levs))
     endif
     !--- 3D diagnostics for Thompson MP
     if(Model%lradar) then
@@ -3294,6 +3301,7 @@ module GFS_typedefs
     allocate (Interstitial%adjvisdfd  (IM))
     allocate (Interstitial%aerodp     (IM,NSPC1))
     allocate (Interstitial%alb1d      (IM))
+    allocate (Interstitial%bexp1d     (IM))
     allocate (Interstitial%cd         (IM))
     allocate (Interstitial%cdq        (IM))
     allocate (Interstitial%cice       (IM))
@@ -3398,14 +3406,18 @@ module GFS_typedefs
     allocate (Interstitial%tsfg       (IM))
     allocate (Interstitial%tsurf      (IM))
     allocate (Interstitial%ud_mf      (IM,Model%levs))
+    allocate (Interstitial%vegf1d     (IM))
     allocate (Interstitial%vegtype    (IM))
     allocate (Interstitial%wind       (IM))
     allocate (Interstitial%work1      (IM))
     allocate (Interstitial%work2      (IM))
     allocate (Interstitial%work3      (IM))
     allocate (Interstitial%xcosz      (IM))
+    allocate (Interstitial%xlai1d     (IM))
     allocate (Interstitial%xmu        (IM))
+    allocate (Interstitial%z01d       (IM))
     allocate (Interstitial%zice       (IM))
+    allocate (Interstitial%zt1d       (IM))
     ! Set components that do not change
     Interstitial%im           = IM
     Interstitial%ipr          = min(IM,10)
@@ -3528,6 +3540,7 @@ module GFS_typedefs
     Interstitial%adjvisbmu    = clear_val
     Interstitial%adjvisdfu    = clear_val
     Interstitial%adjvisdfd    = clear_val
+    Interstitial%bexp1d       = clear_val
     Interstitial%cd           = clear_val
     Interstitial%cdq          = clear_val
     Interstitial%cice         = clear_val
@@ -3609,7 +3622,7 @@ module GFS_typedefs
     Interstitial%sbsno        = clear_val
     Interstitial%sigma        = clear_val
     Interstitial%sigmaf       = clear_val
-    Interstitial%slopetype    = clear_val
+    Interstitial%slopetype    = 0
     Interstitial%snowc        = clear_val
     Interstitial%snohf        = clear_val
     Interstitial%snowmt       = clear_val
@@ -3621,14 +3634,18 @@ module GFS_typedefs
     Interstitial%tseal        = clear_val
     Interstitial%tsurf        = clear_val
     Interstitial%ud_mf        = clear_val
+    Interstitial%vegf1d       = clear_val
     Interstitial%vegtype      = 0
     Interstitial%wind         = clear_val
     Interstitial%work1        = clear_val
     Interstitial%work2        = clear_val
     Interstitial%work3        = clear_val
     Interstitial%xcosz        = clear_val
+    Interstitial%xlai1d       = clear_val
     Interstitial%xmu          = clear_val
+    Interstitial%z01d         = clear_val
     Interstitial%zice         = clear_val
+    Interstitial%zt1d         = clear_val
     !
   end subroutine interstitial_phys_reset
 
@@ -3672,6 +3689,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%adjvisdfd   ) = ', sum(Interstitial%adjvisdfd   )
     write (0,*) 'sum(Interstitial%aerodp      ) = ', sum(Interstitial%aerodp      )
     write (0,*) 'sum(Interstitial%alb1d       ) = ', sum(Interstitial%alb1d       )
+    write (0,*) 'sum(Interstitial%bexp1d      ) = ', sum(Interstitial%bexp1d      )
     write (0,*) 'sum(Interstitial%cd          ) = ', sum(Interstitial%cd          )
     write (0,*) 'sum(Interstitial%cdq         ) = ', sum(Interstitial%cdq         )
     write (0,*) 'sum(Interstitial%cice        ) = ', sum(Interstitial%cice        )
@@ -3792,14 +3810,18 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%tsfg        ) = ', sum(Interstitial%tsfg        )
     write (0,*) 'sum(Interstitial%tsurf       ) = ', sum(Interstitial%tsurf       )
     write (0,*) 'sum(Interstitial%ud_mf       ) = ', sum(Interstitial%ud_mf       )
+    write (0,*) 'sum(Interstitial%vegf1d      ) = ', sum(Interstitial%vegf1d      )
     write (0,*) 'sum(Interstitial%vegtype     ) = ', sum(Interstitial%vegtype     )
     write (0,*) 'sum(Interstitial%wind        ) = ', sum(Interstitial%wind        )
     write (0,*) 'sum(Interstitial%work1       ) = ', sum(Interstitial%work1       )
     write (0,*) 'sum(Interstitial%work2       ) = ', sum(Interstitial%work2       )
     write (0,*) 'sum(Interstitial%work3       ) = ', sum(Interstitial%work3       )
     write (0,*) 'sum(Interstitial%xcosz       ) = ', sum(Interstitial%xcosz       )
+    write (0,*) 'sum(Interstitial%xlai1d      ) = ', sum(Interstitial%xlai1d      )
     write (0,*) 'sum(Interstitial%xmu         ) = ', sum(Interstitial%xmu         )
+    write (0,*) 'sum(Interstitial%z01d        ) = ', sum(Interstitial%z01d        )
     write (0,*) 'sum(Interstitial%zice        ) = ', sum(Interstitial%zice        )
+    write (0,*) 'sum(Interstitial%zt1d        ) = ', sum(Interstitial%zt1d        )
     write (0,*) 'Interstitial_print: end'
     !
   end subroutine interstitial_print
