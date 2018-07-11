@@ -25,7 +25,7 @@ time@units = "s"
 lat = 15.0
 lat@long_name = "latitude of column"
 lat@units = "degrees N"
-lon = -56.0
+lon = -57.0
 lon@long_name = "longitude of column"
 lon@units = "degrees E"
 
@@ -85,7 +85,8 @@ dT_dt_rad = new((/dimsizes(rad_heat),dimsizes(time)/),"float")
 dT_dt_rad@long_name = "prescribed radiative heating rate"
 dT_dt_rad@units = "K/day" ; check units
 do i=0,dimsizes(time)-1,1
-  dT_dt_rad(:,i) = rad_heat
+;  dT_dt_rad(:,i) = rad_heat ; for now, do not use prescirbed radiative heating rate
+  dT_dt_rad(:,i) = 0.0
 end do
 
 ;; horizontal advection of qt
