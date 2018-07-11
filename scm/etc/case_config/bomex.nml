@@ -1,0 +1,32 @@
+$case_config
+model_name = 'FV3',
+n_columns = 1,
+case_name = 'bomex',
+dt = 600.0,
+time_scheme = 1,
+runtime = 21600,
+output_frequency = 600.0,
+n_levels = 64,
+output_dir = 'output_bomex',
+output_file = 'output',
+case_data_dir = '../data/processed_case_input',
+vert_coord_data_dir = '../data/vert_coord_data',
+thermo_forcing_type = 2,
+mom_forcing_type = 3,
+relax_time = 7200.0,
+sfc_flux_spec = .true.,
+sfc_roughness_length_cm = 0.012,
+sfc_type = 0,
+reference_profile_choice = 1,
+year = 1969,
+month = 6,
+day = 22,
+hour = 13,
+$end
+
+$physics_config
+physics_suite = 'suite_GFS_operational_2017_scm_prescribed_surface',
+physics_suite_dir = '../../ccpp-framework/examples/',
+physics_nml = '../../ccpp-physics/input.nml',
+column_area = 2.0E9,
+$end
