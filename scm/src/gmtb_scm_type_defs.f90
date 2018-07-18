@@ -19,6 +19,14 @@ module gmtb_scm_type_defs
 
   character(len = character_length) :: clear_char = ''
 
+#if 0
+!> \section arg_table_gmtb_scm_type_defs
+!! | local_name                                               | standard_name                                                                                     | long_name                                                                           | units         | rank | type                  |    kind   | intent | optional |
+!! |----------------------------------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------------|------|-----------------------|-----------|--------|----------|
+!! | LTP                                                      | extra_top_layer                                                                                   | extra top layer for radiation                                                       | none          |    0 | integer               |           | none   | F        |
+!!
+#endif
+
   type scm_state_type
 
     character(len=character_length)                 :: experiment_name !> name of model configuration file
@@ -152,8 +160,8 @@ module gmtb_scm_type_defs
 
   end type scm_reference_type
 
-! Filter with CPP for PGI compiler
-#ifndef __PGI
+! Filter with CPP
+#if 0
 !> \section arg_table_physics_type
 !! | local_name                                               | standard_name                                                                                     | long_name                                                                           | units         | rank | type                  |    kind   | intent | optional |
 !! |----------------------------------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------------|------|-----------------------|-----------|--------|----------|
@@ -256,6 +264,7 @@ module gmtb_scm_type_defs
 !! | physics%Interstitial(i)%flag_iter                        | flag_for_iteration                                                                                | flag for iteration                                                                  | flag          |    1 | logical               |           | none   | F        |
 !! | physics%Interstitial(i)%fm10                             | Monin-Obukhov_similarity_function_for_momentum_at_10m                                             | Monin-Obukhov similarity parameter for momentum at 10m                              | none          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%frain                            | dynamics_to_physics_timestep_ratio                                                                | ratio of dynamics timestep to physics timestep                                      | none          |    0 | real                  | kind_phys | none   | F        |
+!! | physics%Interstitial(i)%frland                           | land_area_fraction                                                                             | land area fraction                                                                     | frac          |    1 | real                  | kind_phys | none   | F       |
 !! | physics%Interstitial(i)%gabsbdlw                         | surface_downwelling_longwave_flux_absorbed_by_ground                                              | total sky surface downward longwave flux absorbed by the ground                     | W m-2         |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%gamma                            | anisotropy_of_subgrid_orography                                                                   | anisotropy of subgrid orography                                                     | none          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%gamq                             | countergradient_mixing_term_for_water_vapor                                                       | countergradient mixing term for water vapor                                         | kg kg-1       |    1 | real                  | kind_phys | none   | F        |
@@ -369,7 +378,6 @@ module gmtb_scm_type_defs
 !! | physics%Interstitial(i)%z01d                             | perturbation_of_momentum_roughness_length                                                         | perturbation of momentum roughness length                                           | frac          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%zice                             | sea_ice_thickness_for_physics                                                                     | sea-ice thickness                                                                   | m             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%zt1d                             | perturbation_of_heat_to_momentum_roughness_length_ratio                                           | perturbation of heat to momentum roughness length ratio                             | frac          |    1 | real                  | kind_phys | none   | F        |
-!! | physics%LTP                                              | extra_top_layer                                                                                   | extra top layer for radiation                                                       | none          |    0 | integer               |           | none   | F        |
 !! | physics%Statein(i)%phii                                  | geopotential_at_interface                                                                         | geopotential at model layer interfaces                                              | m2 s-2        |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%prsi                                  | air_pressure_at_interface                                                                         | air pressure at model layer interfaces                                              | Pa            |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%prsik                                 | dimensionless_exner_function_at_model_interfaces                                                  | dimensionless Exner function at model layer interfaces                              | none          |    2 | real                  | kind_phys | none   | F        |
@@ -910,7 +918,6 @@ module gmtb_scm_type_defs
     type(GFS_diag_type), allocatable         :: Diag(:)
     type(GFS_interstitial_type), allocatable :: Interstitial(:)
     type(GFS_init_type), allocatable         :: Init_parm(:)
-    integer                                  :: LTP
 
     integer :: n_ozone_coefficients
     integer :: n_ozone_layers

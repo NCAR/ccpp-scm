@@ -1027,6 +1027,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: flag_frsoil(:)   => null()  !<
     real (kind=kind_phys), pointer      :: fm10(:)          => null()  !<
     real (kind=kind_phys)               :: frain                       !<
+    real (kind=kind_phys), pointer      :: frland(:)        => null()  !<
     real (kind=kind_phys), pointer      :: gabsbdlw(:)      => null()  !<
     real (kind=kind_phys), pointer      :: gamma(:)         => null()  !<
     real (kind=kind_phys), pointer      :: gamq(:)          => null()  !<
@@ -3345,6 +3346,7 @@ module GFS_typedefs
     allocate (Interstitial%flag_guess (IM))
     allocate (Interstitial%flag_iter  (IM))
     allocate (Interstitial%fm10       (IM))
+    allocate (Interstitial%frland     (IM))
     allocate (Interstitial%gabsbdlw   (IM))
     allocate (Interstitial%gamma      (IM))
     allocate (Interstitial%gamq       (IM))
@@ -3434,7 +3436,7 @@ module GFS_typedefs
     Interstitial%skip_macro   = .false.
     ! Reset all other variables
     call Interstitial%rad_reset ()
-    call Interstitial%phys_reset ()
+    call Interstitial%phys_reset (Model)
     !
   end subroutine interstitial_create
 
@@ -3522,11 +3524,12 @@ module GFS_typedefs
     !
   end subroutine interstitial_rad_reset
 
-  subroutine interstitial_phys_reset (Interstitial)
+  subroutine interstitial_phys_reset (Interstitial, Model)
     !
     implicit none
     !
     class(GFS_interstitial_type) :: Interstitial
+    type(GFS_control_type), intent(in) :: Model
     !
     Interstitial%adjnirbmd    = clear_val
     Interstitial%adjnirbmu    = clear_val
@@ -3583,6 +3586,7 @@ module GFS_typedefs
     Interstitial%flag_iter    = .false.
     Interstitial%fm10         = clear_val
     Interstitial%frain        = clear_val
+    Interstitial%frland       = clear_val
     Interstitial%gabsbdlw     = clear_val
     Interstitial%gamma        = clear_val
     Interstitial%gamq         = clear_val
@@ -3649,11 +3653,12 @@ module GFS_typedefs
     !
   end subroutine interstitial_phys_reset
 
-  subroutine interstitial_print(Interstitial, mpirank, omprank, blkno)
+  subroutine interstitial_print(Interstitial, Model, mpirank, omprank, blkno)
     !
     implicit none
     !
     class(GFS_interstitial_type) :: Interstitial
+    type(GFS_control_type), intent(in) :: Model
     integer, intent(in) :: mpirank, omprank, blkno
     !
     ! Print static variables
@@ -3736,6 +3741,7 @@ module GFS_typedefs
     write (0,*) 'Interstitial%flag_iter(1)      = ', Interstitial%flag_iter(1)
     write (0,*) 'sum(Interstitial%fm10        ) = ', sum(Interstitial%fm10        )
     write (0,*) 'Interstitial%frain             = ', Interstitial%frain
+    write (0,*) 'sum(Interstitial%frland      ) = ', sum(Interstitial%frland      )
     write (0,*) 'sum(Interstitial%gabsbdlw    ) = ', sum(Interstitial%gabsbdlw    )
     write (0,*) 'sum(Interstitial%gamma       ) = ', sum(Interstitial%gamma       )
     write (0,*) 'sum(Interstitial%gamq        ) = ', sum(Interstitial%gamq        )
