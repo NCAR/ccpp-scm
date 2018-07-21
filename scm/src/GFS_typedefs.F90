@@ -1062,14 +1062,19 @@ module GFS_typedefs
     integer                             :: lmk                         !<
     integer                             :: lmp                         !<
     integer,               pointer      :: mbota(:,:)       => null()  !<
+    logical                             :: mg3_as_mg2                  !<
     integer,               pointer      :: mtopa(:,:)       => null()  !<
+    integer                             :: ncstrac                     !<
     integer                             :: nday                        !<
+    integer                             :: nn                          !<
+    integer                             :: nncl                        !<
     integer                             :: nsamftrac                   !<
     integer                             :: ntk                         !<
     integer                             :: nvdiff                      !<
     real (kind=kind_phys), pointer      :: oa4(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: oc(:)            => null()  !<
     real (kind=kind_phys), pointer      :: olyr(:,:)        => null()  !<
+    logical              , pointer      :: otspt(:,:)       => null()  !<
     integer                             :: oz_coeff                    !<
     real (kind=kind_phys), pointer      :: oz_pres(:)       => null()  !<
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
@@ -3289,8 +3294,9 @@ module GFS_typedefs
     integer,                intent(in) :: IM
     type(GFS_control_type), intent(in) :: Model
     !
-    ! Set up numbers of tracers for water etc - previously interstitial code: sets
-    ! Interstitial%{tracers_water,tracers_total,tracers_start_index,ntk}
+    allocate (Interstitial%otspt      (Model%ntrac+1,2))
+    ! Set up numbers of tracers for PBL, convection, etc: sets
+    ! Interstitial%{nncl,nvdiff,mg3_as_mg2,nn,tracers_total,ntk,otspt,nsamftrac,ncstrac}
     call interstitial_setup_tracers(Interstitial, Model)
     ! Allocate arrays
     allocate (Interstitial%adjnirbmd  (IM))
@@ -3315,7 +3321,7 @@ module GFS_typedefs
     allocate (Interstitial%cldsa      (IM,5))
     allocate (Interstitial%cld1d      (IM))
     allocate (Interstitial%clouds     (IM,Model%levr+LTP,NF_CLDS))
-    allocate (Interstitial%clw        (IM,Model%levs,Interstitial%tracers_total+2))
+    allocate (Interstitial%clw        (IM,Model%levs,Interstitial%nn))
     allocate (Interstitial%clx        (IM,4))
     allocate (Interstitial%cnvc       (IM,Model%levs))
     allocate (Interstitial%cnvw       (IM,Model%levs))
@@ -3442,7 +3448,6 @@ module GFS_typedefs
     Interstitial%lm           = Model%levr
     Interstitial%lmk          = Model%levr+LTP
     Interstitial%lmp          = Model%levr+1+LTP
-    Interstitial%nvdiff       = Model%ntrac
     Interstitial%oz_coeff     = oz_coeff
     Interstitial%oz_pres      = oz_pres
     Interstitial%skip_macro   = .false.
@@ -3458,40 +3463,91 @@ module GFS_typedefs
     !
     class(GFS_interstitial_type)       :: Interstitial
     type(GFS_control_type), intent(in) :: Model
-    !
-    ! DH* 20180517
-    ! CHECK IF THIS ROUTINE IS STILL CORRECT - INDICES MIGHT HAVE CHANGED ETC
-    ! IS PART OF INTERSTITIAL CODE IN GFS_PHYSICS_DRIVER.F90 I BELIEVE
-    ! *DH
-    !
-    Interstitial%tracers_water = 0
-    Interstitial%tracers_total = 0
-    Interstitial%tracers_start_index = 0
-    !
-    Interstitial%ntk = 0
-    !
-    if (Model%trans_trac .or. Model%cscnv) then
-      !
-      if (Model%ntcw > 0) then
-        if (Model%ntoz < Model%ntcw) then
-          Interstitial%tracers_start_index = Model%ntcw + Model%ncld - 1
-        else
-          Interstitial%tracers_start_index = Model%ntoz
-        endif
-      elseif (Model%ntoz > 0) then
-        Interstitial%tracers_start_index = Model%ntoz
+    integer :: n, tracers
+
+    !first, initialize the values (in case the values don't get initialized within if statements below)
+    Interstitial%nncl             = Model%ncld
+    Interstitial%nvdiff           = Model%ntrac
+    Interstitial%mg3_as_mg2       = .false.
+    Interstitial%nn               = Model%ntrac + 1
+    Interstitial%ntk              = 0
+    Interstitial%tracers_total    = 0
+    Interstitial%otspt(:,:)       = .true.
+    Interstitial%nsamftrac        = 0
+    Interstitial%ncstrac          = 0
+
+    ! GF* 20180712 moved from GFS_physics_driver.F90
+    if (Model%imp_physics == Model%imp_physics_thompson) then
+      if (Model%ltaerosol) then
+        Interstitial%nvdiff = 8
       else
-        Interstitial%tracers_start_index = 1
+        Interstitial%nvdiff = 5
       endif
-      !
-      Interstitial%tracers_water = Model%ntrac - Interstitial%tracers_start_index
-      Interstitial%tracers_total = Interstitial%tracers_water
-      !
-      if (Model%ntoz > 0) Interstitial%tracers_total = Interstitial%tracers_total + 1  ! ozone is added separately
-      !
+      Interstitial%nncl = 5
+    elseif (Model%imp_physics == 6) then
+      Interstitial%nvdiff = Model%ntrac -3
+      Interstitial%nncl = 5
+    elseif (Model%ntclamt > 0) then             ! for GFDL MP don't diffuse cloud amount
+      Interstitial%nvdiff = Model%ntrac - 1
     endif
-    !
-    if (Model%ntke > 0) Interstitial%ntk = Model%ntke - Interstitial%tracers_start_index + 3
+
+    if (Model%imp_physics == 10) then
+      if (abs(Model%fprcp) == 1) then
+        Interstitial%nncl = 4                          ! MG2 with rain and snow
+        Interstitial%mg3_as_mg2 = .false.
+      elseif (Model%fprcp >= 2) then
+        if(Model%ntgl > 0 .and. (Model%mg_do_graupel .or. Model%mg_do_hail)) then
+          Interstitial%nncl = 5                        ! MG3 with rain and snow and grapuel/hail
+          Interstitial%mg3_as_mg2 = .false.
+        else                              ! MG3 code run without graupel/hail i.e. as MG2
+          Interstitial%nncl = 4
+          Interstitial%mg3_as_mg2 = .true.
+        endif
+      endif
+    endif
+    ! *GF
+    ! DH* NEW CODE 20180626
+    if (Model%ntiw > 0) then
+      if (Model%ntclamt > 0) then
+        Interstitial%nn = Model%ntrac - 2
+      else
+        Interstitial%nn = Model%ntrac - 1
+      endif
+    elseif (Model%ntcw > 0) then
+      Interstitial%nn = Model%ntrac
+    else
+      Interstitial%nn = Model%ntrac + 1
+    endif
+    ! *DH END NEW CODE 20180626
+    ! GF* 20180712 moved from GFS_physics_driver.F90
+    if (Model%cscnv .or. Model%satmedmf .or. Model%trans_trac ) then
+      Interstitial%otspt(:,:)   = .true.     ! otspt is used only for cscnv
+      Interstitial%otspt(1:3,:) = .false.    ! this is for sp.hum, ice and liquid water
+      tracers = 2
+      do n=2,Model%ntrac
+        if ( n /= Model%ntcw  .and. n /= Model%ntiw  .and. n /= Model%ntclamt .and. &
+             n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
+             n /= Model%ntsnc .and. n /= Model%ntgl  .and. n /= Model%ntgnc) then
+          tracers = tracers + 1
+          if (Model%ntke  == n ) then
+            Interstitial%otspt(tracers+1,1) = .false.
+            Interstitial%ntk = tracers
+          endif
+          if (Model%ntlnc == n .or. Model%ntinc == n .or. Model%ntrnc == n .or. Model%ntsnc == n .or. Model%ntgnc == n)    &
+!           if (ntlnc == n .or. ntinc == n .or. ntrnc == n .or. ntsnc == n .or.&
+!               ntrw  == n .or. ntsw  == n .or. ntgl  == n)                    &
+                  Interstitial%otspt(tracers+1,1) = .false.
+        endif
+      enddo
+      Interstitial%tracers_total = tracers - 2
+    endif   ! end if_ras or cfscnv or samf
+    if(.not. Model%satmedmf .and. .not. Model%trans_trac) then
+       Interstitial%nsamftrac = 0
+    else
+       Interstitial%nsamftrac = Interstitial%tracers_total
+    endif
+    Interstitial%ncstrac = Interstitial%tracers_total + 3
+    ! *GF
     !
   end subroutine interstitial_setup_tracers
 
@@ -3615,7 +3671,6 @@ module GFS_typedefs
     Interstitial%kinver       = 0
     Interstitial%kpbl         = 0
     Interstitial%ktop         = 0
-    Interstitial%nsamftrac    = 0
     Interstitial%oa4          = clear_val
     Interstitial%oc           = clear_val
     Interstitial%qss          = clear_val
