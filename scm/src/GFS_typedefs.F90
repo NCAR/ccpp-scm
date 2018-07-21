@@ -449,6 +449,7 @@ module GFS_typedefs
     integer              :: ncld            !< choice of cloud scheme
     !--- new microphysical switch
     integer              :: imp_physics        !< choice of microphysics scheme
+    integer              :: imp_physics_gfdl = 11 !< choice of GFDL microphysics scheme
     integer              :: imp_physics_thompson = 8 !< choice of Thompson microphysics scheme
     !--- Z-C microphysical parameters
     real(kind=kind_phys) :: psautco(2)         !< [in] auto conversion coeff from ice to snow
@@ -1027,16 +1028,19 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: flag_frsoil(:)   => null()  !<
     real (kind=kind_phys), pointer      :: fm10(:)          => null()  !<
     real (kind=kind_phys)               :: frain                       !<
+    real (kind=kind_phys), pointer      :: frland(:)        => null()  !<
     real (kind=kind_phys), pointer      :: gabsbdlw(:)      => null()  !<
     real (kind=kind_phys), pointer      :: gamma(:)         => null()  !<
     real (kind=kind_phys), pointer      :: gamq(:)          => null()  !<
     real (kind=kind_phys), pointer      :: gamt(:)          => null()  !<
     real (kind=kind_phys), pointer      :: gasvmr(:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: gflx(:)          => null()  !<
+    real (kind=kind_phys), pointer      :: graupel0(:)      => null()  !<
     real (kind=kind_phys), pointer      :: gwdcu(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: gwdcv(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: hflx(:)          => null()  !<
     real (kind=kind_phys), pointer      :: hprime1(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: ice0(:)          => null()  !<
     integer,               pointer      :: idxday(:)        => null()  !<
     integer                             :: im                          !<
     integer                             :: ipr                         !<
@@ -1073,6 +1077,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: qlyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qss(:)           => null()  !<
     real (kind=kind_phys)               :: raddt                       !<
+    real (kind=kind_phys), pointer      :: rain0(:)         => null()  !<
     real (kind=kind_phys), pointer      :: raincd(:)        => null()  !<
     real (kind=kind_phys), pointer      :: raincs(:)        => null()  !<
     real (kind=kind_phys), pointer      :: rainmcadj(:)     => null()  !<
@@ -1097,6 +1102,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: sigmaf(:)        => null()  !<
     logical                             :: skip_macro                  !<
     integer, pointer                    :: slopetype(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: snow0(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snowc(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snohf(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snowmt(:)        => null()  !<
@@ -2479,7 +2485,7 @@ module GFS_typedefs
                  ' sed_supersat=',  Model%sed_supersat ,' do_sb_physics=', Model%do_sb_physics,&
                  ' ncnd=',Model%ncnd
 
-    elseif (Model%imp_physics == 11) then !GFDL microphysics
+    elseif (Model%imp_physics == Model%imp_physics_gfdl) then !GFDL microphysics
       Model%npdf3d  = 0
       Model%num_p3d = 1 ! rsun 4 before
       Model%num_p2d = 1
@@ -2661,7 +2667,7 @@ module GFS_typedefs
       print *, ' mg_ts_auto_ice    : ', Model%mg_ts_auto_ice
       print *, ' '
       endif
-      if (Model%imp_physics == 11) then
+      if (Model%imp_physics == Model%imp_physics_gfdl) then
         print *, ' GFDL microphysical parameters'
         print *, ' GFDL MP radiation inter: ', Model%lgfdlmprad
         print *, ' '
@@ -3345,6 +3351,7 @@ module GFS_typedefs
     allocate (Interstitial%flag_guess (IM))
     allocate (Interstitial%flag_iter  (IM))
     allocate (Interstitial%fm10       (IM))
+    allocate (Interstitial%frland     (IM))
     allocate (Interstitial%gabsbdlw   (IM))
     allocate (Interstitial%gamma      (IM))
     allocate (Interstitial%gamq       (IM))
@@ -3418,6 +3425,13 @@ module GFS_typedefs
     allocate (Interstitial%z01d       (IM))
     allocate (Interstitial%zice       (IM))
     allocate (Interstitial%zt1d       (IM))
+    ! Allocate arrays that are conditional on certain flags
+    if (Model%imp_physics == Model%imp_physics_gfdl) then
+       allocate (Interstitial%graupel0   (IM))
+       allocate (Interstitial%ice0       (IM))
+       allocate (Interstitial%rain0      (IM))
+       allocate (Interstitial%snow0      (IM))
+    end if
     ! Set components that do not change
     Interstitial%im           = IM
     Interstitial%ipr          = min(IM,10)
@@ -3434,7 +3448,7 @@ module GFS_typedefs
     Interstitial%skip_macro   = .false.
     ! Reset all other variables
     call Interstitial%rad_reset ()
-    call Interstitial%phys_reset ()
+    call Interstitial%phys_reset (Model)
     !
   end subroutine interstitial_create
 
@@ -3522,11 +3536,12 @@ module GFS_typedefs
     !
   end subroutine interstitial_rad_reset
 
-  subroutine interstitial_phys_reset (Interstitial)
+  subroutine interstitial_phys_reset (Interstitial, Model)
     !
     implicit none
     !
     class(GFS_interstitial_type) :: Interstitial
+    type(GFS_control_type), intent(in) :: Model
     !
     Interstitial%adjnirbmd    = clear_val
     Interstitial%adjnirbmu    = clear_val
@@ -3583,6 +3598,7 @@ module GFS_typedefs
     Interstitial%flag_iter    = .false.
     Interstitial%fm10         = clear_val
     Interstitial%frain        = clear_val
+    Interstitial%frland       = clear_val
     Interstitial%gabsbdlw     = clear_val
     Interstitial%gamma        = clear_val
     Interstitial%gamq         = clear_val
@@ -3646,14 +3662,22 @@ module GFS_typedefs
     Interstitial%z01d         = clear_val
     Interstitial%zice         = clear_val
     Interstitial%zt1d         = clear_val
+    ! Reset fields that are conditional on certain flags
+    if (Model%imp_physics == Model%imp_physics_gfdl) then
+       Interstitial%graupel0 = clear_val
+       Interstitial%ice0     = clear_val
+       Interstitial%rain0    = clear_val
+       Interstitial%snow0    = clear_val
+    end if
     !
   end subroutine interstitial_phys_reset
 
-  subroutine interstitial_print(Interstitial, mpirank, omprank, blkno)
+  subroutine interstitial_print(Interstitial, Model, mpirank, omprank, blkno)
     !
     implicit none
     !
     class(GFS_interstitial_type) :: Interstitial
+    type(GFS_control_type), intent(in) :: Model
     integer, intent(in) :: mpirank, omprank, blkno
     !
     ! Print static variables
@@ -3736,6 +3760,7 @@ module GFS_typedefs
     write (0,*) 'Interstitial%flag_iter(1)      = ', Interstitial%flag_iter(1)
     write (0,*) 'sum(Interstitial%fm10        ) = ', sum(Interstitial%fm10        )
     write (0,*) 'Interstitial%frain             = ', Interstitial%frain
+    write (0,*) 'sum(Interstitial%frland      ) = ', sum(Interstitial%frland      )
     write (0,*) 'sum(Interstitial%gabsbdlw    ) = ', sum(Interstitial%gabsbdlw    )
     write (0,*) 'sum(Interstitial%gamma       ) = ', sum(Interstitial%gamma       )
     write (0,*) 'sum(Interstitial%gamq        ) = ', sum(Interstitial%gamq        )
@@ -3822,6 +3847,14 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%z01d        ) = ', sum(Interstitial%z01d        )
     write (0,*) 'sum(Interstitial%zice        ) = ', sum(Interstitial%zice        )
     write (0,*) 'sum(Interstitial%zt1d        ) = ', sum(Interstitial%zt1d        )
+    ! Print arrays that are conditional on certain flags
+    if (Model%imp_physics == Model%imp_physics_gfdl) then
+       write (0,*) 'Interstitial_print: values specific to GFDL microphysics'
+       write (0,*) 'sum(Interstitial%graupel0 ) = ', sum(Interstitial%graupel0    )
+       write (0,*) 'sum(Interstitial%ice0     ) = ', sum(Interstitial%ice0        )
+       write (0,*) 'sum(Interstitial%rain0    ) = ', sum(Interstitial%rain0       )
+       write (0,*) 'sum(Interstitial%snow0    ) = ', sum(Interstitial%snow0       )
+    end if
     write (0,*) 'Interstitial_print: end'
     !
   end subroutine interstitial_print
