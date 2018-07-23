@@ -148,8 +148,6 @@ subroutine gmtb_scm_main_sub()
       call ccpp_field_add(cdata(i), 'natural_log_of_ozone_forcing_data_pressure_levels_from_host', physics%ozone_pres, ierr, 'Pa')
       call ccpp_field_add(cdata(i), 'time_levels_in_ozone_forcing_data_from_host', physics%ozone_time, ierr, 'day')
       call ccpp_field_add(cdata(i), 'ozone_forcing_from_host', physics%ozone_forcing_in, ierr, 'various')
-      call ccpp_field_add(cdata(i), 'error_message', physics%Interstitial(i)%errmsg, ierr, 'none')
-      call ccpp_field_add(cdata(i), 'error_flag', physics%Interstitial(i)%errflg, ierr, 'flag')
 
       !initialize easch column's physics
       call ccpp_physics_init(cdata(i), ierr=ierr)
