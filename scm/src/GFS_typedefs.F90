@@ -915,6 +915,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dlwsfci(:)     => null()   !< instantaneous sfc dnwd lw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: ulwsfci(:)     => null()   !< instantaneous sfc upwd lw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: dswsfci(:)     => null()   !< instantaneous sfc dnwd sw flux ( w/m**2 )
+    real (kind=kind_phys), pointer :: nswsfci(:)     => null()   !< instantaneous sfc net dnwd sw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: uswsfci(:)     => null()   !< instantaneous sfc upwd sw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: dusfci (:)     => null()   !< instantaneous u component of surface stress
     real (kind=kind_phys), pointer :: dvsfci (:)     => null()   !< instantaneous v component of surface stress
@@ -968,10 +969,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: adjnirbmu(:)     => null()  !<
     real (kind=kind_phys), pointer      :: adjnirdfd(:)     => null()  !<
     real (kind=kind_phys), pointer      :: adjnirdfu(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: adjsfcdlw(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: adjsfcdsw(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: adjsfcnsw(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: adjsfculw(:)     => null()  !<
     real (kind=kind_phys), pointer      :: adjvisbmd(:)     => null()  !<
     real (kind=kind_phys), pointer      :: adjvisbmu(:)     => null()  !<
     real (kind=kind_phys), pointer      :: adjvisdfu(:)     => null()  !<
@@ -3103,6 +3100,7 @@ module GFS_typedefs
     allocate (Diag%dlwsfci (IM))
     allocate (Diag%ulwsfci (IM))
     allocate (Diag%dswsfci (IM))
+    allocate (Diag%nswsfci (IM))
     allocate (Diag%uswsfci (IM))
     allocate (Diag%dusfci  (IM))
     allocate (Diag%dvsfci  (IM))
@@ -3228,6 +3226,7 @@ module GFS_typedefs
     Diag%dlwsfci    = zero
     Diag%ulwsfci    = zero
     Diag%dswsfci    = zero
+    Diag%nswsfci    = zero
     Diag%uswsfci    = zero
     Diag%dusfci     = zero
     Diag%dvsfci     = zero
@@ -3301,10 +3300,6 @@ module GFS_typedefs
     allocate (Interstitial%adjnirbmu  (IM))
     allocate (Interstitial%adjnirdfd  (IM))
     allocate (Interstitial%adjnirdfu  (IM))
-    allocate (Interstitial%adjsfcdlw  (IM))
-    allocate (Interstitial%adjsfcdsw  (IM))
-    allocate (Interstitial%adjsfcnsw  (IM))
-    allocate (Interstitial%adjsfculw  (IM))
     allocate (Interstitial%adjvisbmd  (IM))
     allocate (Interstitial%adjvisbmu  (IM))
     allocate (Interstitial%adjvisdfu  (IM))
@@ -3599,10 +3594,6 @@ module GFS_typedefs
     Interstitial%adjnirbmu    = clear_val
     Interstitial%adjnirdfd    = clear_val
     Interstitial%adjnirdfu    = clear_val
-    Interstitial%adjsfcdlw    = clear_val
-    Interstitial%adjsfcdsw    = clear_val
-    Interstitial%adjsfcnsw    = clear_val
-    Interstitial%adjsfculw    = clear_val
     Interstitial%adjvisbmd    = clear_val
     Interstitial%adjvisbmu    = clear_val
     Interstitial%adjvisdfu    = clear_val
@@ -3752,10 +3743,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%adjnirbmu   ) = ', sum(Interstitial%adjnirbmu   )
     write (0,*) 'sum(Interstitial%adjnirdfd   ) = ', sum(Interstitial%adjnirdfd   )
     write (0,*) 'sum(Interstitial%adjnirdfu   ) = ', sum(Interstitial%adjnirdfu   )
-    write (0,*) 'sum(Interstitial%adjsfcdlw   ) = ', sum(Interstitial%adjsfcdlw   )
-    write (0,*) 'sum(Interstitial%adjsfcdsw   ) = ', sum(Interstitial%adjsfcdsw   )
-    write (0,*) 'sum(Interstitial%adjsfcnsw   ) = ', sum(Interstitial%adjsfcnsw   )
-    write (0,*) 'sum(Interstitial%adjsfculw   ) = ', sum(Interstitial%adjsfculw   )
     write (0,*) 'sum(Interstitial%adjvisbmd   ) = ', sum(Interstitial%adjvisbmd   )
     write (0,*) 'sum(Interstitial%adjvisbmu   ) = ', sum(Interstitial%adjvisbmu   )
     write (0,*) 'sum(Interstitial%adjvisdfu   ) = ', sum(Interstitial%adjvisdfu   )
