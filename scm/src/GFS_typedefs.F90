@@ -1015,8 +1015,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: dvsfc1(:)        => null()  !<
     real (kind=kind_phys), pointer      :: elvmax(:)        => null()  !<
     real (kind=kind_phys), pointer      :: ep1d(:)          => null()  !<
-    character(len=512)                  :: errmsg
-    integer                             :: errflg
     real (kind=kind_phys), pointer      :: evap(:)          => null()  !<
     real (kind=kind_phys), pointer      :: evbs(:)          => null()  !<
     real (kind=kind_phys), pointer      :: evcw(:)          => null()  !<
@@ -3561,8 +3559,6 @@ module GFS_typedefs
     Interstitial%alb1d        = clear_val
     Interstitial%cldsa        = clear_val
     Interstitial%clouds       = clear_val
-    Interstitial%errmsg       = ''
-    Interstitial%errflg       = 0
     Interstitial%faerlw       = clear_val
     Interstitial%faersw       = clear_val
     Interstitial%gasvmr       = clear_val
@@ -3644,8 +3640,6 @@ module GFS_typedefs
     Interstitial%dvsfc1       = clear_val
     Interstitial%elvmax       = clear_val
     Interstitial%ep1d         = clear_val
-    Interstitial%errmsg       = ''
-    Interstitial%errflg       = 0
     Interstitial%evap         = clear_val
     Interstitial%evbs         = clear_val
     Interstitial%evcw         = clear_val
@@ -3803,8 +3797,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%dvsfc1      ) = ', sum(Interstitial%dvsfc1      )
     write (0,*) 'sum(Interstitial%elvmax      ) = ', sum(Interstitial%elvmax      )
     write (0,*) 'sum(Interstitial%ep1d        ) = ', sum(Interstitial%ep1d        )
-    write (0,*) 'Interstitial%errmsg            = ', trim(Interstitial%errmsg)
-    write (0,*) 'Interstitial%errflg            = ', Interstitial%errflg
     write (0,*) 'sum(Interstitial%evap        ) = ', sum(Interstitial%evap        )
     write (0,*) 'sum(Interstitial%evbs        ) = ', sum(Interstitial%evbs        )
     write (0,*) 'sum(Interstitial%evcw        ) = ', sum(Interstitial%evcw        )
