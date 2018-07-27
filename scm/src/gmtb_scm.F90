@@ -36,7 +36,7 @@ subroutine gmtb_scm_main_sub()
   type(physics_type), target :: physics
 
   integer                           :: i, j, grid_error
-  real(kind=8)                            :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
+  real(kind=8)                      :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer              :: jdat(1:8)
 
   type(ccpp_t), allocatable, target                      :: cdata(:)
@@ -128,26 +128,21 @@ subroutine gmtb_scm_main_sub()
       physics%Init_parm(i)%fn_nml = scm_state%physics_nml(1)
       physics%Init_parm(i)%blksz => scm_state%blksz
 
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Control_type', '', c_loc(physics%Model(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Statein_type', '', c_loc(physics%Statein(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Stateout_type', '', c_loc(physics%Stateout(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Sfcprop_type', '', c_loc(physics%Sfcprop(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Coupling_type', '', c_loc(physics%Coupling(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Grid_type', '', c_loc(physics%Grid(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Tbd_type', '', c_loc(physics%Tbd(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Cldprop_type', '', c_loc(physics%Cldprop(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Radtend_type', '', c_loc(physics%Radtend(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Diag_type', '', c_loc(physics%Diag(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Interstitial_type', '', c_loc(physics%Interstitial(i)), ierr)
-      call ccpp_field_add(cdata(i), 'FV3-GFS_Init_type', '', c_loc(physics%Init_parm(i)), ierr)
-      call ccpp_field_add(cdata(i), 'number_of_latitutde_points_in_ozone_forcing_data_from_host', physics%n_ozone_lats, ierr, 'count')
-      call ccpp_field_add(cdata(i), 'vertical_dimension_of_ozone_forcing_data_from_host', physics%n_ozone_layers, ierr, 'count')
-      call ccpp_field_add(cdata(i), 'number_of_time_levels_in_ozone_forcing_data_from_host', physics%n_ozone_times, ierr, 'count')
-      call ccpp_field_add(cdata(i), 'number_of_coefficients_in_ozone_forcing_data_from_host', physics%n_ozone_coefficients, ierr, 'count')
-      call ccpp_field_add(cdata(i), 'latitude_of_ozone_forcing_data_from_host', physics%ozone_lat, ierr, 'degree')
-      call ccpp_field_add(cdata(i), 'natural_log_of_ozone_forcing_data_pressure_levels_from_host', physics%ozone_pres, ierr, 'Pa')
-      call ccpp_field_add(cdata(i), 'time_levels_in_ozone_forcing_data_from_host', physics%ozone_time, ierr, 'day')
-      call ccpp_field_add(cdata(i), 'ozone_forcing_from_host', physics%ozone_forcing_in, ierr, 'various')
+      ! Allocate and initialize DDTs
+      call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
+                           physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
+                           physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
+                           physics%Diag(i), physics%Interstitial(i), physics%Init_parm(i),      &
+                           physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_times, &
+                           physics%n_ozone_coefficients, physics%ozone_lat, physics%ozone_pres, &
+                           physics%ozone_time, physics%ozone_forcing_in)
+
+      call physics%associate(scm_state, i)
+
+! use ccpp_fields.inc to call ccpp_field_add for all variables to add
+! (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py -
+!  the script parses tables in gmtb_scm_type_defs.f90)
+#include "ccpp_fields.inc"
 
       !initialize easch column's physics
       call ccpp_physics_init(cdata(i), ierr=ierr)
@@ -155,11 +150,6 @@ subroutine gmtb_scm_main_sub()
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
           stop
       end if
-
-      call physics%associate(scm_state, i)
-    !use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in gmtb_scm_type_defs.f90)
-
-#include "ccpp_fields.inc"
 
   end do
 

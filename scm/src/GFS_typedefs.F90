@@ -688,6 +688,7 @@ module GFS_typedefs
     integer              :: jdat(1:8)       !< current forecast date and time
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     real(kind=kind_phys)          :: sec    !< seconds since model initialization
+    real(kind=kind_phys), pointer :: si(:)  !< vertical sigma coordinate for model initialization
 
     contains
       procedure :: init  => control_initialize
@@ -2267,6 +2268,9 @@ module GFS_typedefs
     Model%kdt              = 0
     Model%jdat(1:8)        = jdat(1:8)
     Model%sec              = 0
+    allocate(Model%si(Model%levr+1))
+    ! This will be updated in GFS_suite_setup_scm_init
+    Model%si               = clear_val
 
     !--- stored in wam_f107_kp module
     f107_kp_size      = 56
@@ -2822,6 +2826,7 @@ module GFS_typedefs
       print *, ' kdt               : ', Model%kdt
       print *, ' jdat              : ', Model%jdat
       print *, ' sec               : ', Model%sec
+      print *, ' si                : ', Model%si
     endif
 
   end subroutine control_print
