@@ -451,6 +451,8 @@ module GFS_typedefs
     integer              :: imp_physics        !< choice of microphysics scheme
     integer              :: imp_physics_gfdl = 11 !< choice of GFDL microphysics scheme
     integer              :: imp_physics_thompson = 8 !< choice of Thompson microphysics scheme
+    integer              :: imp_physics_wsm6 = 6      !< choice of WSMG     microphysics scheme
+
     !--- Z-C microphysical parameters
     real(kind=kind_phys) :: psautco(2)         !< [in] auto conversion coeff from ice to snow
     real(kind=kind_phys) :: prautco(2)         !< [in] auto conversion coeff from cloud to rain
@@ -1008,6 +1010,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: dudt(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dusfcg(:)        => null()  !<
     real (kind=kind_phys), pointer      :: dusfc1(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: dvdftra(:,:,:)   => null()  !<
     real (kind=kind_phys), pointer      :: dvdt(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dvsfcg(:)        => null()  !<
     real (kind=kind_phys), pointer      :: dvsfc1(:)        => null()  !<
@@ -1123,6 +1126,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tsnow(:)         => null()  !<
     real (kind=kind_phys), pointer      :: tsurf(:)         => null()  !<
     real (kind=kind_phys), pointer      :: ud_mf(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: vdftra(:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: vegf1d(:)        => null()  !<
     integer, pointer                    :: vegtype(:)       => null()  !<
     real (kind=kind_phys), pointer      :: wind(:)          => null()  !<
@@ -2441,7 +2445,7 @@ module GFS_typedefs
         print *,' Ferrier Microphysics scheme has been deprecated - job aborted'
         stop
 
-    elseif (Model%imp_physics == 6) then !WSM6 microphysics
+    elseif (Model%imp_physics == Model%imp_physics_wsm6) then !WSM6 microphysics
       Model%npdf3d  = 0
       Model%num_p3d = 3
       Model%num_p2d = 1
@@ -2657,7 +2661,7 @@ module GFS_typedefs
       print *, ' wminco            : ', Model%wminco
         print *, ' '
       endif
-      if (Model%imp_physics == 6 .or. Model%imp_physics == Model%imp_physics_thompson) then
+      if (Model%imp_physics == Model%imp_physics_wsm6 .or. Model%imp_physics == Model%imp_physics_thompson) then
         print *, ' Thompson microphysical parameters'
         print *, ' ltaerosol         : ', Model%ltaerosol
         print *, ' lradar            : ', Model%lradar
@@ -3344,6 +3348,7 @@ module GFS_typedefs
     allocate (Interstitial%dvdt       (IM,Model%levs))
     allocate (Interstitial%dvsfcg     (IM))
     allocate (Interstitial%dvsfc1     (IM))
+    allocate (Interstitial%dvdftra    (IM,Model%levs,Interstitial%nvdiff))
     allocate (Interstitial%elvmax     (IM))
     allocate (Interstitial%ep1d       (IM))
     allocate (Interstitial%evap       (IM))
@@ -3417,6 +3422,7 @@ module GFS_typedefs
     allocate (Interstitial%tsfg       (IM))
     allocate (Interstitial%tsurf      (IM))
     allocate (Interstitial%ud_mf      (IM,Model%levs))
+    allocate (Interstitial%vdftra     (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d     (IM))
     allocate (Interstitial%vegtype    (IM))
     allocate (Interstitial%wind       (IM))
@@ -3482,7 +3488,7 @@ module GFS_typedefs
         Interstitial%nvdiff = 5
       endif
       Interstitial%nncl = 5
-    elseif (Model%imp_physics == 6) then
+    elseif (Model%imp_physics == Model%imp_physics_wsm6) then
       Interstitial%nvdiff = Model%ntrac -3
       Interstitial%nncl = 5
     elseif (Model%ntclamt > 0) then             ! for GFDL MP don't diffuse cloud amount
@@ -3627,6 +3633,7 @@ module GFS_typedefs
     Interstitial%dtdt         = clear_val
     Interstitial%dtdtc        = clear_val
     Interstitial%dtsfc1       = clear_val
+    Interstitial%dvdftra      = clear_val
     Interstitial%dtzm         = clear_val
     Interstitial%dudt         = clear_val
     Interstitial%dusfcg       = clear_val
@@ -3658,7 +3665,7 @@ module GFS_typedefs
     Interstitial%iter         = 0
     Interstitial%kbot         = 0
     Interstitial%kcnv         = 0
-    Interstitial%kinver       = 0
+    Interstitial%kinver       = Model%levs
     Interstitial%kpbl         = 0
     Interstitial%ktop         = 0
     Interstitial%oa4          = clear_val
@@ -3695,6 +3702,7 @@ module GFS_typedefs
     Interstitial%tseal        = clear_val
     Interstitial%tsurf        = clear_val
     Interstitial%ud_mf        = clear_val
+    Interstitial%vdftra       = clear_val
     Interstitial%vegf1d       = clear_val
     Interstitial%vegtype      = 0
     Interstitial%wind         = clear_val
@@ -3784,6 +3792,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%dudt        ) = ', sum(Interstitial%dudt        )
     write (0,*) 'sum(Interstitial%dusfcg      ) = ', sum(Interstitial%dusfcg      )
     write (0,*) 'sum(Interstitial%dusfc1      ) = ', sum(Interstitial%dusfc1      )
+    write (0,*) 'sum(Interstitial%dvdftra     ) = ', sum(Interstitial%dvdftra     )
     write (0,*) 'sum(Interstitial%dvdt        ) = ', sum(Interstitial%dvdt        )
     write (0,*) 'sum(Interstitial%dvsfcg      ) = ', sum(Interstitial%dvsfcg      )
     write (0,*) 'sum(Interstitial%dvsfc1      ) = ', sum(Interstitial%dvsfc1      )
@@ -3874,6 +3883,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%tsfg        ) = ', sum(Interstitial%tsfg        )
     write (0,*) 'sum(Interstitial%tsurf       ) = ', sum(Interstitial%tsurf       )
     write (0,*) 'sum(Interstitial%ud_mf       ) = ', sum(Interstitial%ud_mf       )
+    write (0,*) 'sum(Interstitial%vdftra      ) = ', sum(Interstitial%vdftra      )
     write (0,*) 'sum(Interstitial%vegf1d      ) = ', sum(Interstitial%vegf1d      )
     write (0,*) 'sum(Interstitial%vegtype     ) = ', sum(Interstitial%vegtype     )
     write (0,*) 'sum(Interstitial%wind        ) = ', sum(Interstitial%wind        )
