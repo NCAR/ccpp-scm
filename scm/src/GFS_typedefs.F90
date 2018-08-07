@@ -3648,7 +3648,7 @@ module GFS_typedefs
     Interstitial%evcw         = clear_val
     Interstitial%fh2          = clear_val
     Interstitial%flag_guess   = .false.
-    Interstitial%flag_iter    = .false.
+    Interstitial%flag_iter    = .true.
     Interstitial%fm10         = clear_val
     Interstitial%frain        = clear_val
     Interstitial%frland       = clear_val
