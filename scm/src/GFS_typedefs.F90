@@ -9,7 +9,7 @@ module GFS_typedefs
        use module_radiation_gases,    only: NF_VGAS
        use module_radiation_surface,  only: NF_ALBD
        use ozne_def,                  only: levozp, oz_coeff, oz_pres
-       use h2o_def,                   only: levh2o, h2o_coeff
+       use h2o_def,                   only: levh2o, h2o_coeff, h2o_pres
 
        implicit none
 
@@ -285,6 +285,7 @@ module GFS_typedefs
 
     !--- outgoing accumulated quantities
     real (kind=kind_phys), pointer :: rain_cpl  (:)  => null()   !< total rain precipitation
+    real (kind=kind_phys), pointer :: rainc_cpl (:)  => null()   !< convective rain precipitation
     real (kind=kind_phys), pointer :: snow_cpl  (:)  => null()   !< total snow precipitation
     real (kind=kind_phys), pointer :: dusfc_cpl (:)  => null()   !< sfc u momentum flux
     real (kind=kind_phys), pointer :: dvsfc_cpl (:)  => null()   !< sfc v momentum flux
@@ -348,6 +349,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: cldcovi (:,:)   => null()  !< instantaneous 3D cloud fraction
     real (kind=kind_phys), pointer :: nwfa2d  (:)     => null()  !< instantaneous sfc aerosol source
 
+    !--- instantaneous quantities for GSDCHEM coupling
+    real (kind=kind_phys), pointer :: ushfsfci(:)     => null()  !< instantaneous upward sensible heat flux (w/m**2)
+    real (kind=kind_phys), pointer :: dkt     (:,:)   => null()  !< instantaneous dkt diffusion coefficient for temperature (m**2/s)
+
     contains
       procedure :: create  => coupling_create  !<   allocate array data
   end type GFS_coupling_type
@@ -380,6 +385,9 @@ module GFS_typedefs
     integer              :: nx              !< number of points in the i-dir for this MPI-domain
     integer              :: ny              !< number of points in the j-dir for this MPI-domain
     integer              :: levs            !< number of vertical levels
+    !--- ak/bk for pressure level calculations
+    real(kind=kind_phys), pointer :: ak(:)  !< from surface (k=1) to TOA (k=levs)
+    real(kind=kind_phys), pointer :: bk(:)  !< from surface (k=1) to TOA (k=levs)
     integer              :: cnx             !< number of points in the i-dir for this cubed-sphere face
     integer              :: cny             !< number of points in the j-dir for this cubed-sphere face
     integer              :: lonr            !< number of global points in x-dir (i) along the equator
@@ -389,6 +397,7 @@ module GFS_typedefs
     !--- coupling parameters
     logical              :: cplflx          !< default no cplflx collection
     logical              :: cplwav          !< default no cplwav collection
+    logical              :: cplchm          !< default no cplchm collection
 
     !--- integrated dynamics through earth's atmosphere
     logical              :: lsidea
@@ -691,6 +700,12 @@ module GFS_typedefs
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     real(kind=kind_phys)          :: sec    !< seconds since model initialization
     real(kind=kind_phys), pointer :: si(:)  !< vertical sigma coordinate for model initialization
+
+    ! From physcons.F90, updated/set in control_initialize
+    real(kind=kind_phys) :: dxinv           ! inverse scaling factor for critical relative humidity, replaces dxinv in physcons.F90
+    real(kind=kind_phys) :: dxmax           ! maximum scaling factor for critical relative humidity, replaces dxmax in physcons.F90
+    real(kind=kind_phys) :: dxmin           ! minimum scaling factor for critical relative humidity, replaces dxmin in physcons.F90
+    real(kind=kind_phys) :: rhcmax          ! maximum critical relative humidity, replaces rhc_max in physcons.F90
 
     contains
       procedure :: init  => control_initialize
@@ -1037,6 +1052,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: graupel0(:)      => null()  !<
     real (kind=kind_phys), pointer      :: gwdcu(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: gwdcv(:,:)       => null()  !<
+    integer                             :: h2o_coeff                   !<
+    real (kind=kind_phys), pointer      :: h2o_pres(:)      => null()  !<
     real (kind=kind_phys), pointer      :: hflx(:)          => null()  !<
     real (kind=kind_phys), pointer      :: hprime1(:)       => null()  !<
     real (kind=kind_phys), pointer      :: ice0(:)          => null()  !<
@@ -1056,6 +1073,7 @@ module GFS_typedefs
     integer,               pointer      :: ktop(:)          => null()  !<
     integer                             :: latidxprnt                  !<
     integer                             :: levi                        !<
+    integer                             :: levh2o                      !<
     integer                             :: levozp                      !<
     integer                             :: lm                          !<
     integer                             :: lmk                         !<
@@ -1584,6 +1602,22 @@ module GFS_typedefs
 !!    Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
     endif
 
+    ! -- GSDCHEM coupling options
+    if (Model%cplchm) then
+      !--- outgoing instantaneous quantities
+      allocate (Coupling%ushfsfci(IM))
+      allocate (Coupling%dkt     (IM,Model%levs))
+      !--- accumulated total and convective rainfall
+      allocate (Coupling%rain_cpl      (IM))
+      allocate (Coupling%rainc_cpl     (IM))
+
+      Coupling%rain_cpl     = clear_val
+      Coupling%rainc_cpl    = clear_val
+
+      Coupling%ushfsfci = clear_val
+      Coupling%dkt      = clear_val
+    endif
+
     !--- stochastic physics option
     if (Model%do_sppt) then
       allocate (Coupling%sppt_wts  (IM,Model%levs))
@@ -1645,10 +1679,10 @@ module GFS_typedefs
                                  logunit, isc, jsc, nx, ny, levs,   &
                                  cnx, cny, gnx, gny, dt_dycore,     &
                                  dt_phys, idat, jdat, tracer_names, &
-                                 blksz)
+                                 ak, bk, blksz)
 
     !--- modules
-    use physcons,         only: dxmax, dxmin, dxinv, con_rerth, con_pi, rhc_max
+    use physcons,         only: con_rerth, con_pi
     use mersenne_twister, only: random_setseed, random_number
     use module_ras,       only: nrcmax
     use parse_tracers,    only: get_tracer_index
@@ -1677,6 +1711,8 @@ module GFS_typedefs
     integer,                intent(in) :: idat(8)
     integer,                intent(in) :: jdat(8)
     character(len=32),      intent(in) :: tracer_names(:)
+    real(kind=kind_phys), dimension(:), intent(in) :: ak
+    real(kind=kind_phys), dimension(:), intent(in) :: bk
     integer,                intent(in) :: blksz(:)
     !--- local variables
     integer :: n
@@ -1687,6 +1723,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: rinc(5)
     real(kind=kind_evod) :: wrk(1)
     real(kind=kind_phys), parameter :: con_hr = 3600.
+    real(kind=kind_phys), parameter :: p_ref = 101325.0d0
 
     !--- BEGIN NAMELIST VARIABLES
     real(kind=kind_phys) :: fhzero         = 0.0             !< seconds between clearing of diagnostic buckets
@@ -1701,6 +1738,7 @@ module GFS_typedefs
     !--- coupling parameters
     logical              :: cplflx         = .false.         !< default no cplflx collection
     logical              :: cplwav         = .false.         !< default no cplwav collection
+    logical              :: cplchm         = .false.         !< default no cplchm collection
 
     !--- integrated dynamics through earth's atmosphere
     logical              :: lsidea         = .false.
@@ -1934,7 +1972,7 @@ module GFS_typedefs
                                fhzero, ldiag3d, lssav, fhcyc, lgocart, fhgoc3d,             &
                                thermodyn_id, sfcpress_id,                                   &
                           !--- coupling parameters
-                               cplflx, cplwav, lsidea,                                      &
+                               cplflx, cplwav, cplchm, lsidea,                              &
                           !--- radiation parameters
                                fhswr, fhlwr, levr, nfxr, aero_in, iflip, isol, ico2, ialb,  &
                                isot, iems,  iaer, iovr_sw, iovr_lw, ictm, isubc_sw,         &
@@ -2024,6 +2062,10 @@ module GFS_typedefs
     Model%nx               = nx
     Model%ny               = ny
     Model%levs             = levs
+    allocate(Model%ak(1:size(ak)))
+    allocate(Model%bk(1:size(bk)))
+    Model%ak               = ak
+    Model%bk               = bk
     Model%cnx              = cnx
     Model%cny              = cny
     Model%lonr             = gnx         ! number longitudinal points
@@ -2034,6 +2076,7 @@ module GFS_typedefs
     !--- coupling parameters
     Model%cplflx           = cplflx
     Model%cplwav           = cplwav
+    Model%cplchm           = cplchm
 
     !--- integrated dynamics through earth's atmosphere
     Model%lsidea           = lsidea
@@ -2273,8 +2316,11 @@ module GFS_typedefs
     Model%jdat(1:8)        = jdat(1:8)
     Model%sec              = 0
     allocate(Model%si(Model%levr+1))
-    ! This will be updated in GFS_suite_setup_scm_init
-    Model%si               = clear_val
+    !--- Define sigma level for radiation initialization
+    !--- The formula converting hybrid sigma pressure coefficients to sigma coefficients follows Eckermann (2009, MWR)
+    !--- ps is replaced with p0. The value of p0 uses that in http://www.emc.ncep.noaa.gov/officenotes/newernotes/on461.pdf
+    !--- ak/bk have been flipped from their original FV3 orientation and are defined sfc -> toa
+    Model%si = (ak + bk * p_ref - ak(Model%levr+1)) / (p_ref - ak(Model%levr+1))
 
     !--- stored in wam_f107_kp module
     f107_kp_size      = 56
@@ -2285,13 +2331,13 @@ module GFS_typedefs
     !--- BEGIN CODE FROM GFS_PHYSICS_INITIALIZE
     !--- define physcons module variables
     tem     = con_rerth*con_rerth*(con_pi+con_pi)*con_pi
-    dxmax   = log(tem/(max_lon*max_lat))
-    dxmin   = log(tem/(min_lon*min_lat))
-    dxinv   = 1.0d0 / (dxmax-dxmin)
-    rhc_max = rhcmax
-    if (Model%me == Model%master) write(0,*)' dxmax=',dxmax,' dxmin=',dxmin,' dxinv=',dxinv, &
+    Model%dxmax  = log(tem/(max_lon*max_lat))
+    Model%dxmin  = log(tem/(min_lon*min_lat))
+    Model%dxinv  = 1.0d0 / (Model%dxmax-Model%dxmin)
+    Model%rhcmax = rhcmax
+    if (Model%me == Model%master) write(0,*)' dxmax=',Model%dxmax,' dxmin=',Model%dxmin,' dxinv=',Model%dxinv, &
        'max_lon=',max_lon,' max_lat=',max_lat,' min_lon=',min_lon,' min_lat=',min_lat,       &
-       ' rhc_max=',rhc_max
+       ' rhc_max=',Model%rhcmax
 
     !--- set nrcm
 
@@ -2608,6 +2654,7 @@ module GFS_typedefs
       print *, 'coupling parameters'
       print *, ' cplflx            : ', Model%cplflx
       print *, ' cplwav            : ', Model%cplwav
+      print *, ' cplchm            : ', Model%cplchm
       print *, ' '
       print *, 'integrated dynamics through earth atmosphere'
       print *, ' lsidea            : ', Model%lsidea
@@ -3369,6 +3416,7 @@ module GFS_typedefs
     allocate (Interstitial%gflx       (IM))
     allocate (Interstitial%gwdcu      (IM,Model%levs))
     allocate (Interstitial%gwdcv      (IM,Model%levs))
+    allocate (Interstitial%h2o_pres   (levh2o))
     allocate (Interstitial%hflx       (IM))
     allocate (Interstitial%hprime1    (IM))
     allocate (Interstitial%idxday     (IM))
@@ -3443,11 +3491,14 @@ module GFS_typedefs
        allocate (Interstitial%snow0      (IM))
     end if
     ! Set components that do not change
+    Interstitial%h2o_coeff    = h2o_coeff
+    Interstitial%h2o_pres     = h2o_pres
     Interstitial%im           = IM
     Interstitial%ipr          = min(IM,10)
     Interstitial%ix           = IM
     Interstitial%latidxprnt   = 1
     Interstitial%levi         = Model%levs+1
+    Interstitial%levh2o       = levh2o
     Interstitial%levozp       = levozp
     Interstitial%lm           = Model%levr
     Interstitial%lmk          = Model%levr+LTP
@@ -3736,20 +3787,23 @@ module GFS_typedefs
     ! Print static variables
     write (0,'(a,3i6)') 'Interstitial_print for mpirank, omprank, blkno: ', mpirank, omprank, blkno
     write (0,*) 'Interstitial_print: values that do not change'
-    write (0,*) 'Interstitial%im           = ', Interstitial%im
-    write (0,*) 'Interstitial%ipr          = ', Interstitial%ipr
-    write (0,*) 'Interstitial%ix           = ', Interstitial%ix
-    write (0,*) 'Interstitial%latidxprnt   = ', Interstitial%latidxprnt
-    write (0,*) 'Interstitial%levi         = ', Interstitial%levi
-    write (0,*) 'Interstitial%levozp       = ', Interstitial%levozp
-    write (0,*) 'Interstitial%lm           = ', Interstitial%lm
-    write (0,*) 'Interstitial%lmk          = ', Interstitial%lmk
-    write (0,*) 'Interstitial%lmp          = ', Interstitial%lmp
-    write (0,*) 'Interstitial%nsamftrac    = ', Interstitial%nsamftrac
-    write (0,*) 'Interstitial%nvdiff       = ', Interstitial%nvdiff
-    write (0,*) 'Interstitial%oz_coeff     = ', Interstitial%oz_coeff
-    write (0,*) 'Interstitial%oz_pres      = ', Interstitial%oz_pres
-    write (0,*) 'Interstitial%skip_macro   = ', Interstitial%skip_macro
+    write (0,*) 'Interstitial%h2o_coeff     = ', Interstitial%h2o_coeff
+    write (0,*) 'sum(Interstitial%h2o_pres) = ', sum(Interstitial%h2o_pres)
+    write (0,*) 'Interstitial%im            = ', Interstitial%im
+    write (0,*) 'Interstitial%ipr           = ', Interstitial%ipr
+    write (0,*) 'Interstitial%ix            = ', Interstitial%ix
+    write (0,*) 'Interstitial%latidxprnt    = ', Interstitial%latidxprnt
+    write (0,*) 'Interstitial%levi          = ', Interstitial%levi
+    write (0,*) 'Interstitial%levh2o        = ', Interstitial%levh2o
+    write (0,*) 'Interstitial%levozp        = ', Interstitial%levozp
+    write (0,*) 'Interstitial%lm            = ', Interstitial%lm
+    write (0,*) 'Interstitial%lmk           = ', Interstitial%lmk
+    write (0,*) 'Interstitial%lmp           = ', Interstitial%lmp
+    write (0,*) 'Interstitial%nsamftrac     = ', Interstitial%nsamftrac
+    write (0,*) 'Interstitial%nvdiff        = ', Interstitial%nvdiff
+    write (0,*) 'Interstitial%oz_coeff      = ', Interstitial%oz_coeff
+    write (0,*) 'sum(Interstitial%oz_pres)  = ', sum(Interstitial%oz_pres)
+    write (0,*) 'Interstitial%skip_macro    = ', Interstitial%skip_macro
     ! Print all other variables
     write (0,*) 'Interstitial_print: values that change'
     write (0,*) 'sum(Interstitial%adjnirbmd   ) = ', sum(Interstitial%adjnirbmd   )
