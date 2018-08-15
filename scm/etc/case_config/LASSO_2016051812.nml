@@ -27,6 +27,6 @@ $end
 $physics_config
 physics_suite = 'suite_GFS_operational_2017_scm_prescribed_surface',
 physics_suite_dir = '../../ccpp-framework/examples/',
-physics_nml = '../../ccpp-physics/input.nml',
+physics_nml = '../etc/case_config/input.nml',
 column_area = 2.0E9,
 $end
