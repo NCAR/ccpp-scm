@@ -35,14 +35,13 @@ subroutine gmtb_scm_main_sub()
   type(scm_reference_type), target :: scm_reference
   type(physics_type), target :: physics
 
-  integer                           :: i, j, grid_error
-  real(kind=8)                      :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
-  integer              :: jdat(1:8)
+  integer      :: i, j, grid_error
+  real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
+  integer      :: jdat(1:8)
 
-  type(ccpp_t), allocatable, target                      :: cdata(:)
-
-  integer                                                :: cdata_time_index
-  integer                                                :: ierr
+  type(ccpp_t), allocatable, target :: cdata(:)
+  integer                           :: cdata_time_index
+  integer                           :: ierr
 
   call get_config_nml(scm_state)
 
@@ -135,7 +134,10 @@ subroutine gmtb_scm_main_sub()
                            physics%Diag(i), physics%Interstitial(i), physics%Init_parm(i),      &
                            physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_times, &
                            physics%n_ozone_coefficients, physics%ozone_lat, physics%ozone_pres, &
-                           physics%ozone_time, physics%ozone_forcing_in)
+                           physics%ozone_time, physics%ozone_forcing_in,                        &
+                           physics%n_h2o_lats, physics%n_h2o_layers, physics%n_h2o_times,       &
+                           physics%n_h2o_coefficients, physics%h2o_lat, physics%h2o_pres,       &
+                           physics%h2o_time, physics%h2o_forcing_in)
 
       call physics%associate(scm_state, i)
 

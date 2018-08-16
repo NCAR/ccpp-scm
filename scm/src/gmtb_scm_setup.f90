@@ -219,7 +219,11 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                             Coupling, Grid, Tbd, Cldprop, Radtend, Diag,         &
                             Interstitial, Init_parm, n_ozone_lats,               &
                             n_ozone_layers, n_ozone_times, n_ozone_coefficients, &
-                            ozone_lat, ozone_pres, ozone_time, ozone_forcing_in)
+                            ozone_lat_in, ozone_pres_in, ozone_time_in,          &
+                            ozone_forcing_in,                                    &
+                            n_h2o_lats, n_h2o_layers, n_h2o_times,               &
+                            n_h2o_coefficients, h2o_lat_in, h2o_pres_in,         &
+                            h2o_time_in, h2o_forcing_in)
 
   use machine,             only: kind_phys
   use GFS_typedefs,        only: GFS_init_type,                          &
@@ -230,12 +234,11 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                                  GFS_radtend_type,  GFS_diag_type,       &
                                  GFS_interstitial_type
   use funcphys,            only: gfuncphys
-  use module_microphysics, only: gsmconst
   use cldwat2m_micro,      only: ini_micro
   use aer_cloud,           only: aer_cloud_init
   use module_ras,          only: ras_init
   use ozne_def,            only: latsozp, levozp, timeoz, oz_coeff, oz_lat, oz_pres, oz_time, ozplin
-  use GFS_rrtmg_setup,     only: GFS_rrtmg_setup_init
+  use h2o_def,             only: latsh2o, levh2o, timeh2o, h2o_coeff, h2o_lat, h2o_pres, h2o_time, h2oplin
 
   !--- interface variables
   type(GFS_control_type),      intent(inout) :: Model
@@ -252,10 +255,10 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_init_type),         intent(in)    :: Init_parm
 
   integer, intent(in) :: n_ozone_lats, n_ozone_layers, n_ozone_coefficients, n_ozone_times
-  real(kind=kind_phys), intent(in) :: ozone_lat(:), ozone_pres(:), ozone_time(:), ozone_forcing_in(:,:,:,:)
+  real(kind=kind_phys), intent(in) :: ozone_lat_in(:), ozone_pres_in(:), ozone_time_in(:), ozone_forcing_in(:,:,:,:)
 
-  !--- local variables
-  real(kind=kind_phys), parameter   :: p_ref = 101325.0d0
+  integer, intent(in) :: n_h2o_lats, n_h2o_layers, n_h2o_coefficients, n_h2o_times
+  real(kind=kind_phys), intent(in) :: h2o_lat_in(:), h2o_pres_in(:), h2o_time_in(:), h2o_forcing_in(:,:,:,:)
 
   !--- set control properties (including namelist read)
   call Model%init (Init_parm%nlunit, Init_parm%fn_nml,           &
@@ -266,19 +269,35 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%gnx, Init_parm%gny,                 &
                    Init_parm%dt_dycore, Init_parm%dt_phys,       &
                    Init_parm%bdat, Init_parm%cdat,               &
-                   Init_parm%tracer_names, Init_parm%blksz)
+                   Init_parm%tracer_names, Init_parm%ak,         &
+                   Init_parm%bk, Init_parm%blksz)
+
+  ! DH* TODO: clean up this part, the allocation and assignment
+  ! of ozone and h2o data does not belong here !*DH
 
   !--- allocate memory for the variables stored in ozne_def and set them
   allocate(oz_lat(n_ozone_lats), oz_pres(n_ozone_layers), oz_time(n_ozone_times+1))
   allocate(ozplin(n_ozone_lats, n_ozone_layers, n_ozone_coefficients, n_ozone_times))
-  latsozp = n_ozone_lats
-  levozp = n_ozone_layers
-  timeoz = n_ozone_times
+  latsozp  = n_ozone_lats
+  levozp   = n_ozone_layers
+  timeoz   = n_ozone_times
   oz_coeff = n_ozone_coefficients
-  oz_lat = ozone_lat
-  oz_pres = ozone_pres
-  oz_time = ozone_time
-  ozplin = ozone_forcing_in
+  oz_lat   = ozone_lat_in
+  oz_pres  = ozone_pres_in
+  oz_time  = ozone_time_in
+  ozplin   = ozone_forcing_in
+
+  !--- allocate memory for the variables stored in h2o_def and set them
+  allocate(h2o_lat(n_h2o_lats), h2o_pres(n_h2o_layers), h2o_time(n_h2o_times+1))
+  allocate(h2oplin(n_h2o_lats, n_h2o_layers, n_h2o_coefficients, n_h2o_times))
+  latsh2o   = n_h2o_lats
+  levh2o    = n_h2o_layers
+  timeh2o   = n_h2o_times
+  h2o_coeff = n_h2o_coefficients
+  h2o_lat   = h2o_lat_in
+  h2o_pres  = h2o_pres_in
+  h2o_time  = h2o_time_in
+  h2oplin   = h2o_forcing_in
 
   !--- initialize DDTs
   call Statein%create(1, Model)
@@ -297,29 +316,6 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   !--- populate the grid components
   call GFS_grid_populate (Grid, Init_parm%xlon, Init_parm%xlat, Init_parm%area)
 
-  !--- read in and initialize ozone and water
-  if (Model%ntoz > 0) then
-    call setindxoz (Init_parm%blksz, Grid%xlat_d, Grid%jindx1_o3, &
-                      Grid%jindx2_o3, Grid%ddy_o3)
-  endif
-
-  if (Model%h2o_phys) then
-    call setindxh2o (Init_parm%blksz, Grid%xlat_d, Grid%jindx1_h, &
-                       Grid%jindx2_h, Grid%ddy_h)
-  endif
-
-  !--- Call gfuncphys (funcphys.f) to compute all physics function tables.
-  call gfuncphys ()
-
-  call gsmconst (Model%dtp, Model%me, .TRUE.)
-
-  !--- define sigma level for radiation initialization
-  !--- The formula converting hybrid sigma pressure coefficients to sigma coefficients follows Eckermann (2009, MWR)
-  !--- ps is replaced with p0. The value of p0 uses that in http://www.emc.ncep.noaa.gov/officenotes/newernotes/on461.pdf
-  !--- ak/bk have been flipped from their original FV3 orientation and are defined sfc -> toa
-  Model%si = (Init_parm%ak + Init_parm%bk * p_ref - Init_parm%ak(Model%levr+1)) &
-           / (p_ref - Init_parm%ak(Model%levr+1))
-
   !--- initialize Morrison-Gettleman microphysics
   if (Model%ncld == 2) then
     call ini_micro (Model%mg_dcs, Model%mg_qcvar, Model%mg_ts_auto_ice)
@@ -328,9 +324,6 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
 
   !--- initialize ras
   if (Model%ras) call ras_init (Model%levs, Model%me)
-
-  !--- initialize soil vegetation
-  call set_soilveg(Model%me, Model%isot, Model%ivegsrc, Model%nlunit)
 
   !--- lsidea initialization
   if (Model%lsidea) then
