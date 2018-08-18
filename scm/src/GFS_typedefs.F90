@@ -996,7 +996,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: bexp1d(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cd(:)            => null()  !<
     real (kind=kind_phys), pointer      :: cdq(:)           => null()  !<
-    real (kind=kind_phys), pointer      :: cice(:)          => null()  !<
     real (kind=kind_phys), pointer      :: cldf(:)          => null()  !<
     real (kind=kind_phys), pointer      :: cldsa(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: cld1d(:)         => null()  !<
@@ -1015,7 +1014,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: dlength(:)       => null()  !<
     real (kind=kind_phys), pointer      :: dqdt(:,:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: dqsfc1(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: dq3dt_loc(:,:,:) => null()  !<
     real (kind=kind_phys), pointer      :: drain(:)         => null()  !<
     real (kind=kind_phys), pointer      :: dtdt(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dtdtc(:,:)       => null()  !<
@@ -1131,7 +1129,6 @@ module GFS_typedefs
     integer, pointer                    :: soiltype(:)      => null()  !<
     real (kind=kind_phys), pointer      :: stress(:)        => null()  !<
     real (kind=kind_phys), pointer      :: theta(:)         => null()  !<
-    real (kind=kind_phys), pointer      :: tice(:)          => null()  !<
     real (kind=kind_phys), pointer      :: tlvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: tlyr(:,:)        => null()  !<
     integer                             :: tracers_start_index         !<
@@ -1155,7 +1152,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: xlai1d(:)        => null()  !<
     real (kind=kind_phys), pointer      :: xmu(:)           => null()  !<
     real (kind=kind_phys), pointer      :: z01d(:)          => null()  !<
-    real (kind=kind_phys), pointer      :: zice(:)          => null()  !<
     real (kind=kind_phys), pointer      :: zt1d(:)          => null()  !<
 
     contains
@@ -3365,7 +3361,6 @@ module GFS_typedefs
     allocate (Interstitial%bexp1d     (IM))
     allocate (Interstitial%cd         (IM))
     allocate (Interstitial%cdq        (IM))
-    allocate (Interstitial%cice       (IM))
     allocate (Interstitial%cldf       (IM))
     allocate (Interstitial%cldsa      (IM,5))
     allocate (Interstitial%cld1d      (IM))
@@ -3382,7 +3377,6 @@ module GFS_typedefs
     allocate (Interstitial%dlength    (IM))
     allocate (Interstitial%dqdt       (IM,Model%levs,Model%ntrac))
     allocate (Interstitial%dqsfc1     (IM))
-    allocate (Interstitial%dq3dt_loc  (IM,Model%levs,oz_coeff+5))
     allocate (Interstitial%drain      (IM))
     allocate (Interstitial%dtdt       (IM,Model%levs))
     allocate (Interstitial%dtdtc      (IM,Model%levs))
@@ -3461,7 +3455,6 @@ module GFS_typedefs
     allocate (Interstitial%soiltype   (IM))
     allocate (Interstitial%stress     (IM))
     allocate (Interstitial%theta      (IM))
-    allocate (Interstitial%tice       (IM))
     allocate (Interstitial%tlvl       (IM,Model%levr+1+LTP))
     allocate (Interstitial%tlyr       (IM,Model%levr+LTP))
     allocate (Interstitial%trans      (IM))
@@ -3481,7 +3474,6 @@ module GFS_typedefs
     allocate (Interstitial%xlai1d     (IM))
     allocate (Interstitial%xmu        (IM))
     allocate (Interstitial%z01d       (IM))
-    allocate (Interstitial%zice       (IM))
     allocate (Interstitial%zt1d       (IM))
     ! Allocate arrays that are conditional on certain flags
     if (Model%imp_physics == Model%imp_physics_gfdl) then
@@ -3663,7 +3655,6 @@ module GFS_typedefs
     Interstitial%bexp1d       = clear_val
     Interstitial%cd           = clear_val
     Interstitial%cdq          = clear_val
-    Interstitial%cice         = clear_val
     Interstitial%cld1d        = clear_val
     Interstitial%cldf         = clear_val
     Interstitial%clw          = clear_val
@@ -3676,7 +3667,6 @@ module GFS_typedefs
     Interstitial%del_gz       = clear_val
     Interstitial%dkt          = clear_val
     Interstitial%dlength      = clear_val
-    Interstitial%dq3dt_loc    = clear_val
     Interstitial%dqdt         = clear_val
     Interstitial%dqsfc1       = clear_val
     Interstitial%drain        = clear_val
@@ -3748,7 +3738,6 @@ module GFS_typedefs
     Interstitial%soiltype     = 0
     Interstitial%stress       = clear_val
     Interstitial%theta        = clear_val
-    Interstitial%tice         = clear_val
     Interstitial%trans        = clear_val
     Interstitial%tseal        = clear_val
     Interstitial%tsurf        = clear_val
@@ -3764,7 +3753,6 @@ module GFS_typedefs
     Interstitial%xlai1d       = clear_val
     Interstitial%xmu          = clear_val
     Interstitial%z01d         = clear_val
-    Interstitial%zice         = clear_val
     Interstitial%zt1d         = clear_val
     ! Reset fields that are conditional on certain flags
     if (Model%imp_physics == Model%imp_physics_gfdl) then
@@ -3819,7 +3807,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%bexp1d      ) = ', sum(Interstitial%bexp1d      )
     write (0,*) 'sum(Interstitial%cd          ) = ', sum(Interstitial%cd          )
     write (0,*) 'sum(Interstitial%cdq         ) = ', sum(Interstitial%cdq         )
-    write (0,*) 'sum(Interstitial%cice        ) = ', sum(Interstitial%cice        )
     write (0,*) 'sum(Interstitial%cldf        ) = ', sum(Interstitial%cldf        )
     write (0,*) 'sum(Interstitial%cldsa       ) = ', sum(Interstitial%cldsa       )
     write (0,*) 'sum(Interstitial%cld1d       ) = ', sum(Interstitial%cld1d       )
@@ -3836,7 +3823,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%dlength     ) = ', sum(Interstitial%dlength     )
     write (0,*) 'sum(Interstitial%dqdt        ) = ', sum(Interstitial%dqdt        )
     write (0,*) 'sum(Interstitial%dqsfc1      ) = ', sum(Interstitial%dqsfc1      )
-    write (0,*) 'sum(Interstitial%dq3dt_loc   ) = ', sum(Interstitial%dq3dt_loc   )
     write (0,*) 'sum(Interstitial%drain       ) = ', sum(Interstitial%drain       )
     write (0,*) 'sum(Interstitial%dtdt        ) = ', sum(Interstitial%dtdt        )
     write (0,*) 'sum(Interstitial%dtdtc       ) = ', sum(Interstitial%dtdtc       )
@@ -3928,7 +3914,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%soiltype    ) = ', sum(Interstitial%soiltype    )
     write (0,*) 'sum(Interstitial%stress      ) = ', sum(Interstitial%stress      )
     write (0,*) 'sum(Interstitial%theta       ) = ', sum(Interstitial%theta       )
-    write (0,*) 'sum(Interstitial%tice        ) = ', sum(Interstitial%tice        )
     write (0,*) 'sum(Interstitial%tlvl        ) = ', sum(Interstitial%tlvl        )
     write (0,*) 'sum(Interstitial%tlyr        ) = ', sum(Interstitial%tlyr        )
     write (0,*) 'sum(Interstitial%trans       ) = ', sum(Interstitial%trans       )
@@ -3948,7 +3933,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%xlai1d      ) = ', sum(Interstitial%xlai1d      )
     write (0,*) 'sum(Interstitial%xmu         ) = ', sum(Interstitial%xmu         )
     write (0,*) 'sum(Interstitial%z01d        ) = ', sum(Interstitial%z01d        )
-    write (0,*) 'sum(Interstitial%zice        ) = ', sum(Interstitial%zice        )
     write (0,*) 'sum(Interstitial%zt1d        ) = ', sum(Interstitial%zt1d        )
     ! Print arrays that are conditional on certain flags
     if (Model%imp_physics == Model%imp_physics_gfdl) then
