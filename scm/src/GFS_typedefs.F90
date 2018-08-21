@@ -3709,11 +3709,11 @@ module GFS_typedefs
     Interstitial%hprime1      = clear_val
     Interstitial%islmsk       = 0
     Interstitial%iter         = 0
-    Interstitial%kbot         = 0
+    Interstitial%kbot         = Model%levs
     Interstitial%kcnv         = 0
     Interstitial%kinver       = Model%levs
     Interstitial%kpbl         = 0
-    Interstitial%ktop         = 0
+    Interstitial%ktop         = 1
     Interstitial%oa4          = clear_val
     Interstitial%oc           = clear_val
     Interstitial%qss          = clear_val
