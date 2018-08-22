@@ -461,6 +461,9 @@ module GFS_typedefs
     integer              :: imp_physics_gfdl = 11 !< choice of GFDL microphysics scheme
     integer              :: imp_physics_thompson = 8 !< choice of Thompson microphysics scheme
     integer              :: imp_physics_wsm6 = 6      !< choice of WSMG     microphysics scheme
+    integer              :: imp_physics_zhao_carr = 99  !< choice of Zhao-Carr microphysics scheme
+    integer              :: imp_physics_zhao_carr_pdf = 98  !< choice of Zhao-Carr microphysics scheme with PDF clouds
+    integer              :: imp_physics_mg = 10       !< choice of Morrison-Gettelman microphysics scheme
 
     !--- Z-C microphysical parameters
     real(kind=kind_phys) :: psautco(2)         !< [in] auto conversion coeff from ice to snow
@@ -470,7 +473,7 @@ module GFS_typedefs
 
     !--- M-G microphysical parameters
     integer              :: fprcp              !< no prognostic rain and snow (MG)
-    real(kind=kind_phys) :: mg_dcs             !< Morrison-Gettleman microphysics parameters
+    real(kind=kind_phys) :: mg_dcs             !< Morrison-Gettelman microphysics parameters
     real(kind=kind_phys) :: mg_qcvar
     real(kind=kind_phys) :: mg_ts_auto_ice     !< ice auto conversion time scale
 
@@ -1110,7 +1113,8 @@ module GFS_typedefs
     real (kind=kind_phys)               :: rhctop                      !<
     real (kind=kind_phys), pointer      :: rhofr(:)         => null()  !<
     real (kind=kind_phys), pointer      :: runoff(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: save_qcw(:,:)    => null()  !<
+    real (kind=kind_phys), pointer      :: save_qc(:,:)     => null()  !<
+    real (kind=kind_phys), pointer      :: save_qi(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: save_qv(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: save_t(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: save_u(:,:)      => null()  !<
@@ -1787,7 +1791,7 @@ module GFS_typedefs
 
     !--- M-G microphysical parameters
     integer              :: fprcp          =  0                 !< no prognostic rain and snow (MG)
-    real(kind=kind_phys) :: mg_dcs         = 350.0              !< Morrison-Gettleman microphysics parameters
+    real(kind=kind_phys) :: mg_dcs         = 350.0              !< Morrison-Gettelman microphysics parameters
     real(kind=kind_phys) :: mg_qcvar       = 2.0
     real(kind=kind_phys) :: mg_ts_auto_ice = 3600.0             !< ice auto conversion time scale
     real(kind=kind_phys) :: mg_ncnst       = 100.e6             !< constant droplet num concentration (m-3)
@@ -2133,7 +2137,7 @@ module GFS_typedefs
     Model%prautco          = prautco
     Model%evpco            = evpco
     Model%wminco           = wminco
-    !--- Morroson-Gettleman MP parameters
+    !--- Morrison-Gettelman MP parameters
     Model%fprcp            = fprcp
     Model%mg_dcs           = mg_dcs
     Model%mg_qcvar         = mg_qcvar
@@ -2468,7 +2472,7 @@ module GFS_typedefs
     endif
 
     !--- set up cloud schemes and tracer elements
-    if (Model%imp_physics == 99) then
+    if (Model%imp_physics == Model%imp_physics_zhao_carr) then
       Model%npdf3d  = 0
         Model%num_p3d = 4
         Model%num_p2d = 3
@@ -2476,7 +2480,7 @@ module GFS_typedefs
       Model%ncnd    = 1                   ! ncnd is the number of cloud condensate types
       if (Model%me == Model%master) print *,' Using Zhao/Carr/Sundqvist Microphysics'
 
-    elseif (Model%imp_physics == 98) then !Zhao Microphysics with PDF cloud
+    elseif (Model%imp_physics == Model%imp_physics_zhao_carr_pdf) then !Zhao Microphysics with PDF cloud
       Model%npdf3d  = 3
       Model%num_p3d = 4
       Model%num_p2d = 3
@@ -2507,7 +2511,7 @@ module GFS_typedefs
                                           ' microphysics',' ltaerosol = ',Model%ltaerosol, &
                                           ' lradar =',Model%lradar,Model%num_p3d,Model%num_p2d
 
-    else if (Model%imp_physics == 10) then        ! Morrison-Gettelman Microphysics
+    else if (Model%imp_physics == Model%imp_physics_mg) then        ! Morrison-Gettelman Microphysics
       Model%npdf3d  = 0
       Model%num_p3d = 5
       Model%num_p2d = 1
@@ -2696,7 +2700,7 @@ module GFS_typedefs
       print *, ' imp_physics       : ', Model%imp_physics
       print *, ' '
 
-      if (Model%imp_physics == 99 .or. Model%imp_physics == 98) then
+      if (Model%imp_physics == Model%imp_physics_zhao_carr .or. Model%imp_physics == Model%imp_physics_zhao_carr_pdf) then
       print *, ' Z-C microphysical parameters'
       print *, ' psautco           : ', Model%psautco
       print *, ' prautco           : ', Model%prautco
@@ -2710,7 +2714,7 @@ module GFS_typedefs
         print *, ' lradar            : ', Model%lradar
         print *, ' '
       endif
-      if (Model%imp_physics == 10) then
+      if (Model%imp_physics == Model%imp_physics_mg) then
       print *, ' M-G microphysical parameters'
       print *, ' fprcp             : ', Model%fprcp
       print *, ' mg_dcs            : ', Model%mg_dcs
@@ -3438,7 +3442,8 @@ module GFS_typedefs
     allocate (Interstitial%rb         (IM))
     allocate (Interstitial%rhc        (IM,Model%levs))
     allocate (Interstitial%runoff     (IM))
-    allocate (Interstitial%save_qcw   (IM,Model%levs))
+    allocate (Interstitial%save_qc    (IM,Model%levs))
+    allocate (Interstitial%save_qi    (IM,Model%levs))
     allocate (Interstitial%save_qv    (IM,Model%levs))
     allocate (Interstitial%save_t     (IM,Model%levs))
     allocate (Interstitial%save_u     (IM,Model%levs))
@@ -3538,7 +3543,7 @@ module GFS_typedefs
       Interstitial%nvdiff = Model%ntrac - 1
     endif
 
-    if (Model%imp_physics == 10) then
+    if (Model%imp_physics == Model%imp_physics_mg) then
       if (abs(Model%fprcp) == 1) then
         Interstitial%nncl = 4                          ! MG2 with rain and snow
         Interstitial%mg3_as_mg2 = .false.
@@ -3658,6 +3663,7 @@ module GFS_typedefs
     Interstitial%cld1d        = clear_val
     Interstitial%cldf         = clear_val
     Interstitial%clw          = clear_val
+    Interstitial%clw(:,:,2)   = -999.9
     Interstitial%clx          = clear_val
     Interstitial%cnvc         = clear_val
     Interstitial%cnvw         = clear_val
@@ -3704,11 +3710,11 @@ module GFS_typedefs
     Interstitial%hprime1      = clear_val
     Interstitial%islmsk       = 0
     Interstitial%iter         = 0
-    Interstitial%kbot         = 0
+    Interstitial%kbot         = Model%levs
     Interstitial%kcnv         = 0
     Interstitial%kinver       = Model%levs
     Interstitial%kpbl         = 0
-    Interstitial%ktop         = 0
+    Interstitial%ktop         = 1
     Interstitial%oa4          = clear_val
     Interstitial%oc           = clear_val
     Interstitial%qss          = clear_val
@@ -3723,7 +3729,8 @@ module GFS_typedefs
     Interstitial%rhcpbl       = clear_val
     Interstitial%rhctop       = clear_val
     Interstitial%runoff       = clear_val
-    Interstitial%save_qcw     = clear_val
+    Interstitial%save_qc      = clear_val
+    Interstitial%save_qi      = clear_val
     Interstitial%save_qv      = clear_val
     Interstitial%save_t       = clear_val
     Interstitial%save_u       = clear_val
@@ -3892,7 +3899,8 @@ module GFS_typedefs
     write (0,*) 'Interstitial%rhcpbl            = ', Interstitial%rhcpbl
     write (0,*) 'Interstitial%rhctop            = ', Interstitial%rhctop
     write (0,*) 'sum(Interstitial%runoff      ) = ', sum(Interstitial%runoff      )
-    write (0,*) 'sum(Interstitial%save_qcw    ) = ', sum(Interstitial%save_qcw    )
+    write (0,*) 'sum(Interstitial%save_qc     ) = ', sum(Interstitial%save_qc     )
+    write (0,*) 'sum(Interstitial%save_qi     ) = ', sum(Interstitial%save_qi     )
     write (0,*) 'sum(Interstitial%save_qv     ) = ', sum(Interstitial%save_qv     )
     write (0,*) 'sum(Interstitial%save_t      ) = ', sum(Interstitial%save_t      )
     write (0,*) 'sum(Interstitial%save_u      ) = ', sum(Interstitial%save_u      )
