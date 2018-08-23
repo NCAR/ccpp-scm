@@ -1050,14 +1050,14 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: gamt(:)          => null()  !<
     real (kind=kind_phys), pointer      :: gasvmr(:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: gflx(:)          => null()  !<
-    real (kind=kind_phys), pointer      :: graupel0(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: graupelmp(:)     => null()  !<
     real (kind=kind_phys), pointer      :: gwdcu(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: gwdcv(:,:)       => null()  !<
     integer                             :: h2o_coeff                   !<
     real (kind=kind_phys), pointer      :: h2o_pres(:)      => null()  !<
     real (kind=kind_phys), pointer      :: hflx(:)          => null()  !<
     real (kind=kind_phys), pointer      :: hprime1(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: ice0(:)          => null()  !<
+    real (kind=kind_phys), pointer      :: icemp(:)         => null()  !<
     integer,               pointer      :: idxday(:)        => null()  !<
     integer                             :: im                          !<
     integer                             :: ipr                         !<
@@ -1098,9 +1098,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: plyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qlyr(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: prcpmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: qss(:)           => null()  !<
     real (kind=kind_phys)               :: raddt                       !<
-    real (kind=kind_phys), pointer      :: rain0(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: rainmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: raincd(:)        => null()  !<
     real (kind=kind_phys), pointer      :: raincs(:)        => null()  !<
     real (kind=kind_phys), pointer      :: rainmcadj(:)     => null()  !<
@@ -1124,7 +1125,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: sigmaf(:)        => null()  !<
     logical                             :: skip_macro                  !<
     integer, pointer                    :: slopetype(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: snow0(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: snowmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: snowc(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snohf(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snowmt(:)        => null()  !<
@@ -3431,6 +3432,7 @@ module GFS_typedefs
     allocate (Interstitial%plvl       (IM,Model%levr+1+LTP))
     allocate (Interstitial%plyr       (IM,Model%levr+LTP))
     allocate (Interstitial%qlyr       (IM,Model%levr+LTP))
+    allocate (Interstitial%prcpmp     (IM))
     allocate (Interstitial%qss        (IM))
     allocate (Interstitial%raincd     (IM))
     allocate (Interstitial%raincs     (IM))
@@ -3476,12 +3478,12 @@ module GFS_typedefs
     allocate (Interstitial%xmu        (IM))
     allocate (Interstitial%z01d       (IM))
     allocate (Interstitial%zt1d       (IM))
-    ! Allocate arrays that are conditional on certain flags
+    ! Allocate arrays that are conditional on physics choices
     if (Model%imp_physics == Model%imp_physics_gfdl) then
-       allocate (Interstitial%graupel0   (IM))
-       allocate (Interstitial%ice0       (IM))
-       allocate (Interstitial%rain0      (IM))
-       allocate (Interstitial%snow0      (IM))
+       allocate (Interstitial%graupelmp  (IM))
+       allocate (Interstitial%icemp      (IM))
+       allocate (Interstitial%rainmp     (IM))
+       allocate (Interstitial%snowmp     (IM))
     end if
     ! Set components that do not change
     Interstitial%h2o_coeff    = h2o_coeff
@@ -3713,6 +3715,7 @@ module GFS_typedefs
     Interstitial%ktop         = 1
     Interstitial%oa4          = clear_val
     Interstitial%oc           = clear_val
+    Interstitial%prcpmp       = clear_val
     Interstitial%qss          = clear_val
     Interstitial%raincd       = clear_val
     Interstitial%raincs       = clear_val
@@ -3755,12 +3758,12 @@ module GFS_typedefs
     Interstitial%xmu          = clear_val
     Interstitial%z01d         = clear_val
     Interstitial%zt1d         = clear_val
-    ! Reset fields that are conditional on certain flags
+    ! Reset fields that are conditional on physics choices
     if (Model%imp_physics == Model%imp_physics_gfdl) then
-       Interstitial%graupel0 = clear_val
-       Interstitial%ice0     = clear_val
-       Interstitial%rain0    = clear_val
-       Interstitial%snow0    = clear_val
+       Interstitial%graupelmp = clear_val
+       Interstitial%icemp     = clear_val
+       Interstitial%rainmp    = clear_val
+       Interstitial%snowmp    = clear_val
     end if
     !
   end subroutine interstitial_phys_reset
@@ -3879,6 +3882,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%olyr        ) = ', sum(Interstitial%olyr        )
     write (0,*) 'sum(Interstitial%plvl        ) = ', sum(Interstitial%plvl        )
     write (0,*) 'sum(Interstitial%plyr        ) = ', sum(Interstitial%plyr        )
+    write (0,*) 'sum(Interstitial%prcpmp      ) = ', sum(Interstitial%prcpmp      )
     write (0,*) 'sum(Interstitial%qlyr        ) = ', sum(Interstitial%qlyr        )
     write (0,*) 'sum(Interstitial%qss         ) = ', sum(Interstitial%qss         )
     write (0,*) 'Interstitial%raddt             = ', Interstitial%raddt
@@ -3934,13 +3938,13 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%xmu         ) = ', sum(Interstitial%xmu         )
     write (0,*) 'sum(Interstitial%z01d        ) = ', sum(Interstitial%z01d        )
     write (0,*) 'sum(Interstitial%zt1d        ) = ', sum(Interstitial%zt1d        )
-    ! Print arrays that are conditional on certain flags
+    ! Print arrays that are conditional on physics choices
     if (Model%imp_physics == Model%imp_physics_gfdl) then
        write (0,*) 'Interstitial_print: values specific to GFDL microphysics'
-       write (0,*) 'sum(Interstitial%graupel0 ) = ', sum(Interstitial%graupel0    )
-       write (0,*) 'sum(Interstitial%ice0     ) = ', sum(Interstitial%ice0        )
-       write (0,*) 'sum(Interstitial%rain0    ) = ', sum(Interstitial%rain0       )
-       write (0,*) 'sum(Interstitial%snow0    ) = ', sum(Interstitial%snow0       )
+       write (0,*) 'sum(Interstitial%graupelmp) = ', sum(Interstitial%graupelmp   )
+       write (0,*) 'sum(Interstitial%icemp    ) = ', sum(Interstitial%icemp       )
+       write (0,*) 'sum(Interstitial%rainmp   ) = ', sum(Interstitial%rainmp      )
+       write (0,*) 'sum(Interstitial%snowmp   ) = ', sum(Interstitial%snowmp      )
     end if
     write (0,*) 'Interstitial_print: end'
     !

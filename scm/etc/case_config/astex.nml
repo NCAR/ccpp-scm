@@ -24,8 +24,8 @@ hour = 0,
 $end
 
 $physics_config
-physics_suite = 'suite_GFS_operational_2017_scm',
-physics_suite_dir = '../../ccpp-framework/examples/',
+physics_suite = 'suite_SCM_GFS_2017_updated',
+physics_suite_dir = '../../ccpp-framework/suites/',
 physics_nml = '../etc/case_config/input.nml',
 column_area = 3.7E5,
 $end
