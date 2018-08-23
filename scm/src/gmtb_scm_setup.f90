@@ -269,7 +269,8 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%gnx, Init_parm%gny,                 &
                    Init_parm%dt_dycore, Init_parm%dt_phys,       &
                    Init_parm%bdat, Init_parm%cdat,               &
-                   Init_parm%tracer_names, Init_parm%ak,         &
+                   Init_parm%tracer_names,                       &
+                   Init_parm%input_nml_file, Init_parm%ak,       &
                    Init_parm%bk, Init_parm%blksz)
 
   ! DH* TODO: clean up this part, the allocation and assignment

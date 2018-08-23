@@ -56,6 +56,10 @@ module gmtb_scm_type_defs
     integer                           :: ozone_index  !< index for ozone in the tracer array
     integer                           :: cloud_water_index  !< index for cloud water in the tracer array
     integer                           :: cloud_ice_index  !< index for ice cloud water in the tracer array
+    integer                           :: rain_index  !< index for rain water in the tracer array
+    integer                           :: snow_index   !< index for snow water in the tracer array
+    integer                           :: graupel_index    !< index for graupel water in the tracer array
+    integer                           :: cloud_amount_index   !< index for cloud amount in the tracer array
     integer                           :: init_year, init_month, init_day, init_hour
     character(len=32), allocatable    :: tracer_names(:) !< name of physics suite (must be "GFS_operational" for prototype)
     integer, allocatable              :: blksz(:)
@@ -336,7 +340,7 @@ module gmtb_scm_type_defs
 !! | physics%Interstitial(i)%prcpmp                           | lwe_thickness_of_explicit_precipitation_amount                                                    | explicit precipitation (rain, ice, snow, graupel, ...) on physics timestep          | m             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%qss                              | surface_specific_humidity                                                                         | surface air saturation specific humidity                                            | kg kg-1       |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%raddt                            | time_step_for_radiation                                                                           | radiation time step                                                                 | s             |    0 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%rainmp                           | lwe_thickness_of_stratiform_precipitation_amount                                                  | explicit rain on physics timestep                                                   | m             |    1 | real                  | kind_phys | none   | F        |
+!! | physics%Interstitial(i)%rainmp                           | lwe_thickness_of_explicit_rain_amount                                                             | explicit rain on physics timestep                                                   | m             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%raincd                           | lwe_thickness_of_deep_convective_precipitation_amount                                             | deep convective rainfall amount on physics timestep                                 | m             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%raincs                           | lwe_thickness_of_shallow_convective_precipitation_amount                                          | shallow convective rainfall amount on physics timestep                              | m             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%rainmcadj                        | lwe_thickness_of_moist_convective_adj_precipitation_amount                                        | adjusted moist convective rainfall amount on physics timestep                       | m             |    1 | real                  | kind_phys | none   | F        |
@@ -348,9 +352,9 @@ module gmtb_scm_type_defs
 !! | physics%Interstitial(i)%rhcpbl                           | critical_relative_humidity_at_PBL_top                                                             | critical relative humidity at the PBL top                                           | frac          |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%rhctop                           | critical_relative_humidity_at_top_of_atmosphere                                                   | critical relative humidity at the top of atmosphere                                 | frac          |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%runoff                           | surface_runoff_flux                                                                               | surface runoff flux                                                                 | g m-2 s-1     |    1 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%save_q(:,:,scm_state%cloud_water_index) | cloud_liquid_water_mixing_ratio_save                                                              | cloud liquid water mixing ratio before entering a physics scheme                    | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%save_q(:,:,scm_state%cloud_ice_index)   | cloud_ice_water_mixing_ratio_save                                                                 | cloud ice water mixing ratio before entering a physics scheme                       | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%save_q(:,:,scm_state%water_vapor_index) | water_vapor_specific_humidity_save                                                                | water vapor specific humidity before entering a physics scheme                      | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Interstitial(i)%save_q(:,:,scm_state%cloud_water_index) | cloud_liquid_water_mixing_ratio_save                                                       | cloud liquid water mixing ratio before entering a physics scheme                    | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Interstitial(i)%save_q(:,:,scm_state%cloud_ice_index)   | cloud_ice_water_mixing_ratio_save                                                          | cloud ice water mixing ratio before entering a physics scheme                       | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Interstitial(i)%save_q(:,:,scm_state%water_vapor_index) | water_vapor_specific_humidity_save                                                         | water vapor specific humidity before entering a physics scheme                      | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%save_q                           | tracer_concentration_save                                                                         | tracer concentration before entering a physics scheme                               | kg kg-1       |    3 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%save_t                           | air_temperature_save                                                                              | air temperature before entering a physics scheme                                    | K             |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%save_u                           | x_wind_save                                                                                       | x-wind before entering a physics scheme                                             | m s-1         |    2 | real                  | kind_phys | none   | F        |
@@ -419,10 +423,10 @@ module gmtb_scm_type_defs
 !! | physics%Statein(i)%qgrs(:,:,scm_state%cloud_water_index) | cloud_condensed_water_mixing_ratio                                                                | moist (dry+vapor, no condensates) mixing ratio of cloud water (condensate)          | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,1,scm_state%cloud_water_index) | cloud_condensed_water_mixing_ratio_at_lowest_model_layer                                          | moist (dry+vapor, no condensates) mixing ratio of cloud water at lowest model layer | kg kg-1       |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,scm_state%cloud_ice_index)   | ice_water_mixing_ratio                                                                            | moist (dry+vapor, no condensates) mixing ratio of ice water                         | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntrw)       | rain_water_mixing_ratio                                                                           | moist (dry+vapor, no condensates) mixing ratio of rain water                        | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntsw)       | snow_water_mixing_ratio                                                                           | moist (dry+vapor, no condensates) mixing ratio of snow water                        | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntgl)       | graupel_mixing_ratio                                                                              | moist (dry+vapor, no condensates) mixing ratio of graupel                           | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntoz)       | ozone_mixing_ratio                                                                                | ozone mixing ratio                                                                  | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Statein(i)%qgrs(:,:,scm_state%rain_index)        | rain_water_mixing_ratio                                                                           | moist (dry+vapor, no condensates) mixing ratio of rain water                        | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Statein(i)%qgrs(:,:,scm_state%snow_index)        | snow_water_mixing_ratio                                                                           | moist (dry+vapor, no condensates) mixing ratio of snow water                        | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Statein(i)%qgrs(:,:,scm_state%graupel_index)     | graupel_mixing_ratio                                                                              | moist (dry+vapor, no condensates) mixing ratio of graupel                           | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Statein(i)%qgrs(:,:,scm_state%ozone_index)       | ozone_mixing_ratio                                                                                | ozone mixing ratio                                                                  | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntwa)       | water_friendly_aerosol_number_concentration                                                       | number concentration of water-friendly aerosols                                     | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntia)       | ice_friendly_aerosol_number_concentration                                                         | number concentration of ice-friendly aerosols                                       | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntlnc)      | cloud_droplet_number_concentration                                                                | number concentration of cloud droplets (liquid)                                     | kg-1          |    2 | real                  | kind_phys | none   | F        |
@@ -442,10 +446,16 @@ module gmtb_scm_type_defs
 !! | physics%Stateout(i)%gq0(:,:,scm_state%cloud_water_index) | cloud_condensed_water_mixing_ratio_updated_by_physics                                             | moist cloud condensed water mixing ratio updated by physics                         | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%ozone_index)       | ozone_concentration_updated_by_physics                                                            | ozone concentration updated by physics                                              | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%cloud_ice_index)   | ice_water_mixing_ratio_updated_by_physics                                                         | moist (dry+vapor, no condensates) mixing ratio of ice water updated by physics      | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%rain_index)        | rain_water_mixing_ratio_updated_by_physics                                                        | moist (dry+vapor, no condensates) mixing ratio of rain water updated by physics     | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%snow_index)        | snow_water_mixing_ratio_updated_by_physics                                                        | moist (dry+vapor, no condensates) mixing ratio of snow water updated by physics     | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%graupel_index)     | graupel_mixing_ratio_updated_by_physics                                                           | moist (dry+vapor, no condensates) mixing ratio of graupel updated by physics        | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%cloud_amount_index)| cloud_fraction_updated_by_physics                                                                 | cloud fraction updated by physics                                                   | frac          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%me                                      | mpi_rank                                                                                          | current MPI-rank                                                                    | index         |    0 | integer               |           | none   | F        |
-!! | physics%Model(i)%master                                  |                                                                                                   | master MPI-rank                                                                     | index         |    0 | integer               |           | none   | F        |
+!! | physics%Model(i)%master                                  | mpi_root                                                                                          | master MPI-rank                                                                     | index         |    0 | integer               |           | none   | F        |
 !! | physics%Model(i)%nlunit                                  | iounit_namelist                                                                                   | fortran unit number for file opens                                                  | none          |    0 | integer               |           | none   | F        |
-!! | physics%Model(i)%fn_nml                                  |                                                                                                   | namelist filename                                                                   | none          |    0 | charater              |           | none   | F        |
+!! | physics%Model(i)%logunit                                 | iounit_log                                                                                        | fortran unit number for logfile                                                     | none          |    0 | integer               |           | none   | F        |
+!! | physics%Model(i)%fn_nml                                  | namelist_filename                                                                                 | namelist filename                                                                   | none          |    0 | character             | len=64    | none   | F        |
+!! | physics%Model(i)%input_nml_file                          | namelist_filename_for_internal_file_reads                                                         | namelist filename for internal file reads                                           | none          |    1 | character             | len=256   | none   | F        |
 !! | physics%Model(i)%fhzero                                  |                                                                                                   | seconds between clearing of diagnostic buckets                                      | s             |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%ldiag3d                                 | flag_diagnostics_3D                                                                               | flag for 3d diagnostic fields                                                       | flag          |    0 | logical               |           | none   | F        |
 !! | physics%Model(i)%lssav                                   | flag_diagnostics                                                                                  | logical flag for storing diagnostics                                                | flag          |    0 | logical               |           | none   | F        |
@@ -985,6 +995,8 @@ module gmtb_scm_type_defs
 !! | physics%h2o_pres                                         | natural_log_of_h2o_forcing_data_pressure_levels_from_host                                         | natural logarithm of the pressure levels of the h2o forcing data                    | Pa            |    1 | real                  | kind_phys | none   | F        |
 !! | physics%h2o_time                                         | time_levels_in_h2o_forcing_data_from_host                                                         | time values of the h2o forcing data coming from host                                | day           |    1 | real                  | kind_phys | none   | F        |
 !! | physics%h2o_forcing_in                                   | h2o_forcing_from_host                                                                             | h2o forcing data from host                                                          | various       |    4 | real                  | kind_phys | none   | F        |
+!! | physics%hydrostatic                                      | flag_for_hydrostatic_solver                                                                       | flag for use the hydrostatic or nonhydrostatic solver                               | flag          |    0 | logical               |           | none   | F        |
+!! | physics%phys_hydrostatic                                 | flag_for_hydrostatic_heating_from_physics                                                         | flag for use of hydrostatic heating in physics                                      | flag          |    0 | logical               |           | none   | F        |
 !!
 #endif
   type physics_type
@@ -1018,6 +1030,10 @@ module gmtb_scm_type_defs
     real(kind=kind_phys), allocatable :: h2o_lat(:), h2o_pres(:), h2o_time(:)
     real(kind=kind_phys), allocatable :: h2o_forcing_in(:,:,:,:)
 
+    ! needed for GFDL microphysics
+    logical                             :: hydrostatic
+    logical                             :: phys_hydrostatic
+
     contains
       procedure :: create => physics_create
       procedure :: associate => physics_associate
@@ -1049,16 +1065,24 @@ module gmtb_scm_type_defs
     scm_state%n_cols = n_columns
     scm_state%n_timesteps = int_zero
     scm_state%n_time_levels = n_time_levels
-    scm_state%n_tracers = 4
+    scm_state%n_tracers = 8
     allocate(scm_state%tracer_names(scm_state%n_tracers))
     scm_state%water_vapor_index = 1
     scm_state%ozone_index = 2
     scm_state%cloud_water_index = 3
     scm_state%cloud_ice_index = 4
+    scm_state%rain_index = 5
+    scm_state%snow_index = 6
+    scm_state%graupel_index = 7
+    scm_state%cloud_amount_index = 8
     scm_state%tracer_names(1) = 'vap_wat'
     scm_state%tracer_names(2) = 'o3mr'
     scm_state%tracer_names(3) = 'liq_wat'
     scm_state%tracer_names(4) = 'ice_wat'
+    scm_state%tracer_names(5) = 'rainwat'
+    scm_state%tracer_names(6) = 'snowwat'
+    scm_state%tracer_names(7) = 'graupel'
+    scm_state%tracer_names(8) = 'cld_amt'
     scm_state%n_itt_swrad = int_zero
     scm_state%n_itt_lwrad = int_zero
     scm_state%n_itt_out = int_zero
@@ -1303,6 +1327,10 @@ module gmtb_scm_type_defs
     physics%h2o_pres = log(pres)
     physics%h2o_time = (/12.0, 13.0, 14.0/)
     physics%h2o_forcing_in = real_zero
+
+    !needed for GFDL microphysics
+    physics%hydrostatic = .false.
+    physics%phys_hydrostatic = .true.
 
   end subroutine physics_create
 
