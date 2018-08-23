@@ -1113,9 +1113,7 @@ module GFS_typedefs
     real (kind=kind_phys)               :: rhctop                      !<
     real (kind=kind_phys), pointer      :: rhofr(:)         => null()  !<
     real (kind=kind_phys), pointer      :: runoff(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: save_qc(:,:)     => null()  !<
-    real (kind=kind_phys), pointer      :: save_qi(:,:)     => null()  !<
-    real (kind=kind_phys), pointer      :: save_qv(:,:)     => null()  !<
+    real (kind=kind_phys), pointer      :: save_q(:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: save_t(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: save_u(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: save_v(:,:)      => null()  !<
@@ -3442,9 +3440,7 @@ module GFS_typedefs
     allocate (Interstitial%rb         (IM))
     allocate (Interstitial%rhc        (IM,Model%levs))
     allocate (Interstitial%runoff     (IM))
-    allocate (Interstitial%save_qc    (IM,Model%levs))
-    allocate (Interstitial%save_qi    (IM,Model%levs))
-    allocate (Interstitial%save_qv    (IM,Model%levs))
+    allocate (Interstitial%save_q     (IM,Model%levs,Model%ntrac))
     allocate (Interstitial%save_t     (IM,Model%levs))
     allocate (Interstitial%save_u     (IM,Model%levs))
     allocate (Interstitial%save_v     (IM,Model%levs))
@@ -3729,9 +3725,7 @@ module GFS_typedefs
     Interstitial%rhcpbl       = clear_val
     Interstitial%rhctop       = clear_val
     Interstitial%runoff       = clear_val
-    Interstitial%save_qc      = clear_val
-    Interstitial%save_qi      = clear_val
-    Interstitial%save_qv      = clear_val
+    Interstitial%save_q       = clear_val
     Interstitial%save_t       = clear_val
     Interstitial%save_u       = clear_val
     Interstitial%save_v       = clear_val
@@ -3899,9 +3893,7 @@ module GFS_typedefs
     write (0,*) 'Interstitial%rhcpbl            = ', Interstitial%rhcpbl
     write (0,*) 'Interstitial%rhctop            = ', Interstitial%rhctop
     write (0,*) 'sum(Interstitial%runoff      ) = ', sum(Interstitial%runoff      )
-    write (0,*) 'sum(Interstitial%save_qc     ) = ', sum(Interstitial%save_qc     )
-    write (0,*) 'sum(Interstitial%save_qi     ) = ', sum(Interstitial%save_qi     )
-    write (0,*) 'sum(Interstitial%save_qv     ) = ', sum(Interstitial%save_qv     )
+    write (0,*) 'sum(Interstitial%save_q      ) = ', sum(Interstitial%save_q      )
     write (0,*) 'sum(Interstitial%save_t      ) = ', sum(Interstitial%save_t      )
     write (0,*) 'sum(Interstitial%save_u      ) = ', sum(Interstitial%save_u      )
     write (0,*) 'sum(Interstitial%save_v      ) = ', sum(Interstitial%save_v      )
