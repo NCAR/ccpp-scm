@@ -125,7 +125,7 @@
 &gfs_physics_nml
        fhzero         = 6.
        ldiag3d        = .true.
-       fhcyc          = 0.
+       fhcyc          = 24.
        nst_anl        = .true.
        use_ufo        = .true.
        pre_rad        = .false.
@@ -150,7 +150,7 @@
        dspheat        = .true.
        hybedmf        = .true.
        random_clds    = .true.
-       trans_trac     = .true.
+       trans_trac     = .false.
        cnvcld         = .true.
        imfshalcnv     = 2
        imfdeepcnv     = 2

@@ -3551,7 +3551,7 @@ module GFS_typedefs
     elseif (Model%imp_physics == Model%imp_physics_wsm6) then
       Interstitial%nvdiff = Model%ntrac -3
       Interstitial%nncl = 5
-    elseif (Model%ntclamt > 0) then             ! for GFDL MP don't diffuse cloud amount
+    elseif (Model%ntclamt > 0 .and. Model%imp_physics == Model%imp_physics_gfdl) then             ! for GFDL MP don't diffuse cloud amount
       Interstitial%nvdiff = Model%ntrac - 1
     endif
 
