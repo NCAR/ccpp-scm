@@ -93,6 +93,8 @@ module GFS_typedefs
     character(len=32), pointer :: tracer_names(:) !< tracers names to dereference tracer id
                                                   !< based on name location in array
     character(len=65) :: fn_nml                   !< namelist filename
+    character(len=256), pointer :: input_nml_file(:) !< character string containing full namelist
+                                                     !< for use with internal file reads
   end type GFS_init_type
 
 
@@ -378,6 +380,9 @@ module GFS_typedefs
     integer              :: thermodyn_id    !< valid for GFS only for get_prs/phi
     integer              :: sfcpress_id     !< valid for GFS only for get_prs/phi
     logical              :: gen_coord_hybrid!< for Henry's gen coord
+    integer              :: logunit
+    character(len=256), pointer :: input_nml_file(:) !< character string containing full namelist
+                                                   !< for use with internal file reads
 
     !--- set some grid extent parameters
     integer              :: isc             !< starting i-index for this MPI-domain
@@ -1678,7 +1683,7 @@ module GFS_typedefs
                                  logunit, isc, jsc, nx, ny, levs,   &
                                  cnx, cny, gnx, gny, dt_dycore,     &
                                  dt_phys, idat, jdat, tracer_names, &
-                                 ak, bk, blksz)
+                                 input_nml_file, ak, bk, blksz)
 
     !--- modules
     use physcons,         only: con_rerth, con_pi
@@ -1710,9 +1715,11 @@ module GFS_typedefs
     integer,                intent(in) :: idat(8)
     integer,                intent(in) :: jdat(8)
     character(len=32),      intent(in) :: tracer_names(:)
+    character(len=256),     intent(in), pointer :: input_nml_file(:)
     real(kind=kind_phys), dimension(:), intent(in) :: ak
     real(kind=kind_phys), dimension(:), intent(in) :: bk
     integer,                intent(in) :: blksz(:)
+
     !--- local variables
     integer :: n
     integer :: ios
@@ -1993,6 +2000,7 @@ module GFS_typedefs
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, do_deep, jcap,&
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
                                dlqf, rbcr, shoc_parm,                                       &
+                               do_sppt, do_shum, do_skeb, do_sfcperts,                      &
                           !--- Rayleigh friction
                                prslrd0, ral_ts,                                             &
                           !--- mass flux deep convection
@@ -2023,6 +2031,10 @@ module GFS_typedefs
 
 
     !--- read in the namelist
+#ifdef INTERNAL_FILE_NML
+    Model%input_nml_file => input_nml_file
+    read(Model%input_nml_file, nml=gfs_physics_nml)
+#else
     inquire (file=trim(fn_nml), exist=exists)
     if (.not. exists) then
       write(6,*) 'GFS_namelist_read:: namelist file: ',trim(fn_nml),' does not exist'
@@ -2033,6 +2045,7 @@ module GFS_typedefs
     rewind(nlunit)
     read (nlunit, nml=gfs_physics_nml)
     close (nlunit)
+#endif
     !--- write version number and namelist to log file ---
     if (me == master) then
       write(logunit, '(a80)') '================================================================================'
@@ -2044,6 +2057,7 @@ module GFS_typedefs
     Model%me               = me
     Model%master           = master
     Model%nlunit           = nlunit
+    Model%logunit          = logunit
     Model%fn_nml           = fn_nml
     Model%fhzero           = fhzero
     Model%ldiag3d          = ldiag3d
@@ -3537,7 +3551,7 @@ module GFS_typedefs
     elseif (Model%imp_physics == Model%imp_physics_wsm6) then
       Interstitial%nvdiff = Model%ntrac -3
       Interstitial%nncl = 5
-    elseif (Model%ntclamt > 0) then             ! for GFDL MP don't diffuse cloud amount
+    elseif (Model%ntclamt > 0 .and. Model%imp_physics == Model%imp_physics_gfdl) then             ! for GFDL MP don't diffuse cloud amount
       Interstitial%nvdiff = Model%ntrac - 1
     endif
 

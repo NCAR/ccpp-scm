@@ -56,7 +56,7 @@ ADD_DEFINITIONS(-DSCM)
 #------------------------------------------------------------------------------
 # Add model-specific flags for C/C++/Fortran preprocessor
 ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
-ADD_DEFINITIONS(-DINTERNAL_FILE_NML)
+#ADD_DEFINITIONS(-DINTERNAL_FILE_NML)
 
 #------------------------------------------------------------------------------
 # Detect OS and set preprocessor flags
@@ -153,4 +153,3 @@ TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${NETCDF_LIBRARIES})
 set_target_properties(gmtb_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
-
