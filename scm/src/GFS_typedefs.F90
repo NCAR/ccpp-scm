@@ -369,6 +369,8 @@ module GFS_typedefs
 
     integer              :: me              !< MPI rank designator
     integer              :: master          !< MPI rank of master atmosphere processor
+    integer              :: communicator    !< MPI communicator
+    integer              :: ntasks          !< MPI size in communicator
     integer              :: nlunit          !< unit for namelist
     character(len=64)    :: fn_nml          !< namelist filename for surface data cycling
     real(kind=kind_phys) :: fhzero          !< seconds between clearing of diagnostic buckets
@@ -708,6 +710,11 @@ module GFS_typedefs
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     real(kind=kind_phys)          :: sec    !< seconds since model initialization
     real(kind=kind_phys), pointer :: si(:)  !< vertical sigma coordinate for model initialization
+
+!--- IAU
+    real(kind=kind_phys) :: iau_delthrs     ! iau time interval (to scale increments) in hours
+    character(len=240)   :: iau_inc_files(7)! list of increment files
+    real(kind=kind_phys) :: iaufhrs(7)      ! forecast hours associated with increment files
 
     ! From physcons.F90, updated/set in control_initialize
     real(kind=kind_phys) :: dxinv           ! inverse scaling factor for critical relative humidity, replaces dxinv in physcons.F90
@@ -1111,7 +1118,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: raincs(:)        => null()  !<
     real (kind=kind_phys), pointer      :: rainmcadj(:)     => null()  !<
     real (kind=kind_phys), pointer      :: rainp(:,:)       => null()  !<
-    real (kind=kind_phys), pointer      :: rainst(:)        => null()  !<
     real (kind=kind_phys), pointer      :: rb(:)            => null()  !<
     real (kind=kind_phys), pointer      :: rhc(:,:)         => null()  !<
     real (kind=kind_phys)               :: rhcbot                      !<
@@ -1683,7 +1689,8 @@ module GFS_typedefs
                                  logunit, isc, jsc, nx, ny, levs,   &
                                  cnx, cny, gnx, gny, dt_dycore,     &
                                  dt_phys, idat, jdat, tracer_names, &
-                                 input_nml_file, ak, bk, blksz)
+                                 input_nml_file, ak, bk, blksz,     &
+                                 communicator, ntasks)
 
     !--- modules
     use physcons,         only: con_rerth, con_pi
@@ -1719,6 +1726,8 @@ module GFS_typedefs
     real(kind=kind_phys), dimension(:), intent(in) :: ak
     real(kind=kind_phys), dimension(:), intent(in) :: bk
     integer,                intent(in) :: blksz(:)
+    integer,                intent(in) :: communicator
+    integer,                intent(in) :: ntasks
 
     !--- local variables
     integer :: n
@@ -1950,6 +1959,11 @@ module GFS_typedefs
     real(kind=kind_phys) :: xkzminv        = 0.3             !< diffusivity in inversion layers
     real(kind=kind_phys) :: moninq_fac     = 1.0             !< turbulence diffusion coefficient factor
 
+!--- IAU options
+    real(kind=kind_phys)  :: iau_delthrs = 6                 ! iau time interval (to scale increments)
+    character(len=240)    :: iau_inc_files(7)=''             ! list of increment files
+    real(kind=kind_phys)  :: iaufhrs(7)=-1                   ! forecast hours associated with increment files
+
     !--- debug flag
     logical              :: debug          = .false.
     logical              :: pre_rad        = .false.         !< flag for testing purpose
@@ -2012,6 +2026,8 @@ module GFS_typedefs
                           !--- near surface temperature model
                                nst_anl, lsea, xkzm_m, xkzm_h, xkzm_s, nstf_name,            &
                                xkzminv, moninq_fac,                                         &
+                          !--- IAU
+                               iau_delthrs,iaufhrs,iau_inc_files,                           &
                           !--- debug options
                                debug, pre_rad,                                              &
                           !--- parameter range for critical relative humidity
@@ -2056,6 +2072,8 @@ module GFS_typedefs
     !--- MPI parameters
     Model%me               = me
     Model%master           = master
+    Model%communicator     = communicator
+    Model%ntasks           = ntasks
     Model%nlunit           = nlunit
     Model%logunit          = logunit
     Model%fn_nml           = fn_nml
@@ -2278,6 +2296,12 @@ module GFS_typedefs
     Model%pertlai          = pertlai
     Model%pertalb          = pertalb
     Model%pertvegf         = pertvegf
+
+! IAU flags
+!--- iau parameters
+    Model%iaufhrs         = iaufhrs
+    Model%iau_inc_files   = iau_inc_files
+    Model%iau_delthrs     = iau_delthrs
 
     !--- tracer handling
     Model%ntrac            = size(tracer_names)
@@ -2639,6 +2663,7 @@ module GFS_typedefs
       print *, 'basic control parameters'
       print *, ' me                : ', Model%me
       print *, ' master            : ', Model%master
+      print *, ' communicator      : ', Model%communicator
       print *, ' nlunit            : ', Model%nlunit
       print *, ' fn_nml            : ', trim(Model%fn_nml)
       print *, ' fhzero            : ', Model%fhzero
@@ -3452,7 +3477,6 @@ module GFS_typedefs
     allocate (Interstitial%raincs     (IM))
     allocate (Interstitial%rainmcadj  (IM))
     allocate (Interstitial%rainp      (IM,Model%levs))
-    allocate (Interstitial%rainst     (IM))
     allocate (Interstitial%rb         (IM))
     allocate (Interstitial%rhc        (IM,Model%levs))
     allocate (Interstitial%runoff     (IM))
@@ -3735,7 +3759,6 @@ module GFS_typedefs
     Interstitial%raincs       = clear_val
     Interstitial%rainmcadj    = clear_val
     Interstitial%rainp        = clear_val
-    Interstitial%rainst       = clear_val
     Interstitial%rb           = clear_val
     Interstitial%rhc          = clear_val
     Interstitial%rhcbot       = clear_val
@@ -3904,7 +3927,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%raincs      ) = ', sum(Interstitial%raincs      )
     write (0,*) 'sum(Interstitial%rainmcadj   ) = ', sum(Interstitial%rainmcadj   )
     write (0,*) 'sum(Interstitial%rainp       ) = ', sum(Interstitial%rainp       )
-    write (0,*) 'sum(Interstitial%rainst      ) = ', sum(Interstitial%rainst      )
     write (0,*) 'sum(Interstitial%rb          ) = ', sum(Interstitial%rb          )
     write (0,*) 'sum(Interstitial%rhc         ) = ', sum(Interstitial%rhc         )
     write (0,*) 'Interstitial%rhcbot            = ', Interstitial%rhcbot

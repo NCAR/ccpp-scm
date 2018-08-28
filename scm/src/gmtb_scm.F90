@@ -131,7 +131,7 @@ subroutine gmtb_scm_main_sub()
       call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), physics%Init_parm(i),      &
+                           physics%Diag(i), physics%Interstitial(i), 1, 1, physics%Init_parm(i),&
                            physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_times, &
                            physics%n_ozone_coefficients, physics%ozone_lat, physics%ozone_pres, &
                            physics%ozone_time, physics%ozone_forcing_in,                        &
