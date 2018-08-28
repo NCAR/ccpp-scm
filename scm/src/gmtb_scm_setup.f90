@@ -217,8 +217,9 @@ end subroutine patch_in_ref
 !--------------
 subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                   &
                             Coupling, Grid, Tbd, Cldprop, Radtend, Diag,         &
-                            Interstitial, Init_parm, n_ozone_lats,               &
-                            n_ozone_layers, n_ozone_times, n_ozone_coefficients, &
+                            Interstitial, communicator, ntasks, Init_parm,       &
+                            n_ozone_lats, n_ozone_layers, n_ozone_times,         &
+                            n_ozone_coefficients,                                &
                             ozone_lat_in, ozone_pres_in, ozone_time_in,          &
                             ozone_forcing_in,                                    &
                             n_h2o_lats, n_h2o_layers, n_h2o_times,               &
@@ -254,6 +255,9 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_interstitial_type), intent(inout) :: Interstitial
   type(GFS_init_type),         intent(in)    :: Init_parm
 
+  integer,                  intent(in)    :: communicator
+  integer,                  intent(in)    :: ntasks
+
   integer, intent(in) :: n_ozone_lats, n_ozone_layers, n_ozone_coefficients, n_ozone_times
   real(kind=kind_phys), intent(in) :: ozone_lat_in(:), ozone_pres_in(:), ozone_time_in(:), ozone_forcing_in(:,:,:,:)
 
@@ -271,7 +275,8 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%bdat, Init_parm%cdat,               &
                    Init_parm%tracer_names,                       &
                    Init_parm%input_nml_file, Init_parm%ak,       &
-                   Init_parm%bk, Init_parm%blksz)
+                   Init_parm%bk, Init_parm%blksz, communicator,  &
+                   ntasks)
 
   ! DH* TODO: clean up this part, the allocation and assignment
   ! of ozone and h2o data does not belong here !*DH
