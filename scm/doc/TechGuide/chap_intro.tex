@@ -1,7 +1,7 @@
 \chapter{Introduction}
 \label{chapter: introduction}
 
-A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. The Global Model Test Bed (GMTB) SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. The initial physics schemes included in the CCPP are the operational NOAA Global Forecast System (GFS) suite components that were implemented operationally in July 2017. The number of schemes that have met CCPP-compliance criteria is expected to grow significantly after the initial release. This expansion is expected to include many parameterizations to be considered for eventual operational implementation and their use within this model can provide evidence of performance improvement.
+A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. The Global Model Test Bed (GMTB) SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. The physics schemes included in the CCPP are the operational NOAA Global Forecast System (GFS) suite components that were implemented operationally in July 2017 and updates to the same suite as of August 2018, including the GFDL microphysics scheme. The number of schemes that have met CCPP-compliance criteria is expected to grow significantly in the near future. This expansion is expected to include many parameterizations to be considered for eventual operational implementation and their use within this model can provide evidence of performance improvement.
 
 This document serves as the both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
 
@@ -9,13 +9,17 @@ Please refer to the release web page for further documentation and user notes:\\
 
 \section{Release Notes}
 
-The Bundle CCPP-SCM v1.0 contains the CCPP v1.0 and the GMTB SCM v2.0.
+The Bundle CCPP-SCM v2.0 contains the CCPP v2.0 and the GMTB SCM v2.1.
 
-Physics parameterizations within v1.0 of CCPP are CCPP-compliant members of the operational 2017 GFS physics suite and include the following:
+Physics parameterizations within v2.0 of CCPP are CCPP-compliant members of the operational 2017 GFS physics and updates as of August 2018, including the GFDL microphysics scheme. The following schemes are included:
 \begin{itemize}
 	\item GFS RRTMG shortwave and longwave radiation
 	\item GFS ozone
+	\item Choice of:
+	\begin{itemize}
 	\item GFS Zhao-Carr microphysics
+	\item GFDL microphysics
+	\end{itemize}
 	\item GFS scale-aware mass-flux deep convection
 	\item GFS scale-aware mass-flux shallow convection
 	\item GFS hybrid eddy diffusivity-mass-flux PBL and free atmosphere turbulence
@@ -35,20 +39,33 @@ The CCPP framework contains the following
 \item Suite Definition File that allows choosing parameterizations at runtime
 \end{itemize}
 
-GMTB SCM v2.0 is a major update to v1.3. The fundamental difference is how it calls physics since v2.0 uses the CCPP framework. It includes the following:
+GMTB SCM v2.1 is a minor update to v2.0. The fundamental differences are related to updates in the CCPP physics schemes since CCPP v1.0, the addition of new field campaign-based cases, and the capability to specify surface fluxes. It includes the following:
 
 \begin{itemize}
 \item cmake build system to compile needed NCEP libraries, SCM, CCPP framework, and parameterizations
-\item Physics variable metadata as part of a host model cap to the CCPP
-\item Test case of the Tropical Warm Pool -- International Cloud Experiment (TWP-ICE)
+\item physics variable metadata as part of a host model cap to the CCPP
+\item the following test cases:
+\begin{itemize}
+\item Tropical Warm Pool -- International Cloud Experiment (TWP-ICE) maritime deep convection
+\item Atmospheric Radiation Measurement (ARM) Southern Great Plains (SGP) Summer 1997 continental deep convection
+\item Atlantic Stratocumulus Transition Experiment (ASTEX) maritime stratocumulus-to-cumulus transition
+\item Barbados Oceanographic and Meteorological EXperiment (BOMEX) maritime shallow convection
+\item LES ARM Symbiotic Simulation and Observation (LASSO) for May 18, 2016 (with capability to run all LASSO dates) continental shallow convection
+\end{itemize}
 \end{itemize}
 
 \subsection{Limitations}
 
-This release bundle has several known limitations:
+This release bundle has some known limitations:
 
 \begin{itemize}
-\item GMTB SCM v2.0 can only run one case. The other cases that had been working with v1.3 required specified surface fluxes, bypassing the surface schemes within the physics suite. This functionality will be restored in the next minor update, v2.1, which will include a new suite definition file that replaces the GFS surface schemes with a replacement scheme that ``backs out'' surface-related variables needed in PBL schemes from prescribed surface fluxes.
-\item The CCPP physics in this release only includes one scheme of each type, which makes it impossible to swap schemes within a suite. Additional schemes will be added soon to enable this functionality.
-\item The CCPP physics suite in this release contains several short ``interstitial'' schemes that mostly consist of short code sections that appeared in the antecedent GFS physics driver between calls to individual schemes. The existence of these schemes limits the portability in the current release and these will be consolidated in a subsequent release to achieve greater portability of schemes.
+\item The CCPP physics in this release includes one scheme of each type plus an additional microphysics scheme, so changing schemes is currently pretty limited. Additional schemes will be added soon to enable more of this type of functionality.
+\item The SCM cannot run over a land surface point using an LSM at this time due to the absence of necessary staged files that are used to initialize the LSM. Therefore, if the SCM is run over a land point (where sfc\_type = 1 is set in the case configuration file), prescribed surface fluxes must be used:
+\begin{itemize}
+\item surface sensible and latent heat fluxes must be provided in the case data file
+\item sfc\_flux\_spec must be set to true in the case configuration file
+\item the surface roughness length in cm must be set in the case configuration file
+\item the suite defintion file used (physics\_suite variable in the case configuration file) must have been modified to use prescribed surface fluxes rather than an LSM. An example is included in the development repository
+\end{itemize}
+If the SCM is told to use an LSM (sfc\_type = 1) without using prescribed surface fluxes as described above, the model will exit with a segmentation fault due to uninitialized variables. An update to use an LSM with the SCM will be forthcoming.
 \end{itemize}
