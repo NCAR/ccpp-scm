@@ -2063,7 +2063,7 @@ module GFS_typedefs
     close (nlunit)
 #endif
     !--- write version number and namelist to log file ---
-    if (me == master) then
+    if (me==master .and. logunit>=0) then
       write(logunit, '(a80)') '================================================================================'
       write(logunit, '(a64)') phys_version
       write(logunit, nml=gfs_physics_nml)
