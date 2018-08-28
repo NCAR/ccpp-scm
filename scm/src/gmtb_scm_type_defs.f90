@@ -14,6 +14,7 @@ module gmtb_scm_type_defs
   integer, parameter :: character_length = 80
   integer, parameter :: int_zero = 0
   integer, parameter :: int_one = 1
+  integer, parameter :: int_neg_one = -1
   real(kind=dp), parameter :: real_zero = 0.0
   real(kind=dp), parameter :: real_one = 1.0
 
@@ -1340,7 +1341,7 @@ module gmtb_scm_type_defs
       physics%Init_parm(i)%gnx = int_one
       physics%Init_parm(i)%gny = int_one
       physics%Init_parm(i)%nlunit = int_one
-      physics%Init_parm(i)%logunit= int_one
+      physics%Init_parm(i)%logunit= int_neg_one
       physics%Init_parm(i)%bdat(:) = zeroes_8(:)
       physics%Init_parm(i)%cdat(:) = zeroes_8(:)
       physics%Init_parm(i)%dt_dycore = kind_phys_zero
