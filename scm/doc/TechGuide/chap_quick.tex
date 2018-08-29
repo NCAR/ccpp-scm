@@ -10,9 +10,13 @@ The source code bundle for the CCPP and SCM is provided through github.com.  Thi
 \begin{enumerate}
     \item Download a compressed file or clone the source using
 \begin{lstlisting}[language=bash]
-git clone https://[username]@github.com/NCAR/gmtb-scm-release
+git clone https://[username]@github.com/NCAR/gmtb-scm-release gmtb-scm
 \end{lstlisting}
     and enter your github password when prompted.
+    \item Check out the desired release number using
+\begin{lstlisting}[language=bash]
+git checkout [v2.0]
+\end{lstlisting}
     \item Change directory into the project.
 \begin{lstlisting}[language=bash]
 cd gmtb-scm
@@ -34,8 +38,8 @@ The source code for the SCM and CCPP component is in the form of programs writte
 
 The basic requirements for building and running the CCPP and SCM bundle are listed below:
 \begin{itemize}
-    \item FORTRAN 90+ compiler (ifort v15+, gfortran v5.4+, pgf90 v17.9+)
-    \item C compiler (icc v15+, gcc v5.4+, pgcc v17.9+)
+    \item FORTRAN 90+ compiler (ifort v17+, gfortran v5.4+, pgf90 v17.9+)
+    \item C compiler (icc v17+, gcc v5.4+, pgcc v17.9+)
     \item cmake v2.8.11+
     \item netCDF v4.x (not v3.x) with HDF5, ZLIB and SZIP
     \item Python v2.x (not v3.x)
@@ -80,7 +84,6 @@ source etc/Theia_setup_pgi.csh
 source etc/Cheyenne_setup_gnu.csh
 source etc/Cheyenne_setup_intel.csh
 source etc/Cheyenne_setup_pgi.csh
-source etc/Cheyenne_setup_gnu.csh
 source etc/UBUNTU_setup.csh
 source etc/CENTOS_setup.csh
 source etc/MACOSX_setup.csh
@@ -93,7 +96,6 @@ For bourne/bash shells,
 . etc/Cheyenne_setup_gnu.sh
 . etc/Cheyenne_setup_intel.sh
 . etc/Cheyenne_setup_pgi.sh
-. etc/Cheyenne_setup_gnu.sh
 . etc/UBUNTU_setup.sh
 . etc/CENTOS_setup.sh
 . etc/MACOSX_setup.sh
@@ -107,7 +109,7 @@ mkdir bin && cd bin
     \item Invoke cmake on the source code to build.
 \begin{lstlisting}[language=bash]
 cmake ../src                          # without threading/OpenMP
-cmake -DOPENMP=1 ../src               # with threading/OpenMP
+cmake -DOPENMP=ON ../src               # with threading/OpenMP
 cmake -DCMAKE_BUILD_TYPE=Debug ../src # debug mode
 \end{lstlisting}
     \item If cmake cannot find \execout{libxml2} because it is installed in a non-standard location, add

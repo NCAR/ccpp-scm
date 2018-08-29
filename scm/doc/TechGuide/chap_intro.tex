@@ -48,9 +48,9 @@ GMTB SCM v2.1 is a minor update to v2.0. The fundamental differences are related
 \begin{itemize}
 \item Tropical Warm Pool -- International Cloud Experiment (TWP-ICE) maritime deep convection
 \item Atmospheric Radiation Measurement (ARM) Southern Great Plains (SGP) Summer 1997 continental deep convection
-\item Atlantic Stratocumulus Transition Experiment (ASTEX) maritime stratocumulus-to-cumulus transition
+\item Atlantic Stratocumulus Transition EXperiment (ASTEX) maritime stratocumulus-to-cumulus transition
 \item Barbados Oceanographic and Meteorological EXperiment (BOMEX) maritime shallow convection
-\item LES ARM Symbiotic Simulation and Observation (LASSO) for May 18, 2016 (with capability to run all LASSO dates) continental shallow convection
+\item LES ARM Symbiotic Simulation and Observation (LASSO) for May 18, 2016 (with capability to run all LASSO dates - see \ref{sec:lasso}) continental shallow convection
 \end{itemize}
 \end{itemize}
 
@@ -68,4 +68,5 @@ This release bundle has some known limitations:
 \item the suite defintion file used (physics\_suite variable in the case configuration file) must have been modified to use prescribed surface fluxes rather than an LSM. An example is included in the development repository
 \end{itemize}
 If the SCM is told to use an LSM (sfc\_type = 1) without using prescribed surface fluxes as described above, the model will exit with a segmentation fault due to uninitialized variables. An update to use an LSM with the SCM will be forthcoming.
+\item The SCM is limited to running as a single column in this release. Multiple (independent) columns will be supported in the future.
 \end{itemize}
