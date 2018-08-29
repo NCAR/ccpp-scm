@@ -76,8 +76,10 @@ cd scm
 \begin{lstlisting}[language=csh]
 source etc/Theia_setup_intel.csh
 source etc/Theia_setup_pgi.csh
+source etc/Theia_setup_gnu.csh
 source etc/Cheyenne_setup_intel.csh
 source etc/Cheyenne_setup_pgi.csh
+source etc/Cheyenne_setup_gnu.csh
 source etc/UBUNTU_setup.csh
 source etc/CENTOS_setup.csh
 source etc/MACOSX_setup.csh
@@ -86,8 +88,10 @@ For bourne/bash shells,
 \begin{lstlisting}[language=bash]
 . etc/Theia_setup_intel.sh
 . etc/Theia_setup_pgi.sh
+. etc/Theia_setup_gnu.sh
 . etc/Cheyenne_setup_intel.sh
 . etc/Cheyenne_setup_pgi.sh
+. etc/Cheyenne_setup_gnu.sh
 . etc/UBUNTU_setup.sh
 . etc/CENTOS_setup.sh
 . etc/MACOSX_setup.sh
@@ -115,18 +119,18 @@ make
 \end{lstlisting}
 \end{enumerate}
 
-The resulting executable may be found at \execout{./gmtb-scm}.
+The resulting executable may be found at \execout{./gmtb-scm}. (\execout{gmtb-scm/scm/bin/gmtb-scm})
 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
-\section{Run the SCM with the supplied case}
-The test case provided with this version of the SCM is TWP-ICE, the Tropical Warm Pool-International Cloud Experiment. The SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. A single command line argument is required, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For the provided case, that name is \execout{twpice}:
+\section{Run the SCM with a supplied case}
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. A single command line argument is required to run the model, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For a quick test that the model works, choose to run the  \execout{twpice} case:
 \begin{lstlisting}[language=bash]
 ./gmtb_scm twpice
 \end{lstlisting}
 A netCDF output file is generated in the location specified in the case
 configuration file. Any standard netCDF file viewing or analysis tools may be used to
-examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is located in:
+examine the output file (ncdump, ncview, NCL, etc).  For the supplied \execout{twpice.nml} case, it is located in:
 \begin{lstlisting}[language=bash]
 gmtb-scm/scm/bin/output_twpice/output.nc
 \end{lstlisting}

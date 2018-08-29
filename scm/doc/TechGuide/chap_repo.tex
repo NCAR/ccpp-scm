@@ -10,25 +10,24 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.2 ccpp-framework/.
 	.3 cmake/\DTcomment{custom cmake code for building ccpp-framework}.
 	.3 CMakeLists.txt\DTcomment{cmake configuration file for ccpp-framework}.
-	.3 doc/\DTcomment{doxygen configuration, output, and User's Guide}.
-	.3 examples/\DTcomment{contains suite definition files and XML schema definition files}.
+	.3 doc/\DTcomment{doxygen configuration, output, and Developer's Guide}.
 	.3 LICENSE.
 	.3 README.md.
-	.3 schemes/\DTcomment{contains schemes used for testing and obsolete scripts}.
+	.3 schemes/\DTcomment{contains schemes used for testing}.
 	.3 scripts/\DTcomment{contains ccpp\_prebuild and other python scripts for parsing metadata}.
 	.3 src/\DTcomment{contains CCPP framework code}.
+	.3 suites/\DTcomment{contains suite definition files and XML schema definition files}.
 	.2 ccpp-physics/\DTcomment{contains all physics schemes}.
+	.3 CCPP\_CAPS.cmake\DTcomment{auto-generated cmake section for physics caps}.
 	.3 CCPP\_CAPS.mk\DTcomment{auto-generated makefile section for physics caps}.
+	.3 CCPP\_schemes.cmake\DTcomment{auto-generated cmake section for physics schemes}.
 	.3 CCPP\_schemes.mk\DTcomment{auto-generated makefile section for physics schemes}.
 	.3 CMakeLists.txt\DTcomment{cmake configuration file for ccpp-physics}.
-	.3 GFS\_layer/\DTcomment{driving routines}.
-	.3 input.nml\DTcomment{namelist containing parameters for operational GFS physics}.
-	.3 IPD\_layer\DTcomment{routines associated with the cap for FV3}.
 	.3 LICENSE.
-	.3 makefile\DTcomment{makefile to compile ccpp-physics used with FV3}.
 	.3 pgifix.py.
 	.3 physics/\DTcomment{contains all CCPP physics and interstitial schemes}.
 	.4 docs/\DTcomment{contains CCPP physics doxygen documentation}.
+	.3 stochastic\_physics\DTcomment{contains all stochastic physics code - FV3 only for now}.
 	.3 README.md.
 	.2 external/.
 	.3 bacio\DTcomment{NCEP library bacio (needed for GFS physics)}.
@@ -47,21 +46,25 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.4 README\_MACOSX.txt.
 	.4 README\_UBUNTU.txt.
 	.4 README\_CENTOS.txt.
+	.5 TechGuide/\DTcomment{contains LaTeX for this User's Guide}.
 	.3 etc/\DTcomment{contains case configuration, machine setup scripts, and plotting scripts}.
-	.4 case\_config/\DTcomment{contains case configuration files}.
+	.4 case\_config/\DTcomment{contains case configuration files and physics namelist files}.
 	.4 CENTOS\_setup.csh\DTcomment{setup script for CentOS Linux for csh, tcsh}.
 	.4 CENTOS\_setup.sh\DTcomment{setup script for CentOS Linux for sh, bash}.
+	.4 Cheyenne\_setup\_gnu.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
+	.4 Cheyenne\_setup\_gnu.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
 	.4 Cheyenne\_setup\_intel.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
 	.4 Cheyenne\_setup\_intel.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
 	.4 Cheyenne\_setup\_pgi.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
 	.4 Cheyenne\_setup\_pgi.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
-	.4 gmtb\_scm\_ens.py\DTcomment{example script for running an SCM forcing ensemble}.
 	.4 gmtb\_scm\_run.py\DTcomment{example QSUB run script}.
 	.4 MACOSX\_setup.csh\DTcomment{setup script for Mac OS X for csh, tcsh}.
 	.4 MACOSX\_setup.sh\DTcomment{setup script for Mac OS X for sh, bash}.
 	.4 scripts/\DTcomment{python scripts for setting up cases and plotting}.
 	.5 f90nml.0.19/\DTcomment{f90nml python package}.
 	.5 plot\_configs/\DTcomment{plot configuration files}.
+	.4 Theia\_setup\_gnu.csh\DTcomment{setup script for Theia HPC for csh, tcsh}.
+	.4 Theia\_setup\_gnu.sh\DTcomment{setup script for Theia HPC for sh, bash}.
 	.4 Theia\_setup\_intel.csh\DTcomment{setup script for Theia HPC for csh, tcsh}.
 	.4 Theia\_setup\_intel.sh\DTcomment{setup script for Theia HPC for sh, bash}.
 	.4 Theia\_setup\_pgi.csh\DTcomment{setup script for Theia HPC for csh, tcsh}.
@@ -69,7 +72,6 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.4 UBUNTU\_setup.csh\DTcomment{setup script for Ubuntu Linux for csh, tcsh}.
 	.4 UBUNTU\_setup.sh\DTcomment{setup script for Ubuntu Linux for sh, bash}.
 	.3 LICENSE.txt.
-	.3 README.html\DTcomment{link to doxygen generated documentation}.
 	.3 src/\DTcomment{source code for SCM infrastructure}.
 	.4 cmake/\DTcomment{contains custom FindNetCDF.cmake}.
 }}
