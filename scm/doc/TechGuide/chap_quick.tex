@@ -152,4 +152,10 @@ output_twpice/output.nc
 \end{lstlisting}
 if you still reside in the \execout{bin} directory from which you executed the model.
 
+If using the model on HPC resources and significant amounts of processor time is anticipated for the experiments, it will likely be necessary to submit a job through the HPC's batch system. An example script has been included in the repository for running the model on Theia's batch system. It is located in \execout{gmtb-scm/scm/etc/gmtb\_scm\_run.py}. Edit the \execout{job\_name}, \execout{account}, etc. to suit your needs. The case name to be run is included in the \execout{command} variable. To use, invoke
+\begin{lstlisting}[language=bash]
+./gmtb_scm_run.py
+\end{lstlisting}
+from the \execout{gmtb-scm/scm/etc} directory.
+
 Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Developers' Corner available at \url{https://dtcenter.org/gmtb/users/ccpp/developers} and in the CCPP Developers' Guide at \url{https://dtcenter.org/gmtb/users/ccpp/docs}.
