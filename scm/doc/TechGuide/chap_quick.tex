@@ -74,9 +74,10 @@ cd scm
 \end{lstlisting}
     \item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant), netCDF module, etc. and sets compiler environment variables. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
+source etc/Theia_setup_gnu.csh
 source etc/Theia_setup_intel.csh
 source etc/Theia_setup_pgi.csh
-source etc/Theia_setup_gnu.csh
+source etc/Cheyenne_setup_gnu.csh
 source etc/Cheyenne_setup_intel.csh
 source etc/Cheyenne_setup_pgi.csh
 source etc/Cheyenne_setup_gnu.csh
@@ -86,9 +87,10 @@ source etc/MACOSX_setup.csh
 \end{lstlisting}
 For bourne/bash shells,
 \begin{lstlisting}[language=bash]
+. etc/Theia_setup_gnu.sh
 . etc/Theia_setup_intel.sh
 . etc/Theia_setup_pgi.sh
-. etc/Theia_setup_gnu.sh
+. etc/Cheyenne_setup_gnu.sh
 . etc/Cheyenne_setup_intel.sh
 . etc/Cheyenne_setup_pgi.sh
 . etc/Cheyenne_setup_gnu.sh
@@ -119,7 +121,7 @@ make
 \end{lstlisting}
 \end{enumerate}
 
-The resulting executable may be found at \execout{./gmtb-scm}. (\execout{gmtb-scm/scm/bin/gmtb-scm})
+The resulting executable may be found at \execout{./gmtb-scm} (Full path of \execout{gmtb-scm/scm/bin/gmtb-scm}). Depending on the system, it may be necessary to add the location of the CCPP framework and physics libraries to \execout{LD\_LIBRARY\_PATH} to run \execout{./gmtb-scm} (see next section).
 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
@@ -128,6 +130,16 @@ There are several test cases provided with this version of the SCM. For all case
 \begin{lstlisting}[language=bash]
 ./gmtb_scm twpice
 \end{lstlisting}
+If the run aborts with the error message
+\begin{lstlisting}[language=bash]
+gmtb_scm: libccppphys.so.1.0.0: cannot open shared object file: No such file or directory
+\end{lstlisting}
+the environment variable \execout{LD\_LIBRARY\_PATH} must be set to
+\begin{lstlisting}[language=bash]
+export LD_LIBRARY_PATH=$PWD/ccpp-physics:$LD_LIBRARY_PATH
+\end{lstlisting}
+before running the model.
+
 A netCDF output file is generated in the location specified in the case
 configuration file. Any standard netCDF file viewing or analysis tools may be used to
 examine the output file (ncdump, ncview, NCL, etc).  For the supplied \execout{twpice.nml} case, it is located in:
