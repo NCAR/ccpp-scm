@@ -1,8 +1,8 @@
-# Dom Heinzeller, 04/05/2018
+# Dom Heinzeller, 08/28/2018
 
-In order to build and run SCM-CCPP v1 on CentOS Linux, the following installation steps can be used:
+In order to build and run SCM-CCPP v2 on CentOS Linux, the following installation steps can be used:
 
-1. Install "Gnome Desktop / Development Tools" CentOS system from CentOS-7-x86_64-Everything-1708.iso with network enabled
+1. Install "Gnome Desktop / Development Tools" CentOS system from CentOS-7-x86_64-DVD-1804.iso with network enabled
 
 2. As root (su), install additional packages:
     yum --enablerepo=extras install epel-release
@@ -35,16 +35,16 @@ In order to build and run SCM-CCPP v1 on CentOS Linux, the following installatio
     cd /usr/local/src
 
     # Download the following src files from the web to /usr/local/src
-    hdf5-1.8.20.tar.gz
-    netcdf-4.5.0.tar.gz
+    hdf5-1.8.21.tar.gz
+    netcdf-4.6.1.tar.gz
     netcdf-cxx4-4.3.0.tar.gz
     netcdf-fortran-4.4.4.tar.gz
-    parallel-netcdf-1.8.1.tar.gz
+    parallel-netcdf-1.9.0.tar.gz
     szip-2.1.1.tar.gz
     zlib-1.2.11.tar.gz
 
     # zlib-1.2.11
-    tar -xvf zlib-1.2.11.tar.gz 
+    tar -xvf zlib-1.2.11.tar.gz
     cd zlib-1.2.11/
     ./configure 2>&1 | tee log.config
     make 2>&1 | tee log.make
@@ -53,9 +53,9 @@ In order to build and run SCM-CCPP v1 on CentOS Linux, the following installatio
     rm -fr zlib-1.2.11
 
     # szip-2.1.1
-    gunzip szip-2.1.1.tar.gz 
-    tar -xvf szip-2.1.1.tar 
-    gzip szip-2.1.1.tar 
+    gunzip szip-2.1.1.tar.gz
+    tar -xvf szip-2.1.1.tar
+    gzip szip-2.1.1.tar
     cd szip-2.1.1/
     ./configure 2>&1 | tee log.config
     make 2>&1 | tee log.make
@@ -63,31 +63,32 @@ In order to build and run SCM-CCPP v1 on CentOS Linux, the following installatio
     cd ..
     rm -fr szip-2.1.1
 
-    # hdf5-1.8.20
-    tar -xvzf hdf5-1.8.20.tar.gz 
-    cd hdf5-1.8.20/
+    # hdf5-1.8.21
+    gunzip hdf5-1.8.21.tar.gz
+    tar -xvf hdf5-1.8.21.tar
+    gzip hdf5-1.8.21.tar
+    cd hdf5-1.8.21/
     ./configure --with-szlib=/usr/local --with-zlib=/usr/local --prefix=/usr/local 2>&1 | tee log.config
     make 2>&1 | tee log.make
     make install 2>&1 | tee log.install
     cd ..
     rm -fr hdf5-1.8.20
 
-    # netcdf-4.5.0
-    tar -xvf netcdf-4.5.0.tar.gz 
-    cd netcdf-4.5.0/
+    # netcdf-4.6.1
+    tar -xvf netcdf-4.6.1.tar.gz
+    cd netcdf-4.6.1/
     CFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib -lhdf5 -lhdf5_hl -lsz -lz" ./configure 2>&1 | tee log.config
     make 2>&1 | tee log.make
     make install 2>&1 | tee log.install
     cd ..
-    rm -fr netcdf-4.5.0
+    rm -fr netcdf-4.6.1
 
     # netcdf-fortran-4.4.4
-    tar -xvf netcdf-fortran-4.4.4.tar.gz 
+    tar -xvf netcdf-fortran-4.4.4.tar.gz
     cd netcdf-fortran-4.4.4/
     FFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib -lnetcdf -lhdf5 -lhdf5_hl -lsz -lz" ./configure 2>&1 | tee log.config
     make 2>&1 | tee log.make
     make install 2>&1 | tee log.install
-    sync
     cd ..
     rm -fr netcdf-fortran-4.4.4
 
