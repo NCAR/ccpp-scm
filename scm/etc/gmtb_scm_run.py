@@ -11,10 +11,11 @@ account = "gmtb"
 walltime = "0:20:00"
 processors = "procs=1"
 queue = "batch"
-command = "./gmtb_scm_ens.py"
+command = "./gmtb_scm twpice"
 email_addr = "Grant.Firl@noaa.gov"
 email_occasion = "abe"
 serial_mem = "512M"
+working_dir = "../bin"
 ### End User-editable section ###
 
 
@@ -29,11 +30,9 @@ job_string = """#!/bin/bash
 #PBS -M %s
 #PBS -m %s
 #PBS -l vmem=%s
+#PBS -d %s
 #PBS -V
-cd $PBS_O_WORKDIR
-module load intel
-module load netcdf
-%s""" % (job_name, account, walltime, processors, job_name, job_name, queue, email_addr, email_occasion, serial_mem, command)
+%s""" % (job_name, account, walltime, processors, job_name, job_name, queue, email_addr, email_occasion, serial_mem, working_dir, command)
 
 # Send job_string to qsub
 proc.stdin.write(job_string)

@@ -10,9 +10,13 @@ The source code bundle for the CCPP and SCM is provided through github.com.  Thi
 \begin{enumerate}
     \item Download a compressed file or clone the source using
 \begin{lstlisting}[language=bash]
-git clone https://[username]@github.com/NCAR/gmtb-scm-release
+git clone https://[username]@github.com/NCAR/gmtb-scm-release gmtb-scm
 \end{lstlisting}
     and enter your github password when prompted.
+    \item Check out the desired release number using
+\begin{lstlisting}[language=bash]
+git checkout [v2.0]
+\end{lstlisting}
     \item Change directory into the project.
 \begin{lstlisting}[language=bash]
 cd gmtb-scm
@@ -34,8 +38,8 @@ The source code for the SCM and CCPP component is in the form of programs writte
 
 The basic requirements for building and running the CCPP and SCM bundle are listed below:
 \begin{itemize}
-    \item FORTRAN 90+ compiler (ifort v15+, gfortran v5.4+, pgf90 v17.9+)
-    \item C compiler (icc v15+, gcc v5.4+, pgcc v17.9+)
+    \item FORTRAN 90+ compiler (ifort v17+, gfortran v5.4+, pgf90 v17.9+)
+    \item C compiler (icc v17+, gcc v5.4+, pgcc v17.9+)
     \item cmake v2.8.11+
     \item netCDF v4.x (not v3.x) with HDF5, ZLIB and SZIP
     \item Python v2.x (not v3.x)
@@ -62,7 +66,7 @@ community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownI
 
 \section{Compiling SCM with CCPP}
 \label{section: compiling}
-The first step in compiling the CCPP and SCM is to match the physics variables, and build the physics caps needed to use them.  Following this step, the top level build system will use \execout{cmake} to query system parameters and \execout{make} to compile the components.  A platform-specific script is provided to load modules and set the user environment for common platforms.  If you are not using one of these platforms, you will need to set up the same environment on your platform.
+The first step in compiling the CCPP and SCM is to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them.  Following this step, the top level build system will use \execout{cmake} to query system parameters and \execout{make} to compile the components.  A platform-specific script is provided to load modules and set the user environment for common platforms.  If you are not using one of these platforms, you will need to set up the same environment on your platform.
 \begin{enumerate}
     \item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments.
 \begin{lstlisting}[language=bash]
@@ -105,7 +109,7 @@ mkdir bin && cd bin
     \item Invoke cmake on the source code to build.
 \begin{lstlisting}[language=bash]
 cmake ../src                          # without threading/OpenMP
-cmake -DOPENMP=1 ../src               # with threading/OpenMP
+cmake -DOPENMP=ON ../src               # with threading/OpenMP
 cmake -DCMAKE_BUILD_TYPE=Debug ../src # debug mode
 \end{lstlisting}
     \item If cmake cannot find \execout{libxml2} because it is installed in a non-standard location, add
@@ -119,12 +123,12 @@ make
 \end{lstlisting}
 \end{enumerate}
 
-The resulting executable may be found at \execout{./gmtb-scm}. Depending on the system, it may be necessary to add the location of the CCPP framework and physics libraries to \execout{LD\_LIBRARY\_PATH} to run \execout{./gmtb-scm} (see next section).
+The resulting executable may be found at \execout{./gmtb-scm} (Full path of \execout{gmtb-scm/scm/bin/gmtb-scm}). Depending on the system, it may be necessary to add the location of the CCPP framework and physics libraries to \execout{LD\_LIBRARY\_PATH} to run \execout{./gmtb-scm} (see next section).
 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
-\section{Run the SCM with the supplied case}
-The test case provided with this version of the SCM is TWP-ICE, the Tropical Warm Pool-International Cloud Experiment. The SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. A single command line argument is required, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For the provided case, that name is \execout{twpice}:
+\section{Run the SCM with a supplied case}
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. A single command line argument is required to run the model, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For a quick test that the model works, choose to run the  \execout{twpice} case:
 \begin{lstlisting}[language=bash]
 ./gmtb_scm twpice
 \end{lstlisting}
@@ -140,7 +144,7 @@ before running the model.
 
 A netCDF output file is generated in the location specified in the case
 configuration file. Any standard netCDF file viewing or analysis tools may be used to
-examine the output file (ncdump, ncview, NCL, etc).  For the twpice case, it is located in:
+examine the output file (ncdump, ncview, NCL, etc).  For the supplied \execout{twpice.nml} case, it is located in:
 \begin{lstlisting}[language=bash]
 gmtb-scm/scm/bin/output_twpice/output.nc
 \end{lstlisting}
@@ -149,5 +153,11 @@ or, simply,
 output_twpice/output.nc
 \end{lstlisting}
 if you still reside in the \execout{bin} directory from which you executed the model.
+
+If using the model on HPC resources and significant amounts of processor time is anticipated for the experiments, it will likely be necessary to submit a job through the HPC's batch system. An example script has been included in the repository for running the model on Theia's batch system. It is located in \execout{gmtb-scm/scm/etc/gmtb\_scm\_run.py}. Edit the \execout{job\_name}, \execout{account}, etc. to suit your needs. The case name to be run is included in the \execout{command} variable. To use, invoke
+\begin{lstlisting}[language=bash]
+./gmtb_scm_run.py
+\end{lstlisting}
+from the \execout{gmtb-scm/scm/etc} directory.
 
 Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Developers' Corner available at \url{https://dtcenter.org/gmtb/users/ccpp/developers} and in the CCPP Developers' Guide at \url{https://dtcenter.org/gmtb/users/ccpp/docs}.
