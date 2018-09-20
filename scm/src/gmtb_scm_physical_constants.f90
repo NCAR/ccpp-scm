@@ -16,6 +16,7 @@ public
 !! | con_epsm1              | ratio_of_dry_air_to_water_vapor_gas_constants_minus_one  | (rd/rv) - 1                                             | none          |    0 | real              | kind_phys | none   | F        |
 !! | con_fvirt              | ratio_of_vapor_to_dry_air_gas_constants_minus_one        | (rv/rd) - 1 (rv = ideal gas constant for water vapor)   | none          |    0 | real              | kind_phys | none   | F        |
 !! | con_g                  | gravitational_acceleration                               | gravitational acceleration                              | m s-2         |    0 | real              | kind_phys | none   | F        |
+!! | con_hfus               | latent_heat_of_fusion_of_water_at_0C                     | latent heat of fusion                                   | J kg-1        |    0 | real              | kind_phys | none   | F        |
 !! | con_hvap               | latent_heat_of_vaporization_of_water_at_0C               | latent heat of evaporation/sublimation                  | J kg-1        |    0 | real              | kind_phys | none   | F        |
 !! | con_pi                 | pi                                                       | ratio of a circle's circumference to its diameter       | radians       |    0 | real              | kind_phys | none   | F        |
 !! | con_rd                 | gas_constant_dry_air                                     | ideal gas constant for dry air                          | J kg-1 K-1    |    0 | real              | kind_phys | none   | F        |
@@ -35,7 +36,7 @@ public
   real(kind=dp),parameter:: con_cvap   =1.8460e+3
   real(kind=dp),parameter:: con_hvap   =2.5000e+6
   real(kind=dp),parameter:: con_hfus   =3.3358e+5
-  real(kind=dp),parameter:: con_t0c    =2.7315e+2  
+  real(kind=dp),parameter:: con_t0c    =2.7315e+2
 
 
   real(kind=dp),parameter:: con_rocp   =con_rd/con_cp

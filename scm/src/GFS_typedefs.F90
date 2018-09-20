@@ -490,6 +490,9 @@ module GFS_typedefs
     real(kind=kind_phys) :: mg_berg_eff_factor !< berg efficiency factor
     character(len=16)    :: mg_precip_frac_method ! type of precipitation fraction method
 
+    real(kind=kind_phys) :: tf
+    real(kind=kind_phys) :: tcr
+    real(kind=kind_phys) :: tcrf
 !
     logical              :: effr_in            !< eg to turn on ffective radii for MG
     logical              :: microp_uniform
@@ -1021,6 +1024,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: cndm_surf(:)     => null()  !<
     real (kind=kind_phys), pointer      :: cnvc(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: cnvw(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: ctei_r(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: ctei_rml(:)      => null()  !<
     real (kind=kind_phys), pointer      :: cumabs(:)        => null()  !<
     real (kind=kind_phys), pointer      :: dd_mf(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: del(:,:)         => null()  !<
@@ -1050,6 +1055,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: faerlw(:,:,:,:)  => null()  !<
     real (kind=kind_phys), pointer      :: faersw(:,:,:,:)  => null()  !<
     real (kind=kind_phys), pointer      :: fh2(:)           => null()  !<
+    logical,               pointer      :: flag_cice(:)     => null()  !<
     logical,               pointer      :: flag_guess(:)    => null()  !<
     logical,               pointer      :: flag_iter(:)     => null()  !<
     real (kind=kind_phys), pointer      :: flag_frsoil(:)   => null()  !<
@@ -1109,6 +1115,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: oz_pres(:)       => null()  !<
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: plyr(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: prnum(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: qlyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: prcpmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: qss(:)           => null()  !<
@@ -1155,6 +1162,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tsnow(:)         => null()  !<
     real (kind=kind_phys), pointer      :: tsurf(:)         => null()  !<
     real (kind=kind_phys), pointer      :: ud_mf(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: ulwsfc_cice(:)   => null()  !<
     real (kind=kind_phys), pointer      :: vdftra(:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: vegf1d(:)        => null()  !<
     integer, pointer                    :: vegtype(:)       => null()  !<
@@ -1814,6 +1822,8 @@ module GFS_typedefs
     real(kind=kind_phys) :: mg_ngnst       = 0.10e6             !< constant graupel/hail num concentration (m-3) = 0.1e6_r8
     real(kind=kind_phys) :: mg_berg_eff_factor = 2.0            !< berg efficiency factor
     character(len=16)    :: mg_precip_frac_method = 'max_overlap' !< type of precipitation fraction method
+    real(kind=kind_phys) :: tf             = 258.16
+    real(kind=kind_phys) :: tcr            = 273.16
 !
     logical              :: effr_in         = .false.           !< flag to use effective radii of cloud species in radiation
     logical              :: microp_uniform  = .false.
@@ -1999,7 +2009,7 @@ module GFS_typedefs
                                isubc_lw, crick_proof, ccnorm, lwhtr, swhtr,                 &
                           !--- microphysical parameterizations
                                ncld, imp_physics, psautco, prautco, evpco, wminco,          &
-                               fprcp, mg_dcs, mg_qcvar, mg_ts_auto_ice, effr_in,            &
+                               fprcp, mg_dcs, mg_qcvar, mg_ts_auto_ice, effr_in, tf, tcr,   &
                                microp_uniform, do_cldice, hetfrz_classnuc,                  &
                                mg_do_graupel, mg_do_hail, mg_nccons, mg_nicons, mg_ngcons,  &
                                mg_ncnst, mg_ninst, mg_ngnst, sed_supersat, do_sb_physics,   &
@@ -2189,7 +2199,9 @@ module GFS_typedefs
     Model%do_sb_physics    = do_sb_physics
     Model%mg_precip_frac_method  = mg_precip_frac_method
     Model%mg_berg_eff_factor     = mg_berg_eff_factor
-
+    Model%tf               = tf
+    Model%tcr              = tcr
+    Model%tcrf             = 1.0/(tcr-tf)
 !--- Thompson MP parameters
     Model%ltaerosol        = ltaerosol
     Model%lradar           = lradar
@@ -3411,6 +3423,8 @@ module GFS_typedefs
     allocate (Interstitial%clx        (IM,4))
     allocate (Interstitial%cnvc       (IM,Model%levs))
     allocate (Interstitial%cnvw       (IM,Model%levs))
+    allocate (Interstitial%ctei_r     (IM))
+    allocate (Interstitial%ctei_rml   (IM))
     allocate (Interstitial%cumabs     (IM))
     allocate (Interstitial%dd_mf      (IM,Model%levs))
     allocate (Interstitial%del        (IM,Model%levs))
@@ -3440,6 +3454,7 @@ module GFS_typedefs
     allocate (Interstitial%faerlw     (IM,Model%levr+LTP,NBDLW,NF_AELW))
     allocate (Interstitial%faersw     (IM,Model%levr+LTP,NBDSW,NF_AESW))
     allocate (Interstitial%fh2        (IM))
+    allocate (Interstitial%flag_cice  (IM))
     allocate (Interstitial%flag_guess (IM))
     allocate (Interstitial%flag_iter  (IM))
     allocate (Interstitial%fm10       (IM))
@@ -3470,6 +3485,7 @@ module GFS_typedefs
     allocate (Interstitial%oz_pres    (levozp))
     allocate (Interstitial%plvl       (IM,Model%levr+1+LTP))
     allocate (Interstitial%plyr       (IM,Model%levr+LTP))
+    allocate (Interstitial%prnum      (IM,Model%levs))
     allocate (Interstitial%qlyr       (IM,Model%levr+LTP))
     allocate (Interstitial%prcpmp     (IM))
     allocate (Interstitial%qss        (IM))
@@ -3504,6 +3520,7 @@ module GFS_typedefs
     allocate (Interstitial%tsfg       (IM))
     allocate (Interstitial%tsurf      (IM))
     allocate (Interstitial%ud_mf      (IM,Model%levs))
+    allocate (Interstitial%ulwsfc_cice(IM))
     allocate (Interstitial%vdftra     (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d     (IM))
     allocate (Interstitial%vegtype    (IM))
@@ -3662,6 +3679,7 @@ module GFS_typedefs
     Interstitial%olyr         = clear_val
     Interstitial%plvl         = clear_val
     Interstitial%plyr         = clear_val
+    Interstitial%prnum        = clear_val
     Interstitial%qlyr         = clear_val
     Interstitial%raddt        = clear_val
     Interstitial%scmpsw%uvbfc = clear_val
@@ -3703,6 +3721,8 @@ module GFS_typedefs
     Interstitial%clx          = clear_val
     Interstitial%cnvc         = clear_val
     Interstitial%cnvw         = clear_val
+    Interstitial%ctei_r       = clear_val
+    Interstitial%ctei_rml     = clear_val
     Interstitial%cumabs       = clear_val
     Interstitial%dd_mf        = clear_val
     Interstitial%del          = clear_val
@@ -3730,6 +3750,7 @@ module GFS_typedefs
     Interstitial%evbs         = clear_val
     Interstitial%evcw         = clear_val
     Interstitial%fh2          = clear_val
+    Interstitial%flag_cice    = .false.
     Interstitial%flag_guess   = .false.
     Interstitial%flag_iter    = .true.
     Interstitial%fm10         = clear_val
@@ -3783,6 +3804,7 @@ module GFS_typedefs
     Interstitial%tseal        = clear_val
     Interstitial%tsurf        = clear_val
     Interstitial%ud_mf        = clear_val
+    Interstitial%ulwsfc_cice  = clear_val
     Interstitial%vdftra       = clear_val
     Interstitial%vegf1d       = clear_val
     Interstitial%vegtype      = 0
@@ -3856,6 +3878,8 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%clouds      ) = ', sum(Interstitial%clouds      )
     write (0,*) 'sum(Interstitial%cnvc        ) = ', sum(Interstitial%cnvc        )
     write (0,*) 'sum(Interstitial%cnvw        ) = ', sum(Interstitial%cnvw        )
+    write (0,*) 'sum(Interstitial%ctei_r      ) = ', sum(Interstitial%ctei_r      )
+    write (0,*) 'sum(Interstitial%ctei_rml    ) = ', sum(Interstitial%ctei_rml    )
     write (0,*) 'sum(Interstitial%cumabs      ) = ', sum(Interstitial%cumabs      )
     write (0,*) 'sum(Interstitial%dd_mf       ) = ', sum(Interstitial%dd_mf       )
     write (0,*) 'sum(Interstitial%del         ) = ', sum(Interstitial%del         )
@@ -3885,6 +3909,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%faerlw      ) = ', sum(Interstitial%faerlw      )
     write (0,*) 'sum(Interstitial%faersw      ) = ', sum(Interstitial%faersw      )
     write (0,*) 'sum(Interstitial%fh2         ) = ', sum(Interstitial%fh2         )
+    write (0,*) 'Interstitial%flag_cice(1)      = ', Interstitial%flag_cice(1)
     write (0,*) 'Interstitial%flag_guess(1)     = ', Interstitial%flag_guess(1)
     write (0,*) 'Interstitial%flag_iter(1)      = ', Interstitial%flag_iter(1)
     write (0,*) 'sum(Interstitial%fm10        ) = ', sum(Interstitial%fm10        )
@@ -3920,6 +3945,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%plvl        ) = ', sum(Interstitial%plvl        )
     write (0,*) 'sum(Interstitial%plyr        ) = ', sum(Interstitial%plyr        )
     write (0,*) 'sum(Interstitial%prcpmp      ) = ', sum(Interstitial%prcpmp      )
+    write (0,*) 'sum(Interstitial%prnum       ) = ', sum(Interstitial%prnum       )
     write (0,*) 'sum(Interstitial%qlyr        ) = ', sum(Interstitial%qlyr        )
     write (0,*) 'sum(Interstitial%qss         ) = ', sum(Interstitial%qss         )
     write (0,*) 'Interstitial%raddt             = ', Interstitial%raddt
@@ -3962,6 +3988,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%tsfg        ) = ', sum(Interstitial%tsfg        )
     write (0,*) 'sum(Interstitial%tsurf       ) = ', sum(Interstitial%tsurf       )
     write (0,*) 'sum(Interstitial%ud_mf       ) = ', sum(Interstitial%ud_mf       )
+    write (0,*) 'sum(Interstitial%ulwsfc_cice ) = ', sum(Interstitial%ulwsfc_cice )
     write (0,*) 'sum(Interstitial%vdftra      ) = ', sum(Interstitial%vdftra      )
     write (0,*) 'sum(Interstitial%vegf1d      ) = ', sum(Interstitial%vegf1d      )
     write (0,*) 'sum(Interstitial%vegtype     ) = ', sum(Interstitial%vegtype     )
