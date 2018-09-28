@@ -281,17 +281,35 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   ! DH* TODO: clean up this part, the allocation and assignment
   ! of ozone and h2o data does not belong here !*DH
 
+  !GJF* temporary fix for running with oz_phys_2015
+  if(Model%oz_phys) then
+    oz_coeff = 4
+  else if (Model%oz_phys_2015) then
+    oz_coeff = 6
+  else
+    oz_coeff = 4
+  end if
+  !*GJF
+
   !--- allocate memory for the variables stored in ozne_def and set them
   allocate(oz_lat(n_ozone_lats), oz_pres(n_ozone_layers), oz_time(n_ozone_times+1))
-  allocate(ozplin(n_ozone_lats, n_ozone_layers, n_ozone_coefficients, n_ozone_times))
+  !GJF* temporary fix for running with oz_phys_2015
+  allocate(ozplin(n_ozone_lats, n_ozone_layers, oz_coeff, n_ozone_times))
+  !allocate(ozplin(n_ozone_lats, n_ozone_layers, n_ozone_coefficients, n_ozone_times))
+  !*GJF
   latsozp  = n_ozone_lats
   levozp   = n_ozone_layers
   timeoz   = n_ozone_times
-  oz_coeff = n_ozone_coefficients
+  !GJF* temporary fix for running with oz_phys_2015
+  !oz_coeff = n_ozone_coefficients
+  !*GJF
   oz_lat   = ozone_lat_in
   oz_pres  = ozone_pres_in
   oz_time  = ozone_time_in
-  ozplin   = ozone_forcing_in
+  !GJF* temporary fix for running with oz_phys_2015
+  ozplin   = 0.0
+  !ozplin   = ozone_forcing_in
+  !*GJF
 
   !--- allocate memory for the variables stored in h2o_def and set them
   allocate(h2o_lat(n_h2o_lats), h2o_pres(n_h2o_layers), h2o_time(n_h2o_times+1))
