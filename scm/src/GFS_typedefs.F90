@@ -546,6 +546,8 @@ module GFS_typedefs
     logical              :: shocaftcnv      !< flag for SHOC
     logical              :: shoc_cld        !< flag for clouds
     logical              :: uni_cld         !< flag for clouds in grrad
+    logical              :: oz_phys         !< flag for old (2006) ozone physics
+    logical              :: oz_phys_2015    !< flag for new (2015) ozone physics
     logical              :: h2o_phys        !< flag for stratosphere h2o
     logical              :: pdfcld          !< flag for pdfcld
     logical              :: shcnvcw         !< flag for shallow convective cloud
@@ -1864,6 +1866,8 @@ module GFS_typedefs
     logical              :: do_shoc        = .false.                  !< flag for SHOC
     logical              :: shocaftcnv     = .false.                  !< flag for SHOC
     logical              :: shoc_cld       = .false.                  !< flag for SHOC in grrad
+    logical              :: oz_phys        = .true.                   !< flag for old (2006) ozone physics
+    logical              :: oz_phys_2015   = .false.                  !< flag for new (2015) ozone physics
     logical              :: h2o_phys       = .false.                  !< flag for stratosphere h2o
     logical              :: pdfcld         = .false.                  !< flag for pdfcld
     logical              :: shcnvcw        = .false.                  !< flag for shallow convective cloud
@@ -2009,6 +2013,7 @@ module GFS_typedefs
                           !--- physical parameterizations
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
                                cscnv, cal_pre, do_aw, do_shoc, shocaftcnv, shoc_cld,        &
+                               oz_phys, oz_phys_2015,                                       &
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
                                dspheat, cnvcld,                                             &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, do_deep, jcap,&
@@ -2044,6 +2049,7 @@ module GFS_typedefs
 
     !--- convective clouds
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
+
 
 
     !--- read in the namelist
@@ -2225,6 +2231,12 @@ module GFS_typedefs
     Model%shoc_parm        = shoc_parm
     Model%shocaftcnv       = shocaftcnv
     Model%shoc_cld         = shoc_cld
+    if (oz_phys .and. oz_phys_2015) then
+       write(*,*) 'Logic error: can only use one ozone physics option (oz_phys or oz_phys_2015), not both. Exiting.'
+       stop
+    end if
+    Model%oz_phys          = oz_phys
+    Model%oz_phys_2015     = oz_phys_2015
     Model%h2o_phys         = h2o_phys
     Model%pdfcld           = pdfcld
     Model%shcnvcw          = shcnvcw
@@ -3220,7 +3232,7 @@ module GFS_typedefs
       allocate (Diag%du3dt  (IM,Model%levs,4))
       allocate (Diag%dv3dt  (IM,Model%levs,4))
       allocate (Diag%dt3dt  (IM,Model%levs,6))
-      allocate (Diag%dq3dt  (IM,Model%levs,oz_coeff+5))
+      allocate (Diag%dq3dt  (IM,Model%levs,9))
     !--- needed to allocate GoCart coupling fields
       allocate (Diag%upd_mf (IM,Model%levs))
       allocate (Diag%dwn_mf (IM,Model%levs))
