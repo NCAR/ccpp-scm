@@ -690,6 +690,7 @@ module GFS_typedefs
     integer              :: npdf3d          !< number of 3d arrays associated with pdf based clouds/microphysics
     integer              :: nctp            !< number of cloud types in Chikira-Sugiyama scheme
     integer              :: ncnvw           !< the index of cnvw in phy_f3d
+    integer              :: ngreffr         !< the index of graupel effective radius in phy_f3d
 
     !--- debug flag
     logical              :: debug
@@ -1016,6 +1017,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: bexp1d(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cd(:)            => null()  !<
     real (kind=kind_phys), pointer      :: cdq(:)           => null()  !<
+    real (kind=kind_phys), pointer      :: cf_upi(:,:)      => null()  !<
+    real (kind=kind_phys), pointer      :: clcn(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: cldf(:)          => null()  !<
     real (kind=kind_phys), pointer      :: cldsa(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: cld1d(:)         => null()  !<
@@ -1023,7 +1026,15 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: clw(:,:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: clw_surf(:)      => null()  !<
     real (kind=kind_phys), pointer      :: clx(:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: cn_prc(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: cn_snr(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cndm_surf(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: cnv_dqldt(:,:)   => null()  !<
+    real (kind=kind_phys), pointer      :: cnv_fice(:,:)    => null()  !<
+    real (kind=kind_phys), pointer      :: cnv_mfd(:,:)     => null()  !<
+    real (kind=kind_phys), pointer      :: cnv_ndrop(:,:)   => null()  !<
+    real (kind=kind_phys), pointer      :: cnv_nice(:,:)    => null()  !<
+    real (kind=kind_phys), pointer      :: cnv_prc3(:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: cnvc(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: cnvw(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: ctei_r(:)        => null()  !<
@@ -1118,6 +1129,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: plyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: prnum(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: qicn(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: qlcn(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qlyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: prcpmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: qss(:)           => null()  !<
@@ -1168,6 +1181,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: vdftra(:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: vegf1d(:)        => null()  !<
     integer, pointer                    :: vegtype(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: w_upi(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: wind(:)          => null()  !<
     real (kind=kind_phys), pointer      :: work1(:)         => null()  !<
     real (kind=kind_phys), pointer      :: work2(:)         => null()  !<
@@ -2533,6 +2547,7 @@ module GFS_typedefs
     endif
 
     !--- set up cloud schemes and tracer elements
+    Model%ngreffr = 0
     if (Model%imp_physics == Model%imp_physics_zhao_carr) then
       Model%npdf3d  = 0
         Model%num_p3d = 4
@@ -2587,6 +2602,7 @@ module GFS_typedefs
           Model%ncnd = 5
         endif
         Model%num_p3d = 6
+        Model%ngreffr = Model%num_p3d
       endif
       if (Model%me == Model%master)                                                            &
          print *,' Using Morrison-Gettelman double moment microphysics',                       &
@@ -3427,12 +3443,22 @@ module GFS_typedefs
     allocate (Interstitial%bexp1d     (IM))
     allocate (Interstitial%cd         (IM))
     allocate (Interstitial%cdq        (IM))
+    allocate (Interstitial%cf_upi     (IM,Model%levs))
+    allocate (Interstitial%clcn       (IM,Model%levs))
     allocate (Interstitial%cldf       (IM))
     allocate (Interstitial%cldsa      (IM,5))
     allocate (Interstitial%cld1d      (IM))
     allocate (Interstitial%clouds     (IM,Model%levr+LTP,NF_CLDS))
     allocate (Interstitial%clw        (IM,Model%levs,Interstitial%nn))
     allocate (Interstitial%clx        (IM,4))
+    allocate (Interstitial%cn_prc     (IM))
+    allocate (Interstitial%cn_snr     (IM))
+    allocate (Interstitial%cnv_dqldt  (IM,Model%levs))
+    allocate (Interstitial%cnv_fice   (IM,Model%levs))
+    allocate (Interstitial%cnv_mfd    (IM,Model%levs))
+    allocate (Interstitial%cnv_ndrop  (IM,Model%levs))
+    allocate (Interstitial%cnv_nice   (IM,Model%levs))
+    allocate (Interstitial%cnv_prc3   (IM,Model%levs))
     allocate (Interstitial%cnvc       (IM,Model%levs))
     allocate (Interstitial%cnvw       (IM,Model%levs))
     allocate (Interstitial%ctei_r     (IM))
@@ -3498,6 +3524,8 @@ module GFS_typedefs
     allocate (Interstitial%plvl       (IM,Model%levr+1+LTP))
     allocate (Interstitial%plyr       (IM,Model%levr+LTP))
     allocate (Interstitial%prnum      (IM,Model%levs))
+    allocate (Interstitial%qicn       (IM,Model%levs))
+    allocate (Interstitial%qlcn       (IM,Model%levs))
     allocate (Interstitial%qlyr       (IM,Model%levr+LTP))
     allocate (Interstitial%prcpmp     (IM))
     allocate (Interstitial%qss        (IM))
@@ -3536,6 +3564,7 @@ module GFS_typedefs
     allocate (Interstitial%vdftra     (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d     (IM))
     allocate (Interstitial%vegtype    (IM))
+    allocate (Interstitial%w_upi      (IM,Model%levs))
     allocate (Interstitial%wind       (IM))
     allocate (Interstitial%work1      (IM))
     allocate (Interstitial%work2      (IM))
@@ -3691,7 +3720,8 @@ module GFS_typedefs
     Interstitial%olyr         = clear_val
     Interstitial%plvl         = clear_val
     Interstitial%plyr         = clear_val
-    Interstitial%prnum        = clear_val
+    Interstitial%qicn         = clear_val
+    Interstitial%qlcn         = clear_val
     Interstitial%qlyr         = clear_val
     Interstitial%raddt        = clear_val
     Interstitial%scmpsw%uvbfc = clear_val
@@ -3726,11 +3756,21 @@ module GFS_typedefs
     Interstitial%bexp1d       = clear_val
     Interstitial%cd           = clear_val
     Interstitial%cdq          = clear_val
+    Interstitial%cf_upi       = clear_val
+    Interstitial%clcn         = clear_val
     Interstitial%cld1d        = clear_val
     Interstitial%cldf         = clear_val
     Interstitial%clw          = clear_val
     Interstitial%clw(:,:,2)   = -999.9
     Interstitial%clx          = clear_val
+    Interstitial%cn_prc       = clear_val
+    Interstitial%cn_snr       = clear_val
+    Interstitial%cnv_dqldt    = clear_val
+    Interstitial%cnv_fice     = clear_val
+    Interstitial%cnv_mfd      = clear_val
+    Interstitial%cnv_ndrop    = clear_val
+    Interstitial%cnv_nice     = clear_val
+    Interstitial%cnv_prc3     = clear_val
     Interstitial%cnvc         = clear_val
     Interstitial%cnvw         = clear_val
     Interstitial%ctei_r       = clear_val
@@ -3787,6 +3827,7 @@ module GFS_typedefs
     Interstitial%oa4          = clear_val
     Interstitial%oc           = clear_val
     Interstitial%prcpmp       = clear_val
+    Interstitial%prnum        = clear_val
     Interstitial%qss          = clear_val
     Interstitial%raincd       = clear_val
     Interstitial%raincs       = clear_val
@@ -3820,6 +3861,7 @@ module GFS_typedefs
     Interstitial%vdftra       = clear_val
     Interstitial%vegf1d       = clear_val
     Interstitial%vegtype      = 0
+    Interstitial%w_upi        = clear_val
     Interstitial%wind         = clear_val
     Interstitial%work1        = clear_val
     Interstitial%work2        = clear_val
@@ -3882,12 +3924,22 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%bexp1d      ) = ', sum(Interstitial%bexp1d      )
     write (0,*) 'sum(Interstitial%cd          ) = ', sum(Interstitial%cd          )
     write (0,*) 'sum(Interstitial%cdq         ) = ', sum(Interstitial%cdq         )
+    write (0,*) 'sum(Interstitial%cf_upi      ) = ', sum(Interstitial%cf_upi      )
+    write (0,*) 'sum(Interstitial%clcn        ) = ', sum(Interstitial%clcn        )
     write (0,*) 'sum(Interstitial%cldf        ) = ', sum(Interstitial%cldf        )
     write (0,*) 'sum(Interstitial%cldsa       ) = ', sum(Interstitial%cldsa       )
     write (0,*) 'sum(Interstitial%cld1d       ) = ', sum(Interstitial%cld1d       )
     write (0,*) 'sum(Interstitial%clw         ) = ', sum(Interstitial%clw         )
     write (0,*) 'sum(Interstitial%clx         ) = ', sum(Interstitial%clx         )
     write (0,*) 'sum(Interstitial%clouds      ) = ', sum(Interstitial%clouds      )
+    write (0,*) 'sum(Interstitial%cn_prc      ) = ', sum(Interstitial%cn_prc      )
+    write (0,*) 'sum(Interstitial%cn_snr      ) = ', sum(Interstitial%cn_snr      )
+    write (0,*) 'sum(Interstitial%cnv_dqldt   ) = ', sum(Interstitial%cnv_dqldt   )
+    write (0,*) 'sum(Interstitial%cnv_fice    ) = ', sum(Interstitial%cnv_fice    )
+    write (0,*) 'sum(Interstitial%cnv_mfd     ) = ', sum(Interstitial%cnv_mfd     )
+    write (0,*) 'sum(Interstitial%cnv_ndrop   ) = ', sum(Interstitial%cnv_ndrop   )
+    write (0,*) 'sum(Interstitial%cnv_nice    ) = ', sum(Interstitial%cnv_nice    )
+    write (0,*) 'sum(Interstitial%cnv_prc3    ) = ', sum(Interstitial%cnv_prc3    )
     write (0,*) 'sum(Interstitial%cnvc        ) = ', sum(Interstitial%cnvc        )
     write (0,*) 'sum(Interstitial%cnvw        ) = ', sum(Interstitial%cnvw        )
     write (0,*) 'sum(Interstitial%ctei_r      ) = ', sum(Interstitial%ctei_r      )
@@ -3958,6 +4010,8 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%plyr        ) = ', sum(Interstitial%plyr        )
     write (0,*) 'sum(Interstitial%prcpmp      ) = ', sum(Interstitial%prcpmp      )
     write (0,*) 'sum(Interstitial%prnum       ) = ', sum(Interstitial%prnum       )
+    write (0,*) 'sum(Interstitial%qicn        ) = ', sum(Interstitial%qicn        )
+    write (0,*) 'sum(Interstitial%qlcn        ) = ', sum(Interstitial%qlcn        )
     write (0,*) 'sum(Interstitial%qlyr        ) = ', sum(Interstitial%qlyr        )
     write (0,*) 'sum(Interstitial%qss         ) = ', sum(Interstitial%qss         )
     write (0,*) 'Interstitial%raddt             = ', Interstitial%raddt
@@ -4004,6 +4058,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%vdftra      ) = ', sum(Interstitial%vdftra      )
     write (0,*) 'sum(Interstitial%vegf1d      ) = ', sum(Interstitial%vegf1d      )
     write (0,*) 'sum(Interstitial%vegtype     ) = ', sum(Interstitial%vegtype     )
+    write (0,*) 'sum(Interstitial%w_upi       ) = ', sum(Interstitial%w_upi       )
     write (0,*) 'sum(Interstitial%wind        ) = ', sum(Interstitial%wind        )
     write (0,*) 'sum(Interstitial%work1       ) = ', sum(Interstitial%work1       )
     write (0,*) 'sum(Interstitial%work2       ) = ', sum(Interstitial%work2       )
