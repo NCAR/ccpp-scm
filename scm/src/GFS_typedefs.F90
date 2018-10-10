@@ -1113,6 +1113,9 @@ module GFS_typedefs
     integer,               pointer      :: mbota(:,:)       => null()  !<
     logical                             :: mg3_as_mg2                  !<
     integer,               pointer      :: mtopa(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: ncgl(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: ncpr(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: ncps(:,:)        => null()  !<
     integer                             :: ncstrac                     !<
     integer                             :: nday                        !<
     integer                             :: nn                          !<
@@ -1129,9 +1132,12 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: plyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: prnum(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: qgl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qicn(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qlcn(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qlyr(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: qrn(:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: qsnw(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: prcpmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: qss(:)           => null()  !<
     real (kind=kind_phys)               :: raddt                       !<
@@ -3517,6 +3523,9 @@ module GFS_typedefs
     allocate (Interstitial%ktop       (IM))
     allocate (Interstitial%mbota      (IM,3))
     allocate (Interstitial%mtopa      (IM,3))
+    allocate (Interstitial%ncgl       (IM,Model%levs))
+    allocate (Interstitial%ncpr       (IM,Model%levs))
+    allocate (Interstitial%ncps       (IM,Model%levs))
     allocate (Interstitial%oa4        (IM,4))
     allocate (Interstitial%oc         (IM))
     allocate (Interstitial%olyr       (IM,Model%levr+LTP))
@@ -3524,9 +3533,12 @@ module GFS_typedefs
     allocate (Interstitial%plvl       (IM,Model%levr+1+LTP))
     allocate (Interstitial%plyr       (IM,Model%levr+LTP))
     allocate (Interstitial%prnum      (IM,Model%levs))
+    allocate (Interstitial%qgl        (IM,Model%levs))
     allocate (Interstitial%qicn       (IM,Model%levs))
     allocate (Interstitial%qlcn       (IM,Model%levs))
     allocate (Interstitial%qlyr       (IM,Model%levr+LTP))
+    allocate (Interstitial%qrn        (IM,Model%levs))
+    allocate (Interstitial%qsnw       (IM,Model%levs))
     allocate (Interstitial%prcpmp     (IM))
     allocate (Interstitial%qss        (IM))
     allocate (Interstitial%raincd     (IM))
@@ -3716,13 +3728,19 @@ module GFS_typedefs
     Interstitial%kt           = 0
     Interstitial%mbota        = 0
     Interstitial%mtopa        = 0
+    Interstitial%ncgl         = clear_val
+    Interstitial%ncpr         = clear_val
+    Interstitial%ncps         = clear_val
     Interstitial%nday         = 0
     Interstitial%olyr         = clear_val
     Interstitial%plvl         = clear_val
     Interstitial%plyr         = clear_val
+    Interstitial%qgl          = clear_val
     Interstitial%qicn         = clear_val
     Interstitial%qlcn         = clear_val
     Interstitial%qlyr         = clear_val
+    Interstitial%qrn          = clear_val
+    Interstitial%qsnw         = clear_val
     Interstitial%raddt        = clear_val
     Interstitial%scmpsw%uvbfc = clear_val
     Interstitial%scmpsw%uvbf0 = clear_val
@@ -4002,6 +4020,9 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%ktop        ) = ', sum(Interstitial%ktop        )
     write (0,*) 'sum(Interstitial%mbota       ) = ', sum(Interstitial%mbota       )
     write (0,*) 'sum(Interstitial%mtopa       ) = ', sum(Interstitial%mtopa       )
+    write (0,*) 'sum(Interstitial%ncgl        ) = ', sum(Interstitial%ncgl        )
+    write (0,*) 'sum(Interstitial%ncpr        ) = ', sum(Interstitial%ncpr        )
+    write (0,*) 'sum(Interstitial%ncps        ) = ', sum(Interstitial%ncps        )
     write (0,*) 'Interstitial%nday              = ', Interstitial%nday
     write (0,*) 'sum(Interstitial%oa4         ) = ', sum(Interstitial%oa4         )
     write (0,*) 'sum(Interstitial%oc          ) = ', sum(Interstitial%oc          )
@@ -4010,9 +4031,12 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%plyr        ) = ', sum(Interstitial%plyr        )
     write (0,*) 'sum(Interstitial%prcpmp      ) = ', sum(Interstitial%prcpmp      )
     write (0,*) 'sum(Interstitial%prnum       ) = ', sum(Interstitial%prnum       )
+    write (0,*) 'sum(Interstitial%qgl         ) = ', sum(Interstitial%qgl         )
     write (0,*) 'sum(Interstitial%qicn        ) = ', sum(Interstitial%qicn        )
     write (0,*) 'sum(Interstitial%qlcn        ) = ', sum(Interstitial%qlcn        )
     write (0,*) 'sum(Interstitial%qlyr        ) = ', sum(Interstitial%qlyr        )
+    write (0,*) 'sum(Interstitial%qrn         ) = ', sum(Interstitial%qrn         )
+    write (0,*) 'sum(Interstitial%qsnw        ) = ', sum(Interstitial%qsnw        )
     write (0,*) 'sum(Interstitial%qss         ) = ', sum(Interstitial%qss         )
     write (0,*) 'Interstitial%raddt             = ', Interstitial%raddt
     write (0,*) 'sum(Interstitial%raincd      ) = ', sum(Interstitial%raincd      )
