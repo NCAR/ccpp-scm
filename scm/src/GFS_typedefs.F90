@@ -483,6 +483,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: mg_dcs             !< Morrison-Gettelman microphysics parameters
     real(kind=kind_phys) :: mg_qcvar
     real(kind=kind_phys) :: mg_ts_auto_ice     !< ice auto conversion time scale
+    real(kind=kind_phys) :: mg_rhmini          !< relative humidity threshold parameter for nucleating ice
 
     real(kind=kind_phys) :: mg_ncnst           !< constant droplet num concentration (m-3)
     real(kind=kind_phys) :: mg_ninst           !< constant ice num concentration (m-3)
@@ -1132,7 +1133,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: plyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: prnum(:,:)       => null()  !<
-    real (kind=kind_phys), pointer      :: qgl(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: qgl(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: qicn(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qlcn(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qlyr(:,:)        => null()  !<
@@ -1839,6 +1840,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: mg_dcs         = 350.0              !< Morrison-Gettelman microphysics parameters
     real(kind=kind_phys) :: mg_qcvar       = 2.0
     real(kind=kind_phys) :: mg_ts_auto_ice = 3600.0             !< ice auto conversion time scale
+    real(kind=kind_phys) :: mg_rhmini      = 1.01               !< relative humidity threshold parameter for nucleating ice
     real(kind=kind_phys) :: mg_ncnst       = 100.e6             !< constant droplet num concentration (m-3)
     real(kind=kind_phys) :: mg_ninst       = 0.15e6             !< constant ice num concentration (m-3)
     real(kind=kind_phys) :: mg_ngnst       = 0.10e6             !< constant graupel/hail num concentration (m-3) = 0.1e6_r8
@@ -2033,7 +2035,8 @@ module GFS_typedefs
                                isubc_lw, crick_proof, ccnorm, lwhtr, swhtr,                 &
                           !--- microphysical parameterizations
                                ncld, imp_physics, psautco, prautco, evpco, wminco,          &
-                               fprcp, mg_dcs, mg_qcvar, mg_ts_auto_ice, effr_in, tf, tcr,   &
+                               fprcp, mg_dcs, mg_qcvar, mg_ts_auto_ice, mg_rhmini,          &
+                               effr_in, tf, tcr,                                            &
                                microp_uniform, do_cldice, hetfrz_classnuc,                  &
                                mg_do_graupel, mg_do_hail, mg_nccons, mg_nicons, mg_ngcons,  &
                                mg_ncnst, mg_ninst, mg_ngnst, sed_supersat, do_sb_physics,   &
@@ -2209,6 +2212,7 @@ module GFS_typedefs
     Model%mg_dcs           = mg_dcs
     Model%mg_qcvar         = mg_qcvar
     Model%mg_ts_auto_ice   = mg_ts_auto_ice
+    Model%mg_rhmini        = mg_rhmini
     Model%effr_in          = effr_in
     Model%microp_uniform   = microp_uniform
     Model%do_cldice        = do_cldice
@@ -2553,7 +2557,7 @@ module GFS_typedefs
     endif
 
     !--- set up cloud schemes and tracer elements
-    Model%ngreffr = 0
+    Model%ngreffr = 1
     if (Model%imp_physics == Model%imp_physics_zhao_carr) then
       Model%npdf3d  = 0
         Model%num_p3d = 4
@@ -2614,7 +2618,7 @@ module GFS_typedefs
          print *,' Using Morrison-Gettelman double moment microphysics',                       &
                  ' aero_in=',       Model%aero_in,                                             &
                  ' mg_dcs=',        Model%mg_dcs,' mg_qcvar=',Model%mg_qcvar,                  &
-                 ' mg_ts_auto_ice=',Model%mg_ts_auto_ice,                                      &
+                 ' mg_ts_auto_ice=',Model%mg_ts_auto_ice,' mg_rhmini=',Model%mg_rhmini,        &
                  ' mg_do_graupel=', Model%mg_do_graupel,' mg_do_hail=',    Model%mg_do_hail,   &
                  ' mg_nccons=',     Model%mg_nccons,    ' mg_nicon=',      Model%mg_nicons,    &
                  ' mg_ngcons=',     Model%mg_ngcons ,   ' mg_ncnst=',      Model%mg_ncnst,     &
@@ -3728,19 +3732,11 @@ module GFS_typedefs
     Interstitial%kt           = 0
     Interstitial%mbota        = 0
     Interstitial%mtopa        = 0
-    Interstitial%ncgl         = clear_val
-    Interstitial%ncpr         = clear_val
-    Interstitial%ncps         = clear_val
     Interstitial%nday         = 0
     Interstitial%olyr         = clear_val
     Interstitial%plvl         = clear_val
     Interstitial%plyr         = clear_val
-    Interstitial%qgl          = clear_val
-    Interstitial%qicn         = clear_val
-    Interstitial%qlcn         = clear_val
     Interstitial%qlyr         = clear_val
-    Interstitial%qrn          = clear_val
-    Interstitial%qsnw         = clear_val
     Interstitial%raddt        = clear_val
     Interstitial%scmpsw%uvbfc = clear_val
     Interstitial%scmpsw%uvbf0 = clear_val
@@ -3842,10 +3838,18 @@ module GFS_typedefs
     Interstitial%kinver       = Model%levs
     Interstitial%kpbl         = 0
     Interstitial%ktop         = 1
+    Interstitial%ncgl         = clear_val
+    Interstitial%ncpr         = clear_val
+    Interstitial%ncps         = clear_val
     Interstitial%oa4          = clear_val
     Interstitial%oc           = clear_val
     Interstitial%prcpmp       = clear_val
     Interstitial%prnum        = clear_val
+    Interstitial%qicn         = clear_val
+    Interstitial%qgl          = clear_val
+    Interstitial%qlcn         = clear_val
+    Interstitial%qrn          = clear_val
+    Interstitial%qsnw         = clear_val
     Interstitial%qss          = clear_val
     Interstitial%raincd       = clear_val
     Interstitial%raincs       = clear_val
