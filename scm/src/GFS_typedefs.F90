@@ -192,6 +192,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: spec_lh_flux (:) => null() !< specified kinematic surface latent heat flux
 
     !-- In/Out
+    real (kind=kind_phys), pointer :: conv_act(:)  => null()  !< convective activity conter hli 09/2017
     real (kind=kind_phys), pointer :: hice   (:)   => null()  !< sea ice thickness
     real (kind=kind_phys), pointer :: weasd  (:)   => null()  !< water equiv of accumulated snow depth (kg/m**2)
                                                               !< over land and sea ice
@@ -231,11 +232,13 @@ module GFS_typedefs
 
     ! Soil properties for land-surface model (if number of levels different from NOAH 4-layer model)
     real (kind=kind_phys), pointer :: sh2o(:,:)        => null()  !< volume fraction of unfrozen soil moisture for lsm
+    real (kind=kind_phys), pointer :: keepsmfr(:,:)    => null()  !< RUC LSM: frozen moisture in soil
     real (kind=kind_phys), pointer :: smois(:,:)       => null()  !< volumetric fraction of soil moisture for lsm
     real (kind=kind_phys), pointer :: tslb(:,:)        => null()  !< soil temperature for land surface model
     real (kind=kind_phys), pointer :: zs(:)            => null()  !< depth of soil levels for land surface model
     !
     real (kind=kind_phys), pointer :: clw_surf(:)      => null()  !< RUC LSM: moist cloud water mixing ratio at surface
+    real (kind=kind_phys), pointer :: qwv_surf(:)      => null()  !< RUC LSM: water vapor mixing ratio at surface
     real (kind=kind_phys), pointer :: cndm_surf(:)     => null()  !< RUC LSM: surface condensation mass
     real (kind=kind_phys), pointer :: flag_frsoil(:,:) => null()  !< RUC LSM: flag for frozen soil physics
     real (kind=kind_phys), pointer :: rhofr(:)         => null()  !< RUC LSM: density of frozen precipitation
@@ -662,6 +665,7 @@ module GFS_typedefs
     !--- tracer handling
     character(len=32), pointer :: tracer_names(:) !< array of initialized tracers from dynamic core
     integer              :: ntrac           !< number of tracers
+    integer              :: ntracp1         !< number of tracers plus one
     integer              :: ntoz            !< tracer index for ozone mixing ratio
     integer              :: ntcw            !< tracer index for cloud condensate (or liquid water)
     integer              :: ntiw            !< tracer index for ice water
@@ -810,6 +814,12 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: htswc(:,:)       => null()  !<
     real (kind=kind_phys), pointer :: htsw0(:,:)       => null()  !<
 
+    real (kind=kind_phys), pointer :: forcet (:,:)     => null()  !<
+    real (kind=kind_phys), pointer :: forceq (:,:)     => null()  !<
+    real (kind=kind_phys), pointer :: prevst (:,:)     => null()  !<
+    real (kind=kind_phys), pointer :: prevsq (:,:)     => null()  !<
+    integer,               pointer :: cactiv   (:)     => null()  !< convective activity memory contour
+
     contains
       procedure :: create  => tbd_create  !<   allocate array data
   end type GFS_tbd_type
@@ -900,6 +910,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: transa (:)     => null()   !< noah lsm diagnostics
     real (kind=kind_phys), pointer :: sbsnoa (:)     => null()   !< noah lsm diagnostics
     real (kind=kind_phys), pointer :: snowca (:)     => null()   !< noah lsm diagnostics
+    real (kind=kind_phys), pointer :: snowfallac (:) => null()   !< ruc lsm diagnostics
+    real (kind=kind_phys), pointer :: acsnow     (:) => null()   !< ruc lsm diagnostics
     real (kind=kind_phys), pointer :: soilm  (:)     => null()   !< soil moisture
     real (kind=kind_phys), pointer :: tmpmin (:)     => null()   !< min temperature at 2m height (k)
     real (kind=kind_phys), pointer :: tmpmax (:)     => null()   !< max temperature at 2m height (k)
@@ -1076,6 +1088,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: fm10(:)          => null()  !<
     real (kind=kind_phys)               :: frain                       !<
     real (kind=kind_phys), pointer      :: frland(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: fscav(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: fswtr(:)         => null()  !<
     real (kind=kind_phys), pointer      :: gabsbdlw(:)      => null()  !<
     real (kind=kind_phys), pointer      :: gamma(:)         => null()  !<
     real (kind=kind_phys), pointer      :: gamq(:)          => null()  !<
@@ -1163,6 +1177,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: sfcalb(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: sigma(:)         => null()  !<
     real (kind=kind_phys), pointer      :: sigmaf(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: sigmafrac(:,:)   => null()  !<
+    real (kind=kind_phys), pointer      :: sigmatot(:,:)    => null()  !<
     logical                             :: skip_macro                  !<
     integer, pointer                    :: slopetype(:)     => null()  !<
     real (kind=kind_phys), pointer      :: snowmp(:)        => null()  !<
@@ -1189,6 +1205,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: vegf1d(:)        => null()  !<
     integer, pointer                    :: vegtype(:)       => null()  !<
     real (kind=kind_phys), pointer      :: w_upi(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: wcbmax(:)        => null()  !<
     real (kind=kind_phys), pointer      :: wind(:)          => null()  !<
     real (kind=kind_phys), pointer      :: work1(:)         => null()  !<
     real (kind=kind_phys), pointer      :: work2(:)         => null()  !<
@@ -1460,24 +1477,32 @@ module GFS_typedefs
     if (Model%lsm == Model%lsm_ruc) then
     ! For land surface models with different numbers of levels than the four NOAH levels
        allocate (Sfcprop%sh2o        (IM,Model%lsoil_lsm))
+       allocate (Sfcprop%keepsmfr    (IM,Model%lsoil_lsm))
        allocate (Sfcprop%smois       (IM,Model%lsoil_lsm))
        allocate (Sfcprop%tslb        (IM,Model%lsoil_lsm))
        allocate (Sfcprop%zs          (Model%lsoil_lsm))
        allocate (Sfcprop%clw_surf    (IM))
+       allocate (Sfcprop%qwv_surf    (IM))
        allocate (Sfcprop%cndm_surf   (IM))
        allocate (Sfcprop%flag_frsoil (IM,Model%lsoil_lsm))
        allocate (Sfcprop%rhofr       (IM))
        allocate (Sfcprop%tsnow       (IM))
        !
        Sfcprop%sh2o        = clear_val
+       Sfcprop%keepsmfr    = clear_val
        Sfcprop%smois       = clear_val
        Sfcprop%tslb        = clear_val
        Sfcprop%zs          = clear_val
        Sfcprop%clw_surf    = clear_val
+       Sfcprop%qwv_surf    = clear_val
        Sfcprop%cndm_surf   = clear_val
        Sfcprop%flag_frsoil = clear_val
        Sfcprop%rhofr       = clear_val
        Sfcprop%tsnow       = clear_val
+    end if
+    if (Model%imfdeepcnv == 3) then
+        allocate (Sfcprop%conv_act(IM))
+        Sfcprop%conv_act = zero
     end if
 
   end subroutine sfcprop_create
@@ -2353,6 +2378,7 @@ module GFS_typedefs
 
     !--- tracer handling
     Model%ntrac            = size(tracer_names)
+    Model%ntracp1          = Model%ntrac + 1
     allocate (Model%tracer_names(Model%ntrac))
     Model%tracer_names(:)  = tracer_names(:)
     Model%ntoz             = get_tracer_index(Model%tracer_names, 'o3mr',       Model%me, Model%master, Model%debug)
@@ -3087,6 +3113,19 @@ module GFS_typedefs
     Tbd%htswc = clear_val
     Tbd%htsw0 = clear_val
 
+    if (Model%imfdeepcnv == 3) then
+       allocate(Tbd%forcet(IM, Model%levs))
+       allocate(Tbd%forceq(IM, Model%levs))
+       allocate(Tbd%prevst(IM, Model%levs))
+       allocate(Tbd%prevsq(IM, Model%levs))
+       allocate(Tbd%cactiv(IM))
+       Tbd%forcet = clear_val
+       Tbd%forceq = clear_val
+       Tbd%prevst = clear_val
+       Tbd%prevsq = clear_val
+       Tbd%cactiv = zero
+   end if
+
   end subroutine tbd_create
 
 
@@ -3191,6 +3230,8 @@ module GFS_typedefs
     allocate (Diag%transa  (IM))
     allocate (Diag%sbsnoa  (IM))
     allocate (Diag%snowca  (IM))
+    allocate (Diag%snowfallac  (IM))
+    allocate (Diag%acsnow      (IM))
     allocate (Diag%soilm   (IM))
     allocate (Diag%tmpmin  (IM))
     allocate (Diag%tmpmax  (IM))
@@ -3325,6 +3366,8 @@ module GFS_typedefs
     Diag%transa     = zero
     Diag%sbsnoa     = zero
     Diag%snowca     = zero
+    Diag%snowfallac = zero
+    Diag%acsnow     = zero
     Diag%soilm      = zero
     Diag%tmpmin     = huge
     Diag%tmpmax     = zero
@@ -3435,7 +3478,7 @@ module GFS_typedefs
     integer,                intent(in) :: IM
     type(GFS_control_type), intent(in) :: Model
     !
-    allocate (Interstitial%otspt      (Model%ntrac+1,2))
+    allocate (Interstitial%otspt      (Model%ntracp1,2))
     ! Set up numbers of tracers for PBL, convection, etc: sets
     ! Interstitial%{nncl,nvdiff,mg3_as_mg2,nn,tracers_total,ntk,otspt,nsamftrac,ncstrac}
     call interstitial_setup_tracers(Interstitial, Model)
@@ -3507,6 +3550,8 @@ module GFS_typedefs
     allocate (Interstitial%flag_iter  (IM))
     allocate (Interstitial%fm10       (IM))
     allocate (Interstitial%frland     (IM))
+    allocate (Interstitial%fscav      (Model%ntrac-Model%ncld+2))
+    allocate (Interstitial%fswtr      (Model%ntrac-Model%ncld+2))
     allocate (Interstitial%gabsbdlw   (IM))
     allocate (Interstitial%gamma      (IM))
     allocate (Interstitial%gamq       (IM))
@@ -3561,6 +3606,8 @@ module GFS_typedefs
     allocate (Interstitial%sfcalb     (IM,NF_ALBD))
     allocate (Interstitial%sigma      (IM))
     allocate (Interstitial%sigmaf     (IM))
+    allocate (Interstitial%sigmafrac  (IM,Model%levs))
+    allocate (Interstitial%sigmatot   (IM,Model%levs))
     allocate (Interstitial%slopetype  (IM))
     allocate (Interstitial%snowc      (IM))
     allocate (Interstitial%snohf      (IM))
@@ -3581,6 +3628,7 @@ module GFS_typedefs
     allocate (Interstitial%vegf1d     (IM))
     allocate (Interstitial%vegtype    (IM))
     allocate (Interstitial%w_upi      (IM,Model%levs))
+    allocate (Interstitial%wcbmax     (IM))
     allocate (Interstitial%wind       (IM))
     allocate (Interstitial%work1      (IM))
     allocate (Interstitial%work2      (IM))
@@ -3822,6 +3870,8 @@ module GFS_typedefs
     Interstitial%fm10         = clear_val
     Interstitial%frain        = clear_val
     Interstitial%frland       = clear_val
+    Interstitial%fscav        = clear_val
+    Interstitial%fswtr        = clear_val
     Interstitial%gabsbdlw     = clear_val
     Interstitial%gamma        = clear_val
     Interstitial%gamq         = clear_val
@@ -3868,6 +3918,8 @@ module GFS_typedefs
     Interstitial%sbsno        = clear_val
     Interstitial%sigma        = clear_val
     Interstitial%sigmaf       = clear_val
+    Interstitial%sigmafrac    = clear_val
+    Interstitial%sigmatot     = clear_val
     Interstitial%slopetype    = 0
     Interstitial%snowc        = clear_val
     Interstitial%snohf        = clear_val
@@ -3884,6 +3936,7 @@ module GFS_typedefs
     Interstitial%vegf1d       = clear_val
     Interstitial%vegtype      = 0
     Interstitial%w_upi        = clear_val
+    Interstitial%wcbmax       = clear_val
     Interstitial%wind         = clear_val
     Interstitial%work1        = clear_val
     Interstitial%work2        = clear_val
@@ -4001,6 +4054,8 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%fm10        ) = ', sum(Interstitial%fm10        )
     write (0,*) 'Interstitial%frain             = ', Interstitial%frain
     write (0,*) 'sum(Interstitial%frland      ) = ', sum(Interstitial%frland      )
+    write (0,*) 'sum(Interstitial%fscav       ) = ', sum(Interstitial%fscav       )
+    write (0,*) 'sum(Interstitial%fswtr       ) = ', sum(Interstitial%fswtr       )
     write (0,*) 'sum(Interstitial%gabsbdlw    ) = ', sum(Interstitial%gabsbdlw    )
     write (0,*) 'sum(Interstitial%gamma       ) = ', sum(Interstitial%gamma       )
     write (0,*) 'sum(Interstitial%gamq        ) = ', sum(Interstitial%gamq        )
@@ -4067,6 +4122,8 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%sfcalb      ) = ', sum(Interstitial%sfcalb      )
     write (0,*) 'sum(Interstitial%sigma       ) = ', sum(Interstitial%sigma       )
     write (0,*) 'sum(Interstitial%sigmaf      ) = ', sum(Interstitial%sigmaf      )
+    write (0,*) 'sum(Interstitial%sigmafrac   ) = ', sum(Interstitial%sigmafrac   )
+    write (0,*) 'sum(Interstitial%sigmatot    ) = ', sum(Interstitial%sigmatot    )
     write (0,*) 'sum(Interstitial%slopetype   ) = ', sum(Interstitial%slopetype   )
     write (0,*) 'sum(Interstitial%snowc       ) = ', sum(Interstitial%snowc       )
     write (0,*) 'sum(Interstitial%snohf       ) = ', sum(Interstitial%snohf       )
@@ -4087,6 +4144,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%vegf1d      ) = ', sum(Interstitial%vegf1d      )
     write (0,*) 'sum(Interstitial%vegtype     ) = ', sum(Interstitial%vegtype     )
     write (0,*) 'sum(Interstitial%w_upi       ) = ', sum(Interstitial%w_upi       )
+    write (0,*) 'sum(Interstitial%wcbmax      ) = ', sum(Interstitial%wcbmax      )
     write (0,*) 'sum(Interstitial%wind        ) = ', sum(Interstitial%wind        )
     write (0,*) 'sum(Interstitial%work1       ) = ', sum(Interstitial%work1       )
     write (0,*) 'sum(Interstitial%work2       ) = ', sum(Interstitial%work2       )
