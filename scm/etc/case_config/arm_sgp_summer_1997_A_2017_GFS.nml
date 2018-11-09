@@ -26,7 +26,7 @@ $end
 
 $physics_config
 physics_suite = 'suite_SCM_GFS_2017_updated_prescribed_surface',
-physics_suite_dir = '../../ccpp-framework/suites/',
+physics_suite_dir = '../../ccpp/suites/',
 physics_nml = '../etc/case_config/input_2017_GFS.nml',
 column_area = 2.0E9,
 $end
