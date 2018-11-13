@@ -142,7 +142,7 @@ subroutine gmtb_scm_main_sub()
       call physics%associate(scm_state, i)
 
 ! use ccpp_fields.inc to call ccpp_field_add for all variables to add
-! (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py -
+! (this is auto-generated from ccpp/scripts/ccpp_prebuild.py,
 !  the script parses tables in gmtb_scm_type_defs.f90)
 #include "ccpp_fields.inc"
 
