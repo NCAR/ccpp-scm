@@ -158,6 +158,7 @@ module GFS_typedefs
 
     !--- In (radiation and physics)
     real (kind=kind_phys), pointer :: slmsk  (:)   => null()  !< sea/land mask array (sea:0,land:1,sea-ice:2)
+    real (kind=kind_phys), pointer :: lakemsk(:)   => null()  !< lake mask array (lake:1, non-lake:0)
     real (kind=kind_phys), pointer :: tsfc   (:)   => null()  !< surface temperature in k
                                                               !< [tsea in gbphys.f]
     real (kind=kind_phys), pointer :: tisfc  (:)   => null()  !< surface temperature over ice fraction
@@ -208,6 +209,7 @@ module GFS_typedefs
 
     !--- Out
     real (kind=kind_phys), pointer :: t2m    (:)   => null()  !< 2 meter temperature
+    real (kind=kind_phys), pointer :: th2m   (:)   => null()  !< 2 meter potential temperature
     real (kind=kind_phys), pointer :: q2m    (:)   => null()  !< 2 meter humidity
 
     !--- NSSTM variables  (only allocated when [Model%nstf_name(1) > 0])
@@ -243,7 +245,16 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: flag_frsoil(:,:) => null()  !< RUC LSM: flag for frozen soil physics
     real (kind=kind_phys), pointer :: rhofr(:)         => null()  !< RUC LSM: density of frozen precipitation
     real (kind=kind_phys), pointer :: tsnow(:)         => null()  !< RUC LSM: snow temperature at the bottom of the first soil layer
-
+    !  MYNN surface layer
+    real (kind=kind_phys), pointer :: ustm (:)      => null()  !u* including drag
+    real (kind=kind_phys), pointer :: zol(:)        => null()  !surface stability parameter
+    real (kind=kind_phys), pointer :: mol(:)        => null()  !theta star
+    real (kind=kind_phys), pointer :: rmol(:)       => null()  !reciprocal of obukhov length
+    real (kind=kind_phys), pointer :: flhc(:)       => null()  !drag coeff for heat
+    real (kind=kind_phys), pointer :: flqc(:)       => null()  !drag coeff for moisture
+    real (kind=kind_phys), pointer :: chs2(:)       => null()  !exch coeff for heat at 2m
+    real (kind=kind_phys), pointer :: cqs2(:)       => null()  !exch coeff for moisture at 2m
+    real (kind=kind_phys), pointer :: lh(:)         => null()  !latent heating at the surface
     contains
       procedure :: create  => sfcprop_create  !<   allocate array data
   end type GFS_sfcprop_type
@@ -353,6 +364,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: det_mfi (:,:)   => null()  !< instantaneous convective detrainment mass flux
     real (kind=kind_phys), pointer :: cldcovi (:,:)   => null()  !< instantaneous 3D cloud fraction
     real (kind=kind_phys), pointer :: nwfa2d  (:)     => null()  !< instantaneous sfc aerosol source
+    real (kind=kind_phys), pointer :: nifa2d  (:)     => null()  !< instantaneous ice-friendly sfc aerosol source
 
     !--- instantaneous quantities for GSDCHEM coupling
     real (kind=kind_phys), pointer :: ushfsfci(:)     => null()  !< instantaneous upward sensible heat flux (w/m**2)
@@ -439,6 +451,7 @@ module GFS_typedefs
                                             !< 1 => use modis based alb
     integer              :: iems            !< use fixed value of 1.0
     integer              :: iaer            !< default aerosol effect in sw only
+    integer              :: icliq_sw        !< sw optical property for liquid clouds
     integer              :: iovr_sw         !< sw: max-random overlap clouds
     integer              :: iovr_lw         !< lw: max-random overlap clouds
     integer              :: ictm            !< ictm=0 => use data at initial cond time, if not
@@ -597,6 +610,21 @@ module GFS_typedefs
     integer              :: seed0           !< random seed for radiation
 
     real(kind=kind_phys) :: rbcr            !< Critical Richardson Number in the PBL scheme
+    !--- MYNN parameters/switches
+    logical              :: do_mynnedmf
+    logical              :: do_mynnsfclay
+    integer              :: grav_settling      !< flag for initalizing fist time step
+    integer              :: bl_mynn_tkebudget  !< flag for activating TKE budget
+    logical              :: bl_mynn_tkeadvect  !< activate computation of TKE advection (not yet in use for FV3)
+    integer              :: bl_mynn_cloudpdf   !< flag to determine which cloud PDF to use
+    integer              :: bl_mynn_mixlength  !< flag for different version of mixing length formulation
+    integer              :: bl_mynn_edmf       !< flag to activate the mass-flux scheme
+    integer              :: bl_mynn_edmf_mom   !< flag to activate the transport of momentum
+    integer              :: bl_mynn_edmf_tke   !< flag to activate the transport of TKE
+    integer              :: bl_mynn_edmf_part  !< flag to partitioning og the MF and ED areas
+    integer              :: bl_mynn_cloudmix   !< flag to activate mixing of cloud species
+    integer              :: bl_mynn_mixqt      !< flag to mix total water or individual species
+    integer              :: icloud_bl          !< flag for coupling sgs clouds to radiation
 
     !--- Rayleigh friction
     real(kind=kind_phys) :: prslrd0         !< pressure level from which Rayleigh Damping is applied
@@ -950,6 +978,26 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: totsnwb(:)     => null()   !< accumulated snow precipitation in bucket (kg/m2)
     real (kind=kind_phys), pointer :: totgrpb(:)     => null()   !< accumulated graupel precipitation in bucket (kg/m2)
 
+    !--- MYNN variables
+    real (kind=kind_phys), pointer :: CLDFRA_BL  (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: QC_BL      (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: el_pbl     (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: Sh3D       (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: qke        (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: qke_adv    (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: tsq        (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: qsq        (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: cov        (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: edmf_a     (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: edmf_w     (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: edmf_qt    (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: edmf_thl   (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: edmf_ent   (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: edmf_qc    (:,:)   => null()  !
+    real (kind=kind_phys), pointer :: maxMF       (:)    => null()  !
+    integer, pointer               :: nupdraft    (:)    => null()  !
+    integer, pointer               :: ktop_shallow (:)   => null()  !
+
     ! Output - only in physics
     real (kind=kind_phys), pointer :: u10m   (:)     => null()   !< 10 meter u/v wind speed
     real (kind=kind_phys), pointer :: v10m   (:)     => null()   !< 10 meter u/v wind speed
@@ -1034,6 +1082,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: clcn(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: cldf(:)          => null()  !<
     real (kind=kind_phys), pointer      :: cldsa(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: cldtaulw(:,:)    => null()  !<
+    real (kind=kind_phys), pointer      :: cldtausw(:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: cld1d(:)         => null()  !<
     real (kind=kind_phys), pointer      :: clouds(:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: clw(:,:,:)       => null()  !<
@@ -1054,8 +1104,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: ctei_rml(:)      => null()  !<
     real (kind=kind_phys), pointer      :: cumabs(:)        => null()  !<
     real (kind=kind_phys), pointer      :: dd_mf(:,:)       => null()  !<
+    real (kind=kind_phys), pointer      :: de_lgth(:)       => null()  !<
     real (kind=kind_phys), pointer      :: del(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: del_gz(:,:)      => null()  !<
+    real (kind=kind_phys), pointer      :: delr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dkt(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: dlength(:)       => null()  !<
     real (kind=kind_phys), pointer      :: dqdt(:,:,:)      => null()  !<
@@ -1073,6 +1125,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: dvdt(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dvsfcg(:)        => null()  !<
     real (kind=kind_phys), pointer      :: dvsfc1(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: dzlyr(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: elvmax(:)        => null()  !<
     real (kind=kind_phys), pointer      :: ep1d(:)          => null()  !<
     real (kind=kind_phys), pointer      :: evap(:)          => null()  !<
@@ -1108,7 +1161,6 @@ module GFS_typedefs
     integer                             :: im                          !<
     integer                             :: ipr                         !<
     integer,               pointer      :: islmsk(:)        => null()  !<
-    integer                             :: iter                        !<
     integer                             :: ix                          !<
     integer                             :: kb                          !<
     integer,               pointer      :: kbot(:)          => null()  !<
@@ -1137,6 +1189,7 @@ module GFS_typedefs
     integer                             :: nncl                        !<
     integer                             :: nsamftrac                   !<
     integer                             :: ntk                         !<
+    integer                             :: ntkev                       !<
     integer                             :: nvdiff                      !<
     real (kind=kind_phys), pointer      :: oa4(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: oc(:)            => null()  !<
@@ -1146,6 +1199,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: oz_pres(:)       => null()  !<
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: plyr(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: prcpmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: prnum(:,:)       => null()  !<
     real (kind=kind_phys), pointer      :: qgl(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: qicn(:,:)        => null()  !<
@@ -1153,7 +1207,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: qlyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: qrn(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: qsnw(:,:)        => null()  !<
-    real (kind=kind_phys), pointer      :: prcpmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: qss(:)           => null()  !<
     real (kind=kind_phys)               :: raddt                       !<
     real (kind=kind_phys), pointer      :: rainmp(:)        => null()  !<
@@ -1181,9 +1234,9 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: sigmatot(:,:)    => null()  !<
     logical                             :: skip_macro                  !<
     integer, pointer                    :: slopetype(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: snowmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: snowc(:)         => null()  !<
     real (kind=kind_phys), pointer      :: snohf(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: snowmp(:)        => null()  !<
     real (kind=kind_phys), pointer      :: snowmt(:)        => null()  !<
     integer, pointer                    :: soiltype(:)      => null()  !<
     real (kind=kind_phys), pointer      :: stress(:)        => null()  !<
@@ -1334,6 +1387,7 @@ module GFS_typedefs
 
     !--- physics and radiation
     allocate (Sfcprop%slmsk  (IM))
+    allocate (Sfcprop%lakemsk(IM))
     allocate (Sfcprop%tsfc   (IM))
     allocate (Sfcprop%tisfc  (IM))
     allocate (Sfcprop%snowd  (IM))
@@ -1343,6 +1397,7 @@ module GFS_typedefs
     allocate (Sfcprop%hprime (IM,Model%nmtvr))
 
     Sfcprop%slmsk   = clear_val
+    Sfcprop%lakemsk = clear_val
     Sfcprop%tsfc    = clear_val
     Sfcprop%tisfc   = clear_val
     Sfcprop%snowd   = clear_val
@@ -1429,9 +1484,11 @@ module GFS_typedefs
 
     !--- Out
     allocate (Sfcprop%t2m (IM))
+    allocate (Sfcprop%th2m(IM))
     allocate (Sfcprop%q2m (IM))
 
     Sfcprop%t2m = clear_val
+    Sfcprop%th2m = clear_val
     Sfcprop%q2m = clear_val
 
     if (Model%nstf_name(1) > 0) then
@@ -1499,6 +1556,30 @@ module GFS_typedefs
        Sfcprop%flag_frsoil = clear_val
        Sfcprop%rhofr       = clear_val
        Sfcprop%tsnow       = clear_val
+    end if
+    if (Model%do_mynnsfclay) then
+    ! For MYNN surface layer scheme
+      print*,"Allocating all MYNN-sfclay variables"
+       allocate (Sfcprop%ustm   (IM ))
+       allocate (Sfcprop%zol    (IM ))
+       allocate (Sfcprop%mol    (IM ))
+       allocate (Sfcprop%rmol   (IM ))
+       allocate (Sfcprop%flhc   (IM ))
+       allocate (Sfcprop%flqc   (IM ))
+       allocate (Sfcprop%chs2   (IM ))
+       allocate (Sfcprop%cqs2   (IM ))
+       allocate (Sfcprop%lh     (IM ))
+       !
+      print*,"Initializing all MYNN-SfcLay variables with ",clear_val
+       Sfcprop%ustm        = clear_val
+       Sfcprop%zol         = clear_val
+       Sfcprop%mol         = clear_val
+       Sfcprop%rmol        = clear_val
+       Sfcprop%flhc        = clear_val
+       Sfcprop%flqc        = clear_val
+       Sfcprop%chs2        = clear_val
+       Sfcprop%cqs2        = clear_val
+       Sfcprop%lh          = clear_val
     end if
     if (Model%imfdeepcnv == 3) then
         allocate (Sfcprop%conv_act(IM))
@@ -1732,7 +1813,9 @@ module GFS_typedefs
     !--- needed for Thompson's aerosol option
     if(Model%imp_physics == Model%imp_physics_thompson .and. Model%ltaerosol) then
       allocate (Coupling%nwfa2d (IM))
+      allocate (Coupling%nifa2d (IM))
       Coupling%nwfa2d   = clear_val
+      Coupling%nifa2d   = clear_val
     endif
 
   end subroutine coupling_create
@@ -1827,6 +1910,7 @@ module GFS_typedefs
                                                              !< 1 => use modis based alb
     integer              :: iems           =  0              !< use fixed value of 1.0
     integer              :: iaer           =  1              !< default aerosol effect in sw only
+    integer              :: icliq_sw       =  1              !< sw optical property for liquid clouds
     integer              :: iovr_sw        =  1              !< sw: max-random overlap clouds
     integer              :: iovr_lw        =  1              !< lw: max-random overlap clouds
     integer              :: ictm           =  1              !< ictm=0 => use data at initial cond time, if not
@@ -1947,6 +2031,22 @@ module GFS_typedefs
                                                                       !<           current operational version as of 2016
                                                                       !<     2: scale- & aerosol-aware mass-flux deep conv scheme (2017)
     logical              :: do_deep        = .true.                   !< whether to do deep convection
+
+    logical              :: do_mynnedmf       = .false.               !< flag for MYNN-EDMF
+    logical              :: do_mynnsfclay     = .false.               !< flag for MYNN Surface Layer Scheme
+    integer              :: grav_settling     = 0
+    integer              :: bl_mynn_tkebudget = 0
+    logical              :: bl_mynn_tkeadvect = .false.
+    integer              :: bl_mynn_cloudpdf  = 2
+    integer              :: bl_mynn_mixlength = 2
+    integer              :: bl_mynn_edmf      = 1
+    integer              :: bl_mynn_edmf_mom  = 1
+    integer              :: bl_mynn_edmf_tke  = 0
+    integer              :: bl_mynn_edmf_part = 0
+    integer              :: bl_mynn_cloudmix  = 1
+    integer              :: bl_mynn_mixqt     = 0
+    integer              :: icloud_bl         = 1
+
     integer              :: nmtvr          = 14                       !< number of topographic variables such as variance etc
                                                                       !< used in the GWD parameterization
     integer              :: jcap           =  1              !< number of spectral wave trancation used only by sascnv shalcnv
@@ -2056,7 +2156,7 @@ module GFS_typedefs
                                cplflx, cplwav, cplchm, lsidea,                              &
                           !--- radiation parameters
                                fhswr, fhlwr, levr, nfxr, aero_in, iflip, isol, ico2, ialb,  &
-                               isot, iems,  iaer, iovr_sw, iovr_lw, ictm, isubc_sw,         &
+                               isot, iems, iaer, icliq_sw, iovr_sw, iovr_lw, ictm, isubc_sw,&
                                isubc_lw, crick_proof, ccnorm, lwhtr, swhtr,                 &
                           !--- microphysical parameterizations
                                ncld, imp_physics, psautco, prautco, evpco, wminco,          &
@@ -2072,6 +2172,10 @@ module GFS_typedefs
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
                                cscnv, cal_pre, do_aw, do_shoc, shocaftcnv, shoc_cld,        &
                                oz_phys, oz_phys_2015,                                       &
+                               do_mynnedmf, do_mynnsfclay,                                  &
+                               bl_mynn_cloudpdf, bl_mynn_edmf, bl_mynn_edmf_mom,            &
+                               bl_mynn_edmf_tke, bl_mynn_edmf_part, bl_mynn_cloudmix,       &
+                               bl_mynn_mixqt, icloud_bl,                                    &
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
                                dspheat, cnvcld,                                             &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, do_deep, jcap,&
@@ -2206,6 +2310,7 @@ module GFS_typedefs
     Model%ialb             = ialb
     Model%iems             = iems
     Model%iaer             = iaer
+    Model%icliq_sw         = icliq_sw
     Model%iovr_sw          = iovr_sw
     Model%iovr_lw          = iovr_lw
     Model%ictm             = ictm
@@ -2323,6 +2428,18 @@ module GFS_typedefs
     Model%dlqf             = dlqf
     Model%rbcr             = rbcr
 
+    Model%do_mynnedmf       = do_mynnedmf
+    Model%do_mynnsfclay     = do_mynnsfclay
+    Model%bl_mynn_cloudpdf  = bl_mynn_cloudpdf
+    Model%bl_mynn_mixlength = bl_mynn_mixlength
+    Model%bl_mynn_edmf      = bl_mynn_edmf
+    Model%bl_mynn_edmf_mom  = bl_mynn_edmf_mom
+    Model%bl_mynn_edmf_tke  = bl_mynn_edmf_tke
+    Model%bl_mynn_cloudmix  = bl_mynn_cloudmix
+    Model%bl_mynn_mixqt     = bl_mynn_mixqt
+    Model%bl_mynn_edmf_part = bl_mynn_edmf_part
+    Model%bl_mynn_tkeadvect = bl_mynn_tkeadvect
+    Model%grav_settling     = grav_settling
 
     !--- Rayleigh friction
     Model%prslrd0          = prslrd0
@@ -2481,6 +2598,20 @@ module GFS_typedefs
                                             ' ntke=',Model%ntke,' shoc_parm=',shoc_parm
     endif
 
+    !--- mynn-edmf scheme
+    if (do_mynnedmf) then
+      Model%do_shoc    = .false.
+      Model%shal_cnv   = .false.
+      Model%imfshalcnv = -1
+      Model%hybedmf    = .false.
+      Model%satmedmf   = .false.
+      if (Model%me == Model%master) print *,' MYNN-EDMF scheme is used for both',                &
+                                            ' boundary layer turbulence and shallow convection', &
+                                            ' bl_mynn_cloudpdf=',Model%bl_mynn_cloudpdf,         &
+                                            ' bl_mynn_mixlength=',Model%bl_mynn_mixlength,       &
+                                            ' bl_mynn_edmf=',Model%bl_mynn_edmf
+    endif
+
     !--- set number of cloud types
     if (Model%cscnv) then
       Model%nctp = nint(Model%cs_parm(5))
@@ -2514,6 +2645,13 @@ module GFS_typedefs
         print *,' nstf_name(5)=',Model%nstf_name(5)
       endif
       if (Model%do_deep) then
+        ! Consistency check for GF convection: deep and shallow convection are bundled
+        ! and cannot be combined with any other deep or shallow convection scheme
+        if ( (Model%imfdeepcnv == 3 .or. Model%imfshalcnv == 3) .and. &
+            .not. (Model%imfdeepcnv == 3 .and. Model%imfshalcnv == 3) ) then
+            write(0,*) "Logic error: if GF deep convection is used, must also use GF shallow convection (and vice versa)"
+            stop
+        end if
         if (.not. Model%cscnv) then
           if (Model%ras) then
             print *,' RAS Convection scheme used with ccwf=',Model%ccwf
@@ -2525,6 +2663,8 @@ module GFS_typedefs
                print *,' July 2010 version of SAS conv scheme used'
             elseif(Model%imfdeepcnv == 2) then
                print *,' scale & aerosol-aware mass-flux deep conv scheme'
+            elseif(Model%imfdeepcnv == 3) then
+               print *,'Grell-Freitas scale & aerosol-aware mass-flux deep conv scheme'
             endif
           endif
         else
@@ -2539,7 +2679,7 @@ module GFS_typedefs
       else
         print*, ' Deep convection scheme disabled'
       endif
-      if (.not. Model%old_monin .and. .not. Model%do_shoc) print *,' New PBL scheme used'
+      if (.not. Model%old_monin .and. .not. Model%do_shoc .and. .not. Model%do_mynnedmf) print *,' New PBL scheme used'
       if (.not. Model%shal_cnv) then
         Model%imfshalcnv = -1
         print *,' No shallow convection used'
@@ -2550,6 +2690,8 @@ module GFS_typedefs
           print *,' July 2010 version of mass-flux shallow conv scheme used'
         elseif (Model%imfshalcnv == 2) then
           print *,' scale- & aerosol-aware mass-flux shallow conv scheme (2017)'
+        elseif (Model%imfshalcnv == 3) then
+          print *,'Grell-Freitas scale- & aerosol-aware mass-flux shallow conv scheme (2013)'
         else
           print *,' unknown mass-flux scheme in use - defaulting to no shallow convection'
           Model%imfshalcnv = -1
@@ -2667,12 +2809,12 @@ module GFS_typedefs
 
     Model%uni_cld = .false.
 !   if (Model%shoc_cld .or. Model%ncld == 2 .or. Model%ntclamt > 0) then
-    if ((Model%shoc_cld) .or. (Model%imp_physics == 10)) then
+    if ((Model%shoc_cld) .or. (Model%imp_physics == Model%imp_physics_mg)) then
       Model%uni_cld = .true.
     endif
 
     if(Model%ras     .or. Model%cscnv)  Model%cnvcld = .false.
-    if(Model%do_shoc .or. Model%pdfcld) Model%cnvcld = .false.
+    if(Model%do_shoc .or. Model%pdfcld .or. Model%do_mynnedmf) Model%cnvcld = .false.
     if(Model%cnvcld) Model%ncnvcld3d = 1
 
 !--- get cnvw index in phy_f3d
@@ -2703,7 +2845,7 @@ module GFS_typedefs
     !--- set up parameters for Xu & Randell's cloudiness computation (Radiation)
 
     Model%lmfshal  = (Model%shal_cnv .and. (Model%imfshalcnv > 0))
-    Model%lmfdeep2 = (Model%imfdeepcnv == 2)
+    Model%lmfdeep2 = (Model%imfdeepcnv == 2 .or. Model%imfdeepcnv == 3)
     !--- END CODE FROM GLOOPR
 
     !--- BEGIN CODE FROM GLOOPB
@@ -2798,6 +2940,7 @@ module GFS_typedefs
       print *, ' ialb              : ', Model%ialb
       print *, ' iems              : ', Model%iems
       print *, ' iaer              : ', Model%iaer
+      print *, ' icliq_sw          : ', Model%icliq_sw
       print *, ' iovr_sw           : ', Model%iovr_sw
       print *, ' iovr_lw           : ', Model%iovr_lw
       print *, ' ictm              : ', Model%ictm
@@ -2893,6 +3036,8 @@ module GFS_typedefs
       print *, ' dlqf              : ', Model%dlqf
       print *, ' seed0             : ', Model%seed0
       print *, ' rbcr              : ', Model%rbcr
+      print *, ' do_mynnedmf       : ', Model%do_mynnedmf
+      print *, ' do_mynnsfclay     : ', Model%do_mynnsfclay
       print *, ' '
       print *, 'Rayleigh friction'
       print *, ' prslrd0           : ', Model%prslrd0
@@ -3323,6 +3468,48 @@ module GFS_typedefs
       allocate (Diag%refl_10cm(IM,Model%levs))
     endif
 
+    !--- MYNN variables:
+    if (Model%do_mynnedmf) then
+      print*,"Allocating all MYNN-EDMF variables:"
+      allocate (Diag%cldfra_bl (IM,Model%levs))
+      allocate (Diag%qc_bl     (IM,Model%levs))
+      allocate (Diag%el_pbl    (IM,Model%levs))
+      allocate (Diag%sh3d      (IM,Model%levs))
+      allocate (Diag%qke       (IM,Model%levs))
+      allocate (Diag%qke_adv   (IM,Model%levs))
+      allocate (Diag%tsq       (IM,Model%levs))
+      allocate (Diag%qsq       (IM,Model%levs))
+      allocate (Diag%cov       (IM,Model%levs))
+      allocate (Diag%edmf_a    (IM,Model%levs))
+      allocate (Diag%edmf_w    (IM,Model%levs))
+      allocate (Diag%edmf_qt   (IM,Model%levs))
+      allocate (Diag%edmf_thl  (IM,Model%levs))
+      allocate (Diag%edmf_ent  (IM,Model%levs))
+      allocate (Diag%edmf_qc   (IM,Model%levs))
+      allocate (Diag%nupdraft  (IM))
+      allocate (Diag%maxmf     (IM))
+      allocate (Diag%ktop_shallow(IM))
+      print*,"Initializing all MYNN-EDMF variables with ",clear_val
+      Diag%cldfra_bl     = clear_val
+      Diag%qc_bl         = clear_val
+      Diag%el_pbl        = clear_val
+      Diag%sh3d          = clear_val
+      Diag%qke           = zero
+      Diag%qke_adv       = clear_val
+      Diag%tsq           = clear_val
+      Diag%qsq           = clear_val
+      Diag%cov           = clear_val
+      Diag%edmf_a        = clear_val
+      Diag%edmf_w        = clear_val
+      Diag%edmf_qt       = clear_val
+      Diag%edmf_thl      = clear_val
+      Diag%edmf_ent      = clear_val
+      Diag%edmf_qc       = clear_val
+      Diag%nupdraft      = 0
+      Diag%maxmf         = clear_val
+      Diag%ktop_shallow  = 0
+    endif
+
     call Diag%rad_zero  (Model)
 !    print *,'in diag_create, call phys_zero'
     linit = .true.
@@ -3480,7 +3667,7 @@ module GFS_typedefs
     !
     allocate (Interstitial%otspt      (Model%ntracp1,2))
     ! Set up numbers of tracers for PBL, convection, etc: sets
-    ! Interstitial%{nncl,nvdiff,mg3_as_mg2,nn,tracers_total,ntk,otspt,nsamftrac,ncstrac}
+    ! Interstitial%{nncl,nvdiff,mg3_as_mg2,nn,tracers_total,ntk,ntkev,otspt,nsamftrac,ncstrac}
     call interstitial_setup_tracers(Interstitial, Model)
     ! Allocate arrays
     allocate (Interstitial%adjnirbmd  (IM))
@@ -3500,12 +3687,12 @@ module GFS_typedefs
     allocate (Interstitial%clcn       (IM,Model%levs))
     allocate (Interstitial%cldf       (IM))
     allocate (Interstitial%cldsa      (IM,5))
+    allocate (Interstitial%cldtaulw   (IM,Model%levr+LTP))
+    allocate (Interstitial%cldtausw   (IM,Model%levr+LTP))
     allocate (Interstitial%cld1d      (IM))
     allocate (Interstitial%clouds     (IM,Model%levr+LTP,NF_CLDS))
     allocate (Interstitial%clw        (IM,Model%levs,Interstitial%nn))
     allocate (Interstitial%clx        (IM,4))
-    allocate (Interstitial%cn_prc     (IM))
-    allocate (Interstitial%cn_snr     (IM))
     allocate (Interstitial%cnv_dqldt  (IM,Model%levs))
     allocate (Interstitial%cnv_fice   (IM,Model%levs))
     allocate (Interstitial%cnv_mfd    (IM,Model%levs))
@@ -3518,8 +3705,10 @@ module GFS_typedefs
     allocate (Interstitial%ctei_rml   (IM))
     allocate (Interstitial%cumabs     (IM))
     allocate (Interstitial%dd_mf      (IM,Model%levs))
+    allocate (Interstitial%de_lgth    (IM))
     allocate (Interstitial%del        (IM,Model%levs))
     allocate (Interstitial%del_gz     (IM,Model%levs+1))
+    allocate (Interstitial%delr       (IM,Model%levr+LTP))
     allocate (Interstitial%dkt        (IM,Model%levs-1))
     allocate (Interstitial%dlength    (IM))
     allocate (Interstitial%dqdt       (IM,Model%levs,Model%ntrac))
@@ -3537,6 +3726,7 @@ module GFS_typedefs
     allocate (Interstitial%dvsfcg     (IM))
     allocate (Interstitial%dvsfc1     (IM))
     allocate (Interstitial%dvdftra    (IM,Model%levs,Interstitial%nvdiff))
+    allocate (Interstitial%dzlyr      (IM,Model%levr+LTP))
     allocate (Interstitial%elvmax     (IM))
     allocate (Interstitial%ep1d       (IM))
     allocate (Interstitial%evap       (IM))
@@ -3572,9 +3762,6 @@ module GFS_typedefs
     allocate (Interstitial%ktop       (IM))
     allocate (Interstitial%mbota      (IM,3))
     allocate (Interstitial%mtopa      (IM,3))
-    allocate (Interstitial%ncgl       (IM,Model%levs))
-    allocate (Interstitial%ncpr       (IM,Model%levs))
-    allocate (Interstitial%ncps       (IM,Model%levs))
     allocate (Interstitial%oa4        (IM,4))
     allocate (Interstitial%oc         (IM))
     allocate (Interstitial%olyr       (IM,Model%levr+LTP))
@@ -3582,12 +3769,9 @@ module GFS_typedefs
     allocate (Interstitial%plvl       (IM,Model%levr+1+LTP))
     allocate (Interstitial%plyr       (IM,Model%levr+LTP))
     allocate (Interstitial%prnum      (IM,Model%levs))
-    allocate (Interstitial%qgl        (IM,Model%levs))
     allocate (Interstitial%qicn       (IM,Model%levs))
     allocate (Interstitial%qlcn       (IM,Model%levs))
     allocate (Interstitial%qlyr       (IM,Model%levr+LTP))
-    allocate (Interstitial%qrn        (IM,Model%levs))
-    allocate (Interstitial%qsnw       (IM,Model%levs))
     allocate (Interstitial%prcpmp     (IM))
     allocate (Interstitial%qss        (IM))
     allocate (Interstitial%raincd     (IM))
@@ -3639,11 +3823,20 @@ module GFS_typedefs
     allocate (Interstitial%z01d       (IM))
     allocate (Interstitial%zt1d       (IM))
     ! Allocate arrays that are conditional on physics choices
-    if (Model%imp_physics == Model%imp_physics_gfdl) then
+    if (Model%imp_physics == Model%imp_physics_gfdl .or. Model%imp_physics == Model%imp_physics_thompson) then
        allocate (Interstitial%graupelmp  (IM))
        allocate (Interstitial%icemp      (IM))
        allocate (Interstitial%rainmp     (IM))
        allocate (Interstitial%snowmp     (IM))
+    else if (Model%imp_physics == Model%imp_physics_mg) then
+       allocate (Interstitial%cn_prc     (IM))
+       allocate (Interstitial%cn_snr     (IM))
+       allocate (Interstitial%ncgl       (IM,Model%levs))
+       allocate (Interstitial%ncpr       (IM,Model%levs))
+       allocate (Interstitial%ncps       (IM,Model%levs))
+       allocate (Interstitial%qgl        (IM,Model%levs))
+       allocate (Interstitial%qrn        (IM,Model%levs))
+       allocate (Interstitial%qsnw       (IM,Model%levs))
     end if
     ! Set components that do not change
     Interstitial%h2o_coeff    = h2o_coeff
@@ -3681,6 +3874,7 @@ module GFS_typedefs
     Interstitial%mg3_as_mg2       = .false.
     Interstitial%nn               = Model%ntrac + 1
     Interstitial%ntk              = 0
+    Interstitial%ntkev            = 0
     Interstitial%tracers_total    = 0
     Interstitial%otspt(:,:)       = .true.
     Interstitial%nsamftrac        = 0
@@ -3693,12 +3887,19 @@ module GFS_typedefs
       else
         Interstitial%nvdiff = 5
       endif
+      if (Model%satmedmf) then
+        Interstitial%nvdiff = Interstitial%nvdiff + 1
+      endif
       Interstitial%nncl = 5
     elseif (Model%imp_physics == Model%imp_physics_wsm6) then
       Interstitial%nvdiff = Model%ntrac -3
       Interstitial%nncl = 5
     elseif (Model%ntclamt > 0 .and. Model%imp_physics == Model%imp_physics_gfdl) then             ! for GFDL MP don't diffuse cloud amount
       Interstitial%nvdiff = Model%ntrac - 1
+    endif
+
+    if (Model%imp_physics == Model%imp_physics_gfdl) then
+      Interstitial%nncl = 5
     endif
 
     if (Model%imp_physics == Model%imp_physics_mg) then
@@ -3715,6 +3916,9 @@ module GFS_typedefs
         endif
       endif
     endif
+
+    Interstitial%ntkev = Interstitial%nvdiff
+
     ! *GF
     ! DH* NEW CODE 20180626
     if (Model%ntiw > 0) then
@@ -3770,7 +3974,12 @@ module GFS_typedefs
     Interstitial%aerodp       = clear_val
     Interstitial%alb1d        = clear_val
     Interstitial%cldsa        = clear_val
+    Interstitial%cldtaulw     = clear_val
+    Interstitial%cldtausw     = clear_val
     Interstitial%clouds       = clear_val
+    Interstitial%de_lgth      = clear_val
+    Interstitial%delr         = clear_val
+    Interstitial%dzlyr        = clear_val
     Interstitial%faerlw       = clear_val
     Interstitial%faersw       = clear_val
     Interstitial%gasvmr       = clear_val
@@ -3825,8 +4034,6 @@ module GFS_typedefs
     Interstitial%clw          = clear_val
     Interstitial%clw(:,:,2)   = -999.9
     Interstitial%clx          = clear_val
-    Interstitial%cn_prc       = clear_val
-    Interstitial%cn_snr       = clear_val
     Interstitial%cnv_dqldt    = clear_val
     Interstitial%cnv_fice     = clear_val
     Interstitial%cnv_mfd      = clear_val
@@ -3850,11 +4057,11 @@ module GFS_typedefs
     Interstitial%dtdt         = clear_val
     Interstitial%dtdtc        = clear_val
     Interstitial%dtsfc1       = clear_val
-    Interstitial%dvdftra      = clear_val
     Interstitial%dtzm         = clear_val
     Interstitial%dudt         = clear_val
     Interstitial%dusfcg       = clear_val
     Interstitial%dusfc1       = clear_val
+    Interstitial%dvdftra      = clear_val
     Interstitial%dvdt         = clear_val
     Interstitial%dvsfcg       = clear_val
     Interstitial%dvsfc1       = clear_val
@@ -3882,24 +4089,17 @@ module GFS_typedefs
     Interstitial%hflx         = clear_val
     Interstitial%hprime1      = clear_val
     Interstitial%islmsk       = 0
-    Interstitial%iter         = 0
     Interstitial%kbot         = Model%levs
     Interstitial%kcnv         = 0
     Interstitial%kinver       = Model%levs
     Interstitial%kpbl         = 0
     Interstitial%ktop         = 1
-    Interstitial%ncgl         = clear_val
-    Interstitial%ncpr         = clear_val
-    Interstitial%ncps         = clear_val
     Interstitial%oa4          = clear_val
     Interstitial%oc           = clear_val
     Interstitial%prcpmp       = clear_val
     Interstitial%prnum        = clear_val
     Interstitial%qicn         = clear_val
-    Interstitial%qgl          = clear_val
     Interstitial%qlcn         = clear_val
-    Interstitial%qrn          = clear_val
-    Interstitial%qsnw         = clear_val
     Interstitial%qss          = clear_val
     Interstitial%raincd       = clear_val
     Interstitial%raincs       = clear_val
@@ -3947,11 +4147,20 @@ module GFS_typedefs
     Interstitial%z01d         = clear_val
     Interstitial%zt1d         = clear_val
     ! Reset fields that are conditional on physics choices
-    if (Model%imp_physics == Model%imp_physics_gfdl) then
+    if (Model%imp_physics == Model%imp_physics_gfdl .or. Model%imp_physics == Model%imp_physics_thompson) then
        Interstitial%graupelmp = clear_val
        Interstitial%icemp     = clear_val
        Interstitial%rainmp    = clear_val
        Interstitial%snowmp    = clear_val
+    else if (Model%imp_physics == Model%imp_physics_mg) then
+       Interstitial%cn_prc    = clear_val
+       Interstitial%cn_snr    = clear_val
+       Interstitial%ncgl      = clear_val
+       Interstitial%ncpr      = clear_val
+       Interstitial%ncps      = clear_val
+       Interstitial%qgl       = clear_val
+       Interstitial%qrn       = clear_val
+       Interstitial%qsnw      = clear_val
     end if
     !
   end subroutine interstitial_phys_reset
@@ -4003,12 +4212,12 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%clcn        ) = ', sum(Interstitial%clcn        )
     write (0,*) 'sum(Interstitial%cldf        ) = ', sum(Interstitial%cldf        )
     write (0,*) 'sum(Interstitial%cldsa       ) = ', sum(Interstitial%cldsa       )
+    write (0,*) 'sum(Interstitial%cldtaulw    ) = ', sum(Interstitial%cldtaulw    )
+    write (0,*) 'sum(Interstitial%cldtausw    ) = ', sum(Interstitial%cldtausw    )
     write (0,*) 'sum(Interstitial%cld1d       ) = ', sum(Interstitial%cld1d       )
     write (0,*) 'sum(Interstitial%clw         ) = ', sum(Interstitial%clw         )
     write (0,*) 'sum(Interstitial%clx         ) = ', sum(Interstitial%clx         )
     write (0,*) 'sum(Interstitial%clouds      ) = ', sum(Interstitial%clouds      )
-    write (0,*) 'sum(Interstitial%cn_prc      ) = ', sum(Interstitial%cn_prc      )
-    write (0,*) 'sum(Interstitial%cn_snr      ) = ', sum(Interstitial%cn_snr      )
     write (0,*) 'sum(Interstitial%cnv_dqldt   ) = ', sum(Interstitial%cnv_dqldt   )
     write (0,*) 'sum(Interstitial%cnv_fice    ) = ', sum(Interstitial%cnv_fice    )
     write (0,*) 'sum(Interstitial%cnv_mfd     ) = ', sum(Interstitial%cnv_mfd     )
@@ -4021,8 +4230,10 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%ctei_rml    ) = ', sum(Interstitial%ctei_rml    )
     write (0,*) 'sum(Interstitial%cumabs      ) = ', sum(Interstitial%cumabs      )
     write (0,*) 'sum(Interstitial%dd_mf       ) = ', sum(Interstitial%dd_mf       )
+    write (0,*) 'sum(Interstitial%de_lgth     ) = ', sum(Interstitial%de_lgth     )
     write (0,*) 'sum(Interstitial%del         ) = ', sum(Interstitial%del         )
     write (0,*) 'sum(Interstitial%del_gz      ) = ', sum(Interstitial%del_gz      )
+    write (0,*) 'sum(Interstitial%delr        ) = ', sum(Interstitial%delr        )
     write (0,*) 'sum(Interstitial%dkt         ) = ', sum(Interstitial%dkt         )
     write (0,*) 'sum(Interstitial%dlength     ) = ', sum(Interstitial%dlength     )
     write (0,*) 'sum(Interstitial%dqdt        ) = ', sum(Interstitial%dqdt        )
@@ -4040,6 +4251,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%dvdt        ) = ', sum(Interstitial%dvdt        )
     write (0,*) 'sum(Interstitial%dvsfcg      ) = ', sum(Interstitial%dvsfcg      )
     write (0,*) 'sum(Interstitial%dvsfc1      ) = ', sum(Interstitial%dvsfc1      )
+    write (0,*) 'sum(Interstitial%dzlyr       ) = ', sum(Interstitial%dzlyr       )
     write (0,*) 'sum(Interstitial%elvmax      ) = ', sum(Interstitial%elvmax      )
     write (0,*) 'sum(Interstitial%ep1d        ) = ', sum(Interstitial%ep1d        )
     write (0,*) 'sum(Interstitial%evap        ) = ', sum(Interstitial%evap        )
@@ -4068,7 +4280,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%hprime1     ) = ', sum(Interstitial%hprime1     )
     write (0,*) 'sum(Interstitial%idxday      ) = ', sum(Interstitial%idxday      )
     write (0,*) 'sum(Interstitial%islmsk      ) = ', sum(Interstitial%islmsk      )
-    write (0,*) 'Interstitial%iter              = ', Interstitial%iter
     write (0,*) 'Interstitial%kb                = ', Interstitial%kb
     write (0,*) 'sum(Interstitial%kbot        ) = ', sum(Interstitial%kbot        )
     write (0,*) 'sum(Interstitial%kcnv        ) = ', sum(Interstitial%kcnv        )
@@ -4079,9 +4290,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%ktop        ) = ', sum(Interstitial%ktop        )
     write (0,*) 'sum(Interstitial%mbota       ) = ', sum(Interstitial%mbota       )
     write (0,*) 'sum(Interstitial%mtopa       ) = ', sum(Interstitial%mtopa       )
-    write (0,*) 'sum(Interstitial%ncgl        ) = ', sum(Interstitial%ncgl        )
-    write (0,*) 'sum(Interstitial%ncpr        ) = ', sum(Interstitial%ncpr        )
-    write (0,*) 'sum(Interstitial%ncps        ) = ', sum(Interstitial%ncps        )
     write (0,*) 'Interstitial%nday              = ', Interstitial%nday
     write (0,*) 'sum(Interstitial%oa4         ) = ', sum(Interstitial%oa4         )
     write (0,*) 'sum(Interstitial%oc          ) = ', sum(Interstitial%oc          )
@@ -4090,12 +4298,9 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%plyr        ) = ', sum(Interstitial%plyr        )
     write (0,*) 'sum(Interstitial%prcpmp      ) = ', sum(Interstitial%prcpmp      )
     write (0,*) 'sum(Interstitial%prnum       ) = ', sum(Interstitial%prnum       )
-    write (0,*) 'sum(Interstitial%qgl         ) = ', sum(Interstitial%qgl         )
     write (0,*) 'sum(Interstitial%qicn        ) = ', sum(Interstitial%qicn        )
     write (0,*) 'sum(Interstitial%qlcn        ) = ', sum(Interstitial%qlcn        )
     write (0,*) 'sum(Interstitial%qlyr        ) = ', sum(Interstitial%qlyr        )
-    write (0,*) 'sum(Interstitial%qrn         ) = ', sum(Interstitial%qrn         )
-    write (0,*) 'sum(Interstitial%qsnw        ) = ', sum(Interstitial%qsnw        )
     write (0,*) 'sum(Interstitial%qss         ) = ', sum(Interstitial%qss         )
     write (0,*) 'Interstitial%raddt             = ', Interstitial%raddt
     write (0,*) 'sum(Interstitial%raincd      ) = ', sum(Interstitial%raincd      )
@@ -4155,12 +4360,22 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%z01d        ) = ', sum(Interstitial%z01d        )
     write (0,*) 'sum(Interstitial%zt1d        ) = ', sum(Interstitial%zt1d        )
     ! Print arrays that are conditional on physics choices
-    if (Model%imp_physics == Model%imp_physics_gfdl) then
-       write (0,*) 'Interstitial_print: values specific to GFDL microphysics'
+    if (Model%imp_physics == Model%imp_physics_gfdl .or. Model%imp_physics == Model%imp_physics_thompson) then
+       write (0,*) 'Interstitial_print: values specific to GFDL/Thompson microphysics'
        write (0,*) 'sum(Interstitial%graupelmp) = ', sum(Interstitial%graupelmp   )
        write (0,*) 'sum(Interstitial%icemp    ) = ', sum(Interstitial%icemp       )
        write (0,*) 'sum(Interstitial%rainmp   ) = ', sum(Interstitial%rainmp      )
        write (0,*) 'sum(Interstitial%snowmp   ) = ', sum(Interstitial%snowmp      )
+    else if (Model%imp_physics == Model%imp_physics_mg) then
+       write (0,*) 'Interstitial_print: values specific to MG microphysics'
+       write (0,*) 'sum(Interstitial%cn_prc   ) = ', sum(Interstitial%cn_prc      )
+       write (0,*) 'sum(Interstitial%cn_snr   ) = ', sum(Interstitial%cn_snr      )
+       write (0,*) 'sum(Interstitial%ncgl     ) = ', sum(Interstitial%ncgl        )
+       write (0,*) 'sum(Interstitial%ncpr     ) = ', sum(Interstitial%ncpr        )
+       write (0,*) 'sum(Interstitial%ncps     ) = ', sum(Interstitial%ncps        )
+       write (0,*) 'sum(Interstitial%qgl      ) = ', sum(Interstitial%qgl         )
+       write (0,*) 'sum(Interstitial%qrn      ) = ', sum(Interstitial%qrn         )
+       write (0,*) 'sum(Interstitial%qsnw     ) = ', sum(Interstitial%qsnw        )
     end if
     write (0,*) 'Interstitial_print: end'
     !

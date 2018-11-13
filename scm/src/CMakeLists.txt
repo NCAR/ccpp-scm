@@ -10,8 +10,8 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 #MESSAGE("The NETCDF env. variable is $ENV{NETCDF}")
 SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 
-SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp-framework)
-SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp-physics)
+SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
+SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
 
 # Use rpaths on MacOSX
 set(CMAKE_MACOSX_RPATH 1)
@@ -36,8 +36,8 @@ endif()
 SET(NETCDF_F90 "YES")
 FIND_PACKAGE(NetCDF)
 INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp-framework/src)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp-physics)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
 
 #------------------------------------------------------------------------------
 # Add required preprocessor flags for build type
@@ -123,7 +123,7 @@ endif()
 #------------------------------------------------------------------------------
 # CMake Modules
 # Set the CMake module path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp-framework/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp/framework/cmake")
 #------------------------------------------------------------------------------
 # Set OpenMP flags for C/C++/Fortran
 if (OPENMP)
@@ -139,8 +139,8 @@ endif()
 
 #------------------------------------------------------------------------------
 # Configure sources
-ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp-framework)
-ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp-physics)
+ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
+ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 SET(scm_source_files gmtb_scm.F90
             gmtb_scm_input.f90
             gmtb_scm_utils.f90
