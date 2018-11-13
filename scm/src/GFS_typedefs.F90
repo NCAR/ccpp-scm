@@ -1559,7 +1559,6 @@ module GFS_typedefs
     end if
     if (Model%do_mynnsfclay) then
     ! For MYNN surface layer scheme
-      print*,"Allocating all MYNN-sfclay variables"
        allocate (Sfcprop%ustm   (IM ))
        allocate (Sfcprop%zol    (IM ))
        allocate (Sfcprop%mol    (IM ))
@@ -1570,7 +1569,6 @@ module GFS_typedefs
        allocate (Sfcprop%cqs2   (IM ))
        allocate (Sfcprop%lh     (IM ))
        !
-      print*,"Initializing all MYNN-SfcLay variables with ",clear_val
        Sfcprop%ustm        = clear_val
        Sfcprop%zol         = clear_val
        Sfcprop%mol         = clear_val
@@ -3470,7 +3468,6 @@ module GFS_typedefs
 
     !--- MYNN variables:
     if (Model%do_mynnedmf) then
-      print*,"Allocating all MYNN-EDMF variables:"
       allocate (Diag%cldfra_bl (IM,Model%levs))
       allocate (Diag%qc_bl     (IM,Model%levs))
       allocate (Diag%el_pbl    (IM,Model%levs))
@@ -3489,7 +3486,7 @@ module GFS_typedefs
       allocate (Diag%nupdraft  (IM))
       allocate (Diag%maxmf     (IM))
       allocate (Diag%ktop_shallow(IM))
-      print*,"Initializing all MYNN-EDMF variables with ",clear_val
+
       Diag%cldfra_bl     = clear_val
       Diag%qc_bl         = clear_val
       Diag%el_pbl        = clear_val
