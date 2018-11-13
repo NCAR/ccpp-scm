@@ -25,7 +25,7 @@ $end
 
 $physics_config
 physics_suite = 'suite_SCM_GFS_2018_MG',
-physics_suite_dir = '../../ccpp-framework/suites/',
+physics_suite_dir = '../../ccpp/suites/',
 physics_nml = '../etc/case_config/input_MG.nml',
 column_area = 2.0E9,
 $end
