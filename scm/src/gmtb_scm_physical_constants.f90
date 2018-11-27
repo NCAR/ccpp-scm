@@ -22,6 +22,7 @@ public
 !! | con_rd                 | gas_constant_dry_air                                     | ideal gas constant for dry air                          | J kg-1 K-1    |    0 | real              | kind_phys | none   | F        |
 !! | con_rv                 | gas_constant_water_vapor                                 | ideal gas constant for water vapor                      | J kg-1 K-1    |    0 | real              | kind_phys | none   | F        |
 !! | con_t0c                | temperature_at_zero_celsius                              | temperature at 0 degrees Celsius                        | K             |    0 | real              | kind_phys | none   | F        |
+!! | con_ttp                | triple_point_temperature_of_water                        | triple point temperature of water                       | K             |    0 | real              | kind_phys | none   | F        |
 !! | con_vonKarman          | vonKarman_constant                                       | vonKarman constant                                      | none          |    0 | real              | kind_phys | none   | F        |
 !!
   real(kind=dp),parameter:: con_pi     =3.1415926535897931
@@ -37,6 +38,7 @@ public
   real(kind=dp),parameter:: con_hvap   =2.5000e+6
   real(kind=dp),parameter:: con_hfus   =3.3358e+5
   real(kind=dp),parameter:: con_t0c    =2.7315e+2
+  real(kind=dp),parameter:: con_ttp    =2.7316e+2
 
 
   real(kind=dp),parameter:: con_rocp   =con_rd/con_cp
