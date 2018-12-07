@@ -341,10 +341,10 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   call GFS_grid_populate (Grid, Init_parm%xlon, Init_parm%xlat, Init_parm%area)
 
   !--- initialize Morrison-Gettleman microphysics
-  if (Model%ncld == 2) then
-    call ini_micro (Model%mg_dcs, Model%mg_qcvar, Model%mg_ts_auto_ice)
-    call aer_cloud_init ()
-  endif
+  !if (Model%ncld == 2) then
+  !  call ini_micro (Model%mg_dcs, Model%mg_qcvar, Model%mg_ts_auto_ice(1))
+  !  call aer_cloud_init ()
+  !endif
 
   !--- initialize ras
   if (Model%ras) call ras_init (Model%levs, Model%me)
@@ -377,6 +377,7 @@ subroutine GFS_grid_populate (Grid, xlon, xlat, area)
   real(kind=kind_phys), intent(in) :: xlon(:,:)
   real(kind=kind_phys), intent(in) :: xlat(:,:)
   real(kind=kind_phys), intent(in) :: area(:,:)
+  real(kind=kind_phys), parameter  :: rad2deg = 180.0_kind_phys/pi
 
   !--- local variables
   integer :: n_columns, i
@@ -386,7 +387,8 @@ subroutine GFS_grid_populate (Grid, xlon, xlat, area)
   do i=1, n_columns
    Grid%xlon = xlon(i,1)
    Grid%xlat = xlat(i,1)
-   Grid%xlat_d(i) = xlat(i,1) * 180.0_kind_phys/pi
+   Grid%xlat_d(i) = xlat(i,1) * rad2deg
+   Grid%xlon_d(i) = xlon(i,1) * rad2deg
    Grid%sinlat(i) = sin(Grid%xlat(i))
    Grid%coslat(i) = sqrt(1.0_kind_phys - Grid%sinlat(i)*Grid%sinlat(i))
    Grid%area(i)   = area(i,1)
