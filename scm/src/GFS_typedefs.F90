@@ -2572,6 +2572,10 @@ module GFS_typedefs
     Model%iau_inc_files   = iau_inc_files
     Model%iau_delthrs     = iau_delthrs
 
+    !--- debug flag
+    Model%debug            = debug
+    Model%pre_rad          = pre_rad
+
     !--- tracer handling
     Model%ntrac            = size(tracer_names)
     Model%ntracp1          = Model%ntrac + 1
@@ -2598,10 +2602,6 @@ module GFS_typedefs
     Model%nshoc_3d         = nshoc_3d
     Model%ncnvcld3d        = ncnvcld3d
     Model%nctp             = nctp
-
-    !--- debug flag
-    Model%debug            = debug
-    Model%pre_rad          = pre_rad
 
     !--- set initial values for time varying properties
     Model%ipt              = 1

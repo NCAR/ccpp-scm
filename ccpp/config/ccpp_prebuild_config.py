@@ -42,6 +42,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/micro_mg2_0.F90',
     'ccpp/physics/physics/micro_mg3_0.F90',
     'ccpp/physics/physics/module_bfmicrophysics.f',
+    'ccpp/physics/physics/module_gfdl_cloud_microphys.F90',
     'ccpp/physics/physics/module_nst_model.f90',
     'ccpp/physics/physics/module_nst_parameters.f90',
     'ccpp/physics/physics/module_nst_water_prop.f90',
@@ -80,6 +81,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_soil_pre.F90',
     'ccpp/physics/physics/wv_saturation.F',
     'scm/src/GFS_typedefs.F90',
+    'scm/src/CCPP_typedefs.F90'
 ]
 
 # Add all physics scheme files relative to basedir

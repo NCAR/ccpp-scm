@@ -67,6 +67,8 @@ module gmtb_scm_type_defs
     integer                           :: snow_nc_index !< index for snow number concentration in the tracer array
     integer                           :: graupel_nc_index !< index for graupel number concentration in the tracer array
     integer                           :: tke_index !< index for TKE in the tracer array
+    integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
+    integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
     integer                           :: init_year, init_month, init_day, init_hour
     character(len=32), allocatable    :: tracer_names(:) !< name of physics suite (must be "GFS_operational" for prototype)
     integer, allocatable              :: blksz(:)
@@ -466,8 +468,8 @@ module gmtb_scm_type_defs
 !! | physics%Statein(i)%qgrs(:,:,scm_state%snow_index)        | snow_water_mixing_ratio                                                                           | moist (dry+vapor, no condensates) mixing ratio of snow water                        | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,scm_state%graupel_index)     | graupel_mixing_ratio                                                                              | moist (dry+vapor, no condensates) mixing ratio of graupel                           | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,scm_state%ozone_index)       | ozone_mixing_ratio                                                                                | ozone mixing ratio                                                                  | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntwa)       | water_friendly_aerosol_number_concentration                                                       | number concentration of water-friendly aerosols                                     | kg-1          |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntia)       | ice_friendly_aerosol_number_concentration                                                         | number concentration of ice-friendly aerosols                                       | kg-1          |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Statein(i)%qgrs(:,:,scm_state%water_friendly_aerosol_index)       | water_friendly_aerosol_number_concentration                                                       | number concentration of water-friendly aerosols                                     | kg-1          |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Statein(i)%qgrs(:,:,scm_state%ice_friendly_aerosol_index)       | ice_friendly_aerosol_number_concentration                                                         | number concentration of ice-friendly aerosols                                       | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,scm_state%cloud_droplet_nc_index)  | cloud_droplet_number_concentration                                                                | number concentration of cloud droplets (liquid)                                     | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,scm_state%cloud_ice_nc_index)      | ice_number_concentration                                                                          | number concentration of ice                                                         | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Statein(i)%qgrs(:,:,scm_state%rain_nc_index)      | rain_number_concentration                                                                         | number concentration of rain                                                        | kg-1          |    2 | real                  | kind_phys | none   | F        |
@@ -1283,6 +1285,8 @@ module gmtb_scm_type_defs
     scm_state%snow_nc_index = 12
     scm_state%graupel_nc_index = 13
     scm_state%tke_index = 14
+    scm_state%water_friendly_aerosol_index = 15
+    scm_state%ice_friendly_aerosol_index = 16
     scm_state%tracer_names(1) = 'vap_wat'
     scm_state%tracer_names(2) = 'o3mr'
     scm_state%tracer_names(3) = 'liq_wat'
@@ -1297,6 +1301,8 @@ module gmtb_scm_type_defs
     scm_state%tracer_names(12)= 'snow_nc'
     scm_state%tracer_names(13)= 'graupel_nc'
     scm_state%tracer_names(14)= 'sgs_tke'
+    scm_state%tracer_names(15)= 'liq_aero'
+    scm_state%tracer_names(16)= 'ice_aero'
     scm_state%n_itt_swrad = int_zero
     scm_state%n_itt_lwrad = int_zero
     scm_state%n_itt_out = int_zero
@@ -1498,7 +1504,7 @@ module gmtb_scm_type_defs
       physics%Init_parm(i)%gnx = int_one
       physics%Init_parm(i)%gny = int_one
       physics%Init_parm(i)%nlunit = int_one
-      physics%Init_parm(i)%logunit= int_neg_one
+      physics%Init_parm(i)%logunit= 2
       physics%Init_parm(i)%bdat(:) = zeroes_8(:)
       physics%Init_parm(i)%cdat(:) = zeroes_8(:)
       physics%Init_parm(i)%dt_dycore = kind_phys_zero
