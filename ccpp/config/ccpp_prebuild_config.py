@@ -12,6 +12,8 @@ HOST_MODEL_IDENTIFIER = "SCM"
 # Add all files with metadata tables on the host model side,
 # relative to basedir = top-level directory of host model
 VARIABLE_DEFINITION_FILES = [
+    'ccpp/physics/physics/machine.F',
+    'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_type_defs.f90',
     'scm/src/gmtb_scm_physical_constants.f90'
     ]
@@ -53,6 +55,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/namelist_soilveg.f',
     'ccpp/physics/physics/mfpblt.f',
     'ccpp/physics/physics/mfscu.f',
+    'ccpp/physics/physics/num_parthds.F',
     'ccpp/physics/physics/ozinterp.f90',
     'ccpp/physics/physics/ozne_def.f',
     'ccpp/physics/physics/physcons.F90',
@@ -68,6 +71,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/radsw_datatb.f',
     'ccpp/physics/physics/radsw_param.f',
     'ccpp/physics/physics/rascnvv2.f',
+    'ccpp/physics/physics/sfcsub.F',
     'ccpp/physics/physics/set_soilveg.f',
     'ccpp/physics/physics/sflx.f',
     'ccpp/physics/physics/surface_perturbation.F90',
@@ -146,6 +150,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_drv.f'                    : ['physics'],
     'ccpp/physics/physics/sfc_drv_ruc.F90'              : ['physics'],
     'ccpp/physics/physics/sfc_nst.f'                    : ['physics'],
+    'ccpp/physics/physics/sfc_ocean.F'                  : ['physics'],
     'ccpp/physics/physics/sfc_sice.f'                   : ['physics'],
     'ccpp/physics/physics/gmtb_scm_sfc_flux_spec.F90'   : ['physics'],
     }
@@ -239,6 +244,9 @@ OPTIONAL_ARGUMENTS = {
 MODULE_INCLUDE_FILE = 'ccpp_modules.inc'
 FIELDS_INCLUDE_FILE = 'ccpp_fields.inc'
 
+# Directory where to write static API to
+STATIC_API_DIR = 'scm/src/'
+
 # HTML document containing the model-defined CCPP variables
 HTML_VARTABLE_FILE = 'ccpp/physics/CCPP_VARIABLES_SCM.html'
 
@@ -254,25 +262,25 @@ LATEX_VARTABLE_FILE = 'ccpp/framework/doc/DevelopersGuide/CCPP_VARIABLES_SCM.tex
 # in the case of SCM, this is a vector with loop index i
 CCPP_DATA_STRUCTURE = 'cdata(i)'
 
-# Modules to load for auto-generated ccpp_field_add code
-# in the host model cap (e.g. error handling)
-MODULE_USE_TEMPLATE_HOST_CAP = \
-'''
-use ccpp_errors, only: ccpp_error
-'''
-
-# Modules to load for auto-generated ccpp_field_get code
-# in the physics scheme cap (e.g. derived data types)
-MODULE_USE_TEMPLATE_SCHEME_CAP = \
-'''
-       use machine, only: kind_phys
-       use module_radlw_parameters, only: sfcflw_type, topflw_type
-       use module_radsw_parameters, only: cmpfsw_type, sfcfsw_type, topfsw_type
-       use GFS_typedefs, only: GFS_statein_type,  GFS_stateout_type,    &
-                               GFS_sfcprop_type,                        &
-                               GFS_coupling_type, GFS_control_type,     &
-                               GFS_grid_type,     GFS_tbd_type,         &
-                               GFS_cldprop_type,  GFS_radtend_type,     &
-                               GFS_diag_type,     GFS_interstitial_type,&
-                               GFS_init_type
-'''
+# # Modules to load for auto-generated ccpp_field_add code
+# # in the host model cap (e.g. error handling)
+# MODULE_USE_TEMPLATE_HOST_CAP = \
+# '''
+# use ccpp_errors, only: ccpp_error
+# '''
+#
+# # Modules to load for auto-generated ccpp_field_get code
+# # in the physics scheme cap (e.g. derived data types)
+# MODULE_USE_TEMPLATE_SCHEME_CAP = \
+# '''
+#        use machine, only: kind_phys
+#        use module_radlw_parameters, only: sfcflw_type, topflw_type
+#        use module_radsw_parameters, only: cmpfsw_type, sfcfsw_type, topfsw_type
+#        use GFS_typedefs, only: GFS_statein_type,  GFS_stateout_type,    &
+#                                GFS_sfcprop_type,                        &
+#                                GFS_coupling_type, GFS_control_type,     &
+#                                GFS_grid_type,     GFS_tbd_type,         &
+#                                GFS_cldprop_type,  GFS_radtend_type,     &
+#                                GFS_diag_type,     GFS_interstitial_type,&
+#                                GFS_init_type
+# '''
