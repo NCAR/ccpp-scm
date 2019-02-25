@@ -217,7 +217,8 @@ end subroutine patch_in_ref
 !--------------
 subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                   &
                             Coupling, Grid, Tbd, Cldprop, Radtend, Diag,         &
-                            Interstitial, communicator, ntasks, Init_parm,       &
+                            Interstitial, communicator, ntasks, restart,         &
+                            Init_parm,                                           &
                             n_ozone_lats, n_ozone_layers, n_ozone_times,         &
                             n_ozone_coefficients,                                &
                             ozone_lat_in, ozone_pres_in, ozone_time_in,          &
@@ -257,6 +258,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
 
   integer,                  intent(in)    :: communicator
   integer,                  intent(in)    :: ntasks
+  logical,                  intent(in)    :: restart
 
   integer, intent(in) :: n_ozone_lats, n_ozone_layers, n_ozone_coefficients, n_ozone_times
   real(kind=kind_phys), intent(in) :: ozone_lat_in(:), ozone_pres_in(:), ozone_time_in(:), ozone_forcing_in(:,:,:,:)
@@ -275,8 +277,8 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%bdat, Init_parm%cdat,               &
                    Init_parm%tracer_names,                       &
                    Init_parm%input_nml_file, Init_parm%ak,       &
-                   Init_parm%bk, Init_parm%blksz, communicator,  &
-                   ntasks)
+                   Init_parm%bk, Init_parm%blksz, restart,       &
+                   communicator, ntasks)
 
   ! DH* TODO: clean up this part, the allocation and assignment
   ! of ozone and h2o data does not belong here !*DH
@@ -329,7 +331,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   call Sfcprop%create(1, Model)
   call Coupling%create(1, Model)
   call Grid%create(1, Model)
-  call Tbd%create(1, 1, Model)
+  call Tbd%create(1, Model)
   call Cldprop%create(1, Model)
   call Radtend%create(1, Model)
   !--- internal representation of diagnostics
