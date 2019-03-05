@@ -246,6 +246,10 @@ subroutine gmtb_scm_main_sub()
 
   scm_state%dt_now = scm_state%dt
 
+  do i=1, scm_state%n_cols
+    physics%Model(i)%first_time_step = .false.
+  end do
+
   do i = 2, scm_state%n_timesteps
     scm_state%itt = i
     !>  - Calculate the elapsed model time.
@@ -258,8 +262,6 @@ subroutine gmtb_scm_main_sub()
     do j=1, scm_state%n_cols
       physics%Model(j)%jdat = jdat
     end do
-
-    physics%Model(i)%first_time_step = .false.
 
     !>  - Save previously unfiltered state as temporary for use in the time filter.
     if(scm_state%time_scheme == 2) then
