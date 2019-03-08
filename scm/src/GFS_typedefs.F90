@@ -628,6 +628,8 @@ module GFS_typedefs
     logical              :: hybedmf         !< flag for hybrid edmf pbl scheme
     logical              :: satmedmf        !< flag for scale-aware TKE-based moist edmf
                                             !< vertical turbulent mixing scheme
+    logical              :: shinhong        !< flag for scale-aware Shinhong vertical turbulent mixing scheme
+    logical              :: do_ysu          !< flag for YSU turbulent mixing scheme
     logical              :: dspheat         !< flag for tke dissipative heating
     logical              :: cnvcld
     logical              :: random_clds     !< flag controls whether clouds are random
@@ -1908,7 +1910,7 @@ module GFS_typedefs
     endif
 
     !--- needed for Thompson's aerosol option
-    if(Model%imp_physics == Model%imp_physics_thompson .and. Model%ltaerosol) then
+    if(Model%imp_physics == Model%imp_physics_thompson) then
       allocate (Coupling%nwfa2d (IM))
       allocate (Coupling%nifa2d (IM))
       Coupling%nwfa2d   = clear_val
@@ -2119,6 +2121,8 @@ module GFS_typedefs
     logical              :: hybedmf        = .false.                  !< flag for hybrid edmf pbl scheme
     logical              :: satmedmf       = .false.                  !< flag for scale-aware TKE-based moist edmf
                                                                       !< vertical turbulent mixing scheme
+    logical              :: shinhong       = .false.                  !< flag for scale-aware Shinhong vertical turbulent mixing scheme
+    logical              :: do_ysu         = .false.                  !< flag for YSU vertical turbulent mixing scheme
     logical              :: dspheat        = .false.                  !< flag for tke dissipative heating
     logical              :: cnvcld         = .false.
     logical              :: random_clds    = .false.                  !< flag controls whether clouds are random
@@ -2286,7 +2290,7 @@ module GFS_typedefs
                                bl_mynn_edmf_tke, bl_mynn_edmf_part, bl_mynn_cloudmix,       &
                                bl_mynn_mixqt, icloud_bl, bl_mynn_tkeadvect,                 &
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
-                               dspheat, cnvcld,                                             &
+                               shinhong, do_ysu, dspheat, cnvcld,                           &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, do_deep, jcap,&
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
                                dlqf, rbcr, shoc_parm, psauras, prauras, wminras,            &
@@ -2541,6 +2545,8 @@ module GFS_typedefs
     Model%redrag           = redrag
     Model%hybedmf          = hybedmf
     Model%satmedmf         = satmedmf
+    Model%shinhong         = shinhong
+    Model%do_ysu           = do_ysu
     Model%dspheat          = dspheat
     Model%cnvcld           = cnvcld
     Model%random_clds      = random_clds
@@ -3180,6 +3186,8 @@ module GFS_typedefs
       print *, ' redrag            : ', Model%redrag
       print *, ' hybedmf           : ', Model%hybedmf
       print *, ' satmedmf          : ', Model%satmedmf
+      print *, ' shinhong          : ', Model%shinhong
+      print *, ' do_ysu            : ', Model%do_ysu
       print *, ' dspheat           : ', Model%dspheat
       print *, ' cnvcld            : ', Model%cnvcld
       print *, ' random_clds       : ', Model%random_clds
@@ -4144,7 +4152,7 @@ module GFS_typedefs
     endif
 
     if (Interstitial%nvdiff == Model%ntrac) then
-      Interstitial%ntiwx = -999
+      Interstitial%ntiwx = Model%ntiw
     else
       if (Model%imp_physics == Model%imp_physics_wsm6) then
         Interstitial%ntiwx = 3
