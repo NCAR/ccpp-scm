@@ -22,7 +22,9 @@ subroutine gmtb_scm_main_sub()
                ccpp_physics_init,            &
                ccpp_physics_run,             &
                ccpp_physics_finalize,        &
-               ccpp_field_add
+               ccpp_field_add,               &
+               ccpp_initialized,             &
+               ccpp_error
 
   use :: iso_c_binding, only: c_loc
 
@@ -110,6 +112,9 @@ subroutine gmtb_scm_main_sub()
           stop
       end if
 
+      cdata(i)%blk_no = 1
+      cdata(i)%thrd_no = 1
+
       physics%Init_parm(i)%levs = scm_state%n_levels
       physics%Init_parm(i)%bdat(1) = scm_state%init_year
       physics%Init_parm(i)%bdat(2) = scm_state%init_month
@@ -131,7 +136,8 @@ subroutine gmtb_scm_main_sub()
       call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), 1, 1, physics%Init_parm(i),&
+                           physics%Diag(i), physics%Interstitial(i), 1, 1, .false.,             &
+                           physics%Init_parm(i),                                                &
                            physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_times, &
                            physics%n_ozone_coefficients, physics%ozone_lat, physics%ozone_pres, &
                            physics%ozone_time, physics%ozone_forcing_in,                        &
@@ -153,6 +159,7 @@ subroutine gmtb_scm_main_sub()
           stop
       end if
 
+      physics%Model(i)%first_time_step = .true.
   end do
 
   call output_append(scm_state, physics)
@@ -238,6 +245,10 @@ subroutine gmtb_scm_main_sub()
   scm_state%n_itt_out = floor(scm_state%output_frequency/scm_state%dt)
 
   scm_state%dt_now = scm_state%dt
+
+  do i=1, scm_state%n_cols
+    physics%Model(i)%first_time_step = .false.
+  end do
 
   do i = 2, scm_state%n_timesteps
     scm_state%itt = i
