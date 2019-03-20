@@ -5,7 +5,7 @@ This chapter provides instructions for obtaining and compiling  the GMTB SCM. Th
 
 \section{Obtaining Code}
 
-The source code bundle for the CCPP and SCM is provided through github.com.  This release repository contains the tested and supported version for general use.
+The source code bundle for the CCPP and SCM is provided through GitHub.com.  This release repository contains the tested and supported version for general use.
 
 \begin{enumerate}
     \item Download a compressed file or clone the source using
@@ -30,6 +30,24 @@ If you would like to contribute as a developer to this project, please see CCPP 
 \url{https://dtcenter.org/gmtb/users/ccpp/developers/index.php}
 
 There you will find links to all of the documentation pertinent to developers.
+
+One can also clone the development repository, although its stability is not guaranteed. To do so,
+\begin{enumerate}
+    \item Clone the source using
+\begin{lstlisting}[language=bash]
+git clone --recursive https://[username]@github.com/NCAR/gmtb-scm gmtb-scm
+\end{lstlisting}
+    and enter your github password when prompted.
+    \item Check out the desired branch (master) using
+\begin{lstlisting}[language=bash]
+git checkout master
+\end{lstlisting}
+    \item Change directory into the project.
+\begin{lstlisting}[language=bash]
+cd gmtb-scm
+\end{lstlisting}
+\end{enumerate}
+
 
 \section{System Requirements, Libraries, and Tools}
 \label{section: systemrequirements}
