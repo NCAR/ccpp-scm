@@ -62,8 +62,8 @@
        vr_max = 12.
        qi_lim = 1.
        prog_ccn = .false.
-       do_qa = .true.
-       fast_sat_adj = .true.
+       do_qa = .false.
+       fast_sat_adj = .false.
        tau_l2v = 300.
        tau_l2v = 225.
        tau_v2l = 150.
