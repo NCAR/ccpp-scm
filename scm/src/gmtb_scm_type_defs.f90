@@ -1190,22 +1190,6 @@ module gmtb_scm_type_defs
 !! | physics%Cldprop(i)%cv                                    | fraction_of_convective_cloud                                                                      | fraction of convective cloud                                                        | frac          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Cldprop(i)%cvt                                   | pressure_at_top_of_convective_cloud                                                               | convective cloud top pressure                                                       | Pa            |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Cldprop(i)%cvb                                   | pressure_at_bottom_of_convective_cloud                                                            | convective cloud bottom pressure                                                    | Pa            |    1 | real                  | kind_phys | none   | F        |
-!! | physics%n_ozone_layers                                   | vertical_dimension_of_ozone_forcing_data_from_host                                                | number of vertical layers in ozone forcing data coming from host                    | count         |    0 | integer               |           | none   | F        |
-!! | physics%n_ozone_lats                                     | number_of_latitutde_points_in_ozone_forcing_data_from_host                                        | number of latitude points in ozone forcing data coming from host                    | count         |    0 | integer               |           | none   | F        |
-!! | physics%n_ozone_times                                    | number_of_time_levels_in_ozone_forcing_data_from_host                                             | number of time levels in ozone forcing data coming from host                        | count         |    0 | integer               |           | none   | F        |
-!! | physics%n_ozone_coefficients                             | number_of_coefficients_in_ozone_forcing_data_from_host                                            | number of coeffcients in ozone forcing data coming from host                        | count         |    0 | integer               |           | none   | F        |
-!! | physics%ozone_lat                                        | latitude_of_ozone_forcing_data_from_host                                                          | latitude value of the ozone forcing data coming from host                           | degree        |    1 | real                  | kind_phys | none   | F        |
-!! | physics%ozone_pres                                       | natural_log_of_ozone_forcing_data_pressure_levels_from_host                                       | natural logarithm of the pressure levels of the ozone forcing data                  | Pa            |    1 | real                  | kind_phys | none   | F        |
-!! | physics%ozone_time                                       | time_levels_in_ozone_forcing_data_from_host                                                       | time values of the ozone forcing data coming from host                              | day           |    1 | real                  | kind_phys | none   | F        |
-!! | physics%ozone_forcing_in                                 | ozone_forcing_from_host                                                                           | ozone forcing data from host                                                        | various       |    4 | real                  | kind_phys | none   | F        |
-!! | physics%n_h2o_layers                                     | vertical_dimension_of_h2o_forcing_data_from_host                                                  | number of vertical layers in h2o forcing data coming from host                      | count         |    0 | integer               |           | none   | F        |
-!! | physics%n_h2o_lats                                       | number_of_latitutde_points_in_h2o_forcing_data_from_host                                          | number of latitude points in h2o forcing data coming from host                      | count         |    0 | integer               |           | none   | F        |
-!! | physics%n_h2o_times                                      | number_of_time_levels_in_h2o_forcing_data_from_host                                               | number of time levels in h2o forcing data coming from host                          | count         |    0 | integer               |           | none   | F        |
-!! | physics%n_h2o_coefficients                               | number_of_coefficients_in_h2o_forcing_data_from_host                                              | number of coeffcients in h2o forcing data coming from host                          | count         |    0 | integer               |           | none   | F        |
-!! | physics%h2o_lat                                          | latitude_of_h2o_forcing_data_from_host                                                            | latitude value of the h2o forcing data coming from host                             | degree        |    1 | real                  | kind_phys | none   | F        |
-!! | physics%h2o_pres                                         | natural_log_of_h2o_forcing_data_pressure_levels_from_host                                         | natural logarithm of the pressure levels of the h2o forcing data                    | Pa            |    1 | real                  | kind_phys | none   | F        |
-!! | physics%h2o_time                                         | time_levels_in_h2o_forcing_data_from_host                                                         | time values of the h2o forcing data coming from host                                | day           |    1 | real                  | kind_phys | none   | F        |
-!! | physics%h2o_forcing_in                                   | h2o_forcing_from_host                                                                             | h2o forcing data from host                                                          | various       |    4 | real                  | kind_phys | none   | F        |
 !! | physics%hydrostatic                                      | flag_for_hydrostatic_solver                                                                       | flag for use the hydrostatic or nonhydrostatic solver                               | flag          |    0 | logical               |           | none   | F        |
 !! | physics%phys_hydrostatic                                 | flag_for_hydrostatic_heating_from_physics                                                         | flag for use of hydrostatic heating in physics                                      | flag          |    0 | logical               |           | none   | F        |
 !! | physics%nthreads                                         | omp_threads                                                                                       | number of OpenMP threads available for physics schemes                              | count         |    0 | integer               |           | none   | F        |
@@ -1225,22 +1209,6 @@ module gmtb_scm_type_defs
     type(GFS_diag_type), allocatable         :: Diag(:)
     type(GFS_interstitial_type), allocatable :: Interstitial(:)
     type(GFS_init_type), allocatable         :: Init_parm(:)
-
-    integer :: n_ozone_coefficients
-    integer :: n_ozone_layers
-    integer :: n_ozone_times
-    integer :: n_ozone_lats
-
-    real(kind=kind_phys), allocatable :: ozone_lat(:), ozone_pres(:), ozone_time(:)
-    real(kind=kind_phys), allocatable :: ozone_forcing_in(:,:,:,:)
-
-    integer :: n_h2o_coefficients
-    integer :: n_h2o_layers
-    integer :: n_h2o_times
-    integer :: n_h2o_lats
-
-    real(kind=kind_phys), allocatable :: h2o_lat(:), h2o_pres(:), h2o_time(:)
-    real(kind=kind_phys), allocatable :: h2o_forcing_in(:,:,:,:)
 
     ! needed for GFDL microphysics
     logical                             :: hydrostatic
@@ -1528,36 +1496,6 @@ module gmtb_scm_type_defs
       physics%Init_parm(i)%tracer_names => null()
       physics%Init_parm(i)%blksz => null()
     end do
-
-    !set ozone forcing array dimensions
-    physics%n_ozone_coefficients = 4
-    physics%n_ozone_layers = n_levels
-    physics%n_ozone_lats = n_columns
-    physics%n_ozone_times = 2
-
-    allocate(physics%ozone_lat(physics%n_ozone_lats))
-    allocate(physics%ozone_pres(physics%n_ozone_layers))
-    allocate(physics%ozone_time(physics%n_ozone_times+1))
-    allocate(physics%ozone_forcing_in(physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_coefficients, physics%n_ozone_times))
-    physics%ozone_lat = lats
-    physics%ozone_pres = log(pres)
-    physics%ozone_time = (/12.0, 13.0, 14.0/)
-    physics%ozone_forcing_in = real_zero
-
-    !set h2o forcing array dimensions
-    physics%n_h2o_coefficients = 3
-    physics%n_h2o_layers = n_levels
-    physics%n_h2o_lats = n_columns
-    physics%n_h2o_times = 2
-
-    allocate(physics%h2o_lat(physics%n_h2o_lats))
-    allocate(physics%h2o_pres(physics%n_h2o_layers))
-    allocate(physics%h2o_time(physics%n_h2o_times+1))
-    allocate(physics%h2o_forcing_in(physics%n_h2o_lats, physics%n_h2o_layers, physics%n_h2o_coefficients, physics%n_h2o_times))
-    physics%h2o_lat = lats
-    physics%h2o_pres = log(pres)
-    physics%h2o_time = (/12.0, 13.0, 14.0/)
-    physics%h2o_forcing_in = real_zero
 
     !needed for GFDL microphysics
     physics%hydrostatic = .false.

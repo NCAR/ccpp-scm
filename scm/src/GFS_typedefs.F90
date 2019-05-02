@@ -4,9 +4,7 @@ module GFS_typedefs
        ! Radiation-specific types and parameters
        use module_radlw_parameters,   only: sfcflw_type, topflw_type, NBDLW
        use module_radsw_parameters,   only: cmpfsw_type, sfcfsw_type, topfsw_type, NBDSW
-       use ozne_def,                  only: levozp, oz_coeff, oz_pres
-       use h2o_def,                   only: levh2o, h2o_coeff, h2o_pres
-
+      
        implicit none
 
        ! To ensure that these values match what's in the physics,
@@ -28,8 +26,8 @@ module GFS_typedefs
 
        ! These will be set later in GFS_Control%initialize,
        ! since they depend on the runtime config (e.g. Model%ntoz, Model%h2o_phys, Model%aero_in)
-       private :: ntrcaer
-       integer :: ntrcaer
+       private :: levozp, oz_coeff, levh2o, h2o_coeff, ntrcaer
+       integer :: levozp, oz_coeff, levh2o, h2o_coeff, ntrcaer
 
 #if 0
 !> \section arg_table_GFS_typedefs
@@ -2540,6 +2538,13 @@ module GFS_typedefs
     Model%oz_phys          = oz_phys
     Model%oz_phys_2015     = oz_phys_2015
     Model%h2o_phys         = h2o_phys
+    if (h2o_phys) then
+       levh2o    = 72
+       h2o_coeff = 3
+    else
+       levh2o    = 1
+       h2o_coeff = 1
+    end if
     Model%pdfcld           = pdfcld
     Model%shcnvcw          = shcnvcw
     Model%redrag           = redrag
@@ -2662,7 +2667,32 @@ module GFS_typedefs
     Model%ntke             = get_tracer_index(Model%tracer_names, 'sgs_tke',    Model%me, Model%master, Model%debug)
     Model%ntwa             = get_tracer_index(Model%tracer_names, 'liq_aero',   Model%me, Model%master, Model%debug)
     Model%ntia             = get_tracer_index(Model%tracer_names, 'ice_aero',   Model%me, Model%master, Model%debug)
-
+    
+    ! To ensure that these values match what's in the physics,
+    ! array sizes are compared during model init in GFS_phys_time_vary_init()
+    !
+    ! from module ozinterp
+    if (Model%ntoz>0) then
+       if (Model%oz_phys) then
+          levozp   = 80
+          oz_coeff = 4
+       else if (Model%oz_phys_2015) then
+          levozp   = 53
+          oz_coeff = 6
+       else
+          write(*,*) 'Logic error, ntoz>0 but no ozone physics selected'
+          stop
+       end if
+    else
+       if (Model%oz_phys .or. Model%oz_phys_2015) then
+          write(*,*) 'Logic error, ozone physics are selected, but ntoz<=0'
+          stop
+       else
+          levozp   = 1
+          oz_coeff = 0
+       end if
+    end if
+    
     !--- quantities to be used to derive phy_f*d totals
     Model%nshoc_2d         = nshoc_2d
     Model%nshoc_3d         = nshoc_3d
@@ -4069,23 +4099,26 @@ module GFS_typedefs
        allocate (Interstitial%ncpl (IM,Model%levs))
     end if
     ! Set components that do not change
-    Interstitial%h2o_coeff    = h2o_coeff
-    Interstitial%im           = IM
-    Interstitial%ipr          = min(IM,10)
-    Interstitial%ix           = IM
-    Interstitial%latidxprnt   = 1
-    Interstitial%levi         = Model%levs+1
-    Interstitial%levh2o       = levh2o
-    Interstitial%levozp       = levozp
-    Interstitial%lm           = Model%levr
-    Interstitial%lmk          = Model%levr+LTP
-    Interstitial%lmp          = Model%levr+1+LTP
-    Interstitial%oz_coeff     = oz_coeff
+    
+    Interstitial%im               = IM
+    Interstitial%ipr              = min(IM,10)
+    Interstitial%ix               = IM
+    Interstitial%latidxprnt       = 1
+    Interstitial%levi             = Model%levs+1
+    !Interstitial%nsteps_per_reset = nint(Model%avg_max_length/Model%dtp)
+    Interstitial%levh2o           = levh2o
+    Interstitial%levozp           = levozp
+    Interstitial%lm               = Model%levr
+    Interstitial%lmk              = Model%levr+LTP
+    Interstitial%lmp              = Model%levr+1+LTP
+    Interstitial%h2o_coeff        = h2o_coeff
+    Interstitial%oz_coeff         = oz_coeff
     ! h2o_pres and oz_pres do not change during the run, but
     ! need to be set later in GFS_phys_time_vary_init (after
     ! h2o_pres/oz_pres are read in read_h2odata/read_o3data)
-    Interstitial%oz_pres      = oz_pres
-    Interstitial%h2o_pres     = h2o_pres
+    Interstitial%h2o_pres         = clear_val
+    Interstitial%oz_pres          = clear_val
+    
     !
     Interstitial%skip_macro   = .false.
     ! Reset all other variables

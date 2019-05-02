@@ -87,7 +87,7 @@ subroutine gmtb_scm_main_sub()
   scm_state%itt_out = 1
 
   call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%lat(:,1), scm_state%pres_l(1,1,:))
-
+  
   !physics initialization section
 
   !set the array index of the time level of the state variables that the cdata
@@ -137,21 +137,15 @@ subroutine gmtb_scm_main_sub()
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
                            physics%Diag(i), physics%Interstitial(i), 1, 1, .false.,             &
-                           physics%Init_parm(i),                                                &
-                           physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_times, &
-                           physics%n_ozone_coefficients, physics%ozone_lat, physics%ozone_pres, &
-                           physics%ozone_time, physics%ozone_forcing_in,                        &
-                           physics%n_h2o_lats, physics%n_h2o_layers, physics%n_h2o_times,       &
-                           physics%n_h2o_coefficients, physics%h2o_lat, physics%h2o_pres,       &
-                           physics%h2o_time, physics%h2o_forcing_in)
+                           physics%Init_parm(i))
 
       call physics%associate(scm_state, i)
-
+      
 ! use ccpp_fields.inc to call ccpp_field_add for all variables to add
 ! (this is auto-generated from ccpp/scripts/ccpp_prebuild.py,
 !  the script parses tables in gmtb_scm_type_defs.f90)
 #include "ccpp_fields.inc"
-
+      
       !initialize easch column's physics
       call ccpp_physics_init(cdata(i), ierr=ierr)
       if (ierr/=0) then
