@@ -1965,7 +1965,7 @@ module GFS_typedefs
     integer,                intent(in) :: ntasks
 
     !--- local variables
-    integer :: n
+    integer :: n, status
     integer :: ios
     integer :: seed0
     logical :: exists
@@ -2676,9 +2676,21 @@ module GFS_typedefs
        if (Model%oz_phys) then
           levozp   = 80
           oz_coeff = 4
+          call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
+          status = link('global_o3prdlos_orig.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
+          if ( status .ne. 0 ) then
+              write(*,*) 'There was an error symlinking global_o3prdlos_orig.f77 to global_o3prdlos.f77 in scm/src/GFS_typedefs.F90. Now exiting. Status = ',status
+              stop 
+          end if
        else if (Model%oz_phys_2015) then
           levozp   = 53
           oz_coeff = 6
+          call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
+          status = link('ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
+          if ( status .ne. 0 ) then
+              write(*,*) 'There was an error symlinking ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77 to global_o3prdlos.f77 in scm/src/GFS_typedefs.F90. Now exiting. Status = ',status
+              stop 
+          end if
        else
           write(*,*) 'Logic error, ntoz>0 but no ozone physics selected'
           stop
