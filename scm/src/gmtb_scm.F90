@@ -86,7 +86,7 @@ subroutine gmtb_scm_main_sub()
 
   scm_state%itt_out = 1
 
-  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%lat(:,1), scm_state%pres_l(1,1,:))
+  call physics%create(scm_state%n_cols)
   
   !physics initialization section
 
