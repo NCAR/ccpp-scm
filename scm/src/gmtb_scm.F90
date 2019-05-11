@@ -104,9 +104,7 @@ subroutine gmtb_scm_main_sub()
 
   do i = 1, scm_state%n_cols
      !set up each column's physics suite (which may be different)
-      call ccpp_init( &
-          trim(adjustl(scm_state%physics_suite_dir))//trim(adjustl(scm_state%physics_suite_name(i)))//'.xml', &
-          cdata(i), ierr)
+      call ccpp_init(trim(adjustl(scm_state%physics_suite_name(i))), cdata(i), ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
           stop

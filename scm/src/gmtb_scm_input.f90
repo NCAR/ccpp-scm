@@ -59,10 +59,11 @@ subroutine get_config_nml(scm_state)
   !integer, allocatable              :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
 
   integer                           :: i, last_physics_specified
-  integer                        :: ioerror(5)
-
+  integer                        :: ioerror(6)
+  logical :: file_exists
+  
   INTEGER, PARAMETER    :: buflen = 255
-  CHARACTER(LEN=buflen) :: buf, opt_namelist_vals
+  CHARACTER(LEN=buflen) :: buf, opt_namelist_vals, SDF_filename, ioerror_string
   CHARACTER(1)             :: response
 
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
@@ -207,6 +208,26 @@ subroutine get_config_nml(scm_state)
         !       //'for each suite.'
         !   end if
         end if !check on physics_suite
+        
+        SDF_filename = 'suite_'//trim(adjustl(physics_suite(i)))//'.xml'
+        INQUIRE(FILE='./'//SDF_filename, EXIST=file_exists)
+        if (.not. file_exists) then
+          INQUIRE(FILE=trim(adjustl(physics_suite_dir))//SDF_filename, EXIST=file_exists)
+          if (file_exists) then
+            CALL SYMLNK(trim(adjustl(physics_suite_dir))//SDF_filename, './'//SDF_filename , ioerror(5)) 
+            if(ioerror(5) /= 0) then
+              write(*,*) 'There was a problem symlinking the file '//trim(adjustl(physics_suite_dir))//SDF_filename//' into the run directory.'
+              CALL gerror(ioerror_string)
+              write(*,*) ioerror_string
+              STOP
+            end if
+          else
+            write(*,*) 'The file '//trim(adjustl(SDF_filename))//' does not exist in '//trim(adjustl(physics_suite_dir))&
+              //' . It is required to run the suite named '//trim(adjustl(physics_suite(i)))//' specified in '&
+              //trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml'
+            STOP
+          end if
+        end if
       end do
     end if
 
@@ -214,16 +235,16 @@ subroutine get_config_nml(scm_state)
       write(*,*) 'Since there was an error reading in the '//trim(adjustl(case_config_dir))//'/'//trim(experiment_name)//'.nml'&
         //' file, the default values of the namelist variables will be used, modified by any values contained on the command line.'
     end if
-
+    
     !> "Read" in internal namelist variables from command line.
     write(*,*) 'Loading optional namelist variables from command line...'
-    read(opt_namelist_vals, NML=case_config, IOSTAT=ioerror(5))
+    read(opt_namelist_vals, NML=case_config, IOSTAT=ioerror(6))
 
     !> Check for namelist reading errors. If errors are found, output the namelist variables that were loaded to console and ask user for input on whether to proceed.
-    if(ioerror(5) /= 0) then
-      write(*,*) 'There was an error reading the optional namelist variables from the command line: error code ',ioerror(5)
+    if(ioerror(6) /= 0) then
+      write(*,*) 'There was an error reading the optional namelist variables from the command line: error code ',ioerror(6)
     end if
-    if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /= 0 .or. ioerror(5) /= 0) then
+    if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /= 0 .or. ioerror(6) /= 0) then
       write(*,*) 'Since there was an error either reading the namelist file or an error reading namelist variables from the &
         command line, the namelist variables that are available to use are some combination of the default values and the values &
         that were able to be read. Please look over the namelist variables below to make sure they are set as intended.'
