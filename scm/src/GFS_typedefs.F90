@@ -1,3 +1,4 @@
+
 module GFS_typedefs
 
        use machine,                   only: kind_phys
@@ -2677,7 +2678,7 @@ module GFS_typedefs
           levozp   = 80
           oz_coeff = 4
           call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
-          status = link('global_o3prdlos_orig.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
+          status = symlnk('global_o3prdlos_orig.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
           if ( status .ne. 0 ) then
               write(*,*) 'There was an error symlinking global_o3prdlos_orig.f77 to global_o3prdlos.f77 in scm/src/GFS_typedefs.F90. Now exiting. Status = ',status
               stop 
@@ -2686,7 +2687,7 @@ module GFS_typedefs
           levozp   = 53
           oz_coeff = 6
           call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
-          status = link('ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
+          status = symlnk('ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
           if ( status .ne. 0 ) then
               write(*,*) 'There was an error symlinking ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77 to global_o3prdlos.f77 in scm/src/GFS_typedefs.F90. Now exiting. Status = ',status
               stop 
