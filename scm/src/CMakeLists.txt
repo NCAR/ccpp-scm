@@ -108,6 +108,19 @@ elseif (${CMAKE_BUILD_TYPE} MATCHES "Release")
 endif (${CMAKE_BUILD_TYPE} MATCHES "Debug")
 
 #------------------------------------------------------------------------------
+# Set netCDF flags for preprocessor, compiler and linker (if defined)
+set(NETCDF_DIR $ENV{NETCDF})
+if(NETCDF_DIR)
+  set (NETCDF_INC "-I${NETCDF_DIR}/include")
+  set (NETCDF_LIB "-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf")
+  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${NETCDF_INC} ${NETCDF_LIB}")
+  ADD_DEFINITIONS(-DNETCDF)
+  message (STATUS "Enable netCDF support")
+else(NETCDF_DIR)
+  message (STATUS "Disable netCDF support")
+endif(NETCDF_DIR)
+
+#------------------------------------------------------------------------------
 # The Fortran compiler/linker flag inserted by cmake to create shared libraries
 # with the Intel compiler is deprecated (-i_dynamic), correct here.
 # CMAKE_Fortran_COMPILER_ID = {"Intel", "PGI", "GNU", "Clang", "MSVC", ...}
@@ -153,6 +166,8 @@ SET(scm_source_files gmtb_scm.F90
             gmtb_scm_physical_constants.f90
             gmtb_scm_type_defs.f90
 )
+
+message (STATUS "CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
 
 ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
 TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${NETCDF_LIBRARIES})
