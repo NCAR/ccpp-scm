@@ -7,8 +7,12 @@ include(CMakeForceCompiler)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
-#MESSAGE("The NETCDF env. variable is $ENV{NETCDF}")
-SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
+IF(DEFINED ENV{NETCDF})
+  MESSAGE("The NETCDF env. variable is $ENV{NETCDF}")
+  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
+ELSE(DEFINED ENV{NETCDF})
+  MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
+ENDIF(DEFINED ENV{NETCDF})
 
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -32,10 +36,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                  "MinSizeRel" "RelWithDebInfo")
 endif()
 
-#this should call the custome FindNetCDF.cmake file in /src/cmake/modules and populate the NETCDF_INCLUDES and NETCDF_LIBRARIES variables with the appropriate values
-SET(NETCDF_F90 "YES")
-FIND_PACKAGE(NetCDF)
-INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
 
@@ -121,6 +121,35 @@ else(NETCDF_DIR)
 endif(NETCDF_DIR)
 
 #------------------------------------------------------------------------------
+# Set SIONlib flags for preprocessor, compiler and linker (if defined)
+set(SIONLIB $ENV{SIONLIB})
+if (SIONLIB)
+  execute_process(COMMAND ${SIONLIB}/bin/sionconfig --mpi --cflags --f90
+                  RESULT_VARIABLE exit_code
+                  OUTPUT_VARIABLE SIONlib_Fortran_FLAGS
+                  ERROR_VARIABLE stderr
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_STRIP_TRAILING_WHITESPACE)
+  if (NOT exit_code EQUAL "0")
+     message (FATAL_ERROR "Execution of '${SIONLIB}/bin/sionconfig --mpi --cflags --f90' failed")
+  endif (NOT exit_code EQUAL "0")
+  execute_process(COMMAND ${SIONLIB}/bin/sionconfig --mpi --libs --f90
+                  RESULT_VARIABLE exit_code
+                  OUTPUT_VARIABLE SIONlib_Fortran_LIBS
+                  ERROR_VARIABLE stderr
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_STRIP_TRAILING_WHITESPACE)
+  if (NOT exit_code EQUAL "0")
+     message (FATAL_ERROR "Execution of '${SIONLIB}/bin/sionconfig --mpi --libs --f90' failed")
+  endif (NOT exit_code EQUAL "0")
+  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${SIONlib_Fortran_FLAGS} ${SIONlib_Fortran_LIBS}")
+  ADD_DEFINITIONS(-DSION)
+  message (STATUS "Enable SIONlib support")
+else (SIONLIB)
+  message (STATUS "Disable SIONlib support")
+endif (SIONLIB)
+
+#------------------------------------------------------------------------------
 # The Fortran compiler/linker flag inserted by cmake to create shared libraries
 # with the Intel compiler is deprecated (-i_dynamic), correct here.
 # CMAKE_Fortran_COMPILER_ID = {"Intel", "PGI", "GNU", "Clang", "MSVC", ...}
@@ -167,10 +196,8 @@ SET(scm_source_files gmtb_scm.F90
             gmtb_scm_type_defs.f90
 )
 
-message (STATUS "CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
-
 ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
-TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${NETCDF_LIBRARIES})
+TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp)
 set_target_properties(gmtb_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")

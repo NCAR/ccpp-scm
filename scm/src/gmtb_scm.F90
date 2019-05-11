@@ -134,7 +134,7 @@ subroutine gmtb_scm_main_sub()
       call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), 1, 1, .false.,             &
+                           physics%Diag(i), physics%Interstitial(i), 0, 0, .false.,             &
                            physics%Init_parm(i))
 
       call physics%associate(scm_state, i)

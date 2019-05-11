@@ -1470,8 +1470,8 @@ module gmtb_scm_type_defs
       physics%Init_parm(n_columns))
 
     do i=1, n_columns
-      physics%Init_parm(i)%me = int_one
-      physics%Init_parm(i)%master = int_one
+      physics%Init_parm(i)%me = int_zero
+      physics%Init_parm(i)%master = int_zero
       physics%Init_parm(i)%isc = int_one
       physics%Init_parm(i)%jsc = int_one
       physics%Init_parm(i)%nx = int_one
