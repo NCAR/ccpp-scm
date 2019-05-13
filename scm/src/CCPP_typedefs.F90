@@ -12,36 +12,13 @@ module CCPP_typedefs
 
     private
 
-    public CCPP_shared_type, CCPP_interstitial_type, kind_dyn
+    public CCPP_interstitial_type, kind_dyn
 
 #ifdef OVERLOAD_R4
     integer, parameter :: kind_dyn  = 4
 #else
     integer, parameter :: kind_dyn  = 8
 #endif
-
-#if 0
-!! \section arg_table_CCPP_shared_type
-!! | local_name                                         | standard_name                                                 | long_name                                                                           | units   | rank | type        |    kind   | intent | optional |
-!! |----------------------------------------------------|---------------------------------------------------------------|-------------------------------------------------------------------------------------|---------|------|-------------|-----------|--------|----------|
-!! | CCPP_shared(nt)%hydrostatic                        | flag_for_hydrostatic_solver                                   | flag for use the hydrostatic or nonhydrostatic solver                               | flag    |    0 | logical     |           | none   | F        |
-!! | CCPP_shared(nt)%nthreads                           | omp_threads                                                   | number of OpenMP threads available for physics schemes                              | count   |    0 | integer     |           | none   | F        |
-!! | CCPP_shared(nt)%phys_hydrostatic                   | flag_for_hydrostatic_heating_from_physics                     | flag for use of hydrostatic heating in physics                                      | flag    |    0 | logical     |           | none   | F        |
-!!
-#endif
-  type CCPP_shared_type
-
-     logical                             :: hydrostatic
-     integer                             :: nthreads
-     logical                             :: phys_hydrostatic
-
-  contains
-
-    procedure :: create  => shared_create     !<   allocate/set data
-    procedure :: reset   => shared_reset      !<   reset data
-    procedure :: mprint  => shared_print      !<   print data
-
-  end type CCPP_shared_type
 
 #if 0
 !! \section arg_table_CCPP_interstitial_type
@@ -90,53 +67,6 @@ module CCPP_typedefs
   end type CCPP_interstitial_type
 
 contains
-
-!-----------------------------
-! CCPP_shared_type
-!-----------------------------
-  subroutine shared_create (Shared, hydrostatic, phys_hydrostatic)
-    !
-    implicit none
-    !
-    class(CCPP_shared_type) :: Shared
-    logical, intent(in) :: hydrostatic
-    logical, intent(in) :: phys_hydrostatic
-    !
-    Shared%hydrostatic = hydrostatic
-    ! Number of OpenMP threads available for schemes, default only one
-    Shared%nthreads = 1
-    ! DH*
-    ! The input phys_hydrostatic from Atm does not match the
-    ! hardcoded value for calling GFDL MP in GFS_physics_driver.F90
-    !Shared%phys_hydrostatic = phys_hydrostatic
-    Shared%phys_hydrostatic = .true.
-    ! *DH
-    !
-    call Shared%reset()
-    !
-  end subroutine shared_create
-
-  subroutine shared_reset (Shared)
-    !
-    implicit none
-    !
-    class(CCPP_shared_type) :: Shared
-    !
-  end subroutine shared_reset
-
-  subroutine shared_print(Shared)
-    !
-    implicit none
-    !
-    class(CCPP_shared_type) :: Shared
-    !
-    write (0,'(a)') 'Shared_print'
-    write (0,*) 'Shared%hydrostatic       = ', Shared%hydrostatic
-    write (0,*) 'Shared%nthreads          = ', Shared%nthreads
-    write (0,*) 'Shared%phys_hydrostatic  = ', Shared%phys_hydrostatic
-    write (0,*) 'Shared_print: end'
-    !
-  end subroutine shared_print
 
 !-----------------------------
 ! CCPP_interstitial_type

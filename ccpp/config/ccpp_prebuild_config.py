@@ -48,7 +48,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_nst_model.f90',
     'ccpp/physics/physics/module_nst_parameters.f90',
     'ccpp/physics/physics/module_nst_water_prop.f90',
-    'ccpp/physics/physics/module_mp_thompson_hrrr_radar.F90',
+    'ccpp/physics/physics/module_mp_radar.F90',
     'ccpp/physics/physics/module_mp_thompson_hrrr.F90',
     'ccpp/physics/physics/module_bl_mynn.F90',
     'ccpp/physics/physics/module_sf_mynn.F90',

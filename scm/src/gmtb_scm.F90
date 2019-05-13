@@ -129,14 +129,17 @@ subroutine gmtb_scm_main_sub()
       physics%Init_parm(i)%tracer_names => scm_state%tracer_names
       physics%Init_parm(i)%fn_nml = scm_state%physics_nml(1)
       physics%Init_parm(i)%blksz => scm_state%blksz
-
+      physics%Init_parm(i)%tile_num = 1
+      physics%Init_parm(i)%hydrostatic = .true.
+      physics%Init_parm(i)%restart = .false.
+      
       ! Allocate and initialize DDTs
       call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), 0, 0, .false.,             &
+                           physics%Diag(i), physics%Interstitial(i), 0, 0, 1,                   &
                            physics%Init_parm(i))
-
+      
       call physics%associate(scm_state, i)
       
 ! use ccpp_fields.inc to call ccpp_field_add for all variables to add
@@ -150,7 +153,7 @@ subroutine gmtb_scm_main_sub()
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
           stop
       end if
-
+      
       physics%Model(i)%first_time_step = .true.
   end do
 

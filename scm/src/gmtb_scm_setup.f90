@@ -217,7 +217,7 @@ end subroutine patch_in_ref
 !--------------
 subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                   &
                             Coupling, Grid, Tbd, Cldprop, Radtend, Diag,         &
-                            Interstitial, communicator, ntasks, restart,         &
+                            Interstitial, communicator, ntasks, nthreads,        &
                             Init_parm)
 
   use machine,             only: kind_phys
@@ -248,9 +248,8 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_init_type),         intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: communicator
-  integer,                  intent(in)    :: ntasks
-  logical,                  intent(in)    :: restart
-
+  integer,                  intent(in)    :: ntasks, nthreads  
+  
   !--- set control properties (including namelist read)
   call Model%init (Init_parm%nlunit, Init_parm%fn_nml,           &
                    Init_parm%me, Init_parm%master,               &
@@ -261,9 +260,10 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%dt_dycore, Init_parm%dt_phys,       &
                    Init_parm%bdat, Init_parm%cdat,               &
                    Init_parm%tracer_names,                       &
-                   Init_parm%input_nml_file, Init_parm%ak,       &
-                   Init_parm%bk, Init_parm%blksz, restart,       &
-                   communicator, ntasks)
+                   Init_parm%input_nml_file, Init_parm%tile_num, &
+                   Init_parm%ak, Init_parm%bk, Init_parm%blksz,  &
+                   Init_parm%restart, Init_parm%hydrostatic,     &
+                   communicator, ntasks, nthreads)
 
   !--- initialize DDTs
   call Statein%create(1, Model)
@@ -297,7 +297,14 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
     stop
     !--- NEED TO get the logic from the old phys/gloopb.f initialization area
   endif
-
+  
+  if(Model%do_ca)then
+    print *,'Cellular automata cannot be used when CCPP is turned on until'
+    print *,'the stochastic physics pattern generation code has been pulled'
+    print *,'out of the FV3 repository and updated with the CCPP version.'
+    stop
+  endif
+  
   !--- sncovr may not exist in ICs from chgres.
   !--- FV3GFS handles this as part of the IC ingest
   !--- this not is placed here to alert users to the need to study

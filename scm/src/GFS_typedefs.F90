@@ -103,6 +103,7 @@ module GFS_typedefs
   type GFS_init_type
     integer :: me                                !< my MPI-rank
     integer :: master                            !< master MPI-rank
+    integer :: tile_num                          !< tile number for this MPI rank
     integer :: isc                               !< starting i-index for this MPI-domain
     integer :: jsc                               !< starting j-index for this MPI-domain
     integer :: nx                                !< number of points in i-dir for this MPI rank
@@ -122,6 +123,8 @@ module GFS_typedefs
     real(kind=kind_phys) :: dt_phys              !< physics  time step in seconds
     !--- restart information
     logical :: restart                           !< flag whether this is a coldstart (.false.) or a warmstart/restart (.true.)
+    !--- hydrostatic/non-hydrostatic flag
+    logical :: hydrostatic                       !< flag whether this is a hydrostatic or non-hydrostatic run
     !--- blocking data
     integer, pointer :: blksz(:)                 !< for explicit data blocking
                                                  !< default blksz(1)=[nx*ny]
@@ -392,7 +395,20 @@ module GFS_typedefs
     !--- topography-based information for the coupling system
     real (kind=kind_phys), pointer :: oro_cpl    (:) => null()   !< orography          (  oro from GFS_sfcprop_type)
     real (kind=kind_phys), pointer :: slmsk_cpl  (:) => null()   !< Land/Sea/Ice mask  (slmsk from GFS_sfcprop_type)
-
+    
+    !--- cellular automata
+    real (kind=kind_phys), pointer :: tconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: qconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: uconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: vconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: ca_out   (:)   => null()  !
+    real (kind=kind_phys), pointer :: ca_deep  (:)   => null()  !
+    real (kind=kind_phys), pointer :: ca_turb  (:)   => null()  !
+    real (kind=kind_phys), pointer :: ca_shal  (:)   => null()  !
+    real (kind=kind_phys), pointer :: ca_rad   (:)   => null()  !
+    real (kind=kind_phys), pointer :: ca_micro (:)   => null()  !
+    real (kind=kind_phys), pointer :: cape     (:)   => null()  !
+    
     !--- stochastic physics
     real (kind=kind_phys), pointer :: shum_wts  (:,:)   => null()  !
     real (kind=kind_phys), pointer :: sppt_wts  (:,:)   => null()  !
@@ -431,6 +447,7 @@ module GFS_typedefs
     integer              :: master          !< MPI rank of master atmosphere processor
     integer              :: communicator    !< MPI communicator
     integer              :: ntasks          !< MPI size in communicator
+    integer              :: nthreads        !< OpenMP threads available for physics
     integer              :: nlunit          !< unit for namelist
     character(len=64)    :: fn_nml          !< namelist filename for surface data cycling
     real(kind=kind_phys) :: fhzero          !< seconds between clearing of diagnostic buckets
@@ -459,6 +476,7 @@ module GFS_typedefs
     integer              :: cny             !< number of points in the j-dir for this cubed-sphere face
     integer              :: lonr            !< number of global points in x-dir (i) along the equator
     integer              :: latr            !< number of global points in y-dir (j) along any meridian
+    integer              :: tile_num
     integer,     pointer :: blksz(:)        !< for explicit data blocking
 
     !--- coupling parameters
@@ -630,6 +648,7 @@ module GFS_typedefs
     logical              :: shinhong        !< flag for scale-aware Shinhong vertical turbulent mixing scheme
     logical              :: do_ysu          !< flag for YSU turbulent mixing scheme
     logical              :: dspheat         !< flag for tke dissipative heating
+    logical              :: lheatstrg       !< flag for canopy heat storage parameterization
     logical              :: cnvcld
     logical              :: random_clds     !< flag controls whether clouds are random
     logical              :: shal_cnv        !< flag for calling shallow convection
@@ -733,6 +752,21 @@ module GFS_typedefs
     real(kind=kind_phys) :: xkzm_s          !< [in] bkgd_vdif_s  sigma threshold for background mom. diffusion
     real(kind=kind_phys) :: xkzminv         !< diffusivity in inversion layers
     real(kind=kind_phys) :: moninq_fac      !< turbulence diffusion coefficient factor
+    
+    !---cellular automata control parameters
+    integer              :: nca             !< number of independent cellular automata 
+    integer              :: nlives          !< cellular automata lifetime
+    integer              :: ncells          !< cellular automata finer grid
+    real(kind=kind_phys) :: nfracseed       !< cellular automata seed probability 
+    integer              :: nseed           !< cellular automata seed frequency
+    logical              :: do_ca           !< cellular automata main switch
+    logical              :: ca_sgs          !< switch for sgs ca
+    logical              :: ca_global       !< switch for global ca
+    logical              :: ca_smooth       !< switch for gaussian spatial filter
+    logical              :: isppt_deep      !< switch for combination with isppt_deep. OBS! Switches off SPPT on other tendencies!
+    integer              :: iseed_ca        !< seed for random number generation in ca scheme
+    integer              :: nspinup         !< number of iterations to spin up the ca
+    real(kind=kind_phys) :: nthresh         !< threshold used for perturbed vertical velocity
 
     !--- stochastic physics control parameters
     logical              :: do_sppt
@@ -812,6 +846,7 @@ module GFS_typedefs
     integer              :: kdt             !< current forecast iteration
     logical              :: first_time_step !< flag signaling first time step for time integration routine
     logical              :: restart         !< flag whether this is a coldstart (.false.) or a warmstart/restart (.true.)
+    logical              :: hydrostatic     !< flag whether this is a hydrostatic or non-hydrostatic run
     integer              :: jdat(1:8)       !< current forecast date and time
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     logical              :: iccn            !< using IN CCN forcing for MG2/3
@@ -822,6 +857,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: iau_delthrs     ! iau time interval (to scale increments) in hours
     character(len=240)   :: iau_inc_files(7)! list of increment files
     real(kind=kind_phys) :: iaufhrs(7)      ! forecast hours associated with increment files
+    logical              :: iau_filter_increments
 
     ! From physcons.F90, updated/set in control_initialize
     real(kind=kind_phys) :: dxinv           ! inverse scaling factor for critical relative humidity, replaces dxinv in physcons.F90
@@ -1130,6 +1166,13 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: tdomip (:)     => null()   !< dominant accumulated sleet type
     real (kind=kind_phys), pointer :: tdoms  (:)     => null()   !< dominant accumulated snow type
 
+    real (kind=kind_phys), pointer :: ca_out  (:)    => null()   !< cellular automata fraction
+    real (kind=kind_phys), pointer :: ca_deep (:)    => null()   !< cellular automata fraction
+    real (kind=kind_phys), pointer :: ca_turb (:)    => null()   !< cellular automata fraction
+    real (kind=kind_phys), pointer :: ca_shal (:)    => null()   !< cellular automata fraction
+    real (kind=kind_phys), pointer :: ca_rad  (:)    => null()   !< cellular automata fraction
+    real (kind=kind_phys), pointer :: ca_micro(:)    => null()   !< cellular automata fraction
+
     real (kind=kind_phys), pointer :: skebu_wts(:,:) => null()   !< 10 meter u wind speed
     real (kind=kind_phys), pointer :: skebv_wts(:,:) => null()   !< 10 meter v wind speed
     real (kind=kind_phys), pointer :: sppt_wts(:,:)  => null()   !<
@@ -1294,6 +1337,7 @@ module GFS_typedefs
     logical              , pointer      :: otspt(:,:)       => null()  !<
     integer                             :: oz_coeff                    !<
     real (kind=kind_phys), pointer      :: oz_pres(:)       => null()  !<
+    logical                             :: phys_hydrostatic            !<
     real (kind=kind_phys), pointer      :: plvl(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: plyr(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: prcpmp(:)        => null()  !<
@@ -1733,7 +1777,16 @@ module GFS_typedefs
       Coupling%rain_cpl     = clear_val
       Coupling%snow_cpl     = clear_val
     endif
+    
+    if (Model%cplflx .or. Model%cplwav) then
+      !--- instantaneous quantities 
+      allocate (Coupling%u10mi_cpl   (IM))
+      allocate (Coupling%v10mi_cpl   (IM))
 
+      Coupling%u10mi_cpl   = clear_val
+      Coupling%v10mi_cpl   = clear_val
+    endif 
+    
     if (Model%cplflx) then
       !--- incoming quantities
       allocate (Coupling%slimskin_cpl (IM))
@@ -1814,8 +1867,6 @@ module GFS_typedefs
       allocate (Coupling%nvisdfi_cpl (IM))
       allocate (Coupling%t2mi_cpl    (IM))
       allocate (Coupling%q2mi_cpl    (IM))
-      allocate (Coupling%u10mi_cpl   (IM))
-      allocate (Coupling%v10mi_cpl   (IM))
       allocate (Coupling%tsfci_cpl   (IM))
       allocate (Coupling%psurfi_cpl  (IM))
       allocate (Coupling%oro_cpl     (IM))
@@ -1839,14 +1890,36 @@ module GFS_typedefs
       Coupling%nvisdfi_cpl = clear_val
       Coupling%t2mi_cpl    = clear_val
       Coupling%q2mi_cpl    = clear_val
-      Coupling%u10mi_cpl   = clear_val
-      Coupling%v10mi_cpl   = clear_val
       Coupling%tsfci_cpl   = clear_val
       Coupling%psurfi_cpl  = clear_val
-!!    Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro
-!!    Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
+      Coupling%oro_cpl     = clear_val  !< pointer to sfcprop%oro
+      Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
     endif
-
+    
+!-- cellular automata
+    allocate (Coupling%tconvtend (IM,Model%levs))
+    allocate (Coupling%qconvtend (IM,Model%levs))
+    allocate (Coupling%uconvtend (IM,Model%levs))
+    allocate (Coupling%vconvtend (IM,Model%levs))
+    allocate (Coupling%cape (IM))
+    allocate (Coupling%ca_out (IM))
+    allocate (Coupling%ca_deep (IM))
+    allocate (Coupling%ca_turb (IM))
+    allocate (Coupling%ca_shal (IM))
+    allocate (Coupling%ca_rad (IM))
+    allocate (Coupling%ca_micro (IM))
+    Coupling%ca_out = clear_val
+    Coupling%ca_deep = clear_val
+    Coupling%ca_turb = clear_val
+    Coupling%ca_shal = clear_val
+    Coupling%ca_rad =clear_val
+    Coupling%ca_micro = clear_val   
+    Coupling%cape = clear_val
+    Coupling%tconvtend = clear_val
+    Coupling%qconvtend = clear_val
+    Coupling%uconvtend = clear_val
+    Coupling%vconvtend = clear_val
+     
     ! -- GSDCHEM coupling options
     if (Model%cplchm) then
       !--- outgoing instantaneous quantities
@@ -1926,8 +1999,10 @@ module GFS_typedefs
                                  logunit, isc, jsc, nx, ny, levs,   &
                                  cnx, cny, gnx, gny, dt_dycore,     &
                                  dt_phys, idat, jdat, tracer_names, &
-                                 input_nml_file, ak, bk, blksz,     &
-                                 restart, communicator, ntasks)
+                                 input_nml_file, tile_num,          &
+                                 ak, bk, blksz,                     &
+                                 restart, hydrostatic,              &
+                                 communicator, ntasks, nthreads)
 
     !--- modules
     use physcons,         only: con_rerth, con_pi
@@ -1943,6 +2018,7 @@ module GFS_typedefs
     integer,                intent(in) :: me
     integer,                intent(in) :: master
     integer,                intent(in) :: logunit
+    integer,                intent(in) :: tile_num
     integer,                intent(in) :: isc
     integer,                intent(in) :: jsc
     integer,                intent(in) :: nx
@@ -1962,8 +2038,10 @@ module GFS_typedefs
     real(kind=kind_phys), dimension(:), intent(in) :: bk
     integer,                intent(in) :: blksz(:)
     logical,                intent(in) :: restart
+    logical,                intent(in) :: hydrostatic
     integer,                intent(in) :: communicator
     integer,                intent(in) :: ntasks
+    integer,                intent(in) :: nthreads
 
     !--- local variables
     integer :: n, status
@@ -2000,7 +2078,7 @@ module GFS_typedefs
     integer              :: levr           = -99             !< number of vertical levels for radiation calculations
     integer              :: nfxr           = 39+6            !< second dimension of input/output array fluxr
     logical              :: aero_in        = .false.         !< flag for initializing aero data
-    logical              :: iccn           = .true.          !< logical to use IN CCN forcing for MG2/3
+    logical              :: iccn           = .false.         !< logical to use IN CCN forcing for MG2/3
     integer              :: iflip          =  1              !< iflip - is not the same as flipv
     integer              :: isol           =  0              !< use prescribed solar constant
     integer              :: ico2           =  0              !< prescribed global mean value (old opernl)
@@ -2123,6 +2201,7 @@ module GFS_typedefs
     logical              :: shinhong       = .false.                  !< flag for scale-aware Shinhong vertical turbulent mixing scheme
     logical              :: do_ysu         = .false.                  !< flag for YSU vertical turbulent mixing scheme
     logical              :: dspheat        = .false.                  !< flag for tke dissipative heating
+    logical              :: lheatstrg      = .false.                  !< flag for canopy heat storage parameterization
     logical              :: cnvcld         = .false.
     logical              :: random_clds    = .false.                  !< flag controls whether clouds are random
     logical              :: shal_cnv       = .false.                  !< flag for calling shallow convection
@@ -2229,10 +2308,26 @@ module GFS_typedefs
     real(kind=kind_phys) :: xkzminv        = 0.3             !< diffusivity in inversion layers
     real(kind=kind_phys) :: moninq_fac     = 1.0             !< turbulence diffusion coefficient factor
 
+!---Cellular automaton options
+    integer              :: nca            = 1
+    integer              :: ncells         = 5
+    integer              :: nlives         = 10
+    real(kind=kind_phys) :: nfracseed      = 0.5
+    integer              :: nseed          = 100000
+    integer              :: iseed_ca       = 0
+    integer              :: nspinup        = 1
+    logical              :: do_ca          = .false.
+    logical              :: ca_sgs         = .false. 
+    logical              :: ca_global      = .false.
+    logical              :: ca_smooth      = .false.
+    logical              :: isppt_deep     = .false.
+    real(kind=kind_phys) :: nthresh        = 0.0
+
 !--- IAU options
     real(kind=kind_phys)  :: iau_delthrs = 6                 ! iau time interval (to scale increments)
     character(len=240)    :: iau_inc_files(7)=''             ! list of increment files
     real(kind=kind_phys)  :: iaufhrs(7)=-1                   ! forecast hours associated with increment files
+    logical               :: iau_filter_increments = .false. ! filter IAU increments
 
     !--- debug flag
     logical              :: debug          = .false.
@@ -2289,7 +2384,7 @@ module GFS_typedefs
                                bl_mynn_edmf_tke, bl_mynn_edmf_part, bl_mynn_cloudmix,       &
                                bl_mynn_mixqt, icloud_bl, bl_mynn_tkeadvect,                 &
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
-                               shinhong, do_ysu, dspheat, cnvcld,                           &
+                               shinhong, do_ysu, dspheat, lheatstrg, cnvcld,                &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, do_deep, jcap,&
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
                                dlqf, rbcr, shoc_parm, psauras, prauras, wminras,            &
@@ -2306,8 +2401,11 @@ module GFS_typedefs
                                nst_anl, lsea, nstf_name,                                    &
                           !    background vertical diffusion
                                xkzm_m, xkzm_h, xkzm_s, xkzminv, moninq_fac,                 &
+                          !--- cellular automata                         
+                               nca, ncells, nlives, nfracseed,nseed, nthresh, do_ca,        &
+                               ca_sgs, ca_global,iseed_ca,ca_smooth,isppt_deep,nspinup,     &
                           !--- IAU
-                               iau_delthrs,iaufhrs,iau_inc_files,                           &
+                               iau_delthrs,iaufhrs,iau_inc_files,iau_filter_increments,     &
                           !--- debug options
                                debug, pre_rad,                                              &
                           !--- parameter range for critical relative humidity
@@ -2355,6 +2453,7 @@ module GFS_typedefs
     Model%master           = master
     Model%communicator     = communicator
     Model%ntasks           = ntasks
+    Model%nthreads         = nthreads
     Model%nlunit           = nlunit
     Model%logunit          = logunit
     Model%fn_nml           = fn_nml
@@ -2369,6 +2468,7 @@ module GFS_typedefs
     Model%gen_coord_hybrid = gen_coord_hybrid
 
     !--- set some grid extent parameters
+    Model%tile_num         = tile_num
     Model%isc              = isc
     Model%jsc              = jsc
     Model%nx               = nx
@@ -2554,6 +2654,7 @@ module GFS_typedefs
     Model%shinhong         = shinhong
     Model%do_ysu           = do_ysu
     Model%dspheat          = dspheat
+    Model%lheatstrg        = lheatstrg
     Model%cnvcld           = cnvcld
     Model%random_clds      = random_clds
     Model%shal_cnv         = shal_cnv
@@ -2637,11 +2738,27 @@ module GFS_typedefs
     Model%pertalb          = pertalb
     Model%pertvegf         = pertvegf
 
+    !--- cellular automata options
+    Model%nca              = nca
+    Model%ncells           = ncells
+    Model%nlives           = nlives
+    Model%nfracseed        = nfracseed
+    Model%nseed            = nseed
+    Model%ca_global        = ca_global
+    Model%do_ca            = do_ca
+    Model%ca_sgs           = ca_sgs
+    Model%iseed_ca         = iseed_ca
+    Model%ca_smooth        = ca_smooth
+    Model%isppt_deep       = isppt_deep
+    Model%nspinup          = nspinup  
+    Model%nthresh          = nthresh 
+
 ! IAU flags
 !--- iau parameters
     Model%iaufhrs         = iaufhrs
     Model%iau_inc_files   = iau_inc_files
     Model%iau_delthrs     = iau_delthrs
+    Model%iau_filter_increments = iau_filter_increments
 
     !--- debug flag
     Model%debug            = debug
@@ -2731,6 +2848,7 @@ module GFS_typedefs
     Model%kdt              = 0
     Model%first_time_step  = .true.
     Model%restart          = restart
+    Model%hydrostatic      = hydrostatic
     Model%jdat(1:8)        = jdat(1:8)
     Model%sec              = 0
     allocate(Model%si(Model%levr+1))
@@ -2987,7 +3105,15 @@ module GFS_typedefs
 
     elseif (Model%imp_physics == Model%imp_physics_gfdl) then !GFDL microphysics
       Model%npdf3d  = 0
-      Model%num_p3d = 1 ! rsun 4 before
+      Model%num_p3d = 1
+      if(Model%effr_in) then
+         Model%num_p3d = 5
+      endif
+      Model%nleffr = 1
+      Model%nieffr = 2
+      Model%nreffr = 3
+      Model%nseffr = 4
+      Model%ngeffr = 5
       Model%num_p2d = 1
       Model%pdfcld  = .false.
       Model%shcnvcw = .false.
@@ -3232,6 +3358,7 @@ module GFS_typedefs
       print *, ' shinhong          : ', Model%shinhong
       print *, ' do_ysu            : ', Model%do_ysu
       print *, ' dspheat           : ', Model%dspheat
+      print *, ' lheatstrg         : ', Model%lheatstrg
       print *, ' cnvcld            : ', Model%cnvcld
       print *, ' random_clds       : ', Model%random_clds
       print *, ' shal_cnv          : ', Model%shal_cnv
@@ -3298,6 +3425,21 @@ module GFS_typedefs
       print *, ' do_skeb           : ', Model%do_skeb
       print *, ' do_sfcperts       : ', Model%do_sfcperts
       print *, ' '
+      print *, 'cellular automata'
+      print *, ' nca               : ', Model%ncells
+      print *, ' ncells            : ', Model%ncells
+      print *, ' nlives            : ', Model%nlives
+      print *, ' nfracseed         : ', Model%nfracseed
+      print *, ' nseed             : ', Model%nseed
+      print *, ' ca_global         : ', Model%ca_global
+      print *, ' ca_sgs            : ', Model%ca_sgs
+      print *, ' do_ca             : ', Model%do_ca
+      print *, ' iseed_ca          : ', Model%iseed_ca
+      print *, ' ca_smooth         : ', Model%ca_smooth
+      print *, ' isppt_deep        : ', Model%isppt_deep
+      print *, ' nspinup           : ', Model%nspinup
+      print *, ' nthresh           : ', Model%nthresh
+      print *, ' '
       print *, 'tracers'
       print *, ' tracer_names      : ', Model%tracer_names
       print *, ' ntrac             : ', Model%ntrac
@@ -3355,6 +3497,7 @@ module GFS_typedefs
       print *, ' si                : ', Model%si
       print *, ' first_time_step   : ', Model%first_time_step
       print *, ' restart           : ', Model%restart
+      print *, ' hydrostatic       : ', Model%hydrostatic
     endif
 
   end subroutine control_print
@@ -3737,6 +3880,12 @@ module GFS_typedefs
     allocate (Diag%shum_wts(IM,Model%levs))
     !--- 3D diagnostics
     allocate (Diag%zmtnblck(IM))
+    allocate (Diag%ca_out  (IM))
+    allocate (Diag%ca_deep  (IM))
+    allocate (Diag%ca_turb  (IM))
+    allocate (Diag%ca_shal  (IM))
+    allocate (Diag%ca_rad (IM))
+    allocate (Diag%ca_micro  (IM))
     allocate (Diag%du3dt  (IM,Model%levs,4))
     allocate (Diag%dv3dt  (IM,Model%levs,4))
     allocate (Diag%dt3dt  (IM,Model%levs,6))
@@ -3748,10 +3897,8 @@ module GFS_typedefs
     allocate (Diag%cldcov (IM,Model%levs))
 
     !--- 3D diagnostics for Thompson MP
-    if(Model%lradar) then
-      allocate (Diag%refl_10cm(IM,Model%levs))
-    endif
-
+    allocate (Diag%refl_10cm(IM,Model%levs))
+    
     !--- MYNN variables:
     if (Model%do_mynnedmf) then
       print*,"Allocating all MYNN-EDMF variables:"
@@ -3894,6 +4041,12 @@ module GFS_typedefs
     Diag%toticeb    = zero
     Diag%totsnwb    = zero
     Diag%totgrpb    = zero
+    Diag%ca_out     = zero
+    Diag%ca_deep    = zero
+    Diag%ca_turb    = zero
+    Diag%ca_shal    = zero
+    Diag%ca_rad     = zero
+    Diag%ca_micro   = zero
 !    if(Model%me == Model%master) print *,'in diag_phys_zero, totprcpb set to 0,kdt=',Model%kdt
 
     if (Model%ldiag3d) then
@@ -3906,10 +4059,8 @@ module GFS_typedefs
       Diag%det_mf  = zero
     endif
 
-    if (Model%lradar) then
-      Diag%refl_10cm = zero
-    endif
-
+    Diag%refl_10cm = zero
+    
     if (present(linit)) then
       if (linit) then
         Diag%totprcp = zero
@@ -4134,6 +4285,10 @@ module GFS_typedefs
     
     !
     Interstitial%skip_macro   = .false.
+    ! The value phys_hydrostatic from dynamics does not match the
+    ! hardcoded value for calling GFDL MP in GFS_physics_driver.F90,
+    ! which is set to .true.
+    Interstitial%phys_hydrostatic = .true.
     ! Reset all other variables
     call Interstitial%rad_reset ()
     call Interstitial%phys_reset (Model)
@@ -4475,24 +4630,25 @@ module GFS_typedefs
     ! Print static variables
     write (0,'(a,3i6)') 'Interstitial_print for mpirank, omprank, blkno: ', mpirank, omprank, blkno
     write (0,*) 'Interstitial_print: values that do not change'
-    write (0,*) 'Interstitial%h2o_coeff     = ', Interstitial%h2o_coeff
-    write (0,*) 'sum(Interstitial%h2o_pres) = ', sum(Interstitial%h2o_pres)
-    write (0,*) 'Interstitial%im            = ', Interstitial%im
-    write (0,*) 'Interstitial%ipr           = ', Interstitial%ipr
-    write (0,*) 'Interstitial%ix            = ', Interstitial%ix
-    write (0,*) 'Interstitial%latidxprnt    = ', Interstitial%latidxprnt
-    write (0,*) 'Interstitial%levi          = ', Interstitial%levi
-    write (0,*) 'Interstitial%levh2o        = ', Interstitial%levh2o
-    write (0,*) 'Interstitial%levozp        = ', Interstitial%levozp
-    write (0,*) 'Interstitial%lm            = ', Interstitial%lm
-    write (0,*) 'Interstitial%lmk           = ', Interstitial%lmk
-    write (0,*) 'Interstitial%lmp           = ', Interstitial%lmp
-    write (0,*) 'Interstitial%nsamftrac     = ', Interstitial%nsamftrac
-    write (0,*) 'Interstitial%ntiwx         = ', Interstitial%ntiwx
-    write (0,*) 'Interstitial%nvdiff        = ', Interstitial%nvdiff
-    write (0,*) 'Interstitial%oz_coeff      = ', Interstitial%oz_coeff
-    write (0,*) 'sum(Interstitial%oz_pres)  = ', sum(Interstitial%oz_pres)
-    write (0,*) 'Interstitial%skip_macro    = ', Interstitial%skip_macro
+    write (0,*) 'Interstitial%h2o_coeff         = ', Interstitial%h2o_coeff
+    write (0,*) 'sum(Interstitial%h2o_pres)     = ', sum(Interstitial%h2o_pres)
+    write (0,*) 'Interstitial%im                = ', Interstitial%im
+    write (0,*) 'Interstitial%ipr               = ', Interstitial%ipr
+    write (0,*) 'Interstitial%ix                = ', Interstitial%ix
+    write (0,*) 'Interstitial%latidxprnt        = ', Interstitial%latidxprnt
+    write (0,*) 'Interstitial%levi              = ', Interstitial%levi
+    write (0,*) 'Interstitial%levh2o            = ', Interstitial%levh2o
+    write (0,*) 'Interstitial%levozp            = ', Interstitial%levozp
+    write (0,*) 'Interstitial%lm                = ', Interstitial%lm
+    write (0,*) 'Interstitial%lmk               = ', Interstitial%lmk
+    write (0,*) 'Interstitial%lmp               = ', Interstitial%lmp
+    write (0,*) 'Interstitial%nsamftrac         = ', Interstitial%nsamftrac
+    write (0,*) 'Interstitial%ntiwx             = ', Interstitial%ntiwx
+    write (0,*) 'Interstitial%nvdiff            = ', Interstitial%nvdiff
+    write (0,*) 'Interstitial%oz_coeff          = ', Interstitial%oz_coeff
+    write (0,*) 'sum(Interstitial%oz_pres)      = ', sum(Interstitial%oz_pres)
+    write (0,*) 'Interstitial%phys_hydrostatic  = ', Interstitial%phys_hydrostatic
+    write (0,*) 'Interstitial%skip_macro        = ', Interstitial%skip_macro
     ! Print all other variables
     write (0,*) 'Interstitial_print: values that change'
     write (0,*) 'sum(Interstitial%adjnirbmd   ) = ', sum(Interstitial%adjnirbmd   )
