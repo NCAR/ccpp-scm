@@ -1650,6 +1650,19 @@ module gmtb_scm_type_defs
     physics%Sfcprop(col)%tsfc => scm_state%T_surf(col,:)
     physics%Sfcprop(col)%tref => scm_state%T_surf(col,:)
     physics%Sfcprop(col)%slmsk => scm_state%sfc_type_real
+    
+    !GJF : the following logic was introduced into FV3GFS_io.F90 as part of the fractional landmask update (additional logic exists in the same file if the fractional landmask is actually used!)
+    if (physics%Sfcprop(col)%slmsk(1) > 1.9) then
+      physics%Sfcprop(col)%landfrac(1)=0.
+    else
+      physics%Sfcprop(col)%landfrac(1) = physics%Sfcprop(col)%slmsk(1) 
+    end if
+    if (physics%Sfcprop(col)%lakefrac(1) > 0.) then
+      physics%Sfcprop(col)%oceanfrac(1) = 0. ! lake & ocean don't coexist in a cell, lake dominates
+    else
+      physics%Sfcprop(col)%oceanfrac(1) = 1.-physics%Sfcprop(col)%landfrac(1) !LHS:ocean frac [0:1]
+    end if
+    !GJF
 
     if(scm_state%time_scheme == 2) then
       physics%Stateout(col)%gu0 => scm_state%state_u(col,:,:,2)

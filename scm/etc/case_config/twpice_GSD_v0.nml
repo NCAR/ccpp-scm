@@ -7,7 +7,7 @@ time_scheme = 1,
 runtime = 2138400,
 output_frequency = 600.0,
 n_levels = 64,
-output_dir = 'output_twpice_gsd',
+output_dir = 'output_twpice_GSD_v0',
 output_file = 'output',
 case_data_dir = '../data/processed_case_input',
 vert_coord_data_dir = '../data/vert_coord_data',
@@ -24,8 +24,8 @@ hour = 3,
 $end
 
 $physics_config
-physics_suite = 'SCM_GSD',
+physics_suite = 'SCM_GSD_v0',
 physics_suite_dir = '../../ccpp/suites/',
-physics_nml = '../etc/case_config/input_namelists/input_fv3_gsd.nml',
+physics_nml = '../etc/case_config/input_namelists/input_GSD_v0.nml',
 column_area = 2.0E9,
 $end

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_CPT_advanced" lib="ccppphys" ver="2.0.0">
+<suite name="SCM_GFS_v15" lib="ccppphys" ver="2">
   <!-- <init></init> -->
   <group name="time_vary">
     <subcycle loop="1">
@@ -31,6 +31,7 @@
       <scheme>GFS_suite_interstitial_1</scheme>
       <scheme>dcyc2t3</scheme>
       <scheme>GFS_surface_generic_pre</scheme>
+      <scheme>GFS_surface_composites_pre</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
     </subcycle>
     <!-- Surface iteration loop -->
@@ -46,6 +47,7 @@
     </subcycle>
     <!-- End of surface iteration loop -->
     <subcycle loop="1">
+      <scheme>GFS_surface_composites_post</scheme>
       <scheme>dcyc2t3_post</scheme>
       <scheme>sfc_diag</scheme>
       <scheme>sfc_diag_post</scheme>
@@ -59,13 +61,11 @@
       <scheme>rayleigh_damp</scheme>
       <scheme>GFS_suite_stateout_update</scheme>
       <scheme>ozphys_2015</scheme>
-      <scheme>h2ophys</scheme>
+      <!--<scheme>h2ophys</scheme>-->
       <scheme>GFS_DCNV_generic_pre</scheme>
       <scheme>get_phi_fv3</scheme>
       <scheme>GFS_suite_interstitial_3</scheme>
-      <scheme>cs_conv_pre</scheme>
-      <scheme>cs_conv</scheme>
-      <scheme>cs_conv_post</scheme>
+      <scheme>samfdeepcnv</scheme>
       <scheme>GFS_DCNV_generic_post</scheme>
       <scheme>gwdc_pre</scheme>
       <scheme>gwdc</scheme>
@@ -77,12 +77,10 @@
       <scheme>GFS_suite_interstitial_4</scheme>
       <scheme>cnvc90</scheme>
       <scheme>GFS_MP_generic_pre</scheme>
-      <scheme>m_micro_pre</scheme>
-      <scheme>m_micro</scheme>
-      <scheme>m_micro_post</scheme>
-      <scheme>cs_conv_aw_adj</scheme>
+      <scheme>gfdl_cloud_microphys</scheme>
       <scheme>GFS_MP_generic_post</scheme>
       <scheme>sfc_sice_post</scheme>
+      <scheme>maximum_hourly_diagnostics</scheme>
     </subcycle>
   </group>
   <!-- <finalize></finalize> -->
