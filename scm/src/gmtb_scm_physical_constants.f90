@@ -54,11 +54,11 @@ public
 
   real(kind=dp),parameter:: con_vonKarman = 0.4
   
-  real(kind=kind_phys),parameter:: cimin      =0.15
-  real(kind=kind_phys), parameter:: rlapse  = 0.65e-2
-  real(kind=kind_phys),parameter:: con_jcal   =4.1855E+0
-  real(kind=kind_phys),parameter:: con_rhw0   =1022.0
-  real(kind=kind_phys),parameter:: con_sbc    =5.670400e-8
-  real(kind=kind_phys),parameter:: con_tice   =2.7120e+2
+  real(kind=dp),parameter:: cimin      =0.15
+  real(kind=dp),parameter:: rlapse     =0.65e-2
+  real(kind=dp),parameter:: con_jcal   =4.1855E+0
+  real(kind=dp),parameter:: con_rhw0   =1022.0
+  real(kind=dp),parameter:: con_sbc    =5.670400e-8
+  real(kind=dp),parameter:: con_tice   =2.7120e+2
 
 end module gmtb_scm_physical_constants

@@ -1228,8 +1228,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: aecm  (:,:) => null()    !< instantaneous aerosol column mass densities for
                                                                !< pm2.5, black carbon, organic carbon, sulfate, dust, sea salt ( g/m**2 )
     contains
-
-    contains
       procedure :: create    => diag_create
       procedure :: rad_zero  => diag_rad_zero
       procedure :: phys_zero => diag_phys_zero
@@ -2506,7 +2504,7 @@ module GFS_typedefs
                                make_number_concentrations,                                  &
                                ltaerosol, lradar, ttendlim, lgfdlmprad,                     &
                           !--- max hourly
-                               avg_max_length, 
+                               avg_max_length,                                              &
                           !--- land/surface model control
                                lsm, lsoil, lsoil_lsm, nmtvr, ivegsrc, mom4ice, use_ufo,     &
                           !--- physical parameterizations
@@ -4104,7 +4102,7 @@ module GFS_typedefs
 !      allocate (Diag%upd_mf (IM,Model%levs))
 !      allocate (Diag%dwn_mf (IM,Model%levs))
 !      allocate (Diag%det_mf (IM,Model%levs))
-!      allocate (Diag%cldcov (IM,Model%levs))
+    allocate (Diag%cldcov (IM,Model%levs))
 
     !--- 3D diagnostics for Thompson MP / GFDL MP
     allocate (Diag%refl_10cm(IM,Model%levs))
