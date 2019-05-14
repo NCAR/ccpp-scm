@@ -86,8 +86,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
     'ccpp/physics/physics/wv_saturation.F',
-    'scm/src/GFS_typedefs.F90',
-    'scm/src/CCPP_typedefs.F90'
+    'scm/src/GFS_typedefs.F90'
 ]
 
 # Add all physics scheme files relative to basedir
@@ -112,9 +111,9 @@ SCHEME_FILES = {
     'ccpp/physics/physics/cnvc90.f'                         : ['physics'],
     'ccpp/physics/physics/cs_conv.F90'                      : ['physics'],
     'ccpp/physics/physics/cs_conv_aw_adj.F90'               : ['physics'],
-#    'ccpp/physics/physics/cu_ntiedtke_pre.F90'              : ['physics'],
-#    'ccpp/physics/physics/cu_ntiedtke.F90'                  : ['physics'],
-#    'ccpp/physics/physics/cu_ntiedtke_post.F90'             : ['physics'],
+    'ccpp/physics/physics/cu_ntiedtke_pre.F90'              : ['physics'],
+    'ccpp/physics/physics/cu_ntiedtke.F90'                  : ['physics'],
+    'ccpp/physics/physics/cu_ntiedtke_post.F90'             : ['physics'],
     'ccpp/physics/physics/dcyc2.f'                          : ['physics'],
     'ccpp/physics/physics/gcm_shoc.F90'                     : ['physics'],
     'ccpp/physics/physics/get_prs_fv3.F90'                  : ['physics'],
