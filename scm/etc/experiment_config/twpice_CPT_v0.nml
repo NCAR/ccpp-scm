@@ -1,4 +1,4 @@
-$case_config
+$experiment_config
 model_name = 'FV3',
 n_columns = 1,
 case_name = 'twpice',
@@ -26,6 +26,6 @@ $end
 $physics_config
 physics_suite = 'SCM_CPT_v0',
 physics_suite_dir = '../../ccpp/suites/',
-physics_nml = '../etc/case_config/input_namelists/input_CPT_v0.nml',
+physics_nml = '../../ccpp/physics_namelists/input_CPT_v0.nml',
 column_area = 2.0E9,
 $end

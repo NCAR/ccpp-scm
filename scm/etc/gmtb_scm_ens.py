@@ -11,8 +11,8 @@ from threading import Thread
 import sys
 import multiprocessing as mp
 
-def run_SCM(case_config_file):
-    cmd = './gmtb_scm ' + case_config_file
+def run_SCM(experiment_config_file):
+    cmd = './gmtb_scm ' + experiment_config_file
     args = shlex.split(cmd)
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -49,29 +49,29 @@ def worker(queue):
 
 #prepare the case config and model_config files (assuming ensemble forcing files already exist and are named case_name_ensXX)
 
-base_case_config = 'twpice_gf_test_t1534_ctl'
-case_config_dir = 'case_config'
+base_experiment_config = 'twpice_gf_test_t1534_ctl'
+experiment_config_dir = 'experiment_config'
 model_config_dir = 'model_config'
 num_files = 100
 #q = Queue()
-ens_case_configs = []
+ens_experiment_configs = []
 
 #read in the base case config namelist
-base_nml_filename = case_config_dir + '/' + base_case_config
+base_nml_filename = experiment_config_dir + '/' + base_experiment_config
 base_nml = f90nml.read(base_nml_filename + '.nml')
-if base_nml['case_config']:
-    case_name = base_nml['case_config']['case_name']
-    output_dir = base_nml['case_config']['output_dir']
-    output_file = base_nml['case_config']['output_file']
+if base_nml['experiment_config']:
+    case_name = base_nml['experiment_config']['case_name']
+    output_dir = base_nml['experiment_config']['output_dir']
+    output_file = base_nml['experiment_config']['output_file']
     for i in range(num_files):
 
-        patch_nml = {'case_config': {'case_name': case_name + '_ens' + str(i).zfill(2), 'output_dir': output_dir + '/ens', 'output_file': output_file + '_ens' + str(i).zfill(2)}}
+        patch_nml = {'experiment_config': {'case_name': case_name + '_ens' + str(i).zfill(2), 'output_dir': output_dir + '/ens', 'output_file': output_file + '_ens' + str(i).zfill(2)}}
         f90nml.patch(base_nml_filename + '.nml', patch_nml, base_nml_filename + '_ens' + str(i).zfill(2) + '.nml')
-        ens_case_configs.append(base_case_config + '_ens' + str(i).zfill(2))
-        #q.put_nowait((base_case_config + '_ens' + str(i).zfill(2),))
+        ens_experiment_configs.append(base_experiment_config + '_ens' + str(i).zfill(2))
+        #q.put_nowait((base_experiment_config + '_ens' + str(i).zfill(2),))
 
         #copy over the same model_config
-        shutil.copy(model_config_dir + '/' + base_case_config + '.nml', model_config_dir + '/' + base_case_config + '_ens' + str(i).zfill(2) + '.nml')
+        shutil.copy(model_config_dir + '/' + base_experiment_config + '.nml', model_config_dir + '/' + base_experiment_config + '_ens' + str(i).zfill(2) + '.nml')
 else:
     print('Cannot make an ensemble out of a single timestep case config file')
 
@@ -95,14 +95,14 @@ os.chdir('bin')
 #
 #     # start processes
 #     pool = mp.Pool() # use all available CPUs
-#     pool.map(safe_run, ens_case_configs)
+#     pool.map(safe_run, ens_experiment_configs)
 #
 # if __name__=="__main__":
 #     mp.freeze_support() # optional if the program is not frozen
 #     main()
 
-for i in range(len(ens_case_configs)):
-    cmd = './gmtb_scm ' + ens_case_configs[i]
+for i in range(len(ens_experiment_configs)):
+    cmd = './gmtb_scm ' + ens_experiment_configs[i]
     args = shlex.split(cmd)
     print(args)
     with open(os.devnull, "w") as f:
