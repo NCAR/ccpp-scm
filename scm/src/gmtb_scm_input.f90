@@ -214,7 +214,8 @@ subroutine get_config_nml(scm_state)
         if (.not. file_exists) then
           INQUIRE(FILE=trim(adjustl(physics_suite_dir))//SDF_filename, EXIST=file_exists)
           if (file_exists) then
-            CALL SYMLNK(trim(adjustl(physics_suite_dir))//SDF_filename, './'//SDF_filename , ioerror(5)) 
+            call execute_command_line('ln -fs '//trim(adjustl(physics_suite_dir))//SDF_filename//' ./'//SDF_filename, exitstat=ioerror(5))
+            !CALL SYMLNK(trim(adjustl(physics_suite_dir))//SDF_filename, './'//SDF_filename , ioerror(5)) 
             if(ioerror(5) /= 0) then
               write(*,*) 'There was a problem symlinking the file '//trim(adjustl(physics_suite_dir))//SDF_filename//' into the run directory.'
               CALL gerror(ioerror_string)

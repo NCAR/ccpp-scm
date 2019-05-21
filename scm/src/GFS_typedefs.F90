@@ -6,7 +6,7 @@ module GFS_typedefs
        ! Radiation-specific types and parameters
        use module_radlw_parameters,   only: sfcflw_type, topflw_type, NBDLW
        use module_radsw_parameters,   only: cmpfsw_type, sfcfsw_type, topfsw_type, NBDSW
-      
+       
        implicit none
 
        ! To ensure that these values match what's in the physics,
@@ -2970,7 +2970,7 @@ module GFS_typedefs
        if (Model%oz_phys) then
           levozp   = 80
           oz_coeff = 4
-          status = system("ln -fs global_o3prdlos_orig.f77 global_o3prdlos.f77")
+          call execute_command_line("ln -fs global_o3prdlos_orig.f77 global_o3prdlos.f77", exitstat=status)
           !call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
           !status = symlnk('global_o3prdlos_orig.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
           if ( status .ne. 0 ) then
@@ -2980,7 +2980,7 @@ module GFS_typedefs
        else if (Model%oz_phys_2015) then
           levozp   = 53
           oz_coeff = 6
-          status = system("ln -fs ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77 global_o3prdlos.f77")
+          call execute_command_line("ln -fs ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77 global_o3prdlos.f77", exitstat=status)
           !call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
           !status = symlnk('ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
           if ( status .ne. 0 ) then
