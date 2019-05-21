@@ -5059,6 +5059,8 @@ module GFS_typedefs
     Interstitial%vegtype      = 0
     Interstitial%w_upi        = clear_val
     Interstitial%wcbmax       = clear_val
+    Interstitial%weasd_land   = huge
+    Interstitial%weasd_ice    = huge
     Interstitial%wind         = clear_val
     Interstitial%work1        = clear_val
     Interstitial%work2        = clear_val
