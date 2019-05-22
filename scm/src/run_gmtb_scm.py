@@ -20,7 +20,7 @@ EXECUTABLE = './gmtb_scm'
 # Path to the directory containing experiment namelists (relative to run dir)
 EXPERIMENT_NAMELIST_DIR = '../etc/experiment_config'
 
-# Standard name of experiment namelist in run directory
+# Standard name of experiment namelist in run directory, must match value in gmtb_scm_input.f90
 STANDARD_EXPERIMENT_NAMELIST = 'input_experiment.nml'
 
 # Path to the directory containing physics namelists (relative to run dir)
