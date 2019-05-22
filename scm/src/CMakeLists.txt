@@ -201,3 +201,9 @@ TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp)
 set_target_properties(gmtb_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
+
+add_custom_command(
+        TARGET gmtb_scm POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+                ${CMAKE_SOURCE_DIR}/run_gmtb_scm.py
+                ${CMAKE_CURRENT_BINARY_DIR}/run_gmtb_scm.py)
