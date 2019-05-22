@@ -17,6 +17,8 @@
        isubc_sw       = 2
        isubc_lw       = 2
        isol           = 2
+       oz_phys        = .false.
+       oz_phys_2015   = .true.
        lwhtr          = .true.
        swhtr          = .true.
        cnvgwd         = .true.
