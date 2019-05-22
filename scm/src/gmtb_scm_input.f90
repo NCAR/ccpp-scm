@@ -54,7 +54,7 @@ subroutine get_config_nml(scm_state)
   character(len=80), allocatable   :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
   character(len=65), allocatable   :: physics_nml(:)
   real(kind=dp), allocatable       :: column_area(:)
-  !integer, allocatable            :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
+  !integer, allocatable             :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
 
   integer                          :: i, last_physics_specified
   integer                          :: ioerror
