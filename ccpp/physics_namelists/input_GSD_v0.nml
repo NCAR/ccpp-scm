@@ -8,9 +8,9 @@
        pre_rad        = .false.
        ncld           = 5
        imp_physics    = 8
-       ttendlim       = 0.008
-       ltaerosol      = .false.
-       lradar         = .false.
+       ltaerosol      = .true.
+       lradar         = .true.
+       ttendlim       = -999.
        make_number_concentrations = .true.
        pdfcld         = .false.
        fhswr          = 3600.
@@ -31,6 +31,7 @@
        dspheat        = .true.
        hybedmf        = .false.
        satmedmf       = .false.
+       lheatstrg      = .false.
        do_mynnedmf    = .true.
        do_mynnsfclay  = .false.
        random_clds    = .false.
@@ -56,4 +57,8 @@
        do_sfcperts    = .false.
        lsm            = 2
        lsoil_lsm      = 9
+       icloud_bl         = 1
+       bl_mynn_tkeadvect = .true.
+       bl_mynn_edmf      = 1
+       bl_mynn_edmf_mom  = 1
 /

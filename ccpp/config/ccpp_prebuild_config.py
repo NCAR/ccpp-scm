@@ -236,6 +236,7 @@ OPTIONAL_ARGUMENTS = {
         },
     'mp_thompson_pre' : {
         'mp_thompson_pre_run' : [
+            'cloud_droplet_number_concentration_updated_by_physics',
             'water_friendly_aerosol_number_concentration_updated_by_physics',
             'ice_friendly_aerosol_number_concentration_updated_by_physics',
             'tendency_of_water_friendly_aerosols_at_surface',
