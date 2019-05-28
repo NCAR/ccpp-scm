@@ -27,7 +27,6 @@ module gmtb_scm_type_defs
     character(len=character_length)                 :: experiment_name !> name of model configuration file
     character(len=character_length)                 :: model_name !< name of "host" model (must be "GFS" for prototype)
     character(len=character_length)                 :: output_dir !< name of output directory to place netCDF file
-    character(len=character_length)                 :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
     character(len=character_length)                 :: case_data_dir !< location of the case initialization and forcing data files (relative to the executable path)
     character(len=character_length)                 :: vert_coord_data_dir !< location of the vertical coordinate data files (relative to the executable path)
     character(len=character_length)                 :: output_file !< name of output file (without the file extension)
@@ -1358,7 +1357,6 @@ module gmtb_scm_type_defs
     scm_state%experiment_name = clear_char
     scm_state%model_name = clear_char
     scm_state%output_dir = clear_char
-    scm_state%physics_suite_dir = clear_char
     scm_state%case_data_dir = clear_char
     scm_state%vert_coord_data_dir = clear_char
     scm_state%output_file = clear_char

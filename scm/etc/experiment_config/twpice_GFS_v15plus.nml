@@ -25,7 +25,6 @@ $end
 
 $physics_config
 physics_suite = 'SCM_GFS_v15plus',
-physics_suite_dir = '../../ccpp/suites/',
-physics_nml = '../../ccpp/physics_namelists/input_GFS_v15plus.nml',
+physics_nml = 'input_GFS_v15plus.nml',
 column_area = 2.0E9,
 $end

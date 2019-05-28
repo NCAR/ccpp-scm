@@ -248,7 +248,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_init_type),         intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: communicator
-  integer,                  intent(in)    :: ntasks, nthreads  
+  integer,                  intent(in)    :: ntasks, nthreads
   
   !--- set control properties (including namelist read)
   call Model%init (Init_parm%nlunit, Init_parm%fn_nml,           &

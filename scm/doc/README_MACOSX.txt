@@ -29,5 +29,13 @@ In order to build and run SCM-CCPP v1 on Mac OS X, the following installation st
     cd /usr/local/src
     rm -fr realpath-osx
 
-7. Install ncview for viewing netCDF files
+7. Install the f90nml Python library
+   cd /usr/local/src
+   git clone https://github.com/marshallward/f90nml.git
+   cd f90nml
+   python setup.py install --user 2>&1 | tee log.install
+   # Test if the installation was successful
+   python -c "import f90nml" && echo "Installation of f90nml successful"
+
+8. Install ncview for viewing netCDF files
     brew install -v ncview

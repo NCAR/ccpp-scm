@@ -31,10 +31,10 @@ subroutine get_config_nml(scm_state)
   character(len=80)    :: experiment_name !< name of the experiment configuration file (usually case name)
   character(len=80)    :: model_name !< name of the host model (currently only GFS supported)
   character(len=80)    :: case_name !< name of case initialization and forcing dataset
-  real(kind=dp)           :: dt !< time step in seconds
-  real(kind=dp)             :: runtime !< total runtime in seconds
-  real(kind=dp)             :: output_frequency !< freqency of output writing in seconds
-  integer             :: n_levels !< number of model levels (currently only 64 supported)
+  real(kind=dp)        :: dt !< time step in seconds
+  real(kind=dp)        :: runtime !< total runtime in seconds
+  real(kind=dp)        :: output_frequency !< freqency of output writing in seconds
+  integer              :: n_levels !< number of model levels (currently only 64 supported)
   integer              :: n_columns !< number of columns to use
   integer              :: n_time_levels
   integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
@@ -42,42 +42,37 @@ subroutine get_config_nml(scm_state)
   character(len=80)    :: output_file !< name of the output file (without the file extension)
   character(len=80)    :: case_data_dir !< path to the directory containing case initialization and forcing data
   character(len=80)    :: vert_coord_data_dir !< path to the directory containing vertical coordinate data
-  character(len=80)    :: experiment_config_dir !< path to the directory containing experiment configuration files (relative to build dir)
   integer              :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
-  real(kind=dp)              :: relax_time !< relaxation time scale (s)
+  real(kind=dp)        :: relax_time !< relaxation time scale (s)
   logical              :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
   real(kind=dp)        :: sfc_roughness_length_cm !< surface roughness length used for calculating surface layer parameters from specified fluxes
   integer              :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour
 
-  character(len=80), allocatable    :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
-  character(len=65), allocatable    :: physics_nml(:)
-  character(len=80)                :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
+  character(len=80), allocatable   :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
+  character(len=65), allocatable   :: physics_nml(:)
   real(kind=dp), allocatable       :: column_area(:)
-  !integer, allocatable              :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
+  !integer, allocatable             :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
 
-  integer                           :: i, last_physics_specified
-  integer                        :: ioerror(6)
+  integer                          :: i, last_physics_specified
+  integer                          :: ioerror
   logical :: file_exists
-  
-  INTEGER, PARAMETER    :: buflen = 255
-  CHARACTER(LEN=buflen) :: buf, opt_namelist_vals, SDF_filename, ioerror_string
+
   CHARACTER(1)             :: response
+  CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
 
   NAMELIST /experiment_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
     n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, mom_forcing_type, relax_time, &
     sfc_type, sfc_flux_spec, sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour
 
-  NAMELIST /physics_config/ physics_suite, physics_suite_dir, physics_nml, column_area
+  NAMELIST /physics_config/ physics_suite, physics_nml, column_area
 
   !>  \section get_config_alg Algorithm
   !!  @{
 
   !> Define default values for experiment configuration (to be overridden by external namelist file or command line arguments)
-  experiment_config_dir = '../etc/experiment_config'
-
   model_name = 'GFS'
   n_columns = 1
   case_name = 'twpice'
@@ -102,180 +97,84 @@ subroutine get_config_nml(scm_state)
   day = 19
   hour = 3
 
-  physics_suite_dir = '../../ccpp/suites/'
-
   last_physics_specified = -1
 
-  !> Parse the command line arguments.
-  opt_namelist_vals = ''
-
-  !> - Get the entire command used to invoke the SCM (including arguments)
-  CALL GET_COMMAND(command=buf, status=ioerror(1))
-
-  if (ioerror(1) /= 0) then
-    write(*,*) 'An error was encountered reading the command line: error code: '
+  ! DH* TODO - USE A DIFFERENT UNIT THAN 1 *DH
+  open(unit=1, file=experiment_namelist, status='old', action='read', iostat=ioerror)
+  if(ioerror /= 0) then
+    write(*,'(a,i0)') 'There was an error opening the file ' // experiment_namelist // &
+                      '; error code = ', ioerror
+    STOP
   else
-    !> - Discard SCM invocation command.
-    i = INDEX(buf, ' ') !gets position of first space
-    buf = trim(adjustl(buf(i+1:))) !discards invoking command from buf
-
-    !> - Get experiment name from first argument (if not present, use default values in this source file)
-    i = INDEX(buf, ' ') !gets position of second space (if present)
-    experiment_name = trim(adjustl(buf(:i)))
-    buf = trim(adjustl(buf(i+1:))) !discards experiment name from buf
-
-    !> - Put remaining command line arguments into "internal" namelist to read in after the external file.
-    opt_namelist_vals = '&experiment_config '//trim(buf)//' /' !assigns rest of command line into experiment_config namelist
-
-    !> Attempt to read in external namelist file.
-    open(unit=1, file=trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml', status='old', action='read', &
-      iostat=ioerror(2))
-    if(ioerror(2) /= 0) then
-      write(*,*) 'There was an error opening the file '//trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml '//'&
-        Error code = ',ioerror(2)
-    else
-      read(1, NML=experiment_config, iostat=ioerror(3))
-    end if
-
-    if(ioerror(3) /= 0) then
-      write(*,*) 'There was an error reading the namelist experiment_config in the file '&
-        //trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml'//'&
-        Error code = ',ioerror(3)
-    end if
-
-    !The current implementation of GFS physics does not support more than one column, since radiation sub schemes use
-    !internal module variables. This means that one cannot specify different ways to treat O3, CO2 etc., and also that
-    !the code crashes in GFS_initialize_scm_run and later in radiation_gases.f, because it tries to allocate module
-    !variables that are already allocated. For now, throw an error and abort.
-    if (n_columns>1) then
-      write(*,*) 'The current implementation does not allow to run more than one column at a time.'
-      stop
-    end if
-
-    !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
-    !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
-    !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
-    allocate(physics_suite(n_columns), physics_nml(n_columns), column_area(n_columns))
-
-    do i=1, n_columns
-      physics_suite(i) = 'none'
-    end do
-
-    if(ioerror(2) == 0) then
-      read(1, NML=physics_config, iostat=ioerror(4))
-    end if
-    close(1)
-
-    if(ioerror(4) /= 0) then
-      write(*,*) 'There was an error reading the namelist physics_config in the file '&
-        //trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml'//'&
-        Error code = ',ioerror(4)
-      write(*,*) 'Check to make sure that the number of specified physics suites is not greater than n_columns '&
-        //'in the experiment_config namelist. Stopping...'
-      STOP
-    else
-      !check to see if the number of physics_suite_names matches n_cols; if physics_suite_names is less than n_cols, assume that there are multiple columns using the same physics
-      do i=1, n_columns
-        if (physics_suite(i) == 'none') then
-          if(i == 1 ) then
-            write(*,*) 'No physics suites were specified in '//trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml. '&
-              //'Please edit this file and start again.'
-            STOP
-          else
-            if(last_physics_specified < 0) last_physics_specified = i-1
-            !only ask for response the first time an unspecified physics suite is found for a column
-            if(last_physics_specified == i-1) then
-              write(*,*) 'Too few physics suites were specified for the number of columns in '&
-                //trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml. All columns with unspecified physics are set '&
-                //'to the last specified suite. Is this the desired behavior (y/n)?'
-              read(*,*) response
-            end if
-            if (response == 'y' .or. response == 'Y') then
-              physics_suite(i) = physics_suite(last_physics_specified)
-              physics_nml(i) = physics_nml(last_physics_specified)
-              !n_phy_fields(i) = n_phy_fields(last_physics_specified)
-            else
-              write(*,*) 'Please edit '//trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml to contain the same '&
-                //' number of physics suites as columns and start again. Stopping...'
-              STOP
-            end if
-          end if !check on i
-        ! else
-        !   !check to see if n_phy_fields was initialized for this suites
-        !   if (n_phy_fields(i) < 0) then
-        !     write(*,*) 'The variable n_phy_fields was not initialized for the physics suite '//trim(physics_suite(i))//'. Please '&
-        !       //'edit '//trim(adjustl(experiment_config_dir))//'/''//trim(experiment_name)//'.nml to contain values of this variable '&
-        !       //'for each suite.'
-        !   end if
-        end if !check on physics_suite
-        
-        SDF_filename = 'suite_'//trim(adjustl(physics_suite(i)))//'.xml'
-        INQUIRE(FILE='./'//SDF_filename, EXIST=file_exists)
-        if (.not. file_exists) then
-          INQUIRE(FILE=trim(adjustl(physics_suite_dir))//SDF_filename, EXIST=file_exists)
-          if (file_exists) then
-            call execute_command_line('ln -fs '//trim(adjustl(physics_suite_dir))//SDF_filename//' ./'//SDF_filename, exitstat=ioerror(5), cmdmsg=ioerror_string)
-            !CALL SYMLNK(trim(adjustl(physics_suite_dir))//SDF_filename, './'//SDF_filename , ioerror(5)) 
-            if(ioerror(5) /= 0) then
-              write(*,*) 'There was a problem symlinking the file '//trim(adjustl(physics_suite_dir))//SDF_filename//' into the run directory.'
-              !CALL gerror(ioerror_string)
-              write(*,*) ioerror_string
-              STOP
-            end if
-          else
-            write(*,*) 'The file '//trim(adjustl(SDF_filename))//' does not exist in '//trim(adjustl(physics_suite_dir))&
-              //' . It is required to run the suite named '//trim(adjustl(physics_suite(i)))//' specified in '&
-              //trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml'
-            STOP
-          end if
-        end if
-      end do
-    end if
-
-    if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /=0) then
-      write(*,*) 'Since there was an error reading in the '//trim(adjustl(experiment_config_dir))//'/'//trim(experiment_name)//'.nml'&
-        //' file, the default values of the namelist variables will be used, modified by any values contained on the command line.'
-    end if
-    
-    !> "Read" in internal namelist variables from command line.
-    write(*,*) 'Loading optional namelist variables from command line...'
-    read(opt_namelist_vals, NML=experiment_config, IOSTAT=ioerror(6))
-
-    !> Check for namelist reading errors. If errors are found, output the namelist variables that were loaded to console and ask user for input on whether to proceed.
-    if(ioerror(6) /= 0) then
-      write(*,*) 'There was an error reading the optional namelist variables from the command line: error code ',ioerror(6)
-    end if
-    if(ioerror(2) /= 0 .or. ioerror(3) /=0 .or. ioerror(4) /= 0 .or. ioerror(6) /= 0) then
-      write(*,*) 'Since there was an error either reading the namelist file or an error reading namelist variables from the &
-        command line, the namelist variables that are available to use are some combination of the default values and the values &
-        that were able to be read. Please look over the namelist variables below to make sure they are set as intended.'
-      write(*,NML=experiment_config)
-      write(*,*) 'Continue with these values? (y/n):'
-      read(*,*) response
-
-      if (response /= 'y' .and. response /= 'Y') THEN
-        write(*,*) 'Stopping...'
-        stop
-      end if
-    end if
+    read(1, NML=experiment_config, iostat=ioerror)
   end if
 
-  !> If there was an error reading from the command line, use the default values of the namelist variables and check with the user whether to continue.
-  if(ioerror(1) /= 0) then
-    write(*,*) 'There was an error reading from the command line: error code ',ioerror(1)
-    write(*,NML=experiment_config)
-    write(*,*) 'Continue with default values? (y/n):'
-    read(*,*) response
+  if(ioerror /= 0) then
+    write(*,'(a,i0)') 'There was an error reading the namelist experiment_config in the file '&
+                      // experiment_namelist // '; error code = ',ioerror
+    STOP
+  end if
 
-    if (response /= 'y' .and. response /= 'Y') THEN
-      write(*,*) 'Stopping...'
-      stop
-    end if
+  !The current implementation of GFS physics does not support more than one column, since radiation sub schemes use
+  !internal module variables. This means that one cannot specify different ways to treat O3, CO2 etc., and also that
+  !the code crashes in GFS_initialize_scm_run and later in radiation_gases.f, because it tries to allocate module
+  !variables that are already allocated. For now, throw an error and abort.
+  if (n_columns>1) then
+    write(*,'(a)') 'The current implementation does not allow to run more than one column at a time.'
+    STOP
+  end if
+
+  !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
+  !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
+  !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
+  allocate(physics_suite(n_columns), physics_nml(n_columns), column_area(n_columns))
+
+  do i=1, n_columns
+    physics_suite(i) = 'none'
+  end do
+  read(1, NML=physics_config, iostat=ioerror)
+  close(1)
+
+  if(ioerror /= 0) then
+    write(*,'(a,i0)') 'There was an error reading the namelist physics_config in the file ' &
+                      // experiment_namelist // '; error code = ',ioerror
+    write(*,'(a)') 'Check to make sure that the number of specified physics suites is not greater than n_columns '&
+                   // 'in the experiment_config namelist. Stopping...'
+    STOP
+  else
+    !check to see if the number of physics_suite_names matches n_cols; if physics_suite_names is less than n_cols, assume that there are multiple columns using the same physics
+    do i=1, n_columns
+      if (physics_suite(i) == 'none') then
+        if(i == 1 ) then
+          write(*,*) 'No physics suites were specified in ' // experiment_namelist &
+                     // 'Please edit this file and start again.'
+          STOP
+        else
+          if(last_physics_specified < 0) last_physics_specified = i-1
+          !only ask for response the first time an unspecified physics suite is found for a column
+          if(last_physics_specified == i-1) then
+            write(*,*) 'Too few physics suites were specified for the number of columns in '&
+              // experiment_namelist // '. All columns with unspecified physics are set '&
+              // 'to the last specified suite. Is this the desired behavior (y/n)?'
+            read(*,*) response
+          end if
+          if (response == 'y' .or. response == 'Y') then
+            physics_suite(i) = physics_suite(last_physics_specified)
+            physics_nml(i) = physics_nml(last_physics_specified)
+            !n_phy_fields(i) = n_phy_fields(last_physics_specified)
+          else
+            write(*,*) 'Please edit ' // experiment_namelist // ' to contain the same '&
+              //' number of physics suites as columns and start again. Stopping...'
+            STOP
+          end if
+        end if !check on i
+      end if !check on physics_suite
+    end do
+
   end if
 
   !> Write the experiment_config namelist variables to an output file in the output directory for inspection or re-use.
-  CALL SYSTEM('mkdir -p '//TRIM(output_dir))
-  open(unit=1, file=trim(output_dir)//'/'//trim(experiment_name)//'.nml', status='replace', action='write', iostat=ioerror(1))
+  open(unit=1, file=trim(output_dir)// experiment_namelist, status='replace', action='write', iostat=ioerror)
   write(1,NML=experiment_config)
   close(1)
 
@@ -293,7 +192,6 @@ subroutine get_config_nml(scm_state)
   scm_state%experiment_name = experiment_name
   scm_state%model_name = model_name
   scm_state%output_dir = output_dir
-  scm_state%physics_suite_dir = physics_suite_dir
   scm_state%case_data_dir = case_data_dir
   scm_state%vert_coord_data_dir = vert_coord_data_dir
   scm_state%output_file = output_file

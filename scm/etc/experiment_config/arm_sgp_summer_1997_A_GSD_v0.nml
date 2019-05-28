@@ -26,7 +26,6 @@ $end
 
 $physics_config
 physics_suite = 'SCM_GSD_v0_prescribed_surface',
-physics_suite_dir = '../../ccpp/suites/',
-physics_nml = '../../ccpp/physics_namelists/input_GSD_v0.nml',
+physics_nml = 'input_GSD_v0.nml',
 column_area = 2.0E9,
 $end

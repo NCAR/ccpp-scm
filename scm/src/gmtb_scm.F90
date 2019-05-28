@@ -137,7 +137,7 @@ subroutine gmtb_scm_main_sub()
       call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), 0, 0, 1,                   &
+                           physics%Diag(i), physics%Interstitial(i), 0, 1, 1,                   &
                            physics%Init_parm(i))
       
       call physics%associate(scm_state, i)
@@ -147,7 +147,7 @@ subroutine gmtb_scm_main_sub()
 !  the script parses tables in gmtb_scm_type_defs.f90)
 #include "ccpp_fields.inc"
       
-      !initialize easch column's physics
+      !initialize each column's physics
       call ccpp_physics_init(cdata(i), ierr=ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
