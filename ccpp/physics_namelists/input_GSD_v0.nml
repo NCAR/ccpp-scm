@@ -1,7 +1,7 @@
 &gfs_physics_nml
        fhzero         = 6.
        h2o_phys       = .true.
-       ldiag3d        = .false.
+       ldiag3d        = .true.
        fhcyc          = 0.
        nst_anl        = .true.
        use_ufo        = .true.
