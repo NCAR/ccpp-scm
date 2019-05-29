@@ -44,6 +44,7 @@ subroutine gmtb_scm_main_sub()
   type(ccpp_t), allocatable, target :: cdata(:)
   integer                           :: cdata_time_index
   integer                           :: ierr
+  character(len=16) :: logfile_name
 
   call get_config_nml(scm_state)
 
@@ -108,6 +109,12 @@ subroutine gmtb_scm_main_sub()
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
           stop
+      end if
+
+     !open a logfile for each column
+      if (physics%Init_parm(i)%me == physics%Init_parm(i)%master .and. physics%Init_parm(i)%logunit>=0) then
+          write (logfile_name, '(A7,I0.5,A4)') 'logfile', i, '.out'
+          open(unit=physics%Init_parm(i)%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
       end if
 
       cdata(i)%blk_no = 1

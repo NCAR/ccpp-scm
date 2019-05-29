@@ -1607,7 +1607,7 @@ module gmtb_scm_type_defs
       physics%Init_parm(i)%gnx = int_one
       physics%Init_parm(i)%gny = int_one
       physics%Init_parm(i)%nlunit = int_one
-      physics%Init_parm(i)%logunit= 2
+      physics%Init_parm(i)%logunit= 10 + i
       physics%Init_parm(i)%bdat(:) = zeroes_8(:)
       physics%Init_parm(i)%cdat(:) = zeroes_8(:)
       physics%Init_parm(i)%dt_dycore = kind_phys_zero
