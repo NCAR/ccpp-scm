@@ -17,7 +17,7 @@ contains
 !! @{
 !! Contains output-related subroutines
 
-!> This subroutine initializes the output netCDF file, "output.nc", placed in the directory specified by the experiment_config file used.
+!> This subroutine initializes the output netCDF file, "output.nc", placed in the directory specified by the case_config file used.
 subroutine output_init(scm_state)
   use gmtb_scm_type_defs, only: scm_state_type
 
