@@ -55,11 +55,8 @@ subroutine get_config_nml(scm_state)
   character(len=80), allocatable   :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
   character(len=65), allocatable   :: physics_nml(:)
   
-  integer                          :: i
   integer                          :: ioerror
-  logical :: file_exists
 
-  CHARACTER(1)             :: response
   CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
 
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
