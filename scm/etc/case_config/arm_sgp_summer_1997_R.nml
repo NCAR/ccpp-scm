@@ -1,31 +1,25 @@
-$experiment_config
+$case_config
 model_name = 'FV3',
 n_columns = 1,
-case_name = 'LASSO_2016051812',
+case_name = 'arm_sgp_summer_1997_R',
 dt = 600.0,
 time_scheme = 1,
-runtime = 54000,
+runtime = 345600,
 output_frequency = 600.0,
 n_levels = 64,
-output_dir = 'output_LASSO_2016051812_GFS_v15',
 output_file = 'output',
 case_data_dir = '../data/processed_case_input',
 vert_coord_data_dir = '../data/vert_coord_data',
-thermo_forcing_type = 2,
+thermo_forcing_type = 1,
 mom_forcing_type = 3,
 relax_time = 7200.0,
 sfc_flux_spec = .true.,
 sfc_roughness_length_cm = 10.0
 sfc_type = 1,
 reference_profile_choice = 2,
-year = 2016,
-month = 5,
+year = 1997,
+month = 6,
 day = 18,
-hour = 12,
-$end
-
-$physics_config
-physics_suite = 'SCM_GFS_v15_prescribed_surface',
-physics_nml = 'input_GFS_v15.nml',
+hour = 23,
 column_area = 2.0E9,
 $end

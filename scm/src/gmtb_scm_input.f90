@@ -50,24 +50,23 @@ subroutine get_config_nml(scm_state)
   integer              :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour
+  real(kind=dp)        :: column_area
 
   character(len=80), allocatable   :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
   character(len=65), allocatable   :: physics_nml(:)
-  real(kind=dp), allocatable       :: column_area(:)
-  !integer, allocatable             :: n_phy_fields(:) !< number of fields in the data type sent through the IPD
-
-  integer                          :: i, last_physics_specified
+  
+  integer                          :: i
   integer                          :: ioerror
   logical :: file_exists
 
   CHARACTER(1)             :: response
   CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
 
-  NAMELIST /experiment_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
+  NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
     n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, mom_forcing_type, relax_time, &
-    sfc_type, sfc_flux_spec, sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour
-
-  NAMELIST /physics_config/ physics_suite, physics_nml, column_area
+    sfc_type, sfc_flux_spec, sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, column_area
+    
+  NAMELIST /physics_config/ physics_suite, physics_nml
 
   !>  \section get_config_alg Algorithm
   !!  @{
@@ -97,20 +96,17 @@ subroutine get_config_nml(scm_state)
   day = 19
   hour = 3
 
-  last_physics_specified = -1
-
-  ! DH* TODO - USE A DIFFERENT UNIT THAN 1 *DH
-  open(unit=1, file=experiment_namelist, status='old', action='read', iostat=ioerror)
+  open(unit=10, file=experiment_namelist, status='old', action='read', iostat=ioerror)
   if(ioerror /= 0) then
     write(*,'(a,i0)') 'There was an error opening the file ' // experiment_namelist // &
                       '; error code = ', ioerror
     STOP
   else
-    read(1, NML=experiment_config, iostat=ioerror)
+    read(10, NML=case_config, iostat=ioerror)
   end if
 
   if(ioerror /= 0) then
-    write(*,'(a,i0)') 'There was an error reading the namelist experiment_config in the file '&
+    write(*,'(a,i0)') 'There was an error reading the namelist case_config in the file '&
                       // experiment_namelist // '; error code = ',ioerror
     STOP
   end if
@@ -127,56 +123,10 @@ subroutine get_config_nml(scm_state)
   !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
   !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
   !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
-  allocate(physics_suite(n_columns), physics_nml(n_columns), column_area(n_columns))
+  allocate(physics_suite(n_columns), physics_nml(n_columns))
 
-  do i=1, n_columns
-    physics_suite(i) = 'none'
-  end do
-  read(1, NML=physics_config, iostat=ioerror)
-  close(1)
-
-  if(ioerror /= 0) then
-    write(*,'(a,i0)') 'There was an error reading the namelist physics_config in the file ' &
-                      // experiment_namelist // '; error code = ',ioerror
-    write(*,'(a)') 'Check to make sure that the number of specified physics suites is not greater than n_columns '&
-                   // 'in the experiment_config namelist. Stopping...'
-    STOP
-  else
-    !check to see if the number of physics_suite_names matches n_cols; if physics_suite_names is less than n_cols, assume that there are multiple columns using the same physics
-    do i=1, n_columns
-      if (physics_suite(i) == 'none') then
-        if(i == 1 ) then
-          write(*,*) 'No physics suites were specified in ' // experiment_namelist &
-                     // 'Please edit this file and start again.'
-          STOP
-        else
-          if(last_physics_specified < 0) last_physics_specified = i-1
-          !only ask for response the first time an unspecified physics suite is found for a column
-          if(last_physics_specified == i-1) then
-            write(*,*) 'Too few physics suites were specified for the number of columns in '&
-              // experiment_namelist // '. All columns with unspecified physics are set '&
-              // 'to the last specified suite. Is this the desired behavior (y/n)?'
-            read(*,*) response
-          end if
-          if (response == 'y' .or. response == 'Y') then
-            physics_suite(i) = physics_suite(last_physics_specified)
-            physics_nml(i) = physics_nml(last_physics_specified)
-            !n_phy_fields(i) = n_phy_fields(last_physics_specified)
-          else
-            write(*,*) 'Please edit ' // experiment_namelist // ' to contain the same '&
-              //' number of physics suites as columns and start again. Stopping...'
-            STOP
-          end if
-        end if !check on i
-      end if !check on physics_suite
-    end do
-
-  end if
-
-  !> Write the experiment_config namelist variables to an output file in the output directory for inspection or re-use.
-  open(unit=1, file=trim(output_dir)// experiment_namelist, status='replace', action='write', iostat=ioerror)
-  write(1,NML=experiment_config)
-  close(1)
+  read(10, NML=physics_config, iostat=ioerror)
+  close(10)
 
   select case(time_scheme)
     case(1)
@@ -188,7 +138,7 @@ subroutine get_config_nml(scm_state)
   end select
 
   call scm_state%create(n_columns, n_levels, n_time_levels)
-
+  
   scm_state%experiment_name = experiment_name
   scm_state%model_name = model_name
   scm_state%output_dir = output_dir
@@ -220,7 +170,7 @@ subroutine get_config_nml(scm_state)
   scm_state%sfc_type_real = DBLE(sfc_type)
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
-
+  
 !> @}
 end subroutine get_config_nml
 
