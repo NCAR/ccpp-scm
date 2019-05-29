@@ -72,7 +72,6 @@
        prog_ccn = .false.
        do_qa = .false.
        fast_sat_adj = .false.
-       tau_l2v = 300.
        tau_l2v = 225.
        tau_v2l = 150.
        tau_g2v = 900.
