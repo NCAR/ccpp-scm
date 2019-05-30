@@ -44,6 +44,7 @@ subroutine gmtb_scm_main_sub()
   type(ccpp_t), allocatable, target :: cdata(:)
   integer                           :: cdata_time_index
   integer                           :: ierr
+  character(len=16) :: logfile_name
 
   call get_config_nml(scm_state)
 
@@ -86,8 +87,8 @@ subroutine gmtb_scm_main_sub()
 
   scm_state%itt_out = 1
 
-  call physics%create(scm_state%n_cols, scm_state%n_levels, scm_state%lat(:,1), scm_state%pres_l(1,1,:))
-
+  call physics%create(scm_state%n_cols)
+  
   !physics initialization section
 
   !set the array index of the time level of the state variables that the cdata
@@ -104,12 +105,16 @@ subroutine gmtb_scm_main_sub()
 
   do i = 1, scm_state%n_cols
      !set up each column's physics suite (which may be different)
-      call ccpp_init( &
-          trim(adjustl(scm_state%physics_suite_dir))//trim(adjustl(scm_state%physics_suite_name(i)))//'.xml', &
-          cdata(i), ierr)
+      call ccpp_init(trim(adjustl(scm_state%physics_suite_name(i))), cdata(i), ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
           stop
+      end if
+
+     !open a logfile for each column
+      if (physics%Init_parm(i)%me == physics%Init_parm(i)%master .and. physics%Init_parm(i)%logunit>=0) then
+          write (logfile_name, '(A7,I0.5,A4)') 'logfile', i, '.out'
+          open(unit=physics%Init_parm(i)%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
       end if
 
       cdata(i)%blk_no = 1
@@ -131,34 +136,31 @@ subroutine gmtb_scm_main_sub()
       physics%Init_parm(i)%tracer_names => scm_state%tracer_names
       physics%Init_parm(i)%fn_nml = scm_state%physics_nml(1)
       physics%Init_parm(i)%blksz => scm_state%blksz
-
+      physics%Init_parm(i)%tile_num = 1
+      physics%Init_parm(i)%hydrostatic = .true.
+      physics%Init_parm(i)%restart = .false.
+      
       ! Allocate and initialize DDTs
       call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), 1, 1, .false.,             &
-                           physics%Init_parm(i),                                                &
-                           physics%n_ozone_lats, physics%n_ozone_layers, physics%n_ozone_times, &
-                           physics%n_ozone_coefficients, physics%ozone_lat, physics%ozone_pres, &
-                           physics%ozone_time, physics%ozone_forcing_in,                        &
-                           physics%n_h2o_lats, physics%n_h2o_layers, physics%n_h2o_times,       &
-                           physics%n_h2o_coefficients, physics%h2o_lat, physics%h2o_pres,       &
-                           physics%h2o_time, physics%h2o_forcing_in)
-
+                           physics%Diag(i), physics%Interstitial(i), 0, 1, 1,                   &
+                           physics%Init_parm(i))
+      
       call physics%associate(scm_state, i)
-
+      
 ! use ccpp_fields.inc to call ccpp_field_add for all variables to add
 ! (this is auto-generated from ccpp/scripts/ccpp_prebuild.py,
 !  the script parses tables in gmtb_scm_type_defs.f90)
 #include "ccpp_fields.inc"
-
-      !initialize easch column's physics
+      
+      !initialize each column's physics
       call ccpp_physics_init(cdata(i), ierr=ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
           stop
       end if
-
+      
       physics%Model(i)%first_time_step = .true.
   end do
 

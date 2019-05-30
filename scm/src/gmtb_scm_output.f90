@@ -26,8 +26,6 @@ subroutine output_init(scm_state)
   INTEGER :: ncid, time_id, hor_dim_id, vert_dim_id, vert_dim_i_id, dummy_id, year_id, month_id, day_id, hour_id
   !> \section output_init_alg Algorithm
   !! @{
-  !> - Create the output directory if necessary using a system call.
-  CALL SYSTEM('mkdir -p '//TRIM(scm_state%output_dir))
 
   !> - Create the output file in the output directory.
   CALL CHECK(NF90_CREATE(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",CMODE=NF90_CLOBBER,NCID=ncid))
