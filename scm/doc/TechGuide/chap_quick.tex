@@ -118,7 +118,7 @@ For bourne/bash shells,
 . etc/CENTOS_setup.sh
 . etc/MACOSX_setup.sh
 \end{lstlisting}
-\emph{Note:} If using a local Linux or Mac system, we provide instructions for how to set up your development system (compilers and libraries) in \execout{doc/README\_\{MACOSX,UBUNTU,CENTOS\}.txt}. If following these, you will need to run the respective setup script listed above. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary, although we recommend setting environment variables such as \execout{CC}, \execout{FC}, and \execout{NETCDF}.
+\emph{Note:} If using a local Linux or Mac system, we provide instructions for how to set up your development system (compilers and libraries) in \execout{doc/README\_\{MACOSX,UBUNTU,CENTOS\}.txt}. If following these, you will need to run the respective setup script listed above. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary, although we recommend setting environment variables such as \execout{CC} and \execout{FC}. For version 3.0 and above, it is required to have the \execout{NETCDF} environment variable set to the path of the netCDF installation that was compiled with the same compiler used in the following steps. Otherwise, the \execout{cmake} step will not complete successfully.
 
     \item Make a build directory and change into it.
 \begin{lstlisting}[language=bash]
@@ -146,7 +146,10 @@ The resulting executable may be found at \execout{./gmtb-scm} (Full path of \exe
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
 \section{Run the SCM with a supplied case}
-There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. A single command line argument is required to run the model, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For a quick test that the model works, choose to run the  \execout{twpice} case:
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. The model is executed through one of two python run scripts that are pre-staged into the \execout{bin} directory: \execout{run_gmtb_scm.py} or \execout{multi_run_gmtb_scm.py}.
+
+
+A single command line argument is required to run the model, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For a quick test that the model works, choose to run the  \execout{twpice} case:
 \begin{lstlisting}[language=bash]
 ./gmtb_scm twpice
 \end{lstlisting}
