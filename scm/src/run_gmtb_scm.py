@@ -116,6 +116,8 @@ class Experiment(object):
         self._suite = suite
         self._name = case + '_' + suite
         
+        #if a physics namelist is specified (entire filename), it will be used; 
+        #otherwise, a default physics namelist for the given suite is used from default_namelists.py
         if physics_namelist:
             self._physics_namelist = physics_namelist
         else:
@@ -125,12 +127,14 @@ class Experiment(object):
                 message = 'A default physics namelist for suite {0} is not found in default_namelists.py'.format(self._suite)
                 logging.critical(message)
                 raise Exception(message)
-        #self._physics_namelist = os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist)
+        
+        #check to see that the physics namelists exists in the right dir
         if not os.path.isfile(os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist)):
             message = 'The physics namelist {0} was not found'.format(os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist))
             logging.critical(message)
             raise Exception(message)
                         
+        #check to see if the case namelists exists in the right dir
         self._namelist = os.path.join(CASE_NAMELIST_DIR, self._case + '.nml')
         if not os.path.isfile(self._namelist):
             message = 'Experiment {0} with namelist {1} not found'.format(self._name, self._namelist)
@@ -189,11 +193,14 @@ class Experiment(object):
 
     def setup_rundir(self):
         """Set up run directory for this experiment."""
+        
         # Parse case configuration namelist and extract
         # - output directory
         # - surface_flux_spec
         logging.info('Parsing case configuration namelist {0}'.format(self._namelist))
         case_nml = f90nml.read(self._namelist)
+        # look for the output_dir variable in the case configuration namelist and use it if it does; 
+        # if it doesn't exist, create a default output directory name (from the case and suite names) and create a namelist patch
         try:
             output_dir = case_nml['case_config']['output_dir']
             custom_output_dir = True
@@ -205,6 +212,7 @@ class Experiment(object):
                 output_dir = 'output_' + self._case + '_' + self._suite + '_' + os.path.splitext(self._physics_namelist)[0]
             output_dir_patch_nml = {'case_config':{'output_dir':output_dir}}
             custom_output_dir = False
+        # check to see if surface fluxes are specified in the case configuration file (default is False)
         try:
             surface_flux_spec = case_nml['case_config']['sfc_flux_spec']
         except KeyError:
@@ -223,14 +231,16 @@ class Experiment(object):
         
         # Create STANDARD_EXPERIMENT_NAMELIST in the run directory with the case configuration and physics configuration namelists
         logging.info('Creating experiment configuration namelist {0} in the run directory from {1} using {2} and {3} '.format(STANDARD_EXPERIMENT_NAMELIST,self._namelist,self._suite,self._physics_namelist))
-        #if(custom_output_dir):
+        
         with open(STANDARD_EXPERIMENT_NAMELIST, "w+") as nml_file:
             case_nml.write(nml_file)
         
         with open(STANDARD_EXPERIMENT_NAMELIST, "a") as nml_file:
             physics_config_nml.write(nml_file)
         
+        # if using the default output dir name created in this script, patch the experiment namelist with the new output_dir variable
         if(not custom_output_dir):
+            # GJF TODO: this implementation is clunky; newer versions of f90nml can handle this better, but this works with v0.19 so no need to require newer version
             f90nml.patch(STANDARD_EXPERIMENT_NAMELIST, output_dir_patch_nml, 'temp.nml')
             cmd = "mv {0} {1}".format('temp.nml', STANDARD_EXPERIMENT_NAMELIST)
             execute(cmd)
