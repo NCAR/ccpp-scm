@@ -4,7 +4,6 @@ import argparse
 import imp
 import os
 import logging
-import run_gmtb_scm
 import subprocess
 from supported_suites import suites
 from supported_cases import cases
