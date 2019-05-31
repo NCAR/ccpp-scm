@@ -312,21 +312,10 @@ def launch_executable(use_gdb, gdb):
     time.sleep(2)
     os.system(cmd)
 
-def main(**kwargs):
-    case = None
-    use_gdb = False
-    suite = None
-    namelist = ''
+def main():
+    (case, use_gdb, suite, namelist) = parse_arguments()
     
     setup_logging()
-    
-    if not kwargs:
-        # Basics
-        (case, use_gdb, suite, namelist) = parse_arguments()
-    else:
-        case = kwargs.get('case')
-        suite = kwargs.get('suite',DEFAULT_SUITE)
-        namelist = kwargs.get('namelist')
     
     #Experiment
     if namelist:
@@ -341,8 +330,7 @@ def main(**kwargs):
     else:
         gdb = None
     # Launch model on exit
-    #atexit.register(launch_executable, use_gdb, gdb)
-    launch_executable(use_gdb, gdb)
+    atexit.register(launch_executable, use_gdb, gdb)
     
 if __name__ == '__main__':
     main()
