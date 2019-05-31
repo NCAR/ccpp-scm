@@ -26,6 +26,7 @@ parser.add_argument('-t', '--timer',     help='set to time each subprocess', act
 
 def setup_logging(verbose):
     """Sets up the logging module."""
+    # print out debug messages (logs and output from subprocesses) if verbose argument is set
     if verbose:
         LOG_LEVEL = logging.DEBUG
     else:
@@ -34,20 +35,24 @@ def setup_logging(verbose):
     LOG_FORMAT = '%(levelname)s: %(message)s'
     
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+    
+    # write out a log file if verbosity is set twice (-vv)
     if verbose > 1:
         fh = logging.FileHandler(LOG_FILE, mode='w')
         logger = logging.getLogger()
         logger.addHandler(fh)
 
+# function to spawn subprocesses directly (default) or through a timer
 def spawn_subprocess(command, timer):
     if timer:
         t = timeit.Timer(functools.partial(subprocess_work, command))
+        #timer_iterations determines how many realizations are executed in order to calculate the elapsed time
         elapsed_time = t.timeit(timer_iterations)
         logging.info('elapsed time: {0} s'.format(elapsed_time/timer_iterations))
     else:
         subprocess_work(command)
         
-
+# function to actually do the work of executing a subprocess and adding the stderr and stdout to the log at the DEBUG level
 def subprocess_work(command):
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     (output, err) = p.communicate()
