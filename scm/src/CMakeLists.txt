@@ -207,3 +207,9 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_SOURCE_DIR}/run_gmtb_scm.py
                 ${CMAKE_CURRENT_BINARY_DIR}/run_gmtb_scm.py)
+
+add_custom_command(
+        TARGET gmtb_scm POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+                ${CMAKE_SOURCE_DIR}/multi_run_gmtb_scm.py
+                ${CMAKE_CURRENT_BINARY_DIR}/multi_run_gmtb_scm.py)

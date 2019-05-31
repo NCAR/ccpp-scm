@@ -30,6 +30,9 @@ PHYSICS_NAMELIST_DIR = '../../ccpp/physics_namelists'
 # Path to the directory containing physics namelists (relative to run dir)
 PHYSICS_SUITE_DIR = '../../ccpp/suites'
 
+# Default suite to use if none is specified
+DEFAULT_SUITE = 'SCM_GFS_v15'
+
 # Default settings and filenames of input data for ozone physics;
 # these must match the default settings in GFS_typedefs.F90.
 DEFAULT_OZ_PHYS      = True
@@ -49,7 +52,7 @@ LOGLEVEL = logging.INFO
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--case',       help='name of case to run', required=True)
 parser.add_argument('-g', '--gdb',        help='invoke gmtb_scm through gdb', action='store_true', default=False)
-parser.add_argument('-s', '--suite',      help='name of suite to use', default='SCM_GFS_v15')
+parser.add_argument('-s', '--suite',      help='name of suite to use', default=DEFAULT_SUITE)
 parser.add_argument('-n', '--namelist',   help='physics namelist to use')
 
 ###############################################################################
@@ -202,7 +205,11 @@ class Experiment(object):
             output_dir = case_nml['case_config']['output_dir']
             custom_output_dir = True
         except KeyError:
-            output_dir = 'output_' + self._case + '_' + self._suite
+            # If using the default namelist, no need to include it in the output directory name; if not, need to use write custom namelist in output dir name in case running multiple experiments with the same case and suite but different namelists
+            if self._physics_namelist == default_physics_namelists.get(self._suite):
+                output_dir = 'output_' + self._case + '_' + self._suite
+            else:
+                output_dir = 'output_' + self._case + '_' + self._suite + '_' + os.path.splitext(self._physics_namelist)[0]
             output_dir_patch_nml = {'case_config':{'output_dir':output_dir}}
             custom_output_dir = False
         # check to see if surface fluxes are specified in the case configuration file (default is False)
@@ -316,10 +323,11 @@ def launch_executable(use_gdb, gdb):
     os.system(cmd)
 
 def main():
-    # Basics
-    setup_logging()
     (case, use_gdb, suite, namelist) = parse_arguments()
-    # Experiment
+    
+    setup_logging()
+    
+    #Experiment
     if namelist:
         logging.info('Setting up experiment {0} with suite {1} using namelist {2}'.format(case,suite,namelist))
     else:
@@ -333,6 +341,6 @@ def main():
         gdb = None
     # Launch model on exit
     atexit.register(launch_executable, use_gdb, gdb)
-
+    
 if __name__ == '__main__':
     main()
