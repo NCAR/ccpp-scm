@@ -13,7 +13,7 @@ The source code bundle for the CCPP and SCM is provided through GitHub.com.  Thi
 git clone https://[username]@github.com/NCAR/gmtb-scm-release gmtb-scm
 \end{lstlisting}
     and enter your github password when prompted.
-    \item Check out the desired release number using
+    \item Check out the desired \hl{release number} using
 \begin{lstlisting}[language=bash]
 git checkout [v2.0]
 \end{lstlisting}
@@ -54,7 +54,7 @@ cd gmtb-scm
 
 The source code for the SCM and CCPP component is in the form of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the netCDF libraries. Beyond the standard scripts, the build system relies on use of the Python scripting language, along with cmake, GNU make and date.
 
-The basic requirements for building and running the CCPP and SCM bundle are listed below:
+The basic requirements for building and running the CCPP and SCM bundle are \hl{listed below}:
 \begin{itemize}
     \item FORTRAN 90+ compiler (ifort v17+, gfortran v5.4+, pgf90 v17.9+)
     \item C compiler (icc v17+, gcc v5.4+, pgcc v17.9+)
@@ -118,7 +118,7 @@ For bourne/bash shells,
 . etc/CENTOS_setup.sh
 . etc/MACOSX_setup.sh
 \end{lstlisting}
-\emph{Note:} If using a local Linux or Mac system, we provide instructions for how to set up your development system (compilers and libraries) in \execout{doc/README\_\{MACOSX,UBUNTU,CENTOS\}.txt}. If following these, you will need to run the respective setup script listed above. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary, although we recommend setting environment variables such as \execout{CC} and \execout{FC}. For version 3.0 and above, it is required to have the \execout{NETCDF} environment variable set to the path of the netCDF installation that was compiled with the same compiler used in the following steps. Otherwise, the \execout{cmake} step will not complete successfully.
+\emph{Note:} If using a local Linux or Mac system, we provide instructions for how to set up your development system (compilers and libraries) in \execout{doc/README\_\{MACOSX,UBUNTU,CENTOS\}.txt}. If following these, you will need to run the respective setup script listed above. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary, although we recommend setting environment variables such as \execout{CC} and \execout{FC}. \textbf{For version 3.0 and above, it is required to have the \execout{NETCDF} environment variable set to the path of the netCDF installation that was compiled with the same compiler used in the following steps}. Otherwise, the \execout{cmake} step will not complete successfully.
 
     \item Make a build directory and change into it.
 \begin{lstlisting}[language=bash]
