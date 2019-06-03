@@ -163,7 +163,15 @@ When invoking the run script, the only required argument is the name of the case
 \item SCM\_GSD\_v0
 \end{enumerate}
 
-Note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
+Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v0) requires the computation of look-up tables during its initialization phase. As of the release, this process has been prohibitively slow with this model, so it is HIGHLY suggested that these look-up tables are downloaded and staged to use this scheme (and the SCM\_GSD\_v0 suite). Pre-computed tables have been created and are available for download at the following URLs:
+\begin{itemize}
+\item \url{https://dtcenter.org/GMTB/freezeH2O.dat} (243 M)
+\item \url{https://dtcenter.org/GMTB/qr_acr_qg.dat} (49 M)
+\item \url{https://dtcenter.org/GMTB/qr_acr_qs.dat} (32 M)
+\end{itemize}
+These files should be staged in \execout{gmtb-scm/scm/data/GFS\_physics\_data} prior to running \execout{cmake}. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
+
+Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
 
 If specifying a namelist other than the default, the value must be an entire filename that exists in \execout{../../ccpp/physics\_namelists}. Caution should be exercised when modifying physics namelists since some redundancy between flags to control some physics parameterizations and scheme entries in the CCPP suite definition files currently exists. Values of numerical parameters are typically OK to change without fear of inconsistencies. Lastly, the \execout{-g} flag can be used to run the executable through the \exec{gdb} debugger (assuming it is installed on the system).
 
