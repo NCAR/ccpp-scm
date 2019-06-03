@@ -13,7 +13,7 @@ The source code bundle for the CCPP and SCM is provided through GitHub.com.  Thi
 git clone https://[username]@github.com/NCAR/gmtb-scm-release gmtb-scm
 \end{lstlisting}
     and enter your github password when prompted.
-    \item Check out the desired release number using
+    \item Check out the desired \hl{release number} using
 \begin{lstlisting}[language=bash]
 git checkout [v2.0]
 \end{lstlisting}
@@ -54,7 +54,7 @@ cd gmtb-scm
 
 The source code for the SCM and CCPP component is in the form of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the netCDF libraries. Beyond the standard scripts, the build system relies on use of the Python scripting language, along with cmake, GNU make and date.
 
-The basic requirements for building and running the CCPP and SCM bundle are listed below:
+The basic requirements for building and running the CCPP and SCM bundle are \hl{listed below}:
 \begin{itemize}
     \item FORTRAN 90+ compiler (ifort v17+, gfortran v5.4+, pgf90 v17.9+)
     \item C compiler (icc v17+, gcc v5.4+, pgcc v17.9+)
@@ -118,7 +118,7 @@ For bourne/bash shells,
 . etc/CENTOS_setup.sh
 . etc/MACOSX_setup.sh
 \end{lstlisting}
-\emph{Note:} If using a local Linux or Mac system, we provide instructions for how to set up your development system (compilers and libraries) in \execout{doc/README\_\{MACOSX,UBUNTU,CENTOS\}.txt}. If following these, you will need to run the respective setup script listed above. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary, although we recommend setting environment variables such as \execout{CC}, \execout{FC}, and \execout{NETCDF}.
+\emph{Note:} If using a local Linux or Mac system, we provide instructions for how to set up your development system (compilers and libraries) in \execout{doc/README\_\{MACOSX,UBUNTU,CENTOS\}.txt}. If following these, you will need to run the respective setup script listed above. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary, although we recommend setting environment variables such as \execout{CC} and \execout{FC}. \textbf{For version 3.0 and above, it is required to have the \execout{NETCDF} environment variable set to the path of the netCDF installation that was compiled with the same compiler used in the following steps}. Otherwise, the \execout{cmake} step will not complete successfully.
 
     \item Make a build directory and change into it.
 \begin{lstlisting}[language=bash]
@@ -146,13 +146,38 @@ The resulting executable may be found at \execout{./gmtb-scm} (Full path of \exe
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
 \section{Run the SCM with a supplied case}
-There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the suite definition file. A single command line argument is required to run the model, which is the name of the case configuration file (without the .nml extension) found in \execout{../etc/case\_config/}. For a quick test that the model works, choose to run the  \execout{twpice} case:
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially. 
+
+\subsection{Single Run Script Usage}
+Running a case requires three pieces of information: the case to run (consisting of initial conditions, geolocation, forcing data, etc.), the physics suite to use (through a CCPP suite definition file), and a physics namelist (that specifies configurable physics options to use). As discussed in chapter \ref{chapter: cases}, cases are set up via their own namelists in \execout{../etc/case\_config}. A default physics suite is provided as a user-editable variable in the script and default namelists are associated with each physics suite (through \execout{../src/default\_namelists.py}), so, technically, one must only specify a case to run with the SCM. The single run script's interface is described below.
+
 \begin{lstlisting}[language=bash]
-./gmtb_scm twpice
+./run_gmtb_scm.py -c CASE_NAME [-s SUITE_NAME] [-n PHYSICS_NAMELIST_PATH] [-g]
 \end{lstlisting}
+
+When invoking the run script, the only required argument is the name of the case to run. The case name used must match one of the case configuration files located in \execout{../etc/case\_config} (\emph{without the .nml extension!}). If specifying a suite other than the default, the suite name used must match the value of the suite name in one of the suite definition files located in \execout{../../ccpp/suites} (Note: not the filename of the suite definition file). As part of the third CCPP release, the following suite names are valid:
+\begin{enumerate}
+\item SCM\_GFS\_v15
+\item SCM\_GFS\_v15plus
+\item SCM\_CPT\_v0
+\item SCM\_GSD\_v0
+\end{enumerate}
+
+Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v0) requires the computation of look-up tables during its initialization phase. As of the release, this process has been prohibitively slow with this model, so it is HIGHLY suggested that these look-up tables are downloaded and staged to use this scheme (and the SCM\_GSD\_v0 suite). Pre-computed tables have been created and are available for download at the following URLs:
+\begin{itemize}
+\item \url{https://dtcenter.org/GMTB/freezeH2O.dat} (243 M)
+\item \url{https://dtcenter.org/GMTB/qr_acr_qg.dat} (49 M)
+\item \url{https://dtcenter.org/GMTB/qr_acr_qs.dat} (32 M)
+\end{itemize}
+These files should be staged in \execout{gmtb-scm/scm/data/GFS\_physics\_data} prior to running \execout{cmake}. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
+
+Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
+
+If specifying a namelist other than the default, the value must be an entire filename that exists in \execout{../../ccpp/physics\_namelists}. Caution should be exercised when modifying physics namelists since some redundancy between flags to control some physics parameterizations and scheme entries in the CCPP suite definition files currently exists. Values of numerical parameters are typically OK to change without fear of inconsistencies. Lastly, the \execout{-g} flag can be used to run the executable through the \exec{gdb} debugger (assuming it is installed on the system).
+
 If the run aborts with the error message
 \begin{lstlisting}[language=bash]
-gmtb_scm: libccppphys.so.1.0.0: cannot open shared object file: No such file or directory
+gmtb_scm: libccppphys.so.X.X.X: cannot open shared object file: No such file or directory
 \end{lstlisting}
 the environment variable \execout{LD\_LIBRARY\_PATH} must be set to
 \begin{lstlisting}[language=bash]
@@ -161,21 +186,27 @@ export LD_LIBRARY_PATH=$PWD/ccpp/physics:$LD_LIBRARY_PATH
 before running the model.
 
 A netCDF output file is generated in the location specified in the case
-configuration file. Any standard netCDF file viewing or analysis tools may be used to
-examine the output file (ncdump, ncview, NCL, etc).  For the supplied \execout{twpice.nml} case, it is located in:
-\begin{lstlisting}[language=bash]
-gmtb-scm/scm/bin/output_twpice/output.nc
-\end{lstlisting}
-or, simply,
-\begin{lstlisting}[language=bash]
-output_twpice/output.nc
-\end{lstlisting}
-if you still reside in the \execout{bin} directory from which you executed the model.
+configuration file, if the \execout{output\_dir} variable exists in that file. Otherwise an output directory is constructed from the case, suite, and namelist used (if different from the default). All output directories are placed in the \execout{bin} directory. Any standard netCDF file viewing or analysis tools may be used to
+examine the output file (ncdump, ncview, NCL, etc).
 
-If using the model on HPC resources and significant amounts of processor time is anticipated for the experiments, it will likely be necessary to submit a job through the HPC's batch system. An example script has been included in the repository for running the model on Theia's batch system. It is located in \execout{gmtb-scm/scm/etc/gmtb\_scm\_run.py}. Edit the \execout{job\_name}, \execout{account}, etc. to suit your needs. The case name to be run is included in the \execout{command} variable. To use, invoke
+\subsection{Multiple Run Script Usage}
+
+A second python script is provided for automating the execution of multiple integrations through repeated calling of the single run script. From the run directory, one may use this script through the following interface.
+
 \begin{lstlisting}[language=bash]
-./gmtb_scm_run.py
+./multi_run_gmtb_scm.py {[-c CASE_NAME] [-s SUITE_NAME] [-f PATH_TO_FILE]} [-v{v}] [-t]
 \end{lstlisting}
-from the \execout{gmtb-scm/scm/etc} directory.
+
+No arguments are required for this script. The \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options form a mutually-exclusive group, so exactly one of these is allowed at one time. If \execout{--c} is specified with a case name, the script will run a set of integrations for all supported suites (defined in \execout{../src/supported\_suites.py}) for that case. If \execout{-s} is specified with a suite name, the script will run a set of integrations for all supported cases (defined in \execout{../src/supported\_cases.py}) for that that suite. If \execout{-f} is specified with the path to a filename, it will read in lists of cases, suites, and namelists to use from that file. If multiple namelists are specified in the file, there either must be one suite specified \emph{or} the number of suites must match the number of namelists. If none of the \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options group is specified, the script will run through all permutations of supported cases and suites (as defined in the files previously mentioned).
+
+In addition to the main options, some helper options can also be used with any of those above. The \execout{-v{v} or --verbose} option can be used to output more information from the script to the console and to a log file. If this option is not used, only completion progress messages are written out. If one \execout{-v} is used, the script will write out completion progress messages and all messages and output from the single run script. If two \execout{-vv} are used, the script will also write out all messages and single run script output to a log file (\execout{multi\_run\_gmtb\_scm.log}) in the \execout{bin} directory. The final option, \execout{-t or --timer}, can be used to output the elapsed time for each integration executed by the script. Note that the execution time includes file operations performed by the single run script in addition to the execution of the underlying (Fortran) SCM executable. By default, this option will execute one integration of each subprocess. Since some variability is expected for each model run, if greater precision is required, the number of integrations for timing averaging can be set through an internal script variable. This option can be useful, for example, for getting a rough idea of relative computational expense of different physics suites.
+
+\subsection{Batch Run Script}
+
+If using the model on HPC resources and significant amounts of processor time is anticipated for the experiments, it will likely be necessary to submit a job through the HPC's batch system. An example script has been included in the repository for running the model on Theia's batch system (SLURM). It is located in \execout{gmtb-scm/scm/etc/gmtb\_scm\_slurm\_example.py}. Edit the \execout{job\_name}, \execout{account}, etc. to suit your needs and copy to the \execout{bin} directory. The case name to be run is included in the \execout{command} variable. To use, invoke
+\begin{lstlisting}[language=bash]
+./gmtb_scm_slurm_example.py
+\end{lstlisting}
+from the \execout{bin} directory.
 
 Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Developers' Corner available at \url{https://dtcenter.org/gmtb/users/ccpp/developers} and in the CCPP Developers' Guide at \url{https://dtcenter.org/gmtb/users/ccpp/docs}.
