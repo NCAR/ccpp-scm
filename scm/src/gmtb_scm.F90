@@ -44,6 +44,7 @@ subroutine gmtb_scm_main_sub()
   type(ccpp_t), allocatable, target :: cdata(:)
   integer                           :: cdata_time_index
   integer                           :: ierr
+  character(len=16) :: logfile_name
 
   call get_config_nml(scm_state)
 
@@ -110,6 +111,12 @@ subroutine gmtb_scm_main_sub()
           stop
       end if
 
+     !open a logfile for each column
+      if (physics%Init_parm(i)%me == physics%Init_parm(i)%master .and. physics%Init_parm(i)%logunit>=0) then
+          write (logfile_name, '(A7,I0.5,A4)') 'logfile', i, '.out'
+          open(unit=physics%Init_parm(i)%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
+      end if
+
       cdata(i)%blk_no = 1
       cdata(i)%thrd_no = 1
 
@@ -137,7 +144,7 @@ subroutine gmtb_scm_main_sub()
       call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
                            physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
                            physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), 0, 0, 1,                   &
+                           physics%Diag(i), physics%Interstitial(i), 0, 1, 1,                   &
                            physics%Init_parm(i))
       
       call physics%associate(scm_state, i)
@@ -147,7 +154,7 @@ subroutine gmtb_scm_main_sub()
 !  the script parses tables in gmtb_scm_type_defs.f90)
 #include "ccpp_fields.inc"
       
-      !initialize easch column's physics
+      !initialize each column's physics
       call ccpp_physics_init(cdata(i), ierr=ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'

@@ -2,7 +2,7 @@
 \label{chapter: cases}
 
 \section{How to run cases}
-Only two files are needed to set up and run a case with the SCM. The first is a configuration namelist file found in \execout{gmtb-scm/scm/etc/case\_config}. Each case configuration file contains two fortran namelists, one called \execout{case\_config} that contains parameters for the SCM infrastructure and one called \execout{physics\_config} that contains parameters for the physics suite(s). The second necessary file is a netCDF file containing data to initialize the column state and time-dependent data to force the column state. The two files are described below.
+Only two files are needed to set up and run a case with the SCM. The first is a configuration namelist file found in \execout{gmtb-scm/scm/etc/case\_config} that contains parameters for the SCM infrastructure. The second necessary file is a netCDF file containing data to initialize the column state and time-dependent data to force the column state. The two files are described below.
 
 \subsection{Case configuration namelist parameters}
 \label{subsection: case config}
@@ -42,7 +42,7 @@ The \execout{case\_config} namelist expects the following parameters:
 	\end{itemize}
 \item \execout{output\_dir}
 	\begin{itemize}
-	\item A string representing the path (relative to the build directory) to which output should be written.
+	\item A string representing the path (relative to the build directory) to which output should be written. (OPTIONAL)
 	\end{itemize}
 \item \execout{output\_file}
 	\begin{itemize}
@@ -72,6 +72,10 @@ The \execout{case\_config} namelist expects the following parameters:
 	\begin{itemize}
 	\item A boolean set to \exec{.true.} if surface flux are specified from the forcing data (there is no need to have surface schemes in a suite definition file if so)
 	\end{itemize}
+\item \execout{sfc\_roughness\_length\_cm}
+	\begin{itemize}
+	\item Surface roughness length in cm for calculating surface-related fields from specified surface fluxes (only used if \execout{sfc\_flux\_spec} is True).
+	\end{itemize}
 \item \execout{sfc\_type}
 	\begin{itemize}
 	\item An integer representing the character of the surface (0 $=$ sea surface, 1 $=$ land surface, 2 $=$ sea-ice surface)
@@ -95,26 +99,6 @@ The \execout{case\_config} namelist expects the following parameters:
 \item \execout{hour}
 	\begin{itemize}
 	\item An integer representing the hour of the initialization time
-	\end{itemize}
-\end{itemize}
-
-\subsection{Physics configuration namelist parameters}
-\label{subsection: physics config}
-
-The \execout{physics\_config} namelist expects the following parameters:
-
-\begin{itemize}
-\item \execout{physics\_suite}
-	\begin{itemize}
-	\item A string list representing the names of the physics suite for each column (must correspond a suite definition file name; if using multiple columns, you may specify an equal number of physics suites)
-	\end{itemize}
-\item \execout{physics\_suite\_dir}
-	\begin{itemize}
-	\item A string representing the path (relative to the build directory) where suite definition files can be found.
-	\end{itemize}
-\item \execout{physics\_nml}
-	\begin{itemize}
-	\item A string list representing the paths (relative to the build directory) to the physics namelist files.
 	\end{itemize}
 \item \execout{column\_area}
 	\begin{itemize}

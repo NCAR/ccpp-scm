@@ -231,7 +231,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   use funcphys,            only: gfuncphys
   !use cldwat2m_micro,      only: ini_micro
   !use aer_cloud,           only: aer_cloud_init
-  use module_ras,          only: ras_init
+  !use module_ras,          only: ras_init
 
   !--- interface variables
   type(GFS_control_type),      intent(inout) :: Model
@@ -248,7 +248,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_init_type),         intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: communicator
-  integer,                  intent(in)    :: ntasks, nthreads  
+  integer,                  intent(in)    :: ntasks, nthreads
   
   !--- set control properties (including namelist read)
   call Model%init (Init_parm%nlunit, Init_parm%fn_nml,           &
@@ -289,7 +289,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   !endif
 
   !--- initialize ras
-  if (Model%ras) call ras_init (Model%levs, Model%me)
+  !if (Model%ras) call ras_init (Model%levs, Model%me)
 
   !--- lsidea initialization
   if (Model%lsidea) then
