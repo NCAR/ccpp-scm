@@ -13,9 +13,11 @@ for an atmospheric model to interact with physics through the CCPP.
   and enter your github password when prompted.
 2. Change directory into the project.
   * `cd gmtb-scm`
-3. Initialize the CCPP infrastructure and physics submodules.
+3. Checkout the master branch.
+  * `git checkout master`
+4. Initialize the CCPP infrastructure and physics submodules.
   * `git submodule init`
-4. Update (download) the submodules.
+5. Update (download) the submodules.
   * `git submodule update`
   and, if asked, enter your github credentials again. If the machine is running an older
   version of git and you are denied access, you may need to configure the
@@ -27,34 +29,37 @@ for an atmospheric model to interact with physics through the CCPP.
 1. Run the CCPP prebuild script to match required physics variables with those
 available from the dycore (SCM) and to generate physics caps and makefile
 segments.
-  * `./ccpp-framework/scripts/ccpp_prebuild.py --model=SCM`
+  * `./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py`
   Note: add `--debug` to see the full output of the script.
 2. Change directory to the top-level SCM directory.
   * `cd scm`
 3. [Optional] Run the machine setup script if necessary. This script loads
 compiler modules (Fortran 2003-compliant), netCDF module, etc. and sets
 compiler environment variables.
+  * `source etc/Theia_setup_gnu.csh` (for csh) or `. etc/Theia_setup_gnu.sh` (for bash)
   * `source etc/Theia_setup_intel.csh` (for csh) or `. etc/Theia_setup_intel.sh` (for bash)
   * `source etc/Theia_setup_pgi.csh` (for csh) or `. etc/Theia_setup_pgi.sh` (for bash)
+  * `source etc/Cheyenne_setup_gnu.csh` (for csh) or `. etc/Cheyenne_setup_gnu.sh` (for bash)
   * `source etc/Cheyenne_setup_intel.csh` (for csh) or `. etc/Cheyenne_setup_intel.sh` (for bash)
   * `source etc/Cheyenne_setup_pgi.csh` (for csh) or `. etc/Cheyenne_setup_pgi.sh` (for bash)
   * `source etc/UBUNTU_setup.csh` (for csh) or `. etc/UBUNTU_setup.sh` (for bash) if following the instructions in doc/README_UBUNTU.txt
   * `source etc/CENTOS_setup.csh` (for csh) or `. etc/CENTOS_setup.sh` (for bash) if following the instructions in doc/README_CENTOS.txt
   * `source etc/MACOSX_setup.csh` (for csh) or `. etc/MACOSX_setup.sh` (for bash) if following the instructions in doc/README_MACOSX.txt
+  * NOTE: The NETCDF environment variable must be set to the path of the netCDF installation that was compiled with the same compiler used in the following steps.
 4. Make a build directory and change into it.
   * `mkdir bin && cd bin`
 5. Invoke cmake on the source code to build.
   * `cmake ../src` (without threading/OpenMP)
   * `cmake -DOPENMP=1 ../src` (with threading/OpenMP)
-
-  For extensive debugging output, add `-DCMAKE_BUILD_TYPE=Debug` to the `cmake` command.
+  * `cmake -DCMAKE_BUILD_TYPE=Debug ../src` (debug mode)
 6. Compile. Add `VERBOSE=1` to obtain more information on the build process.
   * `make`
 
 ## Running the SCM with CCPP
-1. Run the SCM with the supplied case (twpice). The SCM will go through the time
+1. Run the SCM with a supplied case. The SCM will go through the time
  steps, applying forcing and calling the physics defined in the suite definition
  file.
-  * `./gmtb_scm twpice`
+  * `.run_gmtb_scm.py -c CASE_NAME [-s SUITE_NAME] [-n PHYSICS_NAMELIST_PATH] [-g]`
+  * When invoking the run script, the only required argument is the name of the case to run. The case name used must match one of the case configuration files located in ../etc/case_config (without the .nml extension!). If specifying a suite other than the default, the suite name used must match the value of the suite name in one of the suite definition files located in ../../ccpp/suites, (e.g. `SCM_GFS_v15`). If specifying a namelist other than the default, the value must be an entire filename that exists in ../../ccpp/physics_namelists. The -g flag can be used to run the executable through the gdb debugger (assuming it is installed on the system).
 2. A netcdf output file is generated in the location specified in the case
-configuration file. For the twpice case, it is located in `./output_twpice/output.nc`
+configuration file (is present), or in an output directory created by default in `bin` with the case name and suite name appended.

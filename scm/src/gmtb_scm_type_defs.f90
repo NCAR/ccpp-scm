@@ -27,7 +27,6 @@ module gmtb_scm_type_defs
     character(len=character_length)                 :: experiment_name !> name of model configuration file
     character(len=character_length)                 :: model_name !< name of "host" model (must be "GFS" for prototype)
     character(len=character_length)                 :: output_dir !< name of output directory to place netCDF file
-    character(len=character_length)                 :: physics_suite_dir !< location of the physics suite XML files for the IPD (relative to the executable path)
     character(len=character_length)                 :: case_data_dir !< location of the case initialization and forcing data files (relative to the executable path)
     character(len=character_length)                 :: vert_coord_data_dir !< location of the vertical coordinate data files (relative to the executable path)
     character(len=character_length)                 :: output_file !< name of output file (without the file extension)
@@ -562,8 +561,8 @@ module gmtb_scm_type_defs
 !! | physics%Stateout(i)%gq0(:,:,scm_state%rain_index)        | rain_water_mixing_ratio_updated_by_physics                                                        | moist (dry+vapor, no condensates) mixing ratio of rain water updated by physics     | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%snow_index)        | snow_water_mixing_ratio_updated_by_physics                                                        | moist (dry+vapor, no condensates) mixing ratio of snow water updated by physics     | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%graupel_index)     | graupel_mixing_ratio_updated_by_physics                                                           | moist (dry+vapor, no condensates) mixing ratio of graupel updated by physics        | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntwa)       | water_friendly_aerosol_number_concentration_updated_by_physics                                    | number concentration of water-friendly aerosols updated by physics                  | kg-1          |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntia)       | ice_friendly_aerosol_number_concentration_updated_by_physics                                      | number concentration of ice-friendly aerosols updated by physics                    | kg-1          |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%water_friendly_aerosol_index)       | water_friendly_aerosol_number_concentration_updated_by_physics                                    | number concentration of water-friendly aerosols updated by physics                  | kg-1          |    2 | real                  | kind_phys | none   | F        |
+!! | physics%Stateout(i)%gq0(:,:,scm_state%ice_friendly_aerosol_index)       | ice_friendly_aerosol_number_concentration_updated_by_physics                                      | number concentration of ice-friendly aerosols updated by physics                    | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%cloud_droplet_nc_index)  | cloud_droplet_number_concentration_updated_by_physics                                             | number concentration of cloud droplets updated by physics                           | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%cloud_ice_nc_index)      | ice_number_concentration_updated_by_physics                                                       | number concentration of ice updated by physics                                      | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Stateout(i)%gq0(:,:,scm_state%rain_nc_index)      | rain_number_concentration_updated_by_physics                                                      | number concentration of rain updated by physics                                     | kg-1          |    2 | real                  | kind_phys | none   | F        |
@@ -1358,7 +1357,6 @@ module gmtb_scm_type_defs
     scm_state%experiment_name = clear_char
     scm_state%model_name = clear_char
     scm_state%output_dir = clear_char
-    scm_state%physics_suite_dir = clear_char
     scm_state%case_data_dir = clear_char
     scm_state%vert_coord_data_dir = clear_char
     scm_state%output_file = clear_char
@@ -1609,7 +1607,7 @@ module gmtb_scm_type_defs
       physics%Init_parm(i)%gnx = int_one
       physics%Init_parm(i)%gny = int_one
       physics%Init_parm(i)%nlunit = int_one
-      physics%Init_parm(i)%logunit= 2
+      physics%Init_parm(i)%logunit= 10 + i
       physics%Init_parm(i)%bdat(:) = zeroes_8(:)
       physics%Init_parm(i)%cdat(:) = zeroes_8(:)
       physics%Init_parm(i)%dt_dycore = kind_phys_zero

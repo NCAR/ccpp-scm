@@ -72,7 +72,6 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/radlw_param.f',
     'ccpp/physics/physics/radsw_datatb.f',
     'ccpp/physics/physics/radsw_param.f',
-    'ccpp/physics/physics/rascnvv2.f',
     'ccpp/physics/physics/sfcsub.F',
     'ccpp/physics/physics/sflx.f',
     'ccpp/physics/physics/set_soilveg.f',
@@ -80,7 +79,6 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/cu_gf_deep.F90',
     'ccpp/physics/physics/cu_gf_sh.F90',
     'ccpp/physics/physics/tridi.f',
-    'ccpp/physics/physics/wam_f107_kp_mod.f90',
     'ccpp/physics/physics/module_sf_ruclsm.F90',
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
@@ -236,6 +234,7 @@ OPTIONAL_ARGUMENTS = {
         },
     'mp_thompson_pre' : {
         'mp_thompson_pre_run' : [
+            'cloud_droplet_number_concentration_updated_by_physics',
             'water_friendly_aerosol_number_concentration_updated_by_physics',
             'ice_friendly_aerosol_number_concentration_updated_by_physics',
             'tendency_of_water_friendly_aerosols_at_surface',

@@ -83,13 +83,13 @@ if len(gmtb_scm_datasets) != len(gmtb_scm_datasets_labels):
     print 'gmtb_scm_datasets_labels = ',gmtb_scm_datasets_labels
     quit()
 
-#read in the case name from the experiment_config namelist (just use first dataset dir namelist)
+#read in the case name from the case_config namelist (just use first dataset dir namelist)
 i = gmtb_scm_datasets[0][:gmtb_scm_datasets[0].rfind('/')].rfind('/') #find the second-to-last index of '/'
 dir = gmtb_scm_datasets[0][:i]
 for filename in glob.glob(os.path.join(dir, '*.nml')):
     nml = f90nml.read(filename)
-    if nml['experiment_config']:
-        case_name = nml['experiment_config']['case_name']
+    if nml['case_config']:
+        case_name = nml['case_config']['case_name']
 
 
 

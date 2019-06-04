@@ -6,7 +6,7 @@ module GFS_typedefs
        ! Radiation-specific types and parameters
        use module_radlw_parameters,   only: sfcflw_type, topflw_type, NBDLW
        use module_radsw_parameters,   only: cmpfsw_type, sfcfsw_type, topfsw_type, NBDSW
-      
+       
        implicit none
 
        ! To ensure that these values match what's in the physics,
@@ -2970,21 +2970,9 @@ module GFS_typedefs
        if (Model%oz_phys) then
           levozp   = 80
           oz_coeff = 4
-          call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
-          status = symlnk('global_o3prdlos_orig.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
-          if ( status .ne. 0 ) then
-              write(*,*) 'There was an error symlinking global_o3prdlos_orig.f77 to global_o3prdlos.f77 in scm/src/GFS_typedefs.F90. Now exiting. Status = ',status
-              stop 
-          end if
        else if (Model%oz_phys_2015) then
           levozp   = 53
           oz_coeff = 6
-          call unlink('global_o3prdlos.f77') !unlink the file in case it already exists
-          status = symlnk('ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77','global_o3prdlos.f77') !create a new linked file for ozinterp.f90/read_o3data to read
-          if ( status .ne. 0 ) then
-              write(*,*) 'There was an error symlinking ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77 to global_o3prdlos.f77 in scm/src/GFS_typedefs.F90. Now exiting. Status = ',status
-              stop 
-          end if
        else
           write(*,*) 'Logic error, ntoz>0 but no ozone physics selected'
           stop
@@ -3072,8 +3060,7 @@ module GFS_typedefs
     endif
 
     !--- mynn-edmf scheme
-    if (Model%bl_mynn_edmf > 0) then
-      if (Model%do_mynnedmf) then
+    if (Model%do_mynnedmf) then
             if (Model%do_shoc .or. Model%hybedmf .or. Model%satmedmf) then
                 print *,' Logic error: MYNN EDMF cannot be run with SHOC, HEDMF or SATMEDMF'
                 stop
@@ -3091,7 +3078,6 @@ module GFS_typedefs
                                                   ' bl_mynn_cloudpdf=',Model%bl_mynn_cloudpdf,         &
                                                   ' bl_mynn_mixlength=',Model%bl_mynn_mixlength,       &
                                                   ' bl_mynn_edmf=',Model%bl_mynn_edmf
-      endif
     endif
 
     !--- set number of cloud types
@@ -4108,9 +4094,9 @@ module GFS_typedefs
     ! *DH
 !      allocate (Diag%dq3dt  (IM,Model%levs,oz_coeff+5))
 !--- needed to allocate GoCart coupling fields
-!      allocate (Diag%upd_mf (IM,Model%levs))
-!      allocate (Diag%dwn_mf (IM,Model%levs))
-!      allocate (Diag%det_mf (IM,Model%levs))
+    allocate (Diag%upd_mf (IM,Model%levs))
+    allocate (Diag%dwn_mf (IM,Model%levs))
+    allocate (Diag%det_mf (IM,Model%levs))
     allocate (Diag%cldcov (IM,Model%levs))
 
     !--- 3D diagnostics for Thompson MP / GFDL MP
@@ -4282,10 +4268,10 @@ module GFS_typedefs
       Diag%du3dt   = zero
       Diag%dv3dt   = zero
       Diag%dt3dt   = zero
-      ! Diag%dq3dt   = zero
-      ! Diag%upd_mf  = zero
-      ! Diag%dwn_mf  = zero
-      ! Diag%det_mf  = zero
+      Diag%dq3dt   = zero
+      Diag%upd_mf  = zero
+      Diag%dwn_mf  = zero
+      Diag%det_mf  = zero
     endif
 
     Diag%refl_10cm = zero
@@ -4685,7 +4671,6 @@ module GFS_typedefs
     ! h2o_pres/oz_pres are read in read_h2odata/read_o3data)
     Interstitial%h2o_pres         = clear_val
     Interstitial%oz_pres          = clear_val
-    
     !
     Interstitial%skip_macro       = .false.
     ! The value phys_hydrostatic from dynamics does not match the
@@ -5057,6 +5042,8 @@ module GFS_typedefs
     Interstitial%vegtype      = 0
     Interstitial%w_upi        = clear_val
     Interstitial%wcbmax       = clear_val
+    Interstitial%weasd_land   = huge
+    Interstitial%weasd_ice    = huge
     Interstitial%wind         = clear_val
     Interstitial%work1        = clear_val
     Interstitial%work2        = clear_val
