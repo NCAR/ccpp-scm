@@ -6,9 +6,10 @@ echo "Setting environment variables for SCM-CCPP on Cheyenne with icc/ifort"
 echo "Loading intel and netcdf modules..."
 module purge
 module load ncarenv/1.2
-module load intel/17.0.1
+module load intel/19.0.2
 module load ncarcompilers/0.4.1
-module load netcdf/4.4.1.1
+module load mpt/2.19
+module load netcdf/4.6.1
 
 echo "Setting CC/CXX/FC environment variables"
 export CC=icc
