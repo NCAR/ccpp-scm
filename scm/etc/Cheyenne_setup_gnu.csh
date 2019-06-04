@@ -6,9 +6,10 @@ echo "Setting environment variables for SCM-CCPP on Cheyenne with gcc/gfortran"
 echo "Loading gnu and netcdf modules..."
 module purge
 module load ncarenv/1.2
-module load gnu/6.3.0
+module load gnu/8.1.0
 module load ncarcompilers/0.4.1
-module load netcdf/4.4.1.1
+module load mpt/2.19
+module load netcdf/4.6.1
 
 echo "Setting CC/CXX/FC environment variables"
 setenv CC gcc
