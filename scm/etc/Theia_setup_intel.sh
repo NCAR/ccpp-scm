@@ -5,7 +5,7 @@ echo "Setting environment variables for SCM-CCPP on Theia with icc/ifort"
 #load the modules in order to compile the GMTB SCM
 echo "Loading intel and netcdf modules..."
 module purge
-module load intel/18.1.163
+module load intel/18.0.1.163
 module load netcdf/4.3.0
 
 echo "Setting CC/CXX/FC environment variables"
