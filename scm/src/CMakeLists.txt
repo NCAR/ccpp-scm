@@ -14,6 +14,19 @@ ELSE(DEFINED ENV{NETCDF})
   MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
 ENDIF(DEFINED ENV{NETCDF})
 
+IF(DEFINED ENV{NCEPLIBS_DIR})
+  MESSAGE("The NCEPLIBS_DIR env. variable is $ENV{NCEPLIBS_DIR}")
+  set(NCEPLIBS_DIR $ENV{NCEPLIBS_DIR})
+ELSE(DEFINED ENV{NCEPLIBS_DIR})
+  MESSAGE(FATAL_ERROR "The NCEPLIBS_DIR environment variable must be set to point to your NCEPlibs installation before building. Stopping...")
+ENDIF(DEFINED ENV{NCEPLIBS_DIR})
+
+set(BACIO_LIB4   ${NCEPLIBS_DIR}/lib/libbacio_4.a)
+set(SP_LIBd      ${NCEPLIBS_DIR}/lib/libsp_v2.0.2_d.a)
+set(W3NCO_LIBd   ${NCEPLIBS_DIR}/lib/libw3nco_d.a)
+
+set(STATIC false)
+
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
 
