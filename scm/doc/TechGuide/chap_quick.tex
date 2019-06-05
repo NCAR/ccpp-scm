@@ -66,12 +66,26 @@ The basic requirements for building and running the CCPP and SCM bundle are \hl{
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements.
 
-There are several utility libraries provided in the SCM bundle, as external packages. These are built during the compilation phase, and include
+Further, there are several utility libraries as part of the NCEPlibs package that must be installed prior to building the SCM. 
 \begin{itemize}
     \item bacio - Binary I/O Library
     \item sp - Spectral Transformation Library
     \item w3nco - GRIB decoder and encoder library
 \end{itemize}
+These libraries are prebuilt on most NOAA machines using the Intel compiler. For those needing to build the libraries themselves, GMTB recommends using the source code from GitHub at \url{https://github.com/NCAR/NCEPlibs.git}, which includes build files for various compilers and machines using OpenMP flags and which are threadsafe. Instructions for installing NCEPlibs are included on the GitHub repository webpage, but for the sake of example, execute the following for obtaining and building from source in \execout{/usr/local/NCEPlibs} on a Mac:
+\begin{lstlisting}
+    mkdir /usr/local/NCEPlibs
+    cd /usr/local/src
+    git clone https://github.com/NCAR/NCEPlibs.git
+    cd NCEPlibs
+    ./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1
+\end{lstlisting}
+Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
+\begin{lstlisting}
+export NCEPLIB_DIR=/usr/local/NCEPlibs
+\end{lstlisting}
+If using Theia or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described in section \ref{section: compiling}.
+
 
 \subsection{Compilers}
 The CCPP and SCM have been tested on a variety of
