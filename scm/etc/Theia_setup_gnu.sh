@@ -17,6 +17,10 @@ export CC=gcc
 export CXX=g++
 export FC=gfortran
 
+echo "Setting NCEPLIBS_DIR environment variable"
+NCEPLIBS_DIR=/scratch4/home/Dom.Heinzeller/NEMSfv3gfs_vlab_portability/NCEPlibs-gnu-20181105
+export NCEPLIBS_DIR=$NCEPLIBS_DIR
+
 #prepend the anaconda installation to the path so that the anaconda version of python (with its many installed modules) is used; check if the path already contains the right path first
 echo "Checking if the path to the anaconda python distribution is in PATH"
 echo $PATH | grep '/contrib/ananconda/2.3.0/bin$' >&/dev/null
