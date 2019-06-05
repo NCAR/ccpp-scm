@@ -7,6 +7,24 @@ CCPP infrastructure code and physics code, both of which are included as git
 submodules within the SCM code. This package can be considered a simple example
 for an atmospheric model to interact with physics through the CCPP.
 
+## Prerequisite
+There are several utility libraries as part of the NCEPlibs package that must be installed prior to building the SCM.
+* bacio - Binary I/O Library
+* sp - Spectral Transformation Library
+* w3nco - GRIB decoder and encoder library
+
+These libraries are prebuilt on most NOAA machines using the Intel compiler. For those needing to build the libraries themselves, GMTB recommends using the source code from GitHub at https://github.com/NCAR/NCEPlibs.git, which includes build files for various compilers and machines using OpenMP flags and which are threadsafe. Instructions for installing NCEPlibs are included on the GitHub repository webpage, but for the sake of example, execute the following for obtaining and building from source in /usr/local/NCEPlibs on a Mac:
+1. `cd /usr/local/src`
+2. `git clone https://github.com/NCAR/NCEPlibs.git`
+3. `cd NCEPlibs`
+4. `./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1`
+
+Once NCEPlibs is built, the NCEPLIBS_DIR environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in /usr/local/NCEPlibs, one would execute
+
+`export NCEPLIB_DIR=/usr/local/NCEPlibs`
+
+If using Theia or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described below.
+
 ## Obtaining Code
 1. Download a compressed file or clone the source using
   * `git clone https://[username]@github.com/NCAR/gmtb-scm.git`

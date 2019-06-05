@@ -17,6 +17,11 @@ export CC=gcc
 export CXX=g++
 export FC=gfortran
 
+echo "Setting NCEPLIBS_DIR environment variable"
+NCEPLIBS_DIR=/glade/p/ral/jntp/GMTB/tools/NCEPlibs/20190307/gnu-8.1.0/mpt-2.19
+export NCEPLIBS_DIR=$NCEPLIBS_DIR
+
+
 #install f90nml for the local user
 
 #check to see if f90nml is installed locally
