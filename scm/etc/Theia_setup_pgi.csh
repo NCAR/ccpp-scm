@@ -14,8 +14,8 @@ setenv CXX pgc++
 setenv FC pgf90
 
 echo "Setting NCEPLIBS_DIR environment variable"
-set NCEPLIBS_DIR /scratch4/home/Dom.Heinzeller/NEMSfv3gfs_vlab_portability/NCEPlibs-pgi-20181105
-setenv NCEPLIBS_DIR ${NCEPLIBS_DIR}
+set NCEPLIBS_DIR = "/scratch4/home/Dom.Heinzeller/NEMSfv3gfs_vlab_portability/NCEPlibs-pgi-20181105"
+setenv NCEPLIBS_DIR $NCEPLIBS_DIR
 
 #prepend the anaconda installation to the path so that the anaconda version of python (with its many installed modules) is used; check if the path already contains the right path first
 echo "Checking if the path to the anaconda python distribution is in PATH"

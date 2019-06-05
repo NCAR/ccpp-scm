@@ -16,8 +16,8 @@ setenv CXX pgc++
 setenv FC pgf90
 
 echo "Setting NCEPLIBS_DIR environment variable"
-set NCEPLIBS_DIR /glade/p/ral/jntp/GMTB/tools/NCEPlibs/20190307/pgi-17.9/mpt-2.19
-setenv NCEPLIBS_DIR ${NCEPLIBS_DIR}
+set NCEPLIBS_DIR = "/glade/p/ral/jntp/GMTB/tools/NCEPlibs/20190307/pgi-17.9/mpt-2.19"
+setenv NCEPLIBS_DIR $NCEPLIBS_DIR
 
 #install f90nml for the local user
 
