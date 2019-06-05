@@ -16,6 +16,10 @@ setenv CC icc
 setenv CXX icpc
 setenv FC ifort
 
+echo "Setting NCEPLIBS_DIR environment variable"
+set NCEPLIBS_DIR = "/glade/p/ral/jntp/GMTB/tools/NCEPlibs/20190307/intel-19.0.2/mpt-2.19"
+setenv NCEPLIBS_DIR $NCEPLIBS_DIR
+
 #install f90nml for the local user
 
 #check to see if f90nml is installed locally
