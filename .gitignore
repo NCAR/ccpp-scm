@@ -5,5 +5,5 @@ scm/bin/*
 *.pyc
 .metadata
 non-tracked_files/
-scm/data/GFS_physics_data/qr_acr*.dat
-scm/data/GFS_physics_data/freezeH2O.dat
+scm/data/physics_input_data/qr_acr*.dat
+scm/data/physics_input_data/freezeH2O.dat

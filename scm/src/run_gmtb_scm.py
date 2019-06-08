@@ -33,6 +33,9 @@ PHYSICS_SUITE_DIR = '../../ccpp/suites'
 # Default suite to use if none is specified
 DEFAULT_SUITE = 'SCM_GFS_v15'
 
+# Path to physics data files
+PHYSICS_DATA_DIR = '../data/physics_input_data'
+
 # Default settings and filenames of input data for ozone physics;
 # these must match the default settings in GFS_typedefs.F90.
 DEFAULT_OZ_PHYS      = True
@@ -42,8 +45,8 @@ OZ_PHYS_2015_TARGET  = 'ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77'
 OZ_PHYS_LINK         = 'global_o3prdlos.f77'
 
 # For developers: set logging level to DEBUG for additional output
-#LOGLEVEL = logging.DEBUG
-LOGLEVEL = logging.INFO
+LOGLEVEL = logging.DEBUG
+#LOGLEVEL = logging.INFO
 
 ###############################################################################
 # Command line arguments                                                      #
@@ -267,6 +270,15 @@ class Experiment(object):
             raise Exception(message)
         cmd = "ln -sf {0} {1}".format(os.path.join(PHYSICS_SUITE_DIR, physics_suite), physics_suite)
         execute(cmd)
+        
+        # Link physics data needed for schemes to run directory
+        logging.info('Linking physics input data from {0} into run directory'.format(PHYSICS_DATA_DIR))
+        for entry in os.listdir(PHYSICS_DATA_DIR):
+            if os.path.isfile(os.path.join(PHYSICS_DATA_DIR, entry)):
+                if not os.path.exists(entry):
+                    logging.debug('Linking file {0}'.format(entry))
+                    cmd = 'ln -sf {0} {1}'.format(os.path.join(PHYSICS_DATA_DIR, entry), entry)
+                    execute(cmd)
         
         # Parse physics namelist and extract
         # - oz_phys

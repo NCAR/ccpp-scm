@@ -34,9 +34,9 @@ SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
 set(CMAKE_MACOSX_RPATH 1)
 
 #Copy/link data to build directory
-set(physics_data_dir ${CMAKE_SOURCE_DIR}/../data/GFS_physics_data)
-file(GLOB physics_data_files "${physics_data_dir}/*")
-file(COPY ${physics_data_files} DESTINATION ${CMAKE_BINARY_DIR}/)
+#set(physics_data_dir ${CMAKE_SOURCE_DIR}/../data/GFS_physics_data)
+#file(GLOB physics_data_files "${physics_data_dir}/*")
+#file(COPY ${physics_data_files} DESTINATION ${CMAKE_BINARY_DIR}/)
 
 #------------------------------------------------------------------------------
 # Set a default build type if none was specified
