@@ -320,7 +320,7 @@ def launch_executable(use_gdb, gdb):
         cmd = '{executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(2)
-    os.system(cmd)
+    sys.exit(os.system(cmd))
 
 def main():
     (case, use_gdb, suite, namelist) = parse_arguments()
