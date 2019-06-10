@@ -440,7 +440,7 @@ if(plot_ind_datasets):
                         #isolate the subset of the obs data for the current time slice
                         obs_data_time_slice = obs_data[obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
 
-                        print obs_dict['time_slice_indices'][j][0], obs_dict['time_slice_indices'][j][1]
+                        #print obs_dict['time_slice_indices'][j][0], obs_dict['time_slice_indices'][j][1]
 
                         if time_series_resample:
                             #determine whether obs data frequency matches model output frequency
@@ -459,13 +459,13 @@ if(plot_ind_datasets):
                                 obs_time_slice_periods = obs_dict['time_slice_indices'][j][1] - obs_dict['time_slice_indices'][j][0]
                                 obs_date_range = pd.date_range(start=obs_dict['date'][obs_dict['time_slice_indices'][j][0]], periods=obs_time_slice_periods, freq=obs_data_dateoffset)
 
-                                print data_date_range, obs_date_range
+                                #print data_date_range, obs_date_range
 
                                 resample_string = str(int(obs_delta_seconds)) + 'S'
                                 data_time_slice_series = pd.Series(data_time_slice[:,0], index = data_date_range)
                                 data_time_slice_series_rs = data_time_slice_series.resample(resample_string, how='mean')
 
-                                print obs_data_time_slice.shape, obs_date_range.shape, data_time_slice_series_rs.shape
+                                #print obs_data_time_slice.shape, obs_date_range.shape, data_time_slice_series_rs.shape
 
                                 gspr.plot_time_series_multi(obs_date_range, [data_time_slice_series_rs], [gmtb_scm_datasets_labels[i]], 'date', label, ind_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color', color_index=i)
                             elif(obs_delta_seconds < data_delta_seconds):

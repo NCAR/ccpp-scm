@@ -45,8 +45,8 @@ OZ_PHYS_2015_TARGET  = 'ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77'
 OZ_PHYS_LINK         = 'global_o3prdlos.f77'
 
 # For developers: set logging level to DEBUG for additional output
-LOGLEVEL = logging.DEBUG
-#LOGLEVEL = logging.INFO
+#LOGLEVEL = logging.DEBUG
+LOGLEVEL = logging.INFO
 
 ###############################################################################
 # Command line arguments                                                      #
