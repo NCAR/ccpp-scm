@@ -82,7 +82,7 @@ These libraries are prebuilt on most NOAA machines using the Intel compiler. For
 \end{lstlisting}
 Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
 \begin{lstlisting}
-export NCEPLIB_DIR=/usr/local/NCEPlibs
+export NCEPLIBS_DIR=/usr/local/NCEPlibs
 \end{lstlisting}
 If using Theia or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described in section \ref{section: compiling}.
 
@@ -157,6 +157,13 @@ make
 
 The resulting executable may be found at \execout{./gmtb-scm} (Full path of \execout{gmtb-scm/scm/bin/gmtb-scm}). Depending on the system, it may be necessary to add the location of the CCPP framework and physics libraries to \execout{LD\_LIBRARY\_PATH} to run \execout{./gmtb-scm} (see next section).
 
+Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build/run directory is (from the \execout{bin} directory)
+\begin{lstlisting}[language=bash]
+pwd #confirm that you are in the build/run directory before deleting files
+rm -rfd *
+\end{lstlisting}
+Note: This command can be dangerous (deletes files without confirming), so make sure that you're in the right directory before executing!
+
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
 \section{Run the SCM with a supplied case}
@@ -183,7 +190,7 @@ Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v0) requires t
 \item \url{https://dtcenter.org/GMTB/qr_acr_qg.dat} (49 M)
 \item \url{https://dtcenter.org/GMTB/qr_acr_qs.dat} (32 M)
 \end{itemize}
-These files should be staged in \execout{gmtb-scm/scm/data/GFS\_physics\_data} prior to running \execout{cmake}. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
+These files should be staged in \execout{gmtb-scm/scm/data/GFS\_physics\_data} prior to executing the run script. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
 
 Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
 
@@ -211,7 +218,7 @@ A second python script is provided for automating the execution of multiple inte
 ./multi_run_gmtb_scm.py {[-c CASE_NAME] [-s SUITE_NAME] [-f PATH_TO_FILE]} [-v{v}] [-t]
 \end{lstlisting}
 
-No arguments are required for this script. The \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options form a mutually-exclusive group, so exactly one of these is allowed at one time. If \execout{--c} is specified with a case name, the script will run a set of integrations for all supported suites (defined in \execout{../src/supported\_suites.py}) for that case. If \execout{-s} is specified with a suite name, the script will run a set of integrations for all supported cases (defined in \execout{../src/supported\_cases.py}) for that that suite. If \execout{-f} is specified with the path to a filename, it will read in lists of cases, suites, and namelists to use from that file. If multiple namelists are specified in the file, there either must be one suite specified \emph{or} the number of suites must match the number of namelists. If none of the \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options group is specified, the script will run through all permutations of supported cases and suites (as defined in the files previously mentioned).
+No arguments are required for this script. The \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options form a mutually-exclusive group, so exactly one of these is allowed at one time. If \execout{--c} is specified with a case name, the script will run a set of integrations for all supported suites (defined in \execout{../src/supported\_suites.py}) for that case. If \execout{-s} is specified with a suite name, the script will run a set of integrations for all supported cases (defined in \execout{../src/supported\_cases.py}) for that that suite. If \execout{-f} is specified with the path to a filename, it will read in lists of cases, suites, and namelists to use from that file. An example for this file's syntax can be found in \execout{../src/example\_multi\_run.py}. If multiple namelists are specified in the file, there either must be one suite specified \emph{or} the number of suites must match the number of namelists. If none of the \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options group is specified, the script will run through all permutations of supported cases and suites (as defined in the files previously mentioned).
 
 In addition to the main options, some helper options can also be used with any of those above. The \execout{-v{v} or --verbose} option can be used to output more information from the script to the console and to a log file. If this option is not used, only completion progress messages are written out. If one \execout{-v} is used, the script will write out completion progress messages and all messages and output from the single run script. If two \execout{-vv} are used, the script will also write out all messages and single run script output to a log file (\execout{multi\_run\_gmtb\_scm.log}) in the \execout{bin} directory. The final option, \execout{-t or --timer}, can be used to output the elapsed time for each integration executed by the script. Note that the execution time includes file operations performed by the single run script in addition to the execution of the underlying (Fortran) SCM executable. By default, this option will execute one integration of each subprocess. Since some variability is expected for each model run, if greater precision is required, the number of integrations for timing averaging can be set through an internal script variable. This option can be useful, for example, for getting a rough idea of relative computational expense of different physics suites.
 
