@@ -84,6 +84,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
     'ccpp/physics/physics/wv_saturation.F',
+    'ccpp/physics/stochastic_physics/scm_stochastic_physics.F90',
     'scm/src/GFS_typedefs.F90'
 ]
 
@@ -106,6 +107,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/GFS_surface_composites.F90'       : ['physics'],
     'ccpp/physics/physics/GFS_surface_loop_control.F90'     : ['physics'],
     'ccpp/physics/physics/GFS_time_vary_pre.scm.F90'        : ['physics'],
+    'ccpp/physics/physics/GFS_stochastics.F90'              : ['physics'],
     'ccpp/physics/physics/cnvc90.f'                         : ['physics'],
     'ccpp/physics/physics/cs_conv.F90'                      : ['physics'],
     'ccpp/physics/physics/cs_conv_aw_adj.F90'               : ['physics'],
