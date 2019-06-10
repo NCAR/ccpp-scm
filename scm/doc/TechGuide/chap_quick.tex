@@ -157,6 +157,13 @@ make
 
 The resulting executable may be found at \execout{./gmtb-scm} (Full path of \execout{gmtb-scm/scm/bin/gmtb-scm}). Depending on the system, it may be necessary to add the location of the CCPP framework and physics libraries to \execout{LD\_LIBRARY\_PATH} to run \execout{./gmtb-scm} (see next section).
 
+Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build/run directory is (from the \execout{bin} directory)
+\begin{lstlisting}[language=bash]
+pwd #confirm that you are in the build/run directory before deleting files
+rm -rfd *
+\end{lstlisting}
+Note: This command can be dangerous (deletes files without confirming), so make sure that you're in the right directory before executing!
+
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
 \section{Run the SCM with a supplied case}
