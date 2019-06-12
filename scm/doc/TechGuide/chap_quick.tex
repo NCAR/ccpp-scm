@@ -54,14 +54,25 @@ cd gmtb-scm
 
 The source code for the SCM and CCPP component is in the form of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the netCDF libraries. Beyond the standard scripts, the build system relies on use of the Python scripting language, along with cmake, GNU make and date.
 
-The basic requirements for building and running the CCPP and SCM bundle are \hl{listed below}:
+The basic requirements for building and running the CCPP and SCM bundle are listed below. The versions listed reflect successful tests and there is no guarantee that the code will work with different versions.
 \begin{itemize}
-    \item FORTRAN 90+ compiler (ifort v17+, gfortran v5.4+, pgf90 v17.9+)
-    \item C compiler (icc v17+, gcc v5.4+, pgcc v17.9+)
-    \item cmake v2.8.11+
-    \item netCDF v4.x (not v3.x) with HDF5, ZLIB and SZIP
-    \item Python v2.x (not v3.x)
-    \item Libxml2 (tested with 2.2 and 2.9.1)
+    \item FORTRAN 90+ compiler
+    	\begin{itemize}
+   	 \item ifort 18.0.1.163 and 19.0.2
+	 \item gfortran 6.2, 8.1, and 9.1
+	 \item pgf90 17.7 and 17.9
+	 \end{itemize}
+    \item C compiler
+    	\begin{itemize}
+	\item icc 18.0.1.163 and 19.0.2
+	\item gcc 6.2 and 8.1
+	\item Apple Clang 10.0.0.10001145
+	\item pgcc 17.7 and 17.9
+	\end{itemize}
+    \item cmake 2.8.12.1, 2.8.12.2, and 3.6.2
+    \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1 and 4.6.3 (not 3.x) with HDF5, ZLIB and SZIP
+    \item Python 2.7.5, 2.7.9, and 2.7.13 (not v3.x)
+    \item Libxml2 2.2 and 2.9.7 (not 2.9.9)
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements.
@@ -190,7 +201,7 @@ Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v0) requires t
 \item \url{https://dtcenter.org/GMTB/qr_acr_qg.dat} (49 M)
 \item \url{https://dtcenter.org/GMTB/qr_acr_qs.dat} (32 M)
 \end{itemize}
-These files should be staged in \execout{gmtb-scm/scm/data/GFS\_physics\_data} prior to executing the run script. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
+These files should be staged in \execout{gmtb-scm/scm/data/physics\_input\_data} prior to executing the run script. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
 
 Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
 
