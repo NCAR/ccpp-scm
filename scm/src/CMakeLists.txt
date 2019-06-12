@@ -68,7 +68,7 @@ ADD_DEFINITIONS(-DSCM)
 
 #------------------------------------------------------------------------------
 # Add model-specific flags for C/C++/Fortran preprocessor
-ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
+ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM -DGFSL64)
 #ADD_DEFINITIONS(-DINTERNAL_FILE_NML)
 
 #------------------------------------------------------------------------------
@@ -105,9 +105,9 @@ if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
     message (FATAL_ERROR "This program has only been compiled with gfortran, pgf90 and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
   endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 elseif (${CMAKE_BUILD_TYPE} MATCHES "Release")
-  set (CMAKE_C_FLAGS       "-O2 -g -fPIC" CACHE STRING "" FORCE)
-  set (CMAKE_CXX_FLAGS     "-O2 -g -fPIC" CACHE STRING "" FORCE)
-  set (CMAKE_Fortran_FLAGS "-O2 -g -fPIC" CACHE STRING "" FORCE)
+  set (CMAKE_C_FLAGS       "-traceback -O2 -g -fPIC" CACHE STRING "" FORCE)
+  set (CMAKE_CXX_FLAGS     "-traceback -O2 -g -fPIC" CACHE STRING "" FORCE)
+  set (CMAKE_Fortran_FLAGS "-traceback -O2 -g -fPIC" CACHE STRING "" FORCE)
   # Compiler-dependent settings
   if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
     set (CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -cpp -fdefault-real-8")
