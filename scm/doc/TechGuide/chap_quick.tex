@@ -1,21 +1,16 @@
 \chapter{Quick Start Guide}
 \label{chapter: quick}
 
-This chapter provides instructions for obtaining and compiling  the GMTB SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP framework code. As such, it requires the CCPP framework code and physics code, both of which are included as subdirectories within the SCM code. This package can be considered a simple example for an atmospheric model to interact with physics through the CCPP.
+This chapter provides instructions for obtaining and compiling the GMTB SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP framework code. As such, it requires the CCPP framework code and physics code, both of which are included as submodules within the SCM code. This package can be considered a simple example for an atmospheric model to interact with physics through the CCPP.
 
 \section{Obtaining Code}
 
-The source code bundle for the CCPP and SCM is provided through GitHub.com.  This release repository contains the tested and supported version for general use.
+The source code for the CCPP and SCM is provided through GitHub.com.  This release branch contains the tested and supported version for general use.
 
 \begin{enumerate}
-    \item Download a compressed file or clone the source using
+    \item Clone the source using
 \begin{lstlisting}[language=bash]
-git clone https://[username]@github.com/NCAR/gmtb-scm-release gmtb-scm
-\end{lstlisting}
-    and enter your github password when prompted.
-    \item Check out the desired \hl{release number} using
-\begin{lstlisting}[language=bash]
-git checkout [v2.0]
+git clone --recursive -b v3.0 https://github.com/NCAR/gmtb-scm
 \end{lstlisting}
     \item Change directory into the project.
 \begin{lstlisting}[language=bash]
@@ -25,27 +20,27 @@ cd gmtb-scm
 
 The CCPP framework can be found in the ccpp/framework subdirectory at this level.  The CCPP physics parameterizations can be found in the ccpp/physics subdirectory.
 
-If you would like to contribute as a developer to this project, please see CCPP Developers Corner of the project website:
+If you would like to contribute as a developer to this project, please see (in addition to the rest of this guide) the scientific and technical documentation included with this release:
 
-\url{https://dtcenter.org/gmtb/users/ccpp/developers/index.php}
+\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/documentation}
 
 There you will find links to all of the documentation pertinent to developers.
 
-One can also clone the development repository, although its stability is not guaranteed. To do so,
+One can also clone the development branches, although its stability is not guaranteed. To do so,
 \begin{enumerate}
     \item Clone the source using
 \begin{lstlisting}[language=bash]
-git clone --recursive https://[username]@github.com/NCAR/gmtb-scm gmtb-scm
+git clone --recursive https://github.com/NCAR/gmtb-scm gmtb-scm
 \end{lstlisting}
-    and enter your github password when prompted.
-    \item Check out the desired branch (master) using
-\begin{lstlisting}[language=bash]
-git checkout master
-\end{lstlisting}
-    \item Change directory into the project.
+\item Change directory into the project.
 \begin{lstlisting}[language=bash]
 cd gmtb-scm
 \end{lstlisting}
+\item Check out the desired branch (master) using
+\begin{lstlisting}[language=bash]
+git checkout master
+\end{lstlisting}
+\item You may of course also check out development branches of ccpp-physics and ccpp-framework by changing into their respective subdirectories and issuing the same \execout{git checkout master (or other branch)} command.
 \end{enumerate}
 
 
@@ -180,7 +175,7 @@ If you encounter errors, please capture a log file from all of the steps, and co
 \section{Run the SCM with a supplied case}
 There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially. 
 
-\subsection{Single Run Script Usage}
+\subsection{Single Run Script Usage} \label{subsection: singlerunscript}
 Running a case requires three pieces of information: the case to run (consisting of initial conditions, geolocation, forcing data, etc.), the physics suite to use (through a CCPP suite definition file), and a physics namelist (that specifies configurable physics options to use). As discussed in chapter \ref{chapter: cases}, cases are set up via their own namelists in \execout{../etc/case\_config}. A default physics suite is provided as a user-editable variable in the script and default namelists are associated with each physics suite (through \execout{../src/default\_namelists.py}), so, technically, one must only specify a case to run with the SCM. The single run script's interface is described below.
 
 \begin{lstlisting}[language=bash]
@@ -241,4 +236,4 @@ If using the model on HPC resources and significant amounts of processor time is
 \end{lstlisting}
 from the \execout{bin} directory.
 
-Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Developers' Corner available at \url{https://dtcenter.org/gmtb/users/ccpp/developers} and in the CCPP Developers' Guide at \url{https://dtcenter.org/gmtb/users/ccpp/docs}.
+Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Technical Documentation available at \url{https://dtcenter.org/GMTB/v3.0/ccpp\_tech\_guide/}.
