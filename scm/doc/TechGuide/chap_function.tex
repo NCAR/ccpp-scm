@@ -52,7 +52,7 @@ During each step of the time integration, the following sequence occurs:
 \begin{itemize}
 \item Call the appropriate \execout{apply\_forcing\_*} subroutine from the \execout{gmtb\_scm\_forcing} module.
 \item If using the leapfrog scheme, transfer the model state from one memory slot to the other.
-\item For each column, call \execout{ccpp\_run()} to call all physics schemes within the suite (this assumes that all suite parts are called sequentially without intervening code execution)
+\item For each column, call \execout{ccpp\_physics\_run()} to call all physics schemes within the suite (this assumes that all suite parts are called sequentially without intervening code execution)
 \end{itemize}
 \item If using the leapfrog scheme, call \execout{filter()} in the \execout{gmtb\_scm\_time\_integration} module to time filter the model state.
 \item Check to see if output should be written during the current time step and call \execout{output\_append()} in the \execout{gmtb\_scm\_output} module if necessary.
