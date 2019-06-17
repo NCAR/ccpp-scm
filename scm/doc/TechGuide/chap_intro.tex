@@ -3,7 +3,7 @@
 
 A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. The Global Model Test Bed (GMTB) SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. This version contains all parameterizations of the current operational GFS v15 (implemented on June 12, 2019), plus additional developmental schemes. The schemes are grouped in four supported suites described in detail in the \href{https://dtcenter.org/GMTB/v3.0/sci\_doc/}{CCPP Scientific Documentation} (GFS\_v15, GFS\_v15plus, csawmg, and GSD\_v0). The Zhao-Carr microphysics and the GFS\_v14 suite are no longer supported.
 
-This document serves as the both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
+This document serves as both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
 
 Please refer to the release web page for further documentation and user notes:\\ \url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/ccpp-scm-version-3-0}
 
@@ -14,7 +14,7 @@ GMTB SCM v3.0 contains the following major and minor changes since v2.1.
 Major
 \begin{itemize}
 \item Codebase updated to work with latest ccpp-framework (v3.0) and ccpp-physics (v3.0), allowing use of 4 supported physics suites
-\item Added python scripts for running a single integration or multiple integrations serially
+\item Added Python scripts for running a single integration or multiple integrations serially
 \end{itemize}
 
 Minor
@@ -22,8 +22,8 @@ Minor
 \item Assumed that NCEPlibs are installed as a software prerequisite with an environment variable pointing to the installation location; remove repository copies of NCEPlib files
 \item Assumed that NetCDF is installed as a software prerequisite with an environment variable pointing to the installation location
 \item Updated User's/Technical Guide (this document)
-\item Separated case configuration (remained in \execout{scm/etc/case\_config}) from physics suite configuration (configured through python run script)
-\item Streamlined CMakeLists.txt; moved file operations from CMakelists.txt and Fortran code to python run script (except output)
+\item Separated case configuration (remained in \execout{scm/etc/case\_config}) from physics suite configuration (configured through Python run script)
+\item Streamlined CMakeLists.txt; moved file operations from CMakelists.txt and Fortran code to Python run script (except output)
 \item Changed how ozone, stratospheric H2O, aerosols, and ICN were initialized and handled in SCM code
 \end{itemize}
 
