@@ -84,9 +84,9 @@ These libraries are prebuilt on most NOAA machines using the Intel compiler. For
     cd /usr/local/src
     git clone https://github.com/NCAR/NCEPlibs.git
     cd NCEPlibs
-    ./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1
+    ./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1 -m 0
 \end{lstlisting}
-Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
+Note that the option \execout{-m 0} can be used if MPI is not installed on the machine that is being used. The \execout{nemsio} library will not be installed, however, since it requires MPI. Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
 \begin{lstlisting}
 export NCEPLIBS_DIR=/usr/local/NCEPlibs
 \end{lstlisting}
