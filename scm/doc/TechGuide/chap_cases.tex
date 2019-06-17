@@ -124,13 +124,13 @@ Several cases are included in the repository to serve as examples for users to c
 \item Atmospheric Radiation Measurement (ARM) Southern Great Plains (SGP) Summer 1997 continental deep convection
 \item Atlantic Stratocumulus Transition EXperiment (ASTEX) maritime stratocumulus-to-cumulus transition
 \item Barbados Oceanographic and Meteorological EXperiment (BOMEX) maritime shallow convection
-\item LES ARM Symbiotic Simulation and Observation (LASSO) for May 18, 2016 (with capability to run all LASSO dates - see \ref{sec:lasso}) continental shallow convection
+\item Large eddy simulation ARM Symbiotic Simulation and Observation (LASSO) for May 18, 2016 (with capability to run all LASSO dates - see \ref{sec:lasso}) continental shallow convection
 \end{itemize}
 For the ARM SGP case, several case configuration files representing different time periods of the observational dataset are included, denoted by a trailing letter. The LASSO case may be run with different forcing applied, so three case configuration files corresponding to these different forcing are included.
 
 \section{How to set up new cases}
 
-Setting up a new case involves preparing the two types of files listed above. For the case initialization and forcing data file, this typically involves writing a custom script or program to parse the data from its original format to the format that the SCM expects, listed above. An example of this type of script written in python is included in \execout{/gmtb-scm/scm/etc/scripts/twpice\_forcing\_file\_generator.py}. The script reads in the data as supplied from its source, converts any necessary variables, and writes a netCDF (version 4) file in the format described in subsection \ref{subsection: case input}. For reference, the following formulas are used:
+Setting up a new case involves preparing the two types of files listed above. For the case initialization and forcing data file, this typically involves writing a custom script or program to parse the data from its original format to the format that the SCM expects, listed above. An example of this type of script written in Python is included in \execout{/gmtb-scm/scm/etc/scripts/twpice\_forcing\_file\_generator.py}. The script reads in the data as supplied from its source, converts any necessary variables, and writes a netCDF (version 4) file in the format described in subsection \ref{subsection: case input}. For reference, the following formulas are used:
 \begin{equation}
 \theta_{il} = \theta - \frac{\theta}{T}\left(\frac{L_v}{c_p}q_l + \frac{L_s}{c_p}q_i\right)
 \end{equation}
