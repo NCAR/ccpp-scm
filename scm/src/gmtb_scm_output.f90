@@ -144,12 +144,6 @@ subroutine output_init(scm_state)
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='shf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface sensible heat flux"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="W m-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='shum_wts',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="weights for stochastic shum"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sppt_wts',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="weights for stochastic sppt"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_u',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface x-wind stress"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
@@ -434,17 +428,7 @@ subroutine output_append(scm_state, physics)
   do i=1, scm_state%n_cols
     dummy_1D(i) = physics%Interstitial(i)%dtsfc1(1)
   end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="shum_wts",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%shum_wts(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sppt_wts",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%sppt_wts(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_u",VARID=var_id))
   do i=1, scm_state%n_cols
     dummy_1D(i) = physics%Interstitial(i)%dusfc1(1)
