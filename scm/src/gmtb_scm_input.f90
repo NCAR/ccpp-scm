@@ -499,7 +499,7 @@ subroutine get_case_init(scm_state, scm_input)
 
   call scm_input%create(input_ntimes, input_nlev)
   if (scm_state%model_ics) then
-     call scm_input%create_landics(input_nsoil)
+     call scm_input%create_modelics(input_nsoil)
   endif
 
   scm_input%input_nlev = input_nlev

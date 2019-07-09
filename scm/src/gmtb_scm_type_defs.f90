@@ -32,7 +32,7 @@ module gmtb_scm_type_defs
     character(len=character_length)                 :: output_file !< name of output file (without the file extension)
     character(len=character_length)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
     character(len=character_length), allocatable    :: physics_suite_name(:) !< name of physics suite (must be "GFS_operational" for prototype)
-    character(len=65), allocatable                  :: physics_nml(:)
+    character(len=64), allocatable                  :: physics_nml(:)
 
     integer                           :: n_levels !< number of model levels (must be 64 for prototype)
     integer                           :: n_nsoil  !< number of model levels (must be 4 for prototype)
@@ -197,10 +197,9 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: input_v(:) !< meridional wind (m/s) (initial)
     real(kind=dp), allocatable              :: input_tke(:) !< turbulence kinetic energy (m^2/s^2) (initial)
     real(kind=dp), allocatable              :: input_ozone(:) !< ozone mass mixing ratio (kg/kg) (initial)
-    real(kind=dp), allocatable              :: input_sldpth(:) !
-    real(kind=dp), allocatable              :: input_stc(:) !
-    real(kind=dp), allocatable              :: input_smc(:) !
-    real(kind=dp), allocatable              :: input_slc(:) !
+    real(kind=dp), allocatable              :: input_stc(:) !< soil temperature (k) (initial)
+    real(kind=dp), allocatable              :: input_smc(:) !< soil moisture conteng (g/g) (initial)
+    real(kind=dp), allocatable              :: input_slc(:) !< soil liquid content (g/g) (initial)
     real(kind=dp), allocatable              :: input_lat(:) !< time-series of latitude of column center
     real(kind=dp), allocatable              :: input_lon(:) !< time-series of longitude of column center
     real(kind=dp), allocatable              :: input_pres_surf(:) !< time-series of surface pressure (Pa)
@@ -224,7 +223,7 @@ module gmtb_scm_type_defs
 
     contains
       procedure :: create  => scm_input_create
-      procedure :: create_landics  => scm_input_create_land_ics
+      procedure :: create_modelics  => scm_input_create_model_ics
 
   end type scm_input_type
 
@@ -1585,6 +1584,14 @@ module gmtb_scm_type_defs
     scm_state%v_advec_qt = real_zero
     scm_state%pres_surf = real_zero
     scm_state%T_surf = real_zero
+    scm_state%alvsf = real_zero
+    scm_state%alnsf = real_zero
+    scm_state%alvwf = real_zero
+    scm_state%alnwf = real_zero
+    scm_state%facsf = real_zero
+    scm_state%facwf = real_zero
+    scm_state%hprime = real_zero
+    scm_state%stddev = real_zero
     scm_state%u_nudge = real_zero
     scm_state%v_nudge = real_zero
     scm_state%T_nudge = real_zero
@@ -1600,17 +1607,21 @@ module gmtb_scm_type_defs
 
   end subroutine scm_state_create
 
-  subroutine scm_input_create_land_ics(scm_input, nlev)
+  subroutine scm_input_create_model_ics(scm_input, nlev_soil,nlev)
     class(scm_input_type)             :: scm_input
-    integer, intent(in)               :: nlev
+    integer, intent(in)               :: nlev,nlev_soil
 
-    scm_input%input_nsoil= nlev
-    allocate(scm_input%input_stc(nlev), scm_input%input_smc(nlev), scm_input%input_slc(nlev))
+    scm_input%input_nsoil= nlev_soil
+    allocate(scm_input%input_stc(nlev_soil), scm_input%input_smc(nlev_soil), scm_input%input_slc(nlev_soil))
+    allocate(scm_input%input_temp(nlev), scm_input%input_pres_i(nlev+1),scm_input%input_pres_l(nlev))
     scm_input%input_stc    = real_zero
     scm_input%input_smc    = real_zero
     scm_input%input_slc    = real_zero
+    scm_input%input_temp   = real_zero
+    scm_input%input_pres_i = real_zero
+    scm_input%input_pres_l = real_zero
 
-  end subroutine scm_input_create_land_ics
+  end subroutine scm_input_create_model_ics
 
   subroutine scm_input_create(scm_input, ntimes, nlev)
     class(scm_input_type)             :: scm_input
