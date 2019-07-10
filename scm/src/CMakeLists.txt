@@ -68,8 +68,8 @@ ADD_DEFINITIONS(-DSCM)
 
 #------------------------------------------------------------------------------
 # Add model-specific flags for C/C++/Fortran preprocessor
-ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
-#ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM -DGFSL64)  # add GFSL64 to use correct GFS ak and bks
+#ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
+ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM -DGFSL64)  # add GFSL64 to use correct GFS ak and bks
 #ADD_DEFINITIONS(-DINTERNAL_FILE_NML)
 
 #------------------------------------------------------------------------------

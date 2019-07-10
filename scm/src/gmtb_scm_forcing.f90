@@ -92,7 +92,7 @@ subroutine interpolate_forcing(scm_input, scm_state)
           v_advec_qt_bracket(1,:), top_index, 3)
 
         !>  - If the input forcing file does not reach to the model domain top, fill in values above the input forcing file domain with those from the top level.
-        if (top_index < scm_state%n_levels) then
+        if (top_index < scm_state%n_levels .AND. top_index.GT.0) then
           w_ls_bracket(1,top_index+1:scm_state%n_levels) = 0.0!w_ls_bracket(1,top_index)
           omega_bracket(1,top_index+1:scm_state%n_levels) = 0.0!omega_bracket(1,top_index)
           u_g_bracket(1,top_index+1:scm_state%n_levels) = u_g_bracket(1,top_index)
