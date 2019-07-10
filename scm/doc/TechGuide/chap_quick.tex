@@ -67,7 +67,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
 	\end{itemize}
     \item cmake 2.8.12.1, 2.8.12.2, and 3.6.2
     \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1 and 4.6.3 (not 3.x) with HDF5, ZLIB and SZIP
-    \item Python 2.7.5, 2.7.9, and 2.7.13 (not v3.x)
+    \item Python 2.7.5, 2.7.9, and 2.7.13 (not 3.x)
     \item Libxml2 2.2 and 2.9.7 (not 2.9.9)
 \end{itemize}
 
@@ -79,15 +79,15 @@ Further, there are several utility libraries as part of the NCEPlibs package tha
     \item sp - Spectral Transformation Library
     \item w3nco - GRIB decoder and encoder library
 \end{itemize}
-These libraries are prebuilt on most NOAA machines using the Intel compiler. For those needing to build the libraries themselves, GMTB recommends using the source code from GitHub at \url{https://github.com/NCAR/NCEPlibs.git}, which includes build files for various compilers and machines using OpenMP flags and which are threadsafe. Instructions for installing NCEPlibs are included on the GitHub repository webpage, but for the sake of example, execute the following for obtaining and building from source in \execout{/usr/local/NCEPlibs} on a Mac:
+These libraries are prebuilt on most NOAA machines using the Intel compiler. For those needing to build the libraries themselves, GMTB recommends using the source code from GitHub at \url{https://github.com/NCAR/NCEPlibs}, which includes build files for various compilers and machines using OpenMP flags and which are threadsafe. Instructions for installing NCEPlibs are included on the GitHub repository webpage, but for the sake of example, execute the following for obtaining and building from source in \execout{/usr/local/NCEPlibs} on a Mac:
 \begin{lstlisting}
     mkdir /usr/local/NCEPlibs
     cd /usr/local/src
     git clone https://github.com/NCAR/NCEPlibs.git
     cd NCEPlibs
-    ./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1
+    ./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1 -m 0
 \end{lstlisting}
-Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
+Note that the option \execout{-m 0} can be used if MPI is not installed on the machine that is being used. The \execout{nemsio} library will not be installed, however, since it requires MPI. Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
 \begin{lstlisting}
 export NCEPLIBS_DIR=/usr/local/NCEPlibs
 \end{lstlisting}
@@ -166,7 +166,7 @@ The resulting executable may be found at \execout{./gmtb-scm} (Full path of \exe
 
 Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build/run directory is (from the \execout{bin} directory)
 \begin{lstlisting}[language=bash]
-pwd #confirm that you are in the build/run directory before deleting files
+pwd #confirm that you are in the gmtb-scm/scm/bin directory before deleting files
 rm -rfd *
 \end{lstlisting}
 Note: This command can be dangerous (deletes files without confirming), so make sure that you're in the right directory before executing!
@@ -174,13 +174,13 @@ Note: This command can be dangerous (deletes files without confirming), so make 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
 \section{Run the SCM with a supplied case}
-There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially. 
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two Python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially. 
 
 \subsection{Single Run Script Usage} \label{subsection: singlerunscript}
 Running a case requires three pieces of information: the case to run (consisting of initial conditions, geolocation, forcing data, etc.), the physics suite to use (through a CCPP suite definition file), and a physics namelist (that specifies configurable physics options to use). As discussed in chapter \ref{chapter: cases}, cases are set up via their own namelists in \execout{../etc/case\_config}. A default physics suite is provided as a user-editable variable in the script and default namelists are associated with each physics suite (through \execout{../src/default\_namelists.py}), so, technically, one must only specify a case to run with the SCM. The single run script's interface is described below.
 
 \begin{lstlisting}[language=bash]
-./run_gmtb_scm.py -c CASE_NAME [-s SUITE_NAME] [-n PHYSICS_NAMELIST_PATH] [-g]
+./run_gmtb_scm.py -c CASE_NAME [-s SUITE_NAME] [-n PHYSICS_NAMELIST_WITH_PATH] [-g]
 \end{lstlisting}
 
 When invoking the run script, the only required argument is the name of the case to run. The case name used must match one of the case configuration files located in \execout{../etc/case\_config} (\emph{without the .nml extension!}). If specifying a suite other than the default, the suite name used must match the value of the suite name in one of the suite definition files located in \execout{../../ccpp/suites} (Note: not the filename of the suite definition file). As part of the third CCPP release, the following suite names are valid:
@@ -219,7 +219,7 @@ examine the output file (ncdump, ncview, NCL, etc).
 
 \subsection{Multiple Run Script Usage}
 
-A second python script is provided for automating the execution of multiple integrations through repeated calling of the single run script. From the run directory, one may use this script through the following interface.
+A second Python script is provided for automating the execution of multiple integrations through repeated calling of the single run script. From the run directory, one may use this script through the following interface.
 
 \begin{lstlisting}[language=bash]
 ./multi_run_gmtb_scm.py {[-c CASE_NAME] [-s SUITE_NAME] [-f PATH_TO_FILE]} [-v{v}] [-t]
