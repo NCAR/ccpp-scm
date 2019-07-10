@@ -88,8 +88,8 @@ model initial conditions are needed to initialize the land surface in order to r
   * `cd to scm/etc/scripts/`
   modify path to files you can read in extract_FV3GFS_column_ic.py, this is set up for C96
 2. run extract_FV3GFS_column_ic.py, it will create fv3_model_point.nc in ../../data/processed_case_input/
-  * `python extract_FV3GFS_column_ic.py`
+  * `./extract_FV3GFS_column_ic.py`
 3. cd to bin directory
   * `cd ../../bin/`
 4. Run the SCM with the fv3_model_point case and C96 namelist
-  * `run_gmtb_scm.py -c fv3_model_point -n input_GFS_v15_C96.nml`
+  * `./run_gmtb_scm.py -c fv3_model_point -n input_GFS_v15_C96.nml`
