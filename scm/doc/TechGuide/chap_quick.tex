@@ -27,21 +27,23 @@ If you would like to contribute as a developer to this project, please see (in a
 
 There you will find links to all of the documentation pertinent to developers.
 
-As an alternative, one can also clone the development branches, although its stability is not guaranteed. To do so,
+For working with the development branches (stability not guaranteed), after executing the steps above, check out the master branches of the repository (and submodules):
 \begin{enumerate}
-    \item Clone the source using
-\begin{lstlisting}[language=bash]
-git clone --recursive https://github.com/NCAR/gmtb-scm gmtb-scm
-\end{lstlisting}
-\item Change directory into the project.
-\begin{lstlisting}[language=bash]
-cd gmtb-scm
-\end{lstlisting}
-\item Check out the desired branch (master) using
+    \item Check out the master branch of gmtb-scm.
 \begin{lstlisting}[language=bash]
 git checkout master
 \end{lstlisting}
-\item You may of course also check out development branches of ccpp-physics and ccpp-framework by changing into their respective subdirectories and issuing the same \exec{git checkout} \execsub{master (or other branch)} command.
+\item Check out the master branches of ccpp-physics and ccpp-framework.
+\begin{lstlisting}[language=bash]
+cd ccpp/physics
+git checkout master
+cd ../framework
+git checkout master
+\end{lstlisting}
+\item Change back to the main directory for following the instructions in section \ref{section: compiling} assuming system requirements in section \ref{section: systemrequirements} are met.
+\begin{lstlisting}[language=bash]
+cd ../..
+\end{lstlisting}
 \end{enumerate}
 
 

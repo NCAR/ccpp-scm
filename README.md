@@ -28,12 +28,22 @@ Note that the option `-m 0` can be used if MPI is not installed on the machine t
 If using Theia or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described below.
 
 ## Obtaining Code
+
+For obtaining the last stable release, execute the following:
+
 1. Clone the source using:
   * `git clone --recursive -b v3.0 https://github.com/NCAR/gmtb-scm`
 2. Change directory into the project.
   * `cd gmtb-scm`
-3. Checkout the master branch (optional if not using the release branch).
-  * `git checkout master`
+
+For working with the development branches, after executing the steps above, check out the master branches of the repository (and submodules):
+
+1. `git checkout master`
+2. `cd ccpp/physics`
+3. `git checkout master`
+4. `cd ../framework`
+5. `git checkout master`
+6. `cd ../..`
 
 ## Building and Compiling the SCM with CCPP
 1. Run the CCPP prebuild script to match required physics variables with those
