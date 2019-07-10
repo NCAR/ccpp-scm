@@ -214,7 +214,7 @@ subroutine get_case_init(scm_state, scm_input)
   integer                     :: input_vegsrc !< vegetation source
   integer                     :: input_vegtyp !< vegetation type
   integer                     :: input_soiltyp!< soil type
-  integer                     :: input_slopetyp !< slope type
+  integer                     :: input_slopetype !< slope type
   real(kind=dp)               :: input_vegfrac  !< vegetation fraction
   real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
   real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
@@ -312,7 +312,7 @@ subroutine get_case_init(scm_state, scm_input)
   !>  - Allocate the initial profiles.
   allocate(input_thetail(input_nlev), input_qt(input_nlev), input_ql(input_nlev), input_qi(input_nlev), &
     input_u(input_nlev), input_v(input_nlev), input_tke(input_nlev), input_ozone(input_nlev), stat=allocate_status)
-  if (scm_state%model_ics) then
+   if (scm_state%model_ics) then
      allocate(input_stc(input_nsoil), input_temp(input_nlev),input_smc(input_nsoil), input_slc(input_nsoil), &
               input_pres_i(input_nlev+1),input_pres_l(input_nlev), stat=allocate_status)
   endif
@@ -359,7 +359,7 @@ subroutine get_case_init(scm_state, scm_input)
      call check(NF90_INQ_VARID(grp_ncid,"soiltyp",varID))
      call check(NF90_GET_VAR(grp_ncid,varID,input_soiltyp))
      call check(NF90_INQ_VARID(grp_ncid,"slopetyp",varID))
-     call check(NF90_GET_VAR(grp_ncid,varID,input_slopetyp))
+     call check(NF90_GET_VAR(grp_ncid,varID,input_slopetype))
      call check(NF90_INQ_VARID(grp_ncid,"vegfrac",varID))
      call check(NF90_GET_VAR(grp_ncid,varID,input_vegfrac))
      call check(NF90_INQ_VARID(grp_ncid,"shdmin",varID))
@@ -499,7 +499,7 @@ subroutine get_case_init(scm_state, scm_input)
 
   call scm_input%create(input_ntimes, input_nlev)
   if (scm_state%model_ics) then
-     call scm_input%create_modelics(input_nsoil)
+     call scm_input%create_modelics(input_nsoil,input_nlev)
   endif
 
   scm_input%input_nlev = input_nlev
@@ -546,7 +546,7 @@ subroutine get_case_init(scm_state, scm_input)
      scm_input%input_vegsrc   = input_vegsrc
      scm_input%input_vegtyp   = input_vegtyp
      scm_input%input_soiltyp  = input_soiltyp
-     scm_input%input_slopetyp = input_slopetyp
+     scm_input%input_slopetype = input_slopetype
      scm_input%input_vegfrac  = input_vegfrac 
      scm_input%input_shdmin   = input_shdmin  
      scm_input%input_shdmax   = input_shdmax  

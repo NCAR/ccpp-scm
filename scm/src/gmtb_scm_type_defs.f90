@@ -74,6 +74,7 @@ module gmtb_scm_type_defs
     real(kind=dp)                     :: veg_type_real(1)
     integer                           :: veg_frac !< 0: sea surface, 1: land surface, 2: sea-ice surface
     real(kind=dp)                     :: veg_frac_real(1)
+    real(kind=dp)                     :: slopetype(1)
     real(kind=dp)                     :: shdmin(1)
     real(kind=dp)                     :: shdmax(1)
     real(kind=dp)                     :: tg3(1)
@@ -147,7 +148,7 @@ module gmtb_scm_type_defs
     integer                           :: input_vegsrc !<
     integer                           :: input_vegtyp !<
     integer                           :: input_soiltyp !<
-    integer                           :: input_slopetyp !<
+    integer                           :: input_slopetype !<
     real(kind=dp)                     :: input_vegfrac  !<
     real(kind=dp)                     :: input_shdmin   !<
     real(kind=dp)                     :: input_shdmax   !<
@@ -1679,8 +1680,6 @@ module gmtb_scm_type_defs
     scm_input%input_sigma        = real_zero
     scm_input%input_elvmax       = real_zero
     scm_input%input_facsf        = real_zero
-    scm_input%input_pres_i       = real_zero
-    scm_input%input_pres_l       = real_zero
     scm_input%input_sh_flux_sfc = real_zero
     scm_input%input_lh_flux_sfc = real_zero
     scm_input%input_w_ls = real_zero
@@ -1798,6 +1797,7 @@ module gmtb_scm_type_defs
     physics%Sfcprop(col)%slmsk => scm_state%sfc_type_real
     physics%Sfcprop(col)%vtype => scm_state%veg_type_real
     physics%Sfcprop(col)%vfrac => scm_state%veg_frac_real
+    physics%Sfcprop(col)%slope => scm_state%slopetype
     physics%Interstitial(col)%sigmaf = min(scm_state%veg_frac_real,0.01)
     physics%Sfcprop(col)%shdmax => scm_state%shdmax        
     physics%Sfcprop(col)%shdmin => scm_state%shdmin        

@@ -1,6 +1,5 @@
 from netCDF4 import Dataset
 import numpy as np
-
 # define date
 YYYY=2014
 MM=8
@@ -8,36 +7,39 @@ DD=1
 HH=0
 MI=0
 SC=0
+
+# define path to FV3 GFS initial and boundary conditions
+icpath='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/ics/C96_L64/%4.4i%2.2i%2.2i%2.2i/mem001' %(YYYY,MM,DD,HH)
+fixpath='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/fv3GFS/branches/chgres_fv3/fix/C96'
+print (icpath)
 #  defint i,j and tile to extract colmn
-ipt=50
-jpt=50
-tilenum=6
+ipt=16
+jpt=41
+tilenum=2
 
 ipt2=ipt*2+1
 jpt2=jpt*2+1
 
 #  I have surface cycle on the sfc_data initial conditions to get the proper surface fields
-infile1='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/ics/C96_L64/2014080100/mem001/gfs_data.tile%i.nc' %tilenum
-infile2='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/ics/C96_L64/2014080100/mem001/updated_sfc_data.tile%i.nc' %tilenum
-infile3='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/fv3GFS/branches/chgres_fv3/fix/C96/C96_oro_data.tile%i.nc' %tilenum
-infile4='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/fv3GFS/branches/chgres_fv3/fix/C96//C96_grid.tile%i.nc' %tilenum
-infile5='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/ics/C96_L64/2014080100/mem001/gfs_ctrl.nc'
-infile6='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/experiments/C96/cntl/2014080100/edmf_dspheat/INPUT/C96_grid.tile%i.nc' %tilenum
+infile1='%s/gfs_data.tile%i.nc' % (icpath,tilenum)
+infile2='%s/sfc_data.tile%i.nc' %(icpath,tilenum)
+infile3='%s/C96_oro_data.tile%i.nc' %(fixpath,tilenum)
+infile4='%s/C96_grid.tile%i.nc' %(fixpath,tilenum)
+infile5='%s/gfs_ctrl.nc' %icpath
 ncin1=Dataset(infile1)
 ncin2=Dataset(infile2)
 ncin3=Dataset(infile3)
 ncin4=Dataset(infile4)
 ncin5=Dataset(infile5)
-ncin6=Dataset(infile6)
 # assume model contains one less level than the cold start spectral GFS initial conditions
 nlevs=len(ncin1.dimensions['lev'])-1
 # pick off lat and lon from i and j point defined above
-lon0=ncin6['x'][jpt2,ipt2]
-lat0=ncin6['y'][jpt2,ipt2]
+lon0=ncin4['x'][jpt2,ipt2]
+lat0=ncin4['y'][jpt2,ipt2]
 
 # extract out area of grid cell
-area_in=ncin6['area'][jpt2-1:jpt2+1,ipt2-1:ipt2+1]
-print lat0,lon0
+area_in=ncin4['area'][jpt2-1:jpt2+1,ipt2-1:ipt2+1]
+print (lat0,lon0)
 
 # upper air fields from initial conditions
 zh=ncin1['zh'][::-1,jpt,ipt]
@@ -58,36 +60,36 @@ liqwat=ncin1['liq_wat'][:-1,jpt,ipt]
 
 # surface pressure and skin temperature
 ps=ncin1['ps'][jpt,ipt]
-ts=ncin2['tsea'][0,jpt,ipt]
+ts=ncin2['tsea'][jpt,ipt]
 
 # land state
-stc_in=ncin2['stc'][0,:,jpt,ipt]
-smc_in=ncin2['smc'][0,:,jpt,ipt]
-slc_in=ncin2['slc'][0,:,jpt,ipt]
-tg3_in=ncin2['tg3'][0,jpt,ipt]
+stc_in=ncin2['stc'][:,jpt,ipt]
+smc_in=ncin2['smc'][:,jpt,ipt]
+slc_in=ncin2['slc'][:,jpt,ipt]
+tg3_in=ncin2['tg3'][jpt,ipt]
 
 # surface properties
-uustar_in=ncin2['uustar'][0,jpt,ipt]
-alvsf=ncin2['alvsf'][0,jpt,ipt]
-alvwf=ncin2['alvwf'][0,jpt,ipt]
-alnsf=ncin2['alnsf'][0,jpt,ipt]
-alnwf=ncin2['alnwf'][0,jpt,ipt]
-facsf_in=ncin2['facsf'][0,jpt,ipt]
-facwf_in=ncin2['facwf'][0,jpt,ipt]
-styp_in=ncin2['stype'][0,jpt,ipt]
-slope_in=ncin2['slope'][0,jpt,ipt]
-vtyp_in=ncin2['vtype'][0,jpt,ipt]
-vfrac_in=ncin2['vfrac'][0,jpt,ipt]
-shdmin_in=ncin2['shdmin'][0,jpt,ipt]
-shdmax_in=ncin2['shdmax'][0,jpt,ipt]
-zorl_in=ncin2['zorl'][0,jpt,ipt]
-slmsk_in=ncin2['slmsk'][0,jpt,ipt]
-canopy_in=ncin2['canopy'][0,jpt,ipt]
-hice_in=ncin2['hice'][0,jpt,ipt]
-fice_in=ncin2['fice'][0,jpt,ipt]
-tisfc_in=ncin2['tisfc'][0,jpt,ipt]
-snwdph_in=ncin2['snwdph'][0,jpt,ipt]
-snoalb_in=ncin2['snoalb'][0,jpt,ipt]
+uustar_in=ncin2['uustar'][jpt,ipt]
+alvsf=ncin2['alvsf'][jpt,ipt]
+alvwf=ncin2['alvwf'][jpt,ipt]
+alnsf=ncin2['alnsf'][jpt,ipt]
+alnwf=ncin2['alnwf'][jpt,ipt]
+facsf_in=ncin2['facsf'][jpt,ipt]
+facwf_in=ncin2['facwf'][jpt,ipt]
+styp_in=ncin2['stype'][jpt,ipt]
+slope_in=ncin2['slope'][jpt,ipt]
+vtyp_in=ncin2['vtype'][jpt,ipt]
+vfrac_in=ncin2['vfrac'][jpt,ipt]
+shdmin_in=ncin2['shdmin'][jpt,ipt]
+shdmax_in=ncin2['shdmax'][jpt,ipt]
+zorl_in=ncin2['zorl'][jpt,ipt]
+slmsk_in=ncin2['slmsk'][jpt,ipt]
+canopy_in=ncin2['canopy'][jpt,ipt]
+hice_in=ncin2['hice'][jpt,ipt]
+fice_in=ncin2['fice'][jpt,ipt]
+tisfc_in=ncin2['tisfc'][jpt,ipt]
+snwdph_in=ncin2['snwdph'][jpt,ipt]
+snoalb_in=ncin2['snoalb'][jpt,ipt]
 
 # orographyic properties
 stddev_in=ncin3['stddev'][jpt,ipt]
