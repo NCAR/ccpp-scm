@@ -12,6 +12,7 @@ The source code for the CCPP and SCM is provided through GitHub.com.  This relea
 \begin{lstlisting}[language=bash]
 git clone --recursive -b v3.0 https://github.com/NCAR/gmtb-scm
 \end{lstlisting}
+             Recall that the \execout{recursive} option in this command clones the main gmtb-scm repository and all subrepositories (ccpp-physics and ccpp-framework). Using this option, there is no need to execute \exec{git submodule init} and \exec{git submodule update}.
     \item Change directory into the project.
 \begin{lstlisting}[language=bash]
 cd gmtb-scm
@@ -26,7 +27,7 @@ If you would like to contribute as a developer to this project, please see (in a
 
 There you will find links to all of the documentation pertinent to developers.
 
-One can also clone the development branches, although its stability is not guaranteed. To do so,
+As an alternative, one can also clone the development branches, although its stability is not guaranteed. To do so,
 \begin{enumerate}
     \item Clone the source using
 \begin{lstlisting}[language=bash]
@@ -40,7 +41,7 @@ cd gmtb-scm
 \begin{lstlisting}[language=bash]
 git checkout master
 \end{lstlisting}
-\item You may of course also check out development branches of ccpp-physics and ccpp-framework by changing into their respective subdirectories and issuing the same \execout{git checkout master (or other branch)} command.
+\item You may of course also check out development branches of ccpp-physics and ccpp-framework by changing into their respective subdirectories and issuing the same \exec{git checkout} \execsub{master (or other branch)} command.
 \end{enumerate}
 
 
