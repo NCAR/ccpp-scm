@@ -70,7 +70,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
     \item cmake 2.8.12.1, 2.8.12.2, and 3.6.2
     \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1 and 4.6.3 (not 3.x) with HDF5, ZLIB and SZIP
     \item Python 2.7.5, 2.7.9, and 2.7.13 (not 3.x)
-    \item Libxml2 2.2 and 2.9.7 (not 2.9.9)
+    \item Libxml2 2.2, 2.9.7, 2.9.9
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements.
@@ -157,7 +157,10 @@ cmake -DCMAKE_BUILD_TYPE=Debug ../src # debug mode
 \begin{lstlisting}[language=bash]
 -DPC_LIBXML_INCLUDEDIR=... -DPC_LIBXML_LIBDIR=...
 \end{lstlisting}
-    to the cmake command.
+    to the cmake command. If a compilation error appears related to \execout{libxml2}, namely that a unicode file is not found in the include path, add the appropriate include path to the \execout{CFLAGS} environment variable
+\begin{lstlisting}[language=bash]
+export CFLAGS="-I/include_path"
+\end{lstlisting} before cleaning out the \execout{bin} directory and rerunning \execout{cmake}.
     \item Compile. Add \execout{VERBOSE=1} to obtain more information on the build process.
 \begin{lstlisting}[language=bash]
 make
