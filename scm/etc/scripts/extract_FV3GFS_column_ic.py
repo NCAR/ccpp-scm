@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from netCDF4 import Dataset
 import numpy as np
+
 # define date
 YYYY=2014
 MM=8
@@ -136,8 +137,8 @@ t = nc.createVariable('time',np.float64,('time',))
 t.units = "s" 
 t.description = "elapsed time since the beginning of the simulation" 
 z = nc.createVariable('levels',np.float64,('levels',))
-z.units = "Pa" 
-z.description = "pressure levels" 
+z.units = "Pa"
+z.description = "pressure levels"
 #scalars
 iyr = nc.createVariable('scalars/init_year',np.int32)
 imo = nc.createVariable('scalars/init_month',np.int32)
@@ -375,6 +376,7 @@ sigma[:]=sigma_in
 elvmax[:]=elvmax_in
 facsf[:]=facsf_in
 facwf[:]=facwf_in
+z[:]=np.exp(pn1[0:nlevs])
 w_ls[:]=0.0
 omega[:]=0.0
 u_g[:]=0.0
