@@ -1,5 +1,7 @@
 # User's Guide
 
+A more complete User's Guide can be found at https://dtcenter.org/GMTB/v3.0/scm-ccpp-guide-v3.pdf. If the instructions in this README and the more complete User's Guide differ, the linked guide should be more up-to-date and accurate.
+
 This guide provides instructions for obtaining, compiling and running a simple
 case for the GMTB single column model (SCM). The SCM code calls CCPP-compliant
 physics schemes through the CCPP infrastructure code. As such, it requires the
@@ -17,31 +19,31 @@ These libraries are prebuilt on most NOAA machines using the Intel compiler. For
 1. `cd /usr/local/src`
 2. `git clone https://github.com/NCAR/NCEPlibs.git`
 3. `cd NCEPlibs`
-4. `./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1`
+4. `./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1 -m 0`
 
-Once NCEPlibs is built, the NCEPLIBS_DIR environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in /usr/local/NCEPlibs, one would execute
+Note that the option `-m 0` can be used if MPI is not installed on the machine that is being used. The nemsio library will not be installed, however, since it requires MPI. Once NCEPlibs is built, the NCEPLIBS_DIR environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in /usr/local/NCEPlibs, one would execute
 
-`export NCEPLIB_DIR=/usr/local/NCEPlibs`
+`export NCEPLIBS_DIR=/usr/local/NCEPlibs`
 
 If using Theia or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described below.
 
 ## Obtaining Code
-1. Download a compressed file or clone the source using
-  * `git clone https://[username]@github.com/NCAR/gmtb-scm.git`
-  and enter your github password when prompted.
+
+For obtaining the last stable release, execute the following:
+
+1. Clone the source using:
+  * `git clone --recursive -b v3.0 https://github.com/NCAR/gmtb-scm`
 2. Change directory into the project.
   * `cd gmtb-scm`
-3. Checkout the master branch.
-  * `git checkout master`
-4. Initialize the CCPP infrastructure and physics submodules.
-  * `git submodule init`
-5. Update (download) the submodules.
-  * `git submodule update`
-  and, if asked, enter your github credentials again. If the machine is running an older
-  version of git and you are denied access, you may need to configure the
-  submodule URLs before repeating step 4 by executing this command:
-    * `git config submodule.ccpp-framework.url https://[username]@github.com/NCAR/ccpp-framework.git`
-    * `git config submodule.ccpp-physics.url https://[username]@github.com/NCAR/ccpp-physics.git`
+
+For working with the development branches, after executing the steps above, check out the master branches of the repository (and submodules):
+
+1. `git checkout master`
+2. `cd ccpp/physics`
+3. `git checkout master`
+4. `cd ../framework`
+5. `git checkout master`
+6. `cd ../..`
 
 ## Building and Compiling the SCM with CCPP
 1. Run the CCPP prebuild script to match required physics variables with those
