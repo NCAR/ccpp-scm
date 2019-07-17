@@ -10,8 +10,8 @@ MI=0
 SC=0
 
 # define path to FV3 GFS initial and boundary conditions
-icpath='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/ics/C96_L64/%4.4i%2.2i%2.2i%2.2i/mem001' %(YYYY,MM,DD,HH)
-fixpath='/scratch3/BMC/gsienkf/Philip.Pegion/FV3/fv3GFS/branches/chgres_fv3/fix/C96'
+icpath='../../data/raw_case_input/UFS_test_ics'
+fixpath='../../data/raw_case_input/UFS_test_ics'
 print (icpath)
 #  defint i,j and tile to extract colmn
 ipt=16
