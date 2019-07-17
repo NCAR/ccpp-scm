@@ -132,7 +132,7 @@ elseif (${CMAKE_BUILD_TYPE} MATCHES "Release")
   endif (DEFINED ENV{FFLAGS})
   # Compiler-dependent settings
   if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-    set (CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -cpp -fdefault-real-8")
+    set (CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -cpp -fdefault-real-8 -finit-real=nan")
   elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
     set (CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -ftz -debug minimal -fpp -r8")
   elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "PGI")
