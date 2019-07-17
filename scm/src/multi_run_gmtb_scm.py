@@ -59,7 +59,13 @@ def subprocess_work(command):
     (output, err) = p.communicate()
     p_status = p.wait()
     logging.debug(output)
-    
+    exit_code = p.returncode
+    if not exit_code == 0:
+       message = '####### The subprocess started using the command ({0}) exited with code {1}. #######\n'\
+	  'Run the command ({0}) by itself again or use the -v or -vv options for more details.'.format(command, exit_code)
+       logging.critical(message)
+       #raise Exception(message)
+
 def main():
     args = parser.parse_args()
     
