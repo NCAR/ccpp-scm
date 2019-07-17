@@ -315,6 +315,8 @@ subroutine get_case_init(scm_state, scm_input)
    if (scm_state%model_ics) then
      allocate(input_stc(input_nsoil), input_temp(input_nlev),input_smc(input_nsoil), input_slc(input_nsoil), &
               input_pres_i(input_nlev+1),input_pres_l(input_nlev), stat=allocate_status)
+     input_pres_i(:) = -999.9
+     input_pres_l(:) = -999.9
   endif
 
   !>  - Read in the initial profiles. The variable names in all input files are expected to be identical.
@@ -345,7 +347,7 @@ subroutine get_case_init(scm_state, scm_input)
      call check(NF90_GET_VAR(grp_ncid,varID,input_smc))
      call check(NF90_INQ_VARID(grp_ncid,"slc",varID))
      call check(NF90_GET_VAR(grp_ncid,varID,input_slc))
-     ierr=(NF90_INQ_VARID(grp_ncid,"pres_i",varID))
+     ierr = NF90_INQ_VARID(grp_ncid,"pres_i",varID)
      if (ierr.EQ.0) then ! input file should have pres_i and pres_l
         call check(NF90_GET_VAR(grp_ncid,varID,input_pres_i))
         call check(NF90_INQ_VARID(grp_ncid,"pres_l",varID))
