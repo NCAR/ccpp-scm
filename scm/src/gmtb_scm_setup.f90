@@ -42,72 +42,131 @@ subroutine set_state(scm_input, scm_reference, scm_state)
   !! here or passed up to the main program.
 
   !> - For each column, interpolate the water vapor to the model grid.
-  do i=1, scm_state%n_cols
-    call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_qv, scm_state%pres_l(i,1,:), &
-      scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1), last_index_init, 1)
-    !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
-    if(last_index_init < scm_state%n_levels) THEN
-      call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
-        scm_reference%ref_qv, scm_state%pres_l(i,1,:), scm_state%n_levels, &
-        scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1), grid_error)
-    end if
-  end do
-
-  !> - Calculate the input absolute temperature from input pressure, theta_il, ql, and qi.
-  input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
-    (con_hfus/con_cp)*scm_input%input_qi)
-
-  !> - For each column, interpolate the temperature to the model grid.
-  do i=1, scm_state%n_cols
-    call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_T, scm_state%pres_l(i,1,:), &
-      scm_state%n_levels, scm_state%state_T(i,1,:,1), last_index_init, 1)
-    !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
-    if(last_index_init < scm_state%n_levels) THEN
-      call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
-        scm_reference%ref_T, scm_state%pres_l(i,1,:), scm_state%n_levels, scm_state%state_T(i,1,:,1), grid_error)
-    end if
-  end do
-
-  !> - For each column, interpolate the u-wind to the model grid.
-  do i=1, scm_state%n_cols
-    call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_u, scm_state%pres_l(i,1,:), &
-      scm_state%n_levels, scm_state%state_u(i,1,:,1), last_index_init, 1)
-    if(last_index_init < scm_state%n_levels) THEN
-      do j=last_index_init + 1, scm_state%n_levels
-        !>  - The standard atmosphere doesn't have wind data; assume zero-gradient above the input data.
-        scm_state%state_u(i,1,j,1) = scm_state%state_u(i,1,last_index_init,1)
-      end do
-    end if
-  end do
-
-  !> - For each column, interpolate the v-wind to the model grid.
-  do i=1, scm_state%n_cols
-    call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_v, scm_state%pres_l(i,1,:), &
-      scm_state%n_levels, scm_state%state_v(i,1,:,1), last_index_init, 1)
-    if(last_index_init < scm_state%n_levels) THEN
-      do j=last_index_init + 1, scm_state%n_levels
-        !>  - The standard atmosphere doesn't have wind data; assume zero-gradient above the input data.
-        scm_state%state_v(i,1,j,1) = scm_state%state_v(i,1,last_index_init,1)
-      end do
-    end if
-  end do
-
-  !> - For each column, interpolate the ozone to the model grid.
-  if(scm_state%ozone_index > 0) then
-    do i=1, scm_state%n_cols
-      call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_ozone, scm_state%pres_l(i,1,:), &
-        scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%ozone_index,1), last_index_init, 1)
-      !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
-      if(last_index_init < scm_state%n_levels) THEN
-        call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
-          scm_reference%ref_ozone, scm_state%pres_l(i,1,:), scm_state%n_levels, &
-          scm_state%state_tracer(i,1,:,scm_state%ozone_index,1), grid_error)
-      end if
-    end do
-  end if
-
-  scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) = 0.0
-  !> @}
+  if (.NOT. scm_state%model_ics) then ! not a model
+     do i=1, scm_state%n_cols
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_qv, scm_state%pres_l(i,1,:), &
+         scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1), last_index_init, 1)
+       !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
+       if(last_index_init < scm_state%n_levels) THEN
+         call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
+           scm_reference%ref_qv, scm_state%pres_l(i,1,:), scm_state%n_levels, &
+           scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1), grid_error)
+       end if
+     end do
+   
+     !> - Calculate the input absolute temperature from input pressure, theta_il, ql, and qi.
+     input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
+       (con_hfus/con_cp)*scm_input%input_qi)
+   
+     !> - For each column, interpolate the temperature to the model grid.
+     do i=1, scm_state%n_cols
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_T, scm_state%pres_l(i,1,:), &
+         scm_state%n_levels, scm_state%state_T(i,1,:,1), last_index_init, 1)
+       !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
+       if(last_index_init < scm_state%n_levels) THEN
+         call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
+           scm_reference%ref_T, scm_state%pres_l(i,1,:), scm_state%n_levels, scm_state%state_T(i,1,:,1), grid_error)
+       end if
+     end do
+   
+     !> - For each column, interpolate the u-wind to the model grid.
+     do i=1, scm_state%n_cols
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_u, scm_state%pres_l(i,1,:), &
+         scm_state%n_levels, scm_state%state_u(i,1,:,1), last_index_init, 1)
+       if(last_index_init < scm_state%n_levels) THEN
+         do j=last_index_init + 1, scm_state%n_levels
+           !>  - The standard atmosphere doesn't have wind data; assume zero-gradient above the input data.
+           scm_state%state_u(i,1,j,1) = scm_state%state_u(i,1,last_index_init,1)
+         end do
+       end if
+     end do
+   
+     !> - For each column, interpolate the v-wind to the model grid.
+     do i=1, scm_state%n_cols
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_v, scm_state%pres_l(i,1,:), &
+         scm_state%n_levels, scm_state%state_v(i,1,:,1), last_index_init, 1)
+       if(last_index_init < scm_state%n_levels) THEN
+         do j=last_index_init + 1, scm_state%n_levels
+           !>  - The standard atmosphere doesn't have wind data; assume zero-gradient above the input data.
+           scm_state%state_v(i,1,j,1) = scm_state%state_v(i,1,last_index_init,1)
+         end do
+       end if
+     end do
+   
+     !> - For each column, interpolate the ozone to the model grid.
+     if(scm_state%ozone_index > 0) then
+       do i=1, scm_state%n_cols
+         call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_ozone, scm_state%pres_l(i,1,:), &
+           scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%ozone_index,1), last_index_init, 1)
+         !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
+         if(last_index_init < scm_state%n_levels) THEN
+           call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
+             scm_reference%ref_ozone, scm_state%pres_l(i,1,:), scm_state%n_levels, &
+             scm_state%state_tracer(i,1,:,scm_state%ozone_index,1), grid_error)
+         end if
+       end do
+     end if
+   
+     scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) = 0.0
+   else
+     do i=1, scm_state%n_cols
+        !input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + (con_hfus/con_cp)*scm_input%input_qi)
+        scm_state%state_u(i,1,:,1) = scm_input%input_u(:)
+        scm_state%state_v(i,1,:,1) = scm_input%input_v(:)
+        scm_state%state_T(i,1,:,1) = scm_input%input_temp(:)
+        scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1)=scm_input%input_qt
+        scm_state%state_tracer(i,1,:,scm_state%ozone_index,1)=scm_input%input_ozone
+        scm_state%veg_type = scm_input%input_vegtyp
+        scm_state%soil_type = scm_input%input_soiltyp
+        scm_state%veg_type_real = DBLE(scm_input%input_vegtyp)
+        scm_state%veg_frac_real = scm_input%input_vegfrac
+        scm_state%slopetype     = scm_input%input_slopetype
+        scm_state%shdmin = scm_input%input_shdmin  
+        scm_state%shdmax = scm_input%input_shdmax  
+        scm_state%sfc_roughness_length_cm = scm_input%input_zorl    
+        scm_state%sfc_type_real = scm_input%input_slmsk   
+        scm_state%canopy = scm_input%input_canopy  
+        scm_state%hice = scm_input%input_hice  
+        scm_state%fice = scm_input%input_fice  
+        scm_state%tisfc = scm_input%input_tisfc  
+        scm_state%snwdph = scm_input%input_snwdph  
+        scm_state%snoalb = scm_input%input_snoalb  
+        scm_state%sncovr = scm_input%input_sncovr  
+        scm_state%area = scm_input%input_area    
+        scm_state%tg3    = scm_input%input_tg3     
+        scm_state%uustar = scm_input%input_uustar  
+        scm_state%soil_type_real = DBLE(scm_input%input_soiltyp)
+        scm_state%stc(i,1,:,1)=scm_input%input_stc
+        scm_state%smc(i,1,:,1)=scm_input%input_smc
+        scm_state%slc(i,1,:,1)=scm_input%input_slc
+        if (scm_input%input_pres_i(1).GT. 0.0) then ! pressure are read in, overwrite values
+           scm_state%pres_i(i,1,:)=scm_input%input_pres_i
+           scm_state%pres_l(i,1,:)=scm_input%input_pres_l
+        endif
+        scm_state%alvsf(i)=scm_input%input_alvsf
+        scm_state%alnsf(i)=scm_input%input_alnsf
+        scm_state%alvwf(i)=scm_input%input_alvwf
+        scm_state%alnwf(i)=scm_input%input_alnwf
+        scm_state%stddev(i)=scm_input%input_stddev
+        scm_state%hprime(i,1)=scm_input%input_stddev
+        scm_state%hprime(i,2)=scm_input%input_convexity
+        scm_state%hprime(i,3)=scm_input%input_oa1
+        scm_state%hprime(i,4)=scm_input%input_oa2
+        scm_state%hprime(i,5)=scm_input%input_oa3
+        scm_state%hprime(i,6)=scm_input%input_oa4
+        scm_state%hprime(i,7)=scm_input%input_ol1
+        scm_state%hprime(i,8)=scm_input%input_ol2
+        scm_state%hprime(i,9)=scm_input%input_ol3
+        scm_state%hprime(i,10)=scm_input%input_ol4
+        scm_state%hprime(i,11)=scm_input%input_theta
+        scm_state%hprime(i,12)=scm_input%input_gamma
+        scm_state%hprime(i,13)=scm_input%input_sigma
+        scm_state%hprime(i,14)=scm_input%input_elvmax
+        scm_state%facsf(i)=scm_input%input_facsf
+        scm_state%facwf(i)=scm_input%input_facwf
+     enddo
+   endif
+     !> @}
 end subroutine set_state
 
 !> Subroutine to patch in a reference profile (smoothly) above a given model level.

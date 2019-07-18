@@ -10,6 +10,7 @@ module load intel/19.0.2
 module load ncarcompilers/0.5.0
 module load mpt/2.19
 module load netcdf/4.6.3
+module load python/2.7.16
 
 echo "Setting CC/CXX/FC environment variables"
 export CC=icc

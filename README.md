@@ -83,3 +83,15 @@ compiler environment variables.
   * When invoking the run script, the only required argument is the name of the case to run. The case name used must match one of the case configuration files located in ../etc/case_config (without the .nml extension!). If specifying a suite other than the default, the suite name used must match the value of the suite name in one of the suite definition files located in ../../ccpp/suites, (e.g. `SCM_GFS_v15`). If specifying a namelist other than the default, the value must be an entire filename that exists in ../../ccpp/physics_namelists. The -g flag can be used to run the executable through the gdb debugger (assuming it is installed on the system).
 2. A netcdf output file is generated in the location specified in the case
 configuration file (is present), or in an output directory created by default in `bin` with the case name and suite name appended.
+
+## Running the SCM with FV3GFS initial conditions
+model initial conditions are needed to initialize the land surface in order to run with an interactive land model
+1. Prepare model initial conditions.
+  * `cd to scm/etc/scripts/`
+  modify path to files you can read in extract_FV3GFS_column_ic.py, this is set up for C96
+2. run extract_FV3GFS_column_ic.py, it will create fv3_model_point.nc in ../../data/processed_case_input/
+  * `./extract_FV3GFS_column_ic.py`
+3. cd to bin directory
+  * `cd ../../bin/`
+4. Run the SCM with the fv3_model_point case and C96 namelist
+  * `./run_gmtb_scm.py -c fv3_model_point -n input_GFS_v15_C96.nml`
