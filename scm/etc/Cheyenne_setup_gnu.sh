@@ -18,7 +18,7 @@ export CXX=g++
 export FC=gfortran
 
 echo "Setting NCEPLIBS_DIR environment variable"
-NCEPLIBS_DIR=/glade/p/ral/jntp/GMTB/tools/NCEPlibs/20190307/gnu-8.1.0/mpt-2.19
+NCEPLIBS_DIR=/glade/p/ral/jntp/GMTB/tools/NCEPlibs/20190703/gnu-8.3.0/mpt-2.19
 export NCEPLIBS_DIR=$NCEPLIBS_DIR
 
 
