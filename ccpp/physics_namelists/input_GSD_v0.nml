@@ -55,7 +55,7 @@
        do_shum        = .false.
        do_skeb        = .false.
        do_sfcperts    = .false.
-       lsm            = 2
+       lsm            = 3
        lsoil_lsm      = 9
        icloud_bl         = 1
        bl_mynn_tkeadvect = .true.
