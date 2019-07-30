@@ -30,7 +30,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/cldmacro.F',
     'ccpp/physics/physics/date_def.f',
     'ccpp/physics/physics/funcphys.f90',
-    'ccpp/physics/physics/gfs_phy_tracer_config.f',
+    'ccpp/physics/physics/gfs_phy_tracer_config.F',
     'ccpp/physics/physics/gocart_tracer_config_stub.f',
     'ccpp/physics/physics/h2o_def.f',
     'ccpp/physics/physics/h2ointerp.f90',
@@ -79,11 +79,11 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/cu_gf_deep.F90',
     'ccpp/physics/physics/cu_gf_sh.F90',
     'ccpp/physics/physics/tridi.f',
+    'ccpp/physics/physics/wv_saturation.F',
     'ccpp/physics/physics/module_sf_ruclsm.F90',
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
-    'ccpp/physics/physics/wv_saturation.F',
     'scm/src/GFS_typedefs.F90'
 ]
 
@@ -188,31 +188,31 @@ SUITES_DIR = 'ccpp/suites'
 # or a list of standard_names: [ 'var1', 'var3' ].
 OPTIONAL_ARGUMENTS = {
     'rrtmg_sw' : {
-         'rrtmg_sw_run' : [
-             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step',
-             'components_of_surface_downward_shortwave_fluxes',
-             'cloud_liquid_water_path',
-             'mean_effective_radius_for_liquid_cloud',
-             'cloud_ice_water_path',
-             'mean_effective_radius_for_ice_cloud',
-             'cloud_rain_water_path',
-             'mean_effective_radius_for_rain_drop',
-             'cloud_snow_water_path',
-             'mean_effective_radius_for_snow_flake',
-             ],
-         },
-     'rrtmg_lw' : {
-         'rrtmg_lw_run' : [
-             'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step',
-             'cloud_liquid_water_path',
-             'mean_effective_radius_for_liquid_cloud',
-             'cloud_ice_water_path',
-             'mean_effective_radius_for_ice_cloud',
-             'cloud_rain_water_path',
-             'mean_effective_radius_for_rain_drop',
-             'cloud_snow_water_path',
-             'mean_effective_radius_for_snow_flake',
-             ],
+        'rrtmg_sw_run' : [
+            'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step',
+            'components_of_surface_downward_shortwave_fluxes',
+            'cloud_liquid_water_path',
+            'mean_effective_radius_for_liquid_cloud',
+            'cloud_ice_water_path',
+            'mean_effective_radius_for_ice_cloud',
+            'cloud_rain_water_path',
+            'mean_effective_radius_for_rain_drop',
+            'cloud_snow_water_path',
+            'mean_effective_radius_for_snow_flake',
+            ],
+        },
+    'rrtmg_lw' : {
+        'rrtmg_lw_run' : [
+            'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step',
+            'cloud_liquid_water_path',
+            'mean_effective_radius_for_liquid_cloud',
+            'cloud_ice_water_path',
+            'mean_effective_radius_for_ice_cloud',
+            'cloud_rain_water_path',
+            'mean_effective_radius_for_rain_drop',
+            'cloud_snow_water_path',
+            'mean_effective_radius_for_snow_flake',
+            ],
         },
     'mp_thompson' : {
         'mp_thompson_init' : [

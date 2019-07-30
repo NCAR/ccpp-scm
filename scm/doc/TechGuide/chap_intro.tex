@@ -1,58 +1,30 @@
 \chapter{Introduction}
 \label{chapter: introduction}
 
-A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. The Global Model Test Bed (GMTB) SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. The physics schemes included in the CCPP are the operational NOAA Global Forecast System (GFS) suite components that were implemented operationally in \hl{July 2017 and updates to the same suite as of August 2018, including the GFDL microphysics scheme}. The number of schemes that have met CCPP-compliance criteria is expected to grow significantly in the near future. This expansion is expected to include many parameterizations to be considered for eventual operational implementation and their use within this model can provide evidence of performance improvement.
+A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. The Global Model Test Bed (GMTB) SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. This version contains all parameterizations of the current operational GFS v15 (implemented on June 12, 2019), plus additional developmental schemes. The schemes are grouped in four supported suites described in detail in the \href{https://dtcenter.org/GMTB/v3.0/sci\_doc/}{CCPP Scientific Documentation} (GFS\_v15, GFS\_v15plus, csawmg, and GSD\_v0). The Zhao-Carr microphysics and the GFS\_v14 suite are no longer supported.
 
-This document serves as the both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
+This document serves as both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
 
-Please refer to the release web page for further documentation and user notes\hl{:\\ \\url{https://dtcenter.org/gmtb/users/ccpp/index.php}}
+Please refer to the release web page for further documentation and user notes:\\ \url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/ccpp-scm-version-3-0}
 
-\section{Release Notes}
+\section{Version Notes}
 
-\hl{UPDATE PRIOR TO RELEASE}
+GMTB SCM v3.0 contains the following major and minor changes since v2.1.
 
-The Bundle CCPP-SCM v3.0 contains the CCPP v3.0 and the GMTB SCM v3.0.
-
-Physics parameterizations within v3.0 of CCPP are CCPP-compliant \hl{members of the operational 2017 GFS physics and updates as of August 2018, including the GFDL microphysics scheme. The following schemes are included:}
+Major
 \begin{itemize}
-	\item GFS RRTMG shortwave and longwave radiation
-	\item GFS ozone
-	\item Choice of:
-	\begin{itemize}
-	\item GFS Zhao-Carr microphysics
-	\item GFDL microphysics
-	\end{itemize}
-	\item GFS scale-aware mass-flux deep convection
-	\item GFS scale-aware mass-flux shallow convection
-	\item GFS hybrid eddy diffusivity-mass-flux PBL and free atmosphere turbulence
-	\item GFS orographic gravity wave drag
-	\item GFS convective gravity wave drag
-	\item GFS surface layer
-	\item GFS Noah Land Surface Model
-	\item GFS near-sea-surface temperature
-	\item GFS sea ice
-	\item Additional diagnostics and interstitial computations needed for the GFS suite
+\item Codebase updated to work with latest ccpp-framework (v3.0) and ccpp-physics (v3.0), allowing use of 4 supported physics suites
+\item Added Python scripts for running a single integration or multiple integrations serially
 \end{itemize}
 
-The CCPP framework contains the following
+Minor
 \begin{itemize}
-\item Metadata standards for defining variables provided by the host application (in this case SCM) and needed by each parameterization
-\item \execout{ccpp\_prebuild.py} script to read and parse SCM and parameterizations metadata tables, compare the two and alert if incompatible, manufacture Fortran code for SCM and physics caps, and generate makefile snippets
-\end{itemize}
-
-GMTB SCM v2.1 is a minor update to v2.0. The fundamental differences are related to updates in the CCPP physics schemes since CCPP v1.0, the addition of new field campaign-based cases, and the capability to specify surface fluxes. It includes the following:
-
-\begin{itemize}
-\item cmake build system to compile needed NCEP libraries, SCM, CCPP framework, and parameterizations
-\item physics variable metadata as part of a host model cap to the CCPP
-\item the following test cases:
-\begin{itemize}
-\item Tropical Warm Pool -- International Cloud Experiment (TWP-ICE) maritime deep convection
-\item Atmospheric Radiation Measurement (ARM) Southern Great Plains (SGP) Summer 1997 continental deep convection
-\item Atlantic Stratocumulus Transition EXperiment (ASTEX) maritime stratocumulus-to-cumulus transition
-\item Barbados Oceanographic and Meteorological EXperiment (BOMEX) maritime shallow convection
-\item LES ARM Symbiotic Simulation and Observation (LASSO) for May 18, 2016 (with capability to run all LASSO dates - see \ref{sec:lasso}) continental shallow convection
-\end{itemize}
+\item Assumed that NCEPlibs are installed as a software prerequisite with an environment variable pointing to the installation location; remove repository copies of NCEPlib files
+\item Assumed that NetCDF is installed as a software prerequisite with an environment variable pointing to the installation location
+\item Updated User's/Technical Guide (this document)
+\item Separated case configuration (remained in \execout{scm/etc/case\_config}) from physics suite configuration (configured through Python run script)
+\item Streamlined CMakeLists.txt; moved file operations from CMakelists.txt and Fortran code to Python run script (except output)
+\item Changed how ozone, stratospheric H2O, aerosols, and ICN were initialized and handled in SCM code
 \end{itemize}
 
 \subsection{Limitations}

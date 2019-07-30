@@ -32,9 +32,10 @@ module gmtb_scm_type_defs
     character(len=character_length)                 :: output_file !< name of output file (without the file extension)
     character(len=character_length)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
     character(len=character_length), allocatable    :: physics_suite_name(:) !< name of physics suite (must be "GFS_operational" for prototype)
-    character(len=65), allocatable                  :: physics_nml(:)
+    character(len=64), allocatable                  :: physics_nml(:)
 
     integer                           :: n_levels !< number of model levels (must be 64 for prototype)
+    integer                           :: n_nsoil  !< number of model levels (must be 4 for prototype)
     integer                           :: itt !< current model iteration
     integer                           :: itt_out  !< output iteration counter
     integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
@@ -69,9 +70,30 @@ module gmtb_scm_type_defs
     logical                           :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
     integer                           :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
     real(kind=dp)                     :: sfc_type_real(1)
+    integer                           :: veg_type !
+    real(kind=dp)                     :: veg_type_real(1)
+    integer                           :: veg_frac !< 0: sea surface, 1: land surface, 2: sea-ice surface
+    real(kind=dp)                     :: veg_frac_real(1)
+    real(kind=dp)                     :: slopetype(1)
+    real(kind=dp)                     :: shdmin(1)
+    real(kind=dp)                     :: shdmax(1)
+    real(kind=dp)                     :: tg3(1)
+    real(kind=dp)                     :: slmsk(1)
+    real(kind=dp)                     :: canopy(1)
+    real(kind=dp)                     :: hice(1)
+    real(kind=dp)                     :: fice(1)
+    real(kind=dp)                     :: tisfc(1)
+    real(kind=dp)                     :: snwdph(1)
+    real(kind=dp)                     :: snoalb(1)
+    real(kind=dp)                     :: sncovr(1)
+    real(kind=dp)                     :: uustar(1)
+    integer                           :: soil_type !< 1-14?
+    real(kind=dp)                     :: soil_type_real(1)
     integer                           :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
     integer                           :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
     integer                           :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
+    integer                           :: C_RES !< effective model resolution in cubed sphere resolution (needed for GWD)
+    logical                           :: model_ics !<  true means have land info too
 
     real(kind=dp)                           :: model_time !< elapsed model time (s)
     real(kind=dp)                           :: dt !< physics time step (s)
@@ -107,6 +129,11 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: T_surf(:,:), pres_surf(:,:) !< surface temperature and pressure interpolated to the model time
     real(kind=dp), allocatable              :: sh_flux(:), lh_flux(:) !< surface sensible and latent heat fluxes interpolated to the model time
     real(kind=dp), allocatable              :: sfc_roughness_length_cm(:) !< surface roughness length used for calculating surface layer parameters from specified fluxes
+    real(kind=dp), allocatable              :: alvsf(:), alnsf(:),alvwf(:),alnwf(:) !< surface  albedos
+    real(kind=dp), allocatable              :: facsf(:), facwf(:),stddev(:),hprime(:,:)          !< other surface stuff
+    real(kind=dp), allocatable              :: stc(:,:,:,:) !< soil temperature 
+    real(kind=dp), allocatable              :: smc(:,:,:,:) !< soil moisture
+    real(kind=dp), allocatable              :: slc(:,:,:,:) !< soil liquid content
 
     contains
       procedure :: create  => scm_state_create
@@ -116,11 +143,54 @@ module gmtb_scm_type_defs
   type scm_input_type
     !> - Define the case-specific initialization and forcing variables.
     integer                           :: input_nlev !< number of levels in the input file
+    integer                           :: input_nsoil !< number of soil levels in the input file
     integer                           :: input_ntimes !< number of times in the input file where forcing is available
+    integer                           :: input_vegsrc !<
+    integer                           :: input_vegtyp !<
+    integer                           :: input_soiltyp !<
+    integer                           :: input_slopetype !<
+    real(kind=dp)                     :: input_vegfrac  !<
+    real(kind=dp)                     :: input_shdmin   !<
+    real(kind=dp)                     :: input_shdmax   !<
+    real(kind=dp)                     :: input_zorl     !<
+    real(kind=dp)                     :: input_slmsk   !< sea land ice mask [0,1,2]
+    real(kind=dp)                     :: input_canopy  !< amount of water stored in canopy
+    real(kind=dp)                     :: input_hice    !< ice thickness
+    real(kind=dp)                     :: input_fice    !< ice fraction
+    real(kind=dp)                     :: input_tisfc   !< ice surface temperature
+    real(kind=dp)                     :: input_snwdph  !< snow depth
+    real(kind=dp)                     :: input_snoalb  !< snow albedo
+    real(kind=dp)                     :: input_sncovr  !< snow cover
+    real(kind=dp)                     :: input_area     !<
+    real(kind=dp)                     :: input_tg3      !<
+    real(kind=dp)                     :: input_uustar   !<
+    real(kind=dp)                     :: input_alvsf !< uv+visible black sky albedo (z=60 degree)
+    real(kind=dp)                     :: input_alnsf !< near IR black sky albedo (z=60 degree)
+    real(kind=dp)                     :: input_alvwf !< uv+visible white sky albedo
+    real(kind=dp)                     :: input_alnwf !< near IR white sky albedo
+    real(kind=dp)                     :: input_convexity !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_stddev    !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_oa1       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_oa2       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_oa3       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_oa4       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_ol1       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_ol2       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_ol3       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_ol4       !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_theta     !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_gamma     !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_sigma     !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_elvmax    !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_facsf !< fraction of surface depedent on sun angle
+    real(kind=dp)                     :: input_facwf !< fraction of surface not depedent on sun angle
+    real(kind=dp), allocatable        :: input_pres_i(:) !< pressure (Pa) of input interface
+    real(kind=dp), allocatable        :: input_pres_l(:) !< pressure (Pa) of input levels
     real(kind=dp), allocatable              :: input_pres(:) !< pressure (Pa) of input levels
     real(kind=dp), allocatable              :: input_time(:) !< time (s) since beginning of forcing file
     real(kind=dp), allocatable              :: input_height(:) !< height of input levels (m) (initial)
     real(kind=dp), allocatable              :: input_thetail(:) !< ice-liquid water potential temperature(K) (initial)
+    real(kind=dp), allocatable              :: input_temp(:) !< temperature(K) (initial)
     real(kind=dp), allocatable              :: input_qt(:) !< total water specific humidity (kg/kg) (initial)
     real(kind=dp), allocatable              :: input_ql(:) !< suspended liquid specific humidity (kg/kg) (initial)
     real(kind=dp), allocatable              :: input_qi(:) !< suspended ice specific humidity (kg/kg) (initial)
@@ -128,6 +198,9 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: input_v(:) !< meridional wind (m/s) (initial)
     real(kind=dp), allocatable              :: input_tke(:) !< turbulence kinetic energy (m^2/s^2) (initial)
     real(kind=dp), allocatable              :: input_ozone(:) !< ozone mass mixing ratio (kg/kg) (initial)
+    real(kind=dp), allocatable              :: input_stc(:) !< soil temperature (k) (initial)
+    real(kind=dp), allocatable              :: input_smc(:) !< soil moisture conteng (g/g) (initial)
+    real(kind=dp), allocatable              :: input_slc(:) !< soil liquid content (g/g) (initial)
     real(kind=dp), allocatable              :: input_lat(:) !< time-series of latitude of column center
     real(kind=dp), allocatable              :: input_lon(:) !< time-series of longitude of column center
     real(kind=dp), allocatable              :: input_pres_surf(:) !< time-series of surface pressure (Pa)
@@ -151,6 +224,7 @@ module gmtb_scm_type_defs
 
     contains
       procedure :: create  => scm_input_create
+      procedure :: create_modelics  => scm_input_create_model_ics
 
   end type scm_input_type
 
@@ -384,7 +458,6 @@ module gmtb_scm_type_defs
 !! | physics%Interstitial(i)%ncpl                             | local_condesed_water_number_concentration                                                         | number concentration of condensed water local to physics                            | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%ncpr                             | local_rain_number_concentration                                                                   | number concentration of rain local to physics                                       | kg-1          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%ncps                             | local_snow_number_concentration                                                                   | number concentration of snow local to physics                                       | kg-1          |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%nsteps_per_reset                 | number_of_time_steps_per_maximum_hourly_time_interval                                             | number_of_time_steps_per_maximum_hourly_time_interval                               | count         |    0 | integer               |           | none   | F        |
 !! | physics%Interstitial(i)%ntiwx                            | index_for_ice_cloud_condensate_vertical_diffusion_tracer                                          | index for ice cloud condensate n the vertically diffused tracer array               | index         |    0 | integer               |           | none   | F        |
 !! | physics%Interstitial(i)%ncstrac                          | number_of_tracers_for_CS                                                                          | number of convectively transported tracers in Chikira-Sugiyama deep conv. scheme    | count         |    0 | integer               |           | none   | F        |
 !! | physics%Interstitial(i)%nday                             | daytime_points_dimension                                                                          | daytime points dimension                                                            | count         |    0 | integer               |           | none   | F        |
@@ -425,10 +498,8 @@ module gmtb_scm_type_defs
 !! | physics%Interstitial(i)%rb_ocean                         | bulk_richardson_number_at_lowest_model_level_over_ocean                                           | bulk Richardson number at the surface over ocean                                    | none          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%rb_land                          | bulk_richardson_number_at_lowest_model_level_over_land                                            | bulk Richardson number at the surface over land                                     | none          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%rb_ice                           | bulk_richardson_number_at_lowest_model_level_over_ice                                             | bulk Richardson number at the surface over ice                                      | none          |    1 | real                  | kind_phys | none   | F        |
+!! | physics%Interstitial(i)%reset                            | flag_reset_maximum_hourly_fields                                                                  | flag for resetting maximum hourly fields                                            | flag          |    0 | logical               |           | none   | F        |
 !! | physics%Interstitial(i)%rhc                              | critical_relative_humidity                                                                        | critical relative humidity                                                          | frac          |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%rhcbot                           | critical_relative_humidity_at_surface                                                             | critical relative humidity at the surface                                           | frac          |    0 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%rhcpbl                           | critical_relative_humidity_at_PBL_top                                                             | critical relative humidity at the PBL top                                           | frac          |    0 | real                  | kind_phys | none   | F        |
-!! | physics%Interstitial(i)%rhctop                           | critical_relative_humidity_at_top_of_atmosphere                                                   | critical relative humidity at the top of atmosphere                                 | frac          |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%runoff                           | surface_runoff_flux                                                                               | surface runoff flux                                                                 | g m-2 s-1     |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%save_q(:,:,scm_state%cloud_water_index) | cloud_condensed_water_mixing_ratio_save                            | moist (dry+vapor, no condensates) mixing ratio of cloud water (condensate) before entering a physics scheme | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%save_q(:,:,scm_state%cloud_ice_index)   | ice_water_mixing_ratio_save                                                                | cloud ice water mixing ratio before entering a physics scheme                       | kg kg-1       |    2 | real                  | kind_phys | none   | F        |
@@ -493,6 +564,7 @@ module gmtb_scm_type_defs
 !! | physics%Interstitial(i)%vegtype                          | vegetation_type_classification                                                                    | vegetation type at each grid cell                                                   | index         |    1 | integer               |           | none   | F        |
 !! | physics%Interstitial(i)%w_upi                            | vertical_velocity_for_updraft                                                                     | vertical velocity for updraft                                                       | m s-1         |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%wcbmax                           | maximum_updraft_velocity_at_cloud_base                                                            | maximum updraft velocity at cloud base                                              | m s-1         |    1 | real                  | kind_phys | none   | F        |
+!! | physics%Interstitial(i)%weasd_ocean                      | water_equivalent_accumulated_snow_depth_over_ocean                                                | water equiv of acc snow depth over ocean                                            | mm            |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%weasd_land                       | water_equivalent_accumulated_snow_depth_over_land                                                 | water equiv of acc snow depth over land                                             | mm            |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%weasd_ice                        | water_equivalent_accumulated_snow_depth_over_ice                                                  | water equiv of acc snow depth over ice                                              | mm            |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Interstitial(i)%wind                             | wind_speed_at_lowest_model_layer                                                                  | wind speed at lowest model level                                                    | m s-1         |    1 | real                  | kind_phys | none   | F        |
@@ -695,6 +767,7 @@ module gmtb_scm_type_defs
 !! | physics%Model(i)%lgfdlmprad                              |                                                                                                   | flag for GFDL mp scheme and radiation consistency                                   |               |    0 | logical               |           | none   | F        |
 !! | physics%Model(i)%lsm                                     | flag_for_land_surface_scheme                                                                      | flag for land surface model lsm=1 for noah lsm                                      | flag          |    0 | integer               |           | none   | F        |
 !! | physics%Model(i)%lsm_noah                                | flag_for_noah_land_surface_scheme                                                                 | flag for NOAH land surface model                                                    | flag          |    0 | integer               |           | none   | F        |
+!! | physics%Model(i)%lsm_noahmp                              | flag_for_noahmp_land_surface_scheme                                                               | flag for NOAH MP land surface model                                                 | flag          |    0 | integer               |           | none   | F        |
 !! | physics%Model(i)%lsm_ruc                                 | flag_for_ruc_land_surface_scheme                                                                  | flag for RUC land surface model                                                     | flag          |    0 | integer               |           | none   | F        |
 !! | physics%Model(i)%lsoil                                   | soil_vertical_dimension                                                                           | number of soil layers                                                               | count         |    0 | integer               |           | none   | F        |
 !! | physics%Model(i)%lsoil_lsm                               | soil_vertical_dimension_for_land_surface_model                                                    | number of soil layers internal to land surface model                                | count         |    0 | integer               |           | none   | F        |
@@ -751,6 +824,9 @@ module gmtb_scm_type_defs
 !! | physics%Model(i)%sup                                     | ice_supersaturation_threshold                                                                     | ice supersaturation parameter for PDF clouds                                        | none          |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%ctei_rm                                 | critical_cloud_top_entrainment_instability_criteria                                               | critical cloud top entrainment instability criteria                                 | none          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%crtrh                                   | critical_relative_humidity_at_sfc_pbltop_toa                                                      | critical relative humidity at SFC, PBL top and TOA                                  | frac          |    1 | real                  | kind_phys | none   | F        |
+!! | physics%Model(i)%crtrh(1)                                | critical_relative_humidity_at_surface                                                             | critical relative humidity at the surface                                           | frac          |    0 | real                  | kind_phys | none   | F        |
+!! | physics%Model(i)%crtrh(2)                                | critical_relative_humidity_at_PBL_top                                                             | critical relative humidity at the PBL top                                           | frac          |    0 | real                  | kind_phys | none   | F        |
+!! | physics%Model(i)%crtrh(3)                                | critical_relative_humidity_at_top_of_atmosphere                                                   | critical relative humidity at the top of atmosphere                                 | frac          |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%dlqf                                    |                                                                                                   | factor for cloud condensate detrainment from cloud edges                            |               |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%psauras                                 |                                                                                                   | auto conversion coeff from ice to snow in ras                                       |               |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%prauras                                 |                                                                                                   | auto conversion coeff from cloud to rain in ras                                     |               |    1 | real                  | kind_phys | none   | F        |
@@ -782,6 +858,7 @@ module gmtb_scm_type_defs
 !! | physics%Model(i)%nstf_name(1)                            | flag_for_nsstm_run                                                                                | NSSTM flag: off/uncoupled/coupled=0/1/2                                             | flag          |    0 | integer               |           | none   | F        |
 !! | physics%Model(i)%nstf_name(4)                            | vertical_temperature_average_range_lower_bound                                                    | zsea1 in mm                                                                         | mm            |    0 | integer               |           | none   | F        |
 !! | physics%Model(i)%nstf_name(5)                            | vertical_temperature_average_range_upper_bound                                                    | zsea2 in mm                                                                         | mm            |    0 | integer               |           | none   | F        |
+!! | physics%Model(i)%frac_grid                               | flag_for_fractional_grid                                                                          | flag for fractional grid                                                            | flag          |    0 | logical               |           | none   | F        |
 !! | physics%Model(i)%xkzminv                                 | atmosphere_heat_diffusivity_background_maximum                                                    | maximum background value of heat diffusivity                                        | m2 s-1        |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%moninq_fac                              | atmosphere_diffusivity_coefficient_factor                                                         | multiplicative constant for atmospheric diffusivities                               | none          |    0 | real                  | kind_phys | none   | F        |
 !! | physics%Model(i)%nca                                     | number_of_independent_cellular_automata                                                           | number of independent cellular automata                                             | count         |    0 | integer               |           | none   | F        |
@@ -1051,6 +1128,8 @@ module gmtb_scm_type_defs
 !! | physics%Diag(i)%epi                                      | instantaneous_surface_potential_evaporation                                                       | instantaneous sfc potential evaporation                                             | W m-2         |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Diag(i)%smcwlt2                                  | volume_fraction_of_condensed_water_in_soil_at_wilting_point                                       | wilting point (volumetric)                                                          | frac          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Diag(i)%smcref2                                  | threshold_volume_fraction_of_condensed_water_in_soil                                              | soil moisture threshold (volumetric)                                                | frac          |    1 | real                  | kind_phys | none   | F        |
+!! | physics%Diag(i)%sr                                       | ratio_of_snowfall_to_rainfall                                                                     | snow ratio: ratio of snow to total precipitation                                    | frac          |    1 | real                  | kind_phys | none   | F        |
+!! | physics%Diag(i)%wet1                                     | normalized_soil_wetness                                                                           | normalized soil wetness                                                             | frac          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Diag(i)%tdomr                                    | dominant_rain_type                                                                                | dominant rain type                                                                  | none          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Diag(i)%tdomzr                                   | dominant_freezing_rain_type                                                                       | dominant freezing rain type                                                         | none          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Diag(i)%tdomip                                   | dominant_sleet_type                                                                               | dominant sleet type                                                                 | none          |    1 | real                  | kind_phys | none   | F        |
@@ -1168,11 +1247,9 @@ module gmtb_scm_type_defs
 !! | physics%Sfcprop(i)%f10m                                  | ratio_of_wind_at_lowest_model_layer_and_wind_at_10m                                               | ratio of sigma level 1 wind and 10m wind                                            | ratio         |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%tprcp                                 | nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep                            | total precipitation amount in each time step                                        | m             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%srflag                                | flag_for_precipitation_type                                                                       | snow/rain flag for precipitation                                                    | flag          |    1 | real                  | kind_phys | none   | F        |
-!! | physics%Sfcprop(i)%sr                                    | ratio_of_snowfall_to_rainfall                                                                     | snow ratio: ratio of snow to total precipitation                                    | frac          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%slc                                   | volume_fraction_of_unfrozen_soil_moisture                                                         | liquid soil moisture                                                                | frac          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%smc                                   | volume_fraction_of_soil_moisture                                                                  | total soil moisture                                                                 | frac          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%stc                                   | soil_temperature                                                                                  | soil temperature                                                                    | K             |    2 | real                  | kind_phys | none   | F        |
-!! | physics%Sfcprop(i)%wet1                                  | normalized_soil_wetness                                                                           | normalized soil wetness                                                             | frac          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%t2m                                   | temperature_at_2m                                                                                 | 2 meter temperature                                                                 | K             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%th2m                                  | potential_temperature_at_2m                                                                       | 2 meter potential temperature                                                       | K             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%q2m                                   | specific_humidity_at_2m                                                                           | 2 meter specific humidity                                                           | kg kg-1       |    1 | real                  | kind_phys | none   | F        |
@@ -1194,6 +1271,7 @@ module gmtb_scm_type_defs
 !! | physics%Sfcprop(i)%ifd                                   | index_of_dtlm_start                                                                               | index to start dtlm run or not                                                      | index         |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%dt_cool                               | sub-layer_cooling_amount                                                                          | sub-layer cooling amount                                                            | K             |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%qrain                                 | sensible_heat_flux_due_to_rainfall                                                                | sensible heat flux due to rainfall                                                  | W             |    1 | real                  | kind_phys | none   | F        |
+!! | physics%Sfcprop(i)%wetness                               | normalized_soil_wetness_for_land_surface_model                                                    | normalized soil wetness for lsm                                                     | frac          |    1 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%sh2o                                  | volume_fraction_of_unfrozen_soil_moisture_for_land_surface_model                                  | volume fraction of unfrozen soil moisture for lsm                                   | frac          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%keepsmfr                              | volume_fraction_of_frozen_soil_moisture_for_land_surface_model                                    | volume fraction of frozen soil moisture for lsm                                     | frac          |    2 | real                  | kind_phys | none   | F        |
 !! | physics%Sfcprop(i)%smois                                 | volume_fraction_of_soil_moisture_for_land_surface_model                                           | volumetric fraction of soil moisture for lsm                                        | frac          |    2 | real                  | kind_phys | none   | F        |
@@ -1350,9 +1428,9 @@ module gmtb_scm_type_defs
 
   contains
 
-  subroutine scm_state_create(scm_state, n_columns, n_levels, n_time_levels)
+  subroutine scm_state_create(scm_state, n_columns, n_levels, n_nsoil, n_time_levels)
     class(scm_state_type)             :: scm_state
-    integer, intent(in)               :: n_columns, n_levels, n_time_levels
+    integer, intent(in)               :: n_columns, n_levels, n_nsoil, n_time_levels
 
     scm_state%experiment_name = clear_char
     scm_state%model_name = clear_char
@@ -1417,6 +1495,17 @@ module gmtb_scm_type_defs
     scm_state%sfc_flux_spec = .false.
     scm_state%sfc_type = int_zero
     scm_state%sfc_type_real = real_zero
+    scm_state%veg_type = int_zero
+    scm_state%veg_type_real = real_zero
+    scm_state%veg_frac = int_zero
+    scm_state%veg_frac_real = real_zero
+    scm_state%shdmin = real_zero
+    scm_state%shdmax = real_zero
+    scm_state%tg3 = real_zero
+    scm_state%uustar = real_zero
+    scm_state%soil_type = int_zero
+    scm_state%soil_type_real = real_zero
+    scm_state%C_RES            = int_zero
     scm_state%mom_forcing_type = int_zero
     scm_state%thermo_forcing_type = int_zero
     scm_state%reference_profile_choice = int_zero
@@ -1468,6 +1557,9 @@ module gmtb_scm_type_defs
     allocate(scm_state%temp_tracer(n_columns, 1, n_levels, scm_state%n_tracers, n_time_levels), &
       scm_state%temp_T(n_columns, 1, n_levels, n_time_levels), &
       scm_state%temp_u(n_columns, 1, n_levels, n_time_levels), scm_state%temp_v(n_columns, 1, n_levels, n_time_levels))
+    allocate(scm_state%stc(n_columns, 1, n_nsoil, n_time_levels))
+    allocate(scm_state%smc(n_columns, 1, n_nsoil, n_time_levels))
+    allocate(scm_state%slc(n_columns, 1, n_nsoil, n_time_levels))
     scm_state%temp_tracer = real_zero
     scm_state%temp_T = real_zero
     scm_state%temp_u = real_zero
@@ -1477,6 +1569,9 @@ module gmtb_scm_type_defs
       scm_state%v_g(n_columns, n_levels), scm_state%dT_dt_rad(n_columns, n_levels), scm_state%h_advec_thil(n_columns, n_levels), &
       scm_state%h_advec_qt(n_columns, n_levels), scm_state%v_advec_thil(n_columns, n_levels), &
       scm_state%v_advec_qt(n_columns, n_levels), scm_state%pres_surf(n_columns,1), scm_state%T_surf(n_columns,1), &
+      scm_state%alvsf(n_columns), scm_state%alnsf(n_columns), scm_state%alvwf(n_columns), scm_state%alnwf(n_columns), &
+      scm_state%facsf(n_columns), scm_state%facwf(n_columns), &
+      scm_state%hprime(n_columns,14), scm_state%stddev(n_columns), &
       scm_state%u_nudge(n_columns, n_levels), scm_state%v_nudge(n_columns, n_levels), &
       scm_state%T_nudge(n_columns, n_levels), scm_state%thil_nudge(n_columns, n_levels), &
       scm_state%qt_nudge(n_columns, n_levels), scm_state%sh_flux(n_columns), scm_state%lh_flux(n_columns), &
@@ -1494,6 +1589,14 @@ module gmtb_scm_type_defs
     scm_state%v_advec_qt = real_zero
     scm_state%pres_surf = real_zero
     scm_state%T_surf = real_zero
+    scm_state%alvsf = real_zero
+    scm_state%alnsf = real_zero
+    scm_state%alvwf = real_zero
+    scm_state%alnwf = real_zero
+    scm_state%facsf = real_zero
+    scm_state%facwf = real_zero
+    scm_state%hprime = real_zero
+    scm_state%stddev = real_zero
     scm_state%u_nudge = real_zero
     scm_state%v_nudge = real_zero
     scm_state%T_nudge = real_zero
@@ -1508,6 +1611,22 @@ module gmtb_scm_type_defs
     scm_state%sfc_roughness_length_cm = real_one
 
   end subroutine scm_state_create
+
+  subroutine scm_input_create_model_ics(scm_input, nlev_soil,nlev)
+    class(scm_input_type)             :: scm_input
+    integer, intent(in)               :: nlev,nlev_soil
+
+    scm_input%input_nsoil= nlev_soil
+    allocate(scm_input%input_stc(nlev_soil), scm_input%input_smc(nlev_soil), scm_input%input_slc(nlev_soil))
+    allocate(scm_input%input_temp(nlev), scm_input%input_pres_i(nlev+1),scm_input%input_pres_l(nlev))
+    scm_input%input_stc    = real_zero
+    scm_input%input_smc    = real_zero
+    scm_input%input_slc    = real_zero
+    scm_input%input_temp   = real_zero
+    scm_input%input_pres_i = real_zero
+    scm_input%input_pres_l = real_zero
+
+  end subroutine scm_input_create_model_ics
 
   subroutine scm_input_create(scm_input, ntimes, nlev)
     class(scm_input_type)             :: scm_input
@@ -1544,6 +1663,38 @@ module gmtb_scm_type_defs
     scm_input%input_lon = real_zero
     scm_input%input_pres_surf = real_zero
     scm_input%input_T_surf = real_zero
+    scm_input%input_pres_surf = real_zero
+    scm_input%input_T_surf = real_zero
+    scm_input%input_alvsf        = real_zero
+    scm_input%input_alnsf        = real_zero
+    scm_input%input_alvwf        = real_zero
+    scm_input%input_alnwf        = real_zero
+    scm_input%input_stddev       = real_zero
+    scm_input%input_convexity    = real_zero
+    scm_input%input_oa1          = real_zero
+    scm_input%input_oa2          = real_zero
+    scm_input%input_oa3          = real_zero
+    scm_input%input_oa4          = real_zero
+    scm_input%input_ol1          = real_zero
+    scm_input%input_ol2          = real_zero
+    scm_input%input_ol3          = real_zero
+    scm_input%input_ol4          = real_zero
+    scm_input%input_theta        = real_zero
+    scm_input%input_gamma        = real_zero
+    scm_input%input_sigma        = real_zero
+    scm_input%input_elvmax       = real_zero
+    scm_input%input_facsf        = real_zero
+    scm_input%input_sh_flux_sfc = real_zero
+    scm_input%input_lh_flux_sfc = real_zero
+    scm_input%input_w_ls = real_zero
+    scm_input%input_omega = real_zero
+    scm_input%input_u_g = real_zero
+    scm_input%input_v_g = real_zero
+    scm_input%input_dT_dt_rad = real_zero
+    scm_input%input_h_advec_thetail = real_zero
+    scm_input%input_h_advec_qt = real_zero
+    scm_input%input_v_advec_thetail = real_zero
+    scm_input%input_v_advec_qt = real_zero
     scm_input%input_sh_flux_sfc = real_zero
     scm_input%input_lh_flux_sfc = real_zero
     scm_input%input_w_ls = real_zero
@@ -1612,6 +1763,7 @@ module gmtb_scm_type_defs
       physics%Init_parm(i)%cdat(:) = zeroes_8(:)
       physics%Init_parm(i)%dt_dycore = kind_phys_zero
       physics%Init_parm(i)%dt_phys = kind_phys_zero
+      physics%Init_parm(i)%iau_offset = int_zero
       physics%Init_parm(i)%ak => null()
       physics%Init_parm(i)%bk => null()
       physics%Init_parm(i)%xlon => null()
@@ -1648,6 +1800,27 @@ module gmtb_scm_type_defs
     physics%Sfcprop(col)%tsfc => scm_state%T_surf(col,:)
     physics%Sfcprop(col)%tref => scm_state%T_surf(col,:)
     physics%Sfcprop(col)%slmsk => scm_state%sfc_type_real
+    physics%Sfcprop(col)%vtype => scm_state%veg_type_real
+    physics%Sfcprop(col)%vfrac => scm_state%veg_frac_real
+    physics%Sfcprop(col)%slope => scm_state%slopetype
+    physics%Interstitial(col)%sigmaf = min(scm_state%veg_frac_real,0.01)
+    physics%Sfcprop(col)%shdmax => scm_state%shdmax        
+    physics%Sfcprop(col)%shdmin => scm_state%shdmin        
+    physics%Sfcprop(col)%tg3 => scm_state%tg3        
+    physics%Sfcprop(col)%uustar => scm_state%uustar        
+    physics%Sfcprop(col)%stype => scm_state%soil_type_real
+    physics%Sfcprop(col)%alvsf => scm_state%alvsf
+    physics%Sfcprop(col)%alnsf => scm_state%alnsf
+    physics%Sfcprop(col)%hprim => scm_state%stddev
+    physics%Sfcprop(col)%hprime=> scm_state%hprime 
+    physics%Sfcprop(col)%alvwf => scm_state%alvwf
+    physics%Sfcprop(col)%alnwf => scm_state%alnwf
+    physics%Sfcprop(col)%facsf => scm_state%facsf
+    physics%Sfcprop(col)%facwf => scm_state%facwf
+
+    physics%Sfcprop(col)%stc   => scm_state%stc(col,:,:,1)
+    physics%Sfcprop(col)%smc   => scm_state%smc(col,:,:,1)
+    physics%Sfcprop(col)%slc   => scm_state%slc(col,:,:,1)
     
     !GJF : the following logic was introduced into FV3GFS_io.F90 as part of the fractional landmask update (additional logic exists in the same file if the fractional landmask is actually used!)
     if (physics%Sfcprop(col)%slmsk(1) > 1.9) then
@@ -1678,6 +1851,16 @@ module gmtb_scm_type_defs
       physics%Sfcprop(col)%spec_sh_flux => scm_state%sh_flux
       physics%Sfcprop(col)%spec_lh_flux => scm_state%lh_flux
       physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
+    endif
+    if(scm_state%model_ics) then
+      physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
+      physics%Sfcprop(col)%canopy => scm_state%canopy        
+      physics%Sfcprop(col)%hice => scm_state%hice        
+      physics%Sfcprop(col)%fice => scm_state%fice        
+      physics%Sfcprop(col)%tisfc => scm_state%tisfc        
+      physics%Sfcprop(col)%snowd  => scm_state%snwdph        
+      physics%Sfcprop(col)%snoalb => scm_state%snoalb        
+      physics%Sfcprop(col)%sncovr => scm_state%sncovr        
     endif
 
 
