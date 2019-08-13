@@ -28,7 +28,7 @@ public
 !! | rlapse                 | air_temperature_lapse_rate_constant                      | environmental air temperature lapse rate constant       | K m-1         |    0 | real              | kind_phys | none   | F        |
 !! | con_jcal               | joules_per_calorie_constant                              | joules per calorie constant                             | J cal-1       |    0 | real              | kind_phys | none   | F        |
 !! | con_rhw0               | sea_water_reference_density                              | sea water reference density                             | kg m-3        |    0 | real              | kind_phys | none   | F        |
-!! | con_sbc                | steffan_boltzmann_constant                               | Steffan-Boltzmann constant                              | W m-2 K-4     |    0 | real              | kind_phys | none   | F        |
+!! | con_sbc                | stefan_boltzmann_constant                                | Steffan-Boltzmann constant                              | W m-2 K-4     |    0 | real              | kind_phys | none   | F        |
 !! | con_tice               | freezing_point_temperature_of_seawater                   | freezing point temperature of seawater                  | K             |    0 | real              | kind_phys | none   | F        |
 !!
   real(kind=dp),parameter:: con_pi     =3.1415926535897931
