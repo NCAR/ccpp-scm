@@ -4914,11 +4914,9 @@ module GFS_typedefs
     allocate (Interstitial%cdq_ice    (IM))
     allocate (Interstitial%cdq_land   (IM))
     allocate (Interstitial%cdq_ocean  (IM))
-    allocate (Interstitial%cf_upi     (IM,Model%levs))
     allocate (Interstitial%chh_ice    (IM))
     allocate (Interstitial%chh_land   (IM))
     allocate (Interstitial%chh_ocean  (IM))
-    allocate (Interstitial%clcn       (IM,Model%levs))
     allocate (Interstitial%cldf       (IM))
     allocate (Interstitial%cldsa      (IM,5))
     allocate (Interstitial%cldtaulw   (IM,Model%levr+LTP))
@@ -4930,11 +4928,6 @@ module GFS_typedefs
     allocate (Interstitial%cmm_ice    (IM))
     allocate (Interstitial%cmm_land   (IM))
     allocate (Interstitial%cmm_ocean  (IM))
-    allocate (Interstitial%cnv_dqldt  (IM,Model%levs))
-    allocate (Interstitial%cnv_fice   (IM,Model%levs))
-    allocate (Interstitial%cnv_mfd    (IM,Model%levs))
-    allocate (Interstitial%cnv_ndrop  (IM,Model%levs))
-    allocate (Interstitial%cnv_nice   (IM,Model%levs))
     allocate (Interstitial%cnvc       (IM,Model%levs))
     allocate (Interstitial%cnvw       (IM,Model%levs))
     allocate (Interstitial%ctei_r     (IM))
@@ -5034,8 +5027,6 @@ module GFS_typedefs
     allocate (Interstitial%plvl       (IM,Model%levr+1+LTP))
     allocate (Interstitial%plyr       (IM,Model%levr+LTP))
     allocate (Interstitial%prnum      (IM,Model%levs))
-    allocate (Interstitial%qicn       (IM,Model%levs))
-    allocate (Interstitial%qlcn       (IM,Model%levs))
     allocate (Interstitial%qlyr       (IM,Model%levr+LTP))
     allocate (Interstitial%prcpmp     (IM))
     allocate (Interstitial%qss        (IM))
@@ -5101,7 +5092,6 @@ module GFS_typedefs
     allocate (Interstitial%vdftra     (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d     (IM))
     allocate (Interstitial%vegtype    (IM))
-    allocate (Interstitial%w_upi      (IM,Model%levs))
     allocate (Interstitial%wcbmax     (IM))
     allocate (Interstitial%weasd_ice  (IM))
     allocate (Interstitial%weasd_land (IM))
@@ -5131,6 +5121,16 @@ module GFS_typedefs
        allocate (Interstitial%qgl        (IM,Model%levs))
        allocate (Interstitial%qrn        (IM,Model%levs))
        allocate (Interstitial%qsnw       (IM,Model%levs))
+       allocate (Interstitial%qlcn       (IM,Model%levs))
+       allocate (Interstitial%qicn       (IM,Model%levs))
+       allocate (Interstitial%w_upi      (IM,Model%levs))
+       allocate (Interstitial%cf_upi     (IM,Model%levs))
+       allocate (Interstitial%cnv_mfd    (IM,Model%levs))
+       allocate (Interstitial%cnv_dqldt  (IM,Model%levs))
+       allocate (Interstitial%clcn       (IM,Model%levs))
+       allocate (Interstitial%cnv_fice   (IM,Model%levs))
+       allocate (Interstitial%cnv_ndrop  (IM,Model%levs))
+       allocate (Interstitial%cnv_nice   (IM,Model%levs))
     end if
     if (Model%do_shoc) then
        if (.not. associated(Interstitial%qrn))  allocate (Interstitial%qrn  (IM,Model%levs))
@@ -5376,11 +5376,9 @@ module GFS_typedefs
     Interstitial%cdq_ice      = huge
     Interstitial%cdq_land     = huge
     Interstitial%cdq_ocean    = huge
-    Interstitial%cf_upi       = clear_val
     Interstitial%chh_ice      = huge
     Interstitial%chh_land     = huge
     Interstitial%chh_ocean    = huge
-    Interstitial%clcn         = clear_val
     Interstitial%cld1d        = clear_val
     Interstitial%cldf         = clear_val
     Interstitial%clw          = clear_val
@@ -5389,11 +5387,6 @@ module GFS_typedefs
     Interstitial%cmm_ice      = huge
     Interstitial%cmm_land     = huge
     Interstitial%cmm_ocean    = huge
-    Interstitial%cnv_dqldt    = clear_val
-    Interstitial%cnv_fice     = clear_val
-    Interstitial%cnv_mfd      = clear_val
-    Interstitial%cnv_ndrop    = clear_val
-    Interstitial%cnv_nice     = clear_val
     Interstitial%cnvc         = clear_val
     Interstitial%cnvw         = clear_val
     Interstitial%ctei_r       = clear_val
@@ -5481,8 +5474,6 @@ module GFS_typedefs
     Interstitial%oc           = clear_val
     Interstitial%prcpmp       = clear_val
     Interstitial%prnum        = clear_val
-    Interstitial%qicn         = clear_val
-    Interstitial%qlcn         = clear_val
     Interstitial%qss          = clear_val
     Interstitial%qss_ice      = huge
     Interstitial%qss_land     = huge
@@ -5540,7 +5531,6 @@ module GFS_typedefs
     Interstitial%vdftra       = clear_val
     Interstitial%vegf1d       = clear_val
     Interstitial%vegtype      = 0
-    Interstitial%w_upi        = clear_val
     Interstitial%wcbmax       = clear_val
     Interstitial%weasd_ice    = huge
     Interstitial%weasd_land   = huge
@@ -5570,6 +5560,16 @@ module GFS_typedefs
        Interstitial%qgl       = clear_val
        Interstitial%qrn       = clear_val
        Interstitial%qsnw      = clear_val
+       Interstitial%qlcn      = clear_val
+       Interstitial%qicn      = clear_val
+       Interstitial%w_upi     = clear_val
+       Interstitial%cf_upi    = clear_val
+       Interstitial%cnv_mfd   = clear_val
+       Interstitial%cnv_dqldt = clear_val
+       Interstitial%clcn      = clear_val
+       Interstitial%cnv_fice  = clear_val
+       Interstitial%cnv_ndrop = clear_val
+       Interstitial%cnv_nice  = clear_val
     end if
     if (Model%do_shoc) then
        Interstitial%qrn       = clear_val
@@ -5635,11 +5635,9 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%cdq_ice     ) = ', sum(Interstitial%cdq_ice     )
     write (0,*) 'sum(Interstitial%cdq_land    ) = ', sum(Interstitial%cdq_land    )
     write (0,*) 'sum(Interstitial%cdq_ocean   ) = ', sum(Interstitial%cdq_ocean   )
-    write (0,*) 'sum(Interstitial%cf_upi      ) = ', sum(Interstitial%cf_upi      )
     write (0,*) 'sum(Interstitial%chh_ice     ) = ', sum(Interstitial%chh_ice     )
     write (0,*) 'sum(Interstitial%chh_land    ) = ', sum(Interstitial%chh_land    )
     write (0,*) 'sum(Interstitial%chh_ocean   ) = ', sum(Interstitial%chh_ocean   )
-    write (0,*) 'sum(Interstitial%clcn        ) = ', sum(Interstitial%clcn        )
     write (0,*) 'sum(Interstitial%cldf        ) = ', sum(Interstitial%cldf        )
     write (0,*) 'sum(Interstitial%cldsa       ) = ', sum(Interstitial%cldsa       )
     write (0,*) 'sum(Interstitial%cldtaulw    ) = ', sum(Interstitial%cldtaulw    )
@@ -5651,11 +5649,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%cmm_ice     ) = ', sum(Interstitial%cmm_ice     )
     write (0,*) 'sum(Interstitial%cmm_land    ) = ', sum(Interstitial%cmm_land    )
     write (0,*) 'sum(Interstitial%cmm_ocean   ) = ', sum(Interstitial%cmm_ocean   )
-    write (0,*) 'sum(Interstitial%cnv_dqldt   ) = ', sum(Interstitial%cnv_dqldt   )
-    write (0,*) 'sum(Interstitial%cnv_fice    ) = ', sum(Interstitial%cnv_fice    )
-    write (0,*) 'sum(Interstitial%cnv_mfd     ) = ', sum(Interstitial%cnv_mfd     )
-    write (0,*) 'sum(Interstitial%cnv_ndrop   ) = ', sum(Interstitial%cnv_ndrop   )
-    write (0,*) 'sum(Interstitial%cnv_nice    ) = ', sum(Interstitial%cnv_nice    )
     write (0,*) 'sum(Interstitial%cnvc        ) = ', sum(Interstitial%cnvc        )
     write (0,*) 'sum(Interstitial%cnvw        ) = ', sum(Interstitial%cnvw        )
     write (0,*) 'sum(Interstitial%ctei_r      ) = ', sum(Interstitial%ctei_r      )
@@ -5759,8 +5752,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%plyr        ) = ', sum(Interstitial%plyr        )
     write (0,*) 'sum(Interstitial%prcpmp      ) = ', sum(Interstitial%prcpmp      )
     write (0,*) 'sum(Interstitial%prnum       ) = ', sum(Interstitial%prnum       )
-    write (0,*) 'sum(Interstitial%qicn        ) = ', sum(Interstitial%qicn        )
-    write (0,*) 'sum(Interstitial%qlcn        ) = ', sum(Interstitial%qlcn        )
     write (0,*) 'sum(Interstitial%qlyr        ) = ', sum(Interstitial%qlyr        )
     write (0,*) 'sum(Interstitial%qss         ) = ', sum(Interstitial%qss         )
     write (0,*) 'sum(Interstitial%qss_ice     ) = ', sum(Interstitial%qss_ice     )
@@ -5832,7 +5823,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%vdftra      ) = ', sum(Interstitial%vdftra      )
     write (0,*) 'sum(Interstitial%vegf1d      ) = ', sum(Interstitial%vegf1d      )
     write (0,*) 'sum(Interstitial%vegtype     ) = ', sum(Interstitial%vegtype     )
-    write (0,*) 'sum(Interstitial%w_upi       ) = ', sum(Interstitial%w_upi       )
     write (0,*) 'sum(Interstitial%wcbmax      ) = ', sum(Interstitial%wcbmax      )
     write (0,*) 'sum(Interstitial%weasd_ice   ) = ', sum(Interstitial%weasd_ice   )
     write (0,*) 'sum(Interstitial%weasd_land  ) = ', sum(Interstitial%weasd_land  )
@@ -5864,6 +5854,16 @@ module GFS_typedefs
        write (0,*) 'sum(Interstitial%qgl      ) = ', sum(Interstitial%qgl         )
        write (0,*) 'sum(Interstitial%qrn      ) = ', sum(Interstitial%qrn         )
        write (0,*) 'sum(Interstitial%qsnw     ) = ', sum(Interstitial%qsnw        )
+       write (0,*) 'sum(Interstitial%qlcn     ) = ', sum(Interstitial%qlcn        )
+       write (0,*) 'sum(Interstitial%qicn     ) = ', sum(Interstitial%qicn        )
+       write (0,*) 'sum(Interstitial%w_upi    ) = ', sum(Interstitial%w_upi       )
+       write (0,*) 'sum(Interstitial%cf_upi   ) = ', sum(Interstitial%cf_upi      )
+       write (0,*) 'sum(Interstitial%cnv_mfd  ) = ', sum(Interstitial%cnv_mfd     )
+       write (0,*) 'sum(Interstitial%cnv_dqldt) = ', sum(Interstitial%cnv_dqldt   )
+       write (0,*) 'sum(Interstitial%clcn     ) = ', sum(Interstitial%clcn        )
+       write (0,*) 'sum(Interstitial%cnv_fice ) = ', sum(Interstitial%cnv_fice    )
+       write (0,*) 'sum(Interstitial%cnv_ndrop) = ', sum(Interstitial%cnv_ndrop   )
+       write (0,*) 'sum(Interstitial%cnv_nice ) = ', sum(Interstitial%cnv_nice    )
     end if
     if (Model%do_shoc) then
        write (0,*) 'Interstitial_print: values specific to SHOC'
