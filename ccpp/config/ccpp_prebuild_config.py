@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# CCPP prebuild config for GMTB Single Column Model (SCM) v2.0
+# CCPP prebuild config for GMTB Single Column Model (SCM) v3.0
 
 
 ###############################################################################
@@ -54,6 +54,16 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_mp_thompson_make_number_concentrations.F90',
     'ccpp/physics/physics/module_bl_mynn.F90',
     'ccpp/physics/physics/module_sf_mynn.F90',
+    'ccpp/physics/physics/cires_ugwp_module.F90',
+    'ccpp/physics/physics/ugwp_driver_v0.f',
+    'ccpp/physics/physics/cires_ugwp_triggers.F90',
+    'ccpp/physics/physics/cires_ugwp_initialize.F90',
+    'ccpp/physics/physics/cires_ugwp_solvers.F90',
+    'ccpp/physics/physics/cires_ugwp_utils.F90',
+    'ccpp/physics/physics/cires_orowam2017.f',
+    'ccpp/physics/physics/cires_vert_lsatdis.F90',
+    'ccpp/physics/physics/cires_vert_orodis.F90',
+    'ccpp/physics/physics/cires_vert_wmsdis.F90',
     'ccpp/physics/physics/namelist_soilveg.f',
     'ccpp/physics/physics/mfpblt.f',
     'ccpp/physics/physics/mfscu.f',
@@ -72,6 +82,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/radlw_param.f',
     'ccpp/physics/physics/radsw_datatb.f',
     'ccpp/physics/physics/radsw_param.f',
+    'ccpp/physics/physics/samfaerosols.F',
     'ccpp/physics/physics/sfcsub.F',
     'ccpp/physics/physics/sflx.f',
     'ccpp/physics/physics/set_soilveg.f',
@@ -93,6 +104,7 @@ SCHEME_FILES = {
     # current restrictions are that each scheme can only belong to one physics set, and all schemes within one group in the
     # suite definition file have to belong to the same physics set
     'ccpp/physics/physics/GFS_DCNV_generic.F90'             : ['physics'],
+    'ccpp/physics/physics/GFS_GWD_generic.F90'              : ['physics'],
     'ccpp/physics/physics/GFS_MP_generic.F90'               : ['physics'],
     'ccpp/physics/physics/GFS_PBL_generic.F90'              : ['physics'],
     'ccpp/physics/physics/GFS_SCNV_generic.F90'             : ['physics'],
@@ -106,6 +118,8 @@ SCHEME_FILES = {
     'ccpp/physics/physics/GFS_surface_composites.F90'       : ['physics'],
     'ccpp/physics/physics/GFS_surface_loop_control.F90'     : ['physics'],
     'ccpp/physics/physics/GFS_time_vary_pre.scm.F90'        : ['physics'],
+    'ccpp/physics/physics/cires_ugwp.F90'                   : ['physics'],
+    'ccpp/physics/physics/cires_ugwp_post.F90'              : ['physics'],
     'ccpp/physics/physics/cnvc90.f'                         : ['physics'],
     'ccpp/physics/physics/cs_conv.F90'                      : ['physics'],
     'ccpp/physics/physics/cs_conv_aw_adj.F90'               : ['physics'],
@@ -153,6 +167,8 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_diag.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_diag_post.F90'                : ['physics'],
     'ccpp/physics/physics/sfc_drv_ruc.F90'                  : ['physics'],
+    'ccpp/physics/physics/lsm_ruc_sfc_sice_interstitial.F90': ['physics'],
+    'ccpp/physics/physics/sfc_cice.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_diff.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_drv.f'                        : ['physics'],
     'ccpp/physics/physics/sfc_nst.f'                        : ['physics'],

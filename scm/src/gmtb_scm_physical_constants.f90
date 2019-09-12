@@ -30,11 +30,13 @@ public
 !! | con_rhw0               | sea_water_reference_density                              | sea water reference density                             | kg m-3        |    0 | real              | kind_phys | none   | F        |
 !! | con_sbc                | stefan_boltzmann_constant                                | Steffan-Boltzmann constant                              | W m-2 K-4     |    0 | real              | kind_phys | none   | F        |
 !! | con_tice               | freezing_point_temperature_of_seawater                   | freezing point temperature of seawater                  | K             |    0 | real              | kind_phys | none   | F        |
+!! | con_p0                 | standard_atmospheric_pressure                            | standard atmospheric pressure                           | Pa            |    0 | real              | kind_phys | none   | F        |
 !!
   real(kind=dp),parameter:: con_pi     =3.1415926535897931
 
   real(kind=dp),parameter:: con_g      =9.80665e+0
   real(kind=dp),parameter:: con_omega  =7.2921e-5
+  real(kind=dp),parameter:: con_p0     =1.01325e+5
 
   real(kind=dp),parameter:: con_rd     =2.8705e+2
   real(kind=dp),parameter:: con_rv     =4.6150e+2
