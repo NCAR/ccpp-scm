@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# CCPP prebuild config for GMTB Single Column Model (SCM) v2.0
+# CCPP prebuild config for GMTB Single Column Model (SCM)
 
 
 ###############################################################################
@@ -13,10 +13,49 @@ HOST_MODEL_IDENTIFIER = "SCM"
 # relative to basedir = top-level directory of host model
 VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/machine.F',
+    'ccpp/physics/physics/radsw_param.f',
+    'ccpp/physics/physics/radlw_param.f',
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_type_defs.f90',
     'scm/src/gmtb_scm_physical_constants.f90'
     ]
+
+TYPEDEFS_NEW_METADATA = {
+    'ccpp_types' : {
+        'ccpp_types' : '',
+        'ccpp_t' : 'cdata(i)',
+        },
+    'machine' : {
+        'machine' : '',
+        },
+    'module_radlw_parameters' : {
+        'module_radsw_parameters' : '',
+        },
+    'module_radlw_parameters' : {
+        'module_radlw_parameters' : '',
+        },
+    'GFS_typedefs' : {
+        'GFS_diag_type' : 'physics%Diag(cdata(i)%blk_no)',
+        'GFS_control_type' : 'physics%Model(cdata(i)%blk_no)',
+        'GFS_cldprop_type' : 'physics%Cldprop(cdata(i)%blk_no)',
+        'GFS_tbd_type' : 'physics%Tbd(cdata(i)%blk_no)',
+        'GFS_sfcprop_type' : 'physics%Sfcprop(cdata(i)%blk_no)',
+        'GFS_coupling_type' : 'physics%Coupling(cdata(i)%blk_no)',
+        'GFS_interstitial_type' : 'physics%Interstitial(cdata(i)%blk_no)',
+        'GFS_statein_type' : 'physics%Statein(cdata(i)%blk_no)',
+        'GFS_radtend_type' : 'physics%Radtend(cdata(i)%blk_no)',
+        'GFS_grid_type' : 'physics%Grid(cdata(i)%blk_no)',
+        'GFS_stateout_type' : 'physics%Stateout(cdata(i)%blk_no)',
+        'GFS_typedefs' : '',
+        },
+    'gmtb_scm_physical_constants' : {
+        'gmtb_scm_physical_constants' : '',
+        },
+    'gmtb_scm_type_defs' : {
+        'gmtb_scm_type_defs' : '',
+        'physics_type' : 'physics',
+        },
+    }
 
 # Add all physics scheme dependencies relative to basedir - note that the CCPP
 # rules stipulate that dependencies are not shared between the schemes!
@@ -54,6 +93,16 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_mp_thompson_make_number_concentrations.F90',
     'ccpp/physics/physics/module_bl_mynn.F90',
     'ccpp/physics/physics/module_sf_mynn.F90',
+    'ccpp/physics/physics/cires_ugwp_module.F90',
+    'ccpp/physics/physics/ugwp_driver_v0.f',
+    'ccpp/physics/physics/cires_ugwp_triggers.F90',
+    'ccpp/physics/physics/cires_ugwp_initialize.F90',
+    'ccpp/physics/physics/cires_ugwp_solvers.F90',
+    'ccpp/physics/physics/cires_ugwp_utils.F90',
+    'ccpp/physics/physics/cires_orowam2017.f',
+    'ccpp/physics/physics/cires_vert_lsatdis.F90',
+    'ccpp/physics/physics/cires_vert_orodis.F90',
+    'ccpp/physics/physics/cires_vert_wmsdis.F90',
     'ccpp/physics/physics/namelist_soilveg.f',
     'ccpp/physics/physics/mfpblt.f',
     'ccpp/physics/physics/mfscu.f',
@@ -72,6 +121,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/radlw_param.f',
     'ccpp/physics/physics/radsw_datatb.f',
     'ccpp/physics/physics/radsw_param.f',
+    'ccpp/physics/physics/samfaerosols.F',
     'ccpp/physics/physics/sfcsub.F',
     'ccpp/physics/physics/sflx.f',
     'ccpp/physics/physics/set_soilveg.f',
@@ -93,6 +143,7 @@ SCHEME_FILES = {
     # current restrictions are that each scheme can only belong to one physics set, and all schemes within one group in the
     # suite definition file have to belong to the same physics set
     'ccpp/physics/physics/GFS_DCNV_generic.F90'             : ['physics'],
+    'ccpp/physics/physics/GFS_GWD_generic.F90'              : ['physics'],
     'ccpp/physics/physics/GFS_MP_generic.F90'               : ['physics'],
     'ccpp/physics/physics/GFS_PBL_generic.F90'              : ['physics'],
     'ccpp/physics/physics/GFS_SCNV_generic.F90'             : ['physics'],
@@ -106,6 +157,8 @@ SCHEME_FILES = {
     'ccpp/physics/physics/GFS_surface_composites.F90'       : ['physics'],
     'ccpp/physics/physics/GFS_surface_loop_control.F90'     : ['physics'],
     'ccpp/physics/physics/GFS_time_vary_pre.scm.F90'        : ['physics'],
+    'ccpp/physics/physics/cires_ugwp.F90'                   : ['physics'],
+    'ccpp/physics/physics/cires_ugwp_post.F90'              : ['physics'],
     'ccpp/physics/physics/cnvc90.f'                         : ['physics'],
     'ccpp/physics/physics/cs_conv.F90'                      : ['physics'],
     'ccpp/physics/physics/cs_conv_aw_adj.F90'               : ['physics'],
@@ -153,6 +206,8 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_diag.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_diag_post.F90'                : ['physics'],
     'ccpp/physics/physics/sfc_drv_ruc.F90'                  : ['physics'],
+    'ccpp/physics/physics/lsm_ruc_sfc_sice_interstitial.F90': ['physics'],
+    'ccpp/physics/physics/sfc_cice.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_diff.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_drv.f'                        : ['physics'],
     'ccpp/physics/physics/sfc_nst.f'                        : ['physics'],
@@ -254,6 +309,9 @@ FIELDS_INCLUDE_FILE = 'ccpp_fields.inc'
 # Directory where to write static API to
 STATIC_API_DIR = 'scm/src/'
 
+# Directory for writing HTML pages generated from metadata files
+METADATA_HTML_OUTPUT_DIR = 'ccpp/physics/physics/docs'
+
 # HTML document containing the model-defined CCPP variables
 HTML_VARTABLE_FILE = 'ccpp/physics/CCPP_VARIABLES_SCM.html'
 
@@ -268,26 +326,3 @@ LATEX_VARTABLE_FILE = 'ccpp/framework/doc/DevelopersGuide/CCPP_VARIABLES_SCM.tex
 # Name of the CCPP data structure in the host model cap;
 # in the case of SCM, this is a vector with loop index i
 CCPP_DATA_STRUCTURE = 'cdata(i)'
-
-# # Modules to load for auto-generated ccpp_field_add code
-# # in the host model cap (e.g. error handling)
-# MODULE_USE_TEMPLATE_HOST_CAP = \
-# '''
-# use ccpp_errors, only: ccpp_error
-# '''
-#
-# # Modules to load for auto-generated ccpp_field_get code
-# # in the physics scheme cap (e.g. derived data types)
-# MODULE_USE_TEMPLATE_SCHEME_CAP = \
-# '''
-#        use machine, only: kind_phys
-#        use module_radlw_parameters, only: sfcflw_type, topflw_type
-#        use module_radsw_parameters, only: cmpfsw_type, sfcfsw_type, topfsw_type
-#        use GFS_typedefs, only: GFS_statein_type,  GFS_stateout_type,    &
-#                                GFS_sfcprop_type,                        &
-#                                GFS_coupling_type, GFS_control_type,     &
-#                                GFS_grid_type,     GFS_tbd_type,         &
-#                                GFS_cldprop_type,  GFS_radtend_type,     &
-#                                GFS_diag_type,     GFS_interstitial_type,&
-#                                GFS_init_type
-# '''
