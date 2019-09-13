@@ -2989,11 +2989,6 @@ module GFS_typedefs
     Model%cny              = cny
     Model%lonr             = gnx         ! number longitudinal points
     Model%latr             = gny         ! number of latitudinal points from pole to pole
-    ! DH*
-    write(0,*) "DH DEBUG GFS_typedefs.F90: size(blksz)=", size(blksz)
-    write(0,*) "DH DEBUG GFS_typedefs.F90: blksz=", blksz
-    call sleep(5)
-    ! *DH
     Model%nblks            = size(blksz)
     allocate(Model%blksz(1:Model%nblks))
     Model%blksz            = blksz
