@@ -321,7 +321,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%bdat, Init_parm%cdat,               &
                    Init_parm%tracer_names,                       &
                    Init_parm%input_nml_file, Init_parm%tile_num, &
-                   Init_parm%ak, Init_parm%bk, Init_parm%blksz,  &
+                   Init_parm%blksz, Init_parm%ak, Init_parm%bk,  &
                    Init_parm%restart, Init_parm%hydrostatic,     &
                    communicator, ntasks, nthreads)
 
