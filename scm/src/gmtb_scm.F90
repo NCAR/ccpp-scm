@@ -117,7 +117,7 @@ subroutine gmtb_scm_main_sub()
           open(unit=physics%Init_parm(i)%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
       end if
 
-      cdata(i)%blk_no = 1
+      cdata(i)%blk_no = i
       cdata(i)%thrd_no = 1
 
       physics%Init_parm(i)%levs = scm_state%n_levels
