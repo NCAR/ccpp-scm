@@ -287,7 +287,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                                  GFS_tbd_type,      GFS_cldprop_type,    &
                                  GFS_radtend_type,  GFS_diag_type,       &
                                  GFS_interstitial_type
-  use funcphys,            only: gfuncphys
+  
   !use cldwat2m_micro,      only: ini_micro
   !use aer_cloud,           only: aer_cloud_init
   !use module_ras,          only: ras_init
