@@ -33,6 +33,9 @@ PHYSICS_SUITE_DIR = '../../ccpp/suites'
 # Default suite to use if none is specified
 DEFAULT_SUITE = 'SCM_GFS_v15'
 
+# Path to physics data files
+PHYSICS_DATA_DIR = '../data/physics_input_data'
+
 # Default settings and filenames of input data for ozone physics;
 # these must match the default settings in GFS_typedefs.F90.
 DEFAULT_OZ_PHYS      = True
@@ -268,6 +271,15 @@ class Experiment(object):
         cmd = "ln -sf {0} {1}".format(os.path.join(PHYSICS_SUITE_DIR, physics_suite), physics_suite)
         execute(cmd)
         
+        # Link physics data needed for schemes to run directory
+        logging.info('Linking physics input data from {0} into run directory'.format(PHYSICS_DATA_DIR))
+        for entry in os.listdir(PHYSICS_DATA_DIR):
+            if os.path.isfile(os.path.join(PHYSICS_DATA_DIR, entry)):
+                if not os.path.exists(entry):
+                    logging.debug('Linking file {0}'.format(entry))
+                    cmd = 'ln -sf {0} {1}'.format(os.path.join(PHYSICS_DATA_DIR, entry), entry)
+                    execute(cmd)
+        
         # Parse physics namelist and extract
         # - oz_phys
         # - oz_phys_2015
@@ -320,7 +332,7 @@ def launch_executable(use_gdb, gdb):
         cmd = '{executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(2)
-    os.system(cmd)
+    sys.exit(os.system(cmd))
 
 def main():
     (case, use_gdb, suite, namelist) = parse_arguments()

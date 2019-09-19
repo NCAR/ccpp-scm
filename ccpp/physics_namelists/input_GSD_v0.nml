@@ -11,7 +11,6 @@
        ltaerosol      = .true.
        lradar         = .true.
        ttendlim       = -999.
-       make_number_concentrations = .true.
        pdfcld         = .false.
        fhswr          = 3600.
        fhlwr          = 3600.
@@ -55,7 +54,7 @@
        do_shum        = .false.
        do_skeb        = .false.
        do_sfcperts    = .false.
-       lsm            = 2
+       lsm            = 3
        lsoil_lsm      = 9
        icloud_bl         = 1
        bl_mynn_tkeadvect = .true.

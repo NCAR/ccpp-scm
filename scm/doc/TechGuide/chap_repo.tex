@@ -2,7 +2,7 @@
 \label{chapter: repository}
 
 \section{What is included in the repository?}
-The repository contains all code and data required to run the GMTB SCM. It is functionally separated into 4 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp/framework} directory), the CCPP physics schemes (\execout{ccpp/physics} directory), and any necessary external library code (\execout{external} directory). The entire \execout{gmtb-scm} repository resides on Github's NCAR account, and the \execout{ccpp/framework} and \execout{ccpp/physics} directories are git submodules that point to repositories \execout{ccpp-framework} and \execout{ccpp-physics} on the same account. \hl{Note, to facilitate the public release, the gmtb-scm-release repository also includes} the \execout{ccpp-framework} and \execout{ccpp-physics} codes in \execout{ccpp/framework} and \execout{ccpp/physics}, so users do not have to obtain those as submodules. The structure of the entire repository is represented below. Note that the \execout{ccpp-physics} repository contains files needed for using the CCPP with the UFS Atmosphere host model that uses the Finite-Volume Cubed-Sphere (FV3) dynamical core, even though the use of CCPP with the UFS Atmosphere is not supported in this release.
+The repository contains all code and data required to run the GMTB SCM (with the exception of large initialization tables for the Thompson microphysics scheme discussed in subsection \ref{subsection: singlerunscript}). It is functionally separated into 3 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp/framework} directory), and the CCPP physics schemes (\execout{ccpp/physics} directory). The entire \execout{gmtb-scm} repository resides on Github's NCAR account, and the \execout{ccpp/framework} and \execout{ccpp/physics} directories are git submodules that point to repositories \execout{ccpp-framework} and \execout{ccpp-physics} on the same account. The structure of the entire repository is represented below. Note that the \execout{ccpp-physics} repository contains files needed for using the CCPP with the UFS Atmosphere host model that uses the Finite-Volume Cubed-Sphere (FV3) dynamical core, even though the use of CCPP with the UFS Atmosphere is not supported in this release.
 
 {\small\justify
 \dirtree{%
@@ -11,11 +11,11 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.3 framework/.
 	.4 cmake/\DTcomment{custom cmake code for building ccpp-framework}.
 	.4 CMakeLists.txt\DTcomment{cmake configuration file for ccpp-framework}.
-	.4 doc/\DTcomment{doxygen configuration, output, and Developer's Guide}.
+	.4 doc/\DTcomment{doxygen configuration, output, and Technical Documentation}.
 	.4 LICENSE.
 	.4 README.md.
 	.4 schemes/\DTcomment{contains schemes used for testing}.
-	.4 scripts/\DTcomment{contains ccpp\_prebuild and other python scripts for parsing metadata}.
+	.4 scripts/\DTcomment{contains ccpp\_prebuild and other Python scripts for parsing metadata}.
 	.4 src/\DTcomment{contains CCPP framework code}.
 	.4 test/\DTcomment{contains scripts and configurations for testing}.
 	.4 tests\DTcomment{contains next-generation files for testing}.
@@ -61,8 +61,8 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.4 gmtb\_scm\_slurm\_example.py\DTcomment{example QSUB run script}.
 	.4 MACOSX\_setup.csh\DTcomment{setup script for Mac OS X for csh, tcsh}.
 	.4 MACOSX\_setup.sh\DTcomment{setup script for Mac OS X for sh, bash}.
-	.4 scripts/\DTcomment{python scripts for setting up cases and plotting}.
-	.5 f90nml.0.19/\DTcomment{f90nml python package}.
+	.4 scripts/\DTcomment{Python scripts for setting up cases and plotting}.
+	.5 f90nml.0.19/\DTcomment{f90nml Python package}.
 	.5 plot\_configs/\DTcomment{plot configuration files}.
 	.4 Theia\_setup\_gnu.csh\DTcomment{setup script for Theia HPC for csh, tcsh}.
 	.4 Theia\_setup\_gnu.sh\DTcomment{setup script for Theia HPC for sh, bash}.
@@ -73,5 +73,5 @@ The repository contains all code and data required to run the GMTB SCM. It is fu
 	.4 UBUNTU\_setup.csh\DTcomment{setup script for Ubuntu Linux for csh, tcsh}.
 	.4 UBUNTU\_setup.sh\DTcomment{setup script for Ubuntu Linux for sh, bash}.
 	.3 LICENSE.txt.
-	.3 src/\DTcomment{source code for SCM infrastructure and python run scripts}.
+	.3 src/\DTcomment{source code for SCM infrastructure and Python run scripts}.
 }}

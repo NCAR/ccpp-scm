@@ -37,7 +37,7 @@
       <scheme>GFS_PBL_generic_pre</scheme>
       <scheme>hedmf</scheme>
       <scheme>GFS_PBL_generic_post</scheme>
-      <scheme>gwdps_pre</scheme>
+      <scheme>GFS_GWD_generic_pre</scheme>
       <scheme>gwdps</scheme>
       <scheme>gwdps_post</scheme>
       <scheme>rayleigh_damp</scheme>
@@ -66,7 +66,6 @@
       <scheme>m_micro_post</scheme>
       <scheme>cs_conv_aw_adj</scheme>
       <scheme>GFS_MP_generic_post</scheme>
-      <scheme>sfc_sice_post</scheme>
       <scheme>maximum_hourly_diagnostics</scheme>
     </subcycle>
   </group>

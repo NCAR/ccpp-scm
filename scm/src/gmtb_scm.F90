@@ -117,7 +117,7 @@ subroutine gmtb_scm_main_sub()
           open(unit=physics%Init_parm(i)%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
       end if
 
-      cdata(i)%blk_no = 1
+      cdata(i)%blk_no = i
       cdata(i)%thrd_no = 1
 
       physics%Init_parm(i)%levs = scm_state%n_levels
@@ -174,7 +174,7 @@ subroutine gmtb_scm_main_sub()
 
      call interpolate_forcing(scm_input, scm_state)
 
-     call calc_pres_exner_geopotential(1, scm_state)
+     if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
      !pass in state variables to be modified by forcing and physics
      call do_time_step(scm_state, cdata)

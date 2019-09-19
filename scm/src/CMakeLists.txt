@@ -33,11 +33,6 @@ SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
 # Use rpaths on MacOSX
 set(CMAKE_MACOSX_RPATH 1)
 
-#Copy/link data to build directory
-set(physics_data_dir ${CMAKE_SOURCE_DIR}/../data/GFS_physics_data)
-file(GLOB physics_data_files "${physics_data_dir}/*")
-file(COPY ${physics_data_files} DESTINATION ${CMAKE_BINARY_DIR}/)
-
 #------------------------------------------------------------------------------
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -68,7 +63,8 @@ ADD_DEFINITIONS(-DSCM)
 
 #------------------------------------------------------------------------------
 # Add model-specific flags for C/C++/Fortran preprocessor
-ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
+#ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
+ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM -DGFSL64)  # add GFSL64 to use correct GFS ak and bks
 #ADD_DEFINITIONS(-DINTERNAL_FILE_NML)
 
 #------------------------------------------------------------------------------
@@ -85,9 +81,22 @@ endif()
 # Set compile options
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   # Basic settings
-  set (CMAKE_C_FLAGS       "-O0 -g -fPIC" CACHE STRING "" FORCE)
-  set (CMAKE_CXX_FLAGS     "-O0 -g -fPIC" CACHE STRING "" FORCE)
-  set (CMAKE_Fortran_FLAGS "-O0 -g -fPIC" CACHE STRING "" FORCE)
+  #if CFLAGS, CXX_FLAGS, or FFLAGS are defined via environment variables, use them
+  if (DEFINED ENV{CFLAGS})
+    set (CMAKE_C_FLAGS       "${CMAKE_C_FLAGS} -O0 -g -fPIC" CACHE STRING "" FORCE)
+  else (DEFINED ENV{CFLAGS})
+    set (CMAKE_C_FLAGS       "-O0 -g -fPIC" CACHE STRING "" FORCE)
+  endif (DEFINED ENV{CFLAGS})
+  if (DEFINED ENV{CXXFLAGS})
+    set (CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -O0 -g -fPIC" CACHE STRING "" FORCE)
+  else (DEFINED ENV{CXXFLAGS})
+    set (CMAKE_CXX_FLAGS     "-O0 -g -fPIC" CACHE STRING "" FORCE)
+  endif (DEFINED ENV{CXXFLAGS})
+  if (DEFINED ENV{FFLAGS})
+    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O0 -g -fPIC" CACHE STRING "" FORCE)
+  else (DEFINED ENV{FFLAGS})
+    set (CMAKE_Fortran_FLAGS "-O0 -g -fPIC" CACHE STRING "" FORCE)
+  endif (DEFINED ENV{FFLAGS})
   # Compiler-dependent settings
   if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
     set (CMAKE_C_FLAGS       "${CMAKE_C_FLAGS} -ggdb")
@@ -105,9 +114,22 @@ if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
     message (FATAL_ERROR "This program has only been compiled with gfortran, pgf90 and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
   endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 elseif (${CMAKE_BUILD_TYPE} MATCHES "Release")
-  set (CMAKE_C_FLAGS       "-O2 -g -fPIC" CACHE STRING "" FORCE)
-  set (CMAKE_CXX_FLAGS     "-O2 -g -fPIC" CACHE STRING "" FORCE)
-  set (CMAKE_Fortran_FLAGS "-O2 -g -fPIC" CACHE STRING "" FORCE)
+  #if CFLAGS, CXX_FLAGS, or FFLAGS are defined via environment variables, use them
+  if (DEFINED ENV{CFLAGS})
+    set (CMAKE_C_FLAGS       "${CMAKE_C_FLAGS} -O2 -g -fPIC" CACHE STRING "" FORCE)
+  else (DEFINED ENV{CFLAGS})
+    set (CMAKE_C_FLAGS       "-O2 -g -fPIC" CACHE STRING "" FORCE)
+  endif (DEFINED ENV{CFLAGS})
+  if (DEFINED ENV{CXXFLAGS})
+    set (CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -O2 -g -fPIC" CACHE STRING "" FORCE)
+  else (DEFINED ENV{CXXFLAGS})
+    set (CMAKE_CXX_FLAGS     "-O2 -g -fPIC" CACHE STRING "" FORCE)
+  endif (DEFINED ENV{CXXFLAGS})
+  if (DEFINED ENV{FFLAGS})
+    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2 -g -fPIC" CACHE STRING "" FORCE)
+  else (DEFINED ENV{FFLAGS})
+    set (CMAKE_Fortran_FLAGS "-O2 -g -fPIC" CACHE STRING "" FORCE)
+  endif (DEFINED ENV{FFLAGS})
   # Compiler-dependent settings
   if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
     set (CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -cpp -fdefault-real-8")

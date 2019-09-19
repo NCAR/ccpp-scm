@@ -1,22 +1,18 @@
 \chapter{Quick Start Guide}
 \label{chapter: quick}
 
-This chapter provides instructions for obtaining and compiling  the GMTB SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP framework code. As such, it requires the CCPP framework code and physics code, both of which are included as subdirectories within the SCM code. This package can be considered a simple example for an atmospheric model to interact with physics through the CCPP.
+This chapter provides instructions for obtaining and compiling the GMTB SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP framework code. As such, it requires the CCPP framework code and physics code, both of which are included as submodules within the SCM code. This package can be considered a simple example for an atmospheric model to interact with physics through the CCPP.
 
 \section{Obtaining Code}
 
-The source code bundle for the CCPP and SCM is provided through GitHub.com.  This release repository contains the tested and supported version for general use.
+The source code for the CCPP and SCM is provided through GitHub.com.  This release branch contains the tested and supported version for general use.
 
 \begin{enumerate}
-    \item Download a compressed file or clone the source using
+    \item Clone the source using
 \begin{lstlisting}[language=bash]
-git clone https://[username]@github.com/NCAR/gmtb-scm-release gmtb-scm
+git clone --recursive -b v3.0 https://github.com/NCAR/gmtb-scm
 \end{lstlisting}
-    and enter your github password when prompted.
-    \item Check out the desired \hl{release number} using
-\begin{lstlisting}[language=bash]
-git checkout [v2.0]
-\end{lstlisting}
+             Recall that the \execout{recursive} option in this command clones the main gmtb-scm repository and all subrepositories (ccpp-physics and ccpp-framework). Using this option, there is no need to execute \exec{git submodule init} and \exec{git submodule update}.
     \item Change directory into the project.
 \begin{lstlisting}[language=bash]
 cd gmtb-scm
@@ -25,26 +21,28 @@ cd gmtb-scm
 
 The CCPP framework can be found in the ccpp/framework subdirectory at this level.  The CCPP physics parameterizations can be found in the ccpp/physics subdirectory.
 
-If you would like to contribute as a developer to this project, please see CCPP Developers Corner of the project website:
+If you would like to contribute as a developer to this project, please see (in addition to the rest of this guide) the scientific and technical documentation included with this release:
 
-\url{https://dtcenter.org/gmtb/users/ccpp/developers/index.php}
+\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/documentation}
 
 There you will find links to all of the documentation pertinent to developers.
 
-One can also clone the development repository, although its stability is not guaranteed. To do so,
+For working with the development branches (stability not guaranteed), after executing the steps above, check out the master branches of the repository (and submodules):
 \begin{enumerate}
-    \item Clone the source using
-\begin{lstlisting}[language=bash]
-git clone --recursive https://[username]@github.com/NCAR/gmtb-scm gmtb-scm
-\end{lstlisting}
-    and enter your github password when prompted.
-    \item Check out the desired branch (master) using
+    \item Check out the master branch of gmtb-scm.
 \begin{lstlisting}[language=bash]
 git checkout master
 \end{lstlisting}
-    \item Change directory into the project.
+\item Check out the master branches of ccpp-physics and ccpp-framework.
 \begin{lstlisting}[language=bash]
-cd gmtb-scm
+cd ccpp/physics
+git checkout master
+cd ../framework
+git checkout master
+\end{lstlisting}
+\item Change back to the main directory for following the instructions in section \ref{section: compiling} assuming system requirements in section \ref{section: systemrequirements} are met.
+\begin{lstlisting}[language=bash]
+cd ../..
 \end{lstlisting}
 \end{enumerate}
 
@@ -54,14 +52,25 @@ cd gmtb-scm
 
 The source code for the SCM and CCPP component is in the form of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the netCDF libraries. Beyond the standard scripts, the build system relies on use of the Python scripting language, along with cmake, GNU make and date.
 
-The basic requirements for building and running the CCPP and SCM bundle are \hl{listed below}:
+The basic requirements for building and running the CCPP and SCM bundle are listed below. The versions listed reflect successful tests and there is no guarantee that the code will work with different versions.
 \begin{itemize}
-    \item FORTRAN 90+ compiler (ifort v17+, gfortran v5.4+, pgf90 v17.9+)
-    \item C compiler (icc v17+, gcc v5.4+, pgcc v17.9+)
-    \item cmake v2.8.11+
-    \item netCDF v4.x (not v3.x) with HDF5, ZLIB and SZIP
-    \item Python v2.x (not v3.x)
-    \item Libxml2 (tested with 2.2 and 2.9.1)
+    \item FORTRAN 90+ compiler
+    	\begin{itemize}
+   	 \item ifort 18.0.1.163 and 19.0.2
+	 \item gfortran 6.2, 8.1, and 9.1
+	 \item pgf90 17.7 and 17.9
+	 \end{itemize}
+    \item C compiler
+    	\begin{itemize}
+	\item icc 18.0.1.163 and 19.0.2
+	\item gcc 6.2 and 8.1
+	\item Apple Clang 10.0.0.10001145
+	\item pgcc 17.7 and 17.9
+	\end{itemize}
+    \item cmake 2.8.12.1, 2.8.12.2, and 3.6.2
+    \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1 and 4.6.3 (not 3.x) with HDF5, ZLIB and SZIP
+    \item Python 2.7.5, 2.7.9, and 2.7.13 (not 3.x)
+    \item Libxml2 2.2, 2.9.7, 2.9.9
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements.
@@ -72,17 +81,17 @@ Further, there are several utility libraries as part of the NCEPlibs package tha
     \item sp - Spectral Transformation Library
     \item w3nco - GRIB decoder and encoder library
 \end{itemize}
-These libraries are prebuilt on most NOAA machines using the Intel compiler. For those needing to build the libraries themselves, GMTB recommends using the source code from GitHub at \url{https://github.com/NCAR/NCEPlibs.git}, which includes build files for various compilers and machines using OpenMP flags and which are threadsafe. Instructions for installing NCEPlibs are included on the GitHub repository webpage, but for the sake of example, execute the following for obtaining and building from source in \execout{/usr/local/NCEPlibs} on a Mac:
+These libraries are prebuilt on most NOAA machines using the Intel compiler. For those needing to build the libraries themselves, GMTB recommends using the source code from GitHub at \url{https://github.com/NCAR/NCEPlibs}, which includes build files for various compilers and machines using OpenMP flags and which are threadsafe. Instructions for installing NCEPlibs are included on the GitHub repository webpage, but for the sake of example, execute the following for obtaining and building from source in \execout{/usr/local/NCEPlibs} on a Mac:
 \begin{lstlisting}
     mkdir /usr/local/NCEPlibs
     cd /usr/local/src
     git clone https://github.com/NCAR/NCEPlibs.git
     cd NCEPlibs
-    ./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1
+    ./make_ncep_libs.sh -s macosx -c gnu -d /usr/local/NCEPlibs -o 1 -m 0
 \end{lstlisting}
-Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
+Note that the option \execout{-m 0} can be used if MPI is not installed on the machine that is being used. The \execout{nemsio} library will not be installed, however, since it requires MPI. Once NCEPlibs is built, the \execout{NCEPLIBS\_DIR} environment variable must be set to the location of the installation. For example, if NCEPlibs was installed in \execout{/usr/local/NCEPlibs}, one would execute
 \begin{lstlisting}
-export NCEPLIB_DIR=/usr/local/NCEPlibs
+export NCEPLIBS_DIR=/usr/local/NCEPlibs
 \end{lstlisting}
 If using Theia or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described in section \ref{section: compiling}.
 
@@ -148,7 +157,10 @@ cmake -DCMAKE_BUILD_TYPE=Debug ../src # debug mode
 \begin{lstlisting}[language=bash]
 -DPC_LIBXML_INCLUDEDIR=... -DPC_LIBXML_LIBDIR=...
 \end{lstlisting}
-    to the cmake command.
+    to the cmake command. If a compilation error appears related to \execout{libxml2}, namely that a unicode file is not found in the include path, add the appropriate include path to the \execout{CFLAGS} environment variable
+\begin{lstlisting}[language=bash]
+export CFLAGS="-I/include_path"
+\end{lstlisting} before cleaning out the \execout{bin} directory and rerunning \execout{cmake}.
     \item Compile. Add \execout{VERBOSE=1} to obtain more information on the build process.
 \begin{lstlisting}[language=bash]
 make
@@ -157,16 +169,23 @@ make
 
 The resulting executable may be found at \execout{./gmtb-scm} (Full path of \execout{gmtb-scm/scm/bin/gmtb-scm}). Depending on the system, it may be necessary to add the location of the CCPP framework and physics libraries to \execout{LD\_LIBRARY\_PATH} to run \execout{./gmtb-scm} (see next section).
 
+Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build/run directory is (from the \execout{bin} directory)
+\begin{lstlisting}[language=bash]
+pwd #confirm that you are in the gmtb-scm/scm/bin directory before deleting files
+rm -rfd *
+\end{lstlisting}
+Note: This command can be dangerous (deletes files without confirming), so make sure that you're in the right directory before executing!
+
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
 \section{Run the SCM with a supplied case}
-There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially. 
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two Python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially. 
 
-\subsection{Single Run Script Usage}
+\subsection{Single Run Script Usage} \label{subsection: singlerunscript}
 Running a case requires three pieces of information: the case to run (consisting of initial conditions, geolocation, forcing data, etc.), the physics suite to use (through a CCPP suite definition file), and a physics namelist (that specifies configurable physics options to use). As discussed in chapter \ref{chapter: cases}, cases are set up via their own namelists in \execout{../etc/case\_config}. A default physics suite is provided as a user-editable variable in the script and default namelists are associated with each physics suite (through \execout{../src/default\_namelists.py}), so, technically, one must only specify a case to run with the SCM. The single run script's interface is described below.
 
 \begin{lstlisting}[language=bash]
-./run_gmtb_scm.py -c CASE_NAME [-s SUITE_NAME] [-n PHYSICS_NAMELIST_PATH] [-g]
+./run_gmtb_scm.py -c CASE_NAME [-s SUITE_NAME] [-n PHYSICS_NAMELIST_WITH_PATH] [-g]
 \end{lstlisting}
 
 When invoking the run script, the only required argument is the name of the case to run. The case name used must match one of the case configuration files located in \execout{../etc/case\_config} (\emph{without the .nml extension!}). If specifying a suite other than the default, the suite name used must match the value of the suite name in one of the suite definition files located in \execout{../../ccpp/suites} (Note: not the filename of the suite definition file). As part of the third CCPP release, the following suite names are valid:
@@ -183,7 +202,7 @@ Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v0) requires t
 \item \url{https://dtcenter.org/GMTB/qr_acr_qg.dat} (49 M)
 \item \url{https://dtcenter.org/GMTB/qr_acr_qs.dat} (32 M)
 \end{itemize}
-These files should be staged in \execout{gmtb-scm/scm/data/GFS\_physics\_data} prior to running \execout{cmake}. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
+These files should be staged in \execout{gmtb-scm/scm/data/physics\_input\_data} prior to executing the run script. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
 
 Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
 
@@ -205,13 +224,13 @@ examine the output file (ncdump, ncview, NCL, etc).
 
 \subsection{Multiple Run Script Usage}
 
-A second python script is provided for automating the execution of multiple integrations through repeated calling of the single run script. From the run directory, one may use this script through the following interface.
+A second Python script is provided for automating the execution of multiple integrations through repeated calling of the single run script. From the run directory, one may use this script through the following interface.
 
 \begin{lstlisting}[language=bash]
 ./multi_run_gmtb_scm.py {[-c CASE_NAME] [-s SUITE_NAME] [-f PATH_TO_FILE]} [-v{v}] [-t]
 \end{lstlisting}
 
-No arguments are required for this script. The \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options form a mutually-exclusive group, so exactly one of these is allowed at one time. If \execout{--c} is specified with a case name, the script will run a set of integrations for all supported suites (defined in \execout{../src/supported\_suites.py}) for that case. If \execout{-s} is specified with a suite name, the script will run a set of integrations for all supported cases (defined in \execout{../src/supported\_cases.py}) for that that suite. If \execout{-f} is specified with the path to a filename, it will read in lists of cases, suites, and namelists to use from that file. If multiple namelists are specified in the file, there either must be one suite specified \emph{or} the number of suites must match the number of namelists. If none of the \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options group is specified, the script will run through all permutations of supported cases and suites (as defined in the files previously mentioned).
+No arguments are required for this script. The \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options form a mutually-exclusive group, so exactly one of these is allowed at one time. If \execout{--c} is specified with a case name, the script will run a set of integrations for all supported suites (defined in \execout{../src/supported\_suites.py}) for that case. If \execout{-s} is specified with a suite name, the script will run a set of integrations for all supported cases (defined in \execout{../src/supported\_cases.py}) for that that suite. If \execout{-f} is specified with the path to a filename, it will read in lists of cases, suites, and namelists to use from that file. An example for this file's syntax can be found in \execout{../src/example\_multi\_run.py}. If multiple namelists are specified in the file, there either must be one suite specified \emph{or} the number of suites must match the number of namelists. If none of the \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options group is specified, the script will run through all permutations of supported cases and suites (as defined in the files previously mentioned).
 
 In addition to the main options, some helper options can also be used with any of those above. The \execout{-v{v} or --verbose} option can be used to output more information from the script to the console and to a log file. If this option is not used, only completion progress messages are written out. If one \execout{-v} is used, the script will write out completion progress messages and all messages and output from the single run script. If two \execout{-vv} are used, the script will also write out all messages and single run script output to a log file (\execout{multi\_run\_gmtb\_scm.log}) in the \execout{bin} directory. The final option, \execout{-t or --timer}, can be used to output the elapsed time for each integration executed by the script. Note that the execution time includes file operations performed by the single run script in addition to the execution of the underlying (Fortran) SCM executable. By default, this option will execute one integration of each subprocess. Since some variability is expected for each model run, if greater precision is required, the number of integrations for timing averaging can be set through an internal script variable. This option can be useful, for example, for getting a rough idea of relative computational expense of different physics suites.
 
@@ -223,4 +242,4 @@ If using the model on HPC resources and significant amounts of processor time is
 \end{lstlisting}
 from the \execout{bin} directory.
 
-Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Developers' Corner available at \url{https://dtcenter.org/gmtb/users/ccpp/developers} and in the CCPP Developers' Guide at \url{https://dtcenter.org/gmtb/users/ccpp/docs}.
+Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Technical Documentation available at \url{https://dtcenter.org/GMTB/v3.0/ccpp\_tech\_guide/}.
