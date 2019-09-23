@@ -3138,6 +3138,8 @@ module GFS_typedefs
       Model%lsnow_lsm        = lsnow_lsm
       ! Set lower bound for LSM model, runs from negative (above surface) to surface (zero)
       Model%lsnow_lsm_lbound = -Model%lsnow_lsm+1
+      write(0,*) 'The SCM cannot be run with NoahMP until initialization of its variables is completed.'
+      stop
     end if
     Model%ivegsrc          = ivegsrc
     Model%isot             = isot
