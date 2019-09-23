@@ -870,6 +870,244 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[snowxy]
+  standard_name = number_of_snow_layers
+  long_name = number of snow layers
+  units = count
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[tvxy]
+  standard_name = vegetation_temperature
+  long_name = vegetation temperature
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[tgxy]
+  standard_name = ground_temperature_for_noahmp
+  long_name = ground temperature for noahmp
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[canicexy]
+  standard_name = canopy_intercepted_ice_mass
+  long_name = canopy intercepted ice mass
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[canliqxy]
+  standard_name = canopy_intercepted_liquid_water
+  long_name = canopy intercepted liquid water
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[eahxy]
+  standard_name = canopy_air_vapor_pressure
+  long_name = canopy air vapor pressure
+  units = Pa
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[tahxy]
+  standard_name = canopy_air_temperature
+  long_name = canopy air temperature
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[cmxy]
+  standard_name = surface_drag_coefficient_for_momentum_for_noahmp
+  long_name = surface drag coefficient for momentum for noahmp
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[chxy]
+  standard_name = surface_drag_coefficient_for_heat_and_moisture_for_noahmp
+  long_name = surface exchange coeff heat & moisture for noahmp
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[fwetxy]
+  standard_name = area_fraction_of_wet_canopy
+  long_name = area fraction of canopy that is wetted/snowed
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[sneqvoxy]
+  standard_name = snow_mass_at_previous_time_step
+  long_name = snow mass at previous time step
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[alboldxy]
+  standard_name = snow_albedo_at_previous_time_step
+  long_name = snow albedo at previous time step
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[qsnowxy]
+  standard_name = snow_precipitation_rate_at_surface
+  long_name = snow precipitation rate at surface
+  units = mm s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[wslakexy]
+  standard_name = lake_water_storage
+  long_name = lake water storage
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[zwtxy]
+  standard_name = water_table_depth
+  long_name = water table depth
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[waxy]
+  standard_name = water_storage_in_aquifer
+  long_name = water storage in aquifer
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[wtxy]
+  standard_name = water_storage_in_aquifer_and_saturated_soil
+  long_name = water storage in aquifer and saturated soil
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[tsnoxy]
+  standard_name = snow_temperature
+  long_name = snow_temperature
+  units = K
+  dimensions = (horizontal_dimension, lower_bound_of_snow_vertical_dimension_for_land_surface_model:0)
+  type = real
+  kind = kind_phys
+[zsnsoxy]
+  standard_name = layer_bottom_depth_from_snow_surface
+  long_name = depth from the top of the snow surface at the bottom of the layer
+  units = m
+  dimensions = (horizontal_dimension, lower_bound_of_snow_vertical_dimension_for_land_surface_model:soil_vertical_dimension_for_land_surface_model)
+  type = real
+  kind = kind_phys
+[snicexy]
+  standard_name = snow_layer_ice
+  long_name = snow layer ice
+  units = mm
+  dimensions = (horizontal_dimension, lower_bound_of_snow_vertical_dimension_for_land_surface_model:0)
+  type = real
+  kind = kind_phys
+[snliqxy]
+  standard_name = snow_layer_liquid_water
+  long_name = snow layer liquid water
+  units = mm
+  dimensions = (horizontal_dimension, lower_bound_of_snow_vertical_dimension_for_land_surface_model:0)
+  type = real
+  kind = kind_phys
+[lfmassxy]
+  standard_name = leaf_mass
+  long_name = leaf mass
+  units = g m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[rtmassxy]
+  standard_name = fine_root_mass
+  long_name = fine root mass
+  units = g m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[stmassxy]
+  standard_name = stem_mass
+  long_name = stem mass
+  units = g m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[woodxy]
+  standard_name = wood_mass
+  long_name = wood mass including woody roots
+  units = g m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[stblcpxy]
+  standard_name = slow_soil_pool_mass_content_of_carbon
+  long_name = stable carbon in deep soil
+  units = g m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[fastcpxy]
+  standard_name = fast_soil_pool_mass_content_of_carbon
+  long_name = short-lived carbon in shallow soil
+  units = g m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[xlaixy]
+  standard_name = leaf_area_index
+  long_name = leaf area index 
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[xsaixy]
+  standard_name = stem_area_index
+  long_name = stem area index 
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[taussxy]
+  standard_name = nondimensional_snow_age
+  long_name = non-dimensional snow age
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[smoiseq]
+  standard_name = equilibrium_soil_water_content
+  long_name = equilibrium soil water content
+  units = m3 m-3
+  dimensions = (horizontal_dimension,soil_vertical_dimension_for_land_surface_model)
+  type = real
+  kind = kind_phys
+[smcwtdxy]
+  standard_name = soil_water_content_between_soil_bottom_and_water_table
+  long_name = soil water content between the bottom of the soil and the water table
+  units = m3 m-3
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[deeprechxy]
+  standard_name = water_table_recharge_when_deep
+  long_name = recharge to or from the water table when deep
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[rechxy]
+  standard_name = water_table_recharge_when_shallow
+  long_name = recharge to or from the water table when shallow
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [wetness]
   standard_name = normalized_soil_wetness_for_land_surface_model
   long_name = normalized soil wetness for lsm
@@ -1763,6 +2001,12 @@
   units = flag
   dimensions = ()
   type = logical
+[nscyc]
+  standard_name = number_of_timesteps_between_surface_cycling_calls
+  long_name = number of timesteps between surface cycling calls
+  units = 
+  dimensions = ()
+  type = integer
 [dtp]
   standard_name = time_step_for_physics
   long_name = physics timestep
@@ -1788,6 +2032,18 @@
   long_name = initial date with different size and ordering
   units = none
   dimensions = (4)
+  type = integer
+[nsswr]
+  standard_name = number_of_timesteps_between_shortwave_radiation_calls
+  long_name = number of timesteps between shortwave radiation calls
+  units = 
+  dimensions = ()
+  type = integer
+[nslwr]
+  standard_name = number_of_timesteps_between_longwave_radiation_calls
+  long_name = number of timesteps between longwave radiation calls
+  units = 
+  dimensions = ()
   type = integer
 [fhswr]
   standard_name = frequency_for_shortwave_radiation
@@ -2316,6 +2572,18 @@
   units = count
   dimensions = ()
   type = integer
+[lsnow_lsm]
+  standard_name = snow_vertical_dimension_for_land_surface_model
+  long_name = maximum number of snow layers for land surface model
+  units = count
+  dimensions = ()
+  type = integer
+[lsnow_lsm_lbound]
+  standard_name = lower_bound_of_snow_vertical_dimension_for_land_surface_model
+  long_name = lower bound of of snow-related arrays for land surface model
+  units = count
+  dimensions = ()
+  type = integer
 [ivegsrc]
   standard_name = vegetation_type_dataset_choice
   long_name = land use dataset choice
@@ -2325,6 +2593,78 @@
 [isot]
   standard_name = soil_type_dataset_choice
   long_name = soil type dataset choice
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_dveg]
+  standard_name = flag_for_dynamic_vegetation_option
+  long_name = choice for dynamic vegetation option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_crs]
+  standard_name = flag_for_canopy_stomatal_resistance_option
+  long_name = choice for canopy stomatal resistance option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_btr]
+  standard_name = flag_for_soil_moisture_factor_stomatal_resistance_option
+  long_name = choice for soil moisture factor for canopy stomatal resistance option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_run]
+  standard_name = flag_for_runoff_and_groundwater_option
+  long_name = choice for runoff and groundwater option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_sfc]
+  standard_name = flag_for_surface_layer_drag_coefficient_option
+  long_name = choice for surface layer drag coefficient option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_frz]
+  standard_name = flag_for_supercooled_liquid_water_option
+  long_name = choice for supercooled liquid water option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_inf]
+  standard_name = flag_for_frozen_soil_permeability_option
+  long_name = choice for frozen soil permeability option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_rad]
+  standard_name = flag_for_radiation_transfer_option
+  long_name = choice for radiation transfer option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_alb]
+  standard_name = flag_for_ground_snow_surface_albedo_option
+  long_name = choice for ground snow surface albedo option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_snf]
+  standard_name = flag_for_precipitation_partition_option
+  long_name = choice for precipitation partition option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_tbot]
+  standard_name = flag_for_lower_boundary_soil_temperature_option
+  long_name = choice for lower boundary soil temperature option (see noahmp module for definition)
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_stc]
+  standard_name = flag_for_soil_and_snow_temperature_time_stepping_option
+  long_name = choice for soil and snow temperature time stepping option (see noahmp module for definition)
   units = index
   dimensions = ()
   type = integer
@@ -3156,6 +3496,18 @@
   units = 
   dimensions = ()
   type = integer
+[debug]
+  standard_name = flag_debug
+  long_name = control flag for debug
+  units = flag
+  dimensions = ()
+  type = logical
+[ipt]
+  standard_name = index_for_diagnostic_printout
+  long_name = horizontal index for point used for diagnostic printout
+  units = 
+  dimensions = ()
+  type = integer
 [lprnt]
   standard_name = flag_print
   long_name = control flag for diagnostic print out
@@ -3175,8 +3527,8 @@
   dimensions = ()
   type = logical
 [solhr]
-  standard_name = forecast_hour
-  long_name = hour time after 00z at the t-step
+  standard_name = forecast_hour_of_the_day
+  long_name = time in hours after 00z at the current timestep
   units = h
   dimensions = ()
   type = real
@@ -3216,9 +3568,23 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[phour]
+  standard_name = forecast_time_at_previous_timestep
+  long_name = forecast time at the previous timestep
+  units = h
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [fhour]
   standard_name = forecast_time
   long_name = curent forecast time
+  units = h
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[zhour]
+  standard_name = time_since_diagnostics_zeroed
+  long_name = time since diagnostics variables have been zeroed
   units = h
   dimensions = ()
   type = real
@@ -3263,6 +3629,19 @@
   standard_name = seconds_elapsed_since_model_initialization
   long_name = seconds elapsed since model initialization
   units = s
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[yearlen]
+  standard_name = number_of_days_in_year
+  long_name = number of days in a year
+  units = days
+  dimensions = ()
+  type = integer
+[julian]
+  standard_name = julian_day
+  long_name = julian day
+  units = days
   dimensions = ()
   type = real
   kind = kind_phys
@@ -3809,6 +4188,41 @@
   standard_name = lwe_thickness_of_graupel_amount_from_previous_timestep
   long_name = graupel amount from previous timestep
   units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[draincprv]
+  standard_name = convective_precipitation_rate_from_previous_timestep
+  long_name = convective precipitation rate from previous timestep
+  units = mm s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[drainncprv]
+  standard_name = explicit_rainfall_rate_from_previous_timestep
+  long_name = explicit rainfall rate previous timestep
+  units = mm s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[diceprv]
+  standard_name = ice_precipitation_rate_from_previous_timestep
+  long_name = ice precipitation rate from previous timestep
+  units = mm s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[dsnowprv]
+  standard_name = snow_precipitation_rate_from_previous_timestep
+  long_name = snow precipitation rate from previous timestep
+  units = mm s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[dgraupelprv]
+  standard_name = graupel_precipitation_rate_from_previous_timestep
+  long_name = graupel precipitation rate from previous timestep
+  units = mm s-1
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -6643,6 +7057,13 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+[q2mp]
+  standard_name = specific_humidity_at_2m_from_noahmp
+  long_name = 2 meter specific humidity from noahmp
+  units = kg kg-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [qgl]
   standard_name = local_graupel_mixing_ratio
   long_name = moist (dry+vapor, no condensates) mixing ratio of graupel local to physics
@@ -7020,6 +7441,13 @@
   standard_name = surface_wind_stress_over_ice
   long_name = surface wind stress over ice
   units = m2 s-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[t2mmp]
+  standard_name = temperature_at_2m_from_noahmp
+  long_name = 2 meter temperature from noahmp
+  units = K
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys

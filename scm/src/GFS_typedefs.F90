@@ -681,6 +681,7 @@ module GFS_typedefs
     integer              :: lsoil           !< number of soil layers
     integer              :: lsoil_lsm       !< number of soil layers internal to land surface model
     integer              :: lsnow_lsm       !< maximum number of snow layers internal to land surface model
+    integer              :: lsnow_lsm_lbound!< lower bound for snow arrays, depending on lsnow_lsm
     integer              :: ivegsrc         !< ivegsrc = 0   => USGS, 
                                             !< ivegsrc = 1   => IGBP (20 category)
                                             !< ivegsrc = 2   => UMD  (13 category)
@@ -2072,11 +2073,11 @@ module GFS_typedefs
     allocate (Sfcprop%smcwtdxy (IM))
     allocate (Sfcprop%deeprechxy (IM))
     allocate (Sfcprop%rechxy    (IM))
-    allocate (Sfcprop%snicexy    (IM, -Model%lsnow_lsm+1:0))
-    allocate (Sfcprop%snliqxy    (IM, -Model%lsnow_lsm+1:0))
-    allocate (Sfcprop%tsnoxy     (IM, -Model%lsnow_lsm+1:0))
+    allocate (Sfcprop%snicexy    (IM, Model%lsnow_lsm_lbound:0))
+    allocate (Sfcprop%snliqxy    (IM, Model%lsnow_lsm_lbound:0))
+    allocate (Sfcprop%tsnoxy     (IM, Model%lsnow_lsm_lbound:0))
     allocate (Sfcprop%smoiseq    (IM, Model%lsoil_lsm))
-    allocate (Sfcprop%zsnsoxy    (IM, -Model%lsnow_lsm+1:Model%lsoil_lsm))
+    allocate (Sfcprop%zsnsoxy    (IM, Model%lsnow_lsm_lbound:Model%lsoil_lsm))
 
     Sfcprop%snowxy     = clear_val
     Sfcprop%tvxy       = clear_val
@@ -3155,7 +3156,11 @@ module GFS_typedefs
       write(0,*) 'Logic error: NoahMP expects the maximum number of snow layers to be exactly 3 (see sfc_noahmp_drv.f)'
       stop
     else
-      Model%lsnow_lsm      = lsnow_lsm
+      Model%lsnow_lsm        = lsnow_lsm
+      ! Set lower bound for LSM model, runs from negative (above surface) to surface (zero)
+      Model%lsnow_lsm_lbound = -Model%lsnow_lsm+1
+      write(0,*) 'The SCM cannot be run with NoahMP until initialization of its variables is completed.'
+      stop
     end if
     Model%ivegsrc          = ivegsrc
     Model%isot             = isot
