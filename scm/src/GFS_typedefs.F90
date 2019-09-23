@@ -790,6 +790,9 @@ module GFS_typedefs
     integer              :: bl_mynn_cloudmix   !< flag to activate mixing of cloud species
     integer              :: bl_mynn_mixqt      !< flag to mix total water or individual species
     integer              :: icloud_bl          !< flag for coupling sgs clouds to radiation
+    ! MYJ switches
+    logical              :: do_myjsfc          !< flag for MYJ surface layer scheme
+    logical              :: do_myjpbl          !< flag for MYJ PBL scheme
 
 !--- Rayleigh friction
     real(kind=kind_phys) :: prslrd0         !< pressure level from which Rayleigh Damping is applied
@@ -1115,6 +1118,21 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: qsq        (:,:)   => null()  !
     real (kind=kind_phys), pointer :: cov        (:,:)   => null()  !
 
+    !--- MYJ schemes saved variables (from previous time step)
+    real (kind=kind_phys), pointer :: phy_myj_qsfc(:)    => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_thz0(:)    => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_qz0(:)     => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_uz0(:)     => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_vz0(:)     => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_z0base(:)  => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_akhs(:)    => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_akms(:)    => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_chkqlm(:)  => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_elflx(:)   => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_a1u(:)     => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_a1t(:)     => null()  ! 
+    real (kind=kind_phys), pointer :: phy_myj_a1q(:)     => null()  ! 
+    
     contains
       procedure :: create  => tbd_create  !<   allocate array data
   end type GFS_tbd_type
@@ -2698,7 +2716,9 @@ module GFS_typedefs
     integer              :: bl_mynn_cloudmix  = 1
     integer              :: bl_mynn_mixqt     = 0
     integer              :: icloud_bl         = 1
-
+    logical              :: do_myjsfc         = .false.               !< flag for MYJ surface layer scheme
+    logical              :: do_myjpbl         = .false.               !< flag for MYJ PBL scheme
+    
     integer              :: nmtvr          = 14                       !< number of topographic variables such as variance etc
                                                                       !< used in the GWD parameterization
     integer              :: jcap           =  1              !< number of spectral wave trancation used only by sascnv shalcnv
@@ -2872,6 +2892,7 @@ module GFS_typedefs
                                bl_mynn_cloudpdf, bl_mynn_edmf, bl_mynn_edmf_mom,            &
                                bl_mynn_edmf_tke, bl_mynn_edmf_part, bl_mynn_cloudmix,       &
                                bl_mynn_mixqt, icloud_bl, bl_mynn_tkeadvect,                 &
+                               do_myjsfc, do_myjpbl,                                        &
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
                                shinhong, do_ysu, dspheat, lheatstrg, cnvcld,                &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, isatmedmf,    &
@@ -3237,6 +3258,9 @@ module GFS_typedefs
     Model%bl_mynn_tkeadvect = bl_mynn_tkeadvect
     Model%grav_settling     = grav_settling
     Model%icloud_bl         = icloud_bl
+    
+    Model%do_myjsfc         = do_myjsfc
+    Model%do_myjpbl         = do_myjpbl
 
 !--- Rayleigh friction
     Model%prslrd0          = prslrd0
@@ -3638,6 +3662,8 @@ module GFS_typedefs
         print *,' old (old_monin) PBL scheme used'
       elseif (Model%do_mynnedmf) then
         print *,' MYNN PBL scheme used'
+      elseif (Model%do_myjpbl)then
+        print *,' MYJ PBL scheme used'
       endif
       if (.not. Model%shal_cnv) then
         Model%imfshalcnv = -1
@@ -4088,6 +4114,8 @@ module GFS_typedefs
       print *, ' rbcr              : ', Model%rbcr
       print *, ' do_mynnedmf       : ', Model%do_mynnedmf
       print *, ' do_mynnsfclay     : ', Model%do_mynnsfclay
+      print *, ' do_myjsfc         : ', Model%do_myjsfc
+      print *, ' do_myjpbl         : ', Model%do_myjpbl
       print *, ' '
       print *, 'Rayleigh friction'
       print *, ' prslrd0           : ', Model%prslrd0
@@ -4441,6 +4469,37 @@ module GFS_typedefs
        Tbd%cov           = clear_val
     end if
 
+    ! MYJ variables
+    if (Model%do_myjsfc.or.Model%do_myjpbl) then
+       !print*,"Allocating all MYJ surface variables:"
+       allocate (Tbd%phy_myj_qsfc   (IM))
+       allocate (Tbd%phy_myj_thz0   (IM)) 
+       allocate (Tbd%phy_myj_qz0    (IM)) 
+       allocate (Tbd%phy_myj_uz0    (IM)) 
+       allocate (Tbd%phy_myj_vz0    (IM)) 
+       allocate (Tbd%phy_myj_z0base (IM)) 
+       allocate (Tbd%phy_myj_akhs   (IM)) 
+       allocate (Tbd%phy_myj_akms   (IM)) 
+       allocate (Tbd%phy_myj_chkqlm (IM)) 
+       allocate (Tbd%phy_myj_elflx  (IM)) 
+       allocate (Tbd%phy_myj_a1u    (IM)) 
+       allocate (Tbd%phy_myj_a1t    (IM)) 
+       allocate (Tbd%phy_myj_a1q    (IM))
+       !print*,"Allocating all MYJ schemes variables:"
+       Tbd%phy_myj_qsfc   = clear_val 
+       Tbd%phy_myj_thz0   = clear_val 
+       Tbd%phy_myj_qz0    = clear_val 
+       Tbd%phy_myj_uz0    = clear_val 
+       Tbd%phy_myj_vz0    = clear_val 
+       Tbd%phy_myj_z0base = clear_val 
+       Tbd%phy_myj_akhs   = clear_val 
+       Tbd%phy_myj_akms   = clear_val 
+       Tbd%phy_myj_chkqlm = clear_val 
+       Tbd%phy_myj_elflx  = clear_val 
+       Tbd%phy_myj_a1u    = clear_val 
+       Tbd%phy_myj_a1t    = clear_val 
+       Tbd%phy_myj_a1q    = clear_val 
+    end if
   end subroutine tbd_create
 
 
