@@ -39,5 +39,7 @@ public
   real(kind=dp),parameter:: con_rhw0   =1022.0
   real(kind=dp),parameter:: con_sbc    =5.670400e-8
   real(kind=dp),parameter:: con_tice   =2.7120e+2
+  
+  real(kind=dp),parameter:: rhowater   =1000._dp
 
 end module gmtb_scm_physical_constants

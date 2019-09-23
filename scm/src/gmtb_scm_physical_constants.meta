@@ -155,3 +155,10 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[rhowater]
+  standard_name = liquid_water_density
+  long_name = density of liquid water
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
