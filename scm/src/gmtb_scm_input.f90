@@ -35,7 +35,8 @@ subroutine get_config_nml(scm_state)
   real(kind=dp)        :: runtime !< total runtime in seconds
   real(kind=dp)        :: output_frequency !< freqency of output writing in seconds
   integer              :: n_levels !< number of model levels (currently only 64 supported)
-  integer              :: n_soil   !< number of model levels (currently only 4 supported)
+  integer              :: n_soil   !< number of model soil levels (currently only 4 supported)
+  integer              :: n_snow   !< number of model snow levels (currently only 3 supported)
   integer              :: n_columns !< number of columns to use
   integer              :: n_time_levels
   integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
@@ -81,6 +82,7 @@ subroutine get_config_nml(scm_state)
   output_frequency = 600.0
   n_levels = 64
   n_soil   = 4
+  n_snow   = 3
   output_dir = 'output'
   output_file = 'output'
   case_data_dir = '../data/processed_case_input'
@@ -140,7 +142,7 @@ subroutine get_config_nml(scm_state)
       n_time_levels = 2
   end select
 
-  call scm_state%create(n_columns, n_levels, n_soil, n_time_levels)
+  call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels)
   
   scm_state%experiment_name = experiment_name
   scm_state%model_name = model_name
@@ -186,10 +188,14 @@ subroutine get_case_init(scm_state, scm_input)
   use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
-
+  
+  logical               :: noahmp
+  
   integer               :: input_nlev !< number of levels in the input file
   integer               :: input_nsoil !< number of soil levels in the input file
   integer               :: input_ntimes !< number of times represented in the input file
+  integer               :: input_nsnow
+  integer               :: input_nsoil_plus_nsnow
 
   ! dimension variables
   real(kind=dp), allocatable  :: input_pres(:) !< input file pressure levels (Pa)
@@ -211,10 +217,17 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_slc(:) !< soil liquid content
   real(kind=dp), allocatable  :: input_pres_i(:) !< interface pressures
   real(kind=dp), allocatable  :: input_pres_l(:) !< layer pressures
+  real(kind=dp), allocatable  :: input_snicexy(:) !<
+  real(kind=dp), allocatable  :: input_snliqxy(:) !<
+  real(kind=dp), allocatable  :: input_tsnoxy(:) !<
+  real(kind=dp), allocatable  :: input_smoiseq(:) !<
+  real(kind=dp), allocatable  :: input_zsnsoxy(:) !<
   integer                     :: input_vegsrc !< vegetation source
   integer                     :: input_vegtyp !< vegetation type
   integer                     :: input_soiltyp!< soil type
   integer                     :: input_slopetype !< slope type
+  real(kind=dp)               :: input_lat !< time-series of column latitude
+  real(kind=dp)               :: input_lon !< time-series of column longitude
   real(kind=dp)               :: input_vegfrac  !< vegetation fraction
   real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
   real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
@@ -250,10 +263,37 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_elvmax!<  surface roughness
   real(kind=dp)               :: input_facsf !< near IR white sky albedo"
   real(kind=dp)               :: input_facwf !< near IR white sky albedo"
+  real(kind=dp)               :: input_tvxy !<
+  real(kind=dp)               :: input_tgxy !<
+  real(kind=dp)               :: input_tahxy !<
+  real(kind=dp)               :: input_canicexy !<
+  real(kind=dp)               :: input_canliqxy !<
+  real(kind=dp)               :: input_eahxy !<
+  real(kind=dp)               :: input_cmxy !<
+  real(kind=dp)               :: input_chxy !<
+  real(kind=dp)               :: input_fwetxy !<
+  real(kind=dp)               :: input_sneqvoxy !<
+  real(kind=dp)               :: input_alboldxy !<
+  real(kind=dp)               :: input_qsnowxy !<
+  real(kind=dp)               :: input_wslakexy !<
+  real(kind=dp)               :: input_taussxy !<
+  real(kind=dp)               :: input_waxy !<
+  real(kind=dp)               :: input_wtxy !<
+  real(kind=dp)               :: input_zwtxy !<
+  real(kind=dp)               :: input_xlaixy !<
+  real(kind=dp)               :: input_xsaixy !<
+  real(kind=dp)               :: input_lfmassxy !<
+  real(kind=dp)               :: input_stmassxy !<
+  real(kind=dp)               :: input_rtmassxy !<
+  real(kind=dp)               :: input_woodxy !<
+  real(kind=dp)               :: input_stblcpxy !<
+  real(kind=dp)               :: input_fastcpxy !<
+  real(kind=dp)               :: input_smcwtdxy !<
+  real(kind=dp)               :: input_deeprechxy !<
+  real(kind=dp)               :: input_rechxy !<
+  real(kind=dp)               :: input_snowxy !<
 
   !surface time-series variables
-  real(kind=dp), allocatable  :: input_lat(:) !< time-series of column latitude
-  real(kind=dp), allocatable  :: input_lon(:) !< time-series of column longitude
   real(kind=dp), allocatable  :: input_pres_surf(:) !< time-series of surface pressure (Pa)
   real(kind=dp), allocatable  :: input_T_surf(:) !< time-series of surface temperature (K)
   real(kind=dp), allocatable  :: input_sh_flux_sfc(:) !< time-series of surface sensible heat flux (K m s^-1)
@@ -285,12 +325,18 @@ subroutine get_case_init(scm_state, scm_input)
   call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
 
   !> - Get the dimensions (global group).
-
+  
   call check(NF90_INQ_DIMID(ncid,"levels",varID))
   call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nlev))
   if (scm_state%model_ics) then
     call check(NF90_INQ_DIMID(ncid,"nsoil",varID))
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsoil))
+    ierr = NF90_INQ_DIMID(ncid,"nsnow",varID)
+    noahmp = .false.
+    if (ierr == 0) then
+      call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsnow))
+      noahmp = .true. !if the nsnow variable is present, NoahMP ICs should be present
+    endif
   endif
   call check(NF90_INQ_DIMID(ncid,"time",varID))
   call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_ntimes))
@@ -317,8 +363,12 @@ subroutine get_case_init(scm_state, scm_input)
               input_pres_i(input_nlev+1),input_pres_l(input_nlev), stat=allocate_status)
      input_pres_i(:) = -999.9
      input_pres_l(:) = -999.9
+     if (noahmp) then
+       allocate(input_snicexy(input_nsnow), input_snliqxy(input_nsnow), input_tsnoxy(input_nsnow), &
+          input_smoiseq(input_nsoil), input_zsnsoxy(input_nsnow + input_nsoil))
+     endif
   endif
-
+  
   !>  - Read in the initial profiles. The variable names in all input files are expected to be identical.
   if (.NOT. scm_state%model_ics) then
      call check(NF90_INQ_VARID(grp_ncid,"thetail",varID))
@@ -353,7 +403,23 @@ subroutine get_case_init(scm_state, scm_input)
         call check(NF90_INQ_VARID(grp_ncid,"pres_l",varID))
         call check(NF90_GET_VAR(grp_ncid,varID,input_pres_l))
      endif
+     if (noahmp) then
+       call check(NF90_INQ_VARID(grp_ncid,"snicexy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_snicexy))
+       call check(NF90_INQ_VARID(grp_ncid,"snliqxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_snliqxy))
+       call check(NF90_INQ_VARID(grp_ncid,"tsnoxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_tsnoxy))
+       call check(NF90_INQ_VARID(grp_ncid,"smoiseq",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_smoiseq))
+       call check(NF90_INQ_VARID(grp_ncid,"zsnsoxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_zsnsoxy))
+     endif
      call check(NF90_INQ_GRP_NCID(ncid,"scalars",grp_ncid))
+     call check(NF90_INQ_VARID(grp_ncid,"lat",varID))
+     call check(NF90_GET_VAR(grp_ncid,varID,input_lat))
+     call check(NF90_INQ_VARID(grp_ncid,"lon",varID))
+     call check(NF90_GET_VAR(grp_ncid,varID,input_lon))
      call check(NF90_INQ_VARID(grp_ncid,"vegsrc",varID))
      call check(NF90_GET_VAR(grp_ncid,varID,input_vegsrc))
      call check(NF90_INQ_VARID(grp_ncid,"vegtyp",varID))
@@ -432,6 +498,66 @@ subroutine get_case_init(scm_state, scm_input)
      call check(NF90_GET_VAR(grp_ncid,varID,input_facsf))
      call check(NF90_INQ_VARID(grp_ncid,"facwf",varID))
      call check(NF90_GET_VAR(grp_ncid,varID,input_facwf))
+     if (noahmp) then
+       call check(NF90_INQ_VARID(grp_ncid,"tvxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_tvxy))
+       call check(NF90_INQ_VARID(grp_ncid,"tgxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_tgxy))
+       call check(NF90_INQ_VARID(grp_ncid,"tahxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_tahxy))
+       call check(NF90_INQ_VARID(grp_ncid,"canicexy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_canicexy))
+       call check(NF90_INQ_VARID(grp_ncid,"canliqxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_canliqxy))
+       call check(NF90_INQ_VARID(grp_ncid,"eahxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_eahxy))
+       call check(NF90_INQ_VARID(grp_ncid,"cmxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_cmxy))
+       call check(NF90_INQ_VARID(grp_ncid,"chxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_chxy))
+       call check(NF90_INQ_VARID(grp_ncid,"fwetxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_fwetxy))
+       call check(NF90_INQ_VARID(grp_ncid,"sneqvoxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_sneqvoxy))
+       call check(NF90_INQ_VARID(grp_ncid,"alboldxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_alboldxy))
+       call check(NF90_INQ_VARID(grp_ncid,"qsnowxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_qsnowxy))
+       call check(NF90_INQ_VARID(grp_ncid,"wslakexy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_wslakexy))
+       call check(NF90_INQ_VARID(grp_ncid,"taussxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_taussxy))
+       call check(NF90_INQ_VARID(grp_ncid,"waxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_waxy))
+       call check(NF90_INQ_VARID(grp_ncid,"wtxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_wtxy))
+       call check(NF90_INQ_VARID(grp_ncid,"zwtxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_zwtxy))
+       call check(NF90_INQ_VARID(grp_ncid,"xlaixy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_xlaixy))
+       call check(NF90_INQ_VARID(grp_ncid,"xsaixy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_xsaixy))
+       call check(NF90_INQ_VARID(grp_ncid,"lfmassxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_lfmassxy))
+       call check(NF90_INQ_VARID(grp_ncid,"stmassxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_stmassxy))
+       call check(NF90_INQ_VARID(grp_ncid,"rtmassxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_rtmassxy))
+       call check(NF90_INQ_VARID(grp_ncid,"woodxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_woodxy))
+       call check(NF90_INQ_VARID(grp_ncid,"stblcpxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_stblcpxy))
+       call check(NF90_INQ_VARID(grp_ncid,"fastcpxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_fastcpxy))
+       call check(NF90_INQ_VARID(grp_ncid,"smcwtdxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_smcwtdxy))
+       call check(NF90_INQ_VARID(grp_ncid,"deeprechxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_deeprechxy))
+       call check(NF90_INQ_VARID(grp_ncid,"rechxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_rechxy))
+       call check(NF90_INQ_VARID(grp_ncid,"snowxy",varID))
+       call check(NF90_GET_VAR(grp_ncid,varID,input_snowxy))
+     endif
   endif
 
   !> - Read in the forcing data.
@@ -442,7 +568,7 @@ subroutine get_case_init(scm_state, scm_input)
   !>  - (Recall that multidimensional arrays need to be read in with the order of dimensions reversed from the netCDF file).
 
   !>  - Allocate the time-series and 2D forcing data.
-  allocate(input_lat(input_ntimes), input_lon(input_ntimes), input_pres_surf(input_ntimes), input_T_surf(input_ntimes),            &
+  allocate(input_pres_surf(input_ntimes), input_T_surf(input_ntimes),            &
     input_sh_flux_sfc(input_ntimes), input_lh_flux_sfc(input_ntimes), input_w_ls(input_ntimes, input_nlev), &
     input_omega(input_ntimes, input_nlev), input_u_g(input_ntimes, input_nlev), input_v_g(input_ntimes, input_nlev), &
     input_dT_dt_rad(input_ntimes, input_nlev), input_h_advec_thetail(input_ntimes, input_nlev), &
@@ -452,10 +578,6 @@ subroutine get_case_init(scm_state, scm_input)
     stat=allocate_status)
 
   !>  - Read in the time-series and 2D forcing data.
-  call check(NF90_INQ_VARID(grp_ncid,"lat",varID))
-  call check(NF90_GET_VAR(grp_ncid,varID,input_lat))
-  call check(NF90_INQ_VARID(grp_ncid,"lon",varID))
-  call check(NF90_GET_VAR(grp_ncid,varID,input_lon))
   call check(NF90_INQ_VARID(grp_ncid,"p_surf",varID))
   call check(NF90_GET_VAR(grp_ncid,varID,input_pres_surf))
   call check(NF90_INQ_VARID(grp_ncid,"T_surf",varID))
@@ -501,11 +623,12 @@ subroutine get_case_init(scm_state, scm_input)
 
   call scm_input%create(input_ntimes, input_nlev)
   if (scm_state%model_ics) then
-     call scm_input%create_modelics(input_nsoil,input_nlev)
+     call scm_input%create_modelics(input_nsoil,input_nsnow,input_nlev,noahmp)
   endif
-
-  scm_input%input_nlev = input_nlev
-  scm_input%input_ntimes = input_ntimes
+  
+  ! GJF already done in scm_input%create routine
+  !scm_input%input_nlev = input_nlev
+  !scm_input%input_ntimes = input_ntimes
 
   scm_input%input_pres = input_pres
   scm_input%input_time = input_time
@@ -585,7 +708,43 @@ subroutine get_case_init(scm_state, scm_input)
      scm_input%input_facsf    = input_facsf   
      scm_input%input_facwf    = input_facwf   
      scm_input%input_pres_i   = input_pres_i  
-     scm_input%input_pres_l   = input_pres_l  
+     scm_input%input_pres_l   = input_pres_l
+     if (noahmp) then
+       scm_input%input_snicexy    = input_snicexy
+       scm_input%input_snliqxy    = input_snliqxy
+       scm_input%input_tsnoxy     = input_tsnoxy
+       scm_input%input_smoiseq    = input_smoiseq
+       scm_input%input_zsnsoxy    = input_zsnsoxy
+       scm_input%input_tvxy = input_tvxy
+       scm_input%input_tgxy = input_tgxy
+       scm_input%input_tahxy = input_tahxy
+       scm_input%input_canicexy = input_canicexy
+       scm_input%input_canliqxy = input_canliqxy
+       scm_input%input_eahxy = input_eahxy
+       scm_input%input_cmxy = input_cmxy
+       scm_input%input_chxy = input_chxy
+       scm_input%input_fwetxy = input_fwetxy
+       scm_input%input_sneqvoxy = input_sneqvoxy
+       scm_input%input_alboldxy = input_alboldxy
+       scm_input%input_qsnowxy = input_qsnowxy
+       scm_input%input_wslakexy = input_wslakexy
+       scm_input%input_taussxy = input_taussxy
+       scm_input%input_waxy = input_waxy
+       scm_input%input_wtxy = input_wtxy
+       scm_input%input_zwtxy = input_zwtxy
+       scm_input%input_xlaixy = input_xlaixy
+       scm_input%input_xsaixy = input_xsaixy
+       scm_input%input_lfmassxy = input_lfmassxy
+       scm_input%input_stmassxy = input_stmassxy
+       scm_input%input_rtmassxy = input_rtmassxy
+       scm_input%input_woodxy = input_woodxy
+       scm_input%input_stblcpxy = input_stblcpxy
+       scm_input%input_fastcpxy = input_fastcpxy
+       scm_input%input_smcwtdxy = input_smcwtdxy
+       scm_input%input_deeprechxy = input_deeprechxy
+       scm_input%input_rechxy = input_rechxy
+       scm_input%input_snowxy = input_snowxy
+     endif
   endif
 
 !> @}

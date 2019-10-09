@@ -126,8 +126,8 @@ subroutine interpolate_forcing(scm_input, scm_state)
         scm_state%v_advec_qt(i,:) = v_advec_qt_bracket(1,:)
 
         !>  - Set the surface parameters to the last available data.
-        scm_state%lat(i,1) = scm_input%input_lat(scm_input%input_ntimes)
-        scm_state%lon(i,1) = scm_input%input_lon(scm_input%input_ntimes)
+        !scm_state%lat(i,1) = scm_input%input_lat(scm_input%input_ntimes)
+        !scm_state%lon(i,1) = scm_input%input_lon(scm_input%input_ntimes)
         scm_state%pres_surf(i,1) = scm_input%input_pres_surf(scm_input%input_ntimes)
         scm_state%T_surf(i,1) = scm_input%input_T_surf(scm_input%input_ntimes)
         scm_state%sh_flux(i) = scm_input%input_sh_flux_sfc(scm_input%input_ntimes)
@@ -261,8 +261,8 @@ subroutine interpolate_forcing(scm_input, scm_state)
       scm_state%v_advec_qt(i,:) = (1.0 - lifrac)*v_advec_qt_bracket(1,:) + lifrac*v_advec_qt_bracket(2,:)
 
       !>  - Interpolate the surface parameters in time.
-      scm_state%lat(i,1) = (1.0 - lifrac)*scm_input%input_lat(low_t_index) + lifrac*scm_input%input_lat(low_t_index+1)
-      scm_state%lon(i,1) = (1.0 - lifrac)*scm_input%input_lon(low_t_index) + lifrac*scm_input%input_lon(low_t_index+1)
+      !scm_state%lat(i,1) = (1.0 - lifrac)*scm_input%input_lat(low_t_index) + lifrac*scm_input%input_lat(low_t_index+1)
+      !scm_state%lon(i,1) = (1.0 - lifrac)*scm_input%input_lon(low_t_index) + lifrac*scm_input%input_lon(low_t_index+1)
       scm_state%pres_surf(i,1) = (1.0 - lifrac)*scm_input%input_pres_surf(low_t_index) + &
         lifrac*scm_input%input_pres_surf(low_t_index+1)
       scm_state%T_surf(i,1) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
