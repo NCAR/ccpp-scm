@@ -5,7 +5,7 @@
 module gmtb_scm_setup
 
 use gmtb_scm_kinds, only: sp, dp, qp
-use gmtb_scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp
+use gmtb_scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_pi
 use gmtb_scm_utils, only: interpolate_to_grid_centers
 
 implicit none
@@ -30,10 +30,19 @@ subroutine set_state(scm_input, scm_reference, scm_state)
   integer :: i,j, last_index_init, grid_error
   real(kind=dp), dimension(scm_input%input_nlev) :: input_qv, input_T
   real(kind=dp), parameter :: p0 = 1.0E5
+  real(kind=dp) :: deg_to_rad_const
+  
+  deg_to_rad_const = con_pi/180.0
 
   !> \section set_state_alg Algorithm
   !! @{
-
+  
+  !> - Set the longitude and latitude and convert from degrees to radians
+  do i=1, scm_state%n_cols
+    scm_state%lon(i,1) = scm_input%input_lon*deg_to_rad_const
+    scm_state%lat(i,1) = scm_input%input_lat*deg_to_rad_const
+  end do
+  
   !> - Calculate water vapor from total water, suspended liquid water, and suspended ice.
   input_qv = scm_input%input_qt - scm_input%input_ql - scm_input%input_qi
 
@@ -118,13 +127,12 @@ subroutine set_state(scm_input, scm_reference, scm_state)
         scm_state%state_tracer(i,1,:,scm_state%ozone_index,1)=scm_input%input_ozone
         scm_state%veg_type(i,1) = scm_input%input_vegtyp
         scm_state%soil_type(i,1) = scm_input%input_soiltyp
-        scm_state%veg_type_real(i,1) = DBLE(scm_input%input_vegtyp)
-        scm_state%veg_frac_real(i,1) = scm_input%input_vegfrac
-        scm_state%slopetype(i,1)     = scm_input%input_slopetype
+        scm_state%slope_type(i,1) = scm_input%input_slopetype
+        scm_state%veg_frac(i,1) = scm_input%input_vegfrac
         scm_state%shdmin(i,1) = scm_input%input_shdmin  
         scm_state%shdmax(i,1) = scm_input%input_shdmax  
         scm_state%sfc_roughness_length_cm = scm_input%input_zorl    
-        scm_state%sfc_type_real(i,1) = scm_input%input_slmsk   
+        scm_state%sfc_type(i,1) = scm_input%input_slmsk !< this "overwrites" what is in the SCM case namelist if model ICs are present
         scm_state%canopy(i,1) = scm_input%input_canopy  
         scm_state%hice(i,1) = scm_input%input_hice  
         scm_state%fice(i,1) = scm_input%input_fice  
@@ -135,7 +143,6 @@ subroutine set_state(scm_input, scm_reference, scm_state)
         scm_state%area(i,1) = scm_input%input_area    
         scm_state%tg3(i,1)    = scm_input%input_tg3     
         scm_state%uustar(i,1) = scm_input%input_uustar  
-        scm_state%soil_type_real(i,1) = DBLE(scm_input%input_soiltyp)
         scm_state%stc(i,1,:,1)=scm_input%input_stc
         scm_state%smc(i,1,:,1)=scm_input%input_smc
         scm_state%slc(i,1,:,1)=scm_input%input_slc

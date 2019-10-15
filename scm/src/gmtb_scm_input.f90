@@ -172,8 +172,7 @@ subroutine get_config_nml(scm_state)
   scm_state%C_RES            = C_RES            
   scm_state%sfc_flux_spec = sfc_flux_spec
   scm_state%sfc_roughness_length_cm(:) = sfc_roughness_length_cm
-  scm_state%sfc_type = sfc_type
-  scm_state%sfc_type_real = DBLE(sfc_type)
+  scm_state%sfc_type = REAL(sfc_type, kind=dp)
   scm_state%model_ics = model_ics
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
@@ -194,8 +193,8 @@ subroutine get_case_init(scm_state, scm_input)
   integer               :: input_nlev !< number of levels in the input file
   integer               :: input_nsoil !< number of soil levels in the input file
   integer               :: input_ntimes !< number of times represented in the input file
-  integer               :: input_nsnow
-  integer               :: input_nsoil_plus_nsnow
+  integer               :: input_nsnow !< number of snow levels in the input file
+  integer               :: input_nsoil_plus_nsnow !< number of combined snow and soil levels in the input file
 
   ! dimension variables
   real(kind=dp), allocatable  :: input_pres(:) !< input file pressure levels (Pa)
@@ -212,86 +211,86 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_tke(:) !< TKE profile (m^2 s^-2)
   real(kind=dp), allocatable  :: input_ozone(:) !< ozone profile (kg kg^-1)
 ! additional land info
-  real(kind=dp), allocatable  :: input_stc(:) !< soil temperature
-  real(kind=dp), allocatable  :: input_smc(:) !< soil moisture    
-  real(kind=dp), allocatable  :: input_slc(:) !< soil liquid content
+  real(kind=dp), allocatable  :: input_stc(:) !< soil temperature (K)
+  real(kind=dp), allocatable  :: input_smc(:) !< total soil moisture content (fraction)  
+  real(kind=dp), allocatable  :: input_slc(:) !< liquid soil moisture content (fraction)
   real(kind=dp), allocatable  :: input_pres_i(:) !< interface pressures
   real(kind=dp), allocatable  :: input_pres_l(:) !< layer pressures
-  real(kind=dp), allocatable  :: input_snicexy(:) !<
-  real(kind=dp), allocatable  :: input_snliqxy(:) !<
-  real(kind=dp), allocatable  :: input_tsnoxy(:) !<
-  real(kind=dp), allocatable  :: input_smoiseq(:) !<
-  real(kind=dp), allocatable  :: input_zsnsoxy(:) !<
+  real(kind=dp), allocatable  :: input_snicexy(:) !< snow layer ice (mm)
+  real(kind=dp), allocatable  :: input_snliqxy(:) !< snow layer liquid (mm)
+  real(kind=dp), allocatable  :: input_tsnoxy(:) !< snow temperature (K)
+  real(kind=dp), allocatable  :: input_smoiseq(:) !< equilibrium soil water content (m3 m-3)
+  real(kind=dp), allocatable  :: input_zsnsoxy(:) !< layer bottom depth from snow surface (m)
   integer                     :: input_vegsrc !< vegetation source
   integer                     :: input_vegtyp !< vegetation type
   integer                     :: input_soiltyp!< soil type
   integer                     :: input_slopetype !< slope type
-  real(kind=dp)               :: input_lat !< time-series of column latitude
-  real(kind=dp)               :: input_lon !< time-series of column longitude
+  real(kind=dp)               :: input_lat !< column latitude (deg)
+  real(kind=dp)               :: input_lon !< column longitude (deg)
   real(kind=dp)               :: input_vegfrac  !< vegetation fraction
   real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
   real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
   real(kind=dp)               :: input_zorl    !< surfce roughness length [cm]
   real(kind=dp)               :: input_slmsk   !< sea land ice mask [0,1,2]
-  real(kind=dp)               :: input_canopy  !< amount of water stored in canopy
-  real(kind=dp)               :: input_hice    !< ice thickness
-  real(kind=dp)               :: input_fice    !< ice fraction
-  real(kind=dp)               :: input_tisfc   !< ice surface temperature
-  real(kind=dp)               :: input_snwdph  !< snow depth
-  real(kind=dp)               :: input_snoalb  !< snow albedo
-  real(kind=dp)               :: input_sncovr  !< snow cover
+  real(kind=dp)               :: input_canopy  !< amount of water stored in canopy (kg m-2)
+  real(kind=dp)               :: input_hice    !< sea ice thickness (m)
+  real(kind=dp)               :: input_fice    !< ice fraction (frac)
+  real(kind=dp)               :: input_tisfc   !< ice surface temperature (K)
+  real(kind=dp)               :: input_snwdph  !< water equivalent snow depth (mm)
+  real(kind=dp)               :: input_snoalb  !< maximum snow albedo (frac)
+  real(kind=dp)               :: input_sncovr  !< snow area fraction (frac)
   real(kind=dp)               :: input_area    !< surfce area [m^2]
-  real(kind=dp)               :: input_tg3     !< maximun vegetation fraction
-  real(kind=dp)               :: input_uustar  !< maximun vegetation fraction
-  real(kind=dp)               :: input_alvsf !< uv+visible black sky albedo (z=60 degree)"
-  real(kind=dp)               :: input_alnsf !< near IR black sky albedo (z=60 degree)"
-  real(kind=dp)               :: input_alvwf !< uv+visible white sky albedo"
-  real(kind=dp)               :: input_alnwf !< near IR white sky albedo"
-  real(kind=dp)               :: input_stddev !<  surface roughness
-  real(kind=dp)               :: input_convexity !<  surface roughness
-  real(kind=dp)               :: input_ol1 !<  surface roughness
-  real(kind=dp)               :: input_ol2 !<  surface roughness
-  real(kind=dp)               :: input_ol3 !<  surface roughness
-  real(kind=dp)               :: input_ol4 !<  surface roughness
-  real(kind=dp)               :: input_oa1 !<  surface roughness
-  real(kind=dp)               :: input_oa2 !<  surface roughness
-  real(kind=dp)               :: input_oa3 !<  surface roughness
-  real(kind=dp)               :: input_oa4 !<  surface roughness
-  real(kind=dp)               :: input_sigma !<  surface roughness
-  real(kind=dp)               :: input_theta !<  surface roughness
-  real(kind=dp)               :: input_gamma !<  surface roughness
-  real(kind=dp)               :: input_elvmax!<  surface roughness
-  real(kind=dp)               :: input_facsf !< near IR white sky albedo"
-  real(kind=dp)               :: input_facwf !< near IR white sky albedo"
-  real(kind=dp)               :: input_tvxy !<
-  real(kind=dp)               :: input_tgxy !<
-  real(kind=dp)               :: input_tahxy !<
-  real(kind=dp)               :: input_canicexy !<
-  real(kind=dp)               :: input_canliqxy !<
-  real(kind=dp)               :: input_eahxy !<
-  real(kind=dp)               :: input_cmxy !<
-  real(kind=dp)               :: input_chxy !<
-  real(kind=dp)               :: input_fwetxy !<
-  real(kind=dp)               :: input_sneqvoxy !<
-  real(kind=dp)               :: input_alboldxy !<
-  real(kind=dp)               :: input_qsnowxy !<
-  real(kind=dp)               :: input_wslakexy !<
-  real(kind=dp)               :: input_taussxy !<
-  real(kind=dp)               :: input_waxy !<
-  real(kind=dp)               :: input_wtxy !<
-  real(kind=dp)               :: input_zwtxy !<
-  real(kind=dp)               :: input_xlaixy !<
-  real(kind=dp)               :: input_xsaixy !<
-  real(kind=dp)               :: input_lfmassxy !<
-  real(kind=dp)               :: input_stmassxy !<
-  real(kind=dp)               :: input_rtmassxy !<
-  real(kind=dp)               :: input_woodxy !<
-  real(kind=dp)               :: input_stblcpxy !<
-  real(kind=dp)               :: input_fastcpxy !<
-  real(kind=dp)               :: input_smcwtdxy !<
-  real(kind=dp)               :: input_deeprechxy !<
-  real(kind=dp)               :: input_rechxy !<
-  real(kind=dp)               :: input_snowxy !<
+  real(kind=dp)               :: input_tg3     !< deep soil temperature (K)
+  real(kind=dp)               :: input_uustar  !< surface friction velocity (m s-1)
+  real(kind=dp)               :: input_alvsf !< 60 degree vis albedo with strong cosz dependency
+  real(kind=dp)               :: input_alnsf !< 60 degree nir albedo with strong cosz dependency
+  real(kind=dp)               :: input_alvwf !< 60 degree vis albedo with weak cosz dependency
+  real(kind=dp)               :: input_alnwf !< 60 degree nir albedo with weak cosz dependency
+  real(kind=dp)               :: input_stddev !< standard deviation of subgrid orography (m)
+  real(kind=dp)               :: input_convexity !< convexity of subgrid orography 
+  real(kind=dp)               :: input_ol1 !< fraction of grid box with subgrid orography higher than critical height 1
+  real(kind=dp)               :: input_ol2 !< fraction of grid box with subgrid orography higher than critical height 2
+  real(kind=dp)               :: input_ol3 !< fraction of grid box with subgrid orography higher than critical height 3
+  real(kind=dp)               :: input_ol4 !< fraction of grid box with subgrid orography higher than critical height 4
+  real(kind=dp)               :: input_oa1 !< assymetry of subgrid orography 1
+  real(kind=dp)               :: input_oa2 !< assymetry of subgrid orography 2
+  real(kind=dp)               :: input_oa3 !< assymetry of subgrid orography 3
+  real(kind=dp)               :: input_oa4 !< assymetry of subgrid orography 4
+  real(kind=dp)               :: input_sigma !< slope of subgrid orography
+  real(kind=dp)               :: input_theta !< angle with respect to east of maximum subgrid orographic variations (deg)
+  real(kind=dp)               :: input_gamma !< anisotropy of subgrid orography
+  real(kind=dp)               :: input_elvmax!< maximum of subgrid orography (m)
+  real(kind=dp)               :: input_facsf !< fractional coverage with strong cosz dependency
+  real(kind=dp)               :: input_facwf !< fractional coverage with weak cosz dependency
+  real(kind=dp)               :: input_tvxy !< vegetation temperature (K)
+  real(kind=dp)               :: input_tgxy !< ground temperature for Noahmp (K)
+  real(kind=dp)               :: input_tahxy !< canopy air temperature (K)
+  real(kind=dp)               :: input_canicexy !< canopy intercepted ice mass (mm)
+  real(kind=dp)               :: input_canliqxy !< canopy intercepted liquid water (mm)
+  real(kind=dp)               :: input_eahxy !< canopy air vapor pressure (Pa)
+  real(kind=dp)               :: input_cmxy !< surface drag coefficient for momentum for noahmp
+  real(kind=dp)               :: input_chxy !< surface exchange coeff heat & moisture for noahmp
+  real(kind=dp)               :: input_fwetxy !< area fraction of canopy that is wetted/snowed
+  real(kind=dp)               :: input_sneqvoxy !< snow mass at previous time step (mm)
+  real(kind=dp)               :: input_alboldxy !< snow albedo at previous time step (frac)
+  real(kind=dp)               :: input_qsnowxy !< snow precipitation rate at surface (mm s-1)
+  real(kind=dp)               :: input_wslakexy !< lake water storage (mm)
+  real(kind=dp)               :: input_taussxy !< non-dimensional snow age
+  real(kind=dp)               :: input_waxy !< water storage in aquifer (mm)
+  real(kind=dp)               :: input_wtxy !< water storage in aquifer and saturated soil (mm)
+  real(kind=dp)               :: input_zwtxy !< water table depth (m)
+  real(kind=dp)               :: input_xlaixy !< leaf area index
+  real(kind=dp)               :: input_xsaixy !< stem area index
+  real(kind=dp)               :: input_lfmassxy !< leaf mass (g m-2)
+  real(kind=dp)               :: input_stmassxy !< stem mass (g m-2)
+  real(kind=dp)               :: input_rtmassxy !< fine root mass (g m-2)
+  real(kind=dp)               :: input_woodxy !< wood mass including woody roots (g m-2)
+  real(kind=dp)               :: input_stblcpxy !< stable carbon in deep soil (g m-2)
+  real(kind=dp)               :: input_fastcpxy !< short-lived carbon in shallow soil (g m-2)
+  real(kind=dp)               :: input_smcwtdxy !< soil water content between the bottom of the soil and the water table (m3 m-3)
+  real(kind=dp)               :: input_deeprechxy !< recharge to or from the water table when deep (m)
+  real(kind=dp)               :: input_rechxy !< recharge to or from the water table when shallow (m)
+  real(kind=dp)               :: input_snowxy !< number of snow layers
 
   !surface time-series variables
   real(kind=dp), allocatable  :: input_pres_surf(:) !< time-series of surface pressure (Pa)
@@ -415,11 +414,23 @@ subroutine get_case_init(scm_state, scm_input)
        call check(NF90_INQ_VARID(grp_ncid,"zsnsoxy",varID))
        call check(NF90_GET_VAR(grp_ncid,varID,input_zsnsoxy))
      endif
-     call check(NF90_INQ_GRP_NCID(ncid,"scalars",grp_ncid))
-     call check(NF90_INQ_VARID(grp_ncid,"lat",varID))
-     call check(NF90_GET_VAR(grp_ncid,varID,input_lat))
-     call check(NF90_INQ_VARID(grp_ncid,"lon",varID))
-     call check(NF90_GET_VAR(grp_ncid,varID,input_lon))
+  endif
+  
+  !>  - Find group ncid for scalar group.
+  call check(NF90_INQ_GRP_NCID(ncid,"scalars",grp_ncid))
+  
+  ! ierr = NF90_INQ_VARID(grp_ncid,"lat",varID)
+  ! if (ierr .EQ. 0) then
+  !   call check(NF90_GET_VAR(grp_ncid,varID,input_lat))
+  !   call check(NF90_INQ_VARID(grp_ncid,"lon",varID))
+  !   call check(NF90_GET_VAR(grp_ncid,varID,input_lon))
+  ! endif
+  call check(NF90_INQ_VARID(grp_ncid,"lat",varID))
+  call check(NF90_GET_VAR(grp_ncid,varID,input_lat))
+  call check(NF90_INQ_VARID(grp_ncid,"lon",varID))
+  call check(NF90_GET_VAR(grp_ncid,varID,input_lon))
+  
+  if (scm_state%model_ics) then
      call check(NF90_INQ_VARID(grp_ncid,"vegsrc",varID))
      call check(NF90_GET_VAR(grp_ncid,varID,input_vegsrc))
      call check(NF90_INQ_VARID(grp_ncid,"vegtyp",varID))
@@ -669,9 +680,9 @@ subroutine get_case_init(scm_state, scm_input)
      scm_input%input_smc   = input_smc  
      scm_input%input_slc   = input_slc  
      scm_input%input_vegsrc   = input_vegsrc
-     scm_input%input_vegtyp   = input_vegtyp
-     scm_input%input_soiltyp  = input_soiltyp
-     scm_input%input_slopetype = input_slopetype
+     scm_input%input_vegtyp   = REAL(input_vegtyp, kind=dp)
+     scm_input%input_soiltyp  = REAL(input_soiltyp, kind=dp)
+     scm_input%input_slopetype = REAL(input_slopetype, kind=dp)
      scm_input%input_vegfrac  = input_vegfrac 
      scm_input%input_shdmin   = input_shdmin  
      scm_input%input_shdmax   = input_shdmax  

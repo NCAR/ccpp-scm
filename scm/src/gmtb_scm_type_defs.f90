@@ -112,68 +112,64 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: sh_flux(:), lh_flux(:) !< surface sensible and latent heat fluxes interpolated to the model time
     real(kind=dp), allocatable              :: sfc_roughness_length_cm(:) !< surface roughness length used for calculating surface layer parameters from specified fluxes
     real(kind=dp), allocatable              :: alvsf(:,:), alnsf(:,:),alvwf(:,:),alnwf(:,:) !< surface  albedos
-    real(kind=dp), allocatable              :: facsf(:,:), facwf(:,:),stddev(:,:),hprime(:,:,:)          !< other surface stuff
+    real(kind=dp), allocatable              :: facsf(:,:), facwf(:,:),stddev(:,:),hprime(:,:,:) !< other surface stuff
     real(kind=dp), allocatable              :: stc(:,:,:,:) !< soil temperature 
     real(kind=dp), allocatable              :: smc(:,:,:,:) !< soil moisture
     real(kind=dp), allocatable              :: slc(:,:,:,:) !< soil liquid content
     
-    integer, allocatable                    :: sfc_type(:,:) !< 0: sea surface, 1: land surface, 2: sea-ice surface
-    real(kind=dp), allocatable              :: sfc_type_real(:,:)
-    integer, allocatable                    :: veg_type(:,:)
-    real(kind=dp), allocatable              :: veg_type_real(:,:)
-    integer, allocatable                    :: veg_frac(:,:) !< 0: sea surface, 1: land surface, 2: sea-ice surface
-    real(kind=dp), allocatable              :: veg_frac_real(:,:)
-    real(kind=dp), allocatable              :: slopetype(:,:)
-    real(kind=dp), allocatable              :: shdmin(:,:)
-    real(kind=dp), allocatable              :: shdmax(:,:)
-    real(kind=dp), allocatable              :: tg3(:,:)
-    real(kind=dp), allocatable              :: slmsk(:,:)
-    real(kind=dp), allocatable              :: canopy(:,:)
-    real(kind=dp), allocatable              :: hice(:,:)
-    real(kind=dp), allocatable              :: fice(:,:)
-    real(kind=dp), allocatable              :: tisfc(:,:)
-    real(kind=dp), allocatable              :: snwdph(:,:)
-    real(kind=dp), allocatable              :: snoalb(:,:)
-    real(kind=dp), allocatable              :: sncovr(:,:)
-    real(kind=dp), allocatable              :: uustar(:,:)
-    integer, allocatable                    :: soil_type(:,:) !< 1-14?
-    real(kind=dp), allocatable              :: soil_type_real(:,:)
+    real(kind=dp), allocatable              :: sfc_type(:,:) !< 0: sea surface, 1: land surface, 2: sea-ice surface
+    real(kind=dp), allocatable              :: veg_type(:,:) !< vegetation type classification
+    real(kind=dp), allocatable              :: slope_type(:,:) !< surface slope classification
+    real(kind=dp), allocatable              :: soil_type(:,:) !< soil type classification
+    real(kind=dp), allocatable              :: veg_frac(:,:) !< vegetation area fraction
+    real(kind=dp), allocatable              :: shdmin(:,:) !< minimun vegetation fraction
+    real(kind=dp), allocatable              :: shdmax(:,:) !< maximun vegetation fraction
+    real(kind=dp), allocatable              :: tg3(:,:) !< deep soil temperature (K)
+    real(kind=dp), allocatable              :: slmsk(:,:) !< sea land ice mask [0,1,2]
+    real(kind=dp), allocatable              :: canopy(:,:) !< amount of water stored in canopy (kg m-2)
+    real(kind=dp), allocatable              :: hice(:,:) !< sea ice thickness (m)
+    real(kind=dp), allocatable              :: fice(:,:) !< ice fraction (frac)
+    real(kind=dp), allocatable              :: tisfc(:,:) !< ice surface temperature (K)
+    real(kind=dp), allocatable              :: snwdph(:,:) !< water equivalent snow depth (mm)
+    real(kind=dp), allocatable              :: snoalb(:,:) !< maximum snow albedo (frac)
+    real(kind=dp), allocatable              :: sncovr(:,:) !< snow area fraction (frac)
+    real(kind=dp), allocatable              :: uustar(:,:) !< surface friction velocity (m s-1)
     
-    real(kind=dp), allocatable              :: tvxy(:,:) !<
-    real(kind=dp), allocatable              :: tgxy(:,:) !<
-    real(kind=dp), allocatable              :: tahxy(:,:) !<
-    real(kind=dp), allocatable              :: canicexy(:,:) !<
-    real(kind=dp), allocatable              :: canliqxy(:,:) !<
-    real(kind=dp), allocatable              :: eahxy(:,:) !<
-    real(kind=dp), allocatable              :: cmxy(:,:) !<
-    real(kind=dp), allocatable              :: chxy(:,:) !<
-    real(kind=dp), allocatable              :: fwetxy(:,:) !<
-    real(kind=dp), allocatable              :: sneqvoxy(:,:) !<
-    real(kind=dp), allocatable              :: alboldxy(:,:) !<
-    real(kind=dp), allocatable              :: qsnowxy(:,:) !<
-    real(kind=dp), allocatable              :: wslakexy(:,:) !<
-    real(kind=dp), allocatable              :: taussxy(:,:) !<
-    real(kind=dp), allocatable              :: waxy(:,:) !<
-    real(kind=dp), allocatable              :: wtxy(:,:) !<
-    real(kind=dp), allocatable              :: zwtxy(:,:) !<
-    real(kind=dp), allocatable              :: xlaixy(:,:) !<
-    real(kind=dp), allocatable              :: xsaixy(:,:) !<
-    real(kind=dp), allocatable              :: lfmassxy(:,:) !<
-    real(kind=dp), allocatable              :: stmassxy(:,:) !<
-    real(kind=dp), allocatable              :: rtmassxy(:,:) !<
-    real(kind=dp), allocatable              :: woodxy(:,:) !<
-    real(kind=dp), allocatable              :: stblcpxy(:,:) !<
-    real(kind=dp), allocatable              :: fastcpxy(:,:) !<
-    real(kind=dp), allocatable              :: smcwtdxy(:,:) !<
-    real(kind=dp), allocatable              :: deeprechxy(:,:) !<
-    real(kind=dp), allocatable              :: rechxy(:,:) !<
-    real(kind=dp), allocatable              :: snowxy(:,:) !<
+    real(kind=dp), allocatable              :: tvxy(:,:) !< vegetation temperature (K)
+    real(kind=dp), allocatable              :: tgxy(:,:) !< ground temperature for Noahmp (K)
+    real(kind=dp), allocatable              :: tahxy(:,:) !< canopy air temperature (K)
+    real(kind=dp), allocatable              :: canicexy(:,:) !< canopy intercepted ice mass (mm)
+    real(kind=dp), allocatable              :: canliqxy(:,:) !< canopy intercepted liquid water (mm)
+    real(kind=dp), allocatable              :: eahxy(:,:) !< canopy air vapor pressure (Pa)
+    real(kind=dp), allocatable              :: cmxy(:,:) !< surface drag coefficient for momentum for noahmp
+    real(kind=dp), allocatable              :: chxy(:,:) !< surface exchange coeff heat & moisture for noahmp
+    real(kind=dp), allocatable              :: fwetxy(:,:) !< area fraction of canopy that is wetted/snowed
+    real(kind=dp), allocatable              :: sneqvoxy(:,:) !< snow mass at previous time step (mm)
+    real(kind=dp), allocatable              :: alboldxy(:,:) !< snow albedo at previous time step (frac)
+    real(kind=dp), allocatable              :: qsnowxy(:,:) !< snow precipitation rate at surface (mm s-1)
+    real(kind=dp), allocatable              :: wslakexy(:,:) !< lake water storage (mm)
+    real(kind=dp), allocatable              :: taussxy(:,:) !< non-dimensional snow age
+    real(kind=dp), allocatable              :: waxy(:,:) !< water storage in aquifer (mm)
+    real(kind=dp), allocatable              :: wtxy(:,:) !< water storage in aquifer and saturated soil (mm)
+    real(kind=dp), allocatable              :: zwtxy(:,:) !< water table depth (m)
+    real(kind=dp), allocatable              :: xlaixy(:,:) !< leaf area index
+    real(kind=dp), allocatable              :: xsaixy(:,:) !< stem area index
+    real(kind=dp), allocatable              :: lfmassxy(:,:) !< leaf mass (g m-2)
+    real(kind=dp), allocatable              :: stmassxy(:,:) !< stem mass (g m-2)
+    real(kind=dp), allocatable              :: rtmassxy(:,:) !< fine root mass (g m-2)
+    real(kind=dp), allocatable              :: woodxy(:,:) !< wood mass including woody roots (g m-2)
+    real(kind=dp), allocatable              :: stblcpxy(:,:) !< stable carbon in deep soil (g m-2)
+    real(kind=dp), allocatable              :: fastcpxy(:,:) !< short-lived carbon in shallow soil (g m-2)
+    real(kind=dp), allocatable              :: smcwtdxy(:,:) !< soil water content between the bottom of the soil and the water table (m3 m-3)
+    real(kind=dp), allocatable              :: deeprechxy(:,:) !< recharge to or from the water table when deep (m)
+    real(kind=dp), allocatable              :: rechxy(:,:) !< recharge to or from the water table when shallow (m)
+    real(kind=dp), allocatable              :: snowxy(:,:) !< number of snow layers
     
-    real(kind=dp), allocatable              :: snicexy(:,:,:) !<
-    real(kind=dp), allocatable              :: snliqxy(:,:,:) !<
-    real(kind=dp), allocatable              :: tsnoxy(:,:,:) !<
-    real(kind=dp), allocatable              :: smoiseq(:,:,:) !<
-    real(kind=dp), allocatable              :: zsnsoxy(:,:,:) !<
+    real(kind=dp), allocatable              :: snicexy(:,:,:) !< snow layer ice (mm)
+    real(kind=dp), allocatable              :: snliqxy(:,:,:) !< snow layer liquid (mm)
+    real(kind=dp), allocatable              :: tsnoxy(:,:,:) !< snow temperature (K)
+    real(kind=dp), allocatable              :: smoiseq(:,:,:) !< equilibrium soil water content (m3 m-3)
+    real(kind=dp), allocatable              :: zsnsoxy(:,:,:) !< layer bottom depth from snow surface (m)
     
     contains
       procedure :: create  => scm_state_create
@@ -187,11 +183,11 @@ module gmtb_scm_type_defs
     integer                           :: input_nsnow !< number of snow layers in the input file
     integer                           :: input_ntimes !< number of times in the input file where forcing is available
     integer                           :: input_vegsrc !<
-    integer                           :: input_vegtyp !<
-    integer                           :: input_soiltyp !<
-    integer                           :: input_slopetype !<
-    real(kind=dp)                     :: input_lat !< time-series of latitude of column center
-    real(kind=dp)                     :: input_lon !< time-series of longitude of column center
+    real(kind=dp)                     :: input_vegtyp !<
+    real(kind=dp)                     :: input_soiltyp !<
+    real(kind=dp)                     :: input_slopetype !<
+    real(kind=dp)                     :: input_lat !< latitude of column center
+    real(kind=dp)                     :: input_lon !< longitude of column center
     real(kind=dp)                     :: input_vegfrac  !<
     real(kind=dp)                     :: input_shdmin   !<
     real(kind=dp)                     :: input_shdmax   !<
@@ -207,24 +203,24 @@ module gmtb_scm_type_defs
     real(kind=dp)                     :: input_area     !<
     real(kind=dp)                     :: input_tg3      !<
     real(kind=dp)                     :: input_uustar   !<
-    real(kind=dp)                     :: input_alvsf !< uv+visible black sky albedo (z=60 degree)
-    real(kind=dp)                     :: input_alnsf !< near IR black sky albedo (z=60 degree)
-    real(kind=dp)                     :: input_alvwf !< uv+visible white sky albedo
-    real(kind=dp)                     :: input_alnwf !< near IR white sky albedo
-    real(kind=dp)                     :: input_convexity !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_stddev    !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa1       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa2       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa3       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa4       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol1       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol2       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol3       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol4       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_theta     !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_gamma     !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_sigma     !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_elvmax    !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_alvsf !< 
+    real(kind=dp)                     :: input_alnsf !< 
+    real(kind=dp)                     :: input_alvwf !< 
+    real(kind=dp)                     :: input_alnwf !< 
+    real(kind=dp)                     :: input_convexity !<
+    real(kind=dp)                     :: input_stddev    !<
+    real(kind=dp)                     :: input_oa1       !<
+    real(kind=dp)                     :: input_oa2       !<
+    real(kind=dp)                     :: input_oa3       !<
+    real(kind=dp)                     :: input_oa4       !<
+    real(kind=dp)                     :: input_ol1       !<
+    real(kind=dp)                     :: input_ol2       !<
+    real(kind=dp)                     :: input_ol3       !<
+    real(kind=dp)                     :: input_ol4       !<
+    real(kind=dp)                     :: input_theta     !<
+    real(kind=dp)                     :: input_gamma     !<
+    real(kind=dp)                     :: input_sigma     !<
+    real(kind=dp)                     :: input_elvmax    !<
     real(kind=dp)                     :: input_facsf !< fraction of surface depedent on sun angle
     real(kind=dp)                     :: input_facwf !< fraction of surface not depedent on sun angle
     real(kind=dp)                     :: input_tvxy !<
@@ -502,11 +498,11 @@ module gmtb_scm_type_defs
     
     allocate(scm_state%alvsf(n_columns,1), scm_state%alnsf(n_columns,1), scm_state%alvwf(n_columns,1), scm_state%alnwf(n_columns,1), &
       scm_state%facsf(n_columns,1), scm_state%facwf(n_columns,1), scm_state%hprime(n_columns,1,14), scm_state%stddev(n_columns,1), &
-      scm_state%sfc_type(n_columns,1), scm_state%sfc_type_real(n_columns,1), scm_state%veg_type(n_columns,1), scm_state%veg_type_real(n_columns,1), &
-      scm_state%veg_frac(n_columns,1), scm_state%veg_frac_real(n_columns,1), scm_state%slopetype(n_columns,1), scm_state%shdmin(n_columns,1), scm_state%shdmax(n_columns,1), &
+      scm_state%sfc_type(n_columns,1), scm_state%veg_type(n_columns,1), &
+      scm_state%veg_frac(n_columns,1), scm_state%slope_type(n_columns,1), scm_state%shdmin(n_columns,1), scm_state%shdmax(n_columns,1), &
       scm_state%tg3(n_columns,1), scm_state%slmsk(n_columns,1), scm_state%canopy(n_columns,1), scm_state%hice(n_columns,1), scm_state%fice(n_columns,1), &
       scm_state%tisfc(n_columns,1), scm_state%snwdph(n_columns,1), scm_state%snoalb(n_columns,1), scm_state%sncovr(n_columns,1), scm_state%uustar(n_columns,1), &
-      scm_state%soil_type(n_columns,1), scm_state%soil_type_real(n_columns,1))
+      scm_state%soil_type(n_columns,1))
     
     scm_state%alvsf = real_zero
     scm_state%alnsf = real_zero
@@ -516,13 +512,10 @@ module gmtb_scm_type_defs
     scm_state%facwf = real_zero
     scm_state%hprime = real_zero
     scm_state%stddev = real_zero
-    scm_state%sfc_type = int_zero
-    scm_state%sfc_type_real = real_zero
-    scm_state%veg_type = int_zero
-    scm_state%veg_type_real = real_zero
-    scm_state%veg_frac = int_zero
-    scm_state%veg_frac_real = real_zero
-    scm_state%slopetype = real_zero
+    scm_state%sfc_type = real_zero
+    scm_state%veg_type = real_zero
+    scm_state%veg_frac = real_zero
+    scm_state%slope_type = real_zero
     scm_state%shdmin = real_zero
     scm_state%shdmax = real_zero
     scm_state%tg3 = real_zero
@@ -535,8 +528,7 @@ module gmtb_scm_type_defs
     scm_state%snoalb = real_zero
     scm_state%sncovr = real_zero
     scm_state%uustar = real_zero
-    scm_state%soil_type = int_zero
-    scm_state%soil_type_real = real_zero
+    scm_state%soil_type = real_zero
     
     allocate(scm_state%tvxy(n_columns,1), scm_state%tgxy(n_columns,1), scm_state%tahxy(n_columns,1), scm_state%canicexy(n_columns,1), &
       scm_state%canliqxy(n_columns,1), scm_state%eahxy(n_columns,1), scm_state%cmxy(n_columns,1), scm_state%chxy(n_columns,1), &
@@ -654,9 +646,9 @@ module gmtb_scm_type_defs
     scm_input%input_lat = real_zero
     scm_input%input_lon = real_zero
     scm_input%input_vegsrc = int_zero
-    scm_input%input_vegtyp = int_zero
-    scm_input%input_soiltyp = int_zero
-    scm_input%input_slopetype = int_zero
+    scm_input%input_vegtyp = real_zero
+    scm_input%input_soiltyp = real_zero
+    scm_input%input_slopetype = real_zero
     scm_input%input_vegfrac = real_zero
     scm_input%input_shdmin = real_zero
     scm_input%input_shdmax = real_zero
@@ -836,16 +828,16 @@ module gmtb_scm_type_defs
 
     physics%Sfcprop(col)%tsfc => scm_state%T_surf(col,:)
     physics%Sfcprop(col)%tref => scm_state%T_surf(col,:)
-    physics%Sfcprop(col)%slmsk => scm_state%sfc_type_real(col,:)
-    physics%Sfcprop(col)%vtype => scm_state%veg_type_real(col,:)
-    physics%Sfcprop(col)%vfrac => scm_state%veg_frac_real(col,:)
-    physics%Sfcprop(col)%slope => scm_state%slopetype(col,:)
-    physics%Interstitial(col)%sigmaf = min(scm_state%veg_frac_real(col,:),0.01)
+    physics%Sfcprop(col)%slmsk => scm_state%sfc_type(col,:)
+    physics%Sfcprop(col)%vtype => scm_state%veg_type(col,:)
+    physics%Sfcprop(col)%vfrac => scm_state%veg_frac(col,:)
+    physics%Sfcprop(col)%slope => scm_state%slope_type(col,:)
+    physics%Interstitial(col)%sigmaf = min(scm_state%veg_frac(col,:),0.01)
     physics%Sfcprop(col)%shdmax => scm_state%shdmax(col,:)        
     physics%Sfcprop(col)%shdmin => scm_state%shdmin(col,:)        
     physics%Sfcprop(col)%tg3 => scm_state%tg3(col,:)        
     physics%Sfcprop(col)%uustar => scm_state%uustar(col,:)        
-    physics%Sfcprop(col)%stype => scm_state%soil_type_real(col,:)
+    physics%Sfcprop(col)%stype => scm_state%soil_type(col,:)
     physics%Sfcprop(col)%alvsf => scm_state%alvsf(col,:)
     physics%Sfcprop(col)%alnsf => scm_state%alnsf(col,:)
     physics%Sfcprop(col)%hprim => scm_state%stddev(col,:)

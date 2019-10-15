@@ -57,7 +57,7 @@ oz_pres = nc_fid_o3.variables['pressure']
 oz_data = nc_fid_o3.variables['o3']
 
 oz_f = scipy.interpolate.interp1d(oz_pres, oz_data)
-o3 = oz_f(levels[:])
+o3 = oz_f(levels[:].tolist())
 nc_fid_o3.close()
 
 #get initial theta
@@ -129,20 +129,20 @@ time = np.zeros((w_ls_force_grid.shape[0]),dtype=float)
 for t in range(w_ls_force_grid.shape[0]):
     time[t] = (data_date[t] - data_date[0]).total_seconds()
     w_ls_f = scipy.interpolate.interp1d(z_ls[t,:], w_ls_force_grid[t,:])
-    w_ls[:,t] = w_ls_f(z_wrf)
+    w_ls[:,t] = w_ls_f(z_wrf.tolist())
     omega[:,t] = ffc.w_to_omega(w_ls[:,t], levels, T)
     u_ls_f = scipy.interpolate.interp1d(z_ls[t,:], u_ls_force_grid[t,:])
-    u_ls[:,t] = u_ls_f(z_wrf)
+    u_ls[:,t] = u_ls_f(z_wrf.tolist())
     v_ls_f = scipy.interpolate.interp1d(z_ls[t,:], v_ls_force_grid[t,:])
-    v_ls[:,t] = v_ls_f(z_wrf)
+    v_ls[:,t] = v_ls_f(z_wrf.tolist())
     theta_nudge_f = scipy.interpolate.interp1d(z_ls[t,:], theta_nudge_force_grid[t,:])
-    theta_nudge[:,t] = theta_nudge_f(z_wrf)
+    theta_nudge[:,t] = theta_nudge_f(z_wrf.tolist())
     qv_nudge_f = scipy.interpolate.interp1d(z_ls[t,:], qv_nudge_force_grid[t,:])
-    qv_nudge[:,t] = qv_nudge_f(z_wrf)
+    qv_nudge[:,t] = qv_nudge_f(z_wrf.tolist())
     h_advec_thil_f = scipy.interpolate.interp1d(z_ls[t,:], h_advec_thil_force_grid[t,:])
-    h_advec_thil[:,t] = h_advec_thil_f(z_wrf)
+    h_advec_thil[:,t] = h_advec_thil_f(z_wrf.tolist())
     h_advec_qt_f = scipy.interpolate.interp1d(z_ls[t,:], h_advec_qt_force_grid[t,:])
-    h_advec_qt[:,t] = h_advec_qt_f(z_wrf)
+    h_advec_qt[:,t] = h_advec_qt_f(z_wrf.tolist())
 
 #writefile_fid = Dataset('../processed_case_input/LASSO_2016051812.nc', 'w', format='NETCDF4')
 #writefile_fid = Dataset('LASSO_2016061012.nc', 'w', format='NETCDF4')
@@ -203,6 +203,16 @@ writefile_init_second_var[:] = data_date[0].second
 writefile_init_second_var.units = 'seconds'
 writefile_init_second_var.description = 'second at time of initial values'
 
+writefile_lat_var = writefile_scalar_grp.createVariable('lat', 'f4')
+writefile_lat_var[:] = lat
+writefile_lat_var.units = 'degrees N'
+writefile_lat_var.description = 'latitude of column'
+
+writefile_lon_var = writefile_scalar_grp.createVariable('lon', 'f4')
+writefile_lon_var[:] = lon
+writefile_lon_var.units = 'degrees E'
+writefile_lon_var.description = 'longitude of column'
+
 #initial group
 
 writefile_height_var = writefile_initial_grp.createVariable('height', 'f4', ('levels',))
@@ -251,16 +261,6 @@ writefile_ozone_var.units = 'kg kg^-1'
 writefile_ozone_var.description = 'initial profile of ozone mass mixing ratio'
 
 #forcing group
-
-writefile_lat_var = writefile_forcing_grp.createVariable('lat', 'f4', ('time',))
-writefile_lat_var[:] = lat*np.ones((time.size),dtype=float)
-writefile_lat_var.units = 'degrees N'
-writefile_lat_var.description = 'latitude of column'
-
-writefile_lon_var = writefile_forcing_grp.createVariable('lon', 'f4', ('time',))
-writefile_lon_var[:] = lon*np.ones((time.size),dtype=float)
-writefile_lon_var.units = 'degrees E'
-writefile_lon_var.description = 'longitude of column'
 
 writefile_p_surf_var = writefile_forcing_grp.createVariable('p_surf', 'f4', ('time',))
 writefile_p_surf_var[:] = levels[0]*np.ones((time.size),dtype=float)
