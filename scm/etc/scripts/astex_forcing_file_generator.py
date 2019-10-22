@@ -6,7 +6,7 @@ import forcing_file_common as ffc
 
 #read in raw ASTEX input file
 
-nc_fid = Dataset("../raw_case_input/astex_input_v5.nc", 'r')
+nc_fid = Dataset("../../data/raw_case_input/astex_input_v5.nc", 'r')
 
 #ncdump to look at raw input file
 #nc_attrs, nc_dims, nc_vars = ncdump(nc_fid, False)
@@ -22,8 +22,8 @@ nc_fid = Dataset("../raw_case_input/astex_input_v5.nc", 'r')
 time = nc_fid.variables['time'][:]
 levels = nc_fid.variables['lev'][:]
 height = nc_fid.variables['height'][:]
-lat = nc_fid.variables['lat'][:]
-lon = nc_fid.variables['lon'][:]
+lat = nc_fid.variables['lat'][0]
+lon = nc_fid.variables['lon'][0]
 
 thetal = nc_fid.variables['thetal'][:]
 qt = nc_fid.variables['qt'][:]
@@ -57,7 +57,7 @@ qt_nudge = np.zeros((levels.size,time.size),dtype=float)
 
 #open processed input file for writing
 
-writefile_fid = Dataset('../processed_case_input/astex.nc', 'w', format='NETCDF4')
+writefile_fid = Dataset('../../data/processed_case_input/astex.nc', 'w', format='NETCDF4')
 writefile_fid.description = "GMTB SCM forcing file for ASTEX case"
 
 #create groups for scalars, intitialization, and forcing
@@ -83,6 +83,16 @@ writefile_levels_var.description = 'pressure levels'
 #create variables and write them out
 
 #scalar group
+
+writefile_lat_var = writefile_scalar_grp.createVariable('lat', 'f4')
+writefile_lat_var[:] = lat
+writefile_lat_var.units = 'degrees N'
+writefile_lat_var.description = 'latitude of column'
+
+writefile_lon_var = writefile_scalar_grp.createVariable('lon', 'f4')
+writefile_lon_var[:] = lon
+writefile_lon_var.units = 'degrees E'
+writefile_lon_var.description = 'longitude of column'
 
 #initial group
 
@@ -132,16 +142,6 @@ writefile_ozone_var.units = 'kg kg^-1'
 writefile_ozone_var.description = 'initial profile of ozone mass mixing ratio'
 
 #forcing group
-
-writefile_lat_var = writefile_forcing_grp.createVariable('lat', 'f4', ('time',))
-writefile_lat_var[:] = lat
-writefile_lat_var.units = 'degrees N'
-writefile_lat_var.description = 'latitude of column'
-
-writefile_lon_var = writefile_forcing_grp.createVariable('lon', 'f4', ('time',))
-writefile_lon_var[:] = lon
-writefile_lon_var.units = 'degrees E'
-writefile_lon_var.description = 'longitude of column'
 
 writefile_p_surf_var = writefile_forcing_grp.createVariable('p_surf', 'f4', ('time',))
 writefile_p_surf_var[:] = p_surf

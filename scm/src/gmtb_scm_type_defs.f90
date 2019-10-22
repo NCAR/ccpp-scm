@@ -38,7 +38,7 @@ module gmtb_scm_type_defs
     character(len=64), allocatable                  :: physics_nml(:)
 
     integer                           :: n_levels !< number of model levels (must be 64 for prototype)
-    integer                           :: n_nsoil  !< number of model levels (must be 4 for prototype)
+    integer                           :: n_soil  !< number of model levels (must be 4 for prototype)
     integer                           :: itt !< current model iteration
     integer                           :: itt_out  !< output iteration counter
     integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
@@ -71,27 +71,6 @@ module gmtb_scm_type_defs
     integer, allocatable              :: blksz(:)
 
     logical                           :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
-    integer                           :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
-    real(kind=dp)                     :: sfc_type_real(1)
-    integer                           :: veg_type !
-    real(kind=dp)                     :: veg_type_real(1)
-    integer                           :: veg_frac !< 0: sea surface, 1: land surface, 2: sea-ice surface
-    real(kind=dp)                     :: veg_frac_real(1)
-    real(kind=dp)                     :: slopetype(1)
-    real(kind=dp)                     :: shdmin(1)
-    real(kind=dp)                     :: shdmax(1)
-    real(kind=dp)                     :: tg3(1)
-    real(kind=dp)                     :: slmsk(1)
-    real(kind=dp)                     :: canopy(1)
-    real(kind=dp)                     :: hice(1)
-    real(kind=dp)                     :: fice(1)
-    real(kind=dp)                     :: tisfc(1)
-    real(kind=dp)                     :: snwdph(1)
-    real(kind=dp)                     :: snoalb(1)
-    real(kind=dp)                     :: sncovr(1)
-    real(kind=dp)                     :: uustar(1)
-    integer                           :: soil_type !< 1-14?
-    real(kind=dp)                     :: soil_type_real(1)
     integer                           :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
     integer                           :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
     integer                           :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
@@ -132,12 +111,66 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: T_surf(:,:), pres_surf(:,:) !< surface temperature and pressure interpolated to the model time
     real(kind=dp), allocatable              :: sh_flux(:), lh_flux(:) !< surface sensible and latent heat fluxes interpolated to the model time
     real(kind=dp), allocatable              :: sfc_roughness_length_cm(:) !< surface roughness length used for calculating surface layer parameters from specified fluxes
-    real(kind=dp), allocatable              :: alvsf(:), alnsf(:),alvwf(:),alnwf(:) !< surface  albedos
-    real(kind=dp), allocatable              :: facsf(:), facwf(:),stddev(:),hprime(:,:)          !< other surface stuff
+    real(kind=dp), allocatable              :: alvsf(:,:), alnsf(:,:),alvwf(:,:),alnwf(:,:) !< surface  albedos
+    real(kind=dp), allocatable              :: facsf(:,:), facwf(:,:),stddev(:,:),hprime(:,:,:) !< other surface stuff
     real(kind=dp), allocatable              :: stc(:,:,:,:) !< soil temperature 
     real(kind=dp), allocatable              :: smc(:,:,:,:) !< soil moisture
     real(kind=dp), allocatable              :: slc(:,:,:,:) !< soil liquid content
-
+    
+    real(kind=dp), allocatable              :: sfc_type(:,:) !< 0: sea surface, 1: land surface, 2: sea-ice surface
+    real(kind=dp), allocatable              :: veg_type(:,:) !< vegetation type classification
+    real(kind=dp), allocatable              :: slope_type(:,:) !< surface slope classification
+    real(kind=dp), allocatable              :: soil_type(:,:) !< soil type classification
+    real(kind=dp), allocatable              :: veg_frac(:,:) !< vegetation area fraction
+    real(kind=dp), allocatable              :: shdmin(:,:) !< minimun vegetation fraction
+    real(kind=dp), allocatable              :: shdmax(:,:) !< maximun vegetation fraction
+    real(kind=dp), allocatable              :: tg3(:,:) !< deep soil temperature (K)
+    real(kind=dp), allocatable              :: slmsk(:,:) !< sea land ice mask [0,1,2]
+    real(kind=dp), allocatable              :: canopy(:,:) !< amount of water stored in canopy (kg m-2)
+    real(kind=dp), allocatable              :: hice(:,:) !< sea ice thickness (m)
+    real(kind=dp), allocatable              :: fice(:,:) !< ice fraction (frac)
+    real(kind=dp), allocatable              :: tisfc(:,:) !< ice surface temperature (K)
+    real(kind=dp), allocatable              :: snwdph(:,:) !< water equivalent snow depth (mm)
+    real(kind=dp), allocatable              :: snoalb(:,:) !< maximum snow albedo (frac)
+    real(kind=dp), allocatable              :: sncovr(:,:) !< snow area fraction (frac)
+    real(kind=dp), allocatable              :: uustar(:,:) !< surface friction velocity (m s-1)
+    
+    real(kind=dp), allocatable              :: tvxy(:,:) !< vegetation temperature (K)
+    real(kind=dp), allocatable              :: tgxy(:,:) !< ground temperature for Noahmp (K)
+    real(kind=dp), allocatable              :: tahxy(:,:) !< canopy air temperature (K)
+    real(kind=dp), allocatable              :: canicexy(:,:) !< canopy intercepted ice mass (mm)
+    real(kind=dp), allocatable              :: canliqxy(:,:) !< canopy intercepted liquid water (mm)
+    real(kind=dp), allocatable              :: eahxy(:,:) !< canopy air vapor pressure (Pa)
+    real(kind=dp), allocatable              :: cmxy(:,:) !< surface drag coefficient for momentum for noahmp
+    real(kind=dp), allocatable              :: chxy(:,:) !< surface exchange coeff heat & moisture for noahmp
+    real(kind=dp), allocatable              :: fwetxy(:,:) !< area fraction of canopy that is wetted/snowed
+    real(kind=dp), allocatable              :: sneqvoxy(:,:) !< snow mass at previous time step (mm)
+    real(kind=dp), allocatable              :: alboldxy(:,:) !< snow albedo at previous time step (frac)
+    real(kind=dp), allocatable              :: qsnowxy(:,:) !< snow precipitation rate at surface (mm s-1)
+    real(kind=dp), allocatable              :: wslakexy(:,:) !< lake water storage (mm)
+    real(kind=dp), allocatable              :: taussxy(:,:) !< non-dimensional snow age
+    real(kind=dp), allocatable              :: waxy(:,:) !< water storage in aquifer (mm)
+    real(kind=dp), allocatable              :: wtxy(:,:) !< water storage in aquifer and saturated soil (mm)
+    real(kind=dp), allocatable              :: zwtxy(:,:) !< water table depth (m)
+    real(kind=dp), allocatable              :: xlaixy(:,:) !< leaf area index
+    real(kind=dp), allocatable              :: xsaixy(:,:) !< stem area index
+    real(kind=dp), allocatable              :: lfmassxy(:,:) !< leaf mass (g m-2)
+    real(kind=dp), allocatable              :: stmassxy(:,:) !< stem mass (g m-2)
+    real(kind=dp), allocatable              :: rtmassxy(:,:) !< fine root mass (g m-2)
+    real(kind=dp), allocatable              :: woodxy(:,:) !< wood mass including woody roots (g m-2)
+    real(kind=dp), allocatable              :: stblcpxy(:,:) !< stable carbon in deep soil (g m-2)
+    real(kind=dp), allocatable              :: fastcpxy(:,:) !< short-lived carbon in shallow soil (g m-2)
+    real(kind=dp), allocatable              :: smcwtdxy(:,:) !< soil water content between the bottom of the soil and the water table (m3 m-3)
+    real(kind=dp), allocatable              :: deeprechxy(:,:) !< recharge to or from the water table when deep (m)
+    real(kind=dp), allocatable              :: rechxy(:,:) !< recharge to or from the water table when shallow (m)
+    real(kind=dp), allocatable              :: snowxy(:,:) !< number of snow layers
+    
+    real(kind=dp), allocatable              :: snicexy(:,:,:) !< snow layer ice (mm)
+    real(kind=dp), allocatable              :: snliqxy(:,:,:) !< snow layer liquid (mm)
+    real(kind=dp), allocatable              :: tsnoxy(:,:,:) !< snow temperature (K)
+    real(kind=dp), allocatable              :: smoiseq(:,:,:) !< equilibrium soil water content (m3 m-3)
+    real(kind=dp), allocatable              :: zsnsoxy(:,:,:) !< layer bottom depth from snow surface (m)
+    
     contains
       procedure :: create  => scm_state_create
 
@@ -147,11 +180,14 @@ module gmtb_scm_type_defs
     !> - Define the case-specific initialization and forcing variables.
     integer                           :: input_nlev !< number of levels in the input file
     integer                           :: input_nsoil !< number of soil levels in the input file
+    integer                           :: input_nsnow !< number of snow layers in the input file
     integer                           :: input_ntimes !< number of times in the input file where forcing is available
     integer                           :: input_vegsrc !<
-    integer                           :: input_vegtyp !<
-    integer                           :: input_soiltyp !<
-    integer                           :: input_slopetype !<
+    real(kind=dp)                     :: input_vegtyp !<
+    real(kind=dp)                     :: input_soiltyp !<
+    real(kind=dp)                     :: input_slopetype !<
+    real(kind=dp)                     :: input_lat !< latitude of column center
+    real(kind=dp)                     :: input_lon !< longitude of column center
     real(kind=dp)                     :: input_vegfrac  !<
     real(kind=dp)                     :: input_shdmin   !<
     real(kind=dp)                     :: input_shdmax   !<
@@ -167,26 +203,55 @@ module gmtb_scm_type_defs
     real(kind=dp)                     :: input_area     !<
     real(kind=dp)                     :: input_tg3      !<
     real(kind=dp)                     :: input_uustar   !<
-    real(kind=dp)                     :: input_alvsf !< uv+visible black sky albedo (z=60 degree)
-    real(kind=dp)                     :: input_alnsf !< near IR black sky albedo (z=60 degree)
-    real(kind=dp)                     :: input_alvwf !< uv+visible white sky albedo
-    real(kind=dp)                     :: input_alnwf !< near IR white sky albedo
-    real(kind=dp)                     :: input_convexity !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_stddev    !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa1       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa2       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa3       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_oa4       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol1       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol2       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol3       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_ol4       !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_theta     !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_gamma     !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_sigma     !< surface orograpy standard deviation
-    real(kind=dp)                     :: input_elvmax    !< surface orograpy standard deviation
+    real(kind=dp)                     :: input_alvsf !< 
+    real(kind=dp)                     :: input_alnsf !< 
+    real(kind=dp)                     :: input_alvwf !< 
+    real(kind=dp)                     :: input_alnwf !< 
+    real(kind=dp)                     :: input_convexity !<
+    real(kind=dp)                     :: input_stddev    !<
+    real(kind=dp)                     :: input_oa1       !<
+    real(kind=dp)                     :: input_oa2       !<
+    real(kind=dp)                     :: input_oa3       !<
+    real(kind=dp)                     :: input_oa4       !<
+    real(kind=dp)                     :: input_ol1       !<
+    real(kind=dp)                     :: input_ol2       !<
+    real(kind=dp)                     :: input_ol3       !<
+    real(kind=dp)                     :: input_ol4       !<
+    real(kind=dp)                     :: input_theta     !<
+    real(kind=dp)                     :: input_gamma     !<
+    real(kind=dp)                     :: input_sigma     !<
+    real(kind=dp)                     :: input_elvmax    !<
     real(kind=dp)                     :: input_facsf !< fraction of surface depedent on sun angle
     real(kind=dp)                     :: input_facwf !< fraction of surface not depedent on sun angle
+    real(kind=dp)                     :: input_tvxy !<
+    real(kind=dp)                     :: input_tgxy !<
+    real(kind=dp)                     :: input_tahxy !<
+    real(kind=dp)                     :: input_canicexy !<
+    real(kind=dp)                     :: input_canliqxy !<
+    real(kind=dp)                     :: input_eahxy !<
+    real(kind=dp)                     :: input_cmxy !<
+    real(kind=dp)                     :: input_chxy !<
+    real(kind=dp)                     :: input_fwetxy !<
+    real(kind=dp)                     :: input_sneqvoxy !<
+    real(kind=dp)                     :: input_alboldxy !<
+    real(kind=dp)                     :: input_qsnowxy !<
+    real(kind=dp)                     :: input_wslakexy !<
+    real(kind=dp)                     :: input_taussxy !<
+    real(kind=dp)                     :: input_waxy !<
+    real(kind=dp)                     :: input_wtxy !<
+    real(kind=dp)                     :: input_zwtxy !<
+    real(kind=dp)                     :: input_xlaixy !<
+    real(kind=dp)                     :: input_xsaixy !<
+    real(kind=dp)                     :: input_lfmassxy !<
+    real(kind=dp)                     :: input_stmassxy !<
+    real(kind=dp)                     :: input_rtmassxy !<
+    real(kind=dp)                     :: input_woodxy !<
+    real(kind=dp)                     :: input_stblcpxy !<
+    real(kind=dp)                     :: input_fastcpxy !<
+    real(kind=dp)                     :: input_smcwtdxy !<
+    real(kind=dp)                     :: input_deeprechxy !<
+    real(kind=dp)                     :: input_rechxy !<
+    real(kind=dp)                     :: input_snowxy !<
     real(kind=dp), allocatable        :: input_pres_i(:) !< pressure (Pa) of input interface
     real(kind=dp), allocatable        :: input_pres_l(:) !< pressure (Pa) of input levels
     real(kind=dp), allocatable              :: input_pres(:) !< pressure (Pa) of input levels
@@ -204,8 +269,11 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: input_stc(:) !< soil temperature (k) (initial)
     real(kind=dp), allocatable              :: input_smc(:) !< soil moisture conteng (g/g) (initial)
     real(kind=dp), allocatable              :: input_slc(:) !< soil liquid content (g/g) (initial)
-    real(kind=dp), allocatable              :: input_lat(:) !< time-series of latitude of column center
-    real(kind=dp), allocatable              :: input_lon(:) !< time-series of longitude of column center
+    real(kind=dp), allocatable              :: input_snicexy(:) !<
+    real(kind=dp), allocatable              :: input_snliqxy(:) !<
+    real(kind=dp), allocatable              :: input_tsnoxy(:) !<
+    real(kind=dp), allocatable              :: input_smoiseq(:) !<
+    real(kind=dp), allocatable              :: input_zsnsoxy(:) !<
     real(kind=dp), allocatable              :: input_pres_surf(:) !< time-series of surface pressure (Pa)
     real(kind=dp), allocatable              :: input_T_surf(:) !< time-series of surface temperture
     real(kind=dp), allocatable              :: input_w_ls(:,:) !< large-scale vertical velocity (m/s) (time, levels)
@@ -269,9 +337,9 @@ module gmtb_scm_type_defs
 
   contains
 
-  subroutine scm_state_create(scm_state, n_columns, n_levels, n_nsoil, n_time_levels)
+  subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels)
     class(scm_state_type)             :: scm_state
-    integer, intent(in)               :: n_columns, n_levels, n_nsoil, n_time_levels
+    integer, intent(in)               :: n_columns, n_levels, n_soil, n_snow, n_time_levels
 
     scm_state%experiment_name = clear_char
     scm_state%model_name = clear_char
@@ -334,18 +402,6 @@ module gmtb_scm_type_defs
     scm_state%blksz = int_one
 
     scm_state%sfc_flux_spec = .false.
-    scm_state%sfc_type = int_zero
-    scm_state%sfc_type_real = real_zero
-    scm_state%veg_type = int_zero
-    scm_state%veg_type_real = real_zero
-    scm_state%veg_frac = int_zero
-    scm_state%veg_frac_real = real_zero
-    scm_state%shdmin = real_zero
-    scm_state%shdmax = real_zero
-    scm_state%tg3 = real_zero
-    scm_state%uustar = real_zero
-    scm_state%soil_type = int_zero
-    scm_state%soil_type_real = real_zero
     scm_state%C_RES            = int_zero
     scm_state%mom_forcing_type = int_zero
     scm_state%thermo_forcing_type = int_zero
@@ -398,9 +454,9 @@ module gmtb_scm_type_defs
     allocate(scm_state%temp_tracer(n_columns, 1, n_levels, scm_state%n_tracers, n_time_levels), &
       scm_state%temp_T(n_columns, 1, n_levels, n_time_levels), &
       scm_state%temp_u(n_columns, 1, n_levels, n_time_levels), scm_state%temp_v(n_columns, 1, n_levels, n_time_levels))
-    allocate(scm_state%stc(n_columns, 1, n_nsoil, n_time_levels))
-    allocate(scm_state%smc(n_columns, 1, n_nsoil, n_time_levels))
-    allocate(scm_state%slc(n_columns, 1, n_nsoil, n_time_levels))
+    allocate(scm_state%stc(n_columns, 1, n_soil, n_time_levels))
+    allocate(scm_state%smc(n_columns, 1, n_soil, n_time_levels))
+    allocate(scm_state%slc(n_columns, 1, n_soil, n_time_levels))
     scm_state%temp_tracer = real_zero
     scm_state%temp_T = real_zero
     scm_state%temp_u = real_zero
@@ -410,9 +466,6 @@ module gmtb_scm_type_defs
       scm_state%v_g(n_columns, n_levels), scm_state%dT_dt_rad(n_columns, n_levels), scm_state%h_advec_thil(n_columns, n_levels), &
       scm_state%h_advec_qt(n_columns, n_levels), scm_state%v_advec_thil(n_columns, n_levels), &
       scm_state%v_advec_qt(n_columns, n_levels), scm_state%pres_surf(n_columns,1), scm_state%T_surf(n_columns,1), &
-      scm_state%alvsf(n_columns), scm_state%alnsf(n_columns), scm_state%alvwf(n_columns), scm_state%alnwf(n_columns), &
-      scm_state%facsf(n_columns), scm_state%facwf(n_columns), &
-      scm_state%hprime(n_columns,14), scm_state%stddev(n_columns), &
       scm_state%u_nudge(n_columns, n_levels), scm_state%v_nudge(n_columns, n_levels), &
       scm_state%T_nudge(n_columns, n_levels), scm_state%thil_nudge(n_columns, n_levels), &
       scm_state%qt_nudge(n_columns, n_levels), scm_state%sh_flux(n_columns), scm_state%lh_flux(n_columns), &
@@ -430,14 +483,6 @@ module gmtb_scm_type_defs
     scm_state%v_advec_qt = real_zero
     scm_state%pres_surf = real_zero
     scm_state%T_surf = real_zero
-    scm_state%alvsf = real_zero
-    scm_state%alnsf = real_zero
-    scm_state%alvwf = real_zero
-    scm_state%alnwf = real_zero
-    scm_state%facsf = real_zero
-    scm_state%facwf = real_zero
-    scm_state%hprime = real_zero
-    scm_state%stddev = real_zero
     scm_state%u_nudge = real_zero
     scm_state%v_nudge = real_zero
     scm_state%T_nudge = real_zero
@@ -450,12 +495,95 @@ module gmtb_scm_type_defs
     scm_state%T_force_tend = real_zero
     scm_state%qv_force_tend = real_zero
     scm_state%sfc_roughness_length_cm = real_one
-
+    
+    allocate(scm_state%alvsf(n_columns,1), scm_state%alnsf(n_columns,1), scm_state%alvwf(n_columns,1), scm_state%alnwf(n_columns,1), &
+      scm_state%facsf(n_columns,1), scm_state%facwf(n_columns,1), scm_state%hprime(n_columns,1,14), scm_state%stddev(n_columns,1), &
+      scm_state%sfc_type(n_columns,1), scm_state%veg_type(n_columns,1), &
+      scm_state%veg_frac(n_columns,1), scm_state%slope_type(n_columns,1), scm_state%shdmin(n_columns,1), scm_state%shdmax(n_columns,1), &
+      scm_state%tg3(n_columns,1), scm_state%slmsk(n_columns,1), scm_state%canopy(n_columns,1), scm_state%hice(n_columns,1), scm_state%fice(n_columns,1), &
+      scm_state%tisfc(n_columns,1), scm_state%snwdph(n_columns,1), scm_state%snoalb(n_columns,1), scm_state%sncovr(n_columns,1), scm_state%uustar(n_columns,1), &
+      scm_state%soil_type(n_columns,1))
+    
+    scm_state%alvsf = real_zero
+    scm_state%alnsf = real_zero
+    scm_state%alvwf = real_zero
+    scm_state%alnwf = real_zero
+    scm_state%facsf = real_zero
+    scm_state%facwf = real_zero
+    scm_state%hprime = real_zero
+    scm_state%stddev = real_zero
+    scm_state%sfc_type = real_zero
+    scm_state%veg_type = real_zero
+    scm_state%veg_frac = real_zero
+    scm_state%slope_type = real_zero
+    scm_state%shdmin = real_zero
+    scm_state%shdmax = real_zero
+    scm_state%tg3 = real_zero
+    scm_state%slmsk = real_zero
+    scm_state%canopy = real_zero
+    scm_state%hice = real_zero
+    scm_state%fice = real_zero
+    scm_state%tisfc = real_zero
+    scm_state%snwdph = real_zero
+    scm_state%snoalb = real_zero
+    scm_state%sncovr = real_zero
+    scm_state%uustar = real_zero
+    scm_state%soil_type = real_zero
+    
+    allocate(scm_state%tvxy(n_columns,1), scm_state%tgxy(n_columns,1), scm_state%tahxy(n_columns,1), scm_state%canicexy(n_columns,1), &
+      scm_state%canliqxy(n_columns,1), scm_state%eahxy(n_columns,1), scm_state%cmxy(n_columns,1), scm_state%chxy(n_columns,1), &
+      scm_state%fwetxy(n_columns,1), scm_state%sneqvoxy(n_columns,1), scm_state%alboldxy(n_columns,1), scm_state%qsnowxy(n_columns,1), &
+      scm_state%wslakexy(n_columns,1), scm_state%taussxy(n_columns,1), scm_state%waxy(n_columns,1), scm_state%wtxy(n_columns,1), &
+      scm_state%zwtxy(n_columns,1), scm_state%xlaixy(n_columns,1), scm_state%xsaixy(n_columns,1), scm_state%lfmassxy(n_columns,1), &
+      scm_state%stmassxy(n_columns,1), scm_state%rtmassxy(n_columns,1), scm_state%woodxy(n_columns,1), scm_state%stblcpxy(n_columns,1), &
+      scm_state%fastcpxy(n_columns,1), scm_state%smcwtdxy(n_columns,1), scm_state%deeprechxy(n_columns,1), scm_state%rechxy(n_columns,1), &
+      scm_state%snowxy(n_columns,1))
+    
+    scm_state%tvxy = real_zero
+    scm_state%tgxy = real_zero
+    scm_state%tahxy = real_zero
+    scm_state%canicexy = real_zero
+    scm_state%canliqxy = real_zero
+    scm_state%eahxy = real_zero
+    scm_state%cmxy = real_zero
+    scm_state%chxy = real_zero
+    scm_state%fwetxy = real_zero
+    scm_state%sneqvoxy = real_zero
+    scm_state%alboldxy = real_zero
+    scm_state%qsnowxy = real_zero
+    scm_state%wslakexy = real_zero
+    scm_state%taussxy = real_zero
+    scm_state%waxy = real_zero
+    scm_state%wtxy = real_zero
+    scm_state%zwtxy = real_zero
+    scm_state%xlaixy = real_zero
+    scm_state%xsaixy = real_zero
+    scm_state%lfmassxy = real_zero
+    scm_state%stmassxy = real_zero
+    scm_state%rtmassxy = real_zero
+    scm_state%woodxy = real_zero
+    scm_state%stblcpxy = real_zero
+    scm_state%fastcpxy = real_zero
+    scm_state%smcwtdxy = real_zero
+    scm_state%deeprechxy = real_zero
+    scm_state%rechxy = real_zero
+    scm_state%snowxy = real_zero
+    
+    allocate(scm_state%snicexy(n_columns,1,n_snow), scm_state%snliqxy(n_columns,1,n_snow), scm_state%tsnoxy(n_columns,1,n_snow), &
+      scm_state%smoiseq(n_columns,1,n_soil), scm_state%zsnsoxy(n_columns,1,n_snow + n_soil))
+    
+    scm_state%snicexy = real_zero
+    scm_state%snliqxy = real_zero
+    scm_state%tsnoxy = real_zero
+    scm_state%smoiseq = real_zero
+    scm_state%zsnsoxy = real_zero
+    
   end subroutine scm_state_create
 
-  subroutine scm_input_create_model_ics(scm_input, nlev_soil,nlev)
+  subroutine scm_input_create_model_ics(scm_input,nlev_soil,nlev_snow,nlev,noahmp)
     class(scm_input_type)             :: scm_input
-    integer, intent(in)               :: nlev,nlev_soil
+    integer, intent(in)               :: nlev,nlev_soil,nlev_snow
+    logical, intent(in)               :: noahmp
 
     scm_input%input_nsoil= nlev_soil
     allocate(scm_input%input_stc(nlev_soil), scm_input%input_smc(nlev_soil), scm_input%input_slc(nlev_soil))
@@ -466,6 +594,17 @@ module gmtb_scm_type_defs
     scm_input%input_temp   = real_zero
     scm_input%input_pres_i = real_zero
     scm_input%input_pres_l = real_zero
+    
+    if (noahmp) then
+      scm_input%input_nsnow = nlev_snow
+      allocate(scm_input%input_snicexy(nlev_snow), scm_input%input_snliqxy(nlev_snow), scm_input%input_tsnoxy(nlev_snow), &
+         scm_input%input_smoiseq(nlev_soil), scm_input%input_zsnsoxy(nlev_snow + nlev_soil))
+      scm_input%input_snicexy    = real_zero
+      scm_input%input_snliqxy    = real_zero
+      scm_input%input_tsnoxy     = real_zero
+      scm_input%input_smoiseq    = real_zero
+      scm_input%input_zsnsoxy    = real_zero
+    endif
 
   end subroutine scm_input_create_model_ics
 
@@ -493,19 +632,67 @@ module gmtb_scm_type_defs
     scm_input%input_tke = real_zero
     scm_input%input_ozone = real_zero
 
-    allocate(scm_input%input_lat(ntimes), scm_input%input_lon(ntimes), scm_input%input_pres_surf(ntimes), &
+    allocate(scm_input%input_pres_surf(ntimes), &
       scm_input%input_T_surf(ntimes), scm_input%input_sh_flux_sfc(ntimes), scm_input%input_lh_flux_sfc(ntimes), &
       scm_input%input_w_ls(ntimes, nlev), scm_input%input_omega(ntimes, nlev), scm_input%input_u_g(ntimes, nlev), &
       scm_input%input_v_g(ntimes, nlev), scm_input%input_dT_dt_rad(ntimes, nlev), scm_input%input_h_advec_thetail(ntimes, nlev), &
       scm_input%input_h_advec_qt(ntimes, nlev), scm_input%input_v_advec_thetail(ntimes, nlev), &
       scm_input%input_v_advec_qt(ntimes, nlev), scm_input%input_u_nudge(ntimes, nlev), scm_input%input_v_nudge(ntimes, nlev),    &
       scm_input%input_T_nudge(ntimes, nlev), scm_input%input_thil_nudge(ntimes, nlev), scm_input%input_qt_nudge(ntimes, nlev))
+    scm_input%input_pres_surf = real_zero
+    scm_input%input_T_surf = real_zero
+    scm_input%input_pres_surf = real_zero
+    scm_input%input_T_surf = real_zero
     scm_input%input_lat = real_zero
     scm_input%input_lon = real_zero
-    scm_input%input_pres_surf = real_zero
-    scm_input%input_T_surf = real_zero
-    scm_input%input_pres_surf = real_zero
-    scm_input%input_T_surf = real_zero
+    scm_input%input_vegsrc = int_zero
+    scm_input%input_vegtyp = real_zero
+    scm_input%input_soiltyp = real_zero
+    scm_input%input_slopetype = real_zero
+    scm_input%input_vegfrac = real_zero
+    scm_input%input_shdmin = real_zero
+    scm_input%input_shdmax = real_zero
+    scm_input%input_zorl = real_zero
+    scm_input%input_slmsk = real_zero
+    scm_input%input_canopy = real_zero
+    scm_input%input_hice = real_zero
+    scm_input%input_fice = real_zero
+    scm_input%input_tisfc = real_zero
+    scm_input%input_snwdph = real_zero
+    scm_input%input_snoalb = real_zero
+    scm_input%input_sncovr = real_zero
+    scm_input%input_area = real_zero
+    scm_input%input_tg3 = real_zero
+    scm_input%input_uustar = real_zero
+    scm_input%input_tvxy = real_zero
+    scm_input%input_tgxy = real_zero
+    scm_input%input_tahxy = real_zero
+    scm_input%input_canicexy = real_zero
+    scm_input%input_canliqxy = real_zero
+    scm_input%input_eahxy = real_zero
+    scm_input%input_cmxy = real_zero
+    scm_input%input_chxy = real_zero
+    scm_input%input_fwetxy = real_zero
+    scm_input%input_sneqvoxy = real_zero
+    scm_input%input_alboldxy = real_zero
+    scm_input%input_qsnowxy = real_zero
+    scm_input%input_wslakexy = real_zero
+    scm_input%input_taussxy = real_zero
+    scm_input%input_waxy = real_zero
+    scm_input%input_wtxy = real_zero
+    scm_input%input_zwtxy = real_zero
+    scm_input%input_xlaixy = real_zero
+    scm_input%input_xsaixy = real_zero
+    scm_input%input_lfmassxy = real_zero
+    scm_input%input_stmassxy = real_zero
+    scm_input%input_rtmassxy = real_zero
+    scm_input%input_woodxy = real_zero
+    scm_input%input_stblcpxy = real_zero
+    scm_input%input_fastcpxy = real_zero
+    scm_input%input_smcwtdxy = real_zero
+    scm_input%input_deeprechxy = real_zero
+    scm_input%input_rechxy = real_zero
+    scm_input%input_snowxy = real_zero
     scm_input%input_alvsf        = real_zero
     scm_input%input_alnsf        = real_zero
     scm_input%input_alvwf        = real_zero
@@ -525,6 +712,7 @@ module gmtb_scm_type_defs
     scm_input%input_sigma        = real_zero
     scm_input%input_elvmax       = real_zero
     scm_input%input_facsf        = real_zero
+    scm_input%input_facwf        = real_zero
     scm_input%input_sh_flux_sfc = real_zero
     scm_input%input_lh_flux_sfc = real_zero
     scm_input%input_w_ls = real_zero
@@ -640,24 +828,24 @@ module gmtb_scm_type_defs
 
     physics%Sfcprop(col)%tsfc => scm_state%T_surf(col,:)
     physics%Sfcprop(col)%tref => scm_state%T_surf(col,:)
-    physics%Sfcprop(col)%slmsk => scm_state%sfc_type_real
-    physics%Sfcprop(col)%vtype => scm_state%veg_type_real
-    physics%Sfcprop(col)%vfrac => scm_state%veg_frac_real
-    physics%Sfcprop(col)%slope => scm_state%slopetype
-    physics%Interstitial(col)%sigmaf = min(scm_state%veg_frac_real,0.01)
-    physics%Sfcprop(col)%shdmax => scm_state%shdmax        
-    physics%Sfcprop(col)%shdmin => scm_state%shdmin        
-    physics%Sfcprop(col)%tg3 => scm_state%tg3        
-    physics%Sfcprop(col)%uustar => scm_state%uustar        
-    physics%Sfcprop(col)%stype => scm_state%soil_type_real
-    physics%Sfcprop(col)%alvsf => scm_state%alvsf
-    physics%Sfcprop(col)%alnsf => scm_state%alnsf
-    physics%Sfcprop(col)%hprim => scm_state%stddev
-    physics%Sfcprop(col)%hprime=> scm_state%hprime 
-    physics%Sfcprop(col)%alvwf => scm_state%alvwf
-    physics%Sfcprop(col)%alnwf => scm_state%alnwf
-    physics%Sfcprop(col)%facsf => scm_state%facsf
-    physics%Sfcprop(col)%facwf => scm_state%facwf
+    physics%Sfcprop(col)%slmsk => scm_state%sfc_type(col,:)
+    physics%Sfcprop(col)%vtype => scm_state%veg_type(col,:)
+    physics%Sfcprop(col)%vfrac => scm_state%veg_frac(col,:)
+    physics%Sfcprop(col)%slope => scm_state%slope_type(col,:)
+    physics%Interstitial(col)%sigmaf = min(scm_state%veg_frac(col,:),0.01)
+    physics%Sfcprop(col)%shdmax => scm_state%shdmax(col,:)        
+    physics%Sfcprop(col)%shdmin => scm_state%shdmin(col,:)        
+    physics%Sfcprop(col)%tg3 => scm_state%tg3(col,:)        
+    physics%Sfcprop(col)%uustar => scm_state%uustar(col,:)        
+    physics%Sfcprop(col)%stype => scm_state%soil_type(col,:)
+    physics%Sfcprop(col)%alvsf => scm_state%alvsf(col,:)
+    physics%Sfcprop(col)%alnsf => scm_state%alnsf(col,:)
+    physics%Sfcprop(col)%hprim => scm_state%stddev(col,:)
+    physics%Sfcprop(col)%hprime=> scm_state%hprime(col,:,:) 
+    physics%Sfcprop(col)%alvwf => scm_state%alvwf(col,:)
+    physics%Sfcprop(col)%alnwf => scm_state%alnwf(col,:)
+    physics%Sfcprop(col)%facsf => scm_state%facsf(col,:)
+    physics%Sfcprop(col)%facwf => scm_state%facwf(col,:)
 
     physics%Sfcprop(col)%stc   => scm_state%stc(col,:,:,1)
     physics%Sfcprop(col)%smc   => scm_state%smc(col,:,:,1)
@@ -695,13 +883,50 @@ module gmtb_scm_type_defs
     endif
     if(scm_state%model_ics) then
       physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
-      physics%Sfcprop(col)%canopy => scm_state%canopy        
-      physics%Sfcprop(col)%hice => scm_state%hice        
-      physics%Sfcprop(col)%fice => scm_state%fice        
-      physics%Sfcprop(col)%tisfc => scm_state%tisfc        
-      physics%Sfcprop(col)%snowd  => scm_state%snwdph        
-      physics%Sfcprop(col)%snoalb => scm_state%snoalb        
-      physics%Sfcprop(col)%sncovr => scm_state%sncovr        
+      physics%Sfcprop(col)%canopy => scm_state%canopy(col,:)
+      physics%Sfcprop(col)%hice => scm_state%hice(col,:)
+      physics%Sfcprop(col)%fice => scm_state%fice(col,:)
+      physics%Sfcprop(col)%tisfc => scm_state%tisfc(col,:)
+      physics%Sfcprop(col)%snowd  => scm_state%snwdph(col,:)
+      physics%Sfcprop(col)%snoalb => scm_state%snoalb(col,:)
+      physics%Sfcprop(col)%sncovr => scm_state%sncovr(col,:)
+      if (physics%Model(col)%lsm == physics%Model(col)%lsm_noahmp) then
+        physics%Sfcprop(col)%snowxy     => scm_state%snowxy(col,:)
+        physics%Sfcprop(col)%tvxy       => scm_state%tvxy(col,:)
+        physics%Sfcprop(col)%tgxy       => scm_state%tgxy(col,:)
+        physics%Sfcprop(col)%canicexy   => scm_state%canicexy(col,:)
+        physics%Sfcprop(col)%canliqxy   => scm_state%canliqxy(col,:)
+        physics%Sfcprop(col)%eahxy      => scm_state%eahxy(col,:)
+        physics%Sfcprop(col)%tahxy      => scm_state%tahxy(col,:)
+        physics%Sfcprop(col)%cmxy       => scm_state%cmxy(col,:)
+        physics%Sfcprop(col)%chxy       => scm_state%chxy(col,:)
+        physics%Sfcprop(col)%fwetxy     => scm_state%fwetxy(col,:)
+        physics%Sfcprop(col)%sneqvoxy   => scm_state%sneqvoxy(col,:)
+        physics%Sfcprop(col)%alboldxy   => scm_state%alboldxy(col,:)
+        physics%Sfcprop(col)%qsnowxy    => scm_state%qsnowxy(col,:)
+        physics%Sfcprop(col)%wslakexy   => scm_state%wslakexy(col,:)
+        physics%Sfcprop(col)%zwtxy      => scm_state%zwtxy(col,:)
+        physics%Sfcprop(col)%waxy       => scm_state%waxy(col,:)
+        physics%Sfcprop(col)%wtxy       => scm_state%wtxy(col,:)
+        physics%Sfcprop(col)%lfmassxy   => scm_state%lfmassxy(col,:)
+        physics%Sfcprop(col)%rtmassxy   => scm_state%rtmassxy(col,:)
+        physics%Sfcprop(col)%stmassxy   => scm_state%stmassxy(col,:)
+        physics%Sfcprop(col)%woodxy     => scm_state%woodxy(col,:)
+        physics%Sfcprop(col)%stblcpxy   => scm_state%stblcpxy(col,:)
+        physics%Sfcprop(col)%fastcpxy   => scm_state%fastcpxy(col,:)
+        physics%Sfcprop(col)%xsaixy     => scm_state%xsaixy(col,:)
+        physics%Sfcprop(col)%xlaixy     => scm_state%xlaixy(col,:)
+        physics%Sfcprop(col)%taussxy    => scm_state%taussxy(col,:)
+        physics%Sfcprop(col)%smcwtdxy   => scm_state%smcwtdxy(col,:)
+        physics%Sfcprop(col)%deeprechxy => scm_state%deeprechxy(col,:)
+        physics%Sfcprop(col)%rechxy     => scm_state%rechxy(col,:)
+
+        physics%Sfcprop(col)%snicexy    => scm_state%snicexy(col,:,:)
+        physics%Sfcprop(col)%snliqxy    => scm_state%snliqxy(col,:,:)
+        physics%Sfcprop(col)%tsnoxy     => scm_state%tsnoxy(col,:,:)
+        physics%Sfcprop(col)%smoiseq    => scm_state%smoiseq(col,:,:)
+        physics%Sfcprop(col)%zsnsoxy    => scm_state%zsnsoxy(col,:,:)
+      endif
     endif
 
 
