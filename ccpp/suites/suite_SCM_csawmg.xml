@@ -29,9 +29,10 @@
       <scheme>GFS_suite_stateout_reset</scheme>
       <scheme>get_prs_fv3</scheme>
       <scheme>GFS_suite_interstitial_1</scheme>
-      <scheme>dcyc2t3</scheme>
       <scheme>GFS_surface_generic_pre</scheme>
       <scheme>GFS_surface_composites_pre</scheme>
+      <scheme>dcyc2t3</scheme>
+      <scheme>GFS_surface_composites_inter</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
     </subcycle>
     <!-- Surface iteration loop -->
@@ -56,8 +57,8 @@
       <scheme>hedmf</scheme>
       <scheme>GFS_PBL_generic_post</scheme>
       <scheme>GFS_GWD_generic_pre</scheme>
-      <scheme>gwdps</scheme>
-      <scheme>gwdps_post</scheme>
+      <scheme>cires_ugwp</scheme>
+      <scheme>cires_ugwp_post</scheme>
       <scheme>rayleigh_damp</scheme>
       <scheme>GFS_suite_stateout_update</scheme>
       <scheme>ozphys_2015</scheme>
@@ -69,9 +70,6 @@
       <scheme>cs_conv</scheme>
       <scheme>cs_conv_post</scheme>
       <scheme>GFS_DCNV_generic_post</scheme>
-      <scheme>gwdc_pre</scheme>
-      <scheme>gwdc</scheme>
-      <scheme>gwdc_post</scheme>
       <scheme>GFS_SCNV_generic_pre</scheme>
       <scheme>samfshalcnv</scheme>
       <scheme>samfshalcnv_post</scheme>
