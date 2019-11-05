@@ -154,7 +154,6 @@ subroutine set_state(scm_input, scm_reference, scm_state)
         scm_state%alnsf(i,1)=scm_input%input_alnsf
         scm_state%alvwf(i,1)=scm_input%input_alvwf
         scm_state%alnwf(i,1)=scm_input%input_alnwf
-        scm_state%stddev(i,1)=scm_input%input_stddev
         scm_state%hprime(i,1,1)=scm_input%input_stddev
         scm_state%hprime(i,1,2)=scm_input%input_convexity
         scm_state%hprime(i,1,3)=scm_input%input_oa1

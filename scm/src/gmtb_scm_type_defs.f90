@@ -122,7 +122,7 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: sh_flux(:), lh_flux(:) !< surface sensible and latent heat fluxes interpolated to the model time
     real(kind=dp), allocatable              :: sfc_roughness_length_cm(:) !< surface roughness length used for calculating surface layer parameters from specified fluxes
     real(kind=dp), allocatable              :: alvsf(:,:), alnsf(:,:),alvwf(:,:),alnwf(:,:) !< surface  albedos
-    real(kind=dp), allocatable              :: facsf(:,:), facwf(:,:),stddev(:,:),hprime(:,:,:) !< other surface stuff
+    real(kind=dp), allocatable              :: facsf(:,:), facwf(:,:), hprime(:,:,:) !< other surface stuff
     real(kind=dp), allocatable              :: stc(:,:,:,:) !< soil temperature 
     real(kind=dp), allocatable              :: smc(:,:,:,:) !< soil moisture
     real(kind=dp), allocatable              :: slc(:,:,:,:) !< soil liquid content
@@ -511,7 +511,7 @@ module gmtb_scm_type_defs
     scm_state%sfc_roughness_length_cm = real_one
     
     allocate(scm_state%alvsf(n_columns,1), scm_state%alnsf(n_columns,1), scm_state%alvwf(n_columns,1), scm_state%alnwf(n_columns,1), &
-      scm_state%facsf(n_columns,1), scm_state%facwf(n_columns,1), scm_state%hprime(n_columns,1,14), scm_state%stddev(n_columns,1), &
+      scm_state%facsf(n_columns,1), scm_state%facwf(n_columns,1), scm_state%hprime(n_columns,1,14), &
       scm_state%sfc_type(n_columns,1), scm_state%veg_type(n_columns,1), &
       scm_state%veg_frac(n_columns,1), scm_state%slope_type(n_columns,1), scm_state%shdmin(n_columns,1), scm_state%shdmax(n_columns,1), &
       scm_state%tg3(n_columns,1), scm_state%slmsk(n_columns,1), scm_state%canopy(n_columns,1), scm_state%hice(n_columns,1), scm_state%fice(n_columns,1), &
@@ -525,7 +525,6 @@ module gmtb_scm_type_defs
     scm_state%facsf = real_zero
     scm_state%facwf = real_zero
     scm_state%hprime = real_zero
-    scm_state%stddev = real_zero
     scm_state%sfc_type = real_zero
     scm_state%veg_type = real_zero
     scm_state%veg_frac = real_zero
@@ -854,7 +853,6 @@ module gmtb_scm_type_defs
     physics%Sfcprop(col)%stype => scm_state%soil_type(col,:)
     physics%Sfcprop(col)%alvsf => scm_state%alvsf(col,:)
     physics%Sfcprop(col)%alnsf => scm_state%alnsf(col,:)
-    physics%Sfcprop(col)%hprim => scm_state%stddev(col,:)
     physics%Sfcprop(col)%hprime=> scm_state%hprime(col,:,:) 
     physics%Sfcprop(col)%alvwf => scm_state%alvwf(col,:)
     physics%Sfcprop(col)%alnwf => scm_state%alnwf(col,:)
@@ -866,15 +864,20 @@ module gmtb_scm_type_defs
     physics%Sfcprop(col)%slc   => scm_state%slc(col,:,:,1)
     
     !GJF : the following logic was introduced into FV3GFS_io.F90 as part of the fractional landmask update (additional logic exists in the same file if the fractional landmask is actually used!)
-    if (physics%Sfcprop(col)%slmsk(1) > 1.9) then
-      physics%Sfcprop(col)%landfrac(1)=0.
+    if (physics%Sfcprop(col)%slmsk(1) < 0.1 .or. physics%Sfcprop(col)%slmsk(1) > 1.9) then
+      physics%Sfcprop(col)%landfrac(1) = 0.0
+      if (physics%Sfcprop(col)%oro_uf(1) > 0.01) then
+        physics%Sfcprop(col)%lakefrac(1) = 1.0        ! lake
+      else
+        physics%Sfcprop(col)%lakefrac(1) = 0.0        ! ocean
+      endif
     else
-      physics%Sfcprop(col)%landfrac(1) = physics%Sfcprop(col)%slmsk(1) 
+      physics%Sfcprop(col)%landfrac(1) = 1.0
     end if
-    if (physics%Sfcprop(col)%lakefrac(1) > 0.) then
-      physics%Sfcprop(col)%oceanfrac(1) = 0. ! lake & ocean don't coexist in a cell, lake dominates
+    if (physics%Sfcprop(col)%lakefrac(1) > 0.0) then
+      physics%Sfcprop(col)%oceanfrac(1) = 0.0 ! lake & ocean don't coexist in a cell, lake dominates
     else
-      physics%Sfcprop(col)%oceanfrac(1) = 1.-physics%Sfcprop(col)%landfrac(1) !LHS:ocean frac [0:1]
+      physics%Sfcprop(col)%oceanfrac(1) = 1.0 - physics%Sfcprop(col)%landfrac(1) !LHS:ocean frac [0:1]
     end if
     !GJF
 
