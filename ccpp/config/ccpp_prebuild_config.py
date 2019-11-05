@@ -232,6 +232,7 @@ SCHEME_FILES = {
 # Auto-generated makefile/cmakefile snippets that contain all schemes
 SCHEMES_MAKEFILE = 'ccpp/physics/CCPP_SCHEMES.mk'
 SCHEMES_CMAKEFILE = 'ccpp/physics/CCPP_SCHEMES.cmake'
+SCHEMES_SOURCEFILE = 'ccpp/physics/CCPP_SCHEMES.sh'
 
 # CCPP host cap in which to insert the ccpp_field_add statements;
 # determines the directory to place ccpp_{modules,fields}.inc
@@ -242,6 +243,7 @@ TARGET_FILES = [
 # Auto-generated makefile/cmakefile snippets that contain all caps
 CAPS_MAKEFILE = 'ccpp/physics/CCPP_CAPS.mk'
 CAPS_CMAKEFILE = 'ccpp/physics/CCPP_CAPS.cmake'
+CAPS_SOURCEFILE = 'ccpp/physics/CCPP_CAPS.sh'
 
 # Directory where to put all auto-generated physics caps
 CAPS_DIR = 'ccpp/physics/physics'
@@ -321,6 +323,7 @@ FIELDS_INCLUDE_FILE = 'ccpp_fields.inc'
 
 # Directory where to write static API to
 STATIC_API_DIR = 'scm/src/'
+STATIC_API_SRCFILE = 'scm/src/CCPP_STATIC_API.sh'
 
 # Directory for writing HTML pages generated from metadata files
 METADATA_HTML_OUTPUT_DIR = 'ccpp/physics/physics/docs'
