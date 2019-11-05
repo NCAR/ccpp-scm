@@ -90,7 +90,7 @@ subroutine do_time_step(scm_state, cdata_cols)
     call ccpp_physics_run(cdata_cols(i), ierr=ierr)
 #endif
     if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
         stop
     end if
   end do

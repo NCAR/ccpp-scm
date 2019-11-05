@@ -174,7 +174,7 @@ subroutine gmtb_scm_main_sub()
       call ccpp_physics_init(cdata_cols(i), ierr=ierr)
 #endif
       if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
       end if
       
@@ -226,7 +226,7 @@ subroutine gmtb_scm_main_sub()
       call ccpp_physics_run(cdata_cols(i), ierr=ierr)
 #endif
       if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
       end if
     end do
@@ -334,7 +334,7 @@ subroutine gmtb_scm_main_sub()
       call ccpp_physics_finalize(cdata_cols(i), ierr=ierr)
 #endif
       if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, '. Exiting...'
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
       end if
   end do
