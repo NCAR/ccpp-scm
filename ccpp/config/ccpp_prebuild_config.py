@@ -142,7 +142,7 @@ SCHEME_FILES_DEPENDENCIES = [
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.f90',
-    'scm/src/gmtb_scm_type_defs.F90',
+    'scm/src/gmtb_scm_type_defs.f90',
 ]
 
 # Add all physics scheme files relative to basedir
