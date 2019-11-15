@@ -6,7 +6,13 @@ module gmtb_scm_time_integration
 use gmtb_scm_kinds, only: sp, dp, qp
 use gmtb_scm_forcing
 
-use ccpp_api, only: ccpp_t, ccpp_physics_run
+#ifdef STATIC
+use ccpp_api,        only: ccpp_t
+use ccpp_static_api, only: ccpp_physics_run
+#else
+use ccpp_api,        only: ccpp_t, &
+                           ccpp_physics_run
+#endif
 
 implicit none
 
@@ -48,11 +54,11 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, cdata)
+subroutine do_time_step(scm_state, cdata_cols)
   use gmtb_scm_type_defs, only: scm_state_type
 
   type(scm_state_type), intent(inout)          :: scm_state
-  type(ccpp_t), intent(inout)                  :: cdata(:)
+  type(ccpp_t), intent(inout)                  :: cdata_cols(:)
 
   integer :: i, ierr
 
@@ -78,9 +84,13 @@ subroutine do_time_step(scm_state, cdata)
   end if
 
   do i=1, scm_state%n_cols
-    call ccpp_physics_run(cdata(i), ierr=ierr)
+#ifdef STATIC
+    call ccpp_physics_run(cdata_cols(i), suite_name=trim(adjustl(scm_state%physics_suite_name(i))), ierr=ierr)
+#else
+    call ccpp_physics_run(cdata_cols(i), ierr=ierr)
+#endif
     if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
         stop
     end if
   end do

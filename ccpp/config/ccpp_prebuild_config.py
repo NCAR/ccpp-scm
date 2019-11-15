@@ -23,7 +23,7 @@ VARIABLE_DEFINITION_FILES = [
 TYPEDEFS_NEW_METADATA = {
     'ccpp_types' : {
         'ccpp_types' : '',
-        'ccpp_t' : 'cdata(i)',
+        'ccpp_t' : 'cdata',
         },
     'machine' : {
         'machine' : '',
@@ -35,17 +35,17 @@ TYPEDEFS_NEW_METADATA = {
         'module_radlw_parameters' : '',
         },
     'GFS_typedefs' : {
-        'GFS_diag_type' : 'physics%Diag(cdata(i)%blk_no)',
-        'GFS_control_type' : 'physics%Model(cdata(i)%blk_no)',
-        'GFS_cldprop_type' : 'physics%Cldprop(cdata(i)%blk_no)',
-        'GFS_tbd_type' : 'physics%Tbd(cdata(i)%blk_no)',
-        'GFS_sfcprop_type' : 'physics%Sfcprop(cdata(i)%blk_no)',
-        'GFS_coupling_type' : 'physics%Coupling(cdata(i)%blk_no)',
-        'GFS_interstitial_type' : 'physics%Interstitial(cdata(i)%blk_no)',
-        'GFS_statein_type' : 'physics%Statein(cdata(i)%blk_no)',
-        'GFS_radtend_type' : 'physics%Radtend(cdata(i)%blk_no)',
-        'GFS_grid_type' : 'physics%Grid(cdata(i)%blk_no)',
-        'GFS_stateout_type' : 'physics%Stateout(cdata(i)%blk_no)',
+        'GFS_diag_type' : 'physics%Diag(cdata%blk_no)',
+        'GFS_control_type' : 'physics%Model(cdata%blk_no)',
+        'GFS_cldprop_type' : 'physics%Cldprop(cdata%blk_no)',
+        'GFS_tbd_type' : 'physics%Tbd(cdata%blk_no)',
+        'GFS_sfcprop_type' : 'physics%Sfcprop(cdata%blk_no)',
+        'GFS_coupling_type' : 'physics%Coupling(cdata%blk_no)',
+        'GFS_interstitial_type' : 'physics%Interstitial(cdata%blk_no)',
+        'GFS_statein_type' : 'physics%Statein(cdata%blk_no)',
+        'GFS_radtend_type' : 'physics%Radtend(cdata%blk_no)',
+        'GFS_grid_type' : 'physics%Grid(cdata%blk_no)',
+        'GFS_stateout_type' : 'physics%Stateout(cdata%blk_no)',
         'GFS_typedefs' : '',
         },
     'gmtb_scm_physical_constants' : {
@@ -139,7 +139,10 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
-    'scm/src/GFS_typedefs.F90'
+    # derived data type definitions
+    'scm/src/GFS_typedefs.F90',
+    'scm/src/gmtb_scm_kinds.f90',
+    'scm/src/gmtb_scm_type_defs.f90',
 ]
 
 # Add all physics scheme files relative to basedir
@@ -229,6 +232,7 @@ SCHEME_FILES = {
 # Auto-generated makefile/cmakefile snippets that contain all schemes
 SCHEMES_MAKEFILE = 'ccpp/physics/CCPP_SCHEMES.mk'
 SCHEMES_CMAKEFILE = 'ccpp/physics/CCPP_SCHEMES.cmake'
+SCHEMES_SOURCEFILE = 'ccpp/physics/CCPP_SCHEMES.sh'
 
 # CCPP host cap in which to insert the ccpp_field_add statements;
 # determines the directory to place ccpp_{modules,fields}.inc
@@ -239,6 +243,7 @@ TARGET_FILES = [
 # Auto-generated makefile/cmakefile snippets that contain all caps
 CAPS_MAKEFILE = 'ccpp/physics/CCPP_CAPS.mk'
 CAPS_CMAKEFILE = 'ccpp/physics/CCPP_CAPS.cmake'
+CAPS_SOURCEFILE = 'ccpp/physics/CCPP_CAPS.sh'
 
 # Directory where to put all auto-generated physics caps
 CAPS_DIR = 'ccpp/physics/physics'
@@ -318,6 +323,7 @@ FIELDS_INCLUDE_FILE = 'ccpp_fields.inc'
 
 # Directory where to write static API to
 STATIC_API_DIR = 'scm/src/'
+STATIC_API_SRCFILE = 'scm/src/CCPP_STATIC_API.sh'
 
 # Directory for writing HTML pages generated from metadata files
 METADATA_HTML_OUTPUT_DIR = 'ccpp/physics/physics/docs'
@@ -335,4 +341,4 @@ LATEX_VARTABLE_FILE = 'ccpp/framework/doc/DevelopersGuide/CCPP_VARIABLES_SCM.tex
 
 # Name of the CCPP data structure in the host model cap;
 # in the case of SCM, this is a vector with loop index i
-CCPP_DATA_STRUCTURE = 'cdata(i)'
+CCPP_DATA_STRUCTURE = 'cdata'

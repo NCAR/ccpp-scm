@@ -25,7 +25,9 @@ set(BACIO_LIB4   ${NCEPLIBS_DIR}/lib/libbacio_4.a)
 set(SP_LIBd      ${NCEPLIBS_DIR}/lib/libsp_v2.0.2_d.a)
 set(W3NCO_LIBd   ${NCEPLIBS_DIR}/lib/libw3nco_d.a)
 
-set(STATIC false)
+if(STATIC)
+  ADD_DEFINITIONS(-DSTATIC)
+endif(STATIC)
 
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -218,6 +220,8 @@ endif()
 # Configure sources
 ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
 ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
+ADD_DEPENDENCIES(ccppphys ccpp)
+
 SET(scm_source_files gmtb_scm.F90
             gmtb_scm_input.f90
             gmtb_scm_utils.f90
@@ -231,8 +235,14 @@ SET(scm_source_files gmtb_scm.F90
             gmtb_scm_type_defs.f90
 )
 
-ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
-TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp)
+if(STATIC)
+  ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
+  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+else(STATIC)
+  ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
+  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp)
+endif(STATIC)
+
 set_target_properties(gmtb_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")

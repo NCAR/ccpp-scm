@@ -114,3 +114,15 @@
   units = DDT
   dimensions = ()
   type = physics_type
+[physics]
+  standard_name = physics_type_instance
+  long_name = instance of derived data type physics_type
+  units = DDT
+  dimensions = ()
+  type = physics_type
+[cdata]
+  standard_name = ccpp_t_instance
+  long_name = instance of derived data type ccpp_t
+  units = DDT
+  dimensions = ()
+  type = ccpp_t

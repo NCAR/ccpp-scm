@@ -14,10 +14,19 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_forcing
   use gmtb_scm_time_integration
   use gmtb_scm_output
+  use gmtb_scm_type_defs
 
+#ifdef STATIC
   use :: ccpp_api,                           &
-         only: ccpp_t,                       &
-               ccpp_init,                    &
+         only: ccpp_init,                    &
+               ccpp_finalize
+  use :: ccpp_static_api,                    &
+         only: ccpp_physics_init,            &
+               ccpp_physics_run,             &
+               ccpp_physics_finalize
+#else
+  use :: ccpp_api,                           &
+         only: ccpp_init,                    &
                ccpp_finalize,                &
                ccpp_physics_init,            &
                ccpp_physics_run,             &
@@ -25,23 +34,21 @@ subroutine gmtb_scm_main_sub()
                ccpp_field_add,               &
                ccpp_initialized,             &
                ccpp_error
-
   use :: iso_c_binding, only: c_loc
 
 #include "ccpp_modules.inc"
+#endif
 
   implicit none
 
   type(scm_state_type), target :: scm_state
   type(scm_input_type), target :: scm_input
   type(scm_reference_type), target :: scm_reference
-  type(physics_type), target :: physics
 
   integer      :: i, j, grid_error
   real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer      :: jdat(1:8)
 
-  type(ccpp_t), allocatable, target :: cdata(:)
   integer                           :: cdata_time_index
   integer                           :: ierr
   character(len=16) :: logfile_name
@@ -72,7 +79,7 @@ subroutine gmtb_scm_main_sub()
       stop
   end select
 
-  allocate(cdata(scm_state%n_cols))
+  allocate(cdata_cols(scm_state%n_cols))
 
   call set_state(scm_input, scm_reference, scm_state)
 
@@ -105,7 +112,7 @@ subroutine gmtb_scm_main_sub()
 
   do i = 1, scm_state%n_cols
      !set up each column's physics suite (which may be different)
-      call ccpp_init(trim(adjustl(scm_state%physics_suite_name(i))), cdata(i), ierr)
+      call ccpp_init(trim(adjustl(scm_state%physics_suite_name(i))), cdata_cols(i), ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
           stop
@@ -117,8 +124,8 @@ subroutine gmtb_scm_main_sub()
           open(unit=physics%Init_parm(i)%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
       end if
 
-      cdata(i)%blk_no = i
-      cdata(i)%thrd_no = 1
+      cdata_cols(i)%blk_no = i
+      cdata_cols(i)%thrd_no = 1
 
       physics%Init_parm(i)%levs = scm_state%n_levels
       physics%Init_parm(i)%bdat(1) = scm_state%init_year
@@ -148,16 +155,26 @@ subroutine gmtb_scm_main_sub()
                            physics%Init_parm(i))
       
       call physics%associate(scm_state, i)
-      
+
+#ifndef STATIC
 ! use ccpp_fields.inc to call ccpp_field_add for all variables to add
 ! (this is auto-generated from ccpp/scripts/ccpp_prebuild.py,
 !  the script parses tables in gmtb_scm_type_defs.f90)
+      associate_column: associate (cdata => cdata_cols(i))
 #include "ccpp_fields.inc"
-      
+      end associate associate_column
+#endif
+
       !initialize each column's physics
-      call ccpp_physics_init(cdata(i), ierr=ierr)
+#ifdef STATIC
+      write(0,'(a,i0,a)') "Calling ccpp_physics_init for column ", i, " with suite '" // trim(trim(adjustl(scm_state%physics_suite_name(i)))) // "'"
+      call ccpp_physics_init(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
+      write(0,'(a,i0,a,i0)') "Called ccpp_physics_init for column ", i, " with suite '" // trim(trim(adjustl(scm_state%physics_suite_name(i)))) // "', ierr=", ierr
+#else
+      call ccpp_physics_init(cdata_cols(i), ierr=ierr)
+#endif
       if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
       end if
       
@@ -177,7 +194,7 @@ subroutine gmtb_scm_main_sub()
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
      !pass in state variables to be modified by forcing and physics
-     call do_time_step(scm_state, cdata)
+     call do_time_step(scm_state, cdata_cols)
 
   else if (scm_state%time_scheme == 2) then
   !   !if using the leapfrog scheme, we initialize by taking one half forward time step and one half (unfiltered) leapfrog time step to get to the end of the first time step
@@ -203,9 +220,13 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_v(:,:,:,2) = scm_state%state_v(:,:,:,1)
 
     do i=1, scm_state%n_cols
-      call ccpp_physics_run(cdata(i), ierr=ierr)
+#ifdef STATIC
+      call ccpp_physics_run(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
+#else
+      call ccpp_physics_run(cdata_cols(i), ierr=ierr)
+#endif
       if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
       end if
     end do
@@ -229,7 +250,7 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_tracer(:,:,:,:,1) = scm_state%temp_tracer(:,:,:,:,1)
 
     !go forward one leapfrog time step
-    call do_time_step(scm_state, cdata)
+    call do_time_step(scm_state, cdata_cols)
 
     !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
     call filter(scm_state)
@@ -284,7 +305,7 @@ subroutine gmtb_scm_main_sub()
     end do
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(scm_state, cdata)
+    call do_time_step(scm_state, cdata_cols)
 
     if (scm_state%time_scheme == 2) then
       !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
@@ -307,15 +328,19 @@ subroutine gmtb_scm_main_sub()
   end do
 
   do i=1, scm_state%n_cols
-      call ccpp_physics_finalize(cdata(i), ierr=ierr)
+#ifdef STATIC
+      call ccpp_physics_finalize(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
+#else
+      call ccpp_physics_finalize(cdata_cols(i), ierr=ierr)
+#endif
       if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, '. Exiting...'
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
       end if
   end do
 
   do i=1, scm_state%n_cols
-      call ccpp_finalize(cdata(i), ierr)
+      call ccpp_finalize(cdata_cols(i), ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_finalize for column ', i, '. Exiting...'
           stop

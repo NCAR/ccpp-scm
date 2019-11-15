@@ -7,11 +7,21 @@ module gmtb_scm_type_defs
 !! \htmlinclude gmtb_scm_type_defs.html
 !!
 
-  use gmtb_scm_kinds, only : sp, dp, qp
-  use GFS_typedefs, only: GFS_control_type, GFS_statein_type, GFS_stateout_type, GFS_sfcprop_type, GFS_coupling_type, &
-    GFS_grid_type, GFS_tbd_type, GFS_cldprop_type, GFS_radtend_type, GFS_diag_type, GFS_interstitial_type, &
-    GFS_init_type
-  use machine, only: kind_phys
+  use gmtb_scm_kinds, only: sp, dp, qp
+  use GFS_typedefs,   only: GFS_control_type,      &
+                            GFS_statein_type,      &
+                            GFS_stateout_type,     &
+                            GFS_sfcprop_type,      &
+                            GFS_coupling_type,     &
+                            GFS_grid_type,         &
+                            GFS_tbd_type,          &
+                            GFS_cldprop_type,      &
+                            GFS_radtend_type,      &
+                            GFS_diag_type,         &
+                            GFS_interstitial_type, &
+                            GFS_init_type
+  use machine,        only: kind_phys
+  use ccpp_api,       only: ccpp_t
 
   implicit none
 
@@ -334,6 +344,10 @@ module gmtb_scm_type_defs
       procedure :: create => physics_create
       procedure :: associate => physics_associate
   end type physics_type
+
+  type(physics_type), target :: physics
+
+  type(ccpp_t), allocatable, target :: cdata_cols(:)
 
   contains
 
