@@ -27,18 +27,18 @@ If you would like to contribute as a developer to this project, please see (in a
 
 There you will find links to all of the documentation pertinent to developers.
 
-For working with the development branches (stability not guaranteed), after executing the steps above, check out the master branches of the repository (and submodules):
+For working with the development branches (stability not guaranteed), after executing the steps above, check out the \exec{dtc/develop} branches of the repository (and submodules):
 \begin{enumerate}
-    \item Check out the master branch of gmtb-scm.
+    \item Check out the dtc/develop branch of gmtb-scm.
 \begin{lstlisting}[language=bash]
-git checkout master
+git checkout dtc/develop
 \end{lstlisting}
-\item Check out the master branches of ccpp-physics and ccpp-framework.
+\item Check out the dtc/develop branches of ccpp-physics and ccpp-framework.
 \begin{lstlisting}[language=bash]
 cd ccpp/physics
-git checkout master
+git checkout dtc/develop
 cd ../framework
-git checkout master
+git checkout dtc/develop
 \end{lstlisting}
 \item Change back to the main directory for following the instructions in section \ref{section: compiling} assuming system requirements in section \ref{section: systemrequirements} are met.
 \begin{lstlisting}[language=bash]
@@ -93,7 +93,7 @@ Note that the option \execout{-m 0} can be used if MPI is not installed on the m
 \begin{lstlisting}
 export NCEPLIBS_DIR=/usr/local/NCEPlibs
 \end{lstlisting}
-If using Theia or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described in section \ref{section: compiling}.
+If using Hera or Cheyenne HPC systems, this environment variable is automatically set to an appropriate installation of NCEPlibs on those machines through use of one of the setup scripts described in section \ref{section: compiling}.
 
 
 \subsection{Compilers}
@@ -109,19 +109,22 @@ community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownI
 \label{section: compiling}
 The first step in compiling the CCPP and SCM is to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them.  Following this step, the top level build system will use \execout{cmake} to query system parameters and \execout{make} to compile the components.  A platform-specific script is provided to load modules and set the user environment for common platforms.  If you are not using one of these platforms, you will need to set up the same environment on your platform.
 \begin{enumerate}
-    \item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments.
+    \item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. The default behavior is to use the so-called ``dynamic'' mode where software caps for all schemes in the CCPP repository are generated and a dynamic, shared library is generated for the CCPP physics. The basic syntax is
 \begin{lstlisting}[language=bash]
 ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py [--debug]
 \end{lstlisting}
+A second, more performant ``static'' mode is available that generates software caps for each physics group defined in the supplied SDFs and generates a static library that becomes part of the SCM executable. Using this mode, flexibility of defining suites at runtime is lost, although one can choose among a set of suites defined at compilation time. To use this mode, the syntax becomes
+\begin{lstlisting}[language=bash]
+./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --static --suites=SCM_GFS_v15,SCM_GFS_v15plus,SCM_GSD_v0[...] [--debug]
+\end{lstlisting}
+where the argument supplied via the \execout{-{}-suites} variable is a comma-separated list of suite names that exist in the \execout{./ccpp/suites} directory. Note that suite names are the suite definition filenames minus the \exec{suite\_} prefix and \exec{.xml} suffix.
     \item Change directory to the top-level SCM directory.
 \begin{lstlisting}[language=bash]
 cd scm
 \end{lstlisting}
     \item (Optional) Run the machine setup script if necessary. This script loads compiler modules (Fortran 2003-compliant), netCDF module, etc. and sets compiler environment variables. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
-source etc/Theia_setup_gnu.csh
-source etc/Theia_setup_intel.csh
-source etc/Theia_setup_pgi.csh
+source etc/Hera_setup_intel.csh
 source etc/Cheyenne_setup_gnu.csh
 source etc/Cheyenne_setup_intel.csh
 source etc/Cheyenne_setup_pgi.csh
@@ -131,9 +134,7 @@ source etc/MACOSX_setup.csh
 \end{lstlisting}
 For bourne/bash shells,
 \begin{lstlisting}[language=bash]
-. etc/Theia_setup_gnu.sh
-. etc/Theia_setup_intel.sh
-. etc/Theia_setup_pgi.sh
+. etc/Hera_setup_intel.sh
 . etc/Cheyenne_setup_gnu.sh
 . etc/Cheyenne_setup_intel.sh
 . etc/Cheyenne_setup_pgi.sh
@@ -152,6 +153,7 @@ mkdir bin && cd bin
 cmake ../src                          # without threading/OpenMP
 cmake -DOPENMP=ON ../src               # with threading/OpenMP
 cmake -DCMAKE_BUILD_TYPE=Debug ../src # debug mode
+cmake -DSTATIC=ON ../src.               #static mode
 \end{lstlisting}
     \item If cmake cannot find \execout{libxml2} because it is installed in a non-standard location, add
 \begin{lstlisting}[language=bash]
@@ -236,7 +238,7 @@ In addition to the main options, some helper options can also be used with any o
 
 \subsection{Batch Run Script}
 
-If using the model on HPC resources and significant amounts of processor time is anticipated for the experiments, it will likely be necessary to submit a job through the HPC's batch system. An example script has been included in the repository for running the model on Theia's batch system (SLURM). It is located in \execout{gmtb-scm/scm/etc/gmtb\_scm\_slurm\_example.py}. Edit the \execout{job\_name}, \execout{account}, etc. to suit your needs and copy to the \execout{bin} directory. The case name to be run is included in the \execout{command} variable. To use, invoke
+If using the model on HPC resources and significant amounts of processor time is anticipated for the experiments, it will likely be necessary to submit a job through the HPC's batch system. An example script has been included in the repository for running the model on Hera's batch system (SLURM). It is located in \execout{gmtb-scm/scm/etc/gmtb\_scm\_slurm\_example.py}. Edit the \execout{job\_name}, \execout{account}, etc. to suit your needs and copy to the \execout{bin} directory. The case name to be run is included in the \execout{command} variable. To use, invoke
 \begin{lstlisting}[language=bash]
 ./gmtb_scm_slurm_example.py
 \end{lstlisting}
