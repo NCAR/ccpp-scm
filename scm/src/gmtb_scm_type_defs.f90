@@ -654,8 +654,6 @@ module gmtb_scm_type_defs
       scm_input%input_T_nudge(ntimes, nlev), scm_input%input_thil_nudge(ntimes, nlev), scm_input%input_qt_nudge(ntimes, nlev))
     scm_input%input_pres_surf = real_zero
     scm_input%input_T_surf = real_zero
-    scm_input%input_pres_surf = real_zero
-    scm_input%input_T_surf = real_zero
     scm_input%input_lat = real_zero
     scm_input%input_lon = real_zero
     scm_input%input_vegsrc = int_zero
@@ -841,6 +839,8 @@ module gmtb_scm_type_defs
 
     physics%Sfcprop(col)%tsfc => scm_state%T_surf(col,:)
     physics%Sfcprop(col)%tref => scm_state%T_surf(col,:)
+    physics%Sfcprop(col)%tsfco => scm_state%T_surf(col,:)
+    physics%Sfcprop(col)%tisfc => scm_state%T_surf(col,:) !sea ice temperature is the same as SST for now?
     physics%Sfcprop(col)%slmsk => scm_state%sfc_type(col,:)
     physics%Sfcprop(col)%vtype => scm_state%veg_type(col,:)
     physics%Sfcprop(col)%vfrac => scm_state%veg_frac(col,:)
