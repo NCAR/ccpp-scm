@@ -17,7 +17,7 @@ if(STATIC)
   foreach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
     get_filename_component(suite_definition_filename ${suite_definition_filepath} NAME)
     string(REGEX REPLACE "^suite_(.+)\\.xml$" "\\1" suite_name ${suite_definition_filename})
-    string(APPEND SUITES "${suite_name},")
+    set(SUITES ${SUITES}${suite_name},)
     message (STATUS "  adding suite ${suite_name}")
   endforeach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
   # Abort if no suites found
