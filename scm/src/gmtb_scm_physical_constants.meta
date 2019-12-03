@@ -99,6 +99,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_epsq]
+  standard_name = minimum_value_of_specific_humidity
+  long_name = floor value for specific humidity
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [con_vonKarman]
   standard_name = vonKarman_constant
   long_name = vonKarman constant
