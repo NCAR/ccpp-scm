@@ -10,7 +10,7 @@ reload(ffc)
 
 #read in raw input file
 
-nc_fid = Dataset("../raw_case_input/twp180iopsndgvarana_v2.1_C3.c1.20060117.000000.cdf", 'r')
+nc_fid = Dataset("../../data/raw_case_input/twp180iopsndgvarana_v2.1_C3.c1.20060117.000000.cdf", 'r')
 
 #ncdump to look at raw input file
 #nc_attrs, nc_dims, nc_vars = ncdump(nc_fid, False)
@@ -132,7 +132,7 @@ u_g = np.zeros((levels.size,time.size),dtype=float)
 v_g = np.zeros((levels.size,time.size),dtype=float)
 
 # Open ozone file
-f = open('../raw_case_input/twpice_CRM_ozone.txt', 'r')
+f = open('../../data/raw_case_input/twpice_CRM_ozone.txt', 'r')
 
 # Read and ignore header lines
 header1 = f.readline()
@@ -151,14 +151,14 @@ f.close()
 oz_pres = 100.0*np.array(oz_pres)
 oz_data = np.array(oz_data)
 oz_f = scipy.interpolate.interp1d(oz_pres, oz_data)
-ozone_ppb = oz_f(levels[1:])
+ozone_ppb = oz_f(levels[1:].tolist())
 ozone_ppb = np.insert(ozone_ppb, 0, oz_data[0])
 ozone_mmr = ozone_ppb*1.0E-9
 
 #
 #open processed input file for writing
 
-writefile_fid = Dataset('../processed_case_input/twpice.nc', 'w', format='NETCDF4')
+writefile_fid = Dataset('../../data/processed_case_input/twpice.nc', 'w', format='NETCDF4')
 writefile_fid.description = "GMTB SCM forcing file for TWP-ICE case"
 
 #create groups for scalars, intitialization, and forcing
@@ -184,6 +184,16 @@ writefile_levels_var.description = 'pressure levels'
 #create variables and write them out
 
 #scalar group
+
+writefile_lat_var = writefile_scalar_grp.createVariable('lat', 'f4')
+writefile_lat_var[:] = lat
+writefile_lat_var.units = 'degrees N'
+writefile_lat_var.description = 'latitude of column'
+
+writefile_lon_var = writefile_scalar_grp.createVariable('lon', 'f4')
+writefile_lon_var[:] = lon
+writefile_lon_var.units = 'degrees E'
+writefile_lon_var.description = 'longitude of column'
 
 #initial group
 
@@ -233,16 +243,6 @@ writefile_ozone_var.units = 'kg kg^-1'
 writefile_ozone_var.description = 'initial profile of ozone mass mixing ratio'
 
 #forcing group
-
-writefile_lat_var = writefile_forcing_grp.createVariable('lat', 'f4', ('time',))
-writefile_lat_var[:] = lat*np.ones((time.size),dtype=float)[start_t_index:]
-writefile_lat_var.units = 'degrees N'
-writefile_lat_var.description = 'latitude of column'
-
-writefile_lon_var = writefile_forcing_grp.createVariable('lon', 'f4', ('time',))
-writefile_lon_var[:] = lon*np.ones((time.size),dtype=float)[start_t_index:]
-writefile_lon_var.units = 'degrees E'
-writefile_lon_var.description = 'longitude of column'
 
 writefile_p_surf_var = writefile_forcing_grp.createVariable('p_surf', 'f4', ('time',))
 writefile_p_surf_var[:] = p_surf[start_t_index:]

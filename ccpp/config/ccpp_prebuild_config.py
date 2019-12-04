@@ -23,7 +23,7 @@ VARIABLE_DEFINITION_FILES = [
 TYPEDEFS_NEW_METADATA = {
     'ccpp_types' : {
         'ccpp_types' : '',
-        'ccpp_t' : 'cdata(i)',
+        'ccpp_t' : 'cdata',
         },
     'machine' : {
         'machine' : '',
@@ -35,17 +35,17 @@ TYPEDEFS_NEW_METADATA = {
         'module_radlw_parameters' : '',
         },
     'GFS_typedefs' : {
-        'GFS_diag_type' : 'physics%Diag(cdata(i)%blk_no)',
-        'GFS_control_type' : 'physics%Model(cdata(i)%blk_no)',
-        'GFS_cldprop_type' : 'physics%Cldprop(cdata(i)%blk_no)',
-        'GFS_tbd_type' : 'physics%Tbd(cdata(i)%blk_no)',
-        'GFS_sfcprop_type' : 'physics%Sfcprop(cdata(i)%blk_no)',
-        'GFS_coupling_type' : 'physics%Coupling(cdata(i)%blk_no)',
-        'GFS_interstitial_type' : 'physics%Interstitial(cdata(i)%blk_no)',
-        'GFS_statein_type' : 'physics%Statein(cdata(i)%blk_no)',
-        'GFS_radtend_type' : 'physics%Radtend(cdata(i)%blk_no)',
-        'GFS_grid_type' : 'physics%Grid(cdata(i)%blk_no)',
-        'GFS_stateout_type' : 'physics%Stateout(cdata(i)%blk_no)',
+        'GFS_diag_type' : 'physics%Diag(cdata%blk_no)',
+        'GFS_control_type' : 'physics%Model(cdata%blk_no)',
+        'GFS_cldprop_type' : 'physics%Cldprop(cdata%blk_no)',
+        'GFS_tbd_type' : 'physics%Tbd(cdata%blk_no)',
+        'GFS_sfcprop_type' : 'physics%Sfcprop(cdata%blk_no)',
+        'GFS_coupling_type' : 'physics%Coupling(cdata%blk_no)',
+        'GFS_interstitial_type' : 'physics%Interstitial(cdata%blk_no)',
+        'GFS_statein_type' : 'physics%Statein(cdata%blk_no)',
+        'GFS_radtend_type' : 'physics%Radtend(cdata%blk_no)',
+        'GFS_grid_type' : 'physics%Grid(cdata%blk_no)',
+        'GFS_stateout_type' : 'physics%Stateout(cdata%blk_no)',
         'GFS_typedefs' : '',
         },
     'gmtb_scm_physical_constants' : {
@@ -91,10 +91,15 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_mp_radar.F90',
     'ccpp/physics/physics/module_mp_thompson.F90',
     'ccpp/physics/physics/module_mp_thompson_make_number_concentrations.F90',
+    'ccpp/physics/physics/module_MP_FER_HIRES.F90',
     'ccpp/physics/physics/module_bl_mynn.F90',
     'ccpp/physics/physics/module_sf_mynn.F90',
+    'ccpp/physics/physics/module_SF_JSFC.F90',
+    'ccpp/physics/physics/module_BL_MYJPBL.F90',
+    'ccpp/physics/physics/module_sf_noahmp_glacier.f90',
+    'ccpp/physics/physics/module_sf_noahmplsm.f90',
     'ccpp/physics/physics/cires_ugwp_module.F90',
-    'ccpp/physics/physics/ugwp_driver_v0.f',
+    'ccpp/physics/physics/ugwp_driver_v0.F',
     'ccpp/physics/physics/cires_ugwp_triggers.F90',
     'ccpp/physics/physics/cires_ugwp_initialize.F90',
     'ccpp/physics/physics/cires_ugwp_solvers.F90',
@@ -105,7 +110,10 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/cires_vert_wmsdis.F90',
     'ccpp/physics/physics/namelist_soilveg.f',
     'ccpp/physics/physics/mfpblt.f',
+    'ccpp/physics/physics/mfpbltq.f',
     'ccpp/physics/physics/mfscu.f',
+    'ccpp/physics/physics/mfscuq.f',
+    'ccpp/physics/physics/noahmp_tables.f90',
     'ccpp/physics/physics/num_parthds.F',
     'ccpp/physics/physics/ozne_def.f',
     'ccpp/physics/physics/ozinterp.f90',
@@ -134,7 +142,10 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
-    'scm/src/GFS_typedefs.F90'
+    # derived data type definitions
+    'scm/src/GFS_typedefs.F90',
+    'scm/src/gmtb_scm_kinds.f90',
+    'scm/src/gmtb_scm_type_defs.f90',
 ]
 
 # Add all physics scheme files relative to basedir
@@ -166,6 +177,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/cu_ntiedtke.F90'                  : ['physics'],
     'ccpp/physics/physics/cu_ntiedtke_post.F90'             : ['physics'],
     'ccpp/physics/physics/dcyc2.f'                          : ['physics'],
+    'ccpp/physics/physics/drag_suite.F90'                   : ['physics'],
     'ccpp/physics/physics/gcm_shoc.F90'                     : ['physics'],
     'ccpp/physics/physics/get_prs_fv3.F90'                  : ['physics'],
     'ccpp/physics/physics/gfdl_cloud_microphys.F90'         : ['physics'],
@@ -175,6 +187,8 @@ SCHEME_FILES = {
     'ccpp/physics/physics/h2ophys.f'                        : ['physics'],
     'ccpp/physics/physics/samfdeepcnv.f'                    : ['physics'],
     'ccpp/physics/physics/samfshalcnv.f'                    : ['physics'],
+    'ccpp/physics/physics/sascnvn.F'                        : ['physics'],
+    'ccpp/physics/physics/shalcnv.F'                        : ['physics'],
     'ccpp/physics/physics/maximum_hourly_diagnostics.F90'   : ['physics'],
     'ccpp/physics/physics/m_micro.F90'                      : ['physics'],
     'ccpp/physics/physics/m_micro_interstitial.F90'         : ['physics'],
@@ -184,12 +198,15 @@ SCHEME_FILES = {
     'ccpp/physics/physics/moninedmf.f'                      : ['physics'],
     'ccpp/physics/physics/moninshoc.f'                      : ['physics'],
     'ccpp/physics/physics/satmedmfvdif.F'                   : ['physics'],
+    'ccpp/physics/physics/satmedmfvdifq.F'                  : ['physics'],
     'ccpp/physics/physics/shinhongvdif.F90'                 : ['physics'],
     'ccpp/physics/physics/ysuvdif.F90'                      : ['physics'],
     'ccpp/physics/physics/module_MYNNPBL_wrapper.F90'       : ['physics'],
     'ccpp/physics/physics/module_MYNNSFC_wrapper.F90'       : ['physics'],
     'ccpp/physics/physics/module_MYNNrad_pre.F90'           : ['physics'],
     'ccpp/physics/physics/module_MYNNrad_post.F90'          : ['physics'],
+    'ccpp/physics/physics/module_MYJSFC_wrapper.F90'        : ['physics' ],
+    'ccpp/physics/physics/module_MYJPBL_wrapper.F90'        : ['physics' ],
     'ccpp/physics/physics/mp_thompson_pre.F90'              : ['physics'],
     'ccpp/physics/physics/mp_thompson.F90'                  : ['physics'],
     'ccpp/physics/physics/mp_thompson_post.F90'             : ['physics'],
@@ -210,15 +227,23 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_cice.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_diff.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_drv.f'                        : ['physics'],
+    'ccpp/physics/physics/sfc_noahmp_pre.F90'               : ['physics'],
+    'ccpp/physics/physics/sfc_noahmp_drv.f'                 : ['physics'],
     'ccpp/physics/physics/sfc_nst.f'                        : ['physics'],
     'ccpp/physics/physics/sfc_ocean.F'                      : ['physics'],
     'ccpp/physics/physics/sfc_sice.f'                       : ['physics'],
+    'ccpp/physics/physics/mp_fer_hires.F90'                 : ['physics'],
     'ccpp/physics/physics/gmtb_scm_sfc_flux_spec.F90'       : ['physics'],
     }
+
+# Default build dir, relative to current working directory,
+# if not specified as command-line argument
+DEFAULT_BUILD_DIR = 'scm/bin'
 
 # Auto-generated makefile/cmakefile snippets that contain all schemes
 SCHEMES_MAKEFILE = 'ccpp/physics/CCPP_SCHEMES.mk'
 SCHEMES_CMAKEFILE = 'ccpp/physics/CCPP_SCHEMES.cmake'
+SCHEMES_SOURCEFILE = 'ccpp/physics/CCPP_SCHEMES.sh'
 
 # CCPP host cap in which to insert the ccpp_field_add statements;
 # determines the directory to place ccpp_{modules,fields}.inc
@@ -229,6 +254,7 @@ TARGET_FILES = [
 # Auto-generated makefile/cmakefile snippets that contain all caps
 CAPS_MAKEFILE = 'ccpp/physics/CCPP_CAPS.mk'
 CAPS_CMAKEFILE = 'ccpp/physics/CCPP_CAPS.cmake'
+CAPS_SOURCEFILE = 'ccpp/physics/CCPP_CAPS.sh'
 
 # Directory where to put all auto-generated physics caps
 CAPS_DIR = 'ccpp/physics/physics'
@@ -296,6 +322,13 @@ OPTIONAL_ARGUMENTS = {
             'tendency_of_ice_friendly_aerosols_at_surface',
             ],
         },
+    'mp_fer_hires' : {
+        'mp_fer_hires_init' : [
+            'fraction_of_ice_water_cloud',
+            'fraction_of_rain_water_cloud',
+            'rime_factor',
+            ],
+        },
     #'subroutine_name_1' : 'all',
     #'subroutine_name_2' : 'none',
     #'subroutine_name_2' : [ 'var1', 'var3'],
@@ -308,6 +341,7 @@ FIELDS_INCLUDE_FILE = 'ccpp_fields.inc'
 
 # Directory where to write static API to
 STATIC_API_DIR = 'scm/src/'
+STATIC_API_SRCFILE = 'scm/src/CCPP_STATIC_API.sh'
 
 # Directory for writing HTML pages generated from metadata files
 METADATA_HTML_OUTPUT_DIR = 'ccpp/physics/physics/docs'
@@ -325,4 +359,4 @@ LATEX_VARTABLE_FILE = 'ccpp/framework/doc/DevelopersGuide/CCPP_VARIABLES_SCM.tex
 
 # Name of the CCPP data structure in the host model cap;
 # in the case of SCM, this is a vector with loop index i
-CCPP_DATA_STRUCTURE = 'cdata(i)'
+CCPP_DATA_STRUCTURE = 'cdata'

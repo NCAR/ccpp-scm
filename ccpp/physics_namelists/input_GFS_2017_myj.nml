@@ -27,10 +27,10 @@
        cal_pre        = .false.
        redrag         = .true.
        dspheat        = .true.
-       hybedmf        = .true.
+       hybedmf        = .false.
        satmedmf       = .false.
-       do_myjsfc      = .false.
-       do_myjpbl      = .false.
+       do_myjsfc      = .true.
+       do_myjpbl      = .true.
        shinhong       = .false.
        do_ysu         = .false.
        lheatstrg      = .false.

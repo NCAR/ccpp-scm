@@ -24,7 +24,7 @@ public
   real(kind=dp),parameter:: con_hfus   =3.3358e+5
   real(kind=dp),parameter:: con_t0c    =2.7315e+2
   real(kind=dp),parameter:: con_ttp    =2.7316e+2
-
+  real(kind=dp),parameter:: con_epsq   =1.0E-12_dp
 
   real(kind=dp),parameter:: con_rocp   =con_rd/con_cp
   real(kind=dp),parameter:: con_fvirt  =con_rv/con_rd - 1
@@ -39,5 +39,7 @@ public
   real(kind=dp),parameter:: con_rhw0   =1022.0
   real(kind=dp),parameter:: con_sbc    =5.670400e-8
   real(kind=dp),parameter:: con_tice   =2.7120e+2
+  
+  real(kind=dp),parameter:: rhowater   =1000._dp
 
 end module gmtb_scm_physical_constants
