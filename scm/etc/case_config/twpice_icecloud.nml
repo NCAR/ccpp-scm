@@ -1,7 +1,7 @@
 $case_config
 model_name = 'FV3',
 n_columns = 1,
-case_name = 'twpice',
+case_name = 'twpice_icecloud',
 dt = 600.0,
 time_scheme = 1,
 runtime = 21384,

@@ -22,6 +22,12 @@ module gmtb_scm_type_defs
                             GFS_init_type
   use machine,        only: kind_phys
   use ccpp_api,       only: ccpp_t
+  ! RRTMGP DDTs (scalars in physics_type%)
+  use mo_gas_concentrations,    only: ty_gas_concs
+  use mo_gas_optics_rrtmgp,     only: ty_gas_optics_rrtmgp
+  use mo_cloud_optics,          only: ty_cloud_optics
+  use mo_optical_props,         only: ty_optical_props_1scl,ty_optical_props_2str
+  use mo_source_functions,      only: ty_source_func_lw
 
   implicit none
 
@@ -340,6 +346,26 @@ module gmtb_scm_type_defs
     type(GFS_diag_type), allocatable         :: Diag(:)
     type(GFS_interstitial_type), allocatable :: Interstitial(:)
     type(GFS_init_type), allocatable         :: Init_parm(:)
+
+    ! RRTMGP DDTs
+    type(ty_gas_concs) ::          & !
+         gas_concentrations          !
+    type(ty_source_func_lw) ::     & !
+         sources                     !
+    type(ty_gas_optics_rrtmgp) ::  & !
+         lw_gas_props,             & ! RRTMGP DDT containing spectral information for LW calculation
+         sw_gas_props                ! RRTMGP DDT containing spectral information for SW calculation
+    type(ty_cloud_optics) ::       & !
+         lw_cloud_props,           & ! RRTMGP DDT containing spectral information for RRTMGP LW radiation scheme
+         sw_cloud_props              ! RRTMGP DDT containing spectral information for RRTMGP LW radiation scheme
+    type(ty_optical_props_1scl) :: &
+         lw_optical_props_clrsky,  & ! RRTMGP DDT  
+         lw_optical_props_clouds,  & ! RRTMGP DDT 
+         lw_optical_props_aerosol    ! RRTMGP DDT 
+    type(ty_optical_props_2str) :: &
+         sw_optical_props_clrsky,  & ! RRTMGP DDT 
+         sw_optical_props_clouds,  & ! RRTMGP DDT 
+         sw_optical_props_aerosol    ! RRTMGP DDT 
 
     contains
       procedure :: create => physics_create
