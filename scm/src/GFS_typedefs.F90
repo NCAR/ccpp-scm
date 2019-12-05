@@ -4558,7 +4558,7 @@ module GFS_typedefs
        Tbd%cactiv = zero
     end if
 
-   if (Model%lsm == Model%lsm_ruc) then
+   if (Model%lsm == Model%lsm_ruc .or. Model%lsm == Model%lsm_noahmp) then
        allocate(Tbd%raincprv  (IM))
        allocate(Tbd%rainncprv (IM))
        allocate(Tbd%iceprv    (IM))
