@@ -463,7 +463,7 @@ if(plot_ind_datasets):
 
                                 resample_string = str(int(obs_delta_seconds)) + 'S'
                                 data_time_slice_series = pd.Series(data_time_slice[:,0], index = data_date_range)
-                                data_time_slice_series_rs = data_time_slice_series.resample(resample_string, how='mean')
+                                data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
 
                                 #print obs_data_time_slice.shape, obs_date_range.shape, data_time_slice_series_rs.shape
 
@@ -527,7 +527,7 @@ if(plot_ind_datasets):
                                 data_list_rs = []
                                 for l in range(len(data_list)):
                                     data_time_slice_series = pd.Series(data_list[l][:,0], index = data_date_range)
-                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string, how='mean')
+                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
                                     data_list_rs.append(data_time_slice_series_rs)
 
                                 gspr.plot_time_series_multi(obs_date_range, data_list_rs, time_series_multi[multiplot]['vars_labels'], 'date', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + '.pdf', obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i)
@@ -671,7 +671,7 @@ if(len(gmtb_scm_datasets) > 1):
                             data_time_slice = data[i,time_slice_indices[j][0]:time_slice_indices[j][1],:,:]
                             data_list.append(np.mean(data_time_slice, (0,2)))
                         data_list_of_list.append(data_list)
-                    gspr.plot_profile_multi(vert_axis, data_list_of_list, [profiles_mean_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, comp_dir + '/profiles_mean_multi_' + multiplot + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val)
+                    gspr.plot_profile_multi(vert_axis, data_list_of_list, [profiles_mean_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, comp_dir + '/profiles_mean_multi_' + multiplot + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style')
 
                 num_plots_completed += 1
                 print_progress(num_plots_completed, num_total_plots)
@@ -716,7 +716,7 @@ if(len(gmtb_scm_datasets) > 1):
                             data_time_slice_series_rs = []
                             for i in range(len(gmtb_scm_datasets)):
                                 data_time_slice_series = pd.Series(data_time_slice[i,:,0], index = data_date_range)
-                                data_time_slice_series_rs.append(data_time_slice_series.resample(resample_string, how='mean'))
+                                data_time_slice_series_rs.append(data_time_slice_series.resample(resample_string).mean())
 
                             gspr.plot_time_series_multi(obs_date_range, data_time_slice_series_rs, gmtb_scm_datasets_labels, 'date', label, comp_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val)
                         elif(obs_delta_seconds < data_delta_seconds):
@@ -782,7 +782,7 @@ if(len(gmtb_scm_datasets) > 1):
                                 data_list_rs = []
                                 for i in range(len(gmtb_scm_datasets)):
                                     data_time_slice_series = pd.Series(data_list_of_list[l][i][:,0], index = data_date_range)
-                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string, how='mean')
+                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
                                     data_list_rs.append(data_time_slice_series_rs)
                                 data_list_of_list_rs.append(data_list_rs)
 

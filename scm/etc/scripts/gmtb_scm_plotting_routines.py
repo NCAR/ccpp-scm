@@ -72,7 +72,6 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
     else:
         if line_type not in line_types:
             raise ValueError("Invalid line type. Expected one of: %s" % line_types)
-
     if color_index is None:
         color_index = 0
     else:
@@ -86,50 +85,49 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
     if any(isinstance(i, list) for i in values): #check for a list of lists
         if freeze_axis is None:
             if multi_legend:
+                # for i in range(len(values)):
+                #     lines1.append(plt.Line2D((0,1),(0,0), linestyle=linestyles[0], color=colors[i], linewidth=linewidth_val))
+                #     legend1_labels.append(labels[0][i])
+                # for j in range(len(values[0])):
+                #     if j < len(linestyles):
+                #         lines2.append(plt.Line2D((0,1),(0,0), linestyle=linestyles[j], color='black', linewidth=linewidth_val))
+                #     else:
+                #         lines2.append(plt.Line2D((0,1),(0,0), linestyle='', marker=markers[j - len(linestyles)], color='black', linewidth=linewidth_val))
+                #     legend2_labels.append(labels[1][j])
                 for i in range(len(values)):
-                    lines1.append(plt.Line2D((0,1),(0,0), linestyle=linestyles[0], color=colors[i], linewidth=linewidth_val))
+                    if i < len(linestyles):
+                        lines1.append(plt.Line2D((0,1),(0,0), linestyle=linestyles[i], color='black', linewidth=linewidth_val))
+                    else:
+                        lines1.append(plt.Line2D((0,1),(0,0), linestyle='', marker=markers[i - len(linestyles)], color='black', linewidth=linewidth_val))
                     legend1_labels.append(labels[0][i])
                 for j in range(len(values[0])):
-                    if j < len(linestyles):
-                        lines2.append(plt.Line2D((0,1),(0,0), linestyle=linestyles[j], color='black', linewidth=linewidth_val))
-                    else:
-                        lines2.append(plt.Line2D((0,1),(0,0), linestyle='', marker=markers[j - len(linestyles)], color='black', linewidth=linewidth_val))
+                    lines2.append(plt.Line2D((0,1),(0,0), color=colors[j], linewidth=linewidth_val))
                     legend2_labels.append(labels[1][j])
 
-            for i in range(len(values)): #number of lists in the list (linestyles)
-                for j in range(len(values[i])): #number of items in the nested lists (colors)
-                    if j < len(linestyles):
-                        plt.plot(values[i][j], z, linestyles[j], color=colors[i], linewidth=linewidth_val)
-                    else:
-                        plt.plot(values[i][j], z, markers[j - len(linestyles)], color=colors[i], linewidth=linewidth_val)
-                    if not multi_legend:
-                        if j < len(linestyles):
-                            lines.append(plt.Line2D((0,1),(0,0),color=colors[i],linestyle=linestyles[j], linewidth=linewidth_val))
-                        else:
-                            lines.append(plt.Line2D((0,1),(0,0),linestyle='', color=colors[i], marker=markers[j - len(linestyles)], linewidth=linewidth_val))
-                        legend_labels.append(labels[0][i] + '-' + labels[1][j])
-            #     for i in range(len(values)):
-            #         if i < len(linestyles):
-            #             lines1.append(plt.Line2D((0,1),(0,0), linestyle=linestyles[i], color='black', linewidth=linewidth_val))
-            #         else:
-            #             lines1.append(plt.Line2D((0,1),(0,0), linestyle='', marker=markers[i - len(linestyles)], color='black', linewidth=linewidth_val))
-            #         legend1_labels.append(labels[0][i])
-            #     for j in range(len(values[0])):
-            #         lines2.append(plt.Line2D((0,1),(0,0), color=colors[j], linewidth=linewidth_val))
-            #         legend2_labels.append(labels[1][j])
-            #
             # for i in range(len(values)): #number of lists in the list (linestyles)
             #     for j in range(len(values[i])): #number of items in the nested lists (colors)
-            #         if i < len(linestyles):
-            #             plt.plot(values[i][j], z, linestyles[i], color=colors[j], linewidth=linewidth_val)
+            #         if j < len(linestyles):
+            #             plt.plot(values[i][j], z, linestyles[j], color=colors[i], linewidth=linewidth_val)
             #         else:
-            #             plt.plot(values[i][j], z, markers[i - len(linestyles)], color=colors[j], linewidth=linewidth_val)
+            #             plt.plot(values[i][j], z, markers[j - len(linestyles)], color=colors[i], linewidth=linewidth_val)
             #         if not multi_legend:
-            #             if i < len(linestyles):
-            #                 lines.append(plt.Line2D((0,1),(0,0),color=colors[j],linestyle=linestyles[i], linewidth=linewidth_val))
+            #             if j < len(linestyles):
+            #                 lines.append(plt.Line2D((0,1),(0,0),color=colors[i],linestyle=linestyles[j], linewidth=linewidth_val))
             #             else:
-            #                 lines.append(plt.Line2D((0,1),(0,0),linestyle='', color=colors[j],marker=markers[i - len(linestyles)], linewidth=linewidth_val))
+            #                 lines.append(plt.Line2D((0,1),(0,0),linestyle='', color=colors[i], marker=markers[j - len(linestyles)], linewidth=linewidth_val))
             #             legend_labels.append(labels[0][i] + '-' + labels[1][j])
+            for i in range(len(values)): #number of lists in the list (linestyles)
+                for j in range(len(values[i])): #number of items in the nested lists (colors)
+                    if i < len(linestyles):
+                        plt.plot(values[i][j], z, linestyles[i], color=colors[j], linewidth=linewidth_val)
+                    else:
+                        plt.plot(values[i][j], z, markers[i - len(linestyles)], color=colors[j], linewidth=linewidth_val)
+                    if not multi_legend:
+                        if i < len(linestyles):
+                            lines.append(plt.Line2D((0,1),(0,0),color=colors[j],linestyle=linestyles[i], linewidth=linewidth_val))
+                        else:
+                            lines.append(plt.Line2D((0,1),(0,0),linestyle='', color=colors[j],marker=markers[i - len(linestyles)], linewidth=linewidth_val))
+                        legend_labels.append(labels[0][i] + '-' + labels[1][j])
 
         else:
             legend_labels = []
@@ -424,7 +422,7 @@ def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_
     v = np.linspace(min_contour_value, max_contour_value, 8, endpoint=True)
     plt.contourf(x_dim, y_dim, values, v, vmin=min_contour_value, vmax = max_contour_value, alpha=1.0, cmap=colormap)
     cb = plt.colorbar(ticks=v)
-    C = plt.contour(x_dim, y_dim, values, v, vmin=min_contour_value, vmax = max_contour_value, colors='black', linewidth=.5)
+    C = plt.contour(x_dim, y_dim, values, v, vmin=min_contour_value, vmax = max_contour_value, colors='black')
     #contour_labels = plt.clabel(C, inline=1, fontsize=10) #when saving as eps, contour labels are outside of the axes bounding box
 
     if annotation:
