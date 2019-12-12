@@ -30,6 +30,7 @@
        hybedmf        = .true.
        satmedmf       = .false.
        hurr_pbl       = .true.
+       moninq_fac     = 0.7
        do_myjsfc      = .false.
        do_myjpbl      = .false.
        shinhong       = .false.
