@@ -18,6 +18,8 @@ Rd = 287.0
 Rv = 461.0
 g = 9.81
 
+plot_ext = '.png' #.pdf, .eps, .ps, .png (.png is fastest, but raster)
+
 reload(gspr)
 reload(gsro)
 
@@ -383,17 +385,17 @@ if(plot_ind_datasets):
                         #mean profile is obtained by averaging over dimensions 0 and 2
                         mean_data = np.mean(data_time_slice, (0,2))
 
-                        #gspr.plot_profile(vert_axis, mean_data, label, vert_axis_label, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + '.pdf', y_inverted=y_inverted_val, y_log=y_log_val, y_lim=y_lim_val)
+                        #gspr.plot_profile(vert_axis, mean_data, label, vert_axis_label, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val, y_log=y_log_val, y_lim=y_lim_val)
                         if(obs_compare and obs_dict.has_key(profiles_mean['vars'][k])):
                             obs_data = np.array(obs_dict[profiles_mean['vars'][k]])
                             obs_data_time_slice = obs_data[obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1],:]
 
                             obs_mean_data = np.mean(obs_data_time_slice, (0))
 
-                            gspr.plot_profile_multi(vert_axis, [mean_data], [gmtb_scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color', color_index=i)
+                            gspr.plot_profile_multi(vert_axis, [mean_data], [gmtb_scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color', color_index=i)
 
                         else:
-                            gspr.plot_profile_multi(vert_axis, [mean_data], [gmtb_scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', color_index=i)
+                            gspr.plot_profile_multi(vert_axis, [mean_data], [gmtb_scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', color_index=i)
 
                     else:
                         print 'The variable ' + profiles_mean['vars'][k] + ' found in ' + args.config[0] + ' in the profiles_mean section is invalid.'
@@ -418,7 +420,7 @@ if(plot_ind_datasets):
                             data_time_slice = data[i,time_slice_indices[j][0]:time_slice_indices[j][1],:,:]
                             data_list.append(np.mean(data_time_slice, (0,2)))
 
-                        gspr.plot_profile_multi(vert_axis, data_list, profiles_mean_multi[multiplot]['vars_labels'], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, ind_dir + '/profiles_mean_multi_' + multiplot + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style', color_index=i)
+                        gspr.plot_profile_multi(vert_axis, data_list, profiles_mean_multi[multiplot]['vars_labels'], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, ind_dir + '/profiles_mean_multi_' + multiplot + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style', color_index=i)
 
                     num_plots_completed += 1
                     print_progress(num_plots_completed, num_total_plots)
@@ -463,21 +465,21 @@ if(plot_ind_datasets):
 
                                 resample_string = str(int(obs_delta_seconds)) + 'S'
                                 data_time_slice_series = pd.Series(data_time_slice[:,0], index = data_date_range)
-                                data_time_slice_series_rs = data_time_slice_series.resample(resample_string, how='mean')
+                                data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
 
                                 #print obs_data_time_slice.shape, obs_date_range.shape, data_time_slice_series_rs.shape
 
-                                gspr.plot_time_series_multi(obs_date_range, [data_time_slice_series_rs], [gmtb_scm_datasets_labels[i]], 'date', label, ind_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color', color_index=i)
+                                gspr.plot_time_series_multi(obs_date_range, [data_time_slice_series_rs], [gmtb_scm_datasets_labels[i]], 'date', label, ind_dir + '/time_series_' + time_series['vars'][k] + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color', color_index=i)
                             elif(obs_delta_seconds < data_delta_seconds):
                                 print 'The case where observations are more frequent than model output has not been implmented yet... '
                             else:
                                 obs_time_time_slice = obs_time_h[obs_time_slice_indices[j][0]:obs_time_slice_indices[j][1]]
-                                gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i)
+                                gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + time_series['vars'][k] + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i)
                         else:
                             obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                            gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i)
+                            gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + time_series['vars'][k] + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i)
                     else:
-                        gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + time_series['vars'][k] + '.pdf', line_type='color', color_index=i)
+                        gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + time_series['vars'][k] + plot_ext, line_type='color', color_index=i)
                 else:
                     print 'The variable ' + time_series['vars'][k] + ' found in ' + args.config[0] + ' in the time_series section is invalid.'
                 num_plots_completed += 1
@@ -527,20 +529,20 @@ if(plot_ind_datasets):
                                 data_list_rs = []
                                 for l in range(len(data_list)):
                                     data_time_slice_series = pd.Series(data_list[l][:,0], index = data_date_range)
-                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string, how='mean')
+                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
                                     data_list_rs.append(data_time_slice_series_rs)
 
-                                gspr.plot_time_series_multi(obs_date_range, data_list_rs, time_series_multi[multiplot]['vars_labels'], 'date', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + '.pdf', obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i)
+                                gspr.plot_time_series_multi(obs_date_range, data_list_rs, time_series_multi[multiplot]['vars_labels'], 'date', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i)
                             elif(obs_delta_seconds < data_delta_seconds):
                                 print 'The case where observations are more frequent than model output has not been implmented yet... '
                             else:
                                 obs_time_time_slice = obs_time_h[obs_time_slice_indices[j][0]:obs_time_slice_indices[j][1]]
-                                gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i)
+                                gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i)
                         else:
                             obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                            gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i)
+                            gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i)
                     else:
-                        gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + '.pdf', line_type='style', color_index=i)
+                        gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, line_type='style', color_index=i)
 
                 num_plots_completed += 1
                 print_progress(num_plots_completed, num_total_plots)
@@ -576,7 +578,7 @@ if(plot_ind_datasets):
                         data_time_slice = data[time_slice_indices[j][0]:time_slice_indices[j][1],:,:]
                         label = contours['vars_labels'][k]
 
-                        gspr.contour_plot_firl(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], vert_axis, np.transpose(data_time_slice[:,:,0]), np.amin(data_time_slice[:,0:vert_axis_top_index,0]), np.amax(data_time_slice[:,0:vert_axis_top_index,0]), label, 'time (h)', vert_axis_label_c, ind_dir + '/contour_' + contours['vars'][k] + '.pdf', xticks=x_ticks_val, yticks=y_ticks_val, y_inverted=y_inverted_val_c, y_log = y_log_val_c, y_lim = y_lim_val)
+                        gspr.contour_plot_firl(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], vert_axis, np.transpose(data_time_slice[:,:,0]), np.amin(data_time_slice[:,0:vert_axis_top_index,0]), np.amax(data_time_slice[:,0:vert_axis_top_index,0]), label, 'time (h)', vert_axis_label_c, ind_dir + '/contour_' + contours['vars'][k] + plot_ext, xticks=x_ticks_val, yticks=y_ticks_val, y_inverted=y_inverted_val_c, y_log = y_log_val_c, y_lim = y_lim_val)
                     else:
                         print 'The variable ' + contours['vars'][k] + ' found in ' + args.config[0] + ' in the contours section is invalid.'
 
@@ -636,17 +638,17 @@ if(len(gmtb_scm_datasets) > 1):
 
                         obs_mean_data = np.mean(obs_data_time_slice, (0))
 
-                        gspr.plot_profile_multi(vert_axis, mean_data, gmtb_scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color',skill_scores=skill_scores_val)
+                        gspr.plot_profile_multi(vert_axis, mean_data, gmtb_scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color',skill_scores=skill_scores_val)
 
                         if(bias_val):
                             bias_data = []
                             for i in range(len(gmtb_scm_datasets)):
                                 interp_values = np.flipud(np.interp(np.flipud(obs_vert_axis), np.flipud(vert_axis), np.flipud(mean_data[i])))
                                 bias_data.append(interp_values - obs_mean_data)
-                            gspr.plot_profile_multi(obs_vert_axis, bias_data, gmtb_scm_datasets_labels, label + ' bias', vert_axis_label_pm, comp_dir + '/profiles_bias_' + profiles_mean['vars'][k] + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', zero_line=True)
+                            gspr.plot_profile_multi(obs_vert_axis, bias_data, gmtb_scm_datasets_labels, label + ' bias', vert_axis_label_pm, comp_dir + '/profiles_bias_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', zero_line=True)
 
                     else:
-                        gspr.plot_profile_multi(vert_axis, mean_data, gmtb_scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color',skill_scores=skill_scores_val)
+                        gspr.plot_profile_multi(vert_axis, mean_data, gmtb_scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color',skill_scores=skill_scores_val)
                 else:
                     print 'The variable ' + profiles_mean['vars'][k] + ' found in ' + args.config[0] + ' in the profiles_mean section is invalid.'
                 num_plots_completed += 1
@@ -671,7 +673,7 @@ if(len(gmtb_scm_datasets) > 1):
                             data_time_slice = data[i,time_slice_indices[j][0]:time_slice_indices[j][1],:,:]
                             data_list.append(np.mean(data_time_slice, (0,2)))
                         data_list_of_list.append(data_list)
-                    gspr.plot_profile_multi(vert_axis, data_list_of_list, [profiles_mean_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, comp_dir + '/profiles_mean_multi_' + multiplot + '.pdf', y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val)
+                    gspr.plot_profile_multi(vert_axis, data_list_of_list, [profiles_mean_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, comp_dir + '/profiles_mean_multi_' + multiplot + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style')
 
                 num_plots_completed += 1
                 print_progress(num_plots_completed, num_total_plots)
@@ -716,19 +718,19 @@ if(len(gmtb_scm_datasets) > 1):
                             data_time_slice_series_rs = []
                             for i in range(len(gmtb_scm_datasets)):
                                 data_time_slice_series = pd.Series(data_time_slice[i,:,0], index = data_date_range)
-                                data_time_slice_series_rs.append(data_time_slice_series.resample(resample_string, how='mean'))
+                                data_time_slice_series_rs.append(data_time_slice_series.resample(resample_string).mean())
 
-                            gspr.plot_time_series_multi(obs_date_range, data_time_slice_series_rs, gmtb_scm_datasets_labels, 'date', label, comp_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val)
+                            gspr.plot_time_series_multi(obs_date_range, data_time_slice_series_rs, gmtb_scm_datasets_labels, 'date', label, comp_dir + '/time_series_' + time_series['vars'][k] + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val)
                         elif(obs_delta_seconds < data_delta_seconds):
                             print 'The case where observations are more frequent than model output has not been implmented yet... '
                         else:
                             obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                            gspr.plot_time_series_multi(time_h[0][time_slice_indices[j][0]:time_slice_indices[j][1]], data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val)
+                            gspr.plot_time_series_multi(time_h[0][time_slice_indices[j][0]:time_slice_indices[j][1]], data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + time_series['vars'][k] + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val)
                     else:
                         obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                        gspr.plot_time_series_multi(time_h[0][time_slice_indices[j][0]:time_slice_indices[j][1]], data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + time_series['vars'][k] + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val)
+                        gspr.plot_time_series_multi(time_h[0][time_slice_indices[j][0]:time_slice_indices[j][1]], data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + time_series['vars'][k] + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val)
                 else:
-                    gspr.plot_time_series_multi(time_h[0][time_slice_indices[j][0]:time_slice_indices[j][1]], data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + time_series['vars'][k] + '.pdf', line_type='color',skill_scores=skill_scores_val)
+                    gspr.plot_time_series_multi(time_h[0][time_slice_indices[j][0]:time_slice_indices[j][1]], data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + time_series['vars'][k] + plot_ext, line_type='color',skill_scores=skill_scores_val)
             else:
                 print 'The variable ' + time_series['vars'][k] + ' found in ' + args.config[0] + ' in the time_series section is invalid.'
             num_plots_completed += 1
@@ -782,21 +784,21 @@ if(len(gmtb_scm_datasets) > 1):
                                 data_list_rs = []
                                 for i in range(len(gmtb_scm_datasets)):
                                     data_time_slice_series = pd.Series(data_list_of_list[l][i][:,0], index = data_date_range)
-                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string, how='mean')
+                                    data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
                                     data_list_rs.append(data_time_slice_series_rs)
                                 data_list_of_list_rs.append(data_list_rs)
 
-                            gspr.plot_time_series_multi(obs_date_range, data_list_of_list_rs, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'date', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + '.pdf')#, obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
+                            gspr.plot_time_series_multi(obs_date_range, data_list_of_list_rs, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'date', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext)#, obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
                         elif(obs_delta_seconds < data_delta_seconds):
                             print 'The case where observations are more frequent than model output has not been implmented yet... '
                         else:
                             obs_time_time_slice = obs_time_h[obs_time_slice_indices[j][0]:obs_time_slice_indices[j][1]]
-                            gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
+                            gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
                     else:
                         obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                        gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + '.pdf', obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
+                        gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
                 else:
-                    gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + '.pdf')
+                    gspr.plot_time_series_multi(time_h[i][time_slice_indices[j][0]:time_slice_indices[j][1]], data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext)
 
             num_plots_completed += 1
             print_progress(num_plots_completed, num_total_plots)
