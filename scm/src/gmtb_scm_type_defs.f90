@@ -360,11 +360,13 @@ module gmtb_scm_type_defs
          sw_cloud_props              ! RRTMGP DDT containing spectral information for RRTMGP LW radiation scheme
     type(ty_optical_props_1scl) :: &
          lw_optical_props_clrsky,  & ! RRTMGP DDT  
+         lw_optical_props_cloudsByBand,  & ! RRTMGP DDT 
          lw_optical_props_clouds,  & ! RRTMGP DDT 
          lw_optical_props_aerosol    ! RRTMGP DDT 
     type(ty_optical_props_2str) :: &
          sw_optical_props_clrsky,  & ! RRTMGP DDT 
          sw_optical_props_clouds,  & ! RRTMGP DDT 
+         sw_optical_props_cloudsByBand,  & ! RRTMGP DDT 
          sw_optical_props_aerosol    ! RRTMGP DDT 
 
     contains

@@ -131,6 +131,13 @@
   dimensions = ()
   type = ty_optical_props_2str
   optional = F
+[sw_optical_props_cloudsByBand]
+  standard_name = shortwave_optical_properties_for_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  optional = F
 [sw_optical_props_aerosol]
   standard_name = shortwave_optical_properties_for_aerosols
   long_name = Fortran DDT containing RRTMGP optical properties
@@ -175,6 +182,13 @@
   optional = F
 [lw_optical_props_clouds]
   standard_name = longwave_optical_properties_for_cloudy_atmosphere
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_1scl
+  optional = F
+[lw_optical_props_cloudsByBand]
+  standard_name = longwave_optical_properties_for_cloudy_atmosphere_by_band
   long_name = Fortran DDT containing RRTMGP optical properties
   units = DDT
   dimensions = ()

@@ -2177,6 +2177,7 @@
   units = none
   dimensions =  ()
   type = character
+  kind = len=128
 [nGases]
   standard_name = number_of_active_gases_used_by_RRTMGP
   long_name = number of gases available used by RRTMGP (Model%nGases)
@@ -2188,12 +2189,14 @@
   long_name = directory for rte+rrtmgp source code (Model%rrtmgp_root)
   units = none
   dimensions =  ()
+  kind = len=128
   type = character
 [lw_file_gas]
   standard_name = rrtmgp_kdistribution_lw
   long_name = file containing RRTMGP LW k-distribution (Model%lw_file_gas)
   units = none
   dimensions =  ()
+  kind = len=128
   type = character
 [lw_file_clouds]
   standard_name = rrtmgp_coeff_lw_cloud_optics 
@@ -2201,6 +2204,7 @@
   units = none
   dimensions =  ()
   type = character
+  kind = len=128
 [rrtmgp_nBandsLW]
   standard_name = number_of_lw_bands_rrtmgp
   long_name = number of lw bands used in RRTMGP (Model%rrtmgp_nBandsLW)
@@ -2218,6 +2222,7 @@
   long_name = file containing RRTMGP SW k-distribution (Model%sw_file_gas)
   units = none
   dimensions =  ()
+  kind = len=128
   type = character
 [sw_file_clouds]
   standard_name = rrtmgp_coeff_sw_cloud_optics 
@@ -2225,6 +2230,7 @@
   units = none 
   dimensions =  ()
   type = character
+  kind = len=128
 [rrtmgp_nBandsSW]
   standard_name = number_of_sw_bands_rrtmgp
   long_name = number of sw bands used in RRTMGP (Model%rrtmgp_nBandsSW)
@@ -8707,28 +8713,28 @@
   kind = kind_phys
 [sfc_alb_nir_dir]
   standard_name = surface_albedo_nearIR_direct
-  long_name = near-IR (direct) surface albedo (Model%sfc_alb_nir_dir)
+  long_name = near-IR (direct) surface albedo (sfc_alb_nir_dir)
   units = none
   dimensions = (number_of_sw_bands_rrtmgp,horizontal_dimension)
   type = real
   kind = kind_phys
 [sfc_alb_nir_dif]
   standard_name = surface_albedo_nearIR_diffuse
-  long_name = near-IR (diffuse) surface albedo (Model%sfc_alb_nir_dif) 
+  long_name = near-IR (diffuse) surface albedo (sfc_alb_nir_dif) 
   units = none
   dimensions = (number_of_sw_bands_rrtmgp,horizontal_dimension)
   type = real
   kind = kind_phys
 [sfc_alb_uvvis_dir]
   standard_name =  surface_albedo_uvvis_dir
-  long_name = UVVIS (direct) surface albedo (Model%sfc_alb_uvvis_dir)
+  long_name = UVVIS (direct) surface albedo (sfc_alb_uvvis_dir)
   units = none
   dimensions = (number_of_sw_bands_rrtmgp,horizontal_dimension)
   type = real
   kind = kind_phys
 [sfc_alb_uvvis_dif]
   standard_name =  surface_albedo_uvvis_dif
-  long_name = UVVIS (diffuse) surface albedo (Model%sfc_alb_uvvis_dif)
+  long_name = UVVIS (diffuse) surface albedo (sfc_alb_uvvis_dif)
   units = none
   dimensions = (number_of_sw_bands_rrtmgp,horizontal_dimension)
   type = real
@@ -8747,6 +8753,13 @@
   dimensions = (horizontal_dimension,number_of_sw_spectral_points_rrtmgp)
   type = real
   kind = kind_phys
+[active_gases_array]
+  standard_name = list_of_active_gases_used_by_RRTMGP
+  long_name = list of active gases used by RRTMGP
+  units = none
+  dimensions =  (number_of_active_gases_used_by_RRTMGP)
+  type = character
+  kind = len=128
 
 ########################################################################
 [ccpp-arg-table]

@@ -621,7 +621,6 @@ module GFS_typedefs
                                                  !< = 2 ; USE RRTMGP (LUT)
     integer              :: rrtmgp_nrghice    !< Number of ice-roughness categories
     logical              :: do_GPsw_Glw       ! If set to true use rrtmgp for SW calculation, rrtmg for LW.
-    character(len=128)   :: active_gases_array(100)          !< character array for each trace gas name 
 
 !--- microphysical switch
     integer              :: ncld            !< choice of cloud scheme
@@ -1888,6 +1887,8 @@ module GFS_typedefs
          flxprf_lw(:,:)         => null()    ! DDT containing RRTMGP longwave fluxes
     type(profsw_type), pointer :: &
          flxprf_sw(:,:)         => null()    ! DDT containing RRTMGP shortwave fluxes
+    character(len=128), pointer :: &
+         active_gases_array(:)  => null()    ! Character array for each trace gas name 
 
     !-- HWRF physics: dry mixing ratios
     real (kind=kind_phys), pointer :: qv_r(:,:)               => null()  !<
@@ -5804,6 +5805,7 @@ module GFS_typedefs
     allocate(Interstitial%sfc_alb_uvvis_dif( Model%rrtmgp_nBandsSW,IM))
     allocate(Interstitial%toa_src_sw       ( IM,Model%rrtmgp_nGptsSW))
     allocate(Interstitial%toa_src_lw       ( IM,Model%rrtmgp_nGptsLW))
+    allocate(Interstitial%active_gases_array(Model%nGases))
 
     !
     ! Set components that do not change
@@ -6050,7 +6052,6 @@ module GFS_typedefs
          Interstitial%cwm       = clear_val
        end if
     end if
-    !
   end subroutine interstitial_rad_reset
 
   subroutine interstitial_phys_reset (Interstitial, Model)
@@ -6275,49 +6276,6 @@ module GFS_typedefs
     Interstitial%dudt_mtb        = clear_val
     Interstitial%dudt_ogw        = clear_val
     Interstitial%dudt_tms        = clear_val
-
-    !  RRTMGP fields
-    Interstitial%aerosolslw        = clear_val
-    Interstitial%aerosolssw        = clear_val
-    Interstitial%cld_frac          = clear_val
-    Interstitial%cld_lwp           = clear_val
-    Interstitial%cld_reliq         = clear_val
-    Interstitial%cld_iwp           = clear_val
-    Interstitial%cld_reice         = clear_val
-    Interstitial%cld_swp           = clear_val
-    Interstitial%cld_resnow        = clear_val
-    Interstitial%cld_rwp           = clear_val
-    Interstitial%cld_rerain        = clear_val
-    Interstitial%hsw0              = clear_val
-    Interstitial%hswc              = clear_val
-    Interstitial%hswb              = clear_val
-    Interstitial%hlw0              = clear_val
-    Interstitial%hlwc              = clear_val
-    Interstitial%hlwb              = clear_val
-    Interstitial%fluxlwUP_allsky   = clear_val
-    Interstitial%fluxlwDOWN_allsky = clear_val
-    Interstitial%fluxlwUP_clrsky   = clear_val
-    Interstitial%fluxlwDOWN_clrsky = clear_val
-    Interstitial%fluxswUP_allsky   = clear_val
-    Interstitial%fluxswDOWN_allsky = clear_val
-    Interstitial%fluxswUP_clrsky   = clear_val
-    Interstitial%fluxswDOWN_clrsky = clear_val
-    Interstitial%icseed_lw         = clear_val
-    Interstitial%icseed_sw         = clear_val
-    Interstitial%relhum            = clear_val
-    Interstitial%p_lay             = clear_val
-    Interstitial%p_lev             = clear_val
-    Interstitial%t_lay             = clear_val
-    Interstitial%t_lev             = clear_val
-    Interstitial%tv_lay            = clear_val
-    Interstitial%tracer            = clear_val
-    Interstitial%sfc_emiss_byband  = clear_val
-    Interstitial%sfc_alb_nir_dir   = clear_val
-    Interstitial%sfc_alb_nir_dif   = clear_val
-    Interstitial%sfc_alb_uvvis_dir = clear_val
-    Interstitial%sfc_alb_uvvis_dif = clear_val
-    Interstitial%toa_src_lw        = clear_val
-    Interstitial%toa_src_sw        = clear_val
 !
     ! Reset fields that are conditional on physics choices
     if (Model%imp_physics == Model%imp_physics_gfdl .or. Model%imp_physics == Model%imp_physics_thompson) then
