@@ -389,7 +389,8 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_v(:,1,:,1),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qc",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1),&
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
+    scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,1,:,scm_state%cloud_ice_index,1),&
     START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv_force_tend",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%qv_force_tend(:,:),START=(/1,1,scm_state%itt_out /)))
