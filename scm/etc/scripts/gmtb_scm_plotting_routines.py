@@ -12,6 +12,8 @@ import matplotlib as mpl
 mpl.use('PS')
 import matplotlib.pyplot as plt
 
+mpl.rcParams['savefig.dpi'] = 150
+
 def calc_skill_score(data, experiment, R_0, k):
     sigma_data = np.std(data)
     sigma_experiment = np.std(experiment)
