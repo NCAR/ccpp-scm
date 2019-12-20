@@ -190,7 +190,8 @@ def read_LASSO_obs(obs_file, time_slices, date):
     obs_time_slice_indices = []
 
     obs_fid = Dataset(obs_file, 'r')
-
+    obs_fid.set_auto_mask(False)
+        
     obs_time = obs_fid.variables['time_offset'][:]
     obs_datetime_string = obs_fid.getncattr('output_start_datetime')
 
@@ -221,14 +222,14 @@ def read_LASSO_obs(obs_file, time_slices, date):
     obs_pres_l = np.mean(obs_pres[:,:], (0))
 
     obs_theta = obs_fid.variables['potential_temp'][1:,:]
-    print obs_theta[0,:]
+    #print obs_theta[0,:]
     obs_T = (obs_pres/ffc.p0)**(ffc.R_dry/ffc.c_p)*obs_theta
 
     obs_q = obs_fid.variables['water_vapor_mixing_ratio'][1:,:]*1.0E-3
-    print obs_q[0,:]
+    #print obs_q[0,:]
     obs_cld = obs_fid.variables['cloud_fraction'][1:,:]
 
-    print obs_cld[0,:]
+    #print obs_cld[0,:]
 
     return_dict = {'time': obs_time, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices, 'pres_l': obs_pres_l,
         'T': obs_T, 'qv': obs_q, 'cld': obs_cld}
