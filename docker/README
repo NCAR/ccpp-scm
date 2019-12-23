@@ -1,0 +1,39 @@
+# This Dockerfile builds the v3.0 CCPP SCM from source using the GNU compiler. A number of required codes are built
+# and accessed via DTC-supported base image. For reference, the base image repository can be accessed here:
+# https://github.com/NCAR/CCCP/Dockerfile
+
+# The CCPP SCM has a number of system requirements and necessary libraries and tools. 
+# Below is a list, including versions using to create the the GNU-based Docker image:
+# gfortran - 8.3.1
+# gcc - 8.3.1
+# cmake - 3.13.3
+# netCDF - 4.6.2
+# HDF5 - 1.10.4
+# ZLIB - 1.2.7
+# SZIP - 2.1.1
+# Python - 2.7.5
+# libxml2 - 2.9.1
+
+# The CCPP SCM requires the installation of several utility libraries within the NCEPlibs package.
+# The source code was accessed from: https://github.com/NCAR/NCEPlibs
+# The code was built with the OpenMP and MPI flags set to 0 (disable).
+
+# Clone the base image repository - forked by Michelle; this step will be unecessary when PR is made/accepted
+git clone https://github.com/michelleharrold/CCCP.git
+
+# Clone the repository - currently pointing to v3.0 (forked by Michelle)
+git clone https://github.com/michelleharrold/gmtb-scm-container.git
+
+# Build base image - this step will be unnecessary once PR is made/accepted
+cd CCCP ; docker build -t base . ; cd ..
+
+# Build CCPP SCM conatainer
+cd gmtb-scm-container/docker ; docker build -t ccpp-scm . ; cd ..
+
+# Example run command (TWP-ICE case)
+mkdir output ; cd output
+setenv OUT_DIR /path/to/output 
+- or -
+export OUT_DIR=/path/to/output
+docker run --rm -it -v ${OUT_DIR}:/comsoftware/gmtb-scm/scm/bin/output_twpice_SCM_GFS_v15 --name run-ccpp-scm ccpp-scm ./run_gmtb_scm.py -c twpice
+
