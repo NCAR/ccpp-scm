@@ -389,9 +389,18 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_v(:,1,:,1),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qc",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
-    scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,1,:,scm_state%cloud_ice_index,1),&
-    START=(/1,1,scm_state%itt_out /)))
+  if (physics%model(1)%do_mynnedmf) then
+    do i=1, scm_state%n_cols
+      dummy_2D(i,:) = physics%Tbd(i)%QC_BL(1,:)
+    end do
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
+      scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,1,:,scm_state%cloud_ice_index,1) + &
+      dummy_2d, START=(/1,1,scm_state%itt_out /)))
+  else
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
+      scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,1,:,scm_state%cloud_ice_index,1),&
+      START=(/1,1,scm_state%itt_out /)))
+  endif
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv_force_tend",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%qv_force_tend(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_force_tend",VARID=var_id))
