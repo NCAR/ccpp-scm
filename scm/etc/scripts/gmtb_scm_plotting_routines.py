@@ -13,6 +13,7 @@ mpl.use('PS')
 import matplotlib.pyplot as plt
 
 mpl.rcParams['savefig.dpi'] = 150
+mpl.rcParams['legend.handlelength'] = 5
 
 def calc_skill_score(data, experiment, R_0, k):
     sigma_data = np.std(data)
@@ -49,15 +50,19 @@ def plot_profile(z, values, x_label, y_label, filename, xticks=[], yticks=[], y_
     plt.savefig(filename, bbox_inches = 'tight', pad_inches = 0.1)
     plt.close()
 
-def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None, obs_values=None, xticks=[], yticks=[], y_inverted = False, y_log = False, y_lim = [], freeze_axis=None, line_type=None, color_index=None, skill_scores=False, zero_line=False):
+def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None, obs_values=None, xticks=[], yticks=[], y_inverted = False, y_log = False, y_lim = [], conversion_factor=1.0, freeze_axis=None, line_type=None, color_index=None, skill_scores=False, zero_line=False):
     #xticks = [x_start, x_end, x_num]
     plt.rc('text', usetex=True)
-
+    
+    if np.count_nonzero(values) == 0:
+        print 'The plot for {} will not be created due to all zero values'.format(x_label)
+        return
+    
     fig = plt.figure()
     colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
     linestyles = ['-','--','-.',':']
     markers = ['+','o','*','s','d','^','v','p','h']
-    linewidth_val = 3.0
+    linewidth_val = 2.0
     multi_legend = True
     if multi_legend and freeze_axis is None:
         legend1_labels = []
@@ -121,9 +126,9 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
             for i in range(len(values)): #number of lists in the list (linestyles)
                 for j in range(len(values[i])): #number of items in the nested lists (colors)
                     if i < len(linestyles):
-                        plt.plot(values[i][j], z, linestyles[i], color=colors[j], linewidth=linewidth_val)
+                        plt.plot(conversion_factor*values[i][j], z, linestyles[i], color=colors[j], linewidth=linewidth_val)
                     else:
-                        plt.plot(values[i][j], z, markers[i - len(linestyles)], color=colors[j], linewidth=linewidth_val)
+                        plt.plot(conversion_factor*values[i][j], z, markers[i - len(linestyles)], color=colors[j], linewidth=linewidth_val)
                     if not multi_legend:
                         if i < len(linestyles):
                             lines.append(plt.Line2D((0,1),(0,0),color=colors[j],linestyle=linestyles[i], linewidth=linewidth_val))
@@ -134,7 +139,7 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
         else:
             legend_labels = []
             for i in range(len(values)): #number of lists in the list (colors)
-                plt.plot(values[i][freeze_axis], z, color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val)
+                plt.plot(conversion_factor*values[i][freeze_axis], z, color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val)
                 lines.append(plt.Line2D((0,1),(0,0),color=colors[i],linestyle=linestyles[0], linewidth=linewidth_val))
                 legend_labels.append(labels[0][i])
     else:
@@ -145,13 +150,13 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
         for i in range(len(values)):
             if line_type == 'style':
                 if i < len(linestyles):
-                    plt.plot(values[i], z, color=colors[0], linestyle=linestyles[i], linewidth=linewidth_val)
+                    plt.plot(conversion_factor*values[i], z, color=colors[0], linestyle=linestyles[i], linewidth=linewidth_val)
                     lines.append(plt.Line2D((0,1),(0,0), color=colors[0], linestyle=linestyles[i], linewidth=linewidth_val))
                 else:
-                    plt.plot(values[i], z, color=colors[0], linestyle='', marker=markers[i - len(linestyles)], linewidth=linewidth_val)
+                    plt.plot(conversion_factor*values[i], z, color=colors[0], linestyle='', marker=markers[i - len(linestyles)], linewidth=linewidth_val)
                     lines.append(plt.Line2D((0,1),(0,0),color=colors[0], linestyle='', marker=markers[i - len(linestyles)], linewidth=linewidth_val))
             else:
-                plt.plot(values[i], z, color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val)
+                plt.plot(conversion_factor*values[i], z, color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val)
                 lines.append(plt.Line2D((0,1),(0,0), color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val))
             if skill_scores and obs_values is not None and obs_z is not None:
                 interp_values = np.flipud(np.interp(np.flipud(obs_z), np.flipud(z), np.flipud(values[i])))
@@ -161,7 +166,7 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
                 #legend_labels[i] = legend_labels[i] + '(' + str(ss) + ')'
 
     if obs_values is not None and obs_z is not None:
-        plt.plot(obs_values, obs_z, color='black', linewidth=linewidth_val)
+        plt.plot(conversion_factor*obs_values, obs_z, color='black', linewidth=linewidth_val)
         lines.append(plt.Line2D((0,1),(0,0),color='black', linewidth=linewidth_val))
         legend_labels.append('obs')
 
@@ -195,14 +200,14 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
             include_y = np.intersect1d(np.where(z >= y_lim[0])[0], np.where(z <= y_lim[1])[0])
             start_y = include_y[0]
             end_y = include_y[-1]
-            min_x.append(np.min(values[i][start_y:end_y]))
-            max_x.append(np.max(values[i][start_y:end_y]))
+            min_x.append(conversion_factor*np.min(values[i][start_y:end_y]))
+            max_x.append(conversion_factor*np.max(values[i][start_y:end_y]))
         if obs_values is not None and obs_z is not None:
             include_y = np.intersect1d(np.where(obs_z >= y_lim[0])[0], np.where(obs_z <= y_lim[1])[0])
             start_y = include_y[0]
             end_y = include_y[-1]
-            min_x.append(np.min(obs_values[start_y:end_y]))
-            max_x.append(np.max(obs_values[start_y:end_y]))
+            min_x.append(conversion_factor*np.min(obs_values[start_y:end_y]))
+            max_x.append(conversion_factor*np.max(obs_values[start_y:end_y]))
         min_x_all = min(min_x)
         max_x_all = max(max_x)
         plt.gca().set_xlim([min_x_all, max_x_all])
@@ -285,16 +290,20 @@ def plot_time_series_compare(time, values, LES_time, LES_values, x_label, y_labe
     plt.savefig(filename, bbox_inches = 'tight', pad_inches = 0.1)
     plt.close()
 
-def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs_time=None, obs_values=None, obs_label=None, line_type=None, color_index=None, skill_scores=False):
+def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs_time=None, obs_values=None, obs_label=None, line_type=None, color_index=None, skill_scores=False, conversion_factor=1.0):
     plt.rc('text', usetex=True)
-
+    
+    if np.count_nonzero(values) == 0:
+        print 'The plot for {} will not be created due to all zero values'.format(y_label)
+        return
+    
     fig = plt.figure()
-
+    
     lines = []
     colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
     linestyles = ['-','--','-.',':']
     markers = ['+','o','*','s','d','^','v','p','h']
-    linewidth_val = 3.0
+    linewidth_val = 2.0
     multi_legend = True
     if multi_legend:
         legend1_labels = []
@@ -336,10 +345,10 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
         for i in range(len(values)): #number of lists in the list (linestyles/markers)
             for j in range(len(values[i])): #number of items in the nested lists (colors)
                 if i < len(linestyles):
-                    plt.plot(time, values[i][j], color=colors[j], linestyle=linestyles[i], linewidth=linewidth_val)
+                    plt.plot(time, conversion_factor*values[i][j], color=colors[j], linestyle=linestyles[i], linewidth=linewidth_val)
                     lines.append(plt.Line2D((0,1),(0,0),color=colors[j],linestyle=linestyles[i], linewidth=linewidth_val))
                 else:
-                    plt.plot(time, values[i][j], color=colors[j], linestyle='', marker=markers[i - len(linestyles)], linewidth=linewidth_val)
+                    plt.plot(time, conversion_factor*values[i][j], color=colors[j], linestyle='', marker=markers[i - len(linestyles)], linewidth=linewidth_val)
                     lines.append(plt.Line2D((0,1),(0,0),color=colors[j],linestyle='', marker=markers[i - len(linestyles)], linewidth=linewidth_val))
     else:
         multi_legend = False
@@ -349,13 +358,13 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
         for i in range(len(values)):
             if line_type == 'style':
                 if i < len(linestyles):
-                    plt.plot(time, values[i], color=colors[0], linestyle=linestyles[i], linewidth=linewidth_val)
+                    plt.plot(time, conversion_factor*values[i], color=colors[0], linestyle=linestyles[i], linewidth=linewidth_val)
                     lines.append(plt.Line2D((0,1),(0,0),color=colors[0], linestyle=linestyles[i], linewidth=linewidth_val))
                 else:
-                    plt.plot(time, values[i], color=colors[0], linestyle='', marker = markers[i - len(linestyles)], linewidth=linewidth_val)
+                    plt.plot(time, conversion_factor*values[i], color=colors[0], linestyle='', marker = markers[i - len(linestyles)], linewidth=linewidth_val)
                     lines.append(plt.Line2D((0,1),(0,0),color=colors[0], linestyle='', marker = markers[i - len(linestyles)], linewidth=linewidth_val))
             else:
-                plt.plot(time, values[i], color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val)
+                plt.plot(time, conversion_factor*values[i], color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val)
                 lines.append(plt.Line2D((0,1),(0,0),color=colors[i], linestyle=linestyles[0], linewidth=linewidth_val))
             if skill_scores and obs_values is not None and obs_time is not None:
                 #print obs_time, time
@@ -365,7 +374,7 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
                 #print ss
                 #legend_labels[i] = legend_labels[i] + '(' + str(ss) + ')'
     if obs_values is not None and obs_time is not None:
-        plt.plot(obs_time, obs_values, color='black', linewidth=linewidth_val)
+        plt.plot(obs_time, conversion_factor*obs_values, color='black', linewidth=linewidth_val)
         lines.append(plt.Line2D((0,1),(0,0),color='black', linewidth=linewidth_val))
         if obs_label is not None:
             legend_labels.append(obs_label)
@@ -393,12 +402,18 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
     plt.savefig(filename, bbox_inches = 'tight', pad_inches = 0.1, additional_artists=(first_legend,))
     plt.close()
 
-def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_label, filename, xticks=[], yticks=[], plot_mean = 0, annotation = 0, y_inverted = 0, y_log = False, y_lim = []):
+def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_label, filename, xticks=[], yticks=[], plot_mean = 0, annotation = 0, y_inverted = 0, y_log = False, y_lim = [], conversion_factor=1.0):
     #os.environ['PATH'] = os.environ['PATH'] + ':/usr/texbin'
     #plt.rc('ps', usedistiller='xpdf')
     plt.rc('text', usetex=True)
-
+    
+    if np.count_nonzero(values) == 0:
+        print 'The plot for {} will not be created due to all zero values'.format(title)
+        return
+    
     if(min_val != -999 and max_val != -999):
+        min_val = conversion_factor*min_val
+        max_val = conversion_factor*max_val
         if min_val < 0.0 and max_val > 0.0:
             colormap = 'bwr'
             min_contour_value = min_val
@@ -410,21 +425,21 @@ def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_
     else:
         if np.min(values) < 0.0 and np.max(values) > 0.0:
             colormap = 'bwr'
-            max_abs = np.max(np.abs(values))
+            max_abs = np.max(np.abs(conversion_factor*values))
             min_contour_value = -1.0*max_abs
             max_contour_value = max_abs
         else:
             colormap = 'gist_yarg'
-            min_contour_value = np.min(values)
-            max_contour_value = np.max(values)
+            min_contour_value = np.min(conversion_factor*values)
+            max_contour_value = np.max(conversion_factor*values)
 
     fig = plt.figure()
 
     #plt.contourf(x_dim, y_dim, values, 8, alpha=.75, cmap='jet')
     v = np.linspace(min_contour_value, max_contour_value, 8, endpoint=True)
-    plt.contourf(x_dim, y_dim, values, v, vmin=min_contour_value, vmax = max_contour_value, alpha=1.0, cmap=colormap)
+    plt.contourf(x_dim, y_dim, conversion_factor*values, v, vmin=min_contour_value, vmax = max_contour_value, alpha=1.0, cmap=colormap)
     cb = plt.colorbar(ticks=v)
-    C = plt.contour(x_dim, y_dim, values, v, vmin=min_contour_value, vmax = max_contour_value, colors='black')
+    C = plt.contour(x_dim, y_dim, conversion_factor*values, v, vmin=min_contour_value, vmax = max_contour_value, colors='black')
     #contour_labels = plt.clabel(C, inline=1, fontsize=10) #when saving as eps, contour labels are outside of the axes bounding box
 
     if annotation:
@@ -442,7 +457,7 @@ def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_
     if plot_mean:
         plt.subplots_adjust(left = 0.1, bottom = 0.1, right=0.85, top = 0.9, wspace=0.0)
         mean_ax = fig.add_axes([0.85, 0.10, 0.13, 0.8])
-        mean_profile = np.mean(values, axis=1, dtype=np.float64)
+        mean_profile = np.mean(conversion_factor*values, axis=1, dtype=np.float64)
         plt.plot(mean_profile, y_dim)
         plt.xticks(np.linspace(np.min(mean_profile),np.max(mean_profile),2,endpoint=True)), plt.yticks(np.linspace(y_start,y_end,y_num,endpoint=True))
         plt.setp( mean_ax.get_yticklabels(), visible=False)
@@ -667,7 +682,7 @@ def plot_time_series_multi_ens(time, values, labels, x_label, y_label, filename,
     linestyles = ['-','--','-.',':']
     markers = ['+','o','*','s','d','^','v','p','h']
     hatches = ['/','\\','|','-']
-    linewidth_val = 3.0
+    linewidth_val = 2.0
     multi_legend = True
     if multi_legend:
         legend1_labels = []
