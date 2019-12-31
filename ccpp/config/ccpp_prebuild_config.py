@@ -277,7 +277,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/GFS_rrtmgp_pre.F90'               : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_setup.F90'             : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_sw_pre.F90'            : ['physics'],
-    'ccpp/physics/physics/GFS_rrtmgp_lw_pre.F90'            : ['physics'],
+    'ccpp/physics/physics/rrtmgp_lw_pre.F90'                : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_lw_post.F90'           : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'           : ['physics'],
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90'              : ['physics'],

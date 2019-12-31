@@ -8711,6 +8711,13 @@
   dimensions = (number_of_lw_bands_rrtmgp,horizontal_dimension)
   type = real
   kind = kind_phys
+[sec_diff_byband]
+  standard_name = secant_of_diffusivity_angle_each_RRTMGP_LW_band
+  long_name = secant of diffusivity angle in each RRTMGP LW band
+  units = none
+  dimensions = (number_of_lw_bands_rrtmgp,horizontal_dimension)
+  type = real
+  kind = kind_phys
 [sfc_alb_nir_dir]
   standard_name = surface_albedo_nearIR_direct
   long_name = near-IR (direct) surface albedo (sfc_alb_nir_dir)

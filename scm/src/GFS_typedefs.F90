@@ -1874,6 +1874,7 @@ module GFS_typedefs
          tv_lay(:,:)            => null(), & !
          tracer(:,:,:)          => null(), & !
          sfc_emiss_byband(:,:)  => null(), & !
+         sec_diff_byband(:,:)   => null(), & !
          sfc_alb_nir_dir(:,:)   => null(), & !
          sfc_alb_nir_dif(:,:)   => null(), & !
          sfc_alb_uvvis_dir(:,:) => null(), & !
@@ -5799,7 +5800,7 @@ module GFS_typedefs
     allocate(Interstitial%tv_lay           ( IM, Model%levs))
     allocate(Interstitial%tracer           ( IM, Model%levs, Model%ntrac))
     allocate(Interstitial%sfc_emiss_byband ( Model%rrtmgp_nBandsLW,IM))
-    allocate(Interstitial%sfc_alb_nir_dir  ( Model%rrtmgp_nBandsSW,IM))
+    allocate(Interstitial%sec_diff_byband  ( Model%rrtmgp_nBandsLW,IM))
     allocate(Interstitial%sfc_alb_nir_dif  ( Model%rrtmgp_nBandsSW,IM))
     allocate(Interstitial%sfc_alb_uvvis_dir( Model%rrtmgp_nBandsSW,IM))
     allocate(Interstitial%sfc_alb_uvvis_dif( Model%rrtmgp_nBandsSW,IM))
