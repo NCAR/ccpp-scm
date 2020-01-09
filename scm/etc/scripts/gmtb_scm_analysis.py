@@ -59,7 +59,7 @@ plot_dir = config['plot_dir']
 time_slices = config['time_slices']
 plot_ind_datasets = config['plot_ind_datasets']
 time_series_resample = config['time_series_resample']
-skill_scores_val = True
+skill_scores_val = False
 bias_val = True
 
 plots = config['plots']
