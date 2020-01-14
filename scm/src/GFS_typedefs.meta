@@ -2255,6 +2255,12 @@
   units = count
   dimensions =  ()
   type = integer
+[rrtmgp_nGauss_ang]
+  standard_name = number_of_angles_used_in_gaussian_quadrature
+  long_name = Number of angles used in Gaussian quadrature
+  units = count
+  dimensions =  ()
+  type = integer
 [do_GPsw_Glw]
   standard_name = scheme_flag
   long_name = When true GP is used for SW calculation and G is used for LW calculation

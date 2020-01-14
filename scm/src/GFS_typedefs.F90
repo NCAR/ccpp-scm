@@ -620,6 +620,7 @@ module GFS_typedefs
                                                  !< = 1 ; Use RRTMGP (pade)
                                                  !< = 2 ; USE RRTMGP (LUT)
     integer              :: rrtmgp_nrghice    !< Number of ice-roughness categories
+    integer              :: rrtmgp_nGauss_ang !< Number of angles used in Gaussian quadrature
     logical              :: do_GPsw_Glw       ! If set to true use rrtmgp for SW calculation, rrtmg for LW.
 
 !--- microphysical switch
@@ -2705,6 +2706,8 @@ module GFS_typedefs
                                                                !< = 1 ; Use RRTMGP (pade)
                                                                !< = 2 ; USE RRTMGP (LUT)
     integer              :: rrtmgp_nrghice = 0               !< Number of ice-roughness categories
+    integer              :: rrtmgp_nGauss_ang=1              !< Number of angles used in Gaussian quadrature
+
     logical              :: do_GPsw_Glw    = .false.         
 
 !--- Z-C microphysical parameters
@@ -3028,7 +3031,8 @@ module GFS_typedefs
                                active_gases, nGases, rrtmgp_root, &
                                lw_file_gas, lw_file_clouds, rrtmgp_nBandsLW, rrtmgp_nGptsLW,&
                                sw_file_gas, sw_file_clouds, rrtmgp_nBandsSW, rrtmgp_nGptsSW,&
-                               rrtmgp_cld_optics, rrtmgp_nrghice, do_GPsw_Glw,              &
+                               rrtmgp_cld_optics, rrtmgp_nrghice, rrtmgp_nGauss_ang,        &
+                               do_GPsw_Glw,                                                 &
                           ! IN CCN forcing
                                iccn,                                                        &
                           !--- microphysical parameterizations
@@ -3253,6 +3257,7 @@ module GFS_typedefs
     end if
     ! RRTMGP 
     Model%rrtmgp_nrghice    = rrtmgp_nrghice
+    Model%rrtmgp_nGauss_ang = rrtmgp_nGauss_ang
     Model%do_GPsw_Glw       = do_GPsw_Glw
     Model%active_gases      = active_gases
     Model%ngases            = nGases
@@ -4226,6 +4231,7 @@ module GFS_typedefs
       print *, ' lwhtr             : ', Model%lwhtr
       print *, ' swhtr             : ', Model%swhtr
       print *, ' rrtmgp_nrghice     : ', Model%rrtmgp_nrghice
+      print *, ' rrtmgp_nGauss_ang  : ', Model%rrtmgp_nGauss_ang
       print *, ' do_GPsw_Glw        : ', Model%do_GPsw_Glw
       print *, ' active_gases       : ', Model%active_gases
       print *, ' nGases             : ', Model%ngases
