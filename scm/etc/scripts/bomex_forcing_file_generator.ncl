@@ -261,7 +261,18 @@ fo->levels = (/levels/)
 grpnames = (/"scalars", "initial", "forcing"/)
 filegrpdef(fo, grpnames)
 
-; Scalars -- none
+; Scalars
+
+g1 = fo=>/scalars
+
+filevardef(g1,"lat",typeof(lat),"ncl_scalar")
+filevarattdef(g1,"lat",lat)
+g1->lat = lat
+
+filevardef(g1,"lon",typeof(lon),"ncl_scalar")
+filevarattdef(g1,"lon",lon)
+g1->lon = lon
+
 
 ; Initial
 g2 = fo=>/initial
@@ -308,14 +319,6 @@ g2->ozone = (/ozone/)
 g3 = fo=>/forcing
 
 filedimdef(g3,dimNames,dimSizes,dimUnlim)
-
-filevardef(g3,"lat",typeof(lat),"time")
-filevarattdef(g3,"lat",lat)
-g3->lat = (/lat/)
-
-filevardef(g3,"lon",typeof(lon),"time")
-filevarattdef(g3,"lon",lon)
-g3->lon = (/lon/)
 
 filevardef(g3,"p_surf",typeof(p_surf),"time")
 filevarattdef(g3,"p_surf",p_surf)

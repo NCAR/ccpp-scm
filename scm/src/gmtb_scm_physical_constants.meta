@@ -99,6 +99,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_epsq]
+  standard_name = minimum_value_of_specific_humidity
+  long_name = floor value for specific humidity
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [con_vonKarman]
   standard_name = vonKarman_constant
   long_name = vonKarman constant
@@ -152,6 +159,13 @@
   standard_name = standard_atmospheric_pressure
   long_name = standard atmospheric pressure
   units = Pa
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[rhowater]
+  standard_name = liquid_water_density
+  long_name = density of liquid water
+  units = kg m-3
   dimensions = ()
   type = real
   kind = kind_phys
