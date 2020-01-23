@@ -18,12 +18,15 @@ Rd = 287.0
 Rv = 461.0
 g = 9.81
 
-plot_ext = '.png' #.pdf, .eps, .ps, .png (.png is fastest, but raster)
+plot_ext = '.pdf' #.pdf, .eps, .ps, .png (.png is fastest, but raster)
 
 reload(gspr)
 reload(gsro)
 
-pd.plotting.register_matplotlib_converters()
+try:
+  pd.plotting.register_matplotlib_converters()
+except (AttributeError):
+  print "Warning: The version of the pandas package you are using may lead to Future Warnings being generated. These can be ignored for now." 
 
 #subroutine for printing progress to the command line
 def print_progress(n_complete, n_total):
