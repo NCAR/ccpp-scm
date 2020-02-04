@@ -3,7 +3,7 @@
 # https://github.com/NCAR/CCCP/Dockerfile
 
 # The CCPP SCM has a number of system requirements and necessary libraries and tools. 
-# Below is a list, including versions using to create the the GNU-based Docker image:
+# Below is a list, including versions, used to create the the GNU-based Docker image:
 # gfortran - 8.3.1
 # gcc - 8.3.1
 # cmake - 3.13.3
@@ -16,7 +16,7 @@
 
 # The CCPP SCM requires the installation of several utility libraries within the NCEPlibs package.
 # The source code was accessed from: https://github.com/NCAR/NCEPlibs
-# The code was built with the OpenMP and MPI flags set to 0 (disable).
+# The code was built with the OpenMP and MPI flags set to 1 (enable).
 
 # Clone the base image repository - forked by Michelle; this step will be unecessary when PR is made/accepted
 git clone https://github.com/michelleharrold/CCCP.git
