@@ -315,8 +315,8 @@ class Experiment(object):
 
         # Create output directory (delete existing directory)
         logging.info('Creating output directory {0} in run directory'.format(output_dir))
-        #if os.path.isdir(output_dir):
-        #    shutil.rmtree(output_dir)
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir)
         os.makedirs(output_dir)
         
         # Write experiment configuration file to output directory
