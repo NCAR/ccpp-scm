@@ -314,10 +314,11 @@ class Experiment(object):
             execute(cmd)
 
         # Create output directory (delete existing directory)
-        logging.info('Creating output directory {0} in run directory'.format(output_dir))
+        logging.info('Creating output directory {0} in home directory'.format(output_dir))
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir)
         os.makedirs(output_dir)
+        print("Output dir:"+output_dir)
         
         # Write experiment configuration file to output directory
         logging.info('Writing experiment configuration {0}.nml to output directory'.format(self._name))
