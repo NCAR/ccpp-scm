@@ -318,12 +318,20 @@ class Experiment(object):
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir)
         os.makedirs(output_dir)
-        print("Output dir:"+output_dir)
         
         # Write experiment configuration file to output directory
         logging.info('Writing experiment configuration {0}.nml to output directory'.format(self._name))
         cmd = 'cp {0} {1}'.format(STANDARD_EXPERIMENT_NAMELIST, os.path.join(output_dir,self._name + '.nml'))
         execute(cmd)
+
+        return output_dir
+
+def copy_outdir(exp_dir):
+    """Copy output directory to /home for this experiment."""
+    home_output_dir = '/home/'+exp_dir
+    if os.path.isdir(home_output_dir):
+        shutil.rmtree(home_output_dir)
+    shutil.copytree(exp_dir, home_output_dir)
 
 def launch_executable(use_gdb, gdb):
     """Configure model run command and pass control to shell/gdb"""
@@ -337,22 +345,24 @@ def launch_executable(use_gdb, gdb):
 
 def main():
     (case, use_gdb, suite, namelist) = parse_arguments()
-    
+
     setup_logging()
-    
+
     #Experiment
     if namelist:
         logging.info('Setting up experiment {0} with suite {1} using namelist {2}'.format(case,suite,namelist))
     else:
         logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite'.format(case,suite))
     exp = Experiment(case, suite, namelist)
-    exp.setup_rundir()
+    #exp.setup_rundir()
+    exp_dir = exp.setup_rundir()
     # Debugger
     if use_gdb:
         gdb = find_gdb()
     else:
         gdb = None
     # Launch model on exit
+    atexit.register(copy_outdir, exp_dir)
     atexit.register(launch_executable, use_gdb, gdb)
     
 if __name__ == '__main__':
