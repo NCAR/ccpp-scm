@@ -41,14 +41,8 @@ RUN cd /comsoftware/gmtb-scm/scm/etc \
   && . CENTOS_setup.sh
 
 RUN cd /comsoftware/gmtb-scm/scm/src \
-#  && cat run_gmtb_scm.py | sed "s/output_'/\/home\/output_'/g" > new_run_gmtb_scm.py \
-#  && cp new_run_gmtb_scm.py run_gmtb_scm.py
-#  && cat run_gmtb_scm.py | sed "s/if os.path.isdir/#if os.path.isdir/g; s/shutil.rmtree/#shutil.rmtree/g; s/os.makedirs/os.mkdir/g" > new_run_gmtb_scm.py \
-#  && cp new_run_gmtb_scm.py run_gmtb_scm.py
-#  && cat run_gmtb_scm.py | sed "s/shutil.rmtree(output_dir)/files = glob.glob(output_dir+\"\\/*\")\n            for f in files:\n                 os.remove(f)\n        if not os.path.exists(output_dir):/g; s/os.makedirs/    os.makedirs/g" > new_run_gmtb_scm.py \
-#  && cp new_run_gmtb_scm.py run_gmtb_scm.py
-  && cat run_gmtb_scm.py | sed "s/os.makedirs(output_dir)/os.makedirs(output_dir)\n        os.symlink(os.path.join('\/comsoftware\/gmtb-scm\/scm\/bin\/' \+ output_dir),os.path.join('\/home\/' \+ output_dir))/g" > new_run_gmtb_scm.py \
-  && cp new_run_gmtb_scm.py run_gmtb_scm.py
+  && curl -L -O https://raw.githubusercontent.com/michelleharrold/gmtb-scm-container/master/scm/src/run_gmtb_scm_docker.py \
+  && cp run_gmtb_scm_docker.py run_gmtb_scm.py
 
 # Invoke cmake on the source code to build
 RUN cd /comsoftware/gmtb-scm/scm \
