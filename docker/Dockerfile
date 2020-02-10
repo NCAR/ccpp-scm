@@ -1,10 +1,13 @@
-FROM base:latest
-#FROM dtcenter/base_image:latest
-MAINTAINER Michelle Harrold <harrold@ucar.edu>
+FROM dtcenter/common-community-container:latest
+MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 #
 # Dockerfile for building CCPP SCM container
 #
+
+# Note: The common community container image contains the following packages, which are used to build the SCM:
+# gfortran, gcc, cmake, netCDF, HDF5, ZLIB, SZIP, Python, and libxml2
+# To access the common community container repository: https://github.com/NCAR/Common-Community-Container
 
 # Obtain NCEPlibs source code
 RUN source /opt/rh/devtoolset-8/enable \
@@ -40,6 +43,7 @@ RUN cd /comsoftware/gmtb-scm/scm/etc \
   && mv new_CENTOS.sh CENTOS_setup.sh \
   && . CENTOS_setup.sh
 
+# Use Docker-specific run_gmtb_scm.py script to allow for proper volume mounts
 RUN cd /comsoftware/gmtb-scm/scm/src \
   && curl -L -O https://raw.githubusercontent.com/michelleharrold/gmtb-scm-container/master/scm/src/run_gmtb_scm_docker.py \
   && cp run_gmtb_scm_docker.py run_gmtb_scm.py
