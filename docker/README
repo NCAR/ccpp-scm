@@ -39,7 +39,8 @@ setenv OUT_DIR /path/to/output
 # - or -
 export OUT_DIR=/path/to/output
 
-# Run the CCPP SCM.
+# Run the CCPP SCM. Note, invoking the run script follows the same protocol for arguements as outline in the SCM Users' Guide.
+# SCM UG: https://dtcenter.org/GMTB/v3.0/scm-ccpp-guide-v3.pdf
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_gmtb_scm.py -c twpice
 
 # Notes on the run command options:

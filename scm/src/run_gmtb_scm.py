@@ -324,14 +324,6 @@ class Experiment(object):
         cmd = 'cp {0} {1}'.format(STANDARD_EXPERIMENT_NAMELIST, os.path.join(output_dir,self._name + '.nml'))
         execute(cmd)
 
-    def link_outdir(self):
-        """Link output directory to /home for this experiment."""
-        #home_output_dir = '/home/'+output_dir
-        #os.symlink(output_dir, home_output_dir)
-        home_output_dir = '/home/output_twpice_SCM_GFS_v15'
-        output_dir = '/comsoftware/gmtb-scm/scm/bin/output_twpice_SCM_GFS_v15'
-        os.symlink(output_dir, home_output_dir)
-
 def launch_executable(use_gdb, gdb):
     """Configure model run command and pass control to shell/gdb"""
     if use_gdb:
@@ -361,9 +353,6 @@ def main():
         gdb = None
     # Launch model on exit
     atexit.register(launch_executable, use_gdb, gdb)
-
-    # Link output_dir to /home
-    exp.link_outdir()
     
 if __name__ == '__main__':
     main()
