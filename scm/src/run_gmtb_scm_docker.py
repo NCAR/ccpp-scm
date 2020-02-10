@@ -354,7 +354,6 @@ def main():
     else:
         logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite'.format(case,suite))
     exp = Experiment(case, suite, namelist)
-    #exp.setup_rundir()
     exp_dir = exp.setup_rundir()
     # Debugger
     if use_gdb:
