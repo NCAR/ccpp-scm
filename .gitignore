@@ -9,3 +9,4 @@ scm/data/physics_input_data/qr_acr*.dat
 scm/data/physics_input_data/freezeH2O.dat
 scm/etc/case_config/twpice_*
 scm/data/processed_case_input/twpice_*
+scm/twpice_TWP*
