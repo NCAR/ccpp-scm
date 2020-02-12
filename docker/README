@@ -1,4 +1,4 @@
-# The Dockerfile builds CCPP SCM v3.0 from source using the GNU compiler. A number of required codes are built and accessed
+# The Dockerfile builds CCPP SCM v3.0 from source using the GNU compiler. A number of required codes are built and installed
 # via the DTC-supported common community container. For reference, the common community container repository can be accessed here:
 # https://github.com/NCAR/Common-Community-Container
 
@@ -15,12 +15,13 @@
 # libxml2 - 2.9.1
 
 # The CCPP SCM requires the installation of several utility libraries within the NCEPlibs package.
-# The source code was accessed from: https://github.com/NCAR/NCEPlibs
-# The code was built with the OpenMP and MPI flags set to 1 (enable).
+# The NCEPlibs source code was accessed from: https://github.com/NCAR/NCEPlibs
+# The code is built with the OpenMP and MPI flags set to 1 (enable).
 
 #
 # STEPS TO BUILD AND RUN THE CCPP SCM
 #
+
 # Clone the repository in the location of your choosing - currently pointing to v3.0 (forked by Michelle). Need to update.
 git clone https://github.com/michelleharrold/gmtb-scm-container.git
 
@@ -30,7 +31,7 @@ cd gmtb-scm-container/docker ; docker build -t ccpp-scm . ; cd ..
 # A successful build will show three images: centos, dtcenter/common-community-container, and ccpp-scm. To list images, type:
 docker images
 
-# Example commands to set-up output directory and run a case (example for TWP-ICE case).
+# Example commands to set-up output directory and run a supplied case (example for TWP-ICE case).
 # Make the output directory. This is a top-level directory where all case-specific directories will be mounted (e.g., output_twpice_SCM_GFS_v15).
 mkdir -p /path/to/output
 
@@ -47,6 +48,6 @@ docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_gmtb_
 # --rm removes the container when it exits
 # -it interactive mode with terminal access
 # -v specifies the volume mount from "local" directory (outside container) to inside the container (bind mount). Allows you to save data.
-# For runing the CCPP SCM, the output is being mounted from /home inside the container to the OUT_DIR on the "local" machine.
+# For running the CCPP SCM, the output is being mounted from /home inside the container to the OUT_DIR on the "local" machine.
 
 
