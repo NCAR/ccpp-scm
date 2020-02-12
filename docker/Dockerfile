@@ -1,5 +1,4 @@
-#FROM dtcenter/common-community-container:latest
-FROM base:latest
+FROM dtcenter/common-community-container:latest
 MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 #
@@ -60,7 +59,7 @@ RUN cd /comsoftware/gmtb-scm/scm \
 
 # The analysis scripts have options for using LaTeX when making figure labels.
 # If you would like to install LaTeK, uncomment the section below. 
-# Note: This will increase the image size 1 GB.
+# Note: This will increase the image size by 1 GB.
 #USER root
 #RUN yum -y update \
 #  && yum -y install texlive-*
