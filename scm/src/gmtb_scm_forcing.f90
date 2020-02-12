@@ -29,7 +29,6 @@ subroutine interpolate_forcing(scm_input, scm_state)
   integer :: i, n
   integer :: low_t_index, top_index !< index of the time in the input file immediately before the current model time, index of the last calculated level
   real(kind=dp) :: lifrac
-  real(kind=dp) :: deg_to_rad_const
 
   real(kind=dp) :: w_ls_bracket(2,scm_state%n_levels), omega_bracket(2,scm_state%n_levels), u_g_bracket(2,scm_state%n_levels), &
     v_g_bracket(2,scm_state%n_levels), u_nudge_bracket(2,scm_state%n_levels), v_nudge_bracket(2,scm_state%n_levels), &
@@ -39,8 +38,6 @@ subroutine interpolate_forcing(scm_input, scm_state)
 
   !> \section interpolate_forcing_alg Algorithm
   !! @{
-
-  deg_to_rad_const = con_pi/180.0
 
   !> - Check for the case where the elapsed model time extends beyond the supplied forcing.
   if(scm_state%model_time >= scm_input%input_time(scm_input%input_ntimes)) then
@@ -126,16 +123,11 @@ subroutine interpolate_forcing(scm_input, scm_state)
         scm_state%v_advec_qt(i,:) = v_advec_qt_bracket(1,:)
 
         !>  - Set the surface parameters to the last available data.
-        scm_state%lat(i,1) = scm_input%input_lat(scm_input%input_ntimes)
-        scm_state%lon(i,1) = scm_input%input_lon(scm_input%input_ntimes)
         scm_state%pres_surf(i,1) = scm_input%input_pres_surf(scm_input%input_ntimes)
         scm_state%T_surf(i,1) = scm_input%input_T_surf(scm_input%input_ntimes)
         scm_state%sh_flux(i) = scm_input%input_sh_flux_sfc(scm_input%input_ntimes)
         scm_state%lh_flux(i) = scm_input%input_lh_flux_sfc(scm_input%input_ntimes)
       end do
-      !>  - Convert lat, lon to radians.
-      scm_state%lat = scm_state%lat*deg_to_rad_const
-      scm_state%lon = scm_state%lon*deg_to_rad_const
   else
   !> - When the model elapsed time is within the time-frame specified by the input forcing, the forcing must be interpolated in time and space.
     !>  - Determine the index in the input file for the time immediately preceeding the model time and determine the linear interpolation value.
@@ -261,8 +253,6 @@ subroutine interpolate_forcing(scm_input, scm_state)
       scm_state%v_advec_qt(i,:) = (1.0 - lifrac)*v_advec_qt_bracket(1,:) + lifrac*v_advec_qt_bracket(2,:)
 
       !>  - Interpolate the surface parameters in time.
-      scm_state%lat(i,1) = (1.0 - lifrac)*scm_input%input_lat(low_t_index) + lifrac*scm_input%input_lat(low_t_index+1)
-      scm_state%lon(i,1) = (1.0 - lifrac)*scm_input%input_lon(low_t_index) + lifrac*scm_input%input_lon(low_t_index+1)
       scm_state%pres_surf(i,1) = (1.0 - lifrac)*scm_input%input_pres_surf(low_t_index) + &
         lifrac*scm_input%input_pres_surf(low_t_index+1)
       scm_state%T_surf(i,1) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
@@ -271,9 +261,6 @@ subroutine interpolate_forcing(scm_input, scm_state)
       scm_state%lh_flux(i) = (1.0 - lifrac)*scm_input%input_lh_flux_sfc(low_t_index) + &
         lifrac*scm_input%input_lh_flux_sfc(low_t_index+1)
     end do
-    !>  - Convert lat, lon to radians.
-    scm_state%lat = scm_state%lat*deg_to_rad_const
-    scm_state%lon = scm_state%lon*deg_to_rad_const
   end if
 
   !> @}
