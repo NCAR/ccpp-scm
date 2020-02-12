@@ -107,18 +107,9 @@ community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownI
 
 \section{Compiling SCM with CCPP}
 \label{section: compiling}
-The first step in compiling the CCPP and SCM is to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them.  Following this step, the top level build system will use \execout{cmake} to query system parameters and \execout{make} to compile the components.  A platform-specific script is provided to load modules and set the user environment for common platforms.  If you are not using one of these platforms, you will need to set up the same environment on your platform.
+The first step in compiling the CCPP and SCM is to properly setup your user environment. Platform-specific scripts are provided to load modules and set the user environment for common platforms.  If you are not using one of these platforms, you will need to set up the same environment on your platform. Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components. 
 \begin{enumerate}
-    \item Run the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. The default behavior is to use the so-called ``dynamic'' mode where software caps for all schemes in the CCPP repository are generated and a dynamic, shared library is generated for the CCPP physics. The basic syntax is
-\begin{lstlisting}[language=bash]
-./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py [--debug]
-\end{lstlisting}
-A second, more performant ``static'' mode is available that generates software caps for each physics group defined in the supplied SDFs and generates a static library that becomes part of the SCM executable. Using this mode, flexibility of defining suites at runtime is lost, although one can choose among a set of suites defined at compilation time. To use this mode, the syntax becomes
-\begin{lstlisting}[language=bash]
-./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --static --suites=SCM_GFS_v15,SCM_GFS_v15plus,SCM_GSD_v0[...] [--debug]
-\end{lstlisting}
-where the argument supplied via the \execout{-{}-suites} variable is a comma-separated list of suite names that exist in the \execout{./ccpp/suites} directory. Note that suite names are the suite definition filenames minus the \exec{suite\_} prefix and \exec{.xml} suffix.
-    \item Change directory to the top-level SCM directory.
+ \item Change directory to the top-level SCM directory.
 \begin{lstlisting}[language=bash]
 cd scm
 \end{lstlisting}
@@ -148,14 +139,27 @@ For bourne/bash shells,
 \begin{lstlisting}[language=bash]
 mkdir bin && cd bin
 \end{lstlisting}
-    \item Invoke cmake on the source code to build.
+
+ \item Invoke cmake on the source code to build.
 \begin{lstlisting}[language=bash]
 cmake ../src                          # without threading/OpenMP
 cmake -DOPENMP=ON ../src               # with threading/OpenMP
 cmake -DCMAKE_BUILD_TYPE=Debug ../src # debug mode
 cmake -DSTATIC=ON ../src.               #static mode
 \end{lstlisting}
-    \item If cmake cannot find \execout{libxml2} because it is installed in a non-standard location, add
+Cmake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. The default behavior is to use the so-called ``dynamic'' mode where software caps for all schemes in the CCPP repository are generated and a dynamic, shared library is generated for the CCPP physics. A second, more performant ``static'' mode is available that generates software caps for each physics group defined in the supplied SDFs and generates a static library that becomes part of the SCM executable. Using this mode, flexibility of defining suites at runtime is lost, although one can choose among a set of suites defined at compilation time. Adding the cmake variable \exec{-DSTATIC=ON} will turn this feature on and appropriate software caps will be generated for all suites defined in the \execout{gmtb-scm/ccpp/suites} directory automatically.
+
+If necessary, the CCPP prebuild script can be executed manually from the top level directory (\execout{gmtb-scm}). The basic syntax for the dynamic mode is
+\begin{lstlisting}[language=bash]
+./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --builddir=./scm/bin [--debug]
+\end{lstlisting}
+To use the static mode, the syntax becomes
+\begin{lstlisting}[language=bash]
+./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --static --suites=SCM_GFS_v15p2,SCM_GFS_v16beta,SCM_GSD_v1[...] --builddir=./scm/bin [--debug]
+\end{lstlisting}
+where the argument supplied via the \execout{-{}-suites} variable is a comma-separated list of suite names that exist in the \execout{./ccpp/suites} directory. Note that suite names are the suite definition filenames minus the \exec{suite\_} prefix and \exec{.xml} suffix.
+   
+       \item If cmake cannot find \execout{libxml2} because it is installed in a non-standard location, add
 \begin{lstlisting}[language=bash]
 -DPC_LIBXML_INCLUDEDIR=... -DPC_LIBXML_LIBDIR=...
 \end{lstlisting}

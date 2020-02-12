@@ -257,7 +257,6 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_cice.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_diff.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_drv.f'                        : ['physics'],
-    'ccpp/physics/physics/sfc_noahmp_pre.F90'               : ['physics'],
     'ccpp/physics/physics/sfc_noahmp_drv.f'                 : ['physics'],
     'ccpp/physics/physics/sfc_nst.f'                        : ['physics'],
     'ccpp/physics/physics/sfc_ocean.F'                      : ['physics'],
