@@ -569,6 +569,34 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[alvsf]
+  standard_name = mean_vis_albedo_with_strong_cosz_dependency
+  long_name = mean vis albedo with strong cosz dependency
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[alnsf]
+  standard_name = mean_nir_albedo_with_strong_cosz_dependency
+  long_name = mean nir albedo with strong cosz dependency
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[facsf]
+  standard_name =fractional_coverage_with_strong_cosz_dependency
+  long_name = fractional coverage with strong cosz dependency
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[facwf]
+  standard_name = fractional_coverage_with_weak_cosz_dependency
+  long_name = fractional coverage with weak cosz dependency
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [slope]
   standard_name = surface_slope_classification_real
   long_name = sfc slope type for lsm
@@ -4680,6 +4708,13 @@
 [coszen]
   standard_name = cosine_of_zenith_angle
   long_name = mean cos of zenith angle over rad call period
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[coszdg]
+  standard_name = daytime_mean_cosz_over_rad_call_period
+  long_name = daytime mean cosz over rad call period
   units = none
   dimensions = (horizontal_dimension)
   type = real
