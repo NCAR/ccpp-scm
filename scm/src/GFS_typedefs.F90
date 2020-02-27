@@ -220,6 +220,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: fice   (:)   => null()  !< ice fraction over open water grid 
 !   real (kind=kind_phys), pointer :: hprim  (:)   => null()  !< topographic standard deviation in m
     real (kind=kind_phys), pointer :: hprime (:,:) => null()  !< orographic metrics
+    real (kind=kind_phys), pointer :: z0base (:)   => null()  !< background or baseline surface roughness length in m
+    real (kind=kind_phys), pointer :: semisbase(:)=> null()  !< background surface emissivity
 
 !--- In (radiation only)
     real (kind=kind_phys), pointer :: sncovr (:)   => null()  !< snow cover in fraction
@@ -259,6 +261,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: slc    (:,:) => null()  !< liquid soil moisture
     real (kind=kind_phys), pointer :: smc    (:,:) => null()  !< total soil moisture
     real (kind=kind_phys), pointer :: stc    (:,:) => null()  !< soil temperature
+    real (kind=kind_phys), pointer :: sthick (:)   => null()  !< soil layer thickness (m)
 
 !--- Out
     real (kind=kind_phys), pointer :: t2m    (:)   => null()  !< 2 meter temperature
@@ -688,6 +691,7 @@ module GFS_typedefs
     integer              :: lsm_noah=1      !< flag for NOAH land surface model
     integer              :: lsm_noahmp=2    !< flag for NOAH land surface model
     integer              :: lsm_ruc=3       !< flag for RUC land surface model
+    integer              :: lsm_noah_hafs = 4 !< flag for NOAH land surface model for HAFS application
     integer              :: lsoil           !< number of soil layers
     integer              :: lsoil_lsm       !< number of soil layers internal to land surface model
     integer              :: lsnow_lsm       !< maximum number of snow layers internal to land surface model
@@ -696,8 +700,16 @@ module GFS_typedefs
     integer              :: ivegsrc         !< ivegsrc = 0   => USGS, 
                                             !< ivegsrc = 1   => IGBP (20 category)
                                             !< ivegsrc = 2   => UMD  (13 category)
+                                            !< ivegsrc = 3   => NLCD40 (40 category, NOAH/HAFS only)
+                                            !< ivegsrc = 4   => USGS-RUC (28 category, NOAH/HAFS only)
+                                            !< ivegsrc = 5   => MODI-RUC (21 category, NOAH/HAFS only)
     integer              :: isot            !< isot = 0   => Zobler soil type  ( 9 category)
-                                            !< isot = 1   => STATSGO soil type (19 category)
+                                            !< isot = 1   => STATSGO soil type (19 category, AKA 'STAS'(?))
+                                            !< isot = 2   => STAS-RUC soil type (19 category, NOAH/HAFS only)
+    integer              :: isurban         !< vegetation/land use type corresponding to the urban environment for the chosen ivegsrc
+    integer              :: iopt_thcnd      !< option to treat thermal conductivity in Noah LSM (new in 3.8)
+                                            !< = 1, original (default)
+                                            !< = 2, McCumber and Pielke for silt loam and sandy loam
     ! -- the Noah MP options
 
     integer              :: iopt_dveg ! 1-> off table lai 2-> on 3-> off;4->off;5 -> on
@@ -1152,7 +1164,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: phy_myj_qz0(:)     => null()  ! 
     real (kind=kind_phys), pointer :: phy_myj_uz0(:)     => null()  ! 
     real (kind=kind_phys), pointer :: phy_myj_vz0(:)     => null()  ! 
-    real (kind=kind_phys), pointer :: phy_myj_z0base(:)  => null()  ! 
     real (kind=kind_phys), pointer :: phy_myj_akhs(:)    => null()  ! 
     real (kind=kind_phys), pointer :: phy_myj_akms(:)    => null()  ! 
     real (kind=kind_phys), pointer :: phy_myj_chkqlm(:)  => null()  ! 
@@ -2046,6 +2057,7 @@ module GFS_typedefs
     allocate (Sfcprop%slc    (IM,Model%lsoil))
     allocate (Sfcprop%smc    (IM,Model%lsoil))
     allocate (Sfcprop%stc    (IM,Model%lsoil))
+    allocate (Sfcprop%sthick (Model%lsoil))
 
     Sfcprop%hice   = clear_val
     Sfcprop%weasd  = clear_val
@@ -2059,6 +2071,7 @@ module GFS_typedefs
     Sfcprop%slc    = clear_val
     Sfcprop%smc    = clear_val
     Sfcprop%stc    = clear_val
+    Sfcprop%sthick = clear_val
 
 !--- Out
     allocate (Sfcprop%t2m (IM))
@@ -2209,7 +2222,16 @@ module GFS_typedefs
     Sfcprop%dgraupelprv = clear_val
     
    endif
-
+    
+    if (Model%do_myjsfc.or.Model%do_myjpbl.or.(Model%lsm == Model%lsm_noah_hafs)) then
+      allocate(Sfcprop%z0base(IM))
+      Sfcprop%z0base = clear_val
+    end if
+    if (Model%lsm == Model%lsm_noah_hafs) then
+      allocate(Sfcprop%semisbase(IM))
+      Sfcprop%semisbase = clear_val
+    end if
+    
     if (Model%lsm == Model%lsm_ruc) then
        ! For land surface models with different numbers of levels than the four NOAH levels
        allocate (Sfcprop%wetness     (IM))
@@ -2706,6 +2728,9 @@ module GFS_typedefs
                                                              !< ivegsrc = 2   => UMD  (13 category)
     integer              :: isot           =  0              !< isot = 0   => Zobler soil type  ( 9 category)
                                                              !< isot = 1   => STATSGO soil type (19 category)
+    integer              :: iopt_thcnd     =  1              !< option to treat thermal conductivity in Noah LSM (new in 3.8)
+                                                             !< = 1, original (default)
+                                                             !< = 2, McCumber and Pielke for silt loam and sandy loam
     ! -- to use Noah MP, lsm needs to be set to 2 and both ivegsrc and isot are set
     ! to 1 - MODIS IGBP and STATSGO - the defaults are the same as in the
     ! scripts;change from namelist
@@ -2974,7 +2999,7 @@ module GFS_typedefs
                                avg_max_length,                                              &
                           !--- land/surface model control
                                lsm, lsoil, lsoil_lsm, lsnow_lsm, rdlai,                     &
-                               nmtvr, ivegsrc, use_ufo,                                     &
+                               nmtvr, ivegsrc, use_ufo, iopt_thcnd,                         &
                           !    Noah MP options
                                iopt_dveg,iopt_crs,iopt_btr,iopt_run,iopt_sfc, iopt_frz,     &
                                iopt_inf, iopt_rad,iopt_alb,iopt_snf,iopt_tbot,iopt_stc,     &
@@ -3240,7 +3265,7 @@ module GFS_typedefs
     Model%lsm              = lsm
     Model%lsoil            = lsoil
     ! Consistency check for RUC LSM
-    if (Model%lsm == Model%lsm_ruc .and. Model%nscyc>0) then
+    if ((Model%lsm == Model%lsm_ruc .or. Model%lsm == Model%lsm_noah_hafs) .and. Model%nscyc>0) then
       write(0,*) 'Logic error: RUC LSM cannot be used with surface data cycling at this point (fhcyc>0)'
       stop
     end if
@@ -3266,6 +3291,8 @@ module GFS_typedefs
     end if
     Model%ivegsrc          = ivegsrc
     Model%isot             = isot
+    Model%isurban          = -999      !GJF isurban is only used in NOAH/HAFS and is initialized in sfc_drv_hafs.F90/lsm_noah_hafs_init
+    Model%iopt_thcnd       = iopt_thcnd
     Model%use_ufo          = use_ufo
 
 ! Noah MP options from namelist
@@ -3715,6 +3742,8 @@ module GFS_typedefs
         print *,'iopt_stc   =  ', Model%iopt_stc
       elseif (Model%lsm == Model%lsm_ruc) then
         print *,' RUC Land Surface Model used'
+      elseif (Model%lsm == Model%lsm_noah_hafs) then
+        print *,' NOAH/HAFS Land Surface Model used'
       else
         print *,' Unsupported LSM type - job aborted - lsm=',Model%lsm
         stop
@@ -4193,6 +4222,7 @@ module GFS_typedefs
       print *, ' lsnow_lsm         : ', Model%lsnow_lsm
       print *, ' ivegsrc           : ', Model%ivegsrc
       print *, ' isot              : ', Model%isot
+      print *, ' iopt_thcnd        : ', Model%iopt_thcnd
 
       if (Model%lsm == Model%lsm_noahmp) then
         print *, ' Noah MP LSM is used, the options are'
@@ -4612,7 +4642,6 @@ module GFS_typedefs
        allocate (Tbd%phy_myj_qz0    (IM)) 
        allocate (Tbd%phy_myj_uz0    (IM)) 
        allocate (Tbd%phy_myj_vz0    (IM)) 
-       allocate (Tbd%phy_myj_z0base (IM)) 
        allocate (Tbd%phy_myj_akhs   (IM)) 
        allocate (Tbd%phy_myj_akms   (IM)) 
        allocate (Tbd%phy_myj_chkqlm (IM)) 
@@ -4626,7 +4655,6 @@ module GFS_typedefs
        Tbd%phy_myj_qz0    = clear_val 
        Tbd%phy_myj_uz0    = clear_val 
        Tbd%phy_myj_vz0    = clear_val 
-       Tbd%phy_myj_z0base = clear_val 
        Tbd%phy_myj_akhs   = clear_val 
        Tbd%phy_myj_akms   = clear_val 
        Tbd%phy_myj_chkqlm = clear_val 

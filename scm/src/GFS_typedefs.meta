@@ -541,6 +541,20 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[z0base]
+  standard_name = baseline_surface_roughness_length
+  long_name = baseline surface roughness length for momentum in meter
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[semisbase]
+  standard_name = baseline_surface_longwave_emissivity
+  long_name = baseline surface lw emissivity in fraction
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [sncovr]
   standard_name = surface_snow_area_fraction_over_land
   long_name = surface snow area fraction
@@ -735,6 +749,13 @@
   long_name = soil temperature
   units = K
   dimensions = (horizontal_dimension,soil_vertical_dimension)
+  type = real
+  kind = kind_phys
+[sthick]
+  standard_name = soil_layer_thickness
+  long_name = soil layer thickness
+  units = m
+  dimensions = (soil_vertical_dimension)
   type = real
   kind = kind_phys
 [t2m]
@@ -2616,6 +2637,12 @@
   units = flag
   dimensions = ()
   type = integer
+[lsm_noah_hafs]
+  standard_name = flag_for_noah_hafs_land_surface_scheme
+  long_name = flag for NOAH HAFS land surface model
+  units = flag
+  dimensions = ()
+  type = integer
 [lsoil]
   standard_name = soil_vertical_dimension
   long_name = number of soil layers
@@ -2655,6 +2682,18 @@
 [isot]
   standard_name = soil_type_dataset_choice
   long_name = soil type dataset choice
+  units = index
+  dimensions = ()
+  type = integer
+[isurban]
+  standard_name = urban_vegetation_category
+  long_name = index of the urban vegetation category in the chosen vegetation dataset
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_thcnd]
+  standard_name = flag_for_thermal_conductivity_option
+  long_name = choice for thermal conductivity option (see module_sf_noahlsm)
   units = index
   dimensions = ()
   type = integer
@@ -4458,13 +4497,6 @@
   standard_name = v_wind_component_at_viscous_sublayer_top
   long_name = v wind component at viscous sublayer top over water
   units = m s-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[phy_myj_z0base]
-  standard_name = baseline_surface_roughness_length
-  long_name = baseline surface roughness length for momentum in meter
-  units = m
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
