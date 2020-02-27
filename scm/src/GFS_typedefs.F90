@@ -5667,7 +5667,7 @@ module GFS_typedefs
     Interstitial%phys_hydrostatic = .true.
     !
     ! Reset all other variables
-    call Interstitial%rad_reset (Model)
+    call Interstitial%rad_reset ()
     call Interstitial%phys_reset (Model)
     !
   end subroutine interstitial_create
@@ -5823,13 +5823,12 @@ module GFS_typedefs
 
   end subroutine interstitial_setup_tracers
 
-  subroutine interstitial_rad_reset (Interstitial, Model)
+  subroutine interstitial_rad_reset (Interstitial)
     !
     implicit none
     !
     class(GFS_interstitial_type) :: Interstitial
-    type(GFS_control_type), intent(in) :: Model
-    !
+    
     Interstitial%aerodp       = clear_val
     Interstitial%alb1d        = clear_val
     Interstitial%cldsa        = clear_val
@@ -5866,22 +5865,6 @@ module GFS_typedefs
     Interstitial%tsfa         = clear_val
     Interstitial%tsfg         = clear_val
 
-! F-A scheme
-    if (Model%imp_physics == Model%imp_physics_fer_hires ) then 
-         Interstitial%qv_r       = clear_val
-         Interstitial%qc_r       = clear_val
-         Interstitial%qi_r       = clear_val
-         Interstitial%qr_r       = clear_val
-         Interstitial%qs_r       = clear_val
-         Interstitial%qg_r       = clear_val
-       if(Model%spec_adv) then
-         Interstitial%f_ice     = clear_val
-         Interstitial%f_rain    = clear_val
-         Interstitial%f_rimef   = clear_val
-         Interstitial%cwm       = clear_val
-       end if
-    end if
-    !
   end subroutine interstitial_rad_reset
 
   subroutine interstitial_phys_reset (Interstitial, Model)
