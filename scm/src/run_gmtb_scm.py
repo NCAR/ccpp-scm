@@ -229,8 +229,8 @@ class Experiment(object):
             
         # If surface fluxes are specified for this case, use the SDF modified to use them
         if surface_flux_spec:
-            logging.info('Specified surface fluxes are used for case {0}. Switching to SDF {1} from {2}'.format(self._case,'suite_' + self._suite + '_prescribed_surface' + '.xml','suite_' + self._suite + '.xml'))
-            self._suite = self._suite + '_prescribed_surface'
+            logging.info('Specified surface fluxes are used for case {0}. Switching to SDF {1} from {2}'.format(self._case,'suite_' + self._suite + '_ps' + '.xml','suite_' + self._suite + '.xml'))
+            self._suite = self._suite + '_ps'
                 
         # Create physics_config namelist for experiment configuration file
         physics_config = {"physics_suite":self._suite,

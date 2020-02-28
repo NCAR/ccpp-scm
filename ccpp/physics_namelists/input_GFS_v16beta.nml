@@ -1,11 +1,8 @@
 &gfs_physics_nml
-       fhzero         = 6.
+       fhzero         = 6
+       h2o_phys       = .true.
        ldiag3d        = .true.
-       ldiag_ugwp     = .false.
-       do_ugwp        = .false.
-       do_tofd        = .true.
-       fhcyc          = 24.
-       nst_anl        = .true.
+       fhcyc          = 24
        use_ufo        = .true.
        pre_rad        = .false.
        ncld           = 5
@@ -15,7 +12,7 @@
        fhlwr          = 3600.
        ialb           = 1
        iems           = 1
-       IAER           = 5111
+       iaer           = 5111
        icliq_sw       = 2
        iovr_lw        = 3
        iovr_sw        = 3
@@ -33,13 +30,7 @@
        hybedmf        = .false.
        satmedmf       = .true.
        isatmedmf      = 1
-       do_myjsfc      = .false.
-       do_myjpbl      = .false.
-       shinhong       = .false.
-       do_ysu         = .false.
        lheatstrg      = .true.
-       lgfdlmprad     = .true.
-       effr_in        = .true.
        random_clds    = .false.
        trans_trac     = .true.
        cnvcld         = .true.
@@ -49,8 +40,8 @@
        prslrd0        = 0.
        ivegsrc        = 1
        isot           = 1
-       lsm            = 1
        lsoil          = 4
+       lsm            = 1
        iopt_dveg      = 1
        iopt_crs       = 1
        iopt_btr       = 1
@@ -66,17 +57,19 @@
        debug          = .false.
        oz_phys        = .false.
        oz_phys_2015   = .true.
-       h2o_phys       = .true.
        nstf_name      = 2,1,0,0,0
-       xkzminv        = 0.3
-       xkzm_m         = 1.0
-       xkzm_h         = 1.0
+       nst_anl        = .true.
+       psautco      = 0.0008,0.0005
+       prautco      = 0.00015,0.00015
+       lgfdlmprad     = .true.
+       effr_in        = .true.
+       ldiag_ugwp     = .false.
+       do_ugwp        = .false.
+       do_tofd        = .true.
        do_sppt        = .false.
        do_shum        = .false.
        do_skeb        = .false.
        do_sfcperts    = .false.
-       psautco      = 0.0008,0.0005
-       prautco      = 0.00015,0.00015
 /
 
 &gfdl_cloud_microphysics_nml
