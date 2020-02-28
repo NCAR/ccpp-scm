@@ -29,27 +29,10 @@
       <scheme>get_prs_fv3</scheme>
       <scheme>GFS_suite_interstitial_1</scheme>
       <scheme>GFS_surface_generic_pre</scheme>
-      <scheme>GFS_surface_composites_pre</scheme>
       <scheme>dcyc2t3</scheme>
-      <scheme>GFS_surface_composites_inter</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
-    </subcycle>
-    <!-- Surface iteration loop -->
-    <subcycle loop="2">
-      <scheme>sfc_diff</scheme>
-      <scheme>GFS_surface_loop_control_part1</scheme>
-      <scheme>sfc_ocean</scheme>
-      <scheme>lsm_noah</scheme>
-      <scheme>sfc_sice</scheme>
-      <scheme>GFS_surface_loop_control_part2</scheme>
-    </subcycle>
-    <!-- End of surface iteration loop -->
-    <subcycle loop="1">
-      <scheme>GFS_surface_composites_post</scheme>
+      <scheme>gmtb_scm_sfc_flux_spec</scheme>
       <scheme>dcyc2t3_post</scheme>
-      <scheme>sfc_diag</scheme>
-      <scheme>sfc_diag_post</scheme>
-      <scheme>GFS_surface_generic_post</scheme>
       <scheme>GFS_PBL_generic_pre</scheme>
       <scheme>hedmf</scheme>
       <scheme>GFS_PBL_generic_post</scheme>
@@ -61,9 +44,9 @@
       <scheme>GFS_suite_stateout_update</scheme>
       <scheme>ozphys_2015</scheme>
       <scheme>h2ophys</scheme>
+      <scheme>GFS_DCNV_generic_pre</scheme>
       <scheme>get_phi_fv3</scheme>
       <scheme>GFS_suite_interstitial_3</scheme>
-      <scheme>GFS_DCNV_generic_pre</scheme>
       <scheme>samfdeepcnv</scheme>
       <scheme>GFS_DCNV_generic_post</scheme>
       <scheme>GFS_SCNV_generic_pre</scheme>
