@@ -21,21 +21,13 @@ ENV NCEPLIBS_DIR /comsoftware/libs/NCEPlibs
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b v3.0 https://github.com/NCAR/gmtb-scm \
-  && cd gmtb-scm/ccpp/physics \
-  && git clone https://github.com/NCAR/ccpp-physics.git \
-  && cd ../framework \
-  && git clone https://github.com/NCAR/ccpp-framework.git
+  && git clone --recursive -b release/public-v4 https://github.com/NCAR/gmtb-scm
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
 RUN cd /comsoftware/gmtb-scm/scm/data/physics_input_data \
   && curl -L -O https://dtcenter.org/GMTB/freezeH2O.dat \
   && curl -L -O https://dtcenter.org/GMTB/qr_acr_qg.dat \
   && curl -L -O https://dtcenter.org/GMTB/qr_acr_qs.dat
-
-# Run the CCPP prebuild script
-RUN cd /comsoftware/gmtb-scm \
-  && ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py
 
 # Run the machine setup script to set environment variables
 RUN cd /comsoftware/gmtb-scm/scm/etc \
@@ -54,7 +46,7 @@ RUN cd /comsoftware/gmtb-scm/scm/src \
 RUN cd /comsoftware/gmtb-scm/scm \
   && mkdir bin \
   && cd bin \
-  && cmake ../src \
+  && cmake -DSTATIC=ON ../src \
   && make > make.log 2>&1
 
 # The analysis scripts have options for using LaTeX when making figure labels.
