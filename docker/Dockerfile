@@ -35,13 +35,6 @@ RUN cd /comsoftware/gmtb-scm/scm/etc \
   && mv new_CENTOS.sh CENTOS_setup.sh \
   && . CENTOS_setup.sh
 
-# To allow for functional volume mounts from "local" space to Docker space, modifications must be made to run_gmtb_scm.py.
-# For the running the CCPP SCM in Docker, output will be copied to the /home directory and mounted from there.
-RUN cd /comsoftware/gmtb-scm/scm/src \
-  && cat run_gmtb_scm.py | sed "/def launch_executable(use_gdb, gdb):/i \       \ return output_dir\n\ndef copy_outdir(exp_dir):\n    \"\"\"Copy output directory to \/home for this experiment.\"\"\"\n    home_output_dir = \'\/home\/\'+exp_dir\n    if os.path.isdir(home_output_dir):\n        shutil.rmtree(home_output_dir)\n    shutil.copytree(exp_dir, home_output_dir)\n" | sed "/atexit.register/i \   \ atexit.register(copy_outdir, exp_dir)" | sed "s/exp.setup_rundir()/exp_dir = exp.setup_rundir()/g" > run_gmtb_scm_sed.py \
-  && mv run_gmtb_scm_sed.py run_gmtb_scm.py \
-  && chmod +x run_gmtb_scm.py
-
 # Invoke cmake on the source code to build
 RUN cd /comsoftware/gmtb-scm/scm \
   && mkdir bin \

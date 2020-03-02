@@ -31,7 +31,7 @@ PHYSICS_NAMELIST_DIR = '../../ccpp/physics_namelists'
 PHYSICS_SUITE_DIR = '../../ccpp/suites'
 
 # Default suite to use if none is specified
-DEFAULT_SUITE = 'SCM_GFS_v15'
+DEFAULT_SUITE = 'SCM_GFS_v15p2'
 
 # Path to physics data files
 PHYSICS_DATA_DIR = '../data/physics_input_data'
@@ -63,6 +63,7 @@ parser.add_argument('-c', '--case',       help='name of case to run', required=T
 parser.add_argument('-g', '--gdb',        help='invoke gmtb_scm through gdb', action='store_true', default=False)
 parser.add_argument('-s', '--suite',      help='name of suite to use', default=DEFAULT_SUITE)
 parser.add_argument('-n', '--namelist',   help='physics namelist to use')
+parser.add_argument('-d', '--docker',     help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -99,7 +100,8 @@ def parse_arguments():
     gdb = args.gdb
     suite = args.suite
     namelist = args.namelist
-    return (case, gdb, suite, namelist)
+    docker = args.docker
+    return (case, gdb, suite, namelist, docker)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -348,6 +350,8 @@ class Experiment(object):
         logging.info('Writing experiment configuration {0}.nml to output directory'.format(self._name))
         cmd = 'cp {0} {1}'.format(STANDARD_EXPERIMENT_NAMELIST, os.path.join(output_dir,self._name + '.nml'))
         execute(cmd)
+        
+        return output_dir
 
 def launch_executable(use_gdb, gdb):
     """Configure model run command and pass control to shell/gdb"""
@@ -358,9 +362,16 @@ def launch_executable(use_gdb, gdb):
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(2)
     sys.exit(os.system(cmd))
+    
+def copy_outdir(exp_dir):
+    """Copy output directory to /home for this experiment."""
+    home_output_dir = '/home/'+exp_dir
+    if os.path.isdir(home_output_dir):
+        shutil.rmtree(home_output_dir)
+    shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (case, use_gdb, suite, namelist) = parse_arguments()
+    (case, use_gdb, suite, namelist, docker) = parse_arguments()
     
     setup_logging()
     
@@ -370,14 +381,18 @@ def main():
     else:
         logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite'.format(case,suite))
     exp = Experiment(case, suite, namelist)
-    exp.setup_rundir()
+    exp_dir = exp.setup_rundir()
     # Debugger
     if use_gdb:
         gdb = find_gdb()
     else:
         gdb = None
     # Launch model on exit
+    if docker:
+        #registering this function first should mean that it executes last, which is what we want
+        atexit.register(copy_outdir, exp_dir)
     atexit.register(launch_executable, use_gdb, gdb)
+    
     
 if __name__ == '__main__':
     main()

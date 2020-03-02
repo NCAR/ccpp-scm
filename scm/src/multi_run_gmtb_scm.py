@@ -23,6 +23,7 @@ group.add_argument('-f', '--file',       help='name of file where SCM runs are d
 parser.add_argument('-v', '--verbose',   help='once: set logging level to debug; twice: set logging level to debug '\
     'and write log to file',action='count')
 parser.add_argument('-t', '--timer',     help='set to time each subprocess', action='store_true', default=False)
+parser.add_argument('-d', '--docker',     help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 
 def setup_logging(verbose):
     """Sets up the logging module."""
@@ -76,6 +77,8 @@ def main():
         logging.info('Running all supported suites with case {0}'.format(args.case))
         for i, suite in enumerate(suites,1):
             command = RUN_SCRIPT + ' -c ' + args.case + ' -s ' + suite
+            if args.docker:
+                command = command + ' -d'
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(suites), command))
             spawn_subprocess(command, args.timer)
     
@@ -84,6 +87,8 @@ def main():
         logging.info('Running all supported cases with suite {0}'.format(args.suite))
         for i, case in enumerate(cases,1):
             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + args.suite
+            if args.docker:
+                command = command + ' -d'
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(cases), command))
             spawn_subprocess(command, args.timer)
     
@@ -121,6 +126,8 @@ def main():
                 'Only cases were specified in {0}, so running all cases with the default suite'.format(args.file))
             for i, case in enumerate(scm_runs.cases,1):
                 command = RUN_SCRIPT + ' -c ' + case
+                if args.docker:
+                    command = command + ' -d'
                 logging.info('Executing process {0} of {1} ({2})'.format(i, len(scm_runs.cases), command))
                 spawn_subprocess(command, args.timer)
         
@@ -132,6 +139,8 @@ def main():
                     for i, case in enumerate(scm_runs.cases):
                         for j, namelist in enumerate(scm_runs.namelists,1):
                             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + scm_runs.suites[0] + ' -n ' + namelist
+                            if args.docker:
+                                command = command + ' -d'
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                             spawn_subprocess(command, args.timer)
@@ -141,6 +150,8 @@ def main():
                     for i, case in enumerate(scm_runs.cases):
                         for j, suite in enumerate(scm_runs.suites,1):
                             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite + ' -n ' + scm_runs.namelists[j-1]
+                            if args.docker:
+                                command = command + ' -d'
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                             spawn_subprocess(command, args.timer)
@@ -156,6 +167,8 @@ def main():
                 for i, case in enumerate(scm_runs.cases):
                     for j, suite in enumerate(scm_runs.suites,1):
                         command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
+                        if args.docker:
+                            command = command + ' -d'
                         logging.info('Executing process {0} of {1} ({2})'.format(
                             len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                         spawn_subprocess(command, args.timer)
@@ -166,6 +179,8 @@ def main():
             for i, case in enumerate(scm_runs.cases):
                 for j, namelist in enumerate(scm_runs.namelists,1):
                     command = RUN_SCRIPT + ' -c ' + case + ' -n ' + namelist
+                    if args.docker:
+                        command = command + ' -d'
                     logging.info('Executing process {0} of {1} ({2})'.format(
                         len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                     spawn_subprocess(command, args.timer)
@@ -177,6 +192,8 @@ def main():
         for i, case in enumerate(cases):
             for j, suite in enumerate(suites,1):
                 command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
+                if args.docker:
+                    command = command + ' -d'
                 logging.info('Executing process {0} of {1} ({2})'.format(
                     len(suites)*i+j, len(cases)*len(suites), command))
                 spawn_subprocess(command, args.timer)
