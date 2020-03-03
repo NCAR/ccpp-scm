@@ -1,30 +1,29 @@
 \chapter{Introduction}
 \label{chapter: introduction}
 
-A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. The Global Model Test Bed (GMTB) SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. This version contains all parameterizations of the current operational GFS v15 (implemented on June 12, 2019), plus additional developmental schemes. The schemes are grouped in four supported suites described in detail in the \href{https://dtcenter.org/GMTB/v3.0/sci\_doc/}{CCPP Scientific Documentation} (GFS\_v15, GFS\_v15plus, csawmg, and GSD\_v0). The Zhao-Carr microphysics and the GFS\_v14 suite are no longer supported.
+A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. This SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. This version contains all parameterizations of NOAA's evolved operational GFS v15.2 suite (implemented in 2019), plus additional developmental schemes. The schemes are grouped in four supported suites described in detail in the \href{https://dtcenter.org/GMTB/v4.0/sci\_doc/}{CCPP Scientific Documentation} (GFS\_v15p2, GFS\_v16beta, csawmg, and GSD\_v1). Two additional suites without the near sea surface temperature scheme are available to match the first UFS public release.
 
 This document serves as both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
 
-Please refer to the release web page for further documentation and user notes:\\ \url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/ccpp-scm-version-3-0}
+Please refer to the release web page for further documentation and user notes:\\ \url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/ccpp-scm-version-4-0}
 
 \section{Version Notes}
 
-GMTB SCM v3.0 contains the following major and minor changes since v2.1.
+The CCPP SCM v4.0 contains the following major and minor changes since v3.0.
 
 Major
 \begin{itemize}
-\item Codebase updated to work with latest ccpp-framework (v3.0) and ccpp-physics (v3.0), allowing use of 4 supported physics suites
-\item Added Python scripts for running a single integration or multiple integrations serially
+\item Codebase updated to work with latest ccpp-framework (v4.0) and ccpp-physics (v4.0), allowing use of 6 supported physics suites
+\item Support added for NOAA's Hera HPC platform and Docker containers
+\item Support added for CCPP's ``static'' build
+\item Added capability to utilize UFS initial conditions and initialize the NOAH and NOAHMP LSMs (without advective forcing)
 \end{itemize}
 
 Minor
 \begin{itemize}
-\item Assumed that NCEPlibs are installed as a software prerequisite with an environment variable pointing to the installation location; remove repository copies of NCEPlib files
-\item Assumed that NetCDF is installed as a software prerequisite with an environment variable pointing to the installation location
-\item Updated User's/Technical Guide (this document)
-\item Separated case configuration (remained in \execout{scm/etc/case\_config}) from physics suite configuration (configured through Python run script)
-\item Streamlined CMakeLists.txt; moved file operations from CMakelists.txt and Fortran code to Python run script (except output)
-\item Changed how ozone, stratospheric H2O, aerosols, and ICN were initialized and handled in SCM code
+\item Integrated CCPP code generation with the CMake step
+\item Adopted the new CCPP metadata format
+\item Name change: this code is now known as the CCPP SCM instead of the ``GMTB'' SCM, although filenames in the code have not been changed yet.
 \end{itemize}
 
 \subsection{Limitations}
@@ -32,12 +31,13 @@ Minor
 This release bundle has some known limitations:
 
 \begin{itemize}
-\item The SCM cannot run over a land surface point using an LSM at this time due to the absence of necessary staged files that are used to initialize the LSM. Therefore, if the SCM is run over a land point (where sfc\_type = 1 is set in the case configuration file), prescribed surface fluxes must be used:
+\item The provided cases over land points cannot use an LSM at this time due to the lack of initialization data for the LSMs. Therefore, for the provided cases over land points (ARM\_SGP\_summer\_1997\_* and LASSO\_*, where sfc\_type = 1 is set in the case configuration file), prescribed surface fluxes must be used:
 \begin{itemize}
 \item surface sensible and latent heat fluxes must be provided in the case data file
 \item sfc\_flux\_spec must be set to true in the case configuration file
 \item the surface roughness length in cm must be set in the case configuration file
 \item the suite defintion file used (physics\_suite variable in the case configuration file) must have been modified to use prescribed surface fluxes rather than an LSM. An example is included in the development repository
+\item NOTE: If one can develop appropriate initial conditions for the LSMs for the supplied cases over land points, there should be no technical reason why they cannot be used with LSMs, however.
 \end{itemize}
-If the SCM is told to use an LSM (sfc\_type = 1) without using prescribed surface fluxes as described above, the model will exit with a segmentation fault due to uninitialized variables. An update to use an LSM with the SCM will be forthcoming.
+\item As of this release, using the SCM over a land point with an LSM is possible through the use of UFS initial conditions (see section \ref{sec:UFS ICs}). However, advective forcing terms are unavailable as of this release, so only short integrations using this configuration should be employed. Using dynamical tendencies (advective forcing terms) from the UFS will be part of a future release.
 \end{itemize}
