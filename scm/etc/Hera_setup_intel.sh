@@ -7,8 +7,7 @@ echo "Loading intel and netcdf modules..."
 module purge
 module load intel/18.0.5.274
 module load impi/2018.0.4
-module load netcdf/4.6.1
-module load pnetcdf/1.10.0
+module load netcdf/4.7.0
 
 echo "Setting CC/CXX/FC environment variables"
 export CC=icc
@@ -17,7 +16,12 @@ export FC=ifort
 
 echo "Setting NCEPLIBS_DIR environment variable"
 module use -a /scratch1/BMC/gmtb/software/modulefiles/intel-18.0.5.274/impi-2018.0.4
-module load NCEPlibs/9.9.9
+module load NCEPlibs/1.0.0beta02
+
+echo "Loading cmake"
+module use -a /scratch1/BMC/gmtb/software/modulefiles/generic
+module load cmake/3.16.3
+export CMAKE_Platform=hera.intel
 
 echo "Loading the anaconda python distribution"
 module load contrib
