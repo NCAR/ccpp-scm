@@ -77,9 +77,9 @@ The basic requirements for building and running the CCPP and SCM bundle are list
 	\item gcc 6.2 and 8.3
 	\item Apple Clang 11.0.0.11000033
 	\end{itemize}
-    \item cmake 2.8.12.1, 2.8.12.2, and 3.6.2
-    \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1 and 4.6.3 (not 3.x) with HDF5, ZLIB and SZIP
-    \item Python 2.7.5, 2.7.9, and 2.7.16 (not 3.x)
+    \item cmake 2.8.12.1, 2.8.12.2, 3.6.2, 3.16.3, 3.16.4
+    \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5, ZLIB and SZIP
+    \item Python 2.7.5, 2.7.9, 2.7.13, and 2.7.16 (not 3.x)
     \item Libxml2 2.2, 2.9.7, 2.9.9
 \end{itemize}
 
@@ -150,15 +150,11 @@ mkdir bin && cd bin
 
  \item Invoke \exec{cmake} on the source code to build using one of the options below.
 \begin{itemize}
-\item Suggested mode (using static libraries and compiling multiple supported suites at once)
-\begin{lstlisting}[language=bash]
-cmake -DSTATIC=ON ../src
-\end{lstlisting}
-\item Dynamic mode (maximum flexibility where suites can be constructed at run-time)
+\item Default mode
 \begin{lstlisting}[language=bash]
 cmake ../src
 \end{lstlisting}
-\item Either of the statements above can be modified with the following options:
+\item The statements above can be modified with the following options (put before \execout{../src}):
 \begin{itemize}
 \item Use threading with openmp
 \begin{lstlisting}[language=bash]
@@ -171,13 +167,9 @@ cmake ../src
 \end{itemize}
 \end{itemize}
 
-Cmake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. The default behavior is to use the so-called ``dynamic'' mode where software caps for all schemes in the CCPP repository are generated and a dynamic, shared library is generated for the CCPP physics. A second, more performant ``static'' mode is available that generates software caps for each physics group defined in the supplied SDFs and generates a static library that becomes part of the SCM executable. Using this mode, flexibility of defining suites at runtime is lost, although one can choose among a set of suites defined at compilation time. Adding the cmake variable \exec{-DSTATIC=ON} will turn this feature on and appropriate software caps \textbf{will be generated for all suites defined in the \execout{gmtb-scm/ccpp/suites} directory automatically.}
+Cmake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. It generates software caps for each physics group defined in the supplied SDFs and generates a static library that becomes part of the SCM executable. Appropriate software caps \textbf{will be generated for all suites defined in the \execout{gmtb-scm/ccpp/suites} directory automatically.}
 
-If necessary, the CCPP prebuild script can be executed manually from the top level directory (\execout{gmtb-scm}). The basic syntax for the dynamic mode is
-\begin{lstlisting}[language=bash]
-./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --builddir=./scm/bin [--debug]
-\end{lstlisting}
-To use the static mode, the syntax becomes
+If necessary, the CCPP prebuild script can be executed manually from the top level directory (\execout{gmtb-scm}). The basic syntax is
 \begin{lstlisting}[language=bash]
 ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --static --suites=SCM_GFS_v15p2,SCM_GFS_v16beta,SCM_GSD_v1[...] --builddir=./scm/bin [--debug]
 \end{lstlisting}
