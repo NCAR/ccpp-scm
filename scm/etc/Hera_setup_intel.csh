@@ -19,7 +19,7 @@ echo "Setting NCEPLIBS environment variables"
 ## load modules for above compiler / MPI combination
 ##
 module use -a /scratch1/BMC/gmtb/software/modulefiles/intel-18.0.5.274/impi-2018.0.4
-module load NCEPlibs/1.0.0beta02
+module load NCEPlibs/1.0.0
 
 echo "Loading cmake"
 module use -a /scratch1/BMC/gmtb/software/modulefiles/generic
