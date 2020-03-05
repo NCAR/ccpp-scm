@@ -14,7 +14,7 @@ setenv CC icc
 setenv CXX icpc
 setenv FC ifort
 
-echo "Setting NCEPLIBS_DIR environment variable"
+echo "Setting NCEPLIBS environment variables"
 ##
 ## load modules for above compiler / MPI combination
 ##

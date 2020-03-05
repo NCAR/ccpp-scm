@@ -16,7 +16,7 @@ export CC=icc
 export CXX=icpc
 export FC=ifort
 
-echo "Setting NCEPLIBS_DIR environment variable"
+echo "Setting NCEPLIBS environment variables"
 module use -a /glade/p/ral/jntp/GMTB/tools/modulefiles/intel-19.0.5/mpt-2.19
 module load  NCEPlibs/1.0.0beta02
 
