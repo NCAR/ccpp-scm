@@ -2,6 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(scm)
 set(PROJECT "CCPP-SCM")
 
+# The only option to build is the static build
+set(STATIC TRUE)
+
 ####################################################################
 # Begin CCPP prebuild step                                         #
 ####################################################################
@@ -36,15 +39,7 @@ if(STATIC)
     RESULT_VARIABLE return_code
   )
 else(STATIC)
-  # Run CCPP prebuild.py
-  message (STATUS "Running ccpp_prebuild.py for dynamic CCPP")
-  execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --builddir=${CMAKE_CURRENT_BINARY_DIR}/..
-    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
-    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    RESULT_VARIABLE return_code
-  )
+  message(FATAL_ERROR "Dynamic CCPP build no longer supported")
 endif(STATIC)
 # Check return code from CCPP prebuild.py
 if(return_code EQUAL 0)
@@ -69,16 +64,12 @@ ELSE(DEFINED ENV{NETCDF})
   MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
 ENDIF(DEFINED ENV{NETCDF})
 
-IF(DEFINED ENV{NCEPLIBS_DIR})
-  MESSAGE(STATUS "The NCEPLIBS_DIR environment variable is $ENV{NCEPLIBS_DIR}")
-  set(NCEPLIBS_DIR $ENV{NCEPLIBS_DIR})
-ELSE(DEFINED ENV{NCEPLIBS_DIR})
-  MESSAGE(FATAL_ERROR "The NCEPLIBS_DIR environment variable must be set to point to your NCEPlibs installation before building. Stopping...")
-ENDIF(DEFINED ENV{NCEPLIBS_DIR})
-
-set(BACIO_LIB4   ${NCEPLIBS_DIR}/lib/libbacio_4.a)
-set(SP_LIBd      ${NCEPLIBS_DIR}/lib/libsp_v2.0.2_d.a)
-set(W3NCO_LIBd   ${NCEPLIBS_DIR}/lib/libw3nco_d.a)
+if(NOT DEFINED ENV{BACIO_LIB4} OR NOT DEFINED ENV{SP_LIBd} OR NOT DEFINED ENV{W3NCO_LIBd})
+    message(FATAL_ERROR "Environment variables BACIO_LIB4, SP_LIBd, W3NCO_LIBd not set")
+endif()
+set(BACIO_LIB4   $ENV{BACIO_LIB4})
+set(SP_LIBd      $ENV{SP_LIBd})
+set(W3NCO_LIBd   $ENV{W3NCO_LIBd})
 
 if(STATIC)
   ADD_DEFINITIONS(-DSTATIC)
