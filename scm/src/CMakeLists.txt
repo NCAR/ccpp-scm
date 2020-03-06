@@ -2,6 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(scm)
 set(PROJECT "CCPP-SCM")
 
+# The only option to build is the static build
+set(STATIC TRUE)
+
 ####################################################################
 # Begin CCPP prebuild step                                         #
 ####################################################################
@@ -36,15 +39,7 @@ if(STATIC)
     RESULT_VARIABLE return_code
   )
 else(STATIC)
-  # Run CCPP prebuild.py
-  message (STATUS "Running ccpp_prebuild.py for dynamic CCPP")
-  execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --builddir=${CMAKE_CURRENT_BINARY_DIR}/..
-    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
-    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    RESULT_VARIABLE return_code
-  )
+  message(FATAL_ERROR "Dynamic CCPP build no longer supported")
 endif(STATIC)
 # Check return code from CCPP prebuild.py
 if(return_code EQUAL 0)
