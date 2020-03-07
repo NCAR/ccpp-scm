@@ -27,7 +27,10 @@ RUN cd /comsoftware/gmtb-scm/ \
   && tar -xf cmake-3.16.5.tar.gz \
   && cd cmake-3.16.5 \
   && cmake -DCMAKE_USE_OPENSSL=OFF -DCMAKE_INSTALL_PREFIX=/comsoftware/gmtb-scm/cmake  . \
-  && make install
+  && make install \
+  && cd / \ 
+  && rm -rfd /comsoftware/gmtb-scm/cmake-3.16.5 \
+  && rm -rfd /comsoftware/gmtb-scm/cmake-3.16.5-tar-gz
 
 ENV PATH /comsoftware/gmtb-scm/cmake/bin:$PATH
 
