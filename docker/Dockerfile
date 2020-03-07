@@ -11,7 +11,7 @@ MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b release/public-v4 https://github.com/grantfirl/gmtb-scm
+  && git clone --recursive -b release/public-v4 https://github.com/NCAR/gmtb-scm
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
 RUN cd /comsoftware/gmtb-scm/scm/data/physics_input_data \

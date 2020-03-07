@@ -21,3 +21,8 @@ export LD_LIBRARY_PATH="/usr/local/opt/zlib/lib:/usr/local/opt/llvm/lib${LD_LIBR
 export DYLD_LIBRARY_PATH="/usr/local/opt/zlib/lib:/usr/local/opt/llvm/lib:${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
 
 export NETCDF=/usr/local
+
+echo "Running NCEPLIBS installation script for SCM-CCPP"
+cd ..
+./contrib/build_nceplibs.sh $PWD/nceplibs
+cd scm
