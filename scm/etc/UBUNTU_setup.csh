@@ -9,3 +9,8 @@ setenv F90 gfortran
 setenv FC gfortran
 
 setenv NETCDF /usr
+
+echo "Running NCEPLIBS installation script for SCM-CCPP"
+cd ..
+./contrib/build_nceplibs.sh $PWD/nceplibs
+cd scm

@@ -10,3 +10,7 @@ setenv FC /usr/local/bin/gfortran
 
 setenv NETCDF /usr/local
 
+echo "Running NCEPLIBS installation script for SCM-CCPP"
+cd ..
+./contrib/build_nceplibs.sh $PWD/nceplibs
+cd scm
