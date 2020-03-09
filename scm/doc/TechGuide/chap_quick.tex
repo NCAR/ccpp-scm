@@ -14,7 +14,7 @@ The source code for the CCPP and SCM is provided through GitHub.com.  This relea
 
 Clone the source using
 \begin{lstlisting}[language=bash]
-git clone --recursive -b release/public-v4 https://github.com/NCAR/gmtb-scm
+git clone --recursive -b v4.0.0 https://github.com/NCAR/gmtb-scm
 \end{lstlisting}
              Recall that the \execout{recursive} option in this command clones the main gmtb-scm repository and all subrepositories (ccpp-physics and ccpp-framework). Using this option, there is no need to execute \exec{git submodule init} and \exec{git submodule update}.
 
@@ -99,20 +99,20 @@ The following environment variables are used by the build system to properly lin
 For those needing to build the libraries themselves, the repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}). 
 
 \begin{lstlisting}
-./contrib/build_nceplibs.sh $PWD/nceplibs
+./contrib/build_nceplibs.sh /path/to/nceplibs
 \end{lstlisting}
 
 Following successful execution of this script, the commands to set the proper environment variables mentioned above will be written to the terminal as output. One must execute the correct set for the active shell to finish the installation, e.g., for bash
 \begin{lstlisting}
-export BACIO_LIB4=/path/to/gmtb-scm/nceplibs/lib/libbacio_v2.2.0_4.a
-export SP_LIBd=/path/to/gmtb-scm/nceplibs/lib/libsp_v2.1.0_d.a
-export W3NCO_LIBd=/path/to/gmtb-scm/nceplibs/lib/libw3nco_v2.1.0_d.a
+export BACIO_LIB4=/path/to/nceplibs/lib/libbacio_v2.2.0_4.a
+export SP_LIBd=/path/to/nceplibs/lib/libsp_v2.1.0_d.a
+export W3NCO_LIBd=/path/to/nceplibs/lib/libw3nco_v2.1.0_d.a
 \end{lstlisting}
 and for t/csh
 \begin{lstlisting}
-setenv BACIO_LIB4 /path/to/gmtb-scm/nceplibs/lib/libbacio_v2.2.0_4.a
-setenv SP_LIBd /path/to/gmtb-scm/nceplibs/lib/libsp_v2.1.0_d.a
-setenv W3NCO_LIBd /path/to/gmtb-scm/nceplibs/lib/libw3nco_v2.1.0_d.a
+setenv BACIO_LIB4 /path/to/nceplibs/lib/libbacio_v2.2.0_4.a
+setenv SP_LIBd /path/to/nceplibs/lib/libsp_v2.1.0_d.a
+setenv W3NCO_LIBd /path/to/nceplibs/lib/libw3nco_v2.1.0_d.a
 \end{lstlisting}
 
 The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS release pertaining to the NCEPLIBS-external repository (\url{https://ufs-weather-model.readthedocs.io/en/ufs-v1.0.0/BuildingAndRunning.html#prerequisite-libraries}). If you already have a working version of \execout{cmake}, you can leverage it to install a newer version (local to the SCM) by following these instructions (starting from the top level \execout{gmtb-scm} directory).
@@ -147,7 +147,7 @@ on Linux and MacOS computing platforms using the Intel or GNU Fortran
 compilers. Please use versions listed in the previous section as unforeseen
 build issues may occur when using older compiler versions. Typically the best results come from using the
 most recent version of a compiler. If you have problems with compilers, please check the ``Known Issues'' section of the
-community website (\url{https://dtcenter.org/gmtb/users/ccpp/support/CCPP_KnownIssues.php}).
+release website (\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/download}).
 
 \section{Compiling SCM with CCPP}
 \label{section: compiling}
@@ -300,7 +300,7 @@ If using the model on HPC resources and significant amounts of processor time is
 \end{lstlisting}
 from the \execout{bin} directory.
 
-Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Technical Documentation available at \url{https://dtcenter.org/GMTB/v4.0/ccpp\_tech\_guide/}.
+Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Technical Documentation available at \url{https://ccpp-techdoc.readthedocs.io/en/v4.0/}.
 
 \section{Creating and Using a Docker Container with SCM and CCPP}
 \label{docker}
