@@ -68,14 +68,14 @@ The basic requirements for building and running the CCPP and SCM bundle are list
 \begin{itemize}
     \item FORTRAN 90+ compiler
     	\begin{itemize}
-   	 \item ifort 18.0.5.274 and 19.0.2
-	 \item gfortran 6.2, 8.3, and 9.1
+   	 \item ifort 18.0.5.274, 19.0.2 and 19.0.5
+	 \item gfortran 6.2, 8.3, and 9.2
 	 \end{itemize}
     \item C compiler
     	\begin{itemize}
-	\item icc 18.0.5.274 and 19.0.2
-	\item gcc 6.2 and 8.3
-	\item Apple Clang 11.0.0.11000033
+	\item icc 18.0.5.274, 19.0.2 and 19.0.5
+	\item gcc 6.2, 8.3, and 9.2
+	\item Apple clang 11.0.0.11000033, LLVM clang 9.0.0
 	\end{itemize}
     \item cmake 2.8.12.1, 2.8.12.2, 3.6.2, 3.16.3, 3.16.4
     	\begin{itemize}
@@ -86,7 +86,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
     \item Libxml2 2.2, 2.9.7, 2.9.9
 \end{itemize}
 
-Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements.
+Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) release v1.0.0 of March 11, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPlibs on supported platforms (see section~\ref{section: setup_supported_platforms}).
 
 Further, there are several utility libraries as part of the NCEPlibs package that must be installed with environment variables pointing to their locations prior to building the SCM.
 \begin{itemize}
@@ -94,10 +94,27 @@ Further, there are several utility libraries as part of the NCEPlibs package tha
     \item sp - Spectral Transformation Library
     \item w3nco - GRIB decoder and encoder library
 \end{itemize}
-The following environment variables are used by the build system to properly link these libraries: \execout{BACIO\_LIB4}, \execout{SP\_LIBd}, and \execout{W3NCO\_LIBd}.  These libraries are prebuilt on most NOAA machines using the Intel compiler and on Cheyenne for the Intel and GNU compilers. The machine setup scripts mentioned in section \ref{section: compiling} load these libraries (which are identical to those used by the UFS Medium Range Weather Application on those machines) and set these environment variables for the user automatically. If one has previously installed this prerequisite software as part of the UFS on the same machine where the SCM will be installed and used, just make sure that the environment variables listed above point to the installations used for the UFS.
+The following environment variables are used by the build system to properly link these libraries: \execout{BACIO\_LIB4}, \execout{SP\_LIBd}, and \execout{W3NCO\_LIBd}.  These libraries are prebuilt on most NOAA machines using the Intel compiler and on Cheyenne for the Intel and GNU compilers. The machine setup scripts mentioned in section \ref{section: compiling} load these libraries (which are identical to those used by the UFS Medium Range Weather Application on those machines) and set these environment variables for the user automatically. For installing the libraries and its prerequisites on supported platforms, existing UFS packages can be used (see section~\ref{section: setup_supported_platforms}).
 
-For those needing to build the libraries themselves, the repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}). 
+\subsection{Compilers}
+The CCPP and SCM have been tested on a variety of
+computing platforms. Currently the CCPP system is actively supported
+on Linux and MacOS computing platforms using the Intel or GNU Fortran
+compilers. Please use versions listed in the previous section as unforeseen
+build issues may occur when using older compiler versions. Typically the best results come from using the
+most recent version of a compiler. If you have problems with compilers, please check the ``Known Issues'' section of the
+release website (\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/download}).
 
+\subsection{Installing Libraries on Supported Platforms}\label{section: setup_supported_platforms}
+For users on supported platforms such as generic Linux or macOS systems, the UFS v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/tree/ufs-v1.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and source the shell script that is created by the NCEPLIBS install process to set the required environment variables for compiling the SCM.
+
+The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can install only the NetCDF/NetCDF-Fortran component of the \execout{NCEPLIBS-external} package by following the documentation in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and adding the following arguments to the \execout{cmake} call:
+\begin{lstlisting}
+-DBUILD_MPI=OFF -DBUILD_ESMF=OFF -DBUILD_JASPER=OFF -DBUILD_PNG=OFF -DBUILD_WGRIB2=OFF
+\end{lstlisting}
+Alternatively, users can install NetCDF/NetCDF-Fortran manually or using the software package managers (\execout{apt}, \execout{yum}, \execout{brew}) as in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt}. Whatever approach is taken, users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (described in the following) and the SCM:
+
+The SCM repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code of the three required NCEP libraries from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}). 
 \begin{lstlisting}
 ./contrib/build_nceplibs.sh /path/to/nceplibs
 \end{lstlisting}
@@ -115,74 +132,35 @@ setenv SP_LIBd /path/to/nceplibs/lib/libsp_v2.1.0_d.a
 setenv W3NCO_LIBd /path/to/nceplibs/lib/libw3nco_v2.1.0_d.a
 \end{lstlisting}
 
-The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS release pertaining to the NCEPLIBS-external repository (\url{https://ufs-weather-model.readthedocs.io/en/ufs-v1.0.0/BuildingAndRunning.html#prerequisite-libraries}). If you already have a working version of \execout{cmake}, you can leverage it to install a newer version (local to the SCM) by following these instructions (starting from the top level \execout{gmtb-scm} directory).
+The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS release (\url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0}). Prepend this installation directory of \execout{cmake} to your path environment variable to use it for building the NCEPLIBS.
 
-\begin{lstlisting}
-mkdir -p cmake
-(curl -L -O https://github.com/Kitware/CMake/releases/download/v3.16.5/cmake-3.16.5.tar.gz) the text in parentheses is one command
-tar -xf cmake-3.16.5.tar.gz
-cd cmake-3.16.5
-(cmake -DCMAKE_USE_OPENSSL=OFF -DCMAKE_INSTALL_PREFIX=/path/to/gmtb-scm/cmake  . ) the text in parentheses is one command
-make install
-cd .. 
-rm -rfd cmake-3.16.5 
-rm -rfd cmake-3.16.5-tar-gz
+\subsection{Using Existing Libraries on Preconfigured Platforms}\label{section: use_preconfigured_platforms}
+Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms: These script loads compiler modules (Fortran 2003-compliant), netCDF module, python environment, etc. and set compiler and NCEPlibs environment variables. From the top-level code directory (\execout{gmtb-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
+\begin{lstlisting}[language=csh]
+source scm/etc/Hera_setup_intel.csh
+source scm/etc/Cheyenne_setup_gnu.csh
+source scm/etc/Cheyenne_setup_intel.csh
 \end{lstlisting}
-
-Prepend this installation of \execout{cmake} to your path environment variable to use it for building the NCEPLIBS.
-
-For bash
-\begin{lstlisting}
-export PATH=/path/to/gmtb-scm/cmake/bin:$PATH
+For bourne/bash shells,
+\begin{lstlisting}[language=bash]
+. scm/etc/Hera_setup_intel.sh
+. scm/etc/Cheyenne_setup_gnu.sh
+. scm/etc/Cheyenne_setup_intel.sh
 \end{lstlisting}
-and for t/csh
-\begin{lstlisting}
-setenv PATH /path/to/gmtb-scm/cmake/bin:$PATH
-\end{lstlisting}
-
-\subsection{Compilers}
-The CCPP and SCM have been tested on a variety of
-computing platforms. Currently the CCPP system is actively supported
-on Linux and MacOS computing platforms using the Intel or GNU Fortran
-compilers. Please use versions listed in the previous section as unforeseen
-build issues may occur when using older compiler versions. Typically the best results come from using the
-most recent version of a compiler. If you have problems with compilers, please check the ``Known Issues'' section of the
-release website (\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/download}).
 
 \section{Compiling SCM with CCPP}
 \label{section: compiling}
-The first step in compiling the CCPP and SCM is to properly setup your user environment. Platform-specific scripts are provided to load modules and set the user environment for common platforms.  If you are not using one of these platforms, you will need to set up the same environment on your platform. Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components. 
+The first step in compiling the CCPP and SCM is to properly setup your user environment as described in sections~\ref{section: setup_supported_platforms} and~\ref{section: use_preconfigured_platforms}. Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components.
 \begin{enumerate}
  \item From the top-level code directory (\execout{gmtb-scm} by default), change directory to the top-level SCM directory.
 \begin{lstlisting}[language=bash]
 cd scm
 \end{lstlisting}
-\item If using one of the supported systems, run the appropriate machine setup script. This script loads compiler modules (Fortran 2003-compliant), netCDF module, python environment, etc. and sets compiler environment variables. For \textit{t/csh} shells,
-\begin{lstlisting}[language=csh]
-source etc/Hera_setup_intel.csh
-source etc/Cheyenne_setup_gnu.csh
-source etc/Cheyenne_setup_intel.csh
-source etc/UBUNTU_setup.csh
-source etc/CENTOS_setup.csh
-source etc/MACOSX_setup.csh
-\end{lstlisting}
-For bourne/bash shells,
-\begin{lstlisting}[language=bash]
-. etc/Hera_setup_intel.sh
-. etc/Cheyenne_setup_gnu.sh
-. etc/Cheyenne_setup_intel.sh
-. etc/UBUNTU_setup.sh
-. etc/CENTOS_setup.sh
-. etc/MACOSX_setup.sh
-\end{lstlisting}
-\emph{Note:} If using a local Linux or Mac system, we provide instructions for how to set up your development system (compilers and libraries) in \execout{doc/README\_\{MACOSX,UBUNTU,CENTOS\}.txt}. If following these, you will need to run the respective setup script listed above. If your computing environment was previously set up to use modern compilers with an associated netCDF installation, it may not be necessary, although we recommend setting environment variables such as \execout{CC} and \execout{FC}. \textbf{For version 3.0 and above, it is required to have the \execout{NETCDF} environment variable set to the path of the netCDF installation that was compiled with the same compiler used in the following steps}. Otherwise, the \execout{cmake} step will not complete successfully.
-
-    \item Make a build directory and change into it.
+\item Make a build directory and change into it.
 \begin{lstlisting}[language=bash]
 mkdir bin && cd bin
 \end{lstlisting}
-
- \item Invoke \exec{cmake} on the source code to build using one of the options below.
+\item Invoke \exec{cmake} on the source code to build using one of the options below.
 \begin{itemize}
 \item Default mode
 \begin{lstlisting}[language=bash]
@@ -201,29 +179,21 @@ cmake ../src
 \end{itemize}
 \end{itemize}
 
-Cmake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. It generates software caps for each physics group defined in the supplied SDFs and generates a static library that becomes part of the SCM executable. Appropriate software caps \textbf{will be generated for all suites defined in the \execout{gmtb-scm/ccpp/suites} directory automatically.}
+CMake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. It generates software caps for each physics group defined in the supplied SDFs and generates a static library that becomes part of the SCM executable. Appropriate software caps \textbf{will be generated for all suites defined in the \execout{gmtb-scm/ccpp/suites} directory automatically.}
 
 If necessary, the CCPP prebuild script can be executed manually from the top level directory (\execout{gmtb-scm}). The basic syntax is
 \begin{lstlisting}[language=bash]
 ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --static --suites=SCM_GFS_v15p2,SCM_GFS_v16beta,SCM_GSD_v1[...] --builddir=./scm/bin [--debug]
 \end{lstlisting}
 where the argument supplied via the \execout{-{}-suites} variable is a comma-separated list of suite names that exist in the \execout{./ccpp/suites} directory. Note that suite names are the suite definition filenames minus the \exec{suite\_} prefix and \exec{.xml} suffix.
-   
-       \item If cmake cannot find \execout{libxml2} because it is installed in a non-standard location, add
-\begin{lstlisting}[language=bash]
--DPC_LIBXML_INCLUDEDIR=... -DPC_LIBXML_LIBDIR=...
-\end{lstlisting}
-    to the cmake command. If a compilation error appears related to \execout{libxml2}, namely that a unicode file is not found in the include path, add the appropriate include path to the \execout{CFLAGS} environment variable
-\begin{lstlisting}[language=bash]
-export CFLAGS="-I/include_path"
-\end{lstlisting} before cleaning out the \execout{bin} directory and rerunning \execout{cmake}.
-    \item Compile. Add \execout{VERBOSE=1} to obtain more information on the build process.
+
+\item Compile. Add \execout{VERBOSE=1} to obtain more information on the build process.
 \begin{lstlisting}[language=bash]
 make
 \end{lstlisting}
 \end{enumerate}
 
-The resulting executable may be found at \execout{./gmtb-scm} (Full path of \execout{gmtb-scm/scm/bin/gmtb-scm}). Depending on the system, it may be necessary to add the location of the CCPP framework and physics libraries to \execout{LD\_LIBRARY\_PATH} to run \execout{./gmtb-scm} (see next section).
+The resulting executable may be found at \execout{./gmtb-scm} (Full path of \execout{gmtb-scm/scm/bin/gmtb-scm}).
 
 Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build/run directory is (from the \execout{bin} directory)
 \begin{lstlisting}[language=bash]
@@ -265,16 +235,6 @@ These files should be staged in \execout{gmtb-scm/scm/data/physics\_input\_data}
 Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
 
 If specifying a namelist other than the default, the value must be an entire filename that exists in \execout{../../ccpp/physics\_namelists}. Caution should be exercised when modifying physics namelists since some redundancy between flags to control some physics parameterizations and scheme entries in the CCPP suite definition files currently exists. Values of numerical parameters are typically OK to change without fear of inconsistencies. Lastly, the \execout{-g} flag can be used to run the executable through the \exec{gdb} debugger (assuming it is installed on the system), and the \execout{-d} flag is required when running this command in a Docker container in order to successfully mount a volume between the host machine and the Docker container instance and to share the output and plots with the host machine.
-
-If the run aborts with the error message
-\begin{lstlisting}[language=bash]
-gmtb_scm: libccppphys.so.X.X.X: cannot open shared object file: No such file or directory
-\end{lstlisting}
-the environment variable \execout{LD\_LIBRARY\_PATH} must be set to
-\begin{lstlisting}[language=bash]
-export LD_LIBRARY_PATH=$PWD/ccpp/physics:$LD_LIBRARY_PATH
-\end{lstlisting}
-before running the model.
 
 A netCDF output file is generated in the location specified in the case
 configuration file, if the \execout{output\_dir} variable exists in that file. Otherwise an output directory is constructed from the case, suite, and namelist used (if different from the default). All output directories are placed in the \execout{bin} directory. If using a Docker container, all output is copied to the \execout{/home} directory in container space for volume-mounting purposes. Any standard netCDF file viewing or analysis tools may be used to
