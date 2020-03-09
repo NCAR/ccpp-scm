@@ -137,7 +137,7 @@ Several cases are included in the repository to serve as examples for users to c
 For the ARM SGP case, several case configuration files representing different time periods of the observational dataset are included, denoted by a trailing letter. The LASSO case may be run with different forcing applied, so three case configuration files corresponding to these different forcing are included. In addition, two example cases are included for using UFS Atmosphere initial conditions:
 \begin{itemize}
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with Noah variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noah.nc})
-\item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noah.nc})
+\item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noahmp.nc})
 \end{itemize}
 See \ref{sec:UFS ICs} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions.
 
@@ -201,7 +201,7 @@ In order to use other LASSO cases than the one provided, perform the following s
 ./lasso1_forcing_file_generator_gjf.py
 \end{lstlisting}
 \item Create a new case configuration file (or copy and modify an existing one) in \execout{gmtb-scm/scm/etc/case\_config}. Be sure that the \execout{case\_name} variable points to the newly created/processed case input file from above.
-\end{enumerate} 
+\end{enumerate}
 
 \section{Using UFS Initial Conditions}
 \label{sec:UFS ICs}
@@ -254,10 +254,3 @@ Running the model is the same as for observational field campaign cases:
 \begin{lstlisting}[language=bash]
 ./run_gmtb_scm.py -c fv3_model_point_noahmp -s SCM_GFS_v15_noahmp -n input_GFS_v15_noahmp.nml
 \end{lstlisting}
-
-
-
-
-
-
-

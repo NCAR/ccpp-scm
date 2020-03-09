@@ -1,7 +1,7 @@
 \chapter{Introduction}
 \label{chapter: introduction}
 
-A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. This SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. This version contains all parameterizations of NOAA's evolved operational GFS v15.2 suite (implemented in 2019), plus additional developmental schemes. The schemes are grouped in four supported suites described in detail in the \href{https://dtcenter.org/GMTB/v4.0/sci\_doc/}{CCPP Scientific Documentation} (GFS\_v15p2, GFS\_v16beta, csawmg, and GSD\_v1). Two additional suites without the near sea surface temperature scheme are available to match the first UFS public release.
+A single column model (SCM) can be a valuable tool for diagnosing the performance of a physics suite, from validating that schemes have been integrated into a suite correctly to deep dives into how physical processes are being represented by the approximating code. This SCM has the advantage of working with the Common Community Physics Package (CCPP), a library of physical parameterizations for atmospheric numerical models and the associated framework for connecting potentially any atmospheric model to physics suites constructed from its member parameterizations. In fact, this SCM serves as perhaps the simplest example for using the CCPP and its framework in an atmospheric model. This version contains all parameterizations of NOAA's evolved operational GFS v15.2 suite (implemented in 2019), plus additional developmental schemes. The schemes are grouped in four supported suites described in detail in the \href{https://dtcenter.org/GMTB/v4.0/sci\_doc/}{CCPP Scientific Documentation} (GFS\_v15p2, GFS\_v16beta, csawmg, and GSD\_v1). Two additional suites without the near sea surface temperature scheme are available to match the first Unified Forecast System (UFS) public release.
 
 This document serves as both the User and Technical Guides for this model. It contains a Quick Start Guide with instructions for obtaining the code, compiling, and running a sample test case, an explanation for what is included in the repository, a brief description of the operation of the model, a description of how cases are set up and run, and finally, an explanation for how the model interfaces with physics through the CCPP infrastructure.
 
@@ -16,7 +16,7 @@ Major
 \item Codebase updated to work with latest ccpp-framework (v4.0) and ccpp-physics (v4.0), allowing use of 6 supported physics suites
 \item Support added for NOAA's Hera HPC platform and Docker containers
 \item Support added for CCPP's ``static'' build. This release no longer supports the ``dynamic'' build.
-\item Added capability to utilize UFS initial conditions and initialize the NOAH and NOAHMP LSMs (without advective forcing)
+\item Added capability to utilize UFS initial conditions and initialize the Noah and NoahMP LSMs (without advective forcing)
 \end{itemize}
 
 Minor
