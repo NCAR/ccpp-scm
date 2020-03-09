@@ -206,7 +206,7 @@ In order to use other LASSO cases than the one provided, perform the following s
 \section{Using UFS Initial Conditions}
 \label{sec:UFS ICs}
 
-A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS Atmosphere cold start initial conditions and generate a case input data file that the SCM can use. Since the Noah LSM is the operational LSM, it is assumed that initial variables for it exist in the UFS Atmosphere initial condition files. If NoahMP is to be used, its initial conditions are generated from the Noah initial conditions using the same algorithm used in the UFS Atmosphere. The usage is as follows:
+A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS Atmosphere cold start initial conditions and generate a case input data file that the SCM can use. Since the Noah LSM is the operational LSM, it is assumed that initial variables for it exist in the UFS Atmosphere initial condition files. Although NoahMP is not a member of any officially supported suite as of this release, if NoahMP is to be used, its initial conditions are generated from the Noah initial conditions using the same algorithm used in the UFS Atmosphere. The usage is as follows:
 
 \begin{lstlisting}[language=bash]
 ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
