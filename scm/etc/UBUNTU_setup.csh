@@ -15,7 +15,6 @@ if (! $?BACIO_LIB4) then
   echo "If NCEPLIBS were installed on this machine using the umbrella build, source the generated setenv_nceplibs.csh script to set the appropriate environment variables."
   echo "If the subset of NCEPLIBS required for SCM were installed previously using the supplied build_nceplibs.sh in the contrib directory, set the environment variables as instructed by that build script."
   echo "If NCEPLIBS have not been installed, run ./contrib/build_nceplibs.sh /path/to/where/you/want/to/install/NCEPLIBS from the top level gmtb-scm directory and set the environment variables as instructed by that script."
-  exit 1
 endif
 
 if (! $?SP_LIBd) then
@@ -23,7 +22,6 @@ if (! $?SP_LIBd) then
   echo "If NCEPLIBS were installed on this machine using the umbrella build, source the generated setenv_nceplibs.csh script to set the appropriate environment variables."
   echo "If the subset of NCEPLIBS required for SCM were installed previously using the supplied build_nceplibs.sh in the contrib directory, set the environment variables as instructed by that build script."
   echo "If NCEPLIBS have not been installed, run ./contrib/build_nceplibs.sh /path/to/where/you/want/to/install/NCEPLIBS from the top level gmtb-scm directory and set the environment variables as instructed by that script."
-  exit 1
 endif
 
 if (! $?W3NCO_LIBd) then
@@ -31,5 +29,4 @@ if (! $?W3NCO_LIBd) then
   echo "If NCEPLIBS were installed on this machine using the umbrella build, source the generated setenv_nceplibs.csh script to set the appropriate environment variables."
   echo "If the subset of NCEPLIBS required for SCM were installed previously using the supplied build_nceplibs.sh in the contrib directory, set the environment variables as instructed by that build script."
   echo "If NCEPLIBS have not been installed, run ./contrib/build_nceplibs.sh /path/to/where/you/want/to/install/NCEPLIBS from the top level gmtb-scm directory and set the environment variables as instructed by that script."
-  exit 1
 endif
