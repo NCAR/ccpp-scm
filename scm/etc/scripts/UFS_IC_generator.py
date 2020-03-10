@@ -50,7 +50,7 @@ parser.add_argument('-t', '--tile',       help='tile of desired point (if known 
 parser.add_argument('-a', '--area',       help='area of grid cell in m^2', type=float)
 parser.add_argument('-mp','--noahmp',     help='flag to generate cold-start ICs for NoahMP LSM from Noah LSM ICs', action='store_true')
 parser.add_argument('-n', '--case_name',  help='name of case', required=True)
-parser.add_argument('-g2','--grib2',      help='flag to denote that ICs were generated from GRIB2 data', action='store_true')
+parser.add_argument('-oc','--old_chgres', help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -68,7 +68,7 @@ def parse_arguments():
     area = args.area
     case_name = args.case_name
     noahmp = args.noahmp
-    grib2 = args.grib2
+    old_chgres = args.old_chgres
     
     #validate args
     if not os.path.exists(in_dir):
@@ -99,7 +99,7 @@ def parse_arguments():
         date_dict["hour"] = np.int(date[8:10])
         date_dict["minute"] = np.int(date[10:])
         
-    return (location, index, date_dict, in_dir, grid_dir, tile, area, noahmp, case_name, grib2)
+    return (location, index, date_dict, in_dir, grid_dir, tile, area, noahmp, case_name, old_chgres)
 
 def setup_logging():
     """Sets up the logging module."""
@@ -278,17 +278,17 @@ def sph2cart(az, el, r):
     
     return (x, y, z)    
 
-def get_UFS_IC_data(dir, tile, i, j, grib2):
+def get_UFS_IC_data(dir, tile, i, j, old_chgres):
     """Get the state, surface, and orographic data for the given tile and indices"""
     #returns dictionaries with the data
     
-    state_data = get_UFS_state_data(dir, tile, i, j, grib2)
-    surface_data = get_UFS_surface_data(dir, tile, i, j, grib2)
+    state_data = get_UFS_state_data(dir, tile, i, j, old_chgres)
+    surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres)
     oro_data = get_UFS_oro_data(dir, tile, i, j)
     vgrid_data = get_UFS_vgrid_data(dir) #only needed for ak, bk to calculate pressure
     
     #calculate derived quantities
-    if not grib2:
+    if old_chgres:
         #temperature
         nlevs = state_data["nlevs"]
         gz=state_data["z"]*grav
@@ -303,7 +303,7 @@ def get_UFS_IC_data(dir, tile, i, j, grib2):
     
     return (state_data, surface_data, oro_data)
     
-def get_UFS_state_data(dir, tile, i, j, grib2):
+def get_UFS_state_data(dir, tile, i, j, old_chgres):
     """Get the state data for the given tile and indices"""
     
     nc_file = Dataset('{0}/{1}'.format(dir,'gfs_data.tile{0}.nc'.format(tile)))
@@ -333,8 +333,9 @@ def get_UFS_state_data(dir, tile, i, j, grib2):
     # surface pressure
     ps=nc_file['ps'][j,i]
     
-    if grib2:
-        #gfs_data.tileX.nc files created from GRIB2 already containt temperature and pressure profiles(well, surface pressure and delp); use those
+    if not old_chgres:
+        #gfs_data.tileX.nc files created from chgres_cube already containt temperature and pressure profiles(well, surface pressure and delp); use those
+        #older version of global_chgres did not include these vars
         t = nc_file['t'][::-1,j,i]
         delp = nc_file['delp'][::-1,j,i]
         
@@ -346,7 +347,7 @@ def get_UFS_state_data(dir, tile, i, j, grib2):
     nc_file.close()
     
     #put data in a dictionary
-    if not grib2:
+    if old_chgres:
         state = {
             "nlevs": nlevs,
             "z": zh,
@@ -373,12 +374,12 @@ def get_UFS_state_data(dir, tile, i, j, grib2):
         
     return state
 
-def get_UFS_surface_data(dir, tile, i, j, grib2):
+def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     """Get the surface data for the given tile and indices"""
     
     nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.tile{0}.nc'.format(tile)))
     
-    if not grib2:
+    if old_chgres:
         ts_in=nc_file['tsea'][j,i]
 
         # land state
@@ -411,7 +412,7 @@ def get_UFS_surface_data(dir, tile, i, j, grib2):
         snoalb_in=nc_file['snoalb'][j,i]
         sheleg_in=nc_file['sheleg'][j,i]
     else:
-        #the sfc_data.tileX.nc files created from GRIB2 have an extra time dimension in front compared to those created from NEMSIO
+        #the sfc_data.tileX.nc files created from chgres_cube have an extra time dimension in front compared to those created from global_chgres
         ts_in=nc_file['tsea'][0,j,i]
         
         # land state
@@ -1517,7 +1518,7 @@ def main():
     setup_logging()
     
     #read in arguments
-    (location, indices, date, in_dir, grid_dir, tile, area, noahmp, case_name, grib2) = parse_arguments()
+    (location, indices, date, in_dir, grid_dir, tile, area, noahmp, case_name, old_chgres) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     if not tile:
@@ -1543,7 +1544,7 @@ def main():
         print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
     
     #get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement different file reads)
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, tile, tile_i, tile_j, grib2)
+    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, tile, tile_i, tile_j, old_chgres)
     
     #cold start NoahMP variables
     if (noahmp):
