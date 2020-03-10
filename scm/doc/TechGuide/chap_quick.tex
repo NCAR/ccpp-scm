@@ -82,7 +82,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
 	\item NOTE: Version 3.15+ is required if installing NCEPLIBS
 	\end{itemize}
    	 \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5 and ZLIB
-    \item Python 2.7.5, 2.7.9, 2.7.13, and 2.7.16 (not 3.x)
+    \item Python 2.7.5, 2.7.9, 2.7.13, and 2.7.16 (not 3.x) with f90nml module
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) release v1.0.0 of March 11, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPlibs on supported platforms (see section~\ref{section: setup_supported_platforms}).
@@ -107,11 +107,9 @@ release website (\url{https://dtcenter.org/community-code/common-community-physi
 \subsection{Installing Libraries on Supported Platforms}\label{section: setup_supported_platforms}
 For users on supported platforms such as generic Linux or macOS systems, the UFS v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/tree/ufs-v1.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and source the shell script that is created by the \execout{NCEPLIBS} install process to set the required environment variables for compiling the SCM.
 
-The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can install only the minimum set of components of the \execout{NCEPLIBS-external} package (MPI, NetCDF/NetCDF-Fortran, PNG) by following the documentation in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and adding the following arguments to the \execout{cmake} call:
-\begin{lstlisting}
--DBUILD_ESMF=OFF -DBUILD_JASPER=OFF -DBUILD_WGRIB2=OFF
-\end{lstlisting}
-Note that this approach also compiles and installs the \execout{mpich3} MPI library and the \execout{PNG} library, even though these are not required for the SCM. Alternatively, users can install NetCDF/NetCDF-Fortran manually or using the software package managers (\execout{apt}, \execout{yum}, \execout{brew}) as in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt}. Whatever approach is taken, users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (instead of the \execout{NCEPLIBS} umbrella build referred to in the \execout{NCEPLIBS-external} instructions) and the SCM.
+The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can follow the machine setup instructions in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and, instead of installing \execout{NCEPLIBS-external} and \execout{NCEPLIBS}, install only NetCDF/NetCDF-Fortran manually or using the software package manager (\execout{apt}, \execout{yum}, \execout{brew}).
+
+Users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (instead of the \execout{NCEPLIBS} umbrella build referred to in the \execout{NCEPLIBS-external} instructions) and the SCM.
 
 Installing the NCEP libraries: The SCM repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code of the three required NCEP libraries from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}). 
 \begin{lstlisting}
@@ -133,6 +131,17 @@ setenv W3NCO_LIBd /path/to/nceplibs/lib/libw3nco_v2.1.0_d.a
 
 The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS release (\url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0}). Prepend this installation directory of \execout{cmake} to your path environment variable to use it for building the NCEPLIBS.
 
+The Python environment must provide the \execout{f90nml} module for the SCM scripts to function. Users can test if f90nml is installed using this command in the shell:
+\begin{lstlisting}
+python -c "import f90nml"
+\end{lstlisting}
+If \execout{f90nml} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named f90nml} will be printed to screen. To install the \execout{f90nml} Python module, use the install method preferred for your Python environment (\execout{easy\_install}, \execout{pip}, \execout{conda}, \dots) or perform the following steps to install it manually:
+\begin{lstlisting}
+cd scm/etc/scripts/f90nml-0.19/
+python setup.py build
+python setup.py install --prefix=/my/install/directory
+\end{lstlisting}
+The directory \execout{/my/install/directory} must exist and its subdirectory \execout{/my/install/directory/lib/python2.7/site-packages} (or \execout{lib64} instead of \execout{lib}, depending on the system) must be in the \execout{PYTHONPATH} environment variable.
 \subsection{Using Existing Libraries on Preconfigured Platforms}\label{section: use_preconfigured_platforms}
 Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms: These script loads compiler modules (Fortran 2003-compliant), netCDF module, python environment, etc. and set compiler and NCEPlibs environment variables. From the top-level code directory (\execout{gmtb-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
@@ -292,8 +301,7 @@ The CCPP SCM has a number of system requirements and necessary libraries and too
 \item ZLIB - 1.2.7
 \item SZIP - 2.1.1
 \item Python - 2.7.5
-\item libxml2 - 2.9.1
-\item NCEPLIBS subset: bacio v2.1.0\_4, sp v2.0.2\_d, w3nco v2.0.6\_d
+\item NCEPLIBS subset: bacio v2.2.0\_4, sp v2.1.0\_d, w3nco v2.1.0\_d
 \end{itemize}
 
 A Docker image containing the SCM, CCPP, and its software prerequisites can be generated from the code in the software repository obtained by following section \ref{obtaining_code} by executing the following steps:
