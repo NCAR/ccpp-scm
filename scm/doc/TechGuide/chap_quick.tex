@@ -81,9 +81,8 @@ The basic requirements for building and running the CCPP and SCM bundle are list
     	\begin{itemize}
 	\item NOTE: Version 3.15+ is required if installing NCEPLIBS
 	\end{itemize}
-   	 \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5, ZLIB and SZIP
+   	 \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5 and ZLIB
     \item Python 2.7.5, 2.7.9, 2.7.13, and 2.7.16 (not 3.x)
-    \item Libxml2 2.2, 2.9.7, 2.9.9
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) release v1.0.0 of March 11, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPlibs on supported platforms (see section~\ref{section: setup_supported_platforms}).
@@ -106,15 +105,15 @@ most recent version of a compiler. If you have problems with compilers, please c
 release website (\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/download}).
 
 \subsection{Installing Libraries on Supported Platforms}\label{section: setup_supported_platforms}
-For users on supported platforms such as generic Linux or macOS systems, the UFS v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/tree/ufs-v1.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and source the shell script that is created by the NCEPLIBS install process to set the required environment variables for compiling the SCM.
+For users on supported platforms such as generic Linux or macOS systems, the UFS v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/tree/ufs-v1.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and source the shell script that is created by the \execout{NCEPLIBS} install process to set the required environment variables for compiling the SCM.
 
-The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can install only the NetCDF/NetCDF-Fortran component of the \execout{NCEPLIBS-external} package by following the documentation in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and adding the following arguments to the \execout{cmake} call:
+The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can install only the minimum set of components of the \execout{NCEPLIBS-external} package (MPI, NetCDF/NetCDF-Fortran, PNG) by following the documentation in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and adding the following arguments to the \execout{cmake} call:
 \begin{lstlisting}
--DBUILD_MPI=OFF -DBUILD_ESMF=OFF -DBUILD_JASPER=OFF -DBUILD_PNG=OFF -DBUILD_WGRIB2=OFF
+-DBUILD_ESMF=OFF -DBUILD_JASPER=OFF -DBUILD_WGRIB2=OFF
 \end{lstlisting}
-Alternatively, users can install NetCDF/NetCDF-Fortran manually or using the software package managers (\execout{apt}, \execout{yum}, \execout{brew}) as in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt}. Whatever approach is taken, users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (described in the following) and the SCM:
+Note that this approach also compiles and installs the \execout{mpich3} MPI library and the \execout{PNG} library, even though these are not required for the SCM. Alternatively, users can install NetCDF/NetCDF-Fortran manually or using the software package managers (\execout{apt}, \execout{yum}, \execout{brew}) as in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt}. Whatever approach is taken, users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (instead of the \execout{NCEPLIBS} umbrella build referred to in the \execout{NCEPLIBS-external} instructions) and the SCM.
 
-The SCM repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code of the three required NCEP libraries from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}). 
+Installing the NCEP libraries: The SCM repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code of the three required NCEP libraries from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}). 
 \begin{lstlisting}
 ./contrib/build_nceplibs.sh /path/to/nceplibs
 \end{lstlisting}
@@ -155,7 +154,7 @@ From the top-level code directory (\execout{gmtb-scm} by default), execute the f
 \begin{lstlisting}[language=bash]
 ./contrib/get_thompson_tables.sh
 \end{lstlisting}
-If the download step fails, make sure that your system's firewell does not block access to GitHub. If it does, download the file \execout{thompson_tables.tar} from the GitHub release website and manually extract its contents in the directory \execout{scm/data/physics_input_data/}.
+If the download step fails, make sure that your system's firewall does not block access to GitHub. If it does, download the file \execout{thompson\_tables.tar} from the GitHub release website using your browser and manually extract its contents in the directory \execout{scm/data/physics\_input\_data/}.
 
 Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components.
 \begin{enumerate}
@@ -175,7 +174,7 @@ cmake ../src
 \end{lstlisting}
 \item The statements above can be modified with the following options (put before \execout{../src}):
 \begin{itemize}
-\item Use threading with openmp
+\item Use threading with openmp (not for macOS with clang+gfortran)
 \begin{lstlisting}[language=bash]
 -DOPENMP=ON
 \end{lstlisting}
@@ -231,13 +230,7 @@ When invoking the run script, the only required argument is the name of the case
 \item SCM\_GSD\_v1
 \end{enumerate}
 
-Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v1) requires the computation of look-up tables during its initialization phase. As of the release, this process has been prohibitively slow with this model, so it is HIGHLY suggested that these look-up tables are downloaded and staged to use this scheme (and the SCM\_GSD\_v1 suite). Pre-computed tables have been created and are available for download at the following URLs:
-\begin{itemize}
-\item \url{https://dtcenter.org/GMTB/freezeH2O.dat} (243 M)
-\item \url{https://dtcenter.org/GMTB/qr_acr_qg.dat} (49 M)
-\item \url{https://dtcenter.org/GMTB/qr_acr_qs.dat} (32 M)
-\end{itemize}
-These files should be staged in \execout{gmtb-scm/scm/data/physics\_input\_data} prior to executing the run script. Since binary files can be system-dependent (due to endianness), it is possible that these files will not be read correctly on your system. For reference, the linked files were generated on Theia using the Intel v18 compiler.
+Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v1) requires the computation of look-up tables during its initialization phase. As of the release, this process has been prohibitively slow with this model, so it is HIGHLY suggested that these look-up tables are downloaded and staged to use this scheme (and the SCM\_GSD\_v1 suite) as described in section~\ref{section: compiling}.
 
 Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
 
