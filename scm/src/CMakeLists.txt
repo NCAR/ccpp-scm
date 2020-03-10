@@ -269,6 +269,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp/framework/
 #------------------------------------------------------------------------------
 # Set OpenMP flags for C/C++/Fortran
 if (OPENMP)
+  # OpenMP broken for clang compiler
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang*")
+    message(FATAL_ERROR "OpenMP not supported for the LLVM Clang compiler")
+  endif()
   include(detect_openmp)
   detect_openmp()
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -286,16 +290,16 @@ ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccppphys ccpp)
 
 SET(scm_source_files gmtb_scm.F90
-            gmtb_scm_input.f90
-            gmtb_scm_utils.f90
+            gmtb_scm_input.F90
+            gmtb_scm_utils.F90
             gmtb_scm_vgrid.F90
-            gmtb_scm_setup.f90
-            gmtb_scm_forcing.f90
-            gmtb_scm_time_integration.f90
-            gmtb_scm_output.f90
-            gmtb_scm_kinds.f90
-            gmtb_scm_physical_constants.f90
-            gmtb_scm_type_defs.f90
+            gmtb_scm_setup.F90
+            gmtb_scm_forcing.F90
+            gmtb_scm_time_integration.F90
+            gmtb_scm_output.F90
+            gmtb_scm_kinds.F90
+            gmtb_scm_physical_constants.F90
+            gmtb_scm_type_defs.F90
 )
 
 if(STATIC)
