@@ -50,6 +50,7 @@ parser.add_argument('-t', '--tile',       help='tile of desired point (if known 
 parser.add_argument('-a', '--area',       help='area of grid cell in m^2', type=float)
 parser.add_argument('-mp','--noahmp',     help='flag to generate cold-start ICs for NoahMP LSM from Noah LSM ICs', action='store_true')
 parser.add_argument('-n', '--case_name',  help='name of case', required=True)
+parser.add_argument('-g2','--grib2',      help='flag to denote that ICs were generated from GRIB2 data', action='store_true')
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -67,6 +68,7 @@ def parse_arguments():
     area = args.area
     case_name = args.case_name
     noahmp = args.noahmp
+    grib2 = args.grib2
     
     #validate args
     if not os.path.exists(in_dir):
@@ -97,7 +99,7 @@ def parse_arguments():
         date_dict["hour"] = np.int(date[8:10])
         date_dict["minute"] = np.int(date[10:])
         
-    return (location, index, date_dict, in_dir, grid_dir, tile, area, noahmp, case_name)
+    return (location, index, date_dict, in_dir, grid_dir, tile, area, noahmp, case_name, grib2)
 
 def setup_logging():
     """Sets up the logging module."""
@@ -276,32 +278,32 @@ def sph2cart(az, el, r):
     
     return (x, y, z)    
 
-def get_UFS_IC_data(dir, tile, i, j):
+def get_UFS_IC_data(dir, tile, i, j, grib2):
     """Get the state, surface, and orographic data for the given tile and indices"""
     #returns dictionaries with the data
     
-    state_data = get_UFS_state_data(dir, tile, i, j)
-    surface_data = get_UFS_surface_data(dir, tile, i, j)
+    state_data = get_UFS_state_data(dir, tile, i, j, grib2)
+    surface_data = get_UFS_surface_data(dir, tile, i, j, grib2)
     oro_data = get_UFS_oro_data(dir, tile, i, j)
     vgrid_data = get_UFS_vgrid_data(dir) #only needed for ak, bk to calculate pressure
     
     #calculate derived quantities
-    
-    #temperature
-    nlevs = state_data["nlevs"]
-    gz=state_data["z"]*grav
-    pn1=np.zeros([nlevs+1])
-    temp=np.zeros([nlevs])
-    for k in range(nlevs+1):
-      pn1[k]=np.log(vgrid_data["ak"][k]+state_data["p_surf"]*vgrid_data["bk"][k])
-    for k in range(nlevs):
-      temp[k] = (gz[k]-gz[k+1])/( rdgas*(pn1[k+1]-pn1[k])*(1.+zvir*state_data["qv"][k]) )
-    state_data["T"] = temp
-    state_data["pres"] = np.exp(pn1[0:nlevs])
+    if not grib2:
+        #temperature
+        nlevs = state_data["nlevs"]
+        gz=state_data["z"]*grav
+        pn1=np.zeros([nlevs+1])
+        temp=np.zeros([nlevs])
+        for k in range(nlevs+1):
+          pn1[k]=np.log(vgrid_data["ak"][k]+state_data["p_surf"]*vgrid_data["bk"][k])
+        for k in range(nlevs):
+          temp[k] = (gz[k]-gz[k+1])/( rdgas*(pn1[k+1]-pn1[k])*(1.+zvir*state_data["qv"][k]) )
+        state_data["T"] = temp
+        state_data["pres"] = np.exp(pn1[0:nlevs])
     
     return (state_data, surface_data, oro_data)
     
-def get_UFS_state_data(dir, tile, i, j):
+def get_UFS_state_data(dir, tile, i, j, grib2):
     """Get the state data for the given tile and indices"""
     
     nc_file = Dataset('{0}/{1}'.format(dir,'gfs_data.tile{0}.nc'.format(tile)))
@@ -328,60 +330,119 @@ def get_UFS_state_data(dir, tile, i, j):
     o3=nc_file['o3mr'][::-1,j,i]
     liqwat=nc_file['liq_wat'][::-1,j,i]
 
-    # surface pressure and skin temperature
+    # surface pressure
     ps=nc_file['ps'][j,i]
     
+    if grib2:
+        #gfs_data.tileX.nc files created from GRIB2 already containt temperature and pressure profiles(well, surface pressure and delp); use those
+        t = nc_file['t'][::-1,j,i]
+        delp = nc_file['delp'][::-1,j,i]
+        
+        p = np.zeros(nlevs)
+        p[0] = ps
+        for k in range(1, nlevs):
+            p[k] = p[k-1] - delp[k-1]
+        
     nc_file.close()
     
     #put data in a dictionary
-    state = {
-        "nlevs": nlevs,
-        "z": zh,
-        "u": ucomp,
-        "v": vcomp,
-        "qv": sphum,
-        "o3": o3,
-        "ql": liqwat,
-        "p_surf": ps
-    }
+    if not grib2:
+        state = {
+            "nlevs": nlevs,
+            "z": zh,
+            "u": ucomp,
+            "v": vcomp,
+            "qv": sphum,
+            "o3": o3,
+            "ql": liqwat,
+            "p_surf": ps
+        }
+    else:
+        state = {
+            "nlevs": nlevs,
+            "z": zh,
+            "u": ucomp,
+            "v": vcomp,
+            "qv": sphum,
+            "o3": o3,
+            "ql": liqwat,
+            "p_surf": ps,
+            "T": t,
+            "pres": p
+        }
+        
     return state
 
-def get_UFS_surface_data(dir, tile, i, j):
+def get_UFS_surface_data(dir, tile, i, j, grib2):
     """Get the surface data for the given tile and indices"""
     
     nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.tile{0}.nc'.format(tile)))
     
-    ts_in=nc_file['tsea'][j,i]
+    if not grib2:
+        ts_in=nc_file['tsea'][j,i]
 
-    # land state
-    stc_in=nc_file['stc'][:,j,i]
-    smc_in=nc_file['smc'][:,j,i]
-    slc_in=nc_file['slc'][:,j,i]
-    tg3_in=nc_file['tg3'][j,i]
+        # land state
+        stc_in=nc_file['stc'][:,j,i]
+        smc_in=nc_file['smc'][:,j,i]
+        slc_in=nc_file['slc'][:,j,i]
+        tg3_in=nc_file['tg3'][j,i]
 
-    # surface properties
-    uustar_in=nc_file['uustar'][j,i]
-    alvsf_in=nc_file['alvsf'][j,i]
-    alvwf_in=nc_file['alvwf'][j,i]
-    alnsf_in=nc_file['alnsf'][j,i]
-    alnwf_in=nc_file['alnwf'][j,i]
-    facsf_in=nc_file['facsf'][j,i]
-    facwf_in=nc_file['facwf'][j,i]
-    styp_in=nc_file['stype'][j,i]
-    slope_in=nc_file['slope'][j,i]
-    vtyp_in=nc_file['vtype'][j,i]
-    vfrac_in=nc_file['vfrac'][j,i]
-    shdmin_in=nc_file['shdmin'][j,i]
-    shdmax_in=nc_file['shdmax'][j,i]
-    zorl_in=nc_file['zorl'][j,i]
-    slmsk_in=nc_file['slmsk'][j,i]
-    canopy_in=nc_file['canopy'][j,i]
-    hice_in=nc_file['hice'][j,i]
-    fice_in=nc_file['fice'][j,i]
-    tisfc_in=nc_file['tisfc'][j,i]
-    snwdph_in=nc_file['snwdph'][j,i]
-    snoalb_in=nc_file['snoalb'][j,i]
-    sheleg_in=nc_file['sheleg'][j,i]
+        # surface properties
+        uustar_in=nc_file['uustar'][j,i]
+        alvsf_in=nc_file['alvsf'][j,i]
+        alvwf_in=nc_file['alvwf'][j,i]
+        alnsf_in=nc_file['alnsf'][j,i]
+        alnwf_in=nc_file['alnwf'][j,i]
+        facsf_in=nc_file['facsf'][j,i]
+        facwf_in=nc_file['facwf'][j,i]
+        styp_in=nc_file['stype'][j,i]
+        slope_in=nc_file['slope'][j,i]
+        vtyp_in=nc_file['vtype'][j,i]
+        vfrac_in=nc_file['vfrac'][j,i]
+        shdmin_in=nc_file['shdmin'][j,i]
+        shdmax_in=nc_file['shdmax'][j,i]
+        zorl_in=nc_file['zorl'][j,i]
+        slmsk_in=nc_file['slmsk'][j,i]
+        canopy_in=nc_file['canopy'][j,i]
+        hice_in=nc_file['hice'][j,i]
+        fice_in=nc_file['fice'][j,i]
+        tisfc_in=nc_file['tisfc'][j,i]
+        snwdph_in=nc_file['snwdph'][j,i]
+        snoalb_in=nc_file['snoalb'][j,i]
+        sheleg_in=nc_file['sheleg'][j,i]
+    else:
+        #the sfc_data.tileX.nc files created from GRIB2 have an extra time dimension in front compared to those created from NEMSIO
+        ts_in=nc_file['tsea'][0,j,i]
+        
+        # land state
+        stc_in=nc_file['stc'][0,:,j,i]
+        smc_in=nc_file['smc'][0,:,j,i]
+        slc_in=nc_file['slc'][0,:,j,i]
+        tg3_in=nc_file['tg3'][0,j,i]
+        
+        # surface properties
+        uustar_in=nc_file['uustar'][0,j,i]
+        alvsf_in=nc_file['alvsf'][0,j,i]
+        alvwf_in=nc_file['alvwf'][0,j,i]
+        alnsf_in=nc_file['alnsf'][0,j,i]
+        alnwf_in=nc_file['alnwf'][0,j,i]
+        facsf_in=nc_file['facsf'][0,j,i]
+        facwf_in=nc_file['facwf'][0,j,i]
+        styp_in=nc_file['stype'][0,j,i]
+        slope_in=nc_file['slope'][0,j,i]
+        vtyp_in=nc_file['vtype'][0,j,i]
+        vfrac_in=nc_file['vfrac'][0,j,i]
+        shdmin_in=nc_file['shdmin'][0,j,i]
+        shdmax_in=nc_file['shdmax'][0,j,i]
+        zorl_in=nc_file['zorl'][0,j,i]
+        slmsk_in=nc_file['slmsk'][0,j,i]
+        canopy_in=nc_file['canopy'][0,j,i]
+        hice_in=nc_file['hice'][0,j,i]
+        fice_in=nc_file['fice'][0,j,i]
+        tisfc_in=nc_file['tisfc'][0,j,i]
+        snwdph_in=nc_file['snwdph'][0,j,i]
+        snoalb_in=nc_file['snoalb'][0,j,i]
+        sheleg_in=nc_file['sheleg'][0,j,i]
     
     nc_file.close()
     
@@ -1456,7 +1517,7 @@ def main():
     setup_logging()
     
     #read in arguments
-    (location, indices, date, in_dir, grid_dir, tile, area, noahmp, case_name) = parse_arguments()
+    (location, indices, date, in_dir, grid_dir, tile, area, noahmp, case_name, grib2) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     if not tile:
@@ -1482,7 +1543,7 @@ def main():
         print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
     
     #get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement different file reads)
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, tile, tile_i, tile_j)
+    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, tile, tile_i, tile_j, grib2)
     
     #cold start NoahMP variables
     if (noahmp):
