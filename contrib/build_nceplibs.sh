@@ -9,8 +9,14 @@ fi
 
 NCEPLIBS_DIR=$1
 if [ -d $NCEPLIBS_DIR ]; then
-  echo "Error, destination $NCEPLIBS_DIR already exists."
-  exit 1
+  while true; do
+    read -p "Warning, destination $NCEPLIBS_DIR already exists. Proceed [y/n]? " yn
+    case $yn in
+      [Yy]* ) break;;
+      [Nn]* ) exit;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
 fi
 NCEPLIBS_SRC=$NCEPLIBS_DIR/src
 mkdir -p $NCEPLIBS_SRC
