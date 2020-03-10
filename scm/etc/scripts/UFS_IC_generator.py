@@ -192,15 +192,24 @@ def find_loc_indices(loc, dir, tile):
     """Find the nearest neighbor FV3 grid point given a lon/lat pair and the tile number"""
     #returns the indices of the nearest neighbor point in the given tile, the lon/lat of the nearest neighbor, 
     #and the distance (m) from the given point to the nearest neighbor grid cell
-
-    filename_pattern = 'sfc_data.tile{0}.nc'.format(tile)
+    
+    filename_pattern = '*grid.tile{0}.nc'.format(tile)
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
           filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
-    longitude = np.array(nc_file['geolon'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    latitude = np.array(nc_file['geolat'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    #read in supergrid longitude and latitude
+    lon_super = np.array(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.array(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    #get the longitude and latitude data for the grid centers by slicing the supergrid 
+    #and taking only odd-indexed values
+    longitude = lon_super[1::2,1::2]
+    latitude = lat_super[1::2,1::2]
     nc_file.close()
     
     adj_long = False        
@@ -236,14 +245,23 @@ def find_loc_indices(loc, dir, tile):
 def find_lon_lat_of_indices(indices, dir, tile):
     """Find the longitude and latitude of the given indices within the given tile."""
     
-    filename_pattern = 'sfc_data.tile{0}.nc'.format(tile)
+    filename_pattern = '*grid.tile{0}.nc'.format(tile)
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
           filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
-    longitude = np.array(nc_file['geolon'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    latitude = np.array(nc_file['geolat'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    #read in supergrid longitude and latitude
+    lon_super = np.array(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.array(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    #get the longitude and latitude data for the grid centers by slicing the supergrid 
+    #and taking only odd-indexed values
+    longitude = lon_super[1::2,1::2]
+    latitude = lat_super[1::2,1::2]
     nc_file.close()
     
     return (longitude[indices[1],indices[0]], latitude[indices[1],indices[0]])
@@ -308,7 +326,7 @@ def get_UFS_state_data(dir, tile, i, j):
     sphum=nc_file['sphum'][::-1,j,i]
     # o3 and qv are taken from ics. 
     o3=nc_file['o3mr'][::-1,j,i]
-    liqwat=nc_file['liq_wat'][:-1,j,i]
+    liqwat=nc_file['liq_wat'][::-1,j,i]
 
     # surface pressure and skin temperature
     ps=nc_file['ps'][j,i]
@@ -472,13 +490,13 @@ def get_UFS_grid_area(dir, tile, i, j):
     
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
-          file_name = f_name
-    if not file_name:
+          filename = f_name
+    if not filename:
         message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
         logging.critical(message)
         raise Exception(message)
     
-    nc_file = Dataset('{0}/{1}'.format(dir,file_name))
+    nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
     # extract out area of grid cell
     
