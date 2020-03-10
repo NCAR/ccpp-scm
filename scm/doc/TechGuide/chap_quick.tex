@@ -150,7 +150,14 @@ For bourne/bash shells,
 
 \section{Compiling SCM with CCPP}
 \label{section: compiling}
-The first step in compiling the CCPP and SCM is to properly setup your user environment as described in sections~\ref{section: setup_supported_platforms} and~\ref{section: use_preconfigured_platforms}. Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components.
+The first step in compiling the CCPP and SCM is to properly setup your user environment as described in sections~\ref{section: setup_supported_platforms} and~\ref{section: use_preconfigured_platforms}. The second step is to download the lookup tables (large binaries, $~$324\,MB) for the Thompson microphysics package and place them in the correct directory:
+From the top-level code directory (\execout{gmtb-scm} by default), execute the following script:
+\begin{lstlisting}[language=bash]
+./contrib/get_thompson_tables.sh
+\end{lstlisting}
+If the download step fails, make sure that your system's firewell does not block access to GitHub. If it does, download the file \execout{thompson_tables.tar} from the GitHub release website and manually extract its contents in the directory \execout{scm/data/physics_input_data/}.
+
+Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components.
 \begin{enumerate}
  \item From the top-level code directory (\execout{gmtb-scm} by default), change directory to the top-level SCM directory.
 \begin{lstlisting}[language=bash]

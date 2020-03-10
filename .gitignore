@@ -7,3 +7,5 @@ scm/bin/*
 non-tracked_files/
 scm/data/physics_input_data/qr_acr*.dat
 scm/data/physics_input_data/freezeH2O.dat
+scm/data/physics_input_data/CCN_ACTIVATE.BIN
+
