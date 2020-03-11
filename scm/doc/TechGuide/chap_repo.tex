@@ -8,10 +8,12 @@ The repository contains all code and data required to run the CCPP SCM (with the
 \dirtree{%
 	.1 gmtb-scm/.
 	.2 ccpp/.
+	.3 config/\DTcomment{contains the CCPP prebuild configuration file}.
 	.3 framework/.
 	.4 cmake/\DTcomment{custom cmake code for building ccpp-framework}.
 	.4 CMakeLists.txt\DTcomment{cmake configuration file for ccpp-framework}.
-	.4 doc/\DTcomment{doxygen configuration, output, and Technical Documentation}.
+	.4 CODEOWNERS\DTcomment{list of GitHub users with permission to merge}.
+	.4 doc/\DTcomment{doxygen configuration, output, and Technical Documentation (obsolete)}.
 	.4 LICENSE.
 	.4 README.md.
 	.4 schemes/\DTcomment{contains schemes used for testing}.
@@ -20,50 +22,46 @@ The repository contains all code and data required to run the CCPP SCM (with the
 	.4 test/\DTcomment{contains scripts and configurations for testing}.
 	.4 tests\DTcomment{contains next-generation files for testing}.
 	.3 physics/\DTcomment{contains all physics schemes}.
-	.4 CCPP\_CAPS.cmake\DTcomment{auto-generated cmake section for physics caps}.
-	.4 CCPP\_CAPS.mk\DTcomment{auto-generated makefile section for physics caps}.
-	.4 CCPP\_CAPS.sh\DTcomment{auto-generated shell script for physics caps}.
-	.4 CCPP\_schemes.cmake\DTcomment{auto-generated cmake section for physics schemes}.
-	.4 CCPP\_schemes.mk\DTcomment{auto-generated makefile section for physics schemes}.
-	.4 CCPP\_schemes.sh\DTcomment{auto-generated shell script for physics schemes}.
 	.4 CMakeLists.txt\DTcomment{cmake configuration file for ccpp-physics}.
-	.4 CCPP\_VARIABLES\_SCM.html\DTcomment{auto-generated, CCPP variables provided by SCM}.
+	.4 CODEOWNERS\DTcomment{list of GitHub users with permission to merge}.
 	.4 LICENSE.
 	.4 pgifix.py.
 	.4 physics/\DTcomment{contains all CCPP physics and interstitial schemes}.
 	.5 docs/\DTcomment{contains CCPP physics doxygen documentation}.
 	.4 README.md.
-	.3 config/\DTcomment{contains the CCPP prebuild config}.
-	.3 suites/\DTcomment{contains suite definition files}.
 	.3 physics\_namelists\DTcomment{contains physics namelist files associated with suites}.
+	.3 suites/\DTcomment{contains suite definition files}.
+	.2 CODEOWNERS\DTcomment{list of GitHub users with permission to merge}.
+	.2 contrib/.
+	.3 build\_nceplibs.sh\DTcomment{script for installing prerequisite NCEPLIBS locally}.
+	.3 get\_thompson\_tables.sh\DTcomment{script for downloading/extracting the Thompson lookup tables}.
+	.2 docker/.
+	.3 Dockerfile\DTcomment{contains Docker instructions for building the CCPP SCM image}.
+	.2 README.md.
 	.2 scm/.
 	.3 bin/\DTcomment{build directory (initially empty; populated by cmake)}.
 	.3 data/.
 	.4 comparison\_data/\DTcomment{contains data with which to compare SCM output}.
-	.4 GFS\_physics\_data/\DTcomment{contains data needed by the GFS physics suite}.
+	.4 physics\_input\_data/\DTcomment{contains data needed by the CCPP physics}.
 	.4 processed\_case\_input/\DTcomment{contains initialization and forcing data for cases}.
 	.4 raw\_case\_input/\DTcomment{contains case data to be processed by scripts}.
-	.4 vert\_coord\_data/\DTcomment{contains data to calculate vertical coordinates}.
-	.3 doc/\DTcomment{contains doxygen configuration file, images, and output}.
-	.4 html/\DTcomment{contains HTML output from doxygen}.
-	.5 TechGuide/\DTcomment{contains LaTeX for this User's Guide}.
+	.4 vert\_coord\_data/\DTcomment{contains data to calculate vertical coordinates (from GSM-based GFS only)}.
+	.3 doc/\DTcomment{contains this User's/Technical Guide}.
+	.4 TechGuide/\DTcomment{contains LaTeX for this User's Guide}.
 	.3 etc/\DTcomment{contains case configuration, machine setup scripts, and plotting scripts}.
 	.4 case\_config/\DTcomment{contains case configuration files}.
+	.4 CENTOS\_docker\_setup.sh\DTcomment{contains machine setup for Docker container}.
 	.4 Cheyenne\_setup\_gnu.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
 	.4 Cheyenne\_setup\_gnu.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
 	.4 Cheyenne\_setup\_intel.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
 	.4 Cheyenne\_setup\_intel.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
 	.4 gmtb\_scm\_slurm\_example.py\DTcomment{example QSUB run script}.
-	.4 scripts/\DTcomment{Python scripts for setting up cases and plotting}.
-	.5 f90nml.0.19/\DTcomment{f90nml Python package}.
-	.5 plot\_configs/\DTcomment{plot configuration files}.
 	.4 Hera\_setup\_intel.csh\DTcomment{setup script for Theia HPC for csh, tcsh}.
 	.4 Hera\_setup\_intel.sh\DTcomment{setup script for Theia HPC for sh, bash}.
+	.4 scripts/\DTcomment{Python scripts for setting up cases and plotting}.
+	.5 f90nml.0.19/\DTcomment{f90nml Python package}.
+	.5 Shapely-1.7.0\DTcomment{Shapely Python package}.
+	.5 plot\_configs/\DTcomment{plot configuration files}.
 	.3 LICENSE.txt.
 	.3 src/\DTcomment{source code for SCM infrastructure and Python run scripts}.
-	.2 docker/.
-	.3 Dockerfile\DTcomment{contains Docker instructions for building the CCPP SCM image}.
-	.2 contrib/.
-	.3 build\_nceplibs.sh\DTcomment{script for installing prerequisite NCEPLIBS locally}.
-	.3 get\_thompson\_tables.sh\DTcomment{script for downloading/extracting the Thompson lookup tables}.
 }}

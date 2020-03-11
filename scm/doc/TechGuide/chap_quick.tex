@@ -82,7 +82,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
 	\item NOTE: Version 3.15+ is required if installing NCEPLIBS
 	\end{itemize}
    	 \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5 and ZLIB
-    \item Python 2.7.5, 2.7.9, 2.7.13, and 2.7.16 (not 3.x) with f90nml module
+    \item Python 2.7.5, 2.7.9, 2.7.13, and 2.7.16 (not 3.x) with f90nml module (and Shapely if using the \execout{UFS\_IC\_generator.py} script)
 \end{itemize}
 
 Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) release v1.0.0 of March 11, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPlibs on supported platforms (see section~\ref{section: setup_supported_platforms}).
@@ -334,7 +334,7 @@ NOTE: Windows users can execute these steps through the Docker Quickstart applic
 \begin{lstlisting}[language=bash]
 mkdir -p /path/to/output
 \end{lstlisting}
-For Windows, you can try to create a directory of your choice to mount to the container, but it may not work, depending on your particular Docker installation. In our case, we needed to use the home directory of the current user in order to successfully mount the directory (\execout{//C/Users/my username}), so there might be no need to create a new directory.
+For Windows, you can try to create a directory of your choice to mount to the container, but it may not work or require more configuration, depending on your particular Docker installation. We have found that Docker volume mounting in Windows can be difficult to set up correctly. One method that worked for us was to create a new directory under our local user space, and specifying the volume mount as below. In addition, with Docker Toolbox, double check that the mounted directory has correct permissions. For example, open VirtualBox, right click on the running virtual machine, and choose ``Settings''. In the dialog that appears, make sure that the directory you're trying to share shows up in ``Shared Folders" (and add it if it does not) and make sure that the ``auto-mount" and ``permanent" options are checked.
 \item Set an environment variable to use for your SCM output directory. For \textit{t/csh} shells,
 \begin{lstlisting}[language=bash]
 setenv OUT_DIR /path/to/output
@@ -343,6 +343,7 @@ For bourne/bash shells,
 \begin{lstlisting}[language=bash]
 export OUT_DIR=/path/to/output
 \end{lstlisting}
+For Windows, the format that worked for us followed this example: \execout{/c/Users/my username/path/to/directory/to/mount}
 \item To run the SCM, you can run the Docker container that was just created and give it the same run commands as discussed in sections \ref{subsection: singlerunscript} and \ref{subsection: multirunscript}. \textbf{Be sure to remember to include the \execout{-d} option for all run commands}. For example,
 \begin{lstlisting}[language=bash]
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_gmtb_scm.py -c twpice -d

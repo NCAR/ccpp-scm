@@ -44,3 +44,16 @@ if ( $? != 0 ) then
 else
 	echo "f90nml is installed"
 endif
+
+#install shapely for the local user
+
+#check to see if shapely is installed locally
+echo "Checking if shapely python module is installed"
+python -c "import shapely"
+
+if ( $? != 0 ) then
+	echo "Not found; installing shapely"
+	pip install --index-url http://anaconda.rdhpcs.noaa.gov/simple --trusted-host anaconda.rdhpcs.noaa.gov shapely --user
+else
+	echo "shapely is installed"
+endif
