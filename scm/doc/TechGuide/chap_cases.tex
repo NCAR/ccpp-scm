@@ -208,17 +208,13 @@ In order to use other LASSO cases than the one provided, perform the following s
 
 A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS Atmosphere cold start initial conditions and generate a case input data file that the SCM can use. Since the Noah LSM is the operational LSM, it is assumed that initial variables for it exist in the UFS Atmosphere initial condition files. Although NoahMP is not a member of any officially supported suite as of this release, if NoahMP is to be used, its initial conditions are generated from the Noah initial conditions using the same algorithm used in the UFS Atmosphere. Note that the script requires a few python packages that may not be found by default in all python installations: \exec{argparse}, \exec{fnmatch}, \exec{logging}, \exec{netCDF4}, \exec{numpy}, \exec{shapely}, \exec{f90nml}, and \exec{re}. 
 
-NOTE: If using NOAA's Hera HPC, the \execout{shapely} python package does not seem to be installed with the version of Anaconda used by the rest of this software package. Users can test if \execout{shapely} is installed using this command in the shell:
+NOTE: If using NOAA's Hera HPC, the \execout{shapely} python package does not seem to be installed with the version of Anaconda used by the rest of this software package by default so it is installed when users execute \execout{scm/etc/Hera\_setup\_intel.[csh/sh]}. 
+
+Users on other systems can test if \execout{shapely} is installed using this command in the shell:
 \begin{lstlisting}
 python -c "import shapely"
 \end{lstlisting}
-If \execout{shapely} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named shapely} will be printed to screen. To install the \execout{shapely} Python module, use the install method preferred for your Python environment (\execout{easy\_install}, \execout{pip}, \execout{conda}, \dots) or perform the following steps to install it manually:
-\begin{lstlisting}
-cd scm/etc/scripts/Shapely-1.7.0/
-python setup.py build
-python setup.py install --prefix=/my/install/directory
-\end{lstlisting}
-The directory \execout{/my/install/directory} must exist and its subdirectory \execout{/my/install/directory/lib/python2.7/site-packages} (or \execout{lib64} instead of \execout{lib}, depending on the system) must be in the \execout{PYTHONPATH} environment variable.
+If \execout{shapely} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named shapely} will be printed to screen. To install the \execout{shapely} Python module, use the install method preferred for your Python environment (\execout{easy\_install}, \execout{pip}, \execout{conda}, \dots).
 
 The \execout{UFS\_IC\_generator.py} script usage is as follows:
 
