@@ -141,13 +141,35 @@ The Python environment must provide the \execout{f90nml} module for the SCM scri
 \begin{lstlisting}
 python -c "import f90nml"
 \end{lstlisting}
-If \execout{f90nml} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named f90nml} will be printed to screen. To install the \execout{f90nml} Python module, use the install method preferred for your Python environment (\execout{easy\_install}, \execout{pip}, \execout{conda}, \dots) or perform the following steps to install it manually:
+If \execout{f90nml} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named f90nml} will be printed to screen. To install the \execout{f90nml} (v0.19) Python module, use the install method preferred for your Python environment (one of the following):
+\begin{itemize}
+\item
 \begin{lstlisting}
-cd scm/etc/scripts/f90nml-0.19/
-python setup.py build
-python setup.py install --prefix=/my/install/directory
+easy_install f90nml==0.19
+\end{lstlisting}
+\end{itemize}
+\begin{itemize}
+\item
+\begin{lstlisting}
+pip install f90nml==0.19
+\end{lstlisting}
+\end{itemize}
+\begin{itemize}
+\item
+\begin{lstlisting}
+conda install f90nml=0.19
+\end{lstlisting}
+\end{itemize}
+
+or perform the following steps to install it manually from source:
+\begin{lstlisting}
+cd /directory/with/write/priveleges
+git clone -b v0.19 https://github.com/marshallward/f90nml
+cd f90nml
+python setup.py install [--prefix=/my/install/directory or --user]
 \end{lstlisting}
 The directory \execout{/my/install/directory} must exist and its subdirectory \execout{/my/install/directory/lib/python2.7/site-packages} (or \execout{lib64} instead of \execout{lib}, depending on the system) must be in the \execout{PYTHONPATH} environment variable.
+
 \subsection{Using Existing Libraries on Preconfigured Platforms}\label{section: use_preconfigured_platforms}
 Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms: These script loads compiler modules (Fortran 2003-compliant), netCDF module, python environment, etc. and set compiler and NCEPlibs environment variables. From the top-level code directory (\execout{gmtb-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
