@@ -1,7 +1,7 @@
 \chapter{Quick Start Guide}
 \label{chapter: quick}
 
-This chapter provides instructions for obtaining and compiling the CCPP SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP framework code. As such, it requires the CCPP framework code and physics code, both of which are included as submodules within the SCM code. This package can be considered a simple example for an atmospheric model to interact with physics through the CCPP. 
+This chapter provides instructions for obtaining and compiling the CCPP SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP framework code. As such, it requires the CCPP framework code and physics code, both of which are included as submodules within the SCM code. This package can be considered a simple example for an atmospheric model to interact with physics through the CCPP.
 
 Alternatively, if one doesn't have access or care to set up a machine with the appropriate system requirements but has a working Docker installation, it is possible to create and use a Docker container with a pre-configured computing environment with a pre-compiled model. This is also an avenue for running this software with a Windows PC. See section \ref{docker} for more information.
 
@@ -21,6 +21,7 @@ git clone --recursive -b v4.0.0 https://github.com/NCAR/gmtb-scm
 The CCPP framework can be found in the ccpp/framework subdirectory at this level.  The CCPP physics parameterizations can be found in the ccpp/physics subdirectory.
 
 \subsection{Development Code}
+\label{section: development_code}
 
 If you would like to contribute as a developer to this project, please see (in addition to the rest of this guide) the scientific and technical documentation included with this release:
 
@@ -85,7 +86,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
     \item Python 2.7.5, 2.7.9, 2.7.13, and 2.7.16 (not 3.x) with f90nml module (and Shapely if using the \execout{UFS\_IC\_generator.py} script)
 \end{itemize}
 
-Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) release v1.0.0 of March 11, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPlibs on supported platforms (see section~\ref{section: setup_supported_platforms}).
+Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) Medium-Range Weather Application release v1.0.0 of March 11, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPlibs on supported platforms (see section~\ref{section: setup_supported_platforms}).
 
 Further, there are several utility libraries as part of the NCEPlibs package that must be installed with environment variables pointing to their locations prior to building the SCM.
 \begin{itemize}
@@ -105,7 +106,7 @@ most recent version of a compiler. If you have problems with compilers, please c
 release website (\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/download}).
 
 \subsection{Installing Libraries on Supported Platforms}\label{section: setup_supported_platforms}
-For users on supported platforms such as generic Linux or macOS systems, the UFS v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/tree/ufs-v1.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and source the shell script that is created by the \execout{NCEPLIBS} install process to set the required environment variables for compiling the SCM.
+For users on supported platforms such as generic Linux or macOS systems, the UFS Medium-Range Weather Application v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/tree/ufs-v1.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and source the shell script that is created by the \execout{NCEPLIBS} install process to set the required environment variables for compiling the SCM.
 
 The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can follow the machine setup instructions in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/ufs-v1.0.0/doc/README_*.txt} and, instead of installing \execout{NCEPLIBS-external} and \execout{NCEPLIBS}, install only NetCDF/NetCDF-Fortran manually or using the software package manager (\execout{apt}, \execout{yum}, \execout{brew}).
 
@@ -116,7 +117,7 @@ export LDFLAGS="-L/dir/where/libnetcdf/and/libnetcdff/live -Wl,-rpath,/dir/where
 
 Users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (instead of the \execout{NCEPLIBS} umbrella build referred to in the \execout{NCEPLIBS-external} instructions) and the SCM.
 
-Installing the NCEP libraries: The SCM repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code of the three required NCEP libraries from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}). 
+Installing the NCEP libraries: The SCM repository contains a bash installation script in \execout{gmtb-scm/contrib/build\_nceplibs.sh} that will fetch the source code of the three required NCEP libraries from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{gmtb-scm}).
 \begin{lstlisting}
 ./contrib/build_nceplibs.sh /path/to/nceplibs
 \end{lstlisting}
@@ -225,7 +226,7 @@ Note: This command can be dangerous (deletes files without confirming), so make 
 If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
 
 \section{Run the SCM with a supplied case}
-There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two Python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially. 
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two Python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially.
 
 \subsection{Single Run Script Usage} \label{subsection: singlerunscript}
 Running a case requires three pieces of information: the case to run (consisting of initial conditions, geolocation, forcing data, etc.), the physics suite to use (through a CCPP suite definition file), and a physics namelist (that specifies configurable physics options to use). As discussed in chapter \ref{chapter: cases}, cases are set up via their own namelists in \execout{../etc/case\_config}. A default physics suite is provided as a user-editable variable in the script and default namelists are associated with each physics suite (through \execout{../src/default\_namelists.py}), so, technically, one must only specify a case to run with the SCM. The single run script's interface is described below.
@@ -369,6 +370,3 @@ You will be placed within the container space and within the \execout{bin} direc
 \end{lstlisting}
 NOTE: If developing, since the container is ephemeral, one should push their changes to a remote git repository to save them (i.e. a fork on GitHub.com).
 \end{enumerate}
-
-
-
