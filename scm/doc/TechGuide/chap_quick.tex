@@ -326,6 +326,17 @@ docker images
 \end{lstlisting}
 \end{enumerate}
 
+\subsection{Using a prebuilt Docker image from Dockerhub}
+
+A prebuilt Docker image for this release is available on Dockerhub if it is not desired to build from source. In order to use this, execute the following
+\begin{lstlisting}[language=bash]
+docker pull dtcenter/ccpp-scm
+\end{lstlisting}
+To verify that it exists afterward, run
+\begin{lstlisting}[language=bash]
+docker images
+\end{lstlisting}
+
 \subsection{Running the Docker image}
 
 NOTE: Windows users can execute these steps through the Docker Quickstart application installed with Docker Toolbox.
