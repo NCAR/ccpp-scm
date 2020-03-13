@@ -17,7 +17,7 @@ setenv CXX g++
 setenv FC gfortran
 
 echo "Setting NCEPLIBS environment variables"
-module use -a /glade/p/ral/jntp/GMTB/tools/modulefiles/gnu-8.3.0/mpt-2.19
+module use /glade/p/ral/jntp/GMTB/tools/modulefiles/gnu-8.3.0/mpt-2.19
 module load  NCEPlibs/1.0.0
 
 echo "Loading cmake"
@@ -42,9 +42,7 @@ python -c "import f90nml"
 
 if ( $? != 0 ) then
         echo "Not found; installing f90nml"
-        cd etc/scripts/f90nml-0.19
-        pip install .
-        cd ../..
+        pip install --no-cache-dir f90nml==0.19
 else
         echo "f90nml is installed"
 endif

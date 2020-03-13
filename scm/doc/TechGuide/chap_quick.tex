@@ -141,13 +141,35 @@ The Python environment must provide the \execout{f90nml} module for the SCM scri
 \begin{lstlisting}
 python -c "import f90nml"
 \end{lstlisting}
-If \execout{f90nml} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named f90nml} will be printed to screen. To install the \execout{f90nml} Python module, use the install method preferred for your Python environment (\execout{easy\_install}, \execout{pip}, \execout{conda}, \dots) or perform the following steps to install it manually:
+If \execout{f90nml} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named f90nml} will be printed to screen. To install the \execout{f90nml} (v0.19) Python module, use the install method preferred for your Python environment (one of the following):
+\begin{itemize}
+\item
 \begin{lstlisting}
-cd scm/etc/scripts/f90nml-0.19/
-python setup.py build
-python setup.py install --prefix=/my/install/directory
+easy_install f90nml==0.19
+\end{lstlisting}
+\end{itemize}
+\begin{itemize}
+\item
+\begin{lstlisting}
+pip install f90nml==0.19
+\end{lstlisting}
+\end{itemize}
+\begin{itemize}
+\item
+\begin{lstlisting}
+conda install f90nml=0.19
+\end{lstlisting}
+\end{itemize}
+
+or perform the following steps to install it manually from source:
+\begin{lstlisting}
+cd /directory/with/write/priveleges
+git clone -b v0.19 https://github.com/marshallward/f90nml
+cd f90nml
+python setup.py install [--prefix=/my/install/directory or --user]
 \end{lstlisting}
 The directory \execout{/my/install/directory} must exist and its subdirectory \execout{/my/install/directory/lib/python2.7/site-packages} (or \execout{lib64} instead of \execout{lib}, depending on the system) must be in the \execout{PYTHONPATH} environment variable.
+
 \subsection{Using Existing Libraries on Preconfigured Platforms}\label{section: use_preconfigured_platforms}
 Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms. These scripts load compiler modules (Fortran 2003-compliant), the netCDF module, Python environment, etc. and set compiler and NCEPlibs environment variables. From the top-level code directory (\execout{gmtb-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
@@ -326,6 +348,17 @@ docker images
 \end{lstlisting}
 \end{enumerate}
 
+\subsection{Using a prebuilt Docker image from Dockerhub}
+
+A prebuilt Docker image for this release is available on Dockerhub if it is not desired to build from source. In order to use this, execute the following from the terminal where Docker is run:
+\begin{lstlisting}[language=bash]
+docker pull dtcenter/ccpp-scm:v4.0.0
+\end{lstlisting}
+To verify that it exists afterward, run
+\begin{lstlisting}[language=bash]
+docker images
+\end{lstlisting}
+
 \subsection{Running the Docker image}
 
 NOTE: Windows users can execute these steps through the Docker Quickstart application installed with Docker Toolbox.
@@ -360,6 +393,7 @@ The options included in the above \execout{run} commands are the following:
 \item \execout{-v} specifies the volume mount from host directory (outside container) to inside the container. Using volumes allows you to share data between the host machine and container. For running the SCM, the output is being mounted from \execout{/home} inside the container to the \execout{OUT\_DIR} on the host machine. Upon exiting the container, data mounted to the host machine will still be accessible.
 \item \execout{$--$name} names the container. If no name is provided, the daemon will autogenerate a random string name.
 \end{itemize}
+NOTE: If you are using a prebuilt image from Dockerhub, substitute the name of the image that was pulled from Dockerhub in the commands above; i.e. instead of \execout{ccpp-scm} above, one would have \execout{dtcenter/ccpp-scm:v4.0.0}.
 \item To use the SCM interactively, run non-default configurations, create plots, or even develop code, issue the following command:
 \begin{lstlisting}[language=bash]
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm /bin/bash
