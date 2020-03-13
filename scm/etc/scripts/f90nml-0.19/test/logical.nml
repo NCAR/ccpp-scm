@@ -1,8 +1,0 @@
-&logical_nml
-    a = .true.
-    b = .false.
-    c = t
-    d = f
-    e = .t
-    f = .f
-/
