@@ -40,7 +40,7 @@ export CXX=g++
 export FC=gfortran
 
 echo "Setting NCEPLIBS environment variables"
-module use -a /glade/p/ral/jntp/GMTB/tools/modulefiles/intel-19.0.5/mpt-2.19
+module use -a /glade/p/ral/jntp/GMTB/tools/modulefiles/gnu-8.3.0/mpt-2.19
 module load  NCEPlibs/1.0.0
 
 echo "Loading cmake"
