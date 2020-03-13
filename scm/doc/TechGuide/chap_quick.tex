@@ -350,9 +350,9 @@ docker images
 
 \subsection{Using a prebuilt Docker image from Dockerhub}
 
-A prebuilt Docker image for this release is available on Dockerhub if it is not desired to build from source. In order to use this, execute the following
+A prebuilt Docker image for this release is available on Dockerhub if it is not desired to build from source. In order to use this, execute the following from the terminal where Docker is run:
 \begin{lstlisting}[language=bash]
-docker pull dtcenter/ccpp-scm
+docker pull dtcenter/ccpp-scm:v4.0.0
 \end{lstlisting}
 To verify that it exists afterward, run
 \begin{lstlisting}[language=bash]
@@ -393,6 +393,7 @@ The options included in the above \execout{run} commands are the following:
 \item \execout{-v} specifies the volume mount from host directory (outside container) to inside the container. Using volumes allows you to share data between the host machine and container. For running the SCM, the output is being mounted from \execout{/home} inside the container to the \execout{OUT\_DIR} on the host machine. Upon exiting the container, data mounted to the host machine will still be accessible.
 \item \execout{$--$name} names the container. If no name is provided, the daemon will autogenerate a random string name.
 \end{itemize}
+NOTE: If you are using a prebuilt image from Dockerhub, substitute the name of the image that was pulled from Dockerhub in the commands above; i.e. instead of \execout{ccpp-scm} above, one would have \execout{dtcenter/ccpp-scm:v4.0.0}.
 \item To use the SCM interactively, run non-default configurations, create plots, or even develop code, issue the following command:
 \begin{lstlisting}[language=bash]
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm /bin/bash
