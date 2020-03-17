@@ -91,6 +91,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_mp_radar.F90',
     'ccpp/physics/physics/module_mp_thompson.F90',
     'ccpp/physics/physics/module_mp_thompson_make_number_concentrations.F90',
+    'ccpp/physics/physics/module_MP_FER_HIRES.F90',
     'ccpp/physics/physics/module_bl_mynn.F90',
     'ccpp/physics/physics/module_sf_mynn.F90',
     'ccpp/physics/physics/module_SF_JSFC.F90',
@@ -186,6 +187,8 @@ SCHEME_FILES = {
     'ccpp/physics/physics/h2ophys.f'                        : ['physics'],
     'ccpp/physics/physics/samfdeepcnv.f'                    : ['physics'],
     'ccpp/physics/physics/samfshalcnv.f'                    : ['physics'],
+    'ccpp/physics/physics/sascnvn.F'                        : ['physics'],
+    'ccpp/physics/physics/shalcnv.F'                        : ['physics'],
     'ccpp/physics/physics/maximum_hourly_diagnostics.F90'   : ['physics'],
     'ccpp/physics/physics/m_micro.F90'                      : ['physics'],
     'ccpp/physics/physics/m_micro_interstitial.F90'         : ['physics'],
@@ -228,6 +231,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_nst.f'                        : ['physics'],
     'ccpp/physics/physics/sfc_ocean.F'                      : ['physics'],
     'ccpp/physics/physics/sfc_sice.f'                       : ['physics'],
+    'ccpp/physics/physics/mp_fer_hires.F90'                 : ['physics'],
     'ccpp/physics/physics/gmtb_scm_sfc_flux_spec.F90'       : ['physics'],
     }
 
@@ -315,6 +319,13 @@ OPTIONAL_ARGUMENTS = {
             'ice_friendly_aerosol_number_concentration_updated_by_physics',
             'tendency_of_water_friendly_aerosols_at_surface',
             'tendency_of_ice_friendly_aerosols_at_surface',
+            ],
+        },
+    'mp_fer_hires' : {
+        'mp_fer_hires_init' : [
+            'fraction_of_ice_water_cloud',
+            'fraction_of_rain_water_cloud',
+            'rime_factor',
             ],
         },
     #'subroutine_name_1' : 'all',
