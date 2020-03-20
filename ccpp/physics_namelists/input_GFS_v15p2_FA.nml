@@ -6,7 +6,9 @@
        use_ufo        = .true.
        pre_rad        = .false.
        ncld           = 5
-       imp_physics    = 11
+       imp_physics    = 15
+       spec_adv       = .true.
+       RHGRD          = 0.98
        pdfcld         = .false.
        fhswr          = 3600.
        fhlwr          = 3600.

@@ -16,8 +16,8 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/radsw_param.f',
     'ccpp/physics/physics/radlw_param.f',
     'scm/src/GFS_typedefs.F90',
-    'scm/src/gmtb_scm_type_defs.f90',
-    'scm/src/gmtb_scm_physical_constants.f90',
+    'scm/src/gmtb_scm_type_defs.F90',
+    'scm/src/gmtb_scm_physical_constants.F90',
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
@@ -171,8 +171,8 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_soil_pre.F90',
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
-    'scm/src/gmtb_scm_kinds.f90',
-    'scm/src/gmtb_scm_type_defs.f90',
+    'scm/src/gmtb_scm_kinds.F90',
+    'scm/src/gmtb_scm_type_defs.F90',
     'ccpp/physics/physics/rrtmgp_aux.F90',
     'ccpp/physics/physics/rrtmg_lw_cloud_optics.F90',
     'ccpp/physics/physics/rrtmg_sw_cloud_optics.F90',
@@ -319,7 +319,7 @@ SCHEMES_SOURCEFILE = 'ccpp/physics/CCPP_SCHEMES.sh'
 # CCPP host cap in which to insert the ccpp_field_add statements;
 # determines the directory to place ccpp_{modules,fields}.inc
 TARGET_FILES = [
-    'scm/src/gmtb_scm.f90',
+    'scm/src/gmtb_scm.F90',
     ]
 
 # Auto-generated makefile/cmakefile snippets that contain all caps

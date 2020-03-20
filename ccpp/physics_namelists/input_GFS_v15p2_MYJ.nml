@@ -24,7 +24,9 @@
        cal_pre        = .false.
        redrag         = .true.
        dspheat        = .true.
-       hybedmf        = .true.
+       hybedmf        = .false.
+       do_myjsfc      = .true.
+       do_myjpbl      = .true.
        random_clds    = .false.
        trans_trac     = .true.
        cnvcld         = .true.
