@@ -35,6 +35,7 @@ def print_progress(n_complete, n_total):
 #set up command line argument parser to read in name of config file to use
 parser = argparse.ArgumentParser()
 parser.add_argument('config', help='configuration file for GMTB SCM analysis', nargs=1)
+parser.add_argument('-d', '--docker', help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 
 args = parser.parse_args()
 
@@ -89,6 +90,13 @@ if len(gmtb_scm_datasets) != len(gmtb_scm_datasets_labels):
     print 'gmtb_scm_datasets = ',gmtb_scm_datasets
     print 'gmtb_scm_datasets_labels = ',gmtb_scm_datasets_labels
     quit()
+
+#if running in a Docker container, the output is being copied to a different directory within the container 
+#and the plots should go into that same (home) directory in order for the volume to be correctly mounted and the host to see them.
+if args.docker:
+    plot_dir = '/home/'+plot_dir
+    for f in gmtb_scm_datasets:
+        f = '/home/'+f
 
 #read in the case name from the case_config namelist (just use first dataset dir namelist)
 i = gmtb_scm_datasets[0].rfind('/')
