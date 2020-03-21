@@ -70,9 +70,10 @@
        do_shum        = .false.
        do_skeb        = .false.
        do_sfcperts    = .false.
+       do_RRTMGP      = .true.
        active_gases   = 'h2o_co2_o3_n2o_ch4_o2'
        ngases         = 6
-       rrtmgp_root    = '/home/dswales/Projects/CCPP/gmtb-scm-1/ccpp/physics/physics/rte-rrtmgp/'
+       rrtmgp_root    = '../../ccpp/physics/physics/rte-rrtmgp/'
        lw_file_gas    = 'rrtmgp/data/rrtmgp-data-lw-g256-2018-12-04.nc'
        lw_file_clouds = 'extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc'
        sw_file_gas    = 'rrtmgp/data/rrtmgp-data-sw-g224-2018-12-04.nc'

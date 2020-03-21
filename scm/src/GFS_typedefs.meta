@@ -569,34 +569,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[alvsf]
-  standard_name = mean_vis_albedo_with_strong_cosz_dependency
-  long_name = mean vis albedo with strong cosz dependency
-  units = frac
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[alnsf]
-  standard_name = mean_nir_albedo_with_strong_cosz_dependency
-  long_name = mean nir albedo with strong cosz dependency
-  units = frac
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[facsf]
-  standard_name =fractional_coverage_with_strong_cosz_dependency
-  long_name = fractional coverage with strong cosz dependency
-  units = frac
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[facwf]
-  standard_name = fractional_coverage_with_weak_cosz_dependency
-  long_name = fractional coverage with weak cosz dependency
-  units = frac
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [slope]
   standard_name = surface_slope_classification_real
   long_name = sfc slope type for lsm
@@ -1378,6 +1350,34 @@
   standard_name = graupel_precipitation_rate_from_previous_timestep
   long_name = graupel precipitation rate from previous timestep
   units = mm s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[alvsf]
+  standard_name = mean_vis_albedo_with_strong_cosz_dependency
+  long_name = mean vis albedo with strong cosz dependency
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[alnsf]
+  standard_name = mean_nir_albedo_with_strong_cosz_dependency
+  long_name = mean nir albedo with strong cosz dependency
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[facsf]
+  standard_name =fractional_coverage_with_strong_cosz_dependency
+  long_name = fractional coverage with strong cosz dependency
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[facwf]
+  standard_name = fractional_coverage_with_weak_cosz_dependency
+  long_name = fractional coverage with weak cosz dependency
+  units = frac
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -2293,15 +2293,15 @@
   long_name = directory for rte+rrtmgp source code (Model%rrtmgp_root)
   units = none
   dimensions =  ()
-  kind = len=128
   type = character
+  kind = len=128
 [lw_file_gas]
   standard_name = rrtmgp_kdistribution_lw
   long_name = file containing RRTMGP LW k-distribution (Model%lw_file_gas)
   units = none
   dimensions =  ()
-  kind = len=128
   type = character
+  kind = len=128
 [lw_file_clouds]
   standard_name = rrtmgp_coeff_lw_cloud_optics 
   long_name = file containing coefficients for RRTMGP LW cloud optics (Model%lw_file_clouds)
@@ -2326,8 +2326,8 @@
   long_name = file containing RRTMGP SW k-distribution (Model%sw_file_gas)
   units = none
   dimensions =  ()
-  kind = len=128
   type = character
+  kind = len=128
 [sw_file_clouds]
   standard_name = rrtmgp_coeff_sw_cloud_optics 
   long_name = file containing coefficients for RRTMGP SW cloud optics (Model%sw_file_clouds)
@@ -2365,6 +2365,12 @@
   units = count
   dimensions =  ()
   type = integer
+[do_RRTMGP]
+  standard_name = flag_for_rrtmgp_radiation_scheme
+  long_name = flag for RRTMGP scheme
+  units = flag
+  dimensions =  ()
+  type = logical
 [do_GPsw_Glw]
   standard_name = scheme_flag
   long_name = When true GP is used for SW calculation and G is used for LW calculation
@@ -8786,6 +8792,102 @@
   dimensions = (horizontal_dimension)
   type = integer
   optional = F
+[sw_gas_props]
+  standard_name = coefficients_for_sw_gas_optics
+  long_name = DDT containing spectral information for RRTMGP SW radiation scheme
+  units = DDT
+  dimensions = ()
+  type = ty_gas_optics_rrtmgp
+  optional = F
+[sw_cloud_props]
+  standard_name = coefficients_for_sw_cloud_optics
+  long_name = DDT containing spectral information for RRTMGP SW radiation scheme
+  units = DDT
+  dimensions = ()
+  type = ty_cloud_optics
+  optional = F
+[sw_optical_props_clrsky]
+  standard_name = shortwave_optical_properties_for_clear_sky
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  optional = F
+[sw_optical_props_cloudsByBand]
+  standard_name = shortwave_optical_properties_for_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+[sw_optical_props_clouds]
+  standard_name = shortwave_optical_properties_for_cloudy_atmosphere
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  optional = F
+[sw_optical_props_aerosol]
+  standard_name = shortwave_optical_properties_for_aerosols
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  optional = F
+[gas_concentrations]
+  standard_name = Gas_concentrations_for_RRTMGP_suite
+  long_name = DDT containing gas concentrations for RRTMGP radiation scheme
+  units = DDT
+  dimensions = ()
+  type = ty_gas_concs
+  optional = F
+[sources]
+  standard_name = longwave_source_function
+  long_name = Fortran DDT containing RRTMGP source functions
+  units = DDT
+  dimensions = ()
+  type = ty_source_func_lw
+  optional = F
+[lw_gas_props]
+  standard_name = coefficients_for_lw_gas_optics
+  long_name = DDT containing spectral information for RRTMGP LW radiation scheme
+  units = DDT
+  dimensions = ()
+  type = ty_gas_optics_rrtmgp
+  optional = F
+[lw_cloud_props]
+  standard_name = coefficients_for_lw_cloud_optics
+  long_name = DDT containing spectral information for RRTMGP LW radiation scheme
+  units = DDT
+  dimensions = ()
+  type = ty_cloud_optics
+  optional = F
+[lw_optical_props_clrsky]
+  standard_name = longwave_optical_properties_for_clear_sky
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_1scl
+  optional = F
+[lw_optical_props_clouds]
+  standard_name = longwave_optical_properties_for_cloudy_atmosphere
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_1scl
+  optional = F
+[lw_optical_props_cloudsByBand]
+  standard_name = longwave_optical_properties_for_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_1scl
+[lw_optical_props_aerosol]
+  standard_name = longwave_optical_properties_for_aerosols
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_1scl
+  optional = F
 [sfc_emiss_byband]
   standard_name = surface_emissivity_in_each_RRTMGP_LW_band
   long_name = surface emissivity in each RRTMGP LW band
@@ -8809,7 +8911,7 @@
   kind = kind_phys
 [sfc_alb_nir_dif]
   standard_name = surface_albedo_nearIR_diffuse
-  long_name = near-IR (diffuse) surface albedo (sfc_alb_nir_dif) 
+  long_name = near-IR (diffuse) surface albedo (sfc_alb_nir_dif)
   units = none
   dimensions = (number_of_sw_bands_rrtmgp,horizontal_dimension)
   type = real
@@ -8829,15 +8931,15 @@
   type = real
   kind = kind_phys
 [toa_src_lw]
-  standard_name = toa_incident_lw_flux_by_spectral_point 
-  long_name = TOA longwave incident flux at each spectral points (Radtend%toa_src_lw)
+  standard_name = toa_incident_lw_flux_by_spectral_point
+  long_name = TOA longwave incident flux at each spectral points
   units = W m-2
   dimensions = (horizontal_dimension,number_of_lw_spectral_points_rrtmgp)
   type = real
   kind = kind_phys
 [toa_src_sw]
   standard_name = toa_incident_sw_flux_by_spectral_point
-  long_name = TOA shortwave incident flux at each spectral points (Radtend%toa_src_sw)
+  long_name = TOA shortwave incident flux at each spectral points
   units = W m-2
   dimensions = (horizontal_dimension,number_of_sw_spectral_points_rrtmgp)
   type = real

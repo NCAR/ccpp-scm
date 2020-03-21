@@ -9,8 +9,9 @@
 
 HOST_MODEL_IDENTIFIER = "SCM"
 
-# Add all files with metadata tables on the host model side,
-# relative to basedir = top-level directory of host model
+# Add all files with metadata tables on the host model side and in CCPP,
+# relative to basedir = top-level directory of host model. This includes
+# kind and type definitions used in CCPP physics.
 VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/machine.F',
     'ccpp/physics/physics/radsw_param.f',
@@ -22,7 +23,6 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
-    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_fluxes_byband.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90'
     ]
 
@@ -169,13 +169,37 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
+    # RRTMGP
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_rrtmgp_constants.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_rrtmgp_util_reorder.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_rrtmgp_util_string.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/kernels/mo_gas_optics_kernels.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/kernels/mo_rrtmgp_util_reorder_kernels.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_fluxes.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_util_array.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_kind.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_lw.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_sw.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_fluxes_broadband_kernels.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_optical_props_kernels.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_rte_solver_kernels.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_compute_bc.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_fluxes_byband.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_fluxes_byband_kernels.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_fluxes_bygpoint.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_heating_rates.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_rrtmgp_clr_all_sky.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_sampling.F90', 
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
     'scm/src/gmtb_scm_type_defs.F90',
-    'ccpp/physics/physics/rrtmgp_aux.F90',
-    'ccpp/physics/physics/rrtmg_lw_cloud_optics.F90',
-    'ccpp/physics/physics/rrtmg_sw_cloud_optics.F90',
 ]
 
 # Add all physics scheme files relative to basedir
@@ -263,53 +287,36 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_sice.f'                       : ['physics'],
     'ccpp/physics/physics/mp_fer_hires.F90'                 : ['physics'],
     'ccpp/physics/physics/gmtb_scm_sfc_flux_spec.F90'       : ['physics'],
+    # RRTMGP
+    'ccpp/physics/physics/rrtmg_lw_cloud_optics.F90'        : ['physics'],
+    'ccpp/physics/physics/rrtmg_sw_cloud_optics.F90'        : ['physics'],
+    'ccpp/physics/physics/rrtmgp_aux.F90'                   : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_gas_optics.F90'         : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_cloud_optics.F90'       : ['physics'],
-    'ccpp/physics/physics/rrtmgp_lw_cloud_sampling.F90'     : ['physics'],
-    'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'     : ['physics'],
     'ccpp/physics/physics/rrtmgp_sw_gas_optics.F90'         : ['physics'],
     'ccpp/physics/physics/rrtmgp_sw_cloud_optics.F90'       : ['physics'],
-    'ccpp/physics/physics/rrtmgp_sw_cloud_sampling.F90'     : ['physics'],
     'ccpp/physics/physics/rrtmgp_sw_aerosol_optics.F90'     : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_rte.F90'                : ['physics'],
+    'ccpp/physics/physics/rrtmgp_lw_cloud_sampling.F90'     : ['physics'],
     'ccpp/physics/physics/rrtmgp_sw_rte.F90'                : ['physics'],
-    'ccpp/physics/physics/GFS_rrtmgp_pre.F90'               : ['physics'],
+    'ccpp/physics/physics/rrtmgp_sw_cloud_sampling.F90'     : ['physics'],
+    'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'     : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_setup.F90'             : ['physics'],
-    'ccpp/physics/physics/GFS_rrtmgp_sw_pre.F90'            : ['physics'],
+    'ccpp/physics/physics/GFS_rrtmgp_pre.F90'               : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_pre.F90'                : ['physics'],
+    'ccpp/physics/physics/GFS_rrtmgp_sw_pre.F90'            : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_lw_post.F90'           : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'           : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90'                  : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics.F90'                          : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90'                   : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_rrtmgp_constants.F90'                    : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_rrtmgp_util_reorder.F90'                 : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_rrtmgp_util_string.F90'                  : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/kernels/mo_gas_optics_kernels.F90'          : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/kernels/mo_rrtmgp_util_reorder_kernels.F90' : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_fluxes.F90'                                 : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_util_array.F90'                         : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90'                          : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_kind.F90'                               : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_lw.F90'                                 : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_sw.F90'                                 : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90'                       : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_fluxes_broadband_kernels.F90'       : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_optical_props_kernels.F90'          : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_rte_solver_kernels.F90'             : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_compute_bc.F90'                      : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_fluxes_byband.F90'                   : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_fluxes_byband_kernels.F90'           : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_fluxes_bygpoint.F90'                 : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_heating_rates.F90'                   : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/mo_rrtmgp_clr_all_sky.F90'              : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90'       : ['physics'],
-    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_sampling.F90'     : ['physics'],
     }
 
 # Default build dir, relative to current working directory,
 # if not specified as command-line argument
 DEFAULT_BUILD_DIR = 'scm/bin'
+
+# Auto-generated makefile/cmakefile snippets that contain all type definitions
+TYPEDEFS_MAKEFILE   = 'ccpp/physics/CCPP_TYPEDEFS.mk'
+TYPEDEFS_CMAKEFILE  = 'ccpp/physics/CCPP_TYPEDEFS.cmake'
+TYPEDEFS_SOURCEFILE = 'ccpp/physics/CCPP_TYPEDEFS.sh'
 
 # Auto-generated makefile/cmakefile snippets that contain all schemes
 SCHEMES_MAKEFILE = 'ccpp/physics/CCPP_SCHEMES.mk'
@@ -402,7 +409,7 @@ OPTIONAL_ARGUMENTS = {
         },
     'rrtmgp_sw_rte' : {
          'rrtmgp_sw_rte_run' : [
-             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step',
+             'RRTMGP_sw_heating_rate_clear_sky',
              'components_of_surface_downward_shortwave_fluxes',
              'sw_fluxes_sfc',
              'sw_fluxes_toa',
@@ -410,25 +417,29 @@ OPTIONAL_ARGUMENTS = {
          },
     'GFS_rrtmgp_sw_post' : {
          'GFS_rrtmgp_sw_post_run' : [
-             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step',
+             'RRTMGP_sw_heating_rate_clear_sky',
              'components_of_surface_downward_shortwave_fluxes',
              'sw_fluxes_sfc',
              'sw_fluxes_toa',
-             'components_of_surface_downward_shortwave_fluxes',
              ],
          },
     'rrtmgp_lw_rte' : {
          'rrtmgp_lw_rte_run' : [
-             'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step',
+             'RRTMGP_lw_heating_rate_clear_sky',
              'lw_fluxes_sfc',
              'lw_fluxes_toa',
              ],
         },
     'GFS_rrtmgp_lw_post' : {
          'GFS_rrtmgp_lw_post_run' : [
-             'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step',
+             'RRTMGP_lw_heating_rate_clear_sky',
              'lw_fluxes_sfc',
              'lw_fluxes_toa',
+             ],
+         },
+    'GFS_rrtmgp_post' : {
+         'GFS_rrtmgp_post_run' : [
+             'components_of_surface_downward_shortwave_fluxes',
              ],
          },
     #'subroutine_name_1' : 'all',
