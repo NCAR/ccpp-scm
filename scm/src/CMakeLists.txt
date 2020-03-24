@@ -2,6 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(scm)
 set(PROJECT "CCPP-SCM")
 
+# The only option to build is the static build
+set(STATIC TRUE)
+
 ####################################################################
 # Begin CCPP prebuild step                                         #
 ####################################################################
@@ -36,15 +39,7 @@ if(STATIC)
     RESULT_VARIABLE return_code
   )
 else(STATIC)
-  # Run CCPP prebuild.py
-  message (STATUS "Running ccpp_prebuild.py for dynamic CCPP")
-  execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --builddir=${CMAKE_CURRENT_BINARY_DIR}/..
-    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
-    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    RESULT_VARIABLE return_code
-  )
+  message(FATAL_ERROR "Dynamic CCPP build no longer supported")
 endif(STATIC)
 # Check return code from CCPP prebuild.py
 if(return_code EQUAL 0)
@@ -69,16 +64,29 @@ ELSE(DEFINED ENV{NETCDF})
   MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
 ENDIF(DEFINED ENV{NETCDF})
 
-IF(DEFINED ENV{NCEPLIBS_DIR})
-  MESSAGE(STATUS "The NCEPLIBS_DIR environment variable is $ENV{NCEPLIBS_DIR}")
-  set(NCEPLIBS_DIR $ENV{NCEPLIBS_DIR})
-ELSE(DEFINED ENV{NCEPLIBS_DIR})
-  MESSAGE(FATAL_ERROR "The NCEPLIBS_DIR environment variable must be set to point to your NCEPlibs installation before building. Stopping...")
-ENDIF(DEFINED ENV{NCEPLIBS_DIR})
+IF(DEFINED ENV{BACIO_LIB4})
+  MESSAGE(STATUS "The BACIO_LIB4 environment variable is $ENV{BACIO_LIB4}")
+  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{BACIO_LIB4})
+  SET(BACIO_LIB4 $ENV{BACIO_LIB4})
+ELSE(DEFINED ENV{BACIO_LIB4})
+  MESSAGE(FATAL_ERROR "The BACIO_LIB4 environment variable must be set to point to your BACIO installation (part of NCEPLIBS) before building. Stopping...")
+ENDIF(DEFINED ENV{BACIO_LIB4})
 
-set(BACIO_LIB4   ${NCEPLIBS_DIR}/lib/libbacio_4.a)
-set(SP_LIBd      ${NCEPLIBS_DIR}/lib/libsp_v2.0.2_d.a)
-set(W3NCO_LIBd   ${NCEPLIBS_DIR}/lib/libw3nco_d.a)
+IF(DEFINED ENV{SP_LIBd})
+  MESSAGE(STATUS "The SP_LIBd environment variable is $ENV{SP_LIBd}")
+  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{SP_LIBd})
+  SET(SP_LIBd $ENV{SP_LIBd})
+ELSE(DEFINED ENV{SP_LIBd})
+  MESSAGE(FATAL_ERROR "The SP_LIBd environment variable must be set to point to your SP installation (part of NCEPLIBS) before building. Stopping...")
+ENDIF(DEFINED ENV{SP_LIBd})
+
+IF(DEFINED ENV{W3NCO_LIBd})
+  MESSAGE(STATUS "The W3NCO_LIBd environment variable is $ENV{W3NCO_LIBd}")
+  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{W3NCO_LIBd})
+  SET(W3NCO_LIBd $ENV{W3NCO_LIBd})
+ELSE(DEFINED ENV{W3NCO_LIBd})
+  MESSAGE(FATAL_ERROR "The W3NCO_LIBd environment variable must be set to point to your W3NCO installation (part of NCEPLIBS) before building. Stopping...")
+ENDIF(DEFINED ENV{W3NCO_LIBd})
 
 if(STATIC)
   ADD_DEFINITIONS(-DSTATIC)
@@ -261,6 +269,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp/framework/
 #------------------------------------------------------------------------------
 # Set OpenMP flags for C/C++/Fortran
 if (OPENMP)
+  # OpenMP broken for clang compiler
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang*")
+    message(FATAL_ERROR "OpenMP not supported for the LLVM Clang compiler")
+  endif()
   include(detect_openmp)
   detect_openmp()
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -278,16 +290,16 @@ ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccppphys ccpp)
 
 SET(scm_source_files gmtb_scm.F90
-            gmtb_scm_input.f90
-            gmtb_scm_utils.f90
+            gmtb_scm_input.F90
+            gmtb_scm_utils.F90
             gmtb_scm_vgrid.F90
-            gmtb_scm_setup.f90
-            gmtb_scm_forcing.f90
-            gmtb_scm_time_integration.f90
-            gmtb_scm_output.f90
-            gmtb_scm_kinds.f90
-            gmtb_scm_physical_constants.f90
-            gmtb_scm_type_defs.f90
+            gmtb_scm_setup.F90
+            gmtb_scm_forcing.F90
+            gmtb_scm_time_integration.F90
+            gmtb_scm_output.F90
+            gmtb_scm_kinds.F90
+            gmtb_scm_physical_constants.F90
+            gmtb_scm_type_defs.F90
 )
 
 if(STATIC)
