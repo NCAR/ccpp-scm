@@ -17,6 +17,7 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/radsw_param.f',
     'ccpp/physics/physics/radlw_param.f',
     'scm/src/GFS_typedefs.F90',
+    'scm/src/gmtb_scm_kinds.F90',
     'scm/src/gmtb_scm_type_defs.F90',
     'scm/src/gmtb_scm_physical_constants.F90',
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
@@ -199,6 +200,7 @@ SCHEME_FILES_DEPENDENCIES = [
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
+    'scm/src/gmtb_scm_physical_constants.F90',
     'scm/src/gmtb_scm_type_defs.F90',
 ]
 
