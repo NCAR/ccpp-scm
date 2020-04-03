@@ -119,15 +119,20 @@ def main():
     #       specified in run_gmtb_scm.py using the supplied namelists.
     if args.file:
         logging.info('Importing {0} to run requested combinations'.format(args.file))
-        try:
-            if PYTHON2:
+        if PYTHON2:
+            try:
                 scm_runs = load_source(os.path.splitext(args.file)[0], args.file)
-            else:
+            except (IOError, ImportError):
+                message = 'There was a problem loading {0}. Please check that the path exists.'.format(args.file)
+                logging.critical(message)
+                raise Exception(message)
+        else:
+            try:
                 scm_runs = SourceFileLoader(os.path.splitext(args.file)[0], args.file).load_module()
-        except ImportError:
-            message = 'There was a problem loading {0}. Please check that the path exists.'.format(args.file)
-            logging.critical(message)
-            raise Exception(message)
+            except FileNotFoundError:
+                message = 'There was a problem loading {0}. Please check that the path exists.'.format(args.file)
+                logging.critical(message)
+                raise Exception(message)
 
         if not scm_runs.cases:
             message = 'The cases list in {0} must not be empty'.format(args.file)
