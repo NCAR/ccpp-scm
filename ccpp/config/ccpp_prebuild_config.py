@@ -142,6 +142,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
+    'ccpp/physics/physics/module_sf_noahlsm.F',
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
@@ -227,6 +228,8 @@ SCHEME_FILES = {
     'ccpp/physics/physics/sfc_cice.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_diff.f'                       : ['physics'],
     'ccpp/physics/physics/sfc_drv.f'                        : ['physics'],
+    'ccpp/physics/physics/sfc_noah_GFS_interstitial.F90'    : ['physics'],
+    'ccpp/physics/physics/sfc_noah.F90'                     : ['physics'],
     'ccpp/physics/physics/sfc_noahmp_drv.f'                 : ['physics'],
     'ccpp/physics/physics/sfc_nst.f'                        : ['physics'],
     'ccpp/physics/physics/sfc_ocean.F'                      : ['physics'],
