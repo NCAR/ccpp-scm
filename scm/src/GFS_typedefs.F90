@@ -699,14 +699,6 @@ module GFS_typedefs
     integer              :: lsm_ruc=3       !< flag for RUC land surface model
     integer              :: lsm_noah_hafs = 4 !< flag for NOAH land surface model for HAFS application
     integer              :: lsoil           !< number of soil layers
-    integer              :: lsoil_lsm       !< number of soil layers internal to land surface model
-    integer              :: lsnow_lsm       !< maximum number of snow layers internal to land surface model
-    integer              :: lsnow_lsm_lbound!< lower bound for snow arrays, depending on lsnow_lsm
-    logical              :: rdlai           !< read LAI from input file (for RUC LSM or NOAH LSM HAFS)
-    logical              :: ua_phys         !< flag for using University of Arizona? extension to NOAH LSM HAFS
-    logical              :: usemonalb       !< flag to read surface diffused shortwave albedo from input file for NOAH LSM HAFS
-    real(kind=kind_phys) :: aoasis          !< potential evaporation multiplication factor for NOAH LSM HAFS
-    integer              :: fasdas          !< flag to use "flux-adjusting surface data assimilation system"; 0 = OFF, 1 = ON
     integer              :: ivegsrc         !< ivegsrc = 0   => USGS, 
                                             !< ivegsrc = 1   => IGBP (20 category)
                                             !< ivegsrc = 2   => UMD  (13 category)
@@ -716,6 +708,14 @@ module GFS_typedefs
     integer              :: isot            !< isot = 0   => Zobler soil type  ( 9 category)
                                             !< isot = 1   => STATSGO soil type (19 category, AKA 'STAS'(?))
                                             !< isot = 2   => STAS-RUC soil type (19 category, NOAH/HAFS only)
+    integer              :: lsoil_lsm       !< number of soil layers internal to land surface model
+    integer              :: lsnow_lsm       !< maximum number of snow layers internal to land surface model
+    integer              :: lsnow_lsm_lbound!< lower bound for snow arrays, depending on lsnow_lsm
+    logical              :: rdlai           !< read LAI from input file (for RUC LSM or NOAH LSM HAFS)
+    logical              :: ua_phys         !< flag for using University of Arizona? extension to NOAH LSM HAFS
+    logical              :: usemonalb       !< flag to read surface diffused shortwave albedo from input file for NOAH LSM HAFS
+    real(kind=kind_phys) :: aoasis          !< potential evaporation multiplication factor for NOAH LSM HAFS
+    integer              :: fasdas          !< flag to use "flux-adjusting surface data assimilation system"; 0 = OFF, 1 = ON
     integer              :: isurban         !< vegetation/land use type corresponding to the urban environment for the chosen ivegsrc
     integer              :: iopt_thcnd      !< option to treat thermal conductivity in Noah LSM (new in 3.8)
                                             !< = 1, original (default)
