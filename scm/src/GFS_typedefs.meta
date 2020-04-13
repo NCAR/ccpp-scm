@@ -2155,9 +2155,9 @@
   units = count
   dimensions = ()
   type = integer
-[aero_in]
-  standard_name = flag_for_aerosol_input_MG
-  long_name = flag for using aerosols in Morrison-Gettelman MP
+[iaerclm]
+  standard_name = flag_for_aerosol_input_MG_radiation
+  long_name = flag for using aerosols in Morrison-Gettelman MP_radiation
   units = flag
   dimensions = ()
   type = logical
@@ -3996,9 +3996,9 @@
 [iccn]
   standard_name = flag_for_in_ccn_forcing_for_morrison_gettelman_microphysics
   long_name = flag for IN and CCN forcing for morrison gettelman microphysics
-  units = flag
+  units = none
   dimensions = ()
-  type = logical
+  type = integer
 [sec]
   standard_name = seconds_elapsed_since_model_initialization
   long_name = seconds elapsed since model initialization
@@ -4471,34 +4471,6 @@
   long_name = eff. radius of cloud graupel particle in micrometer
   units = um
   dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-[htlwc]
-  standard_name = tendency_of_air_temperature_due_to_longwave_heating_on_radiation_time_step_and_radiation_levels
-  long_name = total sky heating rate due to longwave radiation
-  units = K s-1
-  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
-  type = real
-  kind = kind_phys
-[htlw0]
-  standard_name = tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels
-  long_name = clear sky heating rate due to longwave radiation
-  units = K s-1
-  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
-  type = real
-  kind = kind_phys
-[htswc]
-  standard_name = tendency_of_air_temperature_due_to_shortwave_heating_on_radiation_time_step_and_radiation_levels
-  long_name = total sky heating rate due to shortwave radiation
-  units = K s-1
-  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
-  type = real
-  kind = kind_phys
-[htsw0]
-  standard_name = tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels
-  long_name = clear sky heating rates due to shortwave radiation
-  units = K s-1
-  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
 [forcet]
@@ -6723,34 +6695,6 @@
   dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[dusfc_cice]
-  standard_name = surface_x_momentum_flux_for_coupling_interstitial
-  long_name = sfc x momentum flux for coupling interstitial
-  units = Pa 
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[dvsfc_cice]
-  standard_name = surface_y_momentum_flux_for_coupling_interstitial
-  long_name = sfc y momentum flux for coupling interstitial
-  units = Pa 
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[dtsfc_cice]
-  standard_name = surface_upward_sensible_heat_flux_for_coupling_interstitial
-  long_name = sfc sensible heat flux for coupling interstitial
-  units = W m-2 
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[dqsfc_cice]
-  standard_name = surface_upward_latent_heat_flux_for_coupling_interstitial
-  long_name= surface latent heat flux for coupling interstitial
-  units = W m-2 
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [elvmax]
   standard_name = maximum_subgrid_orography
   long_name = maximum of subgrid orography
@@ -7256,6 +7200,34 @@
   long_name = kinematic surface upward sensible heat flux over ice
   units = K m s-1
   dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[htlwc]
+  standard_name = tendency_of_air_temperature_due_to_longwave_heating_on_radiation_time_step_and_radiation_levels
+  long_name = total sky heating rate due to longwave radiation
+  units = K s-1
+  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
+  type = real
+  kind = kind_phys
+[htlw0]
+  standard_name = tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels
+  long_name = clear sky heating rate due to longwave radiation
+  units = K s-1
+  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
+  type = real
+  kind = kind_phys
+[htswc]
+  standard_name = tendency_of_air_temperature_due_to_shortwave_heating_on_radiation_time_step_and_radiation_levels
+  long_name = total sky heating rate due to shortwave radiation
+  units = K s-1
+  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
+  type = real
+  kind = kind_phys
+[htsw0]
+  standard_name = tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels
+  long_name = clear sky heating rates due to shortwave radiation
+  units = K s-1
+  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
 [icemp]
@@ -8180,13 +8152,6 @@
   long_name = (updraft mass flux) * delt
   units = kg m-2
   dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-[ulwsfc_cice]
-  standard_name = surface_upwelling_longwave_flux_for_coupling_interstitial
-  long_name = surface upwelling longwave flux for coupling_interstitial
-  units = W m-2
-  dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
 [uustar_ocean]
