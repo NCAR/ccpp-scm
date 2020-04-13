@@ -1143,6 +1143,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[snotime]
+  standard_name = time_since_last_snowfall
+  long_name = elapsed time since last snowfall
+  units = s
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [wetness]
   standard_name = normalized_soil_wetness_for_land_surface_model
   long_name = normalized soil wetness for lsm

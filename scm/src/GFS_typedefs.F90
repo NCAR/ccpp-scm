@@ -305,7 +305,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: smoiseq   (:,:) => null()  !<
     real (kind=kind_phys), pointer :: zsnsoxy   (:,:) => null()  !<
 
-
+! -- In/Out for HWRF NOAH LSM
+    real (kind=kind_phys), pointer :: snotime (:) => null()
 
 !--- NSSTM variables  (only allocated when [Model%nstf_name(1) > 0])
     real (kind=kind_phys), pointer :: tref   (:)   => null()  !< nst_fld%Tref - Reference Temperature
@@ -2270,6 +2271,13 @@ module GFS_typedefs
     Sfcprop%dgraupelprv = clear_val
     
    endif
+   
+   ! HWRF NOAH LSM allocate and init when used
+   !
+   if (Model%lsm == Model%lsm_noah_hafs ) then
+     allocate(Sfcprop%snotime(IM))
+     Sfcprop%snotime = clear_val
+   end if
     
     if (Model%do_myjsfc.or.Model%do_myjpbl.or.(Model%lsm == Model%lsm_noah_hafs)) then
       allocate(Sfcprop%z0base(IM))
