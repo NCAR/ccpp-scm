@@ -2757,6 +2757,18 @@
   units = index
   dimensions = ()
   type = integer
+[isice]
+  standard_name = ice_vegetation_category
+  long_name = index of the permanent snow/ice category in the chosen vegetation dataset
+  units = index
+  dimensions = ()
+  type = integer
+[iswater]
+  standard_name = water_vegetation_category
+  long_name = index of the water body vegetation category in the chosen vegetation dataset
+  units = index
+  dimensions = ()
+  type = integer
 [iopt_thcnd]
   standard_name = flag_for_thermal_conductivity_option
   long_name = choice for thermal conductivity option (see module_sf_noahlsm)
@@ -6977,6 +6989,12 @@
 [flag_lsm]
   standard_name = flag_for_calling_land_surface_model
   long_name = flag for calling land surface model
+  units = flag
+  dimensions = (horizontal_dimension)
+  type = logical
+[flag_lsm_glacier]
+  standard_name = flag_for_calling_land_surface_model_glacier
+  long_name = flag for calling land surface model over glacier
   units = flag
   dimensions = (horizontal_dimension)
   type = logical

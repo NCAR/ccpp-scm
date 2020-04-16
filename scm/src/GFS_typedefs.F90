@@ -718,6 +718,8 @@ module GFS_typedefs
     real(kind=kind_phys) :: aoasis          !< potential evaporation multiplication factor for NOAH LSM HAFS
     integer              :: fasdas          !< flag to use "flux-adjusting surface data assimilation system"; 0 = OFF, 1 = ON
     integer              :: isurban         !< vegetation/land use type corresponding to the urban environment for the chosen ivegsrc
+    integer              :: isice           !< vegetation/land use type corresponding to permanent ice/snow for the chosen ivegsrc
+    integer              :: iswater         !< vegetation/land use type corresponding to water bodies for the chosen ivegsrc
     integer              :: iopt_thcnd      !< option to treat thermal conductivity in Noah LSM (new in 3.8)
                                             !< = 1, original (default)
                                             !< = 2, McCumber and Pielke for silt loam and sandy loam
@@ -1648,6 +1650,7 @@ module GFS_typedefs
     logical,               pointer      :: flag_guess(:)      => null()  !<
     logical,               pointer      :: flag_iter(:)       => null()  !<
     logical,               pointer      :: flag_lsm(:)        => null()  !<
+    logical,               pointer      :: flag_lsm_glacier(:)=> null()  !<
     real (kind=kind_phys), pointer      :: ffmm_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: ffmm_land(:)       => null()  !<
     real (kind=kind_phys), pointer      :: ffmm_ocean(:)      => null()  !<
@@ -3385,6 +3388,8 @@ module GFS_typedefs
       Model%lsnow_lsm_lbound = -Model%lsnow_lsm+1
     end if
     Model%isurban          = -999      !GJF isurban is only used in NOAH/HAFS and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
+    Model%isice            = -999      !GJF isice is only used in NOAH/HAFS and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
+    Model%iswater          = -999      !GJF iswater is only used in NOAH/HAFS and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
     Model%iopt_thcnd       = iopt_thcnd
     Model%ua_phys          = ua_phys
     Model%usemonalb        = usemonalb
@@ -5811,6 +5816,7 @@ module GFS_typedefs
        allocate (Interstitial%dqsdt2          (IM))
        allocate (Interstitial%drain_in_m_sm1  (IM))
        allocate (Interstitial%flag_lsm        (IM))
+       allocate (Interstitial%flag_lsm_glacier(IM))
        allocate (Interstitial%qs1             (IM))
        allocate (Interstitial%qv1             (IM))
        allocate (Interstitial%rho1            (IM))
@@ -6353,6 +6359,7 @@ module GFS_typedefs
        Interstitial%dqsdt2          = clear_val
        Interstitial%drain_in_m_sm1  = clear_val
        Interstitial%flag_lsm        = .false.
+       Interstitial%flag_lsm_glacier= .false.
        Interstitial%qs1             = huge
        Interstitial%qv1             = huge
        Interstitial%rho1            = clear_val
@@ -6727,6 +6734,7 @@ module GFS_typedefs
        write (0,*) 'sum(Interstitial%dqsdt2          ) = ', sum(Interstitial%dqsdt2          )
        write (0,*) 'sum(Interstitial%drain_in_m_sm1  ) = ', sum(Interstitial%drain_in_m_sm1  )
        write (0,*) 'Interstitial%flag_lsm(1)           = ', Interstitial%flag_lsm(1)
+       write (0,*) 'Interstitial%flag_lsm_glacier(1)   = ', Interstitial%flag_lsm_glacier(1)
        write (0,*) 'sum(Interstitial%qs1             ) = ', sum(Interstitial%qs1             )
        write (0,*) 'sum(Interstitial%qv1             ) = ', sum(Interstitial%qv1             )
        write (0,*) 'sum(Interstitial%rho1            ) = ', sum(Interstitial%rho1            )

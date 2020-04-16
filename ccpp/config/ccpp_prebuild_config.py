@@ -145,6 +145,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
     'ccpp/physics/physics/module_sf_noahlsm.F90',
+    'ccpp/physics/physics/module_sf_noahlsm_glacial_only.F90',
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
