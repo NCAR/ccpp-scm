@@ -751,13 +751,6 @@
   dimensions = (horizontal_dimension,soil_vertical_dimension)
   type = real
   kind = kind_phys
-[sthick]
-  standard_name = soil_layer_thickness
-  long_name = soil layer thickness
-  units = m
-  dimensions = (soil_vertical_dimension)
-  type = real
-  kind = kind_phys
 [t2m]
   standard_name = temperature_at_2m
   long_name = 2 meter temperature
@@ -8112,6 +8105,13 @@
   long_name = soil temperature before entering a physics scheme
   units = K
   dimensions = (horizontal_dimension,soil_vertical_dimension)
+  type = real
+  kind = kind_phys
+[sthick]
+  standard_name = soil_layer_thickness
+  long_name = soil layer thickness
+  units = m
+  dimensions = (soil_vertical_dimension)
   type = real
   kind = kind_phys
 [stress]
