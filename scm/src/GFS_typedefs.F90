@@ -697,24 +697,24 @@ module GFS_typedefs
     integer              :: lsm_noah=1      !< flag for NOAH land surface model
     integer              :: lsm_noahmp=2    !< flag for NOAH land surface model
     integer              :: lsm_ruc=3       !< flag for RUC land surface model
-    integer              :: lsm_noah_hafs = 4 !< flag for NOAH land surface model for HAFS application
+    integer              :: lsm_noah_wrfv4 = 4 !< flag for NOAH land surface from WRF v4.0
     integer              :: lsoil           !< number of soil layers
     integer              :: ivegsrc         !< ivegsrc = 0   => USGS, 
                                             !< ivegsrc = 1   => IGBP (20 category)
                                             !< ivegsrc = 2   => UMD  (13 category)
-                                            !< ivegsrc = 3   => NLCD40 (40 category, NOAH/HAFS only)
-                                            !< ivegsrc = 4   => USGS-RUC (28 category, NOAH/HAFS only)
-                                            !< ivegsrc = 5   => MODI-RUC (21 category, NOAH/HAFS only)
+                                            !< ivegsrc = 3   => NLCD40 (40 category, NOAH WRFv4 only)
+                                            !< ivegsrc = 4   => USGS-RUC (28 category, NOAH WRFv4 only)
+                                            !< ivegsrc = 5   => MODI-RUC (21 category, NOAH WRFv4 only)
     integer              :: isot            !< isot = 0   => Zobler soil type  ( 9 category)
                                             !< isot = 1   => STATSGO soil type (19 category, AKA 'STAS'(?))
-                                            !< isot = 2   => STAS-RUC soil type (19 category, NOAH/HAFS only)
+                                            !< isot = 2   => STAS-RUC soil type (19 category, NOAH WRFv4 only)
     integer              :: lsoil_lsm       !< number of soil layers internal to land surface model
     integer              :: lsnow_lsm       !< maximum number of snow layers internal to land surface model
     integer              :: lsnow_lsm_lbound!< lower bound for snow arrays, depending on lsnow_lsm
-    logical              :: rdlai           !< read LAI from input file (for RUC LSM or NOAH LSM HAFS)
-    logical              :: ua_phys         !< flag for using University of Arizona? extension to NOAH LSM HAFS
-    logical              :: usemonalb       !< flag to read surface diffused shortwave albedo from input file for NOAH LSM HAFS
-    real(kind=kind_phys) :: aoasis          !< potential evaporation multiplication factor for NOAH LSM HAFS
+    logical              :: rdlai           !< read LAI from input file (for RUC LSM or NOAH LSM WRFv4)
+    logical              :: ua_phys         !< flag for using University of Arizona? extension to NOAH LSM WRFv4
+    logical              :: usemonalb       !< flag to read surface diffused shortwave albedo from input file for NOAH LSM WRFv4
+    real(kind=kind_phys) :: aoasis          !< potential evaporation multiplication factor for NOAH LSM WRFv4
     integer              :: fasdas          !< flag to use "flux-adjusting surface data assimilation system"; 0 = OFF, 1 = ON
     integer              :: isurban         !< vegetation/land use type corresponding to the urban environment for the chosen ivegsrc
     integer              :: isice           !< vegetation/land use type corresponding to permanent ice/snow for the chosen ivegsrc
@@ -2275,16 +2275,16 @@ module GFS_typedefs
    
    ! HWRF NOAH LSM allocate and init when used
    !
-   if (Model%lsm == Model%lsm_noah_hafs ) then
+   if (Model%lsm == Model%lsm_noah_wrfv4 ) then
      allocate(Sfcprop%snotime(IM))
      Sfcprop%snotime = clear_val
    end if
     
-    if (Model%do_myjsfc.or.Model%do_myjpbl.or.(Model%lsm == Model%lsm_noah_hafs)) then
+    if (Model%do_myjsfc.or.Model%do_myjpbl.or.(Model%lsm == Model%lsm_noah_wrfv4)) then
       allocate(Sfcprop%z0base(IM))
       Sfcprop%z0base = clear_val
     end if
-    if (Model%lsm == Model%lsm_noah_hafs) then
+    if (Model%lsm == Model%lsm_noah_wrfv4) then
       allocate(Sfcprop%semisbase(IM))
       Sfcprop%semisbase = clear_val
     end if
@@ -2795,10 +2795,10 @@ module GFS_typedefs
     integer              :: lsoil          =  4              !< number of soil layers
     integer              :: lsoil_lsm      =  -1             !< number of soil layers internal to land surface model; -1 use lsoil
     integer              :: lsnow_lsm      =  3              !< maximum number of snow layers internal to land surface model
-    logical              :: rdlai          = .false.         !< read LAI from input file (for RUC LSM or NOAH LSM HAFS)
-    logical              :: ua_phys        = .false.         !< flag for using University of Arizona? extension to NOAH LSM HAFS
-    logical              :: usemonalb      = .true.          !< flag to read surface diffused shortwave albedo from input file for NOAH LSM HAFS
-    real(kind=kind_phys) :: aoasis         = 1.0             !< potential evaporation multiplication factor for NOAH LSM HAFS
+    logical              :: rdlai          = .false.         !< read LAI from input file (for RUC LSM or NOAH LSM WRFv4)
+    logical              :: ua_phys        = .false.         !< flag for using University of Arizona? extension to NOAH LSM WRFv4
+    logical              :: usemonalb      = .true.          !< flag to read surface diffused shortwave albedo from input file for NOAH LSM WRFv4
+    real(kind=kind_phys) :: aoasis         = 1.0             !< potential evaporation multiplication factor for NOAH LSM WRFv4
     integer              :: fasdas         = 0               !< flag to use "flux-adjusting surface data assimilation system"; 0 = OFF, 1 = ON
     integer              :: ivegsrc        =  2              !< ivegsrc = 0   => USGS,
                                                              !< ivegsrc = 1   => IGBP (20 category)
@@ -3361,8 +3361,8 @@ module GFS_typedefs
     Model%lsm              = lsm
     Model%lsoil            = lsoil
     ! Consistency check for RUC LSM
-    if ((Model%lsm == Model%lsm_ruc .or. Model%lsm == Model%lsm_noah_hafs) .and. Model%nscyc>0) then
-      write(0,*) 'Logic error: RUC LSM and NOAH HAFS LSM cannot be used with surface data cycling at this point (fhcyc>0)'
+    if ((Model%lsm == Model%lsm_ruc .or. Model%lsm == Model%lsm_noah_wrfv4) .and. Model%nscyc>0) then
+      write(0,*) 'Logic error: RUC LSM and NOAH WRFv4 LSM cannot be used with surface data cycling at this point (fhcyc>0)'
       stop
     end if
     ! Flag to read leaf area index from input files (initial conditions)
@@ -3385,9 +3385,9 @@ module GFS_typedefs
       ! Set lower bound for LSM model, runs from negative (above surface) to surface (zero)
       Model%lsnow_lsm_lbound = -Model%lsnow_lsm+1
     end if
-    Model%isurban          = -999      !GJF isurban is only used in NOAH/HAFS and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
-    Model%isice            = -999      !GJF isice is only used in NOAH/HAFS and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
-    Model%iswater          = -999      !GJF iswater is only used in NOAH/HAFS and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
+    Model%isurban          = -999      !GJF isurban is only used in NOAH WRFv4 and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
+    Model%isice            = -999      !GJF isice is only used in NOAH WRFv4 and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
+    Model%iswater          = -999      !GJF iswater is only used in NOAH WRFv4 and is initialized in sfc_noah_GFS_interstitial.F90/sfc_noah_GFS_pre_init
     Model%iopt_thcnd       = iopt_thcnd
     Model%ua_phys          = ua_phys
     Model%usemonalb        = usemonalb
@@ -3854,8 +3854,8 @@ module GFS_typedefs
         print *,'iopt_stc   =  ', Model%iopt_stc
       elseif (Model%lsm == Model%lsm_ruc) then
         print *,' RUC Land Surface Model used'
-      elseif (Model%lsm == Model%lsm_noah_hafs) then
-        print *,' NOAH/HAFS Land Surface Model used'
+      elseif (Model%lsm == Model%lsm_noah_wrfv4) then
+        print *,' NOAH WRFv4 Land Surface Model used'
       else
         print *,' Unsupported LSM type - job aborted - lsm=',Model%lsm
         stop
@@ -5807,7 +5807,8 @@ module GFS_typedefs
        allocate (Interstitial%t2mmp (IM))
        allocate (Interstitial%q2mp  (IM))
     end if
-    if (Model%lsm == Model%lsm_noah_hafs) then
+    if (Model%lsm == Model%lsm_noah_wrfv4) then
+       write(*,*) 'ALLOCATING WRF4 HERE'
        allocate (Interstitial%canopy_save     (IM))
        allocate (Interstitial%chk_land        (IM))
        allocate (Interstitial%cmc             (IM))
@@ -6351,7 +6352,7 @@ module GFS_typedefs
        Interstitial%t2mmp     = clear_val
        Interstitial%q2mp      = clear_val
     end if
-    if (Model%lsm == Model%lsm_noah_hafs) then
+    if (Model%lsm == Model%lsm_noah_wrfv4) then
        Interstitial%canopy_save     = clear_val
        Interstitial%chk_land        = huge
        Interstitial%cmc             = clear_val
@@ -6727,7 +6728,7 @@ module GFS_typedefs
        write (0,*) 'sum(Interstitial%t2mmp        ) = ', sum(Interstitial%t2mmp           )
        write (0,*) 'sum(Interstitial%q2mp         ) = ', sum(Interstitial%q2mp            )
     end if
-    if (Model%lsm == Model%lsm_noah_hafs) then
+    if (Model%lsm == Model%lsm_noah_wrfv4) then
        write (0,*) 'sum(Interstitial%canopy_save     ) = ', sum(Interstitial%canopy_save     )
        write (0,*) 'sum(Interstitial%chk_land        ) = ', sum(Interstitial%chk_land        )
        write (0,*) 'sum(Interstitial%cmc             ) = ', sum(Interstitial%cmc             )
