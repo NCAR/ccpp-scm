@@ -144,6 +144,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
+    'ccpp/physics/physics/module_sf_exchcoef.f90',
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
@@ -183,6 +184,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/gcm_shoc.F90'                     : ['physics'],
     'ccpp/physics/physics/get_prs_fv3.F90'                  : ['physics'],
     'ccpp/physics/physics/gfdl_cloud_microphys.F90'         : ['physics'],
+    'ccpp/physics/physics/gfdl_sfc_layer.F90'               : ['physics'],
     'ccpp/physics/physics/gscond.f'                         : ['physics'],
     'ccpp/physics/physics/gwdc.f'                           : ['physics'],
     'ccpp/physics/physics/gwdps.f'                          : ['physics'],

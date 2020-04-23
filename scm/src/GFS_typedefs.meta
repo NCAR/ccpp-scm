@@ -20,6 +20,13 @@
   dimensions = (horizontal_dimension,vertical_dimension_plus_one)
   type = real
   kind = kind_phys
+[prsi(:,1)]
+  standard_name = air_pressure_at_lowest_model_interface
+  long_name = air pressure at model layer interfaces
+  units = Pa
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [prsik]
   standard_name = dimensionless_exner_function_at_model_interfaces
   long_name = dimensionless Exner function at model layer interfaces
