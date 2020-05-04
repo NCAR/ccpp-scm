@@ -137,7 +137,7 @@ Several cases are included in the repository to serve as examples for users to c
 For the ARM SGP case, several case configuration files representing different time periods of the observational dataset are included, denoted by a trailing letter. The LASSO case may be run with different forcing applied, so three case configuration files corresponding to these different forcing are included. In addition, two example cases are included for using UFS Atmosphere initial conditions:
 \begin{itemize}
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with Noah variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noah.nc})
-\item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noah.nc})
+\item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noahmp.nc})
 \end{itemize}
 See \ref{sec:UFS ICs} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions.
 
@@ -201,17 +201,27 @@ In order to use other LASSO cases than the one provided, perform the following s
 ./lasso1_forcing_file_generator_gjf.py
 \end{lstlisting}
 \item Create a new case configuration file (or copy and modify an existing one) in \execout{gmtb-scm/scm/etc/case\_config}. Be sure that the \execout{case\_name} variable points to the newly created/processed case input file from above.
-\end{enumerate} 
+\end{enumerate}
 
 \section{Using UFS Initial Conditions}
 \label{sec:UFS ICs}
 
-A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS Atmosphere cold start initial conditions and generate a case input data file that the SCM can use. Since the Noah LSM is the operational LSM, it is assumed that initial variables for it exist in the UFS Atmosphere initial condition files. If NoahMP is to be used, its initial conditions are generated from the Noah initial conditions using the same algorithm used in the UFS Atmosphere. The usage is as follows:
+A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS Atmosphere cold start initial conditions and generate a case input data file that the SCM can use. Since the Noah LSM is the operational LSM, it is assumed that initial variables for it exist in the UFS Atmosphere initial condition files. Although NoahMP is not a member of any officially supported suite as of this release, if NoahMP is to be used, its initial conditions are generated from the Noah initial conditions using the same algorithm used in the UFS Atmosphere. Note that the script requires a few python packages that may not be found by default in all python installations: \exec{argparse}, \exec{fnmatch}, \exec{logging}, \exec{netCDF4}, \exec{numpy}, \exec{shapely}, \exec{f90nml}, and \exec{re}. 
+
+NOTE: If using NOAA's Hera HPC, the \execout{shapely} python package does not seem to be installed with the version of Anaconda used by the rest of this software package by default so it is installed when users execute \execout{scm/etc/Hera\_setup\_intel.[csh/sh]}. 
+
+Users on other systems can test if \execout{shapely} is installed using this command in the shell:
+\begin{lstlisting}
+python -c "import shapely"
+\end{lstlisting}
+If \execout{shapely} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named shapely} will be printed to screen. To install the \execout{shapely} Python module, use the install method preferred for your Python environment (\execout{easy\_install}, \execout{pip}, \execout{conda}, \dots).
+
+The \execout{UFS\_IC\_generator.py} script usage is as follows:
 
 \begin{lstlisting}[language=bash]
 ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
 DATE -i IN_DIR -g GRID_DIR [-t {1,2,3,4,5,6}]
-[-a AREA] [-mp] -n CASE_NAME
+[-a AREA] [-mp] -n CASE_NAME [-oc]
 \end{lstlisting}
 
 Mandatory arguments:
@@ -232,32 +242,25 @@ Optional arguments:
 \item \exec{-{}-tile (-t)}: if one already knows the correct tile for the given longitude and latitude OR one is specifying the UFS grid index (\exec{-{}-index} argument)
 \item \exec{-{}-noahmp (-mp)}: flag to generate cold-start initial conditions for NoahMP LSM from Noah LSM initial conditions
 \item \exec{-{}-area (-a)}: area of grid cell in $m^2$ (if known or different than the value calculated from the supergrid file)
+\item \exec{-{}-old\_chgres (-oc)}: flag if UFS initial conditions were generated using older version of chgres (global\_chgres); might be the case for pre-2018 data
 \end{enumerate}
 
-The following commands were used from within the \exec{scm/etc/scripts} directory to generate the example UFS Atmosphere initial condition case input files:
+The following commands were used from within the \exec{scm/etc/scripts} directory to generate the example UFS Atmosphere initial condition case input file:
 \begin{lstlisting}[language=bash]
-./UFS_IC_generator.py -l 261.51 38.2 -d 201610030000 -i ../../data/raw_case_input/FV3_C96_example_ICs -g ../../data/raw_case_input/FV3_C96_example_ICs -n fv3_model_point_noah
+./UFS_IC_generator.py -l 261.51 38.2 -d 201610030000 -i ../../data/raw_case_input/FV3_C96_example_ICs -g ../../data/raw_case_input/FV3_C96_example_ICs -n fv3_model_point_noah -oc
+\end{lstlisting}
+\begin{lstlisting}[language=bash]
+./UFS_IC_generator.py -l 261.51 38.2 -d 201610030000 -i ../../data/raw_case_input/FV3_C96_example_ICs -g ../../data/raw_case_input/FV3_C96_example_ICs -n fv3_model_point_noahmp -mp -oc
 \end{lstlisting}
 
-\begin{lstlisting}[language=bash]
-./UFS_IC_generator.py -l 261.51 38.2 -d 201610030000 -i ../../data/raw_case_input/FV3_C96_example_ICs -g ../../data/raw_case_input/FV3_C96_example_ICs -n fv3_model_point_noahmp -mp
-\end{lstlisting}
+Note that the \exec{-{}-in\_dir (-i)} and \exec{-{}-grid\_dir (-g)} arguments are the same in this case (since the supergrid files were copied to the same directory as the initial conditions files for point of example), but they will not in general be the same. Also note that the default behavior of the script is to expect that the netCDF initial condition files were generated from \execout{chgres\_cube} and not the older \execout{global\_chgres}. If they were generated from the older version (which is likely for pre-2018 data), they will have a slightly different format requiring the \exec{-{}-old\_chgres (-oc)} option to be set in order for the files to be read properly by the script. If you try without the \exec{-{}-old\_chgres (-oc)} flag and receive a ``IndexError: t not found'' error, try the script again with the flag.
 
-Note that the \exec{-{}-in\_dir (-i)} and \exec{-{}-grid\_dir (-g)} arguments are the same in this case (since the supergrid files were copied to the same directory as the initial conditions files for point of example), but they will not in general be the same.
-
-In addition to the case input files generated by this script, one will need appropriate case configuration files. Make sure that the \exec{model\_ics} variable is set to \exec{.true.} and that the \exec{C\_RES}, \exec{year}, \exec{month}, \exec{day}, and \exec{hour} are all set to the appropriate values that match the UFS Atmosphere initial conditions used. See \execout{scm/etc/case\_config/fv3\_model\_point\_noah.nml} and \execout{scm/etc/case\_config/fv3\_model\_point\_noahmp.nml} for examples.
+In addition to the case input files generated by this script, one will need appropriate case configuration files. Make sure that the \exec{model\_ics} variable is set to \exec{.true.} and that the \exec{C\_RES}, \exec{year}, \exec{month}, \exec{day}, and \exec{hour} are all set to the appropriate values that match the UFS Atmosphere initial conditions used. See \execout{scm/etc/case\_config/fv3\_model\_point\_noah.nml} for an example.
 
 Running the model is the same as for observational field campaign cases:
 \begin{lstlisting}[language=bash]
-./run_gmtb_scm.py -c fv3_model_point_noah -s SCM_GFS_v15 -n input_GFS_v15.nml
+./run_gmtb_scm.py -c fv3_model_point_noah -s SCM_GFS_v15p2
 \end{lstlisting}
 \begin{lstlisting}[language=bash]
-./run_gmtb_scm.py -c fv3_model_point_noahmp -s SCM_GFS_v15_noahmp -n input_GFS_v15_noahmp.nml
+./run_gmtb_scm.py -c fv3_model_point_noahmp -s SCM_GFS_v15p2_noahmp -n input_GFS_v15p2_noahmp.nml
 \end{lstlisting}
-
-
-
-
-
-
-

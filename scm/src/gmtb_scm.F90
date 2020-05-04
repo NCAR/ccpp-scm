@@ -15,29 +15,12 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_time_integration
   use gmtb_scm_output
   use gmtb_scm_type_defs
-
-#ifdef STATIC
-  use :: ccpp_api,                           &
-         only: ccpp_init,                    &
-               ccpp_finalize
+       
   use :: ccpp_static_api,                    &
          only: ccpp_physics_init,            &
                ccpp_physics_run,             &
                ccpp_physics_finalize
-#else
-  use :: ccpp_api,                           &
-         only: ccpp_init,                    &
-               ccpp_finalize,                &
-               ccpp_physics_init,            &
-               ccpp_physics_run,             &
-               ccpp_physics_finalize,        &
-               ccpp_field_add,               &
-               ccpp_initialized,             &
-               ccpp_error
-  use :: iso_c_binding, only: c_loc
 
-#include "ccpp_modules.inc"
-#endif
 
   implicit none
 
@@ -112,11 +95,11 @@ subroutine gmtb_scm_main_sub()
 
   do i = 1, scm_state%n_cols
      !set up each column's physics suite (which may be different)
-      call ccpp_init(trim(adjustl(scm_state%physics_suite_name(i))), cdata_cols(i), ierr)
-      if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
-          stop
-      end if
+      ! call ccpp_init(trim(adjustl(scm_state%physics_suite_name(i))), cdata_cols(i), ierr)
+      ! if (ierr/=0) then
+      !     write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
+      !     stop
+      ! end if
 
      !open a logfile for each column
       if (physics%Init_parm(i)%me == physics%Init_parm(i)%master .and. physics%Init_parm(i)%logunit>=0) then
@@ -156,23 +139,11 @@ subroutine gmtb_scm_main_sub()
       
       call physics%associate(scm_state, i)
 
-#ifndef STATIC
-! use ccpp_fields.inc to call ccpp_field_add for all variables to add
-! (this is auto-generated from ccpp/scripts/ccpp_prebuild.py,
-!  the script parses tables in gmtb_scm_type_defs.f90)
-      associate_column: associate (cdata => cdata_cols(i))
-#include "ccpp_fields.inc"
-      end associate associate_column
-#endif
-
       !initialize each column's physics
-#ifdef STATIC
+
       write(0,'(a,i0,a)') "Calling ccpp_physics_init for column ", i, " with suite '" // trim(trim(adjustl(scm_state%physics_suite_name(i)))) // "'"
       call ccpp_physics_init(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
       write(0,'(a,i0,a,i0)') "Called ccpp_physics_init for column ", i, " with suite '" // trim(trim(adjustl(scm_state%physics_suite_name(i)))) // "', ierr=", ierr
-#else
-      call ccpp_physics_init(cdata_cols(i), ierr=ierr)
-#endif
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
@@ -220,11 +191,7 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_v(:,:,:,2) = scm_state%state_v(:,:,:,1)
 
     do i=1, scm_state%n_cols
-#ifdef STATIC
       call ccpp_physics_run(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
-#else
-      call ccpp_physics_run(cdata_cols(i), ierr=ierr)
-#endif
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
           stop
@@ -328,21 +295,10 @@ subroutine gmtb_scm_main_sub()
   end do
 
   do i=1, scm_state%n_cols
-#ifdef STATIC
       call ccpp_physics_finalize(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
-#else
-      call ccpp_physics_finalize(cdata_cols(i), ierr=ierr)
-#endif
+
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
-          stop
-      end if
-  end do
-
-  do i=1, scm_state%n_cols
-      call ccpp_finalize(cdata_cols(i), ierr)
-      if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_finalize for column ', i, '. Exiting...'
           stop
       end if
   end do
