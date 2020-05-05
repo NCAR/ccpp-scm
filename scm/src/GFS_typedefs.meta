@@ -2853,6 +2853,31 @@
   units = index
   dimensions = ()
   type = integer
+[lcurr_sf]
+  standard_name = flag_for_ocean_currents_in_surface_layer_scheme
+  long_name = flag for taking ocean currents into account in surface layer scheme
+  units = flag
+  dimensions = ()
+  type = logical
+[pert_cd]
+  standard_name = flag_for_perturbation_of_surface_drag_coefficient_for_momentum_in_air
+  long_name = flag for perturbing the surface drag coefficient for momentum in surface layer scheme
+  units = flag
+  dimensions = ()
+  type = logical
+[ntsflg]
+  standard_name = flag_for_updating_skin_temperatuer_in_surface_layer_scheme
+  long_name = flag for updating skin temperature in the surface layer scheme
+  units = flag
+  dimensions = ()
+  type = integer
+[sfenth]
+  standard_name = enthalpy_flux_factor
+  long_name = enthalpy flux factor used in surface layer scheme
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [ras]
   standard_name = flag_for_ras_deep_convection
   long_name = flag for ras convection scheme
