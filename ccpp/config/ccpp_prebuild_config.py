@@ -196,7 +196,6 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/rte-rrtmgp/extensions/mo_heating_rates.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/mo_rrtmgp_clr_all_sky.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
-    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_sampling.F90', 
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
@@ -290,6 +289,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/mp_fer_hires.F90'                 : ['physics'],
     'ccpp/physics/physics/gmtb_scm_sfc_flux_spec.F90'       : ['physics'],
     # RRTMGP
+    'ccpp/physics/physics/mo_cloud_sampling.F90'            : ['physics'],
     'ccpp/physics/physics/rrtmg_lw_cloud_optics.F90'        : ['physics'],
     'ccpp/physics/physics/rrtmg_sw_cloud_optics.F90'        : ['physics'],
     'ccpp/physics/physics/rrtmgp_aux.F90'                   : ['physics'],

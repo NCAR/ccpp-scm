@@ -1838,6 +1838,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: t_lay(:,:)             => null()  !<
     real (kind=kind_phys), pointer      :: relhum(:,:)            => null()  !<
     real (kind=kind_phys), pointer      :: tv_lay(:,:)            => null()  !<
+    real (kind=kind_phys), pointer      :: overlap_param(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: tracer(:,:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: aerosolslw(:,:,:,:)    => null()  !< Aerosol radiative properties in each LW band.
     real (kind=kind_phys), pointer      :: aerosolssw(:,:,:,:)    => null()  !< Aerosol radiative properties in each SW band.
@@ -5740,6 +5741,7 @@ module GFS_typedefs
       allocate (Interstitial%p_lay             (IM, Model%levs))
       allocate (Interstitial%t_lev             (IM, Model%levs+1))
       allocate (Interstitial%t_lay             (IM, Model%levs))
+      allocate (Interstitial%overlap_param     (IM, Model%levs))
       allocate (Interstitial%fluxlwUP_allsky   (IM, Model%levs+1))
       allocate (Interstitial%fluxlwDOWN_allsky (IM, Model%levs+1))
       allocate (Interstitial%fluxlwUP_clrsky   (IM, Model%levs+1))
@@ -6102,6 +6104,7 @@ module GFS_typedefs
       Interstitial%p_lay             = clear_val
       Interstitial%t_lev             = clear_val
       Interstitial%t_lay             = clear_val
+      Interstitial%overlap_param     = clear_val
       Interstitial%fluxlwUP_allsky   = clear_val
       Interstitial%fluxlwDOWN_allsky = clear_val
       Interstitial%fluxlwUP_clrsky   = clear_val
@@ -6725,6 +6728,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%t_lay            ) = ', sum(Interstitial%t_lay       )
     write (0,*) 'sum(Interstitial%t_lev            ) = ', sum(Interstitial%t_lev       )
     write (0,*) 'sum(Interstitial%tv_lay           ) = ', sum(Interstitial%tv_lay      )
+    write (0,*) 'sum(Interstitial%overlap_param    ) = ', sum(Interstitial%overlap_param)
 
     ! Print arrays that are conditional on physics choices
     if (Model%imp_physics == Model%imp_physics_gfdl .or. Model%imp_physics == Model%imp_physics_thompson) then
