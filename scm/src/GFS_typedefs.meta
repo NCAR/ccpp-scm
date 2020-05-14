@@ -8460,6 +8460,30 @@
   type = real
   kind = kind_phys
   optional = F
+[qs_lay]
+  standard_name = saturation_mixing_ratio
+  long_name = saturation mixing ratio
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+  optional = F
+[q_lay]
+  standard_name = water_vapor_mixing_ratio
+  long_name = water mixing ratio
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+  optional = F
+[deltaZ]
+  standard_name = layer_thickness
+  long_name = layer_thickness
+  units = m
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+  optional = F
 [tracer]
   standard_name = chemical_tracers
   long_name = chemical tracers

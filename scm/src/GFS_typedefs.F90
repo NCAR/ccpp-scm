@@ -1838,6 +1838,9 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: t_lay(:,:)             => null()  !<
     real (kind=kind_phys), pointer      :: relhum(:,:)            => null()  !<
     real (kind=kind_phys), pointer      :: tv_lay(:,:)            => null()  !<
+    real (kind=kind_phys), pointer      :: qs_lay(:,:)            => null()  !<
+    real (kind=kind_phys), pointer      :: q_lay(:,:)             => null()  !<
+    real (kind=kind_phys), pointer      :: deltaZ(:,:)            => null()  !<
     real (kind=kind_phys), pointer      :: overlap_param(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: tracer(:,:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: aerosolslw(:,:,:,:)    => null()  !< Aerosol radiative properties in each LW band.
@@ -5737,6 +5740,9 @@ module GFS_typedefs
       allocate (Interstitial%tracer            (IM, Model%levs,Model%ntrac))
       allocate (Interstitial%tv_lay            (IM, Model%levs))
       allocate (Interstitial%relhum            (IM, Model%levs))
+      allocate (Interstitial%qs_lay            (IM, Model%levs))
+      allocate (Interstitial%q_lay             (IM, Model%levs))
+      allocate (Interstitial%deltaZ            (IM, Model%levs))
       allocate (Interstitial%p_lev             (IM, Model%levs+1))
       allocate (Interstitial%p_lay             (IM, Model%levs))
       allocate (Interstitial%t_lev             (IM, Model%levs+1))
@@ -6100,6 +6106,9 @@ module GFS_typedefs
       Interstitial%tracer            = clear_val
       Interstitial%tv_lay            = clear_val
       Interstitial%relhum            = clear_val
+      Interstitial%qs_lay            = clear_val
+      Interstitial%q_lay             = clear_val
+      Interstitial%deltaZ            = clear_val
       Interstitial%p_lev             = clear_val
       Interstitial%p_lay             = clear_val
       Interstitial%t_lev             = clear_val
@@ -6723,6 +6732,9 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%fluxswUP_clrsky  ) = ', sum(Interstitial%fluxswUP_clrsky  )
     write (0,*) 'sum(Interstitial%fluxswDOWN_clrsky) = ', sum(Interstitial%fluxswDOWN_clrsky)
     write (0,*) 'sum(Interstitial%relhum           ) = ', sum(Interstitial%relhum      )
+    write (0,*) 'sum(Interstitial%q_lay            ) = ', sum(Interstitial%q_lay       )
+    write (0,*) 'sum(Interstitial%qs_lay           ) = ', sum(Interstitial%qs_lay      )
+    write (0,*) 'sum(Interstitial%deltaZ           ) = ', sum(Interstitial%deltaZ      )
     write (0,*) 'sum(Interstitial%p_lay            ) = ', sum(Interstitial%p_lay       )
     write (0,*) 'sum(Interstitial%p_lev            ) = ', sum(Interstitial%p_lev       )
     write (0,*) 'sum(Interstitial%t_lay            ) = ', sum(Interstitial%t_lay       )

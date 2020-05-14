@@ -305,10 +305,13 @@ SCHEME_FILES = {
     'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'     : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_setup.F90'             : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_pre.F90'               : ['physics'],
+    'ccpp/physics/physics/GFS_rrtmgp_gfdlmp_pre.F90'        : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_pre.F90'                : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_sw_pre.F90'            : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_lw_post.F90'           : ['physics'],
     'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'           : ['physics'],
+    # Cloud diagnostics
+    'ccpp/physics/physics/GFS_cloud_diagnostics.F90'        : ['physics'],
     }
 
 # Default build dir, relative to current working directory,
