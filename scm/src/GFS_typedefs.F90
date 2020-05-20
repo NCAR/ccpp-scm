@@ -629,10 +629,9 @@ module GFS_typedefs
     character(len=128)   :: sw_file_clouds    !< RRTMGP file containing coefficients used to compute clouds optical properties
     integer              :: rrtmgp_nBandsSW   !< Number of RRTMGP SW bands.
     integer              :: rrtmgp_nGptsSW    !< Number of RRTMGP SW spectral points.
-    integer              :: rrtmgp_cld_optics !< Flag to control which RRTMGP routine to compute cloud-optics.
-                                                 !< = 0 ; Use RRTMG implementation
-                                                 !< = 1 ; Use RRTMGP (pade)
-                                                 !< = 2 ; USE RRTMGP (LUT)
+    logical              :: doG_cldoptics       !< Use legacy RRTMG cloud-optics?                                             
+    logical              :: doGP_cldoptics_PADE !< Use RRTMGP cloud-optics: PADE approximation?                                             
+    logical              :: doGP_cldoptics_LUT  !< Use RRTMGP cloud-optics: LUTs?                                             
     integer              :: rrtmgp_nrghice    !< Number of ice-roughness categories
     integer              :: rrtmgp_nGauss_ang !< Number of angles used in Gaussian quadrature
     logical              :: do_GPsw_Glw       ! If set to true use rrtmgp for SW calculation, rrtmg for LW.
@@ -2733,10 +2732,9 @@ module GFS_typedefs
     character(len=128)   :: sw_file_clouds  = ''             !< RRTMGP file containing coefficients used to compute clouds optical properties
     integer              :: rrtmgp_nBandsSW = 14             !< Number of RRTMGP SW bands.
     integer              :: rrtmgp_nGptsSW  = 224            !< Number of RRTMGP SW spectral points.
-    integer              :: rrtmgp_cld_optics = 0            !<  Flag to control which RRTMGP routine to compute cloud-optics.
-                                                             !< = 0 ; Use RRTMGP implementation
-                                                             !< = 1 ; Use RRTMGP (pade)
-                                                             !< = 2 ; USE RRTMGP (LUT)
+    logical              :: doG_cldoptics       = .false.     !< Use legacy RRTMG cloud-optics?                                             
+    logical              :: doGP_cldoptics_PADE = .false.    !< Use RRTMGP cloud-optics: PADE approximation?                                             
+    logical              :: doGP_cldoptics_LUT  = .false.    !< Use RRTMGP cloud-optics: LUTs?     
     integer              :: rrtmgp_nrghice = 0               !< Number of ice-roughness categories
     integer              :: rrtmgp_nGauss_ang=1              !< Number of angles used in Gaussian quadrature
     logical              :: do_GPsw_Glw    = .false.         
@@ -3072,8 +3070,8 @@ module GFS_typedefs
                                do_RRTMGP, active_gases, nGases, rrtmgp_root,                &
                                lw_file_gas, lw_file_clouds, rrtmgp_nBandsLW, rrtmgp_nGptsLW,&
                                sw_file_gas, sw_file_clouds, rrtmgp_nBandsSW, rrtmgp_nGptsSW,&
-                               rrtmgp_cld_optics, rrtmgp_nrghice, rrtmgp_nGauss_ang,        &
-                               do_GPsw_Glw,                                                 &
+                               doG_cldoptics, doGP_cldoptics_PADE, doGP_cldoptics_LUT,      &
+                               rrtmgp_nrghice, rrtmgp_nGauss_ang, do_GPsw_Glw,              &
                           ! IN CCN forcing
                                iccn,                                                        &
                           !--- microphysical parameterizations
@@ -3307,7 +3305,9 @@ module GFS_typedefs
     Model%sw_file_clouds    = sw_file_clouds
     Model%rrtmgp_nBandsSW   = rrtmgp_nBandsSW
     Model%rrtmgp_nGptsSW    = rrtmgp_nGptsSW
-    Model%rrtmgp_cld_optics = RRTMGP_CLD_OPTICS
+    Model%doG_cldoptics       = doG_cldoptics
+    Model%doGP_cldoptics_PADE = doGP_cldoptics_PADE
+    Model%doGP_cldoptics_LUT  = doGP_cldoptics_LUT
     ! RRTMGP incompatible with levr /= levs
     if (Model%do_RRTMGP .and. Model%levr /= Model%levs) then
       write(0,*) "Logic error, RRTMGP only works with levr = levs"
@@ -4307,7 +4307,9 @@ module GFS_typedefs
         print *, ' sw_file_clouds     : ', Model%sw_file_clouds
         print *, ' rrtmgp_nBandsSW    : ', Model%rrtmgp_nBandsSW
         print *, ' rrtmgp_nGptsSW     : ', Model%rrtmgp_nGptsSW
-        print *, ' rrtmgp_cld_optics  : ', Model%rrtmgp_cld_optics
+        print *, ' doG_cldoptics      : ', Model%doG_cldoptics
+        print *, ' doGP_cldoptics_PADE: ', Model%doGP_cldoptics_PADE
+        print *, ' doGP_cldoptics_LUT : ', Model%doGP_cldoptics_LUT
       endif
       print *, ' '
       print *, 'microphysical switch'
