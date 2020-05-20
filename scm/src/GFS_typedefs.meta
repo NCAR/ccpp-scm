@@ -4276,7 +4276,7 @@
   standard_name = aerosol_number_concentration_from_gocart_aerosol_climatology
   long_name = GOCART aerosol climatology number concentration
   units = kg-1?
-  dimensions = (horizontal_dimension,vertical_dimension,number_of_aerosol_tracers_MG)
+  dimensions = (horizontal_dimension,vertical_dimension,number_of_aerosol_res_MG)
   type = real
   kind = kind_phys
 [imap]
@@ -8456,22 +8456,6 @@
   standard_name = relative_humidity
   long_name = layer relative humidity
   units = frac
-  dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-  optional = F
-[qs_lay]
-  standard_name = saturation_mixing_ratio
-  long_name = saturation mixing ratio
-  units = kg kg-1
-  dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-  optional = F
-[q_lay]
-  standard_name = water_vapor_mixing_ratio
-  long_name = water mixing ratio
-  units = kg kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
