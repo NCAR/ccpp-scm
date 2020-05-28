@@ -3,8 +3,8 @@
 module GFS_typedefs
 
        use machine,                  only: kind_phys
-       use module_radlw_parameters,  only: sfcflw_type, topflw_type, NBDLW, proflw_type
-       use module_radsw_parameters,  only: cmpfsw_type, sfcfsw_type, topfsw_type, NBDSW, profsw_type
+       use module_radsw_parameters,  only: topfsw_type, sfcfsw_type, profsw_type, cmpfsw_type, NBDSW
+       use module_radlw_parameters,  only: topflw_type, sfcflw_type, proflw_type, NBDLW
        use mo_gas_optics_rrtmgp,     only: ty_gas_optics_rrtmgp
        use mo_optical_props,         only: ty_optical_props_1scl,ty_optical_props_2str
        use mo_cloud_optics,          only: ty_cloud_optics
@@ -465,16 +465,18 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: slmsk_cpl  (:) => null()   !< Land/Sea/Ice mask  (slmsk from GFS_sfcprop_type)
 
     !--- cellular automata
-    real (kind=kind_phys), pointer :: ca1      (:)   => null() !
-    real (kind=kind_phys), pointer :: ca2      (:)   => null() !
-    real (kind=kind_phys), pointer :: ca3      (:)   => null() !  
+    real (kind=kind_phys), pointer :: tconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: qconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: uconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: vconvtend(:,:) => null()
+    real (kind=kind_phys), pointer :: ca_out   (:)   => null() !
     real (kind=kind_phys), pointer :: ca_deep  (:)   => null() !
     real (kind=kind_phys), pointer :: ca_turb  (:)   => null() !
     real (kind=kind_phys), pointer :: ca_shal  (:)   => null() !
     real (kind=kind_phys), pointer :: ca_rad   (:)   => null() !
     real (kind=kind_phys), pointer :: ca_micro (:)   => null() !
-    real (kind=kind_phys), pointer :: condition(:)   => null() !
-    real (kind=kind_phys), pointer :: vfact_ca(:)    => null() !
+    real (kind=kind_phys), pointer :: cape     (:)   => null() !
+    
     !--- stochastic physics
     real (kind=kind_phys), pointer :: shum_wts  (:,:) => null()  !
     real (kind=kind_phys), pointer :: sppt_wts  (:,:) => null()  !
@@ -960,24 +962,16 @@ module GFS_typedefs
     integer              :: nca             !< number of independent cellular automata
     integer              :: nlives          !< cellular automata lifetime
     integer              :: ncells          !< cellular automata finer grid
-    integer              :: nca_g           !< number of independent cellular automata
-    integer              :: nlives_g        !< cellular automata lifetime
-    integer              :: ncells_g        !< cellular automata finer grid  
-    real(kind=kind_phys) :: nfracseed       !< cellular automata seed probability 
+    real(kind=kind_phys) :: nfracseed       !< cellular automata seed probability
     integer              :: nseed           !< cellular automata seed frequency
-    integer              :: nseed_g         !< cellular automata seed frequency    
     logical              :: do_ca           !< cellular automata main switch
     logical              :: ca_sgs          !< switch for sgs ca
     logical              :: ca_global       !< switch for global ca
     logical              :: ca_smooth       !< switch for gaussian spatial filter
+    logical              :: isppt_deep      !< switch for combination with isppt_deep. OBS! Switches off SPPT on other tendencies!
     integer              :: iseed_ca        !< seed for random number generation in ca scheme
     integer              :: nspinup         !< number of iterations to spin up the ca
     real(kind=kind_phys) :: nthresh         !< threshold used for perturbed vertical velocity
-    real                 :: ca_amplitude    !< amplitude of ca trigger perturbation
-    integer              :: nsmooth         !< number of passes through smoother
-    logical              :: ca_closure      !< logical switch for ca on closure
-    logical              :: ca_entr         !< logical switch for ca on entrainment
-    logical              :: ca_trigger      !< logical switch for ca on trigger
 
 !--- stochastic physics control parameters
     logical              :: do_sppt
@@ -1426,9 +1420,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: tdomip (:)     => null()   !< dominant accumulated sleet type
     real (kind=kind_phys), pointer :: tdoms  (:)     => null()   !< dominant accumulated snow type
 
-    real (kind=kind_phys), pointer :: ca1      (:)   => null() ! 
-    real (kind=kind_phys), pointer :: ca2      (:)   => null() !
-    real (kind=kind_phys), pointer :: ca3      (:)   => null() ! 
+    real (kind=kind_phys), pointer :: ca_out  (:)    => null()   !< cellular automata fraction
     real (kind=kind_phys), pointer :: ca_deep  (:)   => null()   !< cellular automata fraction
     real (kind=kind_phys), pointer :: ca_turb  (:)   => null()   !< cellular automata fraction
     real (kind=kind_phys), pointer :: ca_shal  (:)   => null()   !< cellular automata fraction
@@ -2487,7 +2479,7 @@ module GFS_typedefs
     Coupling%sfcnsw = clear_val
     Coupling%sfcdlw = clear_val
 
-    if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global) then
+    if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm) then
       allocate (Coupling%rain_cpl (IM))
       allocate (Coupling%snow_cpl (IM))
       Coupling%rain_cpl = clear_val
@@ -2620,21 +2612,19 @@ module GFS_typedefs
     endif
 
    !-- cellular automata
-    allocate (Coupling%condition(IM))
-    allocate (Coupling%vfact_ca(Model%levs))
     if (Model%do_ca) then
-      allocate (Coupling%ca1      (IM))
-      allocate (Coupling%ca2      (IM))
-      allocate (Coupling%ca3      (IM))
+      allocate (Coupling%tconvtend (IM,Model%levs))
+      allocate (Coupling%qconvtend (IM,Model%levs))
+      allocate (Coupling%uconvtend (IM,Model%levs))
+      allocate (Coupling%vconvtend (IM,Model%levs))
+      allocate (Coupling%cape     (IM))
+      allocate (Coupling%ca_out   (IM))
       allocate (Coupling%ca_deep  (IM))
       allocate (Coupling%ca_turb  (IM))
       allocate (Coupling%ca_shal  (IM))
       allocate (Coupling%ca_rad   (IM))
       allocate (Coupling%ca_micro (IM))
-      Coupling%vfact_ca = clear_val
-      Coupling%ca1       = clear_val
-      Coupling%ca2       = clear_val
-      Coupling%ca3       = clear_val
+      Coupling%ca_out    = clear_val
       Coupling%ca_deep   = clear_val
       Coupling%ca_turb   = clear_val
       Coupling%ca_shal   = clear_val
@@ -2663,7 +2653,7 @@ module GFS_typedefs
     endif
 
     !--- stochastic physics option
-    if (Model%do_sppt .or. Model%ca_global)then
+    if (Model%do_sppt) then
       allocate (Coupling%sppt_wts  (IM,Model%levs))
       Coupling%sppt_wts = clear_val
     endif
@@ -2851,7 +2841,7 @@ module GFS_typedefs
 !---Max hourly
     real(kind=kind_phys) :: avg_max_length = 3600.                 !< reset value in seconds for max hourly
 !--- Ferrier-Aligo microphysical parameters
-    real(kind=kind_phys) :: rhgrd             = 0.98               !< fer_hires microphysics only
+    real(kind=kind_phys) :: rhgrd             = 1.0                !< fer_hires microphysics only; for 3-km domain
     logical              :: spec_adv          = .true.             !< Individual cloud species advected
     integer              :: icloud            = 0                  !< cloud effect to the optical depth in radiation; this also controls the cloud fraction options
                                                                    !<  3: with cloud effect from FA, and use cloud fraction option 3, based on Sundqvist et al. (1989)
@@ -3122,7 +3112,6 @@ module GFS_typedefs
     real(kind=kind_phys) :: xkzminv        = 0.3             !< diffusivity in inversion layers
     real(kind=kind_phys) :: moninq_fac     = 1.0             !< turbulence diffusion coefficient factor
     real(kind=kind_phys) :: dspfac         = 1.0             !< tke dissipative heating factor
-
     real(kind=kind_phys) :: bl_upfr        = 0.13            !< updraft fraction in boundary layer mass flux scheme
     real(kind=kind_phys) :: bl_dnfr        = 0.1             !< downdraft fraction in boundary layer mass flux scheme
 
@@ -3134,25 +3123,17 @@ module GFS_typedefs
 !---Cellular automaton options
     integer              :: nca            = 1
     integer              :: ncells         = 5
-    integer              :: nlives         = 30
-    integer              :: nca_g          = 1
-    integer              :: ncells_g       = 1
-    integer              :: nlives_g       = 100
+    integer              :: nlives         = 10
     real(kind=kind_phys) :: nfracseed      = 0.5
     integer              :: nseed          = 100000
-    integer              :: nseed_g        = 100
     integer              :: iseed_ca       = 0
     integer              :: nspinup        = 1
     logical              :: do_ca          = .false.
     logical              :: ca_sgs         = .false.
     logical              :: ca_global      = .false.
     logical              :: ca_smooth      = .false.
+    logical              :: isppt_deep     = .false.
     real(kind=kind_phys) :: nthresh        = 0.0
-    real                 :: ca_amplitude   = 500.
-    integer              :: nsmooth        = 100 
-    logical              :: ca_closure     = .false.
-    logical              :: ca_entr        = .false.
-    logical              :: ca_trigger     = .false.
 
 !--- IAU options
     real(kind=kind_phys)  :: iau_delthrs      = 0           !< iau time interval (to scale increments)
@@ -3268,10 +3249,8 @@ module GFS_typedefs
                           !--- canopy heat storage parameterization
                                z0fac, e0fac,                                                &
                           !--- cellular automata
-                               nca, ncells, nlives, nca_g, ncells_g, nlives_g, nfracseed,   &
-                               nseed, nseed_g, nthresh, do_ca,                              &
-                               ca_sgs, ca_global,iseed_ca,ca_smooth,                        &
-                               nspinup,ca_amplitude,nsmooth,ca_closure,ca_entr,ca_trigger,  & 
+                               nca, ncells, nlives, nfracseed,nseed, nthresh, do_ca,        &
+                               ca_sgs, ca_global,iseed_ca,ca_smooth,isppt_deep,nspinup,     &
                           !--- IAU
                                iau_delthrs,iaufhrs,iau_inc_files,iau_filter_increments,     &
                                iau_drymassfixer,                                            &
@@ -3667,8 +3646,6 @@ module GFS_typedefs
     Model%do_gwd            = maxval(Model%cdmbgwd) > 0.0
       
     Model%do_cnvgwd         = Model%cnvgwd .and. maxval(Model%cdmbgwd(3:4)) == 0.0
-
-    Model%do_cnvgwd         = Model%cnvgwd .and. maxval(Model%cdmbgwd(3:4)) == 0.0
     Model%do_mynnedmf       = do_mynnedmf
     Model%do_mynnsfclay     = do_mynnsfclay
     Model%bl_mynn_cloudpdf  = bl_mynn_cloudpdf
@@ -3769,24 +3746,16 @@ module GFS_typedefs
     Model%nca              = nca
     Model%ncells           = ncells
     Model%nlives           = nlives
-    Model%nca_g            = nca_g
-    Model%ncells_g         = ncells_g
-    Model%nlives_g         = nlives_g
     Model%nfracseed        = nfracseed
     Model%nseed            = nseed
-    Model%nseed_g          = nseed_g
     Model%ca_global        = ca_global
     Model%do_ca            = do_ca
     Model%ca_sgs           = ca_sgs
     Model%iseed_ca         = iseed_ca
     Model%ca_smooth        = ca_smooth
+    Model%isppt_deep       = isppt_deep
     Model%nspinup          = nspinup  
     Model%nthresh          = nthresh 
-    Model%ca_amplitude     = ca_amplitude
-    Model%nsmooth          = nsmooth
-    Model%ca_closure       = ca_closure
-    Model%ca_entr          = ca_entr
-    Model%ca_trigger       = ca_trigger
 
     ! IAU flags
     !--- iau parameters
@@ -4624,7 +4593,6 @@ module GFS_typedefs
       print *, ' shinhong          : ', Model%shinhong
       print *, ' do_ysu            : ', Model%do_ysu
       print *, ' dspheat           : ', Model%dspheat
-      print *, ' hurr_pbl          : ', Model%hurr_pbl
       print *, ' lheatstrg         : ', Model%lheatstrg
       print *, ' cnvcld            : ', Model%cnvcld
       print *, ' random_clds       : ', Model%random_clds
@@ -4650,6 +4618,7 @@ module GFS_typedefs
       print *, ' do_myjsfc         : ', Model%do_myjsfc
       print *, ' do_myjpbl         : ', Model%do_myjpbl
       print *, ' gwd_opt           : ', Model%gwd_opt
+      print *, ' hurr_pbl          : ', Model%hurr_pbl
       print *, ' var_ric           : ', Model%var_ric
       print *, ' coef_ric_l        : ', Model%coef_ric_l
       print *, ' coef_ric_s        : ', Model%coef_ric_s
@@ -4709,27 +4678,19 @@ module GFS_typedefs
       print *, ' do_sfcperts       : ', Model%do_sfcperts
       print *, ' '
       print *, 'cellular automata'
-      print *, ' nca               : ', Model%nca
+      print *, ' nca               : ', Model%ncells
       print *, ' ncells            : ', Model%ncells
       print *, ' nlives            : ', Model%nlives
-      print *, ' nca_g             : ', Model%nca_g
-      print *, ' ncells_g          : ', Model%ncells_g
-      print *, ' nlives_g          : ', Model%nlives_g
       print *, ' nfracseed         : ', Model%nfracseed
-      print *, ' nseed_g           : ', Model%nseed_g
       print *, ' nseed             : ', Model%nseed
       print *, ' ca_global         : ', Model%ca_global
       print *, ' ca_sgs            : ', Model%ca_sgs
       print *, ' do_ca             : ', Model%do_ca
       print *, ' iseed_ca          : ', Model%iseed_ca
       print *, ' ca_smooth         : ', Model%ca_smooth
+      print *, ' isppt_deep        : ', Model%isppt_deep
       print *, ' nspinup           : ', Model%nspinup
       print *, ' nthresh           : ', Model%nthresh
-      print *, ' ca_amplitude      : ', Model%ca_amplitude
-      print *, ' nsmooth           : ', Model%nsmooth
-      print *, ' ca_closure        : ', Model%ca_closure
-      print *, ' ca_entr           : ', Model%ca_entr
-      print *, ' ca_trigger        : ', Model%ca_trigger
       print *, ' '
       print *, 'tracers'
       print *, ' tracer_names      : ', Model%tracer_names
@@ -4933,7 +4894,7 @@ module GFS_typedefs
       Tbd%dsnow_cpl = clear_val
     endif
 
-    if (Model%do_sppt .or. Model%ca_global) then
+    if (Model%do_sppt) then
       allocate (Tbd%dtdtr     (IM,Model%levs))
       allocate (Tbd%dtotprcp  (IM))
       allocate (Tbd%dcnvprcp  (IM))
@@ -5205,16 +5166,14 @@ module GFS_typedefs
     allocate (Diag%skebv_wts(IM,Model%levs))
     allocate (Diag%sppt_wts(IM,Model%levs))
     allocate (Diag%shum_wts(IM,Model%levs))
-    allocate (Diag%zmtnblck(IM))    
-    allocate (Diag%ca1      (IM))
-    allocate (Diag%ca2      (IM))
-    allocate (Diag%ca3      (IM))
+    allocate (Diag%zmtnblck(IM))
 
     ! F-A MP scheme
     if (Model%imp_physics == Model%imp_physics_fer_hires) then
      allocate (Diag%TRAIN     (IM,Model%levs))
     end if
 
+    allocate (Diag%ca_out  (IM))
     allocate (Diag%ca_deep  (IM))
     allocate (Diag%ca_turb  (IM))
     allocate (Diag%ca_shal  (IM))
@@ -5517,9 +5476,7 @@ module GFS_typedefs
     Diag%totgrpb    = zero
 !
     if (Model%do_ca) then
-      Diag%ca1      = zero
-      Diag%ca2      = zero
-      Diag%ca3      = zero
+      Diag%ca_out   = zero
       Diag%ca_deep  = zero
       Diag%ca_turb  = zero
       Diag%ca_shal  = zero
@@ -6085,7 +6042,6 @@ module GFS_typedefs
        allocate (Interstitial%q2mp  (IM))
     end if
     if (Model%lsm == Model%lsm_noah_wrfv4) then
-       write(*,*) 'ALLOCATING WRF4 HERE'
        allocate (Interstitial%canopy_save     (IM))
        allocate (Interstitial%chk_land        (IM))
        allocate (Interstitial%cmc             (IM))
