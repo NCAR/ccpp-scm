@@ -292,19 +292,19 @@ subroutine output_init(scm_state)
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="detrainment mass flux"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2 s-1"))
   ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='PBL_height',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_TOA_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_TOA_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_TOA_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_TOA_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
 
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_year',XTYPE=NF90_FLOAT,VARID=year_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="description",VALUES="model initialization year"))
@@ -635,6 +635,86 @@ subroutine output_append(scm_state, physics)
   ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_dn_sfc_tot(:),START=(/1,scm_state%itt_out /)))
   ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_clr",VARID=var_id))
   ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_dn_sfc_clr(:),START=(/1,scm_state%itt_out /)))
+
+  ! TOA/SFC fluxes
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Diag(i)%topfsw(1)%upfxc
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_tot",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Diag(i)%topfsw(1)%dnfxc
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_TOA_tot",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Diag(i)%topfsw(1)%upfx0
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_clr",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%upfxc
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_tot",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%dnfxc
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_tot",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%upfx0
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_clr",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%dnfx0
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_clr",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Diag(i)%topflw(1)%upfxc
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_tot",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Diag(i)%topflw(1)%upfx0
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_clr",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%upfxc
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_tot",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%dnfxc
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_tot",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%upfx0
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_clr",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  !
+  do i=1, scm_state%n_cols
+     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%upfx0
+  end do
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_clr",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+
 
   !> - Close the file.
   CALL CHECK(NF90_CLOSE(ncid))

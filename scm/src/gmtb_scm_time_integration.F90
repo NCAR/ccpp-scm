@@ -6,13 +6,8 @@ module gmtb_scm_time_integration
 use gmtb_scm_kinds, only: sp, dp, qp
 use gmtb_scm_forcing
 
-#ifdef STATIC
 use ccpp_api,        only: ccpp_t
 use ccpp_static_api, only: ccpp_physics_run
-#else
-use ccpp_api,        only: ccpp_t, &
-                           ccpp_physics_run
-#endif
 
 implicit none
 
@@ -84,11 +79,7 @@ subroutine do_time_step(scm_state, cdata_cols)
   end if
 
   do i=1, scm_state%n_cols
-#ifdef STATIC
     call ccpp_physics_run(cdata_cols(i), suite_name=trim(adjustl(scm_state%physics_suite_name(i))), ierr=ierr)
-#else
-    call ccpp_physics_run(cdata_cols(i), ierr=ierr)
-#endif
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
         stop

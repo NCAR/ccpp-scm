@@ -83,15 +83,15 @@ def execute(cmd):
     status = p.returncode
     if status == 0:
         message = 'Execution of "{0}" returned with exit code {1}\n'.format(cmd, status)
-        message += '    stdout: "{0}"\n'.format(stdout.rstrip('\n'))
-        message += '    stderr: "{0}"'.format(stderr.rstrip('\n'))
+        message += '    stdout: "{0}"\n'.format(stdout.rstrip('\n'.encode()))
+        message += '    stderr: "{0}"'.format(stderr.rstrip('\n'.encode()))
         logging.debug(message)
     else:
         message = 'Execution of command "{0}" failed, exit code {1}\n'.format(cmd, status)
-        message += '    stdout: "{0}"\n'.format(stdout.rstrip('\n'))
-        message += '    stderr: "{0}"'.format(stderr.rstrip('\n'))
+        message += '    stdout: "{0}"\n'.format(stdout.rstrip('\n'.encode()))
+        message += '    stderr: "{0}"'.format(stderr.rstrip('\n'.encode()))
         logging.debug(message)
-    return (status, stdout.rstrip('\n'), stderr.rstrip('\n'))
+    return (status, stdout.rstrip('\n'.encode()), stderr.rstrip('\n'.encode()))
 
 def parse_arguments():
     """Parse command line arguments"""
