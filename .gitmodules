@@ -1,8 +1,8 @@
 [submodule "ccpp-framework"]
 	path = ccpp/framework
-	url = https://github.com/NCAR/ccpp-framework
+	url = https://github.com/MicroTed/ccpp-framework
 	branch = dtc/develop
 [submodule "ccpp-physics"]
 	path = ccpp/physics
-	url = https://github.com/NCAR/ccpp-physics
+	url = https://github.com/MicroTed/ccpp-physics
 	branch = dtc/develop
