@@ -3662,7 +3662,7 @@ module GFS_typedefs
     Model%wminras           = wminras
     Model%rbcr              = rbcr
     Model%do_gwd            = maxval(Model%cdmbgwd) > 0.0
-      
+
     Model%do_cnvgwd         = Model%cnvgwd .and. maxval(Model%cdmbgwd(3:4)) == 0.0
     Model%do_mynnedmf       = do_mynnedmf
     Model%do_mynnsfclay     = do_mynnsfclay
@@ -5497,7 +5497,7 @@ module GFS_typedefs
     Diag%zmtnblck   = zero
 
     if (Model%imp_physics == Model%imp_physics_fer_hires) then
-       Diag%TRAIN      = zero
+      Diag%TRAIN      = zero
     end if
 
     Diag%totprcpb   = zero
