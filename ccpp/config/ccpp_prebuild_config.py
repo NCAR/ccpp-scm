@@ -185,6 +185,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_kind.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_lw.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_sw.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_config.F90',    
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_fluxes_broadband_kernels.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_optical_props_kernels.F90',
@@ -412,6 +413,12 @@ OPTIONAL_ARGUMENTS = {
             'rime_factor',
             ],
         },
+    'rrtmgp_lw_rte' : {
+         'rrtmgp_lw_rte_run' : [
+             'RRTMGP_jacobian_of_lw_flux_profile_upward',
+             'RRTMGP_jacobian_of_lw_flux_profile_downward',
+             ],
+         },          
     'rrtmgp_sw_rte' : {
          'rrtmgp_sw_rte_run' : [
              'components_of_surface_downward_shortwave_fluxes',
