@@ -359,6 +359,20 @@ SUITES_DIR = 'ccpp/suites'
 # if no entry is made here. Possible values are: 'all', 'none',
 # or a list of standard_names: [ 'var1', 'var3' ].
 OPTIONAL_ARGUMENTS = {
+    'rrtmgp_sw_rte' : {
+         'rrtmgp_sw_rte_run' : [
+             'components_of_surface_downward_shortwave_fluxes',
+             ],
+         },
+    'GFS_rrtmgp_sw_post' : {
+         'GFS_rrtmgp_sw_post_run' : 'none',
+         },
+    'rrtmgp_lw_rte' : {
+         'rrtmgp_lw_rte_run' : 'none',
+        },
+    'GFS_rrtmgp_lw_post' : {
+         'GFS_rrtmgp_lw_post_run' : 'none',
+         },
     'rrtmg_sw' : {
         'rrtmg_sw_run' : [
             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
@@ -388,10 +402,16 @@ OPTIONAL_ARGUMENTS = {
         },
     'mp_thompson' : {
         'mp_thompson_init' : [
+            'cloud_droplet_number_concentration',
             'water_friendly_aerosol_number_concentration',
             'ice_friendly_aerosol_number_concentration',
             'tendency_of_water_friendly_aerosols_at_surface',
             'tendency_of_ice_friendly_aerosols_at_surface',
+            # DH* 2020-06-01: turn off calculation of effective radii, now done in GFS_rrtmg_pre
+            #'effective_radius_of_stratiform_cloud_liquid_water_particle_in_um',
+            #'effective_radius_of_stratiform_cloud_ice_particle_in_um',
+            #'effective_radius_of_stratiform_cloud_snow_particle_in_um',
+            # *DH 2020-06-01
             ],
         'mp_thompson_run' : [
             'cloud_droplet_number_concentration_updated_by_physics',
@@ -399,18 +419,11 @@ OPTIONAL_ARGUMENTS = {
             'ice_friendly_aerosol_number_concentration_updated_by_physics',
             'tendency_of_water_friendly_aerosols_at_surface',
             'tendency_of_ice_friendly_aerosols_at_surface',
-            'mean_effective_radius_for_liquid_cloud',
-            'mean_effective_radius_for_ice_cloud',
-            'mean_effective_radius_for_snow_flake',
-            ],
-        },
-    'mp_thompson_pre' : {
-        'mp_thompson_pre_run' : [
-            'cloud_droplet_number_concentration_updated_by_physics',
-            'water_friendly_aerosol_number_concentration_updated_by_physics',
-            'ice_friendly_aerosol_number_concentration_updated_by_physics',
-            'tendency_of_water_friendly_aerosols_at_surface',
-            'tendency_of_ice_friendly_aerosols_at_surface',
+            # DH* 2020-06-01: turn off calculation of effective radii, now done in GFS_rrtmg_pre
+            #'effective_radius_of_stratiform_cloud_liquid_water_particle_in_um',
+            #'effective_radius_of_stratiform_cloud_ice_particle_in_um',
+            #'effective_radius_of_stratiform_cloud_snow_particle_in_um',
+            # *DH 2020-06-01
             ],
         },
     'mp_fer_hires' : {
@@ -420,37 +433,7 @@ OPTIONAL_ARGUMENTS = {
             'rime_factor',
             ],
         },
-    'rrtmgp_sw_rte' : {
-         'rrtmgp_sw_rte_run' : [
-             'components_of_surface_downward_shortwave_fluxes',
-             'sw_fluxes_sfc',
-             'sw_fluxes_toa',
-             ],
-         },
-    'GFS_rrtmgp_sw_post' : {
-         'GFS_rrtmgp_sw_post_run' : [
-             'components_of_surface_downward_shortwave_fluxes',
-             'sw_fluxes_sfc',
-             'sw_fluxes_toa',
-             ],
-         },
-    'rrtmgp_lw_rte' : {
-         'rrtmgp_lw_rte_run' : [
-             'lw_fluxes_sfc',
-             'lw_fluxes_toa',
-             ],
-        },
-    'GFS_rrtmgp_lw_post' : {
-         'GFS_rrtmgp_lw_post_run' : [
-             'lw_fluxes_sfc',
-             'lw_fluxes_toa',
-             ],
-         },
-    'GFS_rrtmgp_post' : {
-         'GFS_rrtmgp_post_run' : [
-             'components_of_surface_downward_shortwave_fluxes',
-             ],
-         },
+
     #'subroutine_name_1' : 'all',
     #'subroutine_name_2' : 'none',
     #'subroutine_name_2' : [ 'var1', 'var3'],
