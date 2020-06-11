@@ -301,6 +301,7 @@ SCHEME_FILES = {
     'ccpp/physics/physics/rrtmgp_sw_aerosol_optics.F90'         : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_rte.F90'                    : ['physics'],
     'ccpp/physics/physics/rrtmgp_gfdlmp_lw_cloud_sampling.F90'  : ['physics'],
+    'ccpp/physics/physics/rrtmgp_lwadj.F90'                     : ['physics'],    
     'ccpp/physics/physics/rrtmgp_gfdlmp_sw_cloud_sampling.F90'  : ['physics'],
     'ccpp/physics/physics/rrtmgp_sw_rte.F90'                    : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'         : ['physics'],

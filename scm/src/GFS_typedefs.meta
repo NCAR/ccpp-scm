@@ -8131,6 +8131,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[sktp1r]
+  standard_name = surface_ground_temperature_for_radiation_at_previous_rad_time_step
+  long_name = surface ground temperature for radiation at previous radiation time step
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys 
 [tsurf]
   standard_name = surface_skin_temperature_after_iteration
   long_name = surface skin temperature after iteration
