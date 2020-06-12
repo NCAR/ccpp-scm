@@ -2,45 +2,39 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(scm)
 set(PROJECT "CCPP-SCM")
 
-# The only option to build is the static build
-set(STATIC TRUE)
-
 ####################################################################
 # Begin CCPP prebuild step                                         #
 ####################################################################
-if(STATIC)
-  # Start with empty list of suites
-  message (STATUS "Generating list of suites to compile for static CCPP")
-  set(SUITES "")
-  # Get list of all suite definition files (with full path)
-  file(GLOB SUITE_DEFINITION_FILES
-      "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp/suites/suite_*.xml"
-  )
-  # Extract file name and suite name and append to SUITES
-  foreach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
-    get_filename_component(suite_definition_filename ${suite_definition_filepath} NAME)
-    string(REGEX REPLACE "^suite_(.+)\\.xml$" "\\1" suite_name ${suite_definition_filename})
-    set(SUITES ${SUITES}${suite_name},)
-    message (STATUS "  adding suite ${suite_name}")
-  endforeach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
-  # Abort if no suites found
-  if ("${SUITES}" STREQUAL "")
-    message(FATAL_ERROR "No suites found to compile for static CCPP")
-  endif("${SUITES}" STREQUAL "")
-  # Remove trailing comma from list of suites
-  string(REGEX REPLACE "(.+),$" "\\1" SUITES ${SUITES})
-  # Run CCPP prebuild.py
-  message (STATUS "Running ccpp_prebuild.py for static CCPP")
-  execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --static --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR}/..
-    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
-    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    RESULT_VARIABLE return_code
-  )
-else(STATIC)
-  message(FATAL_ERROR "Dynamic CCPP build no longer supported")
-endif(STATIC)
+# Start with empty list of suites
+message (STATUS "Generating list of suites to compile for CCPP")
+set(SUITES "")
+# Get list of all suite definition files (with full path)
+file(GLOB SUITE_DEFINITION_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp/suites/suite_*.xml"
+)
+# Extract file name and suite name and append to SUITES
+foreach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
+  get_filename_component(suite_definition_filename ${suite_definition_filepath} NAME)
+  string(REGEX REPLACE "^suite_(.+)\\.xml$" "\\1" suite_name ${suite_definition_filename})
+  set(SUITES ${SUITES}${suite_name},)
+  message (STATUS "  adding suite ${suite_name}")
+endforeach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
+# Abort if no suites found
+if ("${SUITES}" STREQUAL "")
+  message(FATAL_ERROR "No suites found to compile for CCPP")
+endif("${SUITES}" STREQUAL "")
+# Remove trailing comma from list of suites
+string(REGEX REPLACE "(.+),$" "\\1" SUITES ${SUITES})
+# Run CCPP prebuild.py
+message (STATUS "Running ccpp_prebuild.py for CCPP")
+execute_process(
+  COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR}/..
+  OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
+  ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
+  RESULT_VARIABLE return_code
+)
+  
 # Check return code from CCPP prebuild.py
 if(return_code EQUAL 0)
   message (STATUS "CCPP prebuild step completed successfully")
@@ -87,10 +81,6 @@ IF(DEFINED ENV{W3NCO_LIBd})
 ELSE(DEFINED ENV{W3NCO_LIBd})
   MESSAGE(FATAL_ERROR "The W3NCO_LIBd environment variable must be set to point to your W3NCO installation (part of NCEPLIBS) before building. Stopping...")
 ENDIF(DEFINED ENV{W3NCO_LIBd})
-
-if(STATIC)
-  ADD_DEFINITIONS(-DSTATIC)
-endif(STATIC)
 
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -299,13 +289,9 @@ SET(scm_source_files gmtb_scm.F90
             gmtb_scm_output.F90
 )
 
-if(STATIC)
-  ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
-  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
-else(STATIC)
-  ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
-  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp)
-endif(STATIC)
+ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
+TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+
 
 set_target_properties(gmtb_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"

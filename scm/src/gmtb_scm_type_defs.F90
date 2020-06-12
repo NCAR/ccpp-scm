@@ -896,13 +896,13 @@ module gmtb_scm_type_defs
       physics%Stateout(col)%gq0 => scm_state%state_tracer(col,:,:,:,1)
     endif
 
+    physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
     if(scm_state%sfc_flux_spec) then
       physics%Sfcprop(col)%spec_sh_flux => scm_state%sh_flux
       physics%Sfcprop(col)%spec_lh_flux => scm_state%lh_flux
-      physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
     endif
     if(scm_state%model_ics) then
-      physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
+      !physics%Sfcprop(col)%zorl => scm_state%sfc_roughness_length_cm
       physics%Sfcprop(col)%canopy => scm_state%canopy(col,:)
       physics%Sfcprop(col)%hice => scm_state%hice(col,:)
       physics%Sfcprop(col)%fice => scm_state%fice(col,:)
