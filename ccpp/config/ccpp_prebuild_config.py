@@ -436,6 +436,12 @@ OPTIONAL_ARGUMENTS = {
              'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
              ],
          },
+    'rrtmgp_lwadj' : {
+         'rrtmgp_lwadj_run' : [
+             'RRTMGP_jacobian_of_lw_flux_profile_upward',
+             'RRTMGP_jacobian_of_lw_flux_profile_downward',
+             ],
+         },         
     #'subroutine_name_1' : 'all',
     #'subroutine_name_2' : 'none',
     #'subroutine_name_2' : [ 'var1', 'var3'],

@@ -5770,8 +5770,10 @@ module GFS_typedefs
       allocate (Interstitial%fluxlwDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxlwUP_clrsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
-      allocate (Interstitial%fluxlwDOWN_jac       (IM, Model%levs+1))
-      allocate (Interstitial%fluxlwUP_jac         (IM, Model%levs+1))       
+      if (Model%use_LW_jacobian) then
+         allocate (Interstitial%fluxlwDOWN_jac    (IM, Model%levs+1))
+         allocate (Interstitial%fluxlwUP_jac      (IM, Model%levs+1))       
+      endif
       allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxswUP_clrsky      (IM, Model%levs+1))
@@ -6139,9 +6141,7 @@ module GFS_typedefs
       Interstitial%fluxlwUP_allsky      = clear_val
       Interstitial%fluxlwDOWN_allsky    = clear_val
       Interstitial%fluxlwUP_clrsky      = clear_val
-      Interstitial%fluxlwDOWN_clrsky    = clear_val
-      Interstitial%fluxlwUP_jac         = clear_val
-      Interstitial%fluxlwDOWN_jac       = clear_val                  
+      Interstitial%fluxlwDOWN_clrsky    = clear_val                
       Interstitial%fluxswUP_allsky      = clear_val
       Interstitial%fluxswDOWN_allsky    = clear_val
       Interstitial%fluxswUP_clrsky      = clear_val
@@ -6443,6 +6443,17 @@ module GFS_typedefs
       Interstitial%radar_reset = mod(Model%kdt-1, nint(Model%nsradar_reset/Model%dtp)) == 0
     end if
     !
+
+	!
+	! RRTMGP
+	!
+	if (Model%do_RRTMGP) then  
+	   if (Model%use_LW_jacobian) then 
+          !Interstitial%fluxlwUP_jac   = clear_val
+          !Interstitial%fluxlwDOWN_jac = clear_val      
+       endif  
+    endif
+    
   end subroutine interstitial_phys_reset
 
   subroutine interstitial_print(Interstitial, Model, mpirank, omprank, blkno)
