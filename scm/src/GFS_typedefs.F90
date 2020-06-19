@@ -5772,7 +5772,7 @@ module GFS_typedefs
       allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
       if (Model%use_LW_jacobian) then
          allocate (Interstitial%fluxlwDOWN_jac    (IM, Model%levs+1))
-         allocate (Interstitial%fluxlwUP_jac      (IM, Model%levs+1))       
+         allocate (Interstitial%fluxlwUP_jac      (IM, Model%levs+1))      
       endif
       allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
@@ -6138,7 +6138,6 @@ module GFS_typedefs
       Interstitial%t_lay                = clear_val
       Interstitial%cloud_overlap_param  = clear_val
       Interstitial%precip_overlap_param = clear_val
-      Interstitial%fluxlwUP_allsky      = clear_val
       Interstitial%fluxlwDOWN_allsky    = clear_val
       Interstitial%fluxlwUP_clrsky      = clear_val
       Interstitial%fluxlwDOWN_clrsky    = clear_val                
