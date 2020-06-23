@@ -636,6 +636,7 @@ module GFS_typedefs
     integer              :: rrtmgp_nGauss_ang !< Number of angles used in Gaussian quadrature
     logical              :: do_GPsw_Glw       ! If set to true use rrtmgp for SW calculation, rrtmg for LW.
     character(len=128)   :: active_gases_array(100)          !< character array for each trace gas name
+    logical              :: use_LW_jacobian   !< If true, use Jacobian of LW to update radiation tendency.
 !--- microphysical switch
     integer              :: ncld            !< choice of cloud scheme
     !--- new microphysical switch
@@ -1784,6 +1785,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tsfc_land(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tsfc_ocean(:)      => null()  !<
     real (kind=kind_phys), pointer      :: tsfg(:)            => null()  !<
+    real (kind=kind_phys), pointer      :: sktp1r(:)          => null()  !<
     real (kind=kind_phys), pointer      :: tsnow(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_ice(:)       => null()  !<
@@ -1863,6 +1865,8 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: fluxswDOWN_allsky(:,:)    => null()  !< RRTMGP downward shortwave all-sky flux profile
     real (kind=kind_phys), pointer      :: fluxswUP_clrsky(:,:)      => null()  !< RRTMGP upward   shortwave clr-sky flux profile
     real (kind=kind_phys), pointer      :: fluxswDOWN_clrsky(:,:)    => null()  !< RRTMGP downward shortwave clr-sky flux profile
+    real (kind=kind_phys), pointer      :: fluxlwUP_jac(:,:)         => null()  !< RRTMGP upward Jacobian of longwave flux
+    real (kind=kind_phys), pointer      :: fluxlwDOWN_jac(:,:)       => null()  !< RRTMGP downward Jacobian of longwave flux 
     real (kind=kind_phys), pointer      :: sfc_emiss_byband(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: sec_diff_byband(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: sfc_alb_nir_dir(:,:)      => null()  !<
@@ -2743,7 +2747,8 @@ module GFS_typedefs
     logical              :: doGP_cldoptics_LUT  = .false.    !< Use RRTMGP cloud-optics: LUTs?     
     integer              :: rrtmgp_nrghice = 0               !< Number of ice-roughness categories
     integer              :: rrtmgp_nGauss_ang=1              !< Number of angles used in Gaussian quadrature
-    logical              :: do_GPsw_Glw    = .false.         
+    logical              :: do_GPsw_Glw    = .false.     
+    logical              :: use_LW_jacobian = .false.        !< Use Jacobian of LW to update LW radiation tendencies.  
 
 !--- Z-C microphysical parameters
     integer              :: ncld              =  1                 !< choice of cloud scheme
@@ -3078,6 +3083,7 @@ module GFS_typedefs
                                sw_file_gas, sw_file_clouds, rrtmgp_nBandsSW, rrtmgp_nGptsSW,&
                                doG_cldoptics, doGP_cldoptics_PADE, doGP_cldoptics_LUT,      &
                                rrtmgp_nrghice, rrtmgp_nGauss_ang, do_GPsw_Glw,              &
+                               use_LW_jacobian,                                             &
                           ! IN CCN forcing
                                iccn,                                                        &
                           !--- microphysical parameterizations
@@ -3314,6 +3320,7 @@ module GFS_typedefs
     Model%doG_cldoptics       = doG_cldoptics
     Model%doGP_cldoptics_PADE = doGP_cldoptics_PADE
     Model%doGP_cldoptics_LUT  = doGP_cldoptics_LUT
+    Model%use_LW_jacobian     = use_LW_jacobian
     ! RRTMGP incompatible with levr /= levs
     if (Model%do_RRTMGP .and. Model%levr /= Model%levs) then
       write(0,*) "Logic error, RRTMGP only works with levr = levs"
@@ -4316,6 +4323,7 @@ module GFS_typedefs
         print *, ' doG_cldoptics      : ', Model%doG_cldoptics
         print *, ' doGP_cldoptics_PADE: ', Model%doGP_cldoptics_PADE
         print *, ' doGP_cldoptics_LUT : ', Model%doGP_cldoptics_LUT
+        print *, ' use_LW_jacobian    : ', Model%use_LW_jacobian
       endif
       print *, ' '
       print *, 'microphysical switch'
@@ -5716,6 +5724,7 @@ module GFS_typedefs
     allocate (Interstitial%tsfc_land       (IM))
     allocate (Interstitial%tsfc_ocean      (IM))
     allocate (Interstitial%tsfg            (IM))
+    allocate (Interstitial%sktp1r          (IM))
     allocate (Interstitial%tsurf           (IM))
     allocate (Interstitial%tsurf_ice       (IM))
     allocate (Interstitial%tsurf_land      (IM))
@@ -5761,10 +5770,12 @@ module GFS_typedefs
       allocate (Interstitial%fluxlwDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxlwUP_clrsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
+      allocate (Interstitial%fluxlwDOWN_jac       (IM, Model%levs+1))
+      allocate (Interstitial%fluxlwUP_jac         (IM, Model%levs+1))      
       allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxswUP_clrsky      (IM, Model%levs+1))
-      allocate (Interstitial%fluxswDOWN_clrsky    (IM, Model%levs+1))
+      allocate (Interstitial%fluxswDOWN_clrsky    (IM, Model%levs+1))      
       allocate (Interstitial%aerosolslw           (IM, Model%levs, Model%rrtmgp_nBandsLW, NF_AELW))
       allocate (Interstitial%aerosolssw           (IM, Model%levs, Model%rrtmgp_nBandsSW, NF_AESW))
       allocate (Interstitial%cld_frac             (IM, Model%levs))
@@ -6125,10 +6136,9 @@ module GFS_typedefs
       Interstitial%t_lay                = clear_val
       Interstitial%cloud_overlap_param  = clear_val
       Interstitial%precip_overlap_param = clear_val
-      Interstitial%fluxlwUP_allsky      = clear_val
       Interstitial%fluxlwDOWN_allsky    = clear_val
       Interstitial%fluxlwUP_clrsky      = clear_val
-      Interstitial%fluxlwDOWN_clrsky    = clear_val
+      Interstitial%fluxlwDOWN_clrsky    = clear_val                
       Interstitial%fluxswUP_allsky      = clear_val
       Interstitial%fluxswDOWN_allsky    = clear_val
       Interstitial%fluxswUP_clrsky      = clear_val
@@ -6430,6 +6440,17 @@ module GFS_typedefs
       Interstitial%radar_reset = mod(Model%kdt-1, nint(Model%nsradar_reset/Model%dtp)) == 0
     end if
     !
+
+	!
+	! RRTMGP
+	!
+	if (Model%do_RRTMGP) then  
+	   if (Model%use_LW_jacobian) then 
+          !Interstitial%fluxlwUP_jac   = clear_val
+          !Interstitial%fluxlwDOWN_jac = clear_val      
+       endif  
+    endif
+    
   end subroutine interstitial_phys_reset
 
   subroutine interstitial_print(Interstitial, Model, mpirank, omprank, blkno)
