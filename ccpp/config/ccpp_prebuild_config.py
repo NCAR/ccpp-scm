@@ -301,7 +301,6 @@ SCHEME_FILES = {
     'ccpp/physics/physics/rrtmgp_sw_aerosol_optics.F90'         : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_rte.F90'                    : ['physics'],
     'ccpp/physics/physics/rrtmgp_gfdlmp_lw_cloud_sampling.F90'  : ['physics'],
-    'ccpp/physics/physics/rrtmgp_lwadj.F90'                     : ['physics'],    
     'ccpp/physics/physics/rrtmgp_gfdlmp_sw_cloud_sampling.F90'  : ['physics'],
     'ccpp/physics/physics/rrtmgp_sw_rte.F90'                    : ['physics'],
     'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'         : ['physics'],
@@ -436,10 +435,10 @@ OPTIONAL_ARGUMENTS = {
              'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
              ],
          },
-    'rrtmgp_lwadj' : {
-         'rrtmgp_lwadj_run' : [
+    'GFS_suite_interstitial_2' : {
+         'GFS_suite_interstitial_2_run' : [
              'RRTMGP_jacobian_of_lw_flux_profile_upward',
-             'RRTMGP_jacobian_of_lw_flux_profile_downward',
+             'RRTMGP_lw_flux_profile_upward_allsky',
              ],
          },         
     #'subroutine_name_1' : 'all',

@@ -41,7 +41,6 @@
       <scheme>GFS_surface_composites_pre</scheme>
       <scheme>dcyc2t3</scheme>
       <scheme>GFS_surface_composites_inter</scheme>
-      <scheme>rrtmgp_lwadj</scheme>      
       <scheme>GFS_suite_interstitial_2</scheme>
     </subcycle>
     <!-- Surface iteration loop -->

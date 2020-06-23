@@ -5770,10 +5770,8 @@ module GFS_typedefs
       allocate (Interstitial%fluxlwDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxlwUP_clrsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
-      if (Model%use_LW_jacobian) then
-         allocate (Interstitial%fluxlwDOWN_jac    (IM, Model%levs+1))
-         allocate (Interstitial%fluxlwUP_jac      (IM, Model%levs+1))      
-      endif
+      allocate (Interstitial%fluxlwDOWN_jac       (IM, Model%levs+1))
+      allocate (Interstitial%fluxlwUP_jac         (IM, Model%levs+1))      
       allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxswUP_clrsky      (IM, Model%levs+1))
