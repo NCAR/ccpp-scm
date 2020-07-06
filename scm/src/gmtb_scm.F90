@@ -73,8 +73,6 @@ subroutine gmtb_scm_main_sub()
 
   call interpolate_forcing(scm_input, scm_state)
 
-  call output_init(scm_state)
-
   scm_state%itt_out = 1
 
   call physics%create(scm_state%n_cols)
@@ -138,7 +136,16 @@ subroutine gmtb_scm_main_sub()
                            physics%Init_parm(i))
       
       call physics%associate(scm_state, i)
-
+      
+      ! When asked to calculate 3-dim. tendencies, set Stateout variables to
+      ! Statein variables here in order to capture the first call to dycore
+      if (physics%Model(i)%ldiag3d) then
+        physics%Stateout(i)%gu0 = physics%Statein(i)%ugrs
+        physics%Stateout(i)%gv0 = physics%Statein(i)%vgrs
+        physics%Stateout(i)%gt0 = physics%Statein(i)%tgrs
+        physics%Stateout(i)%gq0 = physics%Statein(i)%qgrs
+      endif
+      
       !initialize each column's physics
 
       write(0,'(a,i0,a)') "Calling ccpp_physics_init for column ", i, " with suite '" // trim(trim(adjustl(scm_state%physics_suite_name(i)))) // "'"
@@ -152,6 +159,7 @@ subroutine gmtb_scm_main_sub()
       physics%Model(i)%first_time_step = .true.
   end do
 
+  call output_init(scm_state, physics)
   call output_append(scm_state, physics)
 
   !first time step (call once)
@@ -165,7 +173,7 @@ subroutine gmtb_scm_main_sub()
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
      !pass in state variables to be modified by forcing and physics
-     call do_time_step(scm_state, cdata_cols)
+     call do_time_step(scm_state, physics, cdata_cols)
 
   else if (scm_state%time_scheme == 2) then
   !   !if using the leapfrog scheme, we initialize by taking one half forward time step and one half (unfiltered) leapfrog time step to get to the end of the first time step
@@ -189,6 +197,26 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_tracer(:,:,:,:,2) = scm_state%state_tracer(:,:,:,:,1)
     scm_state%state_u(:,:,:,2) = scm_state%state_u(:,:,:,1)
     scm_state%state_v(:,:,:,2) = scm_state%state_v(:,:,:,1)
+
+    ! Calculate total non-physics tendencies by substracting old Stateout
+    ! variables from new/updated Statein variables (gives the tendencies
+    ! due to anything else than physics)
+    do i=1, scm_state%n_cols
+      if (physics%Model(i)%ldiag3d) then
+        physics%Diag(i)%du3dt(:,:,8)  = physics%Diag(i)%du3dt(:,:,8)  &
+                                        + (physics%Statein(i)%ugrs - physics%Stateout(i)%gu0)
+        physics%Diag(i)%dv3dt(:,:,8)  =   physics%Diag(i)%dv3dt(:,:,8)  &
+                                        + (  physics%Statein(i)%vgrs - physics%Stateout(i)%gv0)
+        physics%Diag(i)%dt3dt(:,:,11) = physics%Diag(i)%dt3dt(:,:,11) &
+                                        + (physics%Statein(i)%tgrs - physics%Stateout(i)%gt0)
+        if (physics%Model(i)%qdiag3d) then
+          physics%Diag(i)%dq3dt(:,:,12) = physics%Diag(i)%dq3dt(:,:,12) &
+                + (physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntqv) - physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntqv))
+          physics%Diag(i)%dq3dt(:,:,13) = physics%Diag(i)%dq3dt(:,:,13) &
+                + (physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntoz) - physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntoz))
+        endif
+      endif
+    end do
 
     do i=1, scm_state%n_cols
       call ccpp_physics_run(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
@@ -217,7 +245,7 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_tracer(:,:,:,:,1) = scm_state%temp_tracer(:,:,:,:,1)
 
     !go forward one leapfrog time step
-    call do_time_step(scm_state, cdata_cols)
+    call do_time_step(scm_state, physics, cdata_cols)
 
     !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
     call filter(scm_state)
@@ -272,7 +300,7 @@ subroutine gmtb_scm_main_sub()
     end do
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(scm_state, cdata_cols)
+    call do_time_step(scm_state, physics, cdata_cols)
 
     if (scm_state%time_scheme == 2) then
       !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics

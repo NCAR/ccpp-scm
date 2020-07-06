@@ -49,10 +49,11 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, cdata_cols)
-  use gmtb_scm_type_defs, only: scm_state_type
+subroutine do_time_step(scm_state, physics, cdata_cols)
+  use gmtb_scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout)          :: scm_state
+  type(physics_type), intent(inout)            :: physics
   type(ccpp_t), intent(inout)                  :: cdata_cols(:)
 
   integer :: i, ierr
@@ -77,6 +78,26 @@ subroutine do_time_step(scm_state, cdata_cols)
     scm_state%state_u(:,1,:,2) = scm_state%state_u(:,1,:,1)
     scm_state%state_v(:,1,:,2) = scm_state%state_v(:,1,:,1)
   end if
+
+  ! Calculate total non-physics tendencies by substracting old Stateout
+  ! variables from new/updated Statein variables (gives the tendencies
+  ! due to anything else than physics)
+  do i=1, scm_state%n_cols
+    if (physics%Model(i)%ldiag3d) then
+      physics%Diag(i)%du3dt(:,:,8)  = physics%Diag(i)%du3dt(:,:,8)  &
+                                      + (physics%Statein(i)%ugrs - physics%Stateout(i)%gu0)
+      physics%Diag(i)%dv3dt(:,:,8)  =   physics%Diag(i)%dv3dt(:,:,8)  &
+                                      + (  physics%Statein(i)%vgrs - physics%Stateout(i)%gv0)
+      physics%Diag(i)%dt3dt(:,:,11) = physics%Diag(i)%dt3dt(:,:,11) &
+                                      + (physics%Statein(i)%tgrs - physics%Stateout(i)%gt0)
+      if (physics%Model(i)%qdiag3d) then
+        physics%Diag(i)%dq3dt(:,:,12) = physics%Diag(i)%dq3dt(:,:,12) &
+              + (physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntqv) - physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntqv))
+        physics%Diag(i)%dq3dt(:,:,13) = physics%Diag(i)%dq3dt(:,:,13) &
+              + (physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntoz) - physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntoz))
+      endif
+    endif
+  end do
 
   do i=1, scm_state%n_cols
     call ccpp_physics_run(cdata_cols(i), suite_name=trim(adjustl(scm_state%physics_suite_name(i))), ierr=ierr)

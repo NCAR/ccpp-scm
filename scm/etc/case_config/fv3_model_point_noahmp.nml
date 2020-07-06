@@ -22,6 +22,5 @@ year = 2016,
 month = 10,
 day = 3,
 hour = 0,
-output_dir = 'output_fv3_model_point_noahmp'
 $end
 

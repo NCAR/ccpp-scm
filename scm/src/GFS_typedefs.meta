@@ -492,6 +492,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[tiice]
+  standard_name = internal_ice_temperature
+  long_name = sea ice internal temperature
+  units = K
+  dimensions = (horizontal_dimension,ice_vertical_dimension)
+  type = real
+  kind = kind_phys
 [snowd]
   standard_name = surface_snow_thickness_water_equivalent
   long_name = water equivalent snow depth
@@ -538,6 +545,20 @@
   standard_name = standard_deviation_of_subgrid_orography
   long_name = standard deviation of subgrid orography
   units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[z0base]
+  standard_name = baseline_surface_roughness_length
+  long_name = baseline surface roughness length for momentum in meter
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[semisbase]
+  standard_name = baseline_surface_longwave_emissivity
+  long_name = baseline surface lw emissivity in fraction
+  units = frac
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -1119,6 +1140,13 @@
   standard_name = water_table_recharge_when_shallow
   long_name = recharge to or from the water table when shallow
   units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[snotime]
+  standard_name = time_since_last_snowfall
+  long_name = elapsed time since last snowfall
+  units = s
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -1890,6 +1918,13 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+[qci_conv]
+  standard_name = convective_cloud_condesate_after_rainout
+  long_name = convective cloud condesate after rainout
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
 
 ########################################################################
 [ccpp-arg-table]
@@ -1963,12 +1998,54 @@
   units = flag
   dimensions = ()
   type = logical
+[qdiag3d]
+  standard_name = flag_tracer_diagnostics_3D
+  long_name = flag for 3d tracer diagnostic fields
+  units = flag
+  dimensions = ()
+  type = logical
+[flag_for_gwd_generic_tend]
+  standard_name = flag_for_generic_gravity_wave_drag_tendency
+  long_name = true if GFS_GWD_generic should calculate tendencies
+  units = flag
+  dimensions = ()
+  type = logical
+[flag_for_pbl_generic_tend]
+  standard_name = flag_for_generic_planetary_boundary_layer_tendency
+  long_name = true if GFS_PBL_generic should calculate tendencies
+  units = flag
+  dimensions = ()
+  type = logical
+[flag_for_dcnv_generic_tend]
+  standard_name = flag_for_generic_deep_convection_tendency
+  long_name = true if GFS_DCNV_generic should calculate tendencies
+  units = flag
+  dimensions = ()
+  type = logical
+[flag_for_scnv_generic_tend]
+  standard_name = flag_for_generic_shallow_convection_tendency
+  long_name = true if GFS_SCNV_generic should calculate tendencies
+  units = flag
+  dimensions = ()
+  type = logical
 [lssav]
   standard_name = flag_diagnostics
   long_name = logical flag for storing diagnostics
   units = flag
   dimensions = ()
   type = logical
+[naux2d]
+  standard_name = number_of_2d_auxiliary_arrays
+  long_name = number of 2d auxiliary arrays to output (for debugging)
+  units = count
+  dimensions = ()
+  type = integer
+[naux3d]
+  standard_name = number_of_3d_auxiliary_arrays
+  long_name = number of 3d auxiliary arrays to output (for debugging)
+  units = count
+  dimensions = ()
+  type = integer
 [levs]
   standard_name = vertical_dimension
   long_name = number of vertical levels
@@ -2766,6 +2843,18 @@
   units = flag
   dimensions = ()
   type = integer
+[lsm_noah_wrfv4]
+  standard_name = flag_for_noah_wrfv4_land_surface_scheme
+  long_name = flag for NOAH WRFv4 land surface model
+  units = flag
+  dimensions = ()
+  type = integer
+[kice]
+  standard_name = ice_vertical_dimension
+  long_name = vertical loop extent for ice levels, start at 1
+  units = count
+  dimensions = ()
+  type = integer
 [lsoil]
   standard_name = soil_vertical_dimension
   long_name = number of soil layers
@@ -2792,10 +2881,35 @@
   type = integer
 [rdlai]
   standard_name = flag_for_reading_leaf_area_index_from_input
-  long_name = flag for reading leaf area index from initial conditions for RUC LSM
+  long_name = flag for reading leaf area index from initial conditions
   units = flag
   dimensions = ()
   type = logical
+[ua_phys]
+  standard_name = flag_for_noah_lsm_ua_extension
+  long_name = flag for using University of Arizona(?) extension for NOAH LSM WRFv4 (see module_sf_noahlsm.F)
+  units = flag
+  dimensions = ()
+  type = logical
+[usemonalb]
+  standard_name = flag_for_reading_surface_diffused_shortwave_albedo_from_input
+  long_name = flag for reading surface diffused shortwave albedo for NOAH LSM WRFv4 (see module_sf_noahlsm.F)
+  units = flag
+  dimensions = ()
+  type = logical
+[aoasis]
+  standard_name = potential_evaporation_multiplicative_factor
+  long_name = potential evaporation multiplicative factor for NOAH LSM WRFv4 (see module_sf_noahlsm.F)
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[fasdas]
+  standard_name = flag_flux_adjusting_surface_data_assimilation_system
+  long_name = flag to use the flux adjusting surface data assimilation system for NOAH LSM WRFv4 (see module_sf_noahlsm.F)
+  units = flag
+  dimensions = ()
+  type = integer
 [ivegsrc]
   standard_name = vegetation_type_dataset_choice
   long_name = land use dataset choice
@@ -2805,6 +2919,30 @@
 [isot]
   standard_name = soil_type_dataset_choice
   long_name = soil type dataset choice
+  units = index
+  dimensions = ()
+  type = integer
+[isurban]
+  standard_name = urban_vegetation_category
+  long_name = index of the urban vegetation category in the chosen vegetation dataset
+  units = index
+  dimensions = ()
+  type = integer
+[isice]
+  standard_name = ice_vegetation_category
+  long_name = index of the permanent snow/ice category in the chosen vegetation dataset
+  units = index
+  dimensions = ()
+  type = integer
+[iswater]
+  standard_name = water_vegetation_category
+  long_name = index of the water body vegetation category in the chosen vegetation dataset
+  units = index
+  dimensions = ()
+  type = integer
+[iopt_thcnd]
+  standard_name = flag_for_thermal_conductivity_option
+  long_name = choice for thermal conductivity option (see module_sf_noahlsm)
   units = index
   dimensions = ()
   type = integer
@@ -2893,6 +3031,31 @@
   units = index
   dimensions = ()
   type = integer
+[lcurr_sf]
+  standard_name = flag_for_ocean_currents_in_surface_layer_scheme
+  long_name = flag for taking ocean currents into account in surface layer scheme
+  units = flag
+  dimensions = ()
+  type = logical
+[pert_cd]
+  standard_name = flag_for_perturbation_of_surface_drag_coefficient_for_momentum_in_air
+  long_name = flag for perturbing the surface drag coefficient for momentum in surface layer scheme
+  units = flag
+  dimensions = ()
+  type = logical
+[ntsflg]
+  standard_name = flag_for_updating_skin_temperatuer_in_surface_layer_scheme
+  long_name = flag for updating skin temperature in the surface layer scheme
+  units = flag
+  dimensions = ()
+  type = integer
+[sfenth]
+  standard_name = enthalpy_flux_factor
+  long_name = enthalpy flux factor used in surface layer scheme
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [ras]
   standard_name = flag_for_ras_deep_convection
   long_name = flag for ras convection scheme
@@ -3026,6 +3189,12 @@
   units = flag
   dimensions = ()
   type = logical
+[hurr_pbl]
+  standard_name = flag_hurricane_PBL
+  long_name = flag for hurricane-specific options in PBL scheme
+  units = flag
+  dimensions = ()
+  type = logical
 [lheatstrg]
   standard_name = flag_for_canopy_heat_storage
   long_name = flag for canopy heat storage parameterization
@@ -3098,6 +3267,18 @@
   units = flag
   dimensions = ()
   type = integer
+[hwrf_samfdeep]
+  standard_name = flag_for_hwrf_samfdeepcnv_scheme
+  long_name = flag for hwrf samfdeepcnv scheme
+  units = flag
+  dimensions = ()
+  type = logical
+[hwrf_samfshal]
+  standard_name = flag_for_hwrf_samfshalcnv_scheme
+  long_name = flag for hwrf samfshalcnv scheme
+  units = flag
+  dimensions = ()
+  type = logical
 [isatmedmf]
   standard_name = choice_of_scale_aware_TKE_moist_EDMF_PBL
   long_name = choice of scale-aware TKE moist EDMF PBL scheme
@@ -3412,7 +3593,7 @@
   kind = kind_phys
 [moninq_fac]
   standard_name = atmosphere_diffusivity_coefficient_factor
-  long_name = multiplicative constant for atmospheric diffusivities
+  long_name = multiplicative constant for atmospheric diffusivities (AKA alpha)
   units = none
   dimensions = ()
   type = real
@@ -3980,6 +4161,12 @@
   units = flag
   dimensions = ()
   type = logical
+[cycling]
+  standard_name = flag_for_cycling
+  long_name = flag for cycling or coldstart
+  units = flag
+  dimensions = ()
+  type = logical
 [hydrostatic]
   standard_name = flag_for_hydrostatic_solver
   long_name = flag for hydrostatic solver from dynamics
@@ -4053,6 +4240,12 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[icloud]
+  standard_name = cloud_effect_to_optical_depth_and_cloud_fraction
+  long_name = cloud effect to the optical depth and cloud fraction in radiation
+  units = flag
+  dimensions = ()
+  type = integer
 [gwd_opt]
   standard_name = gwd_opt
   long_name = flag to choose gwd scheme
@@ -4149,12 +4342,39 @@
   units = flag
   dimensions = ()
   type = integer
+[bl_mynn_output]
+  standard_name = mynn_output_flag
+  long_name = flag initialize and output extra 3D variables
+  units = flag
+  dimensions = ()
+  type = integer
 [icloud_bl]
   standard_name = couple_sgs_clouds_to_radiation_flag
   long_name = flag for coupling sgs clouds to radiation
   units = flag
   dimensions = ()
   type = integer
+[var_ric]
+  standard_name = flag_variable_bulk_richardson_number
+  long_name = flag for calculating variable bulk richardson number for hurricane PBL
+  units = flag
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[coef_ric_l]
+  standard_name = coefficient_for_variable_bulk_richardson_number_over_land
+  long_name = coefficient for calculating variable bulk richardson number for hurricane PBL over land
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[coef_ric_s]
+  standard_name = coefficient_for_variable_bulk_richardson_number_over_ocean
+  long_name = coefficient for calculating variable bulk richardson number for hurricane PBL over ocean
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [do_ugwp]
   standard_name = do_ugwp
   long_name = flag to activate CIRES UGWP
@@ -4527,8 +4747,15 @@
   type = real
   kind = kind_phys
 [QC_BL]
-  standard_name = subgrid_cloud_mixing_ratio_pbl
-  long_name = subgrid cloud cloud mixing ratio from PBL scheme
+  standard_name = subgrid_cloud_water_mixing_ratio_pbl
+  long_name = subgrid cloud water mixing ratio from PBL scheme
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[QI_BL]
+  standard_name = subgrid_cloud_ice_mixing_ratio_pbl
+  long_name = subgrid cloud ice mixing ratio from PBL scheme
   units = kg kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
@@ -4607,13 +4834,6 @@
   standard_name = v_wind_component_at_viscous_sublayer_top
   long_name = v wind component at viscous sublayer top over water
   units = m s-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[phy_myj_z0base]
-  standard_name = baseline_surface_roughness_length
-  long_name = baseline surface roughness length for momentum in meter
-  units = m
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -5531,6 +5751,34 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+[du3dt(:,:,5)]
+  standard_name = cumulative_change_in_x_wind_due_to_rayleigh_damping
+  long_name = cumulative change in x wind due to Rayleigh damping
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[du3dt(:,:,6)]
+  standard_name = cumulative_change_in_x_wind_due_to_shallow_convection
+  long_name = cumulative change in x wind due to shallow convection
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[du3dt(:,:,7)]
+  standard_name = cumulative_change_in_x_wind_due_to_physics
+  long_name = cumulative change in x wind due to physics
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[du3dt(:,:,8)]
+  standard_name = cumulative_change_in_x_wind_due_to_non_physics_processes
+  long_name = cumulative change in x wind due to non-physics processes
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
 [dv3dt(:,:,1)]
   standard_name = cumulative_change_in_y_wind_due_to_PBL
   long_name = cumulative change in y wind due to PBL
@@ -5555,6 +5803,34 @@
 [dv3dt(:,:,4)]
   standard_name = cumulative_change_in_y_wind_due_to_convective_gravity_wave_drag
   long_name = cumulative change in y wind due to convective gravity wave drag
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dv3dt(:,:,5)]
+  standard_name = cumulative_change_in_y_wind_due_to_rayleigh_damping
+  long_name = cumulative change in y wind due to Rayleigh damping
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dv3dt(:,:,6)]
+  standard_name = cumulative_change_in_y_wind_due_to_shallow_convection
+  long_name = cumulative change in y wind due to shallow convection
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dv3dt(:,:,7)]
+  standard_name = cumulative_change_in_y_wind_due_to_physics
+  long_name = cumulative change in y wind due to physics
+  units = m s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dv3dt(:,:,8)]
+  standard_name = cumulative_change_in_y_wind_due_to_non_physics_processes
+  long_name = cumulative change in y wind due to non-physics processes
   units = m s-1
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
@@ -5588,7 +5864,7 @@
   type = real
   kind = kind_phys
 [dt3dt(:,:,5)]
-  standard_name = cumulative_change_in_temperature_due_to_shal_convection
+  standard_name = cumulative_change_in_temperature_due_to_shallow_convection
   long_name = cumulative change in temperature due to shallow convection
   units = K
   dimensions = (horizontal_dimension,vertical_dimension)
@@ -5608,6 +5884,34 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+[dt3dt(:,:,8)]
+  standard_name = cumulative_change_in_temperature_due_to_rayleigh_damping
+  long_name = cumulative change in temperature due to Rayleigh damping
+  units = K
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dt3dt(:,:,9)]
+  standard_name = cumulative_change_in_temperature_due_to_convective_gravity_wave_drag
+  long_name = cumulative change in temperature due to convective gravity wave drag
+  units = K
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dt3dt(:,:,10)]
+  standard_name = cumulative_change_in_temperature_due_to_physics
+  long_name = cumulative change in temperature due to physics
+  units = K
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dt3dt(:,:,11)]
+  standard_name = cumulative_change_in_temperature_due_to_non_physics_processes
+  long_name = cumulative change in temperature due to non-physics processed
+  units = K
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
 [dq3dt(:,:,1)]
   standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_PBL
   long_name = cumulative change in water vapor specific humidity due to PBL
@@ -5623,7 +5927,7 @@
   type = real
   kind = kind_phys
 [dq3dt(:,:,3)]
-  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_shal_convection
+  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_shallow_convection
   long_name = cumulative change in water vapor specific humidity due to shallow convection
   units = kg kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
@@ -5667,6 +5971,34 @@
 [dq3dt(:,:,9)]
   standard_name = cumulative_change_in_ozone_concentration_due_to_overhead_ozone_column
   long_name = cumulative change in ozone concentration due to overhead ozone column
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dq3dt(:,:,10)]
+  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_physics
+  long_name = cumulative change in water vapor specific humidity due to physics
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dq3dt(:,:,11)]
+  standard_name = cumulative_change_in_ozone_concentration_due_to_physics
+  long_name = cumulative change in ozone concentration due to physics
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dq3dt(:,:,12)]
+  standard_name = cumulative_change_in_water_vapor_specific_humidity_due_to_non_physics_processes
+  long_name = cumulative change in water vapor specific humidity due to non-physics processes
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dq3dt(:,:,13)]
+  standard_name = cumulative_change_in_ozone_concentration_due_to_non_physics_processes
+  long_name = cumulative change in ozone_concentration due to non-physics processes
   units = kg kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
@@ -5739,6 +6071,13 @@
   long_name = instantaneous refl_10cm
   units = dBZ
   dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[dkudiagnostic]
+  standard_name = atmosphere_momentum_diffusivity
+  long_name = diffusivity for momentum
+  units = m2 s-1
+  dimensions = (horizontal_dimension,vertical_dimension_minus_one)
   type = real
   kind = kind_phys
 [ndust]
@@ -5857,6 +6196,34 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+[sub_thl]
+  standard_name = theta_subsidence_tendency
+  long_name = updraft theta subsidence tendency
+  units = K s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[sub_sqv]
+  standard_name = water_vapor_subsidence_tendency
+  long_name = updraft water vapor subsidence tendency
+  units = kg kg-1 s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[det_thl]
+  standard_name = theta_detrainment_tendency
+  long_name = updraft theta detrainment tendency
+  units = K s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[det_sqv]
+  standard_name = water_vapor_detrainment_tendency
+  long_name = updraft water vapor detrainment tendency
+  units = kg kg-1 s-1
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
 [nupdraft]
   standard_name = number_of_plumes
   long_name = number of plumes per grid column
@@ -5870,9 +6237,9 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[ktop_shallow]
-  standard_name = k_level_of_highest_reaching_plume
-  long_name = k-level of highest reaching plume
+[ktop_plume]
+  standard_name = k_level_of_highest_plume
+  long_name = k-level of highest plume
   units = count
   dimensions = (horizontal_dimension)
   type = integer
@@ -5972,6 +6339,20 @@
   long_name = time integral of change in y wind due to NGW
   units = m s-2
   dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[aux2d]
+  standard_name = auxiliary_2d_arrays
+  long_name = auxiliary 2d arrays to output (for debugging)
+  units = none
+  dimensions = (horizontal_dimension,number_of_3d_auxiliary_arrays)
+  type = real
+  kind = kind_phys
+[aux3d]
+  standard_name = auxiliary_3d_arrays
+  long_name = auxiliary 3d arrays to output (for debugging)
+  units = none
+  dimensions = (horizontal_dimension,vertical_dimension,number_of_3d_auxiliary_arrays)
   type = real
   kind = kind_phys
 
@@ -6147,6 +6528,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[canopy_save]
+  standard_name = canopy_water_amount_save
+  long_name = canopy water amount before entering a physics scheme
+  units = kg m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [cd]
   standard_name = surface_drag_coefficient_for_momentum_in_air
   long_name = surface exchange coeff for momentum
@@ -6221,6 +6609,13 @@
   standard_name = surface_drag_mass_flux_for_heat_and_moisture_in_air_over_ice
   long_name = thermal exchange coefficient over ice
   units = kg m-2 s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[chk_land]
+  standard_name = surface_conductance_for_heat_and_moisture_in_air_over_land
+  long_name = surface conductance for heat & moisture over land
+  units = m s-1
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -6369,6 +6764,20 @@
   long_name = frac. of grid box with by subgrid orography higher than critical height
   units = frac
   dimensions = (horizontal_dimension,4)
+  type = real
+  kind = kind_phys
+[clxss]
+  standard_name = fraction_of_grid_box_with_subgrid_orography_higher_than_critical_height_small_scale
+  long_name = frac. of grid box with by subgrid orography higher than critical height small scale
+  units = frac
+  dimensions = (horizontal_dimension,4)
+  type = real
+  kind = kind_phys
+[cmc]
+  standard_name = canopy_water_amount_in_m
+  long_name = canopy water amount in m
+  units = m
+  dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
 [cmm_ocean]
@@ -6602,6 +7011,13 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+[dqsdt2]
+  standard_name = saturation_specific_humidity_slope
+  long_name = saturation specific humidity slope at lowest model layer
+  units = K-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [dqsfc1]
   standard_name = instantaneous_surface_upward_latent_heat_flux
   long_name = surface upward latent heat flux
@@ -6613,6 +7029,13 @@
   standard_name = subsurface_runoff_flux
   long_name = subsurface runoff flux
   units = kg m-2 s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[drain_in_m_sm1]
+  standard_name = subsurface_runoff_flux_in_m_sm1
+  long_name = subsurface runoff flux in m s-1
+  units = m s-1
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -6932,6 +7355,18 @@
 [flag_iter]
   standard_name = flag_for_iteration
   long_name = flag for iteration
+  units = flag
+  dimensions = (horizontal_dimension)
+  type = logical
+[flag_lsm]
+  standard_name = flag_for_calling_land_surface_model
+  long_name = flag for calling land surface model
+  units = flag
+  dimensions = (horizontal_dimension)
+  type = logical
+[flag_lsm_glacier]
+  standard_name = flag_for_calling_land_surface_model_glacier
+  long_name = flag for calling land surface model over glacier
   units = flag
   dimensions = (horizontal_dimension)
   type = logical
@@ -7571,9 +8006,30 @@
   dimensions = (horizontal_dimension,4)
   type = real
   kind = kind_phys
+[varss]
+  standard_name = standard_deviation_of_subgrid_orography_small_scale
+  long_name = standard deviation of subgrid orography small scale
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[oa4ss]
+  standard_name = asymmetry_of_subgrid_orography_small_scale
+  long_name = asymmetry of subgrid orography small scale
+  units = none
+  dimensions = (horizontal_dimension,4)
+  type = real
+  kind = kind_phys
 [oc]
   standard_name = convexity_of_subgrid_orography
   long_name = convexity of subgrid orography
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[ocss]
+  standard_name = convexity_of_subgrid_orography_small_scale
+  long_name = convexity of subgrid orography small scale
   units = none
   dimensions = (horizontal_dimension)
   type = real
@@ -7721,6 +8177,20 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[qs1]
+  standard_name = saturation_specific_humidity_at_lowest_model_layer
+  long_name = saturation specific humidity at lowest model layer
+  units = kg kg-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[qv1]
+  standard_name = bounded_specific_humidity_at_lowest_model_layer_over_land
+  long_name = specific humidity at lowest model layer over land bounded between a nonzero epsilon and saturation
+  units = kg kg-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [radar_reset]
   standard_name = flag_for_resetting_radar_reflectivity_calculation
   long_name = flag for resetting radar reflectivity calculation
@@ -7810,10 +8280,24 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+[rho1]
+  standard_name = air_density_at_lowest_model_layer
+  long_name = air density at lowest model layer
+  units = kg m-3
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [runoff]
   standard_name = surface_runoff_flux
   long_name = surface runoff flux
   units = kg m-2 s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[runoff_in_m_sm1]
+  standard_name = surface_runoff_flux_in_m_sm1
+  long_name = surface runoff flux in m s-1
+  units = m s-1
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -7848,6 +8332,13 @@
 [save_t]
   standard_name = air_temperature_save
   long_name = air temperature before entering a physics scheme
+  units = K
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[save_tcp]
+  standard_name = air_temperature_save_from_cumulus_paramterization
+  long_name = air temperature after cumulus parameterization
   units = K
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
@@ -7941,12 +8432,33 @@
   units = flag
   dimensions = ()
   type = logical
+[slc_save]
+  standard_name = volume_fraction_of_unfrozen_soil_moisture_save
+  long_name = liquid soil moisture before entering a physics scheme
+  units = frac
+  dimensions = (horizontal_dimension,soil_vertical_dimension)
+  type = real
+  kind = kind_phys
 [slopetype]
   standard_name = surface_slope_classification
   long_name = surface slope type at each grid cell
   units = index
   dimensions = (horizontal_dimension)
   type = integer
+[smcmax]
+  standard_name = soil_porosity
+  long_name = volumetric soil porosity
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[smc_save]
+  standard_name = volume_fraction_of_soil_moisture_save
+  long_name = total soil moisture before entering a physics scheme
+  units = frac
+  dimensions = (horizontal_dimension,soil_vertical_dimension)
+  type = real
+  kind = kind_phys
 [snowc]
   standard_name = surface_snow_area_fraction
   long_name = surface snow area fraction
@@ -7968,6 +8480,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[snowd_land_save]
+  standard_name = surface_snow_thickness_water_equivalent_over_land_save
+  long_name = water equivalent snow depth over land before entering a physics scheme
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [snowd_ice]
   standard_name = surface_snow_thickness_water_equivalent_over_ice
   long_name = water equivalent snow depth over ice
@@ -7975,9 +8494,37 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[snow_depth]
+  standard_name = actual_snow_depth
+  long_name = actual snow depth
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [snohf]
   standard_name = snow_freezing_rain_upward_latent_heat_flux
   long_name = latent heat flux due to snow and frz rain
+  units = W m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[snohf_snow]
+  standard_name = latent_heat_flux_from_precipitating_snow
+  long_name = latent heat flux due to precipitating snow
+  units = W m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[snohf_frzgra]
+  standard_name = latent_heat_flux_from_freezing_rain
+  long_name = latent heat flux due to freezing rain
+  units = W m-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[snohf_snowmelt]
+  standard_name = latent_heat_flux_due_to_snowmelt
+  long_name = latent heat flux due to snowmelt phase change
   units = W m-2
   dimensions = (horizontal_dimension)
   type = real
@@ -7996,12 +8543,33 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[soilm_in_m]
+  standard_name = soil_moisture_content_in_m
+  long_name = soil moisture in meters
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [soiltype]
   standard_name = soil_type_classification
   long_name = soil type at each grid cell
   units = index
   dimensions = (horizontal_dimension)
   type = integer
+[stc_save]
+  standard_name = soil_temperature_save
+  long_name = soil temperature before entering a physics scheme
+  units = K
+  dimensions = (horizontal_dimension,soil_vertical_dimension)
+  type = real
+  kind = kind_phys
+[sthick]
+  standard_name = soil_layer_thickness
+  long_name = soil layer thickness
+  units = m
+  dimensions = (soil_vertical_dimension)
+  type = real
+  kind = kind_phys
 [stress]
   standard_name = surface_wind_stress
   long_name = surface wind stress
@@ -8044,6 +8612,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[th1]
+  standard_name = potential_temperature_at_lowest_model_layer
+  long_name = potential_temperature_at_lowest_model_layer
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [tice]
   standard_name = sea_ice_temperature_interstitial
   long_name = sea ice surface skin temperature use as interstitial
@@ -8083,6 +8658,13 @@
   standard_name = nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep_over_ice
   long_name = total precipitation amount in each time step over ice
   units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[tprcp_rate_land]
+  standard_name = total_precipitation_rate_on_dynamics_timestep_over_land
+  long_name = total precipitation rate in each time step over land
+  units = kg m-2 s-1
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -8135,6 +8717,13 @@
 [tsfc_land]
   standard_name = surface_skin_temperature_over_land_interstitial
   long_name = surface skin temperature over land  (temporary use as interstitial)
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[tsfc_land_save]
+  standard_name = surface_skin_temperature_over_land_interstitial_save
+  long_name = surface skin temperature over land before entering a physics scheme (temporary use as interstitial)
   units = K
   dimensions = (horizontal_dimension)
   type = real
@@ -8259,6 +8848,13 @@
 [weasd_land]
   standard_name = water_equivalent_accumulated_snow_depth_over_land
   long_name = water equiv of acc snow depth over land
+  units = mm
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[weasd_land_save]
+  standard_name = water_equivalent_accumulated_snow_depth_over_land_save
+  long_name = water equiv of acc snow depth over land before entering a physics scheme
   units = mm
   dimensions = (horizontal_dimension)
   type = real

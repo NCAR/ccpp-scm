@@ -120,6 +120,8 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/module_mp_thompson.F90',
     'ccpp/physics/physics/module_mp_thompson_make_number_concentrations.F90',
     'ccpp/physics/physics/module_MP_FER_HIRES.F90',
+#    'ccpp/physics/physics/HWRF_mersenne_twister.F90',
+#    'ccpp/physics/physics/HWRF_mcica_random_numbers.F90',
     'ccpp/physics/physics/module_bl_mynn.F90',
     'ccpp/physics/physics/module_sf_mynn.F90',
     'ccpp/physics/physics/module_SF_JSFC.F90',
@@ -170,6 +172,9 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/namelist_soilveg_ruc.F90',
     'ccpp/physics/physics/set_soilveg_ruc.F90',
     'ccpp/physics/physics/module_soil_pre.F90',
+#    'ccpp/physics/physics/module_sf_noahlsm.F90',
+#    'ccpp/physics/physics/module_sf_noahlsm_glacial_only.F90',
+#    'ccpp/physics/physics/module_sf_exchcoef.f90',
     # RRTMGP
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics.F90',
@@ -196,7 +201,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/rte-rrtmgp/extensions/mo_heating_rates.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/mo_rrtmgp_clr_all_sky.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
-    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_sampling.F90', 
+    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_sampling.F90',
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
@@ -237,6 +242,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/gcm_shoc.F90'                     ,
     'ccpp/physics/physics/get_prs_fv3.F90'                  ,
     'ccpp/physics/physics/gfdl_cloud_microphys.F90'         ,
+#    'ccpp/physics/physics/gfdl_sfc_layer.F90'              ],
     'ccpp/physics/physics/gscond.f'                         ,
     'ccpp/physics/physics/gwdc.f'                           ,
     'ccpp/physics/physics/gwdps.f'                          ,
@@ -259,8 +265,8 @@ SCHEME_FILES = [
     'ccpp/physics/physics/ysuvdif.F90'                      ,
     'ccpp/physics/physics/module_MYNNPBL_wrapper.F90'       ,
     'ccpp/physics/physics/module_MYNNSFC_wrapper.F90'       ,
-    'ccpp/physics/physics/module_MYNNrad_pre.F90'           ,
-    'ccpp/physics/physics/module_MYNNrad_post.F90'          ,
+    'ccpp/physics/physics/module_SGSCloud_RadPre.F90'       ,
+    'ccpp/physics/physics/module_SGSCloud_RadPost.F90'      ,
     'ccpp/physics/physics/module_MYJSFC_wrapper.F90'        ,
     'ccpp/physics/physics/module_MYJPBL_wrapper.F90'        ,
     'ccpp/physics/physics/mp_thompson_pre.F90'              ,
@@ -269,6 +275,9 @@ SCHEME_FILES = [
     'ccpp/physics/physics/ozphys.f'                         ,
     'ccpp/physics/physics/ozphys_2015.f'                    ,
     'ccpp/physics/physics/precpd.f'                         ,
+    'ccpp/physics/physics/phys_tend.F90'                    ,
+#    'ccpp/physics/physics/radlw_main.F90'                  ],
+#    'ccpp/physics/physics/radsw_main.F90'                  ],
     'ccpp/physics/physics/radlw_main.f'                     ,
     'ccpp/physics/physics/radsw_main.f'                     ,
     'ccpp/physics/physics/rayleigh_damp.f'                  ,
@@ -283,6 +292,8 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_cice.f'                       ,
     'ccpp/physics/physics/sfc_diff.f'                       ,
     'ccpp/physics/physics/sfc_drv.f'                        ,
+#    'ccpp/physics/physics/sfc_noah_wrfv4_interstitial.F90'  ,
+#    'ccpp/physics/physics/sfc_noah_wrfv4.F90'               ,
     'ccpp/physics/physics/sfc_noahmp_drv.f'                 ,
     'ccpp/physics/physics/sfc_nst.f'                        ,
     'ccpp/physics/physics/sfc_ocean.F'                      ,
@@ -349,19 +360,19 @@ SUITES_DIR = 'ccpp/suites'
 # or a list of standard_names: [ 'var1', 'var3' ].
 OPTIONAL_ARGUMENTS = {
     'rrtmgp_sw_rte' : {
-     'rrtmgp_sw_rte_run' : [
-         'components_of_surface_downward_shortwave_fluxes',
-         ],
-     },
+         'rrtmgp_sw_rte_run' : [
+             'components_of_surface_downward_shortwave_fluxes',
+             ],
+         },
     'GFS_rrtmgp_sw_post' : {
-     'GFS_rrtmgp_sw_post_run' : 'none',
-     },
+         'GFS_rrtmgp_sw_post_run' : 'none',
+         },
     'rrtmgp_lw_rte' : {
-     'rrtmgp_lw_rte_run' : 'none',
-    },
+         'rrtmgp_lw_rte_run' : 'none',
+        },
     'GFS_rrtmgp_lw_post' : {
-     'GFS_rrtmgp_lw_post_run' : 'none',
-     },
+         'GFS_rrtmgp_lw_post_run' : 'none',
+         },
     'rrtmg_sw' : {
         'rrtmg_sw_run' : [
             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
@@ -396,6 +407,11 @@ OPTIONAL_ARGUMENTS = {
             'ice_friendly_aerosol_number_concentration',
             'tendency_of_water_friendly_aerosols_at_surface',
             'tendency_of_ice_friendly_aerosols_at_surface',
+            # DH* 2020-06-01: turn off calculation of effective radii, now done in GFS_rrtmg_pre
+            #'effective_radius_of_stratiform_cloud_liquid_water_particle_in_um',
+            #'effective_radius_of_stratiform_cloud_ice_particle_in_um',
+            #'effective_radius_of_stratiform_cloud_snow_particle_in_um',
+            # *DH 2020-06-01
             ],
         'mp_thompson_run' : [
             'cloud_droplet_number_concentration_updated_by_physics',
