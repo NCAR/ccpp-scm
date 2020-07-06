@@ -200,6 +200,7 @@
   long_name = number concentration of water-friendly aerosols
   units = kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
+  active = (index_for_water_friendly_aerosols > 0)
   type = real
   kind = kind_phys
 [qgrs(:,:,index_for_ice_friendly_aerosols)]
@@ -207,6 +208,7 @@
   long_name = number concentration of ice-friendly aerosols
   units = kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
+  active = (index_for_ice_friendly_aerosols > 0)
   type = real
   kind = kind_phys
 [qgrs(:,:,index_for_liquid_cloud_number_concentration)]
@@ -216,6 +218,7 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+  active = (index_for_liquid_cloud_number_concentration > 0)
 [qgrs(:,:,index_for_ice_cloud_number_concentration)]
   standard_name = ice_number_concentration
   long_name = number concentration of ice
@@ -382,6 +385,7 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+  active = (index_for_water_friendly_aerosols > 0)
 [gq0(:,:,index_for_ice_friendly_aerosols)]
   standard_name = ice_friendly_aerosol_number_concentration_updated_by_physics
   long_name = number concentration of ice-friendly aerosols updated by physics
@@ -389,6 +393,7 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+  active = (index_for_ice_friendly_aerosols > 0)
 [gq0(:,:,index_for_liquid_cloud_number_concentration)]
   standard_name = cloud_droplet_number_concentration_updated_by_physics
   long_name = number concentration of cloud droplets updated by physics
@@ -396,6 +401,7 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+  active = (index_for_liquid_cloud_number_concentration > 0)
 [gq0(:,:,index_for_ice_cloud_number_concentration)]
   standard_name = ice_number_concentration_updated_by_physics
   long_name = number concentration of ice updated by physics
@@ -1311,6 +1317,27 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[evap]
+  standard_name = kinematic_surface_upward_latent_heat_flux
+  long_name = kinematic surface upward latent heat flux
+  units = kg kg-1 m s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[hflx]
+  standard_name = kinematic_surface_upward_sensible_heat_flux
+  long_name = kinematic surface upward sensible heat flux
+  units = K m s-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[qss]
+  standard_name = surface_specific_humidity
+  long_name = surface air saturation specific humidity
+  units = kg kg-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [raincprv]
   standard_name = lwe_thickness_of_convective_precipitation_amount_from_previous_timestep
   long_name = convective_precipitation_amount from previous timestep
@@ -1897,6 +1924,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+  active = (flag_for_microphysics_scheme == flag_for_thompson_microphysics_scheme .and. flag_for_aerosol_physics)
 [nifa2d]
   standard_name = tendency_of_ice_friendly_aerosols_at_surface
   long_name = instantaneous ice-friendly sfc aerosol source
@@ -1904,6 +1932,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+  active = (flag_for_microphysics_scheme == flag_for_thompson_microphysics_scheme .and. flag_for_aerosol_physics)
 [ushfsfci]
   standard_name = instantaneous_surface_upward_sensible_heat_flux_for_chemistry_coupling
   long_name = instantaneous upward sensible heat flux for chemistry coupling
@@ -2089,16 +2118,16 @@
   dimensions = ()
   type = integer
 [nblks]
-  standard_name = number_of_blocks
+  standard_name = ccpp_block_count
   long_name = for explicit data blocking: number of blocks
   units = count
   dimensions = ()
   type = integer
 [blksz]
-  standard_name = horizontal_block_size
+  standard_name = ccpp_block_sizes
   long_name = for explicit data blocking: block sizes of all blocks
   units = count
-  dimensions = (number_of_blocks)
+  dimensions = (ccpp_block_count)
   type = integer
 [blksz(ccpp_block_number)]
   standard_name = horizontal_loop_extent
@@ -2106,7 +2135,7 @@
   units = count
   dimensions = ()
   type = integer
-[blksz2(ccpp_block_number)]
+[ncols]
   standard_name = horizontal_dimension
   long_name = horizontal dimension
   units = count
@@ -2206,6 +2235,12 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[nhfrad]
+  standard_name = number_of_timesteps_for_radiation_calls_on_physics_timestep
+  long_name = number of timesteps for radiation calls on physics timestep (coldstarts only)
+  units = count
+  dimensions = ()
+  type = integer
 [levr]
   standard_name = number_of_vertical_layers_for_radiation_calculations
   long_name = number of vertical levels for radiation calculations
@@ -2881,7 +2916,7 @@
   type = integer
 [rdlai]
   standard_name = flag_for_reading_leaf_area_index_from_input
-  long_name = flag for reading leaf area index from initial conditions
+  long_name = flag for reading leaf area index from initial conditions for RUC LSM
   units = flag
   dimensions = ()
   type = logical
@@ -4490,6 +4525,13 @@
   dimensions = (horizontal_dimension,vertical_dimension_of_h2o_forcing_data,number_of_coefficients_in_h2o_forcing_data)
   type = real
   kind = kind_phys
+[hpbl]
+  standard_name = atmosphere_boundary_layer_thickness
+  long_name = pbl height
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [in_nm]
   standard_name = in_number_concentration
   long_name = IN number concentration
@@ -5499,13 +5541,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[hpbl]
-  standard_name = atmosphere_boundary_layer_thickness
-  long_name = pbl height
-  units = m
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [pwat]
   standard_name = column_precipitable_water
   long_name = precipitable water
@@ -6237,6 +6272,12 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[ktop_shallow]
+  standard_name = k_level_of_highest_reaching_plume
+  long_name = k-level of highest reaching plume
+  units = count
+  dimensions = (horizontal_dimension)
+  type = integer
 [ktop_plume]
   standard_name = k_level_of_highest_plume
   long_name = k-level of highest plume
@@ -6962,6 +7003,7 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+  active = (index_for_liquid_cloud_number_concentration > 0)
 [dqdt(:,:,index_for_ice_cloud_number_concentration)]
   standard_name = tendency_of_ice_number_concentration_due_to_model_physics
   long_name = number concentration of ice tendency due to model physics
@@ -6976,6 +7018,7 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+  active = (index_for_water_friendly_aerosols > 0)
 [dqdt(:,:,index_for_ice_friendly_aerosols)]
   standard_name = tendency_of_ice_friendly_aerosol_number_concentration_due_to_model_physics
   long_name = number concentration of ice-friendly aerosols tendency due to model physics
@@ -6983,6 +7026,7 @@
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
+  active = (index_for_ice_friendly_aerosols > 0)
 [dqdt(:,:,index_for_rain_water)]
   standard_name = tendency_of_rain_water_mixing_ratio_due_to_model_physics
   long_name = ratio of mass of rain water tendency to mass of dry air plus vapor (without condensates) due to model physics
@@ -7183,13 +7227,6 @@
   standard_name = surface_upward_potential_latent_heat_flux_over_ice
   long_name = surface upward potential latent heat flux over ice
   units = W m-2
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[evap]
-  standard_name = kinematic_surface_upward_latent_heat_flux
-  long_name = kinematic surface upward latent heat flux
-  units = kg kg-1 m s-1
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -7639,13 +7676,6 @@
   standard_name = surface_upward_sensible_heat_flux_reduction_factor
   long_name = surface upward sensible heat flux reduction factor from canopy heat storage
   units = none
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-[hflx]
-  standard_name = kinematic_surface_upward_sensible_heat_flux
-  long_name = kinematic surface upward sensible heat flux
-  units = K m s-1
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -8149,13 +8179,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[qss]
-  standard_name = surface_specific_humidity
-  long_name = surface air saturation specific humidity
-  units = kg kg-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [qss_ocean]
   standard_name = surface_specific_humidity_over_ocean
   long_name = surface air saturation specific humidity over ocean
@@ -8299,6 +8322,13 @@
   long_name = surface runoff flux in m s-1
   units = m s-1
   dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[save_q(:,:,index_for_ozone)]
+  standard_name = ozone_mixing_ratio_save
+  long_name = ozone mixing ratio before entering a physics scheme
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
 [save_q(:,:,index_for_liquid_cloud_condensate)]
