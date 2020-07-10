@@ -32,16 +32,16 @@ subroutine filter(scm_state)
   !! \f]
   !! where \f$\overline{x^\tau}\f$ is the filtered value of variable \f$x\f$ at the current iteration, \f$x^\tau\f$ is the unfiltered value of the previous time step, \f$x^{\tau +1}\f$ is the unfiltered
   !! value that was just updated by the forcing and physics, and \f$\overline{x^{\tau - 1}}\f$ is the filtered value of the variable from the previous iteration, and \f$c\f$ is the filtering constant.
-  scm_state%state_tracer(:,1,:,scm_state%water_vapor_index,1) = &
-    (1.0 - scm_state%c_filter)*scm_state%temp_tracer(:,1,:,scm_state%water_vapor_index,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_tracer(:,1,:,scm_state%water_vapor_index,2) + &
-    scm_state%temp_tracer(:,1,:,scm_state%water_vapor_index,1))
-  scm_state%state_T(:,1,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_T(:,1,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_T(:,1,:,2) + scm_state%temp_T(:,1,:,1))
-  scm_state%state_u(:,1,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_u(:,1,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_u(:,1,:,2) + scm_state%temp_u(:,1,:,1))
-  scm_state%state_v(:,1,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_v(:,1,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_v(:,1,:,2) + scm_state%temp_v(:,1,:,1))
+  scm_state%state_tracer(:,:,scm_state%water_vapor_index,1) = &
+    (1.0 - scm_state%c_filter)*scm_state%temp_tracer(:,:,scm_state%water_vapor_index,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_tracer(:,:,scm_state%water_vapor_index,2) + &
+    scm_state%temp_tracer(:,:,scm_state%water_vapor_index,1))
+  scm_state%state_T(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_T(:,:,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_T(:,:,2) + scm_state%temp_T(:,:,1))
+  scm_state%state_u(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_u(:,:,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_u(:,:,2) + scm_state%temp_u(:,:,1))
+  scm_state%state_v(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_v(:,:,2) + &
+    0.5*scm_state%c_filter*(scm_state%state_v(:,:,2) + scm_state%temp_v(:,:,1))
 
 end subroutine
 
@@ -49,12 +49,12 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, physics, cdata_cols)
+subroutine do_time_step(scm_state, physics, cdata)
   use gmtb_scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout)          :: scm_state
   type(physics_type), intent(inout)            :: physics
-  type(ccpp_t), intent(inout)                  :: cdata_cols(:)
+  type(ccpp_t), intent(inout)                  :: cdata
 
   integer :: i, ierr
 
@@ -73,40 +73,37 @@ subroutine do_time_step(scm_state, physics, cdata_cols)
 
   if (scm_state%time_scheme == 2) then
     !IPD cdata points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
-    scm_state%state_T(:,1,:,2) = scm_state%state_T(:,1,:,1)
-    scm_state%state_tracer(:,1,:,:,2) = scm_state%state_tracer(:,1,:,:,1)
-    scm_state%state_u(:,1,:,2) = scm_state%state_u(:,1,:,1)
-    scm_state%state_v(:,1,:,2) = scm_state%state_v(:,1,:,1)
+    scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
+    scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
+    scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
+    scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
   end if
 
   ! Calculate total non-physics tendencies by substracting old Stateout
   ! variables from new/updated Statein variables (gives the tendencies
   ! due to anything else than physics)
   do i=1, scm_state%n_cols
-    if (physics%Model(i)%ldiag3d) then
-      physics%Diag(i)%du3dt(:,:,8)  = physics%Diag(i)%du3dt(:,:,8)  &
-                                      + (physics%Statein(i)%ugrs - physics%Stateout(i)%gu0)
-      physics%Diag(i)%dv3dt(:,:,8)  =   physics%Diag(i)%dv3dt(:,:,8)  &
-                                      + (  physics%Statein(i)%vgrs - physics%Stateout(i)%gv0)
-      physics%Diag(i)%dt3dt(:,:,11) = physics%Diag(i)%dt3dt(:,:,11) &
-                                      + (physics%Statein(i)%tgrs - physics%Stateout(i)%gt0)
-      if (physics%Model(i)%qdiag3d) then
-        physics%Diag(i)%dq3dt(:,:,12) = physics%Diag(i)%dq3dt(:,:,12) &
-              + (physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntqv) - physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntqv))
-        physics%Diag(i)%dq3dt(:,:,13) = physics%Diag(i)%dq3dt(:,:,13) &
-              + (physics%Statein(i)%qgrs(:,:,physics%Model(i)%ntoz) - physics%Stateout(i)%gq0(:,:,physics%Model(i)%ntoz))
+    if (physics%Model%ldiag3d) then
+      physics%Diag%du3dt(i,:,8)  = physics%Diag%du3dt(i,:,8)  &
+                                      + (physics%Statein%ugrs(i,:) - physics%Stateout%gu0(i,:))
+      physics%Diag%dv3dt(i,:,8)  =   physics%Diag%dv3dt(i,:,8)  &
+                                      + (  physics%Statein%vgrs(i,:) - physics%Stateout%gv0(i,:))
+      physics%Diag%dt3dt(i,:,11) = physics%Diag%dt3dt(i,:,11) &
+                                      + (physics%Statein%tgrs(i,:) - physics%Stateout%gt0(i,:))
+      if (physics%Model%qdiag3d) then
+        physics%Diag%dq3dt(i,:,12) = physics%Diag%dq3dt(i,:,12) &
+              + (physics%Statein%qgrs(i,:,physics%Model%ntqv) - physics%Stateout%gq0(i,:,physics%Model%ntqv))
+        physics%Diag%dq3dt(i,:,13) = physics%Diag%dq3dt(i,:,13) &
+              + (physics%Statein%qgrs(i,:,physics%Model%ntoz) - physics%Stateout%gq0(i,:,physics%Model%ntoz))
       endif
     endif
   end do
 
-  do i=1, scm_state%n_cols
-    call ccpp_physics_run(cdata_cols(i), suite_name=trim(adjustl(scm_state%physics_suite_name(i))), ierr=ierr)
-    if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
-        stop
-    end if
-  end do
-
+  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
+      stop
+  end if
 
   !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)
   ! scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)

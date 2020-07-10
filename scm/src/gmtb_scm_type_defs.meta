@@ -1,108 +1,72 @@
 [ccpp-arg-table]
   name = physics_type
   type = ddt
-[Model(ccpp_block_number)]
+[Model]
   standard_name = GFS_control_type_instance
   long_name = instance of derived type GFS_control_type
   units = DDT
   dimensions = ()
   type = GFS_control_type
-[Cldprop(ccpp_block_number)]
+[Cldprop]
   standard_name = GFS_cldprop_type_instance
   long_name = instance of derived type GFS_cldprop_type
   units = DDT
   dimensions = ()
   type = GFS_cldprop_type
-[Coupling(ccpp_block_number)]
+[Coupling]
   standard_name = GFS_coupling_type_instance
   long_name = instance of derived type GFS_coupling_type
   units = DDT
   dimensions = ()
   type = GFS_coupling_type
-[Diag(ccpp_block_number)]
+[Diag]
   standard_name = GFS_diag_type_instance
   long_name = instance of derived type GFS_diag_type
   units = DDT
   dimensions = ()
   type = GFS_diag_type
-[Grid(ccpp_block_number)]
+[Grid]
   standard_name = GFS_grid_type_instance
   long_name = instance of derived type GFS_grid_type
   units = DDT
   dimensions = ()
   type = GFS_grid_type
-[Radtend(ccpp_block_number)]
+[Radtend]
   standard_name = GFS_radtend_type_instance
   long_name = instance of derived type GFS_radtend_type
   units = DDT
   dimensions = ()
   type = GFS_radtend_type
-[Sfcprop(ccpp_block_number)]
+[Sfcprop]
   standard_name = GFS_sfcprop_type_instance
   long_name = instance of derived type GFS_sfcprop_type
   units = DDT
   dimensions = ()
   type = GFS_sfcprop_type
-[Statein(ccpp_block_number)]
+[Statein]
   standard_name = GFS_statein_type_instance
   long_name = instance of derived type GFS_statein_type
   units = DDT
   dimensions = ()
   type = GFS_statein_type
-[Stateout(ccpp_block_number)]
+[Stateout]
   standard_name = GFS_stateout_type_instance
   long_name = instance of derived type GFS_stateout_type
   units = DDT
   dimensions = ()
   type = GFS_stateout_type
-[Tbd(ccpp_block_number)]
+[Tbd]
   standard_name = GFS_tbd_type_instance
   long_name = instance of derived type GFS_tbd_type
   units = DDT
   dimensions = ()
   type = GFS_tbd_type
-[Interstitial(ccpp_block_number)]
+[Interstitial]
   standard_name = GFS_interstitial_type_instance
   long_name = instance of derived type GFS_interstitial_type
   units = DDT
   dimensions = ()
   type = GFS_interstitial_type
-[Statein(:)]
-  standard_name = GFS_statein_type_instance_all_blocks
-  long_name = instance of derived type GFS_statein_type
-  units = DDT
-  dimensions = (ccpp_block_count)
-  type = GFS_statein_type
-[Grid(:)]
-  standard_name = GFS_grid_type_instance_all_blocks
-  long_name = instance of derived type GFS_grid_type
-  units = DDT
-  dimensions = (ccpp_block_count)
-  type = GFS_grid_type
-[Tbd(:)]
-  standard_name = GFS_tbd_type_instance_all_blocks
-  long_name = instance of derived type GFS_tbd_type
-  units = DDT
-  dimensions = (ccpp_block_count)
-  type = GFS_tbd_type
-[Sfcprop(:)]
-  standard_name = GFS_sfcprop_type_instance_all_blocks
-  long_name = instance of derived type GFS_sfcprop_type
-  units = DDT
-  dimensions = (ccpp_block_count)
-  type = GFS_sfcprop_type
-[Cldprop(:)]
-  standard_name = GFS_cldprop_type_instance_all_blocks
-  long_name = instance of derived type GFS_cldprop_type
-  units = DDT
-  dimensions = (ccpp_block_count)
-  type = GFS_cldprop_type
-[Diag(:)]
-  standard_name = GFS_diag_type_instance_all_blocks
-  long_name = instance of derived type GFS_diag_type
-  units = DDT
-  dimensions = (ccpp_block_count)
-  type = GFS_diag_type
 
 ########################################################################
 [ccpp-arg-table]

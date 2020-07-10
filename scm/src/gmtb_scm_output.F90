@@ -24,7 +24,7 @@ subroutine output_init(scm_state, physics)
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type),   intent(in) :: physics
 
-  INTEGER :: i, ncid, time_id, hor_dim_id, vert_dim_id, vert_dim_i_id, dummy_id, year_id, month_id, day_id, hour_id, maxnaux2d, maxnaux3d
+  INTEGER :: i, ncid, time_id, hor_dim_id, vert_dim_id, vert_dim_i_id, dummy_id, year_id, month_id, day_id, hour_id
   character(2) :: idx
   !> \section output_init_alg Algorithm
   !! @{
@@ -431,18 +431,16 @@ subroutine output_init(scm_state, physics)
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=hour_id,NAME="description",VALUES="model initialization hour"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=hour_id,NAME="units",VALUES=""))
   
-  if (any(physics%Model(:)%naux2d > 0)) then
-    maxnaux2d = maxval(physics%Model(:)%naux2d)
-    do i=1, maxnaux2d
+  if (physics%Model%naux2d > 0) then
+    do i=1, physics%Model%naux2d
       write(idx,'(I2)') i
       CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='aux2d'//idx,XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id,time_id /), &
         VARID=dummy_id))
     end do
   end if
   
-  if (any(physics%Model(:)%naux3d > 0)) then
-    maxnaux3d = maxval(physics%Model(:)%naux3d)
-    do i=1, maxnaux3d
+  if (physics%Model%naux3d > 0) then
+    do i=1, physics%Model%naux3d
       write(idx,'(I2)') i
       CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='aux3d'//idx,XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id,vert_dim_id,time_id /), &
         VARID=dummy_id))
@@ -486,7 +484,7 @@ subroutine output_append(scm_state, physics)
   ! real(kind=dp), intent(in)          :: lw_dn_sfc_clr(:) !< clear sky downward LW flux at sfc (\f$W/m^2\f$) (horizontal)
 
 
-  integer :: ncid, var_id, i, j, maxnaux2d, maxnaux3d
+  integer :: ncid, var_id, i, j
   character(2) :: idx
 
   allocate(dummy_1D(scm_state%n_cols), dummy_2d(scm_state%n_cols, scm_state%n_levels))
@@ -502,33 +500,30 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_out /)))
 
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pres",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_l(:,1,:),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_l(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pres_i",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_i(:,1,:),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_i(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sigma",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%sl(:,1,:),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%sl(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sigma_i",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%si(:,1,:),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%si(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_tracer(:,1,:,scm_state%water_vapor_index,1),&
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_tracer(:,:,scm_state%water_vapor_index,1),&
     START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_T(:,1,:,1),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_T(:,:,1),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="u",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_u(:,1,:,1),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_u(:,:,1),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_v(:,1,:,1),START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_v(:,:,1),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qc",VARID=var_id))
-  if (physics%model(1)%do_mynnedmf) then
-    do i=1, scm_state%n_cols
-      dummy_2D(i,:) = physics%Tbd(i)%QC_BL(1,:)
-    end do
+  if (physics%model%do_mynnedmf) then
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
-      scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,1,:,scm_state%cloud_ice_index,1) + &
-      dummy_2d, START=(/1,1,scm_state%itt_out /)))
+      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1) + &
+      physics%Tbd%QC_BL(:,:), START=(/1,1,scm_state%itt_out /)))
   else
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
-      scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,1,:,scm_state%cloud_ice_index,1),&
+      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1),&
       START=(/1,1,scm_state%itt_out /)))
   endif
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv_force_tend",VARID=var_id))
@@ -556,297 +551,252 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v_advec_qt",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%v_advec_qt(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_s",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%T_surf(:,1),START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%T_surf(:),START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pres_s",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_surf(:,1),START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_surf(:),START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lhf",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Interstitial(i)%dqsfc1(1)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dqsfc1(:),START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="shf",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Interstitial(i)%dtsfc1(1)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dtsfc1(:),START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_u",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Interstitial(i)%dusfc1(1)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dusfc1(:),START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_v",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Interstitial(i)%dvsfc1(1)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dvsfc1(:),START=(/1,scm_state%itt_out /)))
 
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="cldcov",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%clouds(1,:,1)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%clouds(:,:,1),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="cldcov_conv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%cnvc(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%cnvc(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="ql",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%clw(1,:,2)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%clw(:,:,2),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qi",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%clw(1,:,1)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%clw(:,:,1),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qc_conv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%cnvw(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%cnvw(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rain",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Diag(i)%rain(1)/scm_state%dt
+    dummy_1D(i) = physics%Diag%rain(i)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rainc",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Diag(i)%rainc(1)/scm_state%dt
+    dummy_1D(i) = physics%Diag%rainc(i)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pwat",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Diag(i)%pwat(1)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Diag%pwat(:),START=(/1,scm_state%itt_out /)))
 
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_rad_heating_rate",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Radtend(i)%htrsw(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Radtend%htrsw(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_rad_heating_rate",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Radtend(i)%htrlw(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Radtend%htrlw(:,:),START=(/1,1,scm_state%itt_out /)))
   
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_lwrad",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,1)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,1)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_swrad",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,2)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,2)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_PBL",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,3)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,3)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_deepconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,4)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,4)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_shalconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,5)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,5)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_micro",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,6)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,6)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_ogwd",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,7)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,7)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_rayleigh",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,8)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,8)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_cgwd",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,9)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,9)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_phys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,10)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,10)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_nonphys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dt3dt(1,:,11)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,11)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_PBL",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,1)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,1)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_deepconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,2)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,2)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_shalconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,3)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,3)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_micro",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,4)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,4)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_PBL",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,5)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,5)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_prodloss",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,6)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,6)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_oz",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,7)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,7)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_T",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,8)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,8)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_ovhd",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,9)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,9)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_phys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,10)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,10)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_phys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,11)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,11)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_nonphys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,12)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,12)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_nonphys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dq3dt(1,:,13)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,13)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_PBL",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,1)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,1)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_OGWD",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,2)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,2)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_deepconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,3)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,3)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_CGWD",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,4)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,4)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_rayleigh",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,5)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,5)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_shalconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,6)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,6)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_phys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,7)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,7)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_nonphys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%du3dt(1,:,8)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%du3dt(i,:,8)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_PBL",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,1)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,1)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_OGWD",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,2)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,2)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_deepconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,3)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,3)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_CGWD",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,4)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,4)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_rayleigh",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,5)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,5)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_shalconv",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,6)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,6)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_phys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,7)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,7)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_nonphys",VARID=var_id))
   do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag(i)%dv3dt(1,:,8)/scm_state%dt
+    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,8)/scm_state%dt
   end do
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="upd_mf",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%ud_mf(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%ud_mf(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dwn_mf",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%dd_mf(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dd_mf(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="det_mf",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Interstitial(i)%dt_mf(1,:)
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dt_mf(:,:),START=(/1,1,scm_state%itt_out /)))
   ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="PBL_height",VARID=var_id))
   ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=hpbl(:),START=(/1,scm_state%itt_out /)))
   ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_tot",VARID=var_id))
@@ -878,102 +828,100 @@ subroutine output_append(scm_state, physics)
 
   ! TOA/SFC fluxes
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag(i)%topfsw(1)%upfxc
+     dummy_1D(i) = physics%Diag%topfsw(i)%upfxc
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_tot",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag(i)%topfsw(1)%dnfxc
+     dummy_1D(i) = physics%Diag%topfsw(i)%dnfxc
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_TOA_tot",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag(i)%topfsw(1)%upfx0
+     dummy_1D(i) = physics%Diag%topfsw(i)%upfx0
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%upfxc
+     dummy_1D(i) = physics%Radtend%sfcfsw(i)%upfxc
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_tot",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%dnfxc
+     dummy_1D(i) = physics%Radtend%sfcfsw(i)%dnfxc
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_tot",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%upfx0
+     dummy_1D(i) = physics%Radtend%sfcfsw(i)%upfx0
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcfsw(1)%dnfx0
+     dummy_1D(i) = physics%Radtend%sfcfsw(i)%dnfx0
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag(i)%topflw(1)%upfxc
+     dummy_1D(i) = physics%Diag%topflw(i)%upfxc
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_tot",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag(i)%topflw(1)%upfx0
+     dummy_1D(i) = physics%Diag%topflw(i)%upfx0
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%upfxc
+     dummy_1D(i) = physics%Radtend%sfcflw(i)%upfxc
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_tot",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%dnfxc
+     dummy_1D(i) = physics%Radtend%sfcflw(i)%dnfxc
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_tot",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%upfx0
+     dummy_1D(i) = physics%Radtend%sfcflw(i)%upfx0
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend(i)%sfcflw(1)%upfx0
+     dummy_1D(i) = physics%Radtend%sfcflw(i)%upfx0
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   
-  if (any(physics%Model(:)%naux2d > 0)) then
-    maxnaux2d = maxval(physics%Model(:)%naux2d)
-    do j=1, maxnaux2d
+  if (physics%Model%naux2d > 0) then
+    do j=1, physics%Model%naux2d
       write(idx,'(I2)') j
       CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="aux2d"//idx,VARID=var_id))
       do i=1, scm_state%n_cols
-         dummy_1D(i) = physics%Diag(i)%aux2d(1,j)
+         dummy_1D(i) = physics%Diag%aux2d(i,j)
       end do
       CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
     end do
   end if
   
-  if (any(physics%Model(:)%naux3d > 0)) then
-    maxnaux3d = maxval(physics%Model(:)%naux3d)
-    do j=1, maxnaux3d
+  if (physics%Model%naux3d > 0) then
+    do j=1, physics%Model%naux3d
       write(idx,'(I2)') j
       CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="aux3d"//idx,VARID=var_id))
       do i=1, scm_state%n_cols
-         dummy_2D(i,:) = physics%Diag(i)%aux3d(1,:,j)
+         dummy_2D(i,:) = physics%Diag%aux3d(i,:,j)
       end do
       CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
     end do
