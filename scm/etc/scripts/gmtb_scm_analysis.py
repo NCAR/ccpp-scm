@@ -156,19 +156,43 @@ dT_dt_deepconv = []
 dT_dt_shalconv = []
 dT_dt_micro = []
 dT_dt_conv = []
+dT_dt_ogwd = []
+dT_dt_rayleigh = []
+dT_dt_cgwd = []
+dT_dt_phys = []
+dT_dt_nonphys = []
 dq_dt_PBL = []
 dq_dt_deepconv = []
 dq_dt_shalconv = []
 dq_dt_micro = []
 dq_dt_conv = []
+dq_dt_phys = []
+dq_dt_nonphys = []
+doz_dt_PBL = []
+doz_dt_prodloss = []
+doz_dt_oz = []
+doz_dt_T = []
+doz_dt_ovhd = []
+doz_dt_phys = []
+doz_dt_nonphys = []
 du_dt_PBL = []
 du_dt_OGWD = []
 du_dt_deepconv = []
 du_dt_CGWD = []
+du_dt_rayleigh = []
+du_dt_shalconv = []
+du_dt_conv = []
+du_dt_phys = []
+du_dt_nonphys = []
 dv_dt_PBL = []
 dv_dt_OGWD = []
 dv_dt_deepconv = []
 dv_dt_CGWD = []
+dv_dt_rayleigh = []
+dv_dt_shalconv = []
+dv_dt_conv = []
+dv_dt_phys = []
+dv_dt_nonphys = []
 upd_mf = []
 dwn_mf = []
 det_mf = []
@@ -246,19 +270,36 @@ for i in range(len(gmtb_scm_datasets)):
     dT_dt_shalconv.append(nc_fid.variables['dT_dt_shalconv'][:]*86400.0)
     dT_dt_micro.append(nc_fid.variables['dT_dt_micro'][:]*86400.0)
     dT_dt_conv.append(dT_dt_deepconv[-1] + dT_dt_shalconv[-1])
+    dT_dt_ogwd.append(nc_fid.variables['dT_dt_ogwd'][:]*86400.0)
+    dT_dt_rayleigh.append(nc_fid.variables['dT_dt_rayleigh'][:]*86400.0)
+    dT_dt_cgwd.append(nc_fid.variables['dT_dt_cgwd'][:]*86400.0)
+    dT_dt_phys.append(nc_fid.variables['dT_dt_phys'][:]*86400.0)
+    dT_dt_nonphys.append(nc_fid.variables['dT_dt_nonphys'][:]*86400.0)
     dq_dt_PBL.append(nc_fid.variables['dq_dt_PBL'][:]*86400.0*1.0E3)
     dq_dt_deepconv.append(nc_fid.variables['dq_dt_deepconv'][:]*86400.0*1.0E3)
     dq_dt_shalconv.append(nc_fid.variables['dq_dt_shalconv'][:]*86400.0*1.0E3)
     dq_dt_micro.append(nc_fid.variables['dq_dt_micro'][:]*86400.0*1.0E3)
     dq_dt_conv.append(dq_dt_deepconv[-1] + dq_dt_shalconv[-1])
+    dq_dt_phys.append(nc_fid.variables['dq_dt_phys'][:]*86400.0*1.0E3)
+    dq_dt_nonphys.append(nc_fid.variables['dq_dt_nonphys'][:]*86400.0*1.0E3)
     du_dt_PBL.append(nc_fid.variables['du_dt_PBL'][:]*86400.0)
     du_dt_OGWD.append(nc_fid.variables['du_dt_OGWD'][:]*86400.0)
     du_dt_deepconv.append(nc_fid.variables['du_dt_deepconv'][:]*86400.0)
     du_dt_CGWD.append(nc_fid.variables['du_dt_CGWD'][:]*86400.0)
+    du_dt_rayleigh.append(nc_fid.variables['du_dt_rayleigh'][:]*86400.0)
+    du_dt_shalconv.append(nc_fid.variables['du_dt_shalconv'][:]*86400.0)
+    du_dt_conv.append(du_dt_deepconv[-1] + du_dt_shalconv[-1])
+    du_dt_phys.append(nc_fid.variables['du_dt_phys'][:]*86400.0)
+    du_dt_nonphys.append(nc_fid.variables['du_dt_nonphys'][:]*86400.0)
     dv_dt_PBL.append(nc_fid.variables['dv_dt_PBL'][:]*86400.0)
     dv_dt_OGWD.append(nc_fid.variables['dv_dt_OGWD'][:]*86400.0)
     dv_dt_deepconv.append(nc_fid.variables['dv_dt_deepconv'][:]*86400.0)
     dv_dt_CGWD.append(nc_fid.variables['dv_dt_CGWD'][:]*86400.0)
+    dv_dt_rayleigh.append(nc_fid.variables['dv_dt_rayleigh'][:]*86400.0)
+    dv_dt_shalconv.append(nc_fid.variables['dv_dt_shalconv'][:]*86400.0)
+    dv_dt_conv.append(dv_dt_deepconv[-1] + dv_dt_shalconv[-1])
+    dv_dt_phys.append(nc_fid.variables['dv_dt_phys'][:]*86400.0)
+    dv_dt_nonphys.append(nc_fid.variables['dv_dt_nonphys'][:]*86400.0)
     upd_mf.append(nc_fid.variables['upd_mf'][:])
     dwn_mf.append(nc_fid.variables['dwn_mf'][:])
     det_mf.append(nc_fid.variables['det_mf'][:])
