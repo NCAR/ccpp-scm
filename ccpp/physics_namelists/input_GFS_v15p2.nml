@@ -14,6 +14,8 @@
        iems           = 1
        iaer           = 111
        ico2           = 2
+       iovr_sw        = 5
+       iovr_lw        = 5
        isubc_sw       = 2
        isubc_lw       = 2
        isol           = 2
