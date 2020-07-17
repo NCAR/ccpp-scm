@@ -2618,14 +2618,14 @@ module GFS_typedefs
     integer              :: iems           =  0              !< use fixed value of 1.0
     integer              :: iaer           =  1              !< default aerosol effect in sw only
     integer              :: icliq_sw       =  1              !< sw optical property for liquid clouds
-    integer              :: iovr_sw        =  5              !< sw: cloud overlap method for radiation
+    integer              :: iovr_sw        =  1              !< sw: cloud overlap method for radiation
                                                              !< 0 => use random overlap
                                                              !< 1 => use maximum-random overlap
                                                              !< 2 => use maximum overlap
                                                              !< 3 => use decorrelation length overlap (NOAA/Hou)
                                                              !< 4 => use exponential overlap (AER)
                                                              !< 5 => use exponential-random overlap (AER)
-    integer              :: iovr_lw        =  5              !< lw: cloud overlap method for radiation
+    integer              :: iovr_lw        =  1              !< lw: cloud overlap method for radiation
                                                              !< 0 => use random overlap
                                                              !< 1 => use maximum-random overlap
                                                              !< 2 => use maximum overlap
@@ -2644,8 +2644,8 @@ module GFS_typedefs
                                                              !<           the fcst time; no extrapolation.
                                                              !< ictm=-2 => same as ictm=0, but add seasonal cycle
                                                              !<           from climatology; no extrapolation.
-    integer              :: isubc_sw          =  2           !< sw clouds without sub-grid approximation
-    integer              :: isubc_lw          =  2           !< lw clouds without sub-grid approximation
+    integer              :: isubc_sw          =  0           !< sw clouds without sub-grid approximation
+    integer              :: isubc_lw          =  0           !< lw clouds without sub-grid approximation
                                                              !< =1 => sub-grid cloud with prescribed seeds
                                                              !< =2 => sub-grid cloud with randomly generated
                                                              !< seeds
