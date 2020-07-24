@@ -27,7 +27,7 @@ module load cmake/3.16.3
 setenv CMAKE_Platform hera.intel
 
 echo "Loading the anaconda python distribution"
-module load contrib
+module use -a /contrib/anaconda/modulefiles
 module load anaconda/anaconda2
 
 #install f90nml for the local user
