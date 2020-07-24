@@ -470,6 +470,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[lakedepth]
+  standard_name = lake_depth
+  long_name = lake depth
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [tsfc]
   standard_name = surface_skin_temperature
   long_name = surface skin temperature
@@ -3066,6 +3073,12 @@
   units = index
   dimensions = ()
   type = integer
+[lkm]
+  standard_name = flag_for_lake_surface_scheme
+  long_name = flag for lake surface model
+  units = flag
+  dimensions = ()
+  type = integer
 [lcurr_sf]
   standard_name = flag_for_ocean_currents_in_surface_layer_scheme
   long_name = flag for taking ocean currents into account in surface layer scheme
@@ -4132,7 +4145,7 @@
 [slag]
   standard_name = equation_of_time
   long_name = equation of time (radian)
-  units = radians
+  units = radian
   dimensions = ()
   type = real
   kind = kind_phys
@@ -4462,14 +4475,14 @@
 [xlat]
   standard_name = latitude
   long_name = latitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
 [xlon]
   standard_name = longitude
   long_name = longitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -4488,9 +4501,9 @@
   type = real
   kind = kind_phys
 [xlat_d]
-  standard_name = latitude_degree
-  long_name = latitude in degrees
-  units = degree
+  standard_name = latitude_in_degree
+  long_name = latitude in degree north
+  units = degree_north
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -6106,13 +6119,6 @@
   long_name = instantaneous refl_10cm
   units = dBZ
   dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-[dkudiagnostic]
-  standard_name = atmosphere_momentum_diffusivity
-  long_name = diffusivity for momentum
-  units = m2 s-1
-  dimensions = (horizontal_dimension,vertical_dimension_minus_one)
   type = real
   kind = kind_phys
 [ndust]
@@ -8367,7 +8373,7 @@
   type = real
   kind = kind_phys
 [save_tcp]
-  standard_name = air_temperature_save_from_cumulus_paramterization
+  standard_name = air_temperature_save_from_convective_parameterization
   long_name = air temperature after cumulus parameterization
   units = K
   dimensions = (horizontal_dimension,vertical_dimension)
@@ -8638,7 +8644,7 @@
 [theta]
   standard_name = angle_from_east_of_maximum_subgrid_orographic_variations
   long_name = angle with_respect to east of maximum subgrid orographic variations
-  units = degrees
+  units = degree
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
