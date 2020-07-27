@@ -82,7 +82,7 @@ subroutine get_GFS_vgrid(scm_input, scm_state, error)
   read(1,'(a)',iostat=ierr) line
   !> - Read in the coefficient data.
   do i=1, scm_state%n_levels+1
-    read(1,file_format)  scm_state%a_k(1,i), scm_state%b_k(1,i)
+    read(1,file_format)  scm_state%a_k(i), scm_state%b_k(i)
   end do
   close(1)
 
@@ -91,19 +91,19 @@ subroutine get_GFS_vgrid(scm_input, scm_state, error)
   p0 = scm_input%input_pres_surf(1)
   pres_sfc_inv = 1.0/p0
   do i=1, scm_state%n_levels+1
-    scm_state%pres_i(:,1,i) = scm_state%a_k(1,i) + scm_state%b_k(1,i)*p0
-    scm_state%si(:,1,i) = scm_state%a_k(1,i)*pres_sfc_inv + scm_state%b_k(1,i)
-    scm_state%exner_i(:,1,i) = (scm_state%pres_i(:,1,i)/1.0E5)**con_rocp
+    scm_state%pres_i(:,i) = scm_state%a_k(i) + scm_state%b_k(i)*p0
+    scm_state%si(:,i) = scm_state%a_k(i)*pres_sfc_inv + scm_state%b_k(i)
+    scm_state%exner_i(:,i) = (scm_state%pres_i(:,i)/1.0E5)**con_rocp
   end do
 
   !> - Calculate layer center pressures, sigma, and exner function.
   do i=1, scm_state%n_levels
-    scm_state%pres_l(:,1,i) = ((1.0/(con_rocp+1.0))*&
-      (scm_state%pres_i(:,1,i)**(con_rocp+1.0) - scm_state%pres_i(:,1,i+1)**(con_rocp+1.0))/ &
-      (scm_state%pres_i(:,1,i) - scm_state%pres_i(:,1,i+1)))**(1.0/con_rocp)
-    scm_state%sl(:,1,i) = 0.5*(scm_state%si(:,1,i) + scm_state%si(:,1,i+1))
+    scm_state%pres_l(:,i) = ((1.0/(con_rocp+1.0))*&
+      (scm_state%pres_i(:,i)**(con_rocp+1.0) - scm_state%pres_i(:,i+1)**(con_rocp+1.0))/ &
+      (scm_state%pres_i(:,i) - scm_state%pres_i(:,i+1)))**(1.0/con_rocp)
+    scm_state%sl(:,i) = 0.5*(scm_state%si(:,i) + scm_state%si(:,i+1))
 
-    scm_state%exner_l(:,1,i) = (scm_state%pres_l(:,1,i)/1.0E5)**con_rocp
+    scm_state%exner_l(:,i) = (scm_state%pres_l(:,i)/1.0E5)**con_rocp
 
   end do
   !> @}
@@ -1001,16 +1001,16 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
 
             ks = 5
             do k=1,km+1
-              scm_state%a_k(1,k) = a24(k)
-              scm_state%b_k(1,k) = b24(k)
+              scm_state%a_k(k) = a24(k)
+              scm_state%b_k(k) = b24(k)
             enddo
 
          case (26)
 
             ks = 7
             do k=1,km+1
-              scm_state%a_k(1,k) = a26(k)
-              scm_state%b_k(1,k) = b26(k)
+              scm_state%a_k(k) = a26(k)
+              scm_state%b_k(k) = b26(k)
             enddo
 
           case (32)
@@ -1020,51 +1020,51 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             ks = 7
 #endif
             do k=1,km+1
-              scm_state%a_k(1,k) = a32(k)
-              scm_state%b_k(1,k) = b32(k)
+              scm_state%a_k(k) = a32(k)
+              scm_state%b_k(k) = b32(k)
             enddo
 
           case (47)
       !         ks = 27       ! high-res trop-strat
             ks = 20       ! Oct 23, 2012
             do k=1,km+1
-              scm_state%a_k(1,k) = a47(k)
-              scm_state%b_k(1,k) = b47(k)
+              scm_state%a_k(k) = a47(k)
+              scm_state%b_k(k) = b47(k)
             enddo
 
           case (48)
             ks = 28
             do k=1,km+1
-              scm_state%a_k(1,k) = a48(k)
-              scm_state%b_k(1,k) = b48(k)
+              scm_state%a_k(k) = a48(k)
+              scm_state%b_k(k) = b48(k)
             enddo
 
           case (52)
             ks = 35         ! pint = 223
             do k=1,km+1
-              scm_state%a_k(1,k) = a52(k)
-              scm_state%b_k(1,k) = b52(k)
+              scm_state%a_k(k) = a52(k)
+              scm_state%b_k(k) = b52(k)
             enddo
 
           case (54)
             ks = 11         ! pint =  109.4
             do k=1,km+1
-              scm_state%a_k(1,k) = a54(k)
-              scm_state%b_k(1,k) = b54(k)
+              scm_state%a_k(k) = a54(k)
+              scm_state%b_k(k) = b54(k)
             enddo
 
           case (56)
             ks = 26
             do k=1,km+1
-              scm_state%a_k(1,k) = a56(k)
-              scm_state%b_k(1,k) = b56(k)
+              scm_state%a_k(k) = a56(k)
+              scm_state%b_k(k) = b56(k)
             enddo
 
           case (60)
             ks = 37
             do k=1,km+1
-              scm_state%a_k(1,k) = a60(k)
-              scm_state%b_k(1,k) = b60(k)
+              scm_state%a_k(k) = a60(k)
+              scm_state%b_k(k) = b60(k)
             enddo
 
 
@@ -1075,37 +1075,37 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             ks = 46
 #endif
             do k=1,km+1
-              scm_state%a_k(1,k) = a64(k)
-              scm_state%b_k(1,k) = b64(k)
+              scm_state%a_k(k) = a64(k)
+              scm_state%b_k(k) = b64(k)
             enddo
       !-->cjg
           case (68)
             ks = 27
             do k=1,km+1
-              scm_state%a_k(1,k) = a68(k)
-              scm_state%b_k(1,k) = b68(k)
+              scm_state%a_k(k) = a68(k)
+              scm_state%b_k(k) = b68(k)
             enddo
 
           case (96)
             ks = 27
             do k=1,km+1
-              scm_state%a_k(1,k) = a96(k)
-              scm_state%b_k(1,k) = b96(k)
+              scm_state%a_k(k) = a96(k)
+              scm_state%b_k(k) = b96(k)
             enddo
       !<--cjg
 
           case (100)
             ks = 38
             do k=1,km+1
-              scm_state%a_k(1,k) = a100(k)
-              scm_state%b_k(1,k) = b100(k)
+              scm_state%a_k(k) = a100(k)
+              scm_state%b_k(k) = b100(k)
             enddo
 
           case (104)
             ks = 73
             do k=1,km+1
-              scm_state%a_k(1,k) = a104(k)
-              scm_state%b_k(1,k) = b104(k)
+              scm_state%a_k(k) = a104(k)
+              scm_state%b_k(k) = b104(k)
             enddo
 
 #ifndef TEST_GWAVES
@@ -1138,22 +1138,22 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
 
            if(ks /= 0) then
               do k=1,ks
-                 scm_state%a_k(1,k) = press(k)
-                 scm_state%b_k(1,k) = 0.
+                 scm_state%a_k(k) = press(k)
+                 scm_state%b_k(k) = 0.
               enddo
             endif
 
                pint = press(ks+1)
             do k=ks+1,km
-               scm_state%a_k(1,k) =  pint*(press(km)-press(k))/(press(km)-pint)
-               scm_state%b_k(1,k) = (press(k) - scm_state%a_k(1,k)) / press(km+1)
+               scm_state%a_k(k) =  pint*(press(km)-press(k))/(press(km)-pint)
+               scm_state%b_k(k) = (press(k) - scm_state%a_k(k)) / press(km+1)
             enddo
-               scm_state%a_k(1,km+1) = 0.
-               scm_state%b_k(1,km+1) = 1.
+               scm_state%a_k(km+1) = 0.
+               scm_state%b_k(km+1) = 1.
 
   !         do k=2,km
-  !            scm_state%b_k(1,k) = real(k-1) / real(km)
-  !            scm_state%a_k(1,k) = pt * ( 1. - scm_state%b_k(1,k) )
+  !            scm_state%b_k(k) = real(k-1) / real(km)
+  !            scm_state%a_k(k) = pt * ( 1. - scm_state%b_k(k) )
   !         enddo
 #endif
 
@@ -1186,8 +1186,8 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             ptop = a63(1)
             pint = a63(ks+1)
             do k=1,km+1
-              scm_state%a_k(1,k) = a63(k)
-              scm_state%b_k(1,k) = b63(k)
+              scm_state%a_k(k) = a63(k)
+              scm_state%b_k(k) = b63(k)
             enddo
 #else
           case (63)
@@ -1215,8 +1215,8 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             ptop = a125(1)
             pint = a125(ks+1)
             do k=1,km+1
-              scm_state%a_k(1,k) = a125(k)
-              scm_state%b_k(1,k) = b125(k)
+              scm_state%a_k(k) = a125(k)
+              scm_state%b_k(k) = b125(k)
             enddo
           case default
 
@@ -1226,7 +1226,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
 !--------------------------------------------------
             call gw_1d(km, 1000.E2, scm_state%a_k, scm_state%b_k, ptop, 10.E3, pt1)
               ks = 0
-            pint = scm_state%a_k(1,1)
+            pint = scm_state%a_k(1)
 #else
 
 !----------------------------------------------------------------
@@ -1238,22 +1238,22 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
   !        pint = pt + 0.5*1.E5/real(km)     ! SJL: 20120327
            pint = pt + 1.E5/real(km)
 
-           scm_state%a_k(1,1) = pt
-           scm_state%b_k(1,1) = 0.
-           scm_state%a_k(1,2) = pint
-           scm_state%b_k(1,2) = 0.
+           scm_state%a_k(1) = pt
+           scm_state%b_k(1) = 0.
+           scm_state%a_k(2) = pint
+           scm_state%b_k(2) = 0.
 
             do k=3,km+1
-               scm_state%b_k(1,k) = real(k-2) / real(km-1)
-               scm_state%a_k(1,k) = pint - scm_state%b_k(1,k)*pint
+               scm_state%b_k(k) = real(k-2) / real(km-1)
+               scm_state%a_k(k) = pint - scm_state%b_k(k)*pint
             enddo
-            scm_state%a_k(1,km+1) = 0.
-            scm_state%b_k(1,km+1) = 1.
+            scm_state%a_k(km+1) = 0.
+            scm_state%b_k(km+1) = 1.
 #endif
       end select
 
-      ptop = scm_state%a_k(1,1)
-      pint = scm_state%a_k(1,ks+1)
+      ptop = scm_state%a_k(1)
+      pint = scm_state%a_k(ks+1)
 
       !> - Calculate interface pressures, sigma, and exner function.
 
@@ -1261,31 +1261,31 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       mid_index = (km+1)/2
       last_index = km+1
       do k = 1, mid_index
-          ak_tmp = scm_state%a_k(1,k)
-          bk_tmp = scm_state%b_k(1,k)
-          scm_state%a_k(1,k) = scm_state%a_k(1,last_index)
-          scm_state%b_k(1,k) = scm_state%b_k(1,last_index)
-          scm_state%a_k(1,last_index) = ak_tmp
-          scm_state%b_k(1,last_index) = bk_tmp
+          ak_tmp = scm_state%a_k(k)
+          bk_tmp = scm_state%b_k(k)
+          scm_state%a_k(k) = scm_state%a_k(last_index)
+          scm_state%b_k(k) = scm_state%b_k(last_index)
+          scm_state%a_k(last_index) = ak_tmp
+          scm_state%b_k(last_index) = bk_tmp
           last_index = last_index - 1
       end do
 
       p_ref = scm_input%input_pres_surf(1)
       pres_sfc_inv = 1.0/p_ref
       do k=1, km+1
-        scm_state%pres_i(:,1,k) = scm_state%a_k(1,k) + scm_state%b_k(1,k)*p_ref
-        scm_state%si(:,1,k) = scm_state%a_k(1,k)*pres_sfc_inv + scm_state%b_k(1,k)
-        scm_state%exner_i(:,1,k) = (scm_state%pres_i(:,1,k)/1.0E5)**con_rocp
+        scm_state%pres_i(:,k) = scm_state%a_k(k) + scm_state%b_k(k)*p_ref
+        scm_state%si(:,k) = scm_state%a_k(k)*pres_sfc_inv + scm_state%b_k(k)
+        scm_state%exner_i(:,k) = (scm_state%pres_i(:,k)/1.0E5)**con_rocp
       end do
 
       !> - Calculate layer center pressures, sigma, and exner function.
       do k=1, km
-        scm_state%pres_l(:,1,k) = ((1.0/(con_rocp+1.0))*&
-          (scm_state%pres_i(:,1,k)**(con_rocp+1.0) - scm_state%pres_i(:,1,k+1)**(con_rocp+1.0))/ &
-          (scm_state%pres_i(:,1,k) - scm_state%pres_i(:,1,k+1)))**(1.0/con_rocp)
-        scm_state%sl(:,1,k) = 0.5*(scm_state%si(:,1,k) + scm_state%si(:,1,k+1))
+        scm_state%pres_l(:,k) = ((1.0/(con_rocp+1.0))*&
+          (scm_state%pres_i(:,k)**(con_rocp+1.0) - scm_state%pres_i(:,k+1)**(con_rocp+1.0))/ &
+          (scm_state%pres_i(:,k) - scm_state%pres_i(:,k+1)))**(1.0/con_rocp)
+        scm_state%sl(:,k) = 0.5*(scm_state%si(:,k) + scm_state%si(:,k+1))
 
-        scm_state%exner_l(:,1,k) = (scm_state%pres_l(:,1,k)/1.0E5)**con_rocp
+        scm_state%exner_l(:,k) = (scm_state%pres_l(:,k)/1.0E5)**con_rocp
 
       end do
 
@@ -1900,37 +1900,37 @@ subroutine calc_pres_exner_geopotential(time_level, scm_state)
 
   !> - Calculate interface pressures, sigma, and exner function.
   do i=1, scm_state%n_cols
-    pres_sfc_inv = 1.0/scm_state%pres_surf(i,1)
+    pres_sfc_inv = 1.0/scm_state%pres_surf(i)
     do k=1, scm_state%n_levels+1
-      scm_state%pres_i(i,1,k) = scm_state%a_k(1,k) + scm_state%b_k(1,k)*scm_state%pres_surf(1,i)
-      scm_state%si(i,1,k) = scm_state%a_k(1,k)*pres_sfc_inv + scm_state%b_k(1,k)
-      scm_state%exner_i(i,1,k) = (scm_state%pres_i(i,1,k)*1.0E-5)**con_rocp
+      scm_state%pres_i(i,k) = scm_state%a_k(k) + scm_state%b_k(k)*scm_state%pres_surf(i)
+      scm_state%si(i,k) = scm_state%a_k(k)*pres_sfc_inv + scm_state%b_k(k)
+      scm_state%exner_i(i,k) = (scm_state%pres_i(i,k)*1.0E-5)**con_rocp
     end do
   end do
 
   !> - Calculate layer center pressures, sigma, and exner function.
   do i=1, scm_state%n_cols
     do k=1, scm_state%n_levels
-      scm_state%pres_l(i,1,k) = ((1.0/(con_rocp+1.0))*&
-        (scm_state%pres_i(i,1,k)**(con_rocp+1.0) - scm_state%pres_i(i,1,k+1)**(con_rocp+1.0))/ &
-        (scm_state%pres_i(i,1,k) - scm_state%pres_i(i,1,k+1)))**(1.0/con_rocp)
-      scm_state%sl(i,1,k) = 0.5*(scm_state%si(i,1,k) + scm_state%si(i,1,k+1))
-      scm_state%exner_l(i,1,k) = (scm_state%pres_l(i,1,k)*1.0E-5)**con_rocp
+      scm_state%pres_l(i,k) = ((1.0/(con_rocp+1.0))*&
+        (scm_state%pres_i(i,k)**(con_rocp+1.0) - scm_state%pres_i(i,k+1)**(con_rocp+1.0))/ &
+        (scm_state%pres_i(i,k) - scm_state%pres_i(i,k+1)))**(1.0/con_rocp)
+      scm_state%sl(i,k) = 0.5*(scm_state%si(i,k) + scm_state%si(i,k+1))
+      scm_state%exner_l(i,k) = (scm_state%pres_l(i,k)*1.0E-5)**con_rocp
     end do
   end do
 
   do i=1, scm_state%n_cols
-    scm_state%geopotential_i(i,1,1) = 0.0
+    scm_state%geopotential_i(i,1) = 0.0
   end do
 
   do i=1, scm_state%n_cols
     do k=1, scm_state%n_levels
-      tem = con_cp*scm_state%state_T(i,1,k,time_level)*&
-        (1.0 + con_fvirt*max(scm_state%state_tracer(i,1,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,1,k)
-      dgeopotential_lower_half = (scm_state%exner_i(i,1,k) - scm_state%exner_l(i,1,k))*tem
-      dgeopotential_upper_half = (scm_state%exner_l(i,1,k) - scm_state%exner_i(i,1,k+1))*tem
-      scm_state%geopotential_l(i,1,k) = scm_state%geopotential_i(i,1,k) + dgeopotential_lower_half
-      scm_state%geopotential_i(i,1,k+1) = scm_state%geopotential_l(i,1,k) + dgeopotential_upper_half
+      tem = con_cp*scm_state%state_T(i,k,time_level)*&
+        (1.0 + con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,k)
+      dgeopotential_lower_half = (scm_state%exner_i(i,k) - scm_state%exner_l(i,k))*tem
+      dgeopotential_upper_half = (scm_state%exner_l(i,k) - scm_state%exner_i(i,k+1))*tem
+      scm_state%geopotential_l(i,k) = scm_state%geopotential_i(i,k) + dgeopotential_lower_half
+      scm_state%geopotential_i(i,k+1) = scm_state%geopotential_l(i,k) + dgeopotential_upper_half
     end do
   end do
 
@@ -1946,17 +1946,17 @@ subroutine calc_geopotential(time_level, scm_state)
   real(kind=dp) :: tem, dgeopotential_lower_half, dgeopotential_upper_half
 
   do i=1, scm_state%n_cols
-    scm_state%geopotential_i(i,1,1) = 0.0
+    scm_state%geopotential_i(i,1) = 0.0
   end do
 
   do i=1, scm_state%n_cols
     do k=1, scm_state%n_levels
-      tem = con_cp*scm_state%state_T(i,1,k,time_level)*(1.0 + &
-        con_fvirt*max(scm_state%state_tracer(i,1,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,1,k)
-      dgeopotential_lower_half = (scm_state%exner_i(i,1,k) - scm_state%exner_l(i,1,k))*tem
-      dgeopotential_upper_half = (scm_state%exner_l(i,1,k) - scm_state%exner_i(i,1,k+1))*tem
-      scm_state%geopotential_l(i,1,k) = scm_state%geopotential_i(i,1,k) + dgeopotential_lower_half
-      scm_state%geopotential_i(i,1,k+1) = scm_state%geopotential_l(i,1,k) + dgeopotential_upper_half
+      tem = con_cp*scm_state%state_T(i,k,time_level)*(1.0 + &
+        con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,k)
+      dgeopotential_lower_half = (scm_state%exner_i(i,k) - scm_state%exner_l(i,k))*tem
+      dgeopotential_upper_half = (scm_state%exner_l(i,k) - scm_state%exner_i(i,k+1))*tem
+      scm_state%geopotential_l(i,k) = scm_state%geopotential_i(i,k) + dgeopotential_lower_half
+      scm_state%geopotential_i(i,k+1) = scm_state%geopotential_l(i,k) + dgeopotential_upper_half
     end do
   end do
 
