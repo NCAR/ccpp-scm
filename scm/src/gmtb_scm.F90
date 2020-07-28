@@ -15,29 +15,12 @@ subroutine gmtb_scm_main_sub()
   use gmtb_scm_time_integration
   use gmtb_scm_output
   use gmtb_scm_type_defs
-
-#ifdef STATIC
-  use :: ccpp_api,                           &
-         only: ccpp_init,                    &
-               ccpp_finalize
+       
   use :: ccpp_static_api,                    &
          only: ccpp_physics_init,            &
                ccpp_physics_run,             &
                ccpp_physics_finalize
-#else
-  use :: ccpp_api,                           &
-         only: ccpp_init,                    &
-               ccpp_finalize,                &
-               ccpp_physics_init,            &
-               ccpp_physics_run,             &
-               ccpp_physics_finalize,        &
-               ccpp_field_add,               &
-               ccpp_initialized,             &
-               ccpp_error
-  use :: iso_c_binding, only: c_loc
 
-#include "ccpp_modules.inc"
-#endif
 
   implicit none
 
@@ -329,14 +312,6 @@ subroutine gmtb_scm_main_sub()
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
       stop
   end if
-
-  do i=1, scm_state%n_cols
-      call ccpp_finalize(cdata_cols(i), ierr)
-      if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_finalize for column ', i, '. Exiting...'
-          stop
-      end if
-  end do
 
 end subroutine gmtb_scm_main_sub
 

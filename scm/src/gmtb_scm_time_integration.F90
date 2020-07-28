@@ -6,13 +6,8 @@ module gmtb_scm_time_integration
 use gmtb_scm_kinds, only: sp, dp, qp
 use gmtb_scm_forcing
 
-#ifdef STATIC
 use ccpp_api,        only: ccpp_t
 use ccpp_static_api, only: ccpp_physics_run
-#else
-use ccpp_api,        only: ccpp_t, &
-                           ccpp_physics_run
-#endif
 
 implicit none
 
