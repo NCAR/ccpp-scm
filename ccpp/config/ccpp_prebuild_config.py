@@ -230,6 +230,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GFS_surface_composites.F90'       ,
     'ccpp/physics/physics/GFS_surface_loop_control.F90'     ,
     'ccpp/physics/physics/GFS_time_vary_pre.scm.F90'        ,
+#    'ccpp/physics/physics/bl_acm.F90'                       ,
     'ccpp/physics/physics/cires_ugwp.F90'                   ,
     'ccpp/physics/physics/cires_ugwp_post.F90'              ,
     'ccpp/physics/physics/cnvc90.f'                         ,
