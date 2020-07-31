@@ -1898,7 +1898,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tsfc_land_save(:)  => null()  !<
     real (kind=kind_phys), pointer      :: tsfc_ocean(:)      => null()  !<
     real (kind=kind_phys), pointer      :: tsfg(:)            => null()  !<
-    real (kind=kind_phys), pointer      :: sktp1r(:)          => null()  !<
     real (kind=kind_phys), pointer      :: tsnow(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_ice(:)       => null()  !<
@@ -1947,6 +1946,7 @@ module GFS_typedefs
     ! RRTMGP
     integer                             :: ipsdlw0                              !<
     integer                             :: ipsdsw0                              !<
+    real (kind=kind_phys), pointer      :: sktp1r(:)                 => null()  !<
     real (kind=kind_phys), pointer      :: p_lay(:,:)                => null()  !<
     real (kind=kind_phys), pointer      :: p_lev(:,:)                => null()  !<
     real (kind=kind_phys), pointer      :: t_lev(:,:)                => null()  !<
@@ -6149,7 +6149,6 @@ module GFS_typedefs
     allocate (Interstitial%tsfc_land       (IM))
     allocate (Interstitial%tsfc_ocean      (IM))
     allocate (Interstitial%tsfg            (IM))
-    allocate (Interstitial%sktp1r          (IM))
     allocate (Interstitial%tsurf           (IM))
     allocate (Interstitial%tsurf_ice       (IM))
     allocate (Interstitial%tsurf_land      (IM))
@@ -6177,7 +6176,11 @@ module GFS_typedefs
     allocate (Interstitial%zorl_land       (IM))
     allocate (Interstitial%zorl_ocean      (IM))
     allocate (Interstitial%zt1d            (IM))
-   ! RRTMGP
+    ! RRTMGP
+    allocate (Interstitial%sktp1r                 (IM))
+    allocate (Interstitial%fluxlwDOWN_jac         (IM, Model%levs+1))
+    allocate (Interstitial%fluxlwUP_jac           (IM, Model%levs+1)) 
+    allocate (Interstitial%fluxlwUP_allsky        (IM, Model%levs+1))        
     if (Model%do_RRTMGP) then
       allocate (Interstitial%tracer               (IM, Model%levs,Model%ntrac))
       allocate (Interstitial%tv_lay               (IM, Model%levs))
@@ -6191,12 +6194,9 @@ module GFS_typedefs
       allocate (Interstitial%t_lay                (IM, Model%levs))
       allocate (Interstitial%cloud_overlap_param  (IM, Model%levs))
       allocate (Interstitial%precip_overlap_param (IM, Model%levs))
-      allocate (Interstitial%fluxlwUP_allsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxlwDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxlwUP_clrsky      (IM, Model%levs+1))
-      allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
-      allocate (Interstitial%fluxlwDOWN_jac       (IM, Model%levs+1))
-      allocate (Interstitial%fluxlwUP_jac         (IM, Model%levs+1))      
+      allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))     
       allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
       allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
       allocate (Interstitial%fluxswUP_clrsky      (IM, Model%levs+1))
