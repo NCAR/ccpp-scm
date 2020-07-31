@@ -9556,7 +9556,35 @@
   dimensions =  (number_of_active_gases_used_by_RRTMGP)
   type = character
   kind = len=128
-
+[con_eps]
+  standard_name = physical_constant_epsilon
+  long_name     = gas constant for air divided by gas constant for h2o
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys  
+[con_epsm1]
+  standard_name = physical_constant_epsilon_minus_one
+  long_name     = gas constant for air divided by gas constant for h2o minus one
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys  
+[con_fvirt]  
+  standard_name = physical_constant_inverse_of_epsilon
+  long_name     = gas constant for h2o divided by gas constant fir air minus one
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[con_qMin]
+  standard_name = algorithmic_constant_lower_limit_for_saturation_vapor_pressure
+  long_name     = lower limit allowed when computing saturation vapor pressure  
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+    
 ########################################################################
 [ccpp-arg-table]
   name = GFS_data_type

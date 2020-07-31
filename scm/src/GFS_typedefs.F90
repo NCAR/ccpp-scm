@@ -1943,6 +1943,15 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: dudt_ogw(:,:)      => null()  !< daily aver u-wind tend due to orographic gravity wave drag
     real (kind=kind_phys), pointer      :: dudt_tms(:,:)      => null()  !< daily aver u-wind tend due to TMS
 
+	! Physical constants used as interstitial data.
+	real (kind=kind_phys) :: &
+	    con_eps,   & !< Derived
+	    con_epsm1, & !< Derived
+	    con_fvirt    !< Dervied
+	! Algorithmic constants
+	real (kind=kind_phys) :: &
+	    con_qMin     !< lower limit for saturation-vapor pressure   
+
     ! RRTMGP
     integer                             :: ipsdlw0                              !<
     integer                             :: ipsdsw0                              !<
@@ -5937,6 +5946,8 @@ module GFS_typedefs
   ! GFS_interstitial_type%create
   !-------------------------
   subroutine interstitial_create (Interstitial, IM, Model)
+    use physcons, only: eps=>con_eps, epsm1=>con_epsm1, fvirt=>con_fvirt
+
     !
     implicit none
     !
@@ -6364,6 +6375,15 @@ module GFS_typedefs
     call Interstitial%rad_reset (Model)
     call Interstitial%phys_reset (Model)
     !
+    
+	! Physical constants (copying from physcons.f to GFS_Interstital_type)
+	Interstitial%con_eps   = eps
+	Interstitial%con_epsm1 = epsm1
+	Interstitial%con_fvirt = fvirt
+
+    ! Algorithmic constants
+    Interstitial%con_qmin = 1e-10
+    
   end subroutine interstitial_create
 
   subroutine interstitial_setup_tracers(Interstitial, Model)
