@@ -1941,16 +1941,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: zogw(:)            => null()  !< height of drag due to orographic gravity wave
     real (kind=kind_phys), pointer      :: dudt_mtb(:,:)      => null()  !< daily aver u-wind tend due to mountain blocking drag
     real (kind=kind_phys), pointer      :: dudt_ogw(:,:)      => null()  !< daily aver u-wind tend due to orographic gravity wave drag
-    real (kind=kind_phys), pointer      :: dudt_tms(:,:)      => null()  !< daily aver u-wind tend due to TMS
-
-	! Physical constants used as interstitial data.
-	real (kind=kind_phys) :: &
-	    con_eps,   & !< Derived
-	    con_epsm1, & !< Derived
-	    con_fvirt    !< Dervied
-	! Algorithmic constants
-	real (kind=kind_phys) :: &
-	    con_qMin     !< lower limit for saturation-vapor pressure   
+    real (kind=kind_phys), pointer      :: dudt_tms(:,:)      => null()  !< daily aver u-wind tend due to TMS  
 
     ! RRTMGP
     integer                             :: ipsdlw0                              !<
@@ -2021,6 +2012,8 @@ module GFS_typedefs
     type(ty_optical_props_2str)         :: sw_optical_props_aerosol             !< RRTMGP DDT
     type(ty_gas_concs)                  :: gas_concentrations                   !< RRTMGP DDT
     type(ty_source_func_lw)             :: sources                              !< RRTMGP DDT
+    ! RRTMGP configuration (~radcons.f)
+	real (kind=kind_phys)               :: qs_Min                               !< RRTMGP constant: lower limit for saturation-vapor pressure 
 
     !-- HWRF physics: dry mixing ratios
     real (kind=kind_phys), pointer :: qv_r(:,:)               => null()  !<
@@ -5946,7 +5939,6 @@ module GFS_typedefs
   ! GFS_interstitial_type%create
   !-------------------------
   subroutine interstitial_create (Interstitial, IM, Model)
-    use physcons, only: eps=>con_eps, epsm1=>con_epsm1, fvirt=>con_fvirt
 
     !
     implicit none
@@ -6371,18 +6363,13 @@ module GFS_typedefs
     ! which is set to .true.
     Interstitial%phys_hydrostatic = .true.
     !
+    ! Constants used by radiation scheme
+    Interstitial%qs_Min = 1e-10
+    !
     ! Reset all other variables
     call Interstitial%rad_reset (Model)
     call Interstitial%phys_reset (Model)
     !
-    
-	! Physical constants (copying from physcons.f to GFS_Interstital_type)
-	Interstitial%con_eps   = eps
-	Interstitial%con_epsm1 = epsm1
-	Interstitial%con_fvirt = fvirt
-
-    ! Algorithmic constants
-    Interstitial%con_qmin = 1e-10
     
   end subroutine interstitial_create
 
