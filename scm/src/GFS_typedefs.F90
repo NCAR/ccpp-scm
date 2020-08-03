@@ -2012,8 +2012,6 @@ module GFS_typedefs
     type(ty_optical_props_2str)         :: sw_optical_props_aerosol             !< RRTMGP DDT
     type(ty_gas_concs)                  :: gas_concentrations                   !< RRTMGP DDT
     type(ty_source_func_lw)             :: sources                              !< RRTMGP DDT
-    ! RRTMGP configuration (~radcons.f)
-	real (kind=kind_phys)               :: qs_Min                               !< RRTMGP constant: lower limit for saturation-vapor pressure 
 
     !-- HWRF physics: dry mixing ratios
     real (kind=kind_phys), pointer :: qv_r(:,:)               => null()  !<
@@ -6362,9 +6360,6 @@ module GFS_typedefs
     ! hardcoded value for calling GFDL MP in GFS_physics_driver.F90,
     ! which is set to .true.
     Interstitial%phys_hydrostatic = .true.
-    !
-    ! Constants used by radiation scheme
-    Interstitial%qs_Min = 1e-10
     !
     ! Reset all other variables
     call Interstitial%rad_reset (Model)

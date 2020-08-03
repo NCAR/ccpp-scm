@@ -106,6 +106,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_epsqs]
+  standard_name = minimum_value_of_saturation_mixing_ratio
+  long_name = floor value for saturation mixing ratio
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys  
 [con_vonKarman]
   standard_name = vonKarman_constant
   long_name = vonKarman constant
