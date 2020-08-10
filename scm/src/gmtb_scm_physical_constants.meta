@@ -8,6 +8,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_csol]
+  standard_name = specific_heat_of_ice_at_constant_pressure
+  long_name = specific heat of ice at constant pressure
+  units = J kg-1 K-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [con_cp]
   standard_name = specific_heat_of_dry_air_at_constant_pressure
   long_name = specific heat of dry air at constant pressure
@@ -22,13 +29,6 @@
   dimensions = ()
   type = real
   kind = kind_phys
-[con_epsqs]
-  standard_name = minimum_value_of_saturation_mixing_ratio
-  long_name = floor value for saturation mixing ratio
-  units = kg kg-1
-  dimensions = ()
-  type = real
-  kind = kind_phys  
 [con_eps]
   standard_name = ratio_of_dry_air_to_water_vapor_gas_constants
   long_name = rd/rv
@@ -36,6 +36,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_epsqs]
+  standard_name = minimum_value_of_saturation_mixing_ratio
+  long_name = floor value for saturation mixing ratio
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys 
 [con_epsm1]
   standard_name = ratio_of_dry_air_to_water_vapor_gas_constants_minus_one
   long_name = (rd/rv) - 1
@@ -74,7 +81,7 @@
 [con_pi]
   standard_name = pi
   long_name = ratio of a circle's circumference to its diameter
-  units = radian
+  units = none
   dimensions = ()
   type = real
   kind = kind_phys
