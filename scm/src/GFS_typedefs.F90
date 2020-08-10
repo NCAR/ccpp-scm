@@ -797,6 +797,7 @@ module GFS_typedefs
                                             !< vertical turbulent mixing scheme
     logical              :: shinhong        !< flag for scale-aware Shinhong vertical turbulent mixing scheme
     logical              :: do_ysu          !< flag for YSU turbulent mixing scheme
+    logical              :: acm             !< flag for ACM turbulent mixing scheme
     logical              :: dspheat         !< flag for tke dissipative heating
     logical              :: hurr_pbl        !< flag for hurricane-specific options in PBL scheme
     logical              :: lheatstrg       !< flag for canopy heat storage parameterization
@@ -1759,7 +1760,10 @@ module GFS_typedefs
     integer                             :: nsamftrac                     !<
     integer                             :: nscav                         !<
     integer                             :: nspc1                         !<
+    integer                             :: ntqvx                         !<
+    integer                             :: ntcwx                         !<
     integer                             :: ntiwx                         !<
+    integer                             :: ntozx                         !<
     integer                             :: ntk                           !<
     integer                             :: ntkev                         !<
     integer                             :: nvdiff                        !<
@@ -2980,6 +2984,7 @@ module GFS_typedefs
                                                                       !< vertical turbulent mixing scheme
     logical              :: shinhong       = .false.                  !< flag for scale-aware Shinhong vertical turbulent mixing scheme
     logical              :: do_ysu         = .false.                  !< flag for YSU vertical turbulent mixing scheme
+    logical              :: acm            = .false.                  !< flag for ACM vertical turbulent mixing scheme
     logical              :: dspheat        = .false.                  !< flag for tke dissipative heating
     logical              :: hurr_pbl       = .false.                  !< flag for hurricane-specific options in PBL scheme
     logical              :: lheatstrg      = .false.                  !< flag for canopy heat storage parameterization
@@ -3237,7 +3242,7 @@ module GFS_typedefs
                                do_myjsfc, do_myjpbl,                                        &
                                hwrf_samfdeep, hwrf_samfshal,                                &
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
-                               shinhong, do_ysu, dspheat, hurr_pbl, lheatstrg, cnvcld,      &
+                               shinhong, do_ysu, acm, dspheat, hurr_pbl, lheatstrg, cnvcld, &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, isatmedmf,    &
                                do_deep, jcap,                                               &
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
@@ -3330,6 +3335,78 @@ module GFS_typedefs
     Model%logunit          = logunit
     Model%fhzero           = fhzero
     Model%ldiag3d          = ldiag3d
+    Model%qdiag3d          = qdiag3d
+    if (Model%qdiag3d .and. .not. Model%ldiag3d) then
+      write(0,*) 'Logic error in GFS_typedefs.F90: qdiag3d requires ldiag3d'
+      stop
+    endif
+    Model%flag_for_gwd_generic_tend = .true.
+    Model%flag_for_pbl_generic_tend = .true.
+    Model%flag_for_scnv_generic_tend = .true.
+    Model%flag_for_dcnv_generic_tend = .true.
+
+    if(gwd_opt==1) then
+      if(me==master) &
+           write(0,*) 'FLAG: gwd_opt==1 so gwd not generic'
+      Model%flag_for_gwd_generic_tend=.false.
+    elseif(me==master) then
+      write(0,*) 'NO FLAG: gwd is generic'
+    endif
+
+    if(satmedmf .and. isatmedmf==0) then
+      if(me==master) &
+           write(0,*) 'FLAG: satmedmf and isatedmf=0 so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
+    elseif(satmedmf .and. isatmedmf==1) then
+      if(me==master) &
+           write(0,*) 'FLAG: satmedmf and isatedmf=1 so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
+    else if(hybedmf) then
+      if(me==master) &
+           write(0,*) 'FLAG: hybedmf so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
+    else if(do_mynnedmf) then
+      if(me==master) &
+           write(0,*) 'FLAG: do_mynnedmf so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
+    else if(do_ysu) then
+      if(me==master) &
+           write(0,*) 'FLAG: do_ysu so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
+    else if(shinhong) then
+      if(me==master) &
+           write(0,*) 'FLAG: shinhong so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
+    else if(acm) then
+      if(me==master) &
+           write(0,*) 'FLAG: acm so pbl not generic'
+      Model%flag_for_pbl_generic_tend=.false.
+    elseif(me==master) then
+      write(0,*) 'NO FLAG: pbl is generic'
+    endif
+
+    if(imfshalcnv == Model%imfshalcnv_gf) then
+      if(me==master) &
+           write(0,*) 'FLAG: imfshalcnv_gf so scnv not generic'
+      Model%flag_for_scnv_generic_tend=.false.
+    ! else if(imfshalcnv == Model%imfshalcnv_samf) then
+    !   write(0,*) 'FLAG: imfshalcnv_samf so scnv not generic'
+    !   Model%flag_for_scnv_generic_tend=.false.
+    elseif(me==master) then
+      write(0,*) 'NO FLAG: scnv is generic'
+    endif
+
+    if(imfdeepcnv == Model%imfdeepcnv_gf) then
+      if(me==master) &
+           write(0,*) 'FLAG: imfdeepcnv_gf so dcnv not generic'
+      Model%flag_for_dcnv_generic_tend=.false.
+    ! else if(imfdeepcnv == Model%imfdeepcnv_samf) then
+    !   write(0,*) 'FLAG: imfdeepcnv_samf so dcnv not generic'
+    !   Model%flag_for_dcnv_generic_tend=.false.
+    elseif(me==master) then
+      write(0,*) 'NO FLAG: dcnv is generic'
+    endif
+
 !
 !VAY-ugwp  --- set some GW-related switches
 !
@@ -3637,6 +3714,7 @@ module GFS_typedefs
     Model%satmedmf          = satmedmf
     Model%shinhong          = shinhong
     Model%do_ysu            = do_ysu
+    Model%acm               = acm
     Model%dspheat           = dspheat
     Model%hurr_pbl          = hurr_pbl
     Model%lheatstrg         = lheatstrg
@@ -3796,7 +3874,7 @@ module GFS_typedefs
     Model%ntracp1          = Model%ntrac + 1
     allocate (Model%tracer_names(Model%ntrac))
     Model%tracer_names(:)  = tracer_names(:)
-    Model%ntqv             = get_tracer_index(Model%tracer_names, 'vap_wat',    Model%me, Model%master, Model%debug)
+    Model%ntqv             = get_tracer_index(Model%tracer_names, 'sphum',      Model%me, Model%master, Model%debug)
 #ifdef MULTI_GASES
     Model%nto              = get_tracer_index(Model%tracer_names, 'spfo',        Model%me, Model%master, Model%debug)
     Model%nto2             = get_tracer_index(Model%tracer_names, 'spfo2',       Model%me, Model%master, Model%debug)
@@ -4613,6 +4691,7 @@ module GFS_typedefs
       print *, ' isatmedmf         : ', Model%isatmedmf
       print *, ' shinhong          : ', Model%shinhong
       print *, ' do_ysu            : ', Model%do_ysu
+      print *, ' acm               : ', Model%acm
       print *, ' dspheat           : ', Model%dspheat
       print *, ' lheatstrg         : ', Model%lheatstrg
       print *, ' cnvcld            : ', Model%cnvcld
@@ -5726,7 +5805,7 @@ module GFS_typedefs
     !
     allocate (Interstitial%otspt      (Model%ntracp1,2))
     ! Set up numbers of tracers for PBL, convection, etc: sets
-    ! Interstitial%{nncl,nvdiff,mg3_as_mg2,nn,tracers_total,ntiwx,ntk,ntkev,otspt,nsamftrac,ncstrac,nscav}
+    ! Interstitial%{nncl,nvdiff,mg3_as_mg2,nn,tracers_total,ntqvx,ntcwx,ntiwx,ntk,ntkev,ntozx,otspt,nsamftrac,ncstrac,nscav}
     call interstitial_setup_tracers(Interstitial, Model)
     ! Allocate arrays
     allocate (Interstitial%adjsfculw_land  (IM))
@@ -6178,7 +6257,7 @@ module GFS_typedefs
     elseif (Model%ntclamt > 0) then             ! for GFDL MP don't diffuse cloud amount
       Interstitial%nvdiff = Model%ntrac - 1
     endif
-
+    
     if (Model%imp_physics == Model%imp_physics_gfdl) then
       Interstitial%nncl = 5
     endif
@@ -6200,25 +6279,53 @@ module GFS_typedefs
 
     ! DH* STILL VALID GIVEN THE CHANGES BELOW FOR CPLCHM?
     if (Interstitial%nvdiff == Model%ntrac) then
+      Interstitial%ntqvx = Model%ntqv
+      Interstitial%ntcwx = Model%ntcw
       Interstitial%ntiwx = Model%ntiw
+      Interstitial%ntozx = Model%ntoz
     else
       if (Model%imp_physics == Model%imp_physics_wsm6) then
+        Interstitial%ntqvx = 1
+        Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3
+        Interstitial%ntozx = 4
       elseif (Model%imp_physics == Model%imp_physics_thompson) then
         if(Model%ltaerosol) then
+          Interstitial%ntqvx = 1
+          Interstitial%ntcwx = 2
           Interstitial%ntiwx = 3
+          Interstitial%ntozx = 10
         else
+          Interstitial%ntqvx = 1
+          Interstitial%ntcwx = 2
           Interstitial%ntiwx = 3
+          Interstitial%ntozx = 9
         endif
       elseif (Model%imp_physics == Model%imp_physics_gfdl) then
+        Interstitial%ntqvx = 1
+        Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3
+        Interstitial%ntozx = 7
       ! F-A MP scheme
       elseif (Model%imp_physics == Model%imp_physics_fer_hires) then
+        Interstitial%ntqvx = 1
+        Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3 ! total ice or total condensate
+        Interstitial%ntozx = 6 
       elseif (Model%imp_physics == Model%imp_physics_mg) then
+        Interstitial%ntqvx = 1
+        Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3
+        if (Model%ntgl > 0) then
+          Interstitial%ntozx = 12
+        else
+          Interstitial%ntozx = 10
+        end if
       else
+        Interstitial%ntqvx = 1
+        Interstitial%ntcwx = 2
         Interstitial%ntiwx = 0
+        Interstitial%ntozx = 3
       endif
     endif
     ! *DH

@@ -352,9 +352,12 @@ module gmtb_scm_type_defs
 
   contains
 
-  subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels)
+  subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels, tracers)
     class(scm_state_type)             :: scm_state
     integer, intent(in)               :: n_columns, n_levels, n_soil, n_snow, n_time_levels
+    character(len=character_length), intent(in), dimension(:) :: tracers
+    
+    integer :: i
 
     scm_state%experiment_name = clear_char
     scm_state%model_name = clear_char
@@ -375,42 +378,28 @@ module gmtb_scm_type_defs
     scm_state%n_cols = n_columns
     scm_state%n_timesteps = int_zero
     scm_state%n_time_levels = n_time_levels
-    scm_state%n_tracers = 17
+    
+    scm_state%n_tracers = size(tracers)
     allocate(scm_state%tracer_names(scm_state%n_tracers))
-    scm_state%water_vapor_index = 1
-    scm_state%ozone_index = 2
-    scm_state%cloud_water_index = 3
-    scm_state%cloud_ice_index = 4
-    scm_state%rain_index = 5
-    scm_state%snow_index = 6
-    scm_state%graupel_index = 7
-    scm_state%cloud_amount_index = 8
-    scm_state%cloud_droplet_nc_index = 9
-    scm_state%cloud_ice_nc_index = 10
-    scm_state%rain_nc_index = 11
-    scm_state%snow_nc_index = 12
-    scm_state%graupel_nc_index = 13
-    scm_state%tke_index = 14
-    scm_state%water_friendly_aerosol_index = 15
-    scm_state%ice_friendly_aerosol_index = 16
-    scm_state%mass_weighted_rime_factor_index = 17
-    scm_state%tracer_names(1) = 'vap_wat'
-    scm_state%tracer_names(2) = 'o3mr'
-    scm_state%tracer_names(3) = 'liq_wat'
-    scm_state%tracer_names(4) = 'ice_wat'
-    scm_state%tracer_names(5) = 'rainwat'
-    scm_state%tracer_names(6) = 'snowwat'
-    scm_state%tracer_names(7) = 'graupel'
-    scm_state%tracer_names(8) = 'cld_amt'
-    scm_state%tracer_names(9) = 'water_nc'
-    scm_state%tracer_names(10)= 'ice_nc'
-    scm_state%tracer_names(11)= 'rain_nc'
-    scm_state%tracer_names(12)= 'snow_nc'
-    scm_state%tracer_names(13)= 'graupel_nc'
-    scm_state%tracer_names(14)= 'sgs_tke'
-    scm_state%tracer_names(15)= 'liq_aero'
-    scm_state%tracer_names(16)= 'ice_aero'
-    scm_state%tracer_names(17)= 'q_rimef'
+    scm_state%tracer_names = tracers
+    scm_state%water_vapor_index               = get_tracer_index(scm_state%tracer_names,"sphum")
+    scm_state%ozone_index                     = get_tracer_index(scm_state%tracer_names,"o3mr")
+    scm_state%cloud_water_index               = get_tracer_index(scm_state%tracer_names,"liq_wat")
+    scm_state%cloud_ice_index                 = get_tracer_index(scm_state%tracer_names,"ice_wat")
+    scm_state%rain_index                      = get_tracer_index(scm_state%tracer_names,"rainwat")
+    scm_state%snow_index                      = get_tracer_index(scm_state%tracer_names,"snowwat")
+    scm_state%graupel_index                   = get_tracer_index(scm_state%tracer_names,"graupel")
+    scm_state%cloud_amount_index              = get_tracer_index(scm_state%tracer_names,"cld_amt")
+    scm_state%cloud_droplet_nc_index          = get_tracer_index(scm_state%tracer_names,"water_nc")
+    scm_state%cloud_ice_nc_index              = get_tracer_index(scm_state%tracer_names,"ice_nc")
+    scm_state%rain_nc_index                   = get_tracer_index(scm_state%tracer_names,"rain_nc")
+    scm_state%snow_nc_index                   = get_tracer_index(scm_state%tracer_names,"snow_nc")
+    scm_state%graupel_nc_index                = get_tracer_index(scm_state%tracer_names,"graupel_nc")
+    scm_state%tke_index                       = get_tracer_index(scm_state%tracer_names,"sgs_tke")
+    scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
+    scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
+    scm_state%mass_weighted_rime_factor_index = get_tracer_index(scm_state%tracer_names,"q_rimef")
+    
     scm_state%n_itt_swrad = int_zero
     scm_state%n_itt_lwrad = int_zero
     scm_state%n_itt_out = int_zero
@@ -951,5 +940,33 @@ module gmtb_scm_type_defs
 
 
   end subroutine physics_associate
+  
+  function get_tracer_index (tracer_names, name)
+
+    character(len=32), intent(in) :: tracer_names(:)
+    character(len=*),  intent(in) :: name
+    
+    !--- local variables
+    integer :: get_tracer_index
+    integer :: i
+    integer, parameter :: no_tracer = -99
+
+    get_tracer_index = no_tracer
+
+    do i=1, size(tracer_names)
+       if (trim(name) == trim(tracer_names(i))) then
+           get_tracer_index = i
+           exit
+       endif
+    enddo
+
+    if (get_tracer_index == no_tracer) then
+      print *,'tracer with name '//trim(name)//' not found'
+    else
+      print *,'tracer FOUND:',trim(name)
+    endif
+
+    return
+  end function get_tracer_index
 
 end module gmtb_scm_type_defs
