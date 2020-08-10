@@ -312,9 +312,9 @@ SCHEME_FILES = {
     'ccpp/physics/physics/rrtmgp_sw_cloud_optics.F90'      ,
     'ccpp/physics/physics/rrtmgp_sw_aerosol_optics.F90'    ,
     'ccpp/physics/physics/rrtmgp_lw_rte.F90'               ,
-    'ccpp/physics/physics/rrtmgp_gfdlmp_lw_cloud_sampling.F90'    ,
+    'ccpp/physics/physics/rrtmgp_lw_cloud_sampling.F90'    ,
     'ccpp/physics/physics/rrtmgp_sw_rte.F90'               ,
-    'ccpp/physics/physics/rrtmgp_gfdlmp_sw_cloud_sampling.F90'    ,
+    'ccpp/physics/physics/rrtmgp_sw_cloud_sampling.F90'    ,
     'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'    ,
     'ccpp/physics/physics/GFS_rrtmgp_setup.F90'            ,
     'ccpp/physics/physics/GFS_rrtmgp_pre.F90'              ,
@@ -430,13 +430,13 @@ OPTIONAL_ARGUMENTS = {
          },        
     'GFS_rrtmgp_sw_post' : {
          'GFS_rrtmgp_sw_post_run' : [
-             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
+             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step',
              'components_of_surface_downward_shortwave_fluxes',
              ],
          },
     'GFS_rrtmgp_lw_post' : {
          'GFS_rrtmgp_lw_post_run' : [
-             'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
+             'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step',
              ],
          },
     'GFS_suite_interstitial_2' : {
