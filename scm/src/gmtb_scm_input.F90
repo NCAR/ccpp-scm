@@ -59,6 +59,8 @@ subroutine get_config_nml(scm_state)
 
   character(len=character_length)    :: physics_suite !< name of the physics suite name (currently only GFS_operational supported)
   character(len=character_length)    :: physics_nml
+  
+  character(len=character_length), allocatable, dimension(:) :: tracer_names
 
   integer                          :: ioerror
 
@@ -138,9 +140,11 @@ subroutine get_config_nml(scm_state)
     case default
       n_time_levels = 2
   end select
-
-  call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels)
   
+  call get_tracers(tracer_names)
+  
+  call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels, tracer_names)
+
   scm_state%experiment_name = experiment_name
   scm_state%model_name = model_name
   scm_state%output_dir = output_dir
@@ -174,6 +178,7 @@ subroutine get_config_nml(scm_state)
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
   
+  deallocate(tracer_names)
 !> @}
 end subroutine get_config_nml
 
@@ -866,6 +871,38 @@ subroutine get_reference_profile_old(nlev, pres, T, qv, ozone)
   ozone = ozone*1.0E-5
 
 end subroutine get_reference_profile_old
+
+subroutine get_tracers(tracer_names)
+  character(len=character_length), allocatable, intent(inout), dimension(:) :: tracer_names
+
+  character(len=*), parameter :: file_name = 'tracers.txt'
+
+  character(len=100) :: name!, std_name, units
+  integer            :: i, fu, rc, n_lines
+
+  open (action='read', file=FILE_NAME, iostat=rc, newunit=fu)
+    if (rc == 0) then
+        n_lines = 0
+        do
+            read (fu, *, iostat=rc) name!, std_name, units
+            if (rc /= 0) exit
+            n_lines = n_lines + 1
+        end do
+        allocate(tracer_names(n_lines))
+        rewind(fu)
+        do i=1,n_lines
+            read (fu, *, iostat=rc) name!, std_name, units
+            if (rc /= 0) exit
+            tracer_names(i) = trim(name)
+        end do
+    else
+        write(*,'(a,i0)') 'There was an error opening the file ' // FILE_NAME // &
+                          '; error code = ', rc
+        stop
+    end if
+
+    close (fu)
+end subroutine get_tracers
 
 !> Generic subroutine to check for netCDF I/O errors
 subroutine check(status)

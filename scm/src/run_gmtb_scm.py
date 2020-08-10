@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 from default_namelists import default_physics_namelists
+from default_tracers import default_tracers
 
 ###############################################################################
 # Global settings                                                             #
@@ -20,6 +21,10 @@ EXECUTABLE = './gmtb_scm'
 
 # Path to the directory containing experiment namelists (relative to run dir)
 CASE_NAMELIST_DIR = '../etc/case_config'
+
+# Path to the directory containing tracer configurations (relative to run dir)
+TRACERS_DIR = '../etc/tracer_config'
+TRACERS_LINK = 'tracers.txt'
 
 # Standard name of experiment namelist in run directory, must match value in gmtb_scm_input.f90
 STANDARD_EXPERIMENT_NAMELIST = 'input_experiment.nml'
@@ -63,6 +68,7 @@ parser.add_argument('-c', '--case',       help='name of case to run', required=T
 parser.add_argument('-g', '--gdb',        help='invoke gmtb_scm through gdb', action='store_true', default=False)
 parser.add_argument('-s', '--suite',      help='name of suite to use', default=DEFAULT_SUITE)
 parser.add_argument('-n', '--namelist',   help='physics namelist to use')
+parser.add_argument('-t', '--tracers',    help='tracer configuration to use')
 parser.add_argument('-d', '--docker',     help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 
 ###############################################################################
@@ -101,7 +107,8 @@ def parse_arguments():
     suite = args.suite
     namelist = args.namelist
     docker = args.docker
-    return (case, gdb, suite, namelist, docker)
+    tracers = args.tracers
+    return (case, gdb, suite, namelist, docker, tracers)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -118,7 +125,7 @@ def find_gdb():
 
 class Experiment(object):
 
-    def __init__(self, case, suite, physics_namelist):
+    def __init__(self, case, suite, physics_namelist, tracers):
         """Initialize experiment. This routine does most of the work,
         including setting and checking the experiment configuration
         (namelist)."""
@@ -142,6 +149,24 @@ class Experiment(object):
         #check to see that the physics namelists exists in the right dir
         if not os.path.isfile(os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist)):
             message = 'The physics namelist {0} was not found'.format(os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist))
+            logging.critical(message)
+            raise Exception(message)
+        
+        #if a tracer configuration is specified (entire filename), it will be used; 
+        #otherwise, a default tracer configuration for the given suite is used from default_tracers.py
+        if tracers:
+            self._tracers = tracers
+        else:
+            if self._suite in default_tracers:
+                self._tracers = default_tracers.get(self._suite)
+            else:
+                message = 'A default tracer configuration for suite {0} is not found in default_tracers.py'.format(self._suite)
+                logging.critical(message)
+                raise Exception(message)
+        
+        #check to see that the physics namelists exists in the right dir
+        if not os.path.isfile(os.path.join(TRACERS_DIR, self._tracers)):
+            message = 'The tracer configuration {0} was not found'.format(os.path.join(TRACERS_DIR, self._tracers))
             logging.critical(message)
             raise Exception(message)
                         
@@ -267,6 +292,17 @@ class Experiment(object):
         cmd = "ln -sf {0} {1}".format(os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist), self._physics_namelist)
         execute(cmd)
         
+        # Link tracer configuration to run directory with its original name
+        logging.info('Linking tracer configuration {0} to run directory'.format(self._tracers))
+        if os.path.isfile(self._tracers):
+            os.remove(self._tracers)
+        if not os.path.isfile(os.path.join(TRACERS_DIR, self._tracers)):
+            message = 'Tracer configuration {0} not found in directory {1}'.format(self._tracers, TRACERS_DIR)
+            logging.critical(message)
+            raise Exception(message)
+        cmd = "ln -sf {0} {1}".format(os.path.join(TRACERS_DIR, self._tracers), TRACERS_LINK)
+        execute(cmd)
+        
         # Link physics SDF to run directory
         physics_suite = 'suite_' + self._suite + '.xml'
         logging.info('Linking physics suite {0} to run directory'.format(physics_suite))
@@ -371,16 +407,22 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (case, use_gdb, suite, namelist, docker) = parse_arguments()
+    (case, use_gdb, suite, namelist, docker, tracers) = parse_arguments()
     
     setup_logging()
     
     #Experiment
     if namelist:
-        logging.info('Setting up experiment {0} with suite {1} using namelist {2}'.format(case,suite,namelist))
+        if tracers:
+            logging.info('Setting up experiment {0} with suite {1} using namelist {2} and tracers {3}'.format(case,suite,namelist,tracers))
+        else:
+            logging.info('Setting up experiment {0} with suite {1} using namelist {2} using default tracers for the suite'.format(case,suite,namelist))
     else:
-        logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite'.format(case,suite))
-    exp = Experiment(case, suite, namelist)
+        if tracers:
+            logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite and tracers {2}'.format(case,suite,tracers))
+        else:
+            logging.info('Setting up experiment {0} with suite {1} using the default namelist and tracers for the suite'.format(case,suite))
+    exp = Experiment(case, suite, namelist, tracers)
     exp_dir = exp.setup_rundir()
     # Debugger
     if use_gdb:
