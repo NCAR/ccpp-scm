@@ -42,17 +42,17 @@ TYPEDEFS_NEW_METADATA = {
         'module_radlw_parameters' : '',
         },
     'GFS_typedefs' : {
-        'GFS_diag_type' : 'physics%Diag(cdata%blk_no)',
-        'GFS_control_type' : 'physics%Model(cdata%blk_no)',
-        'GFS_cldprop_type' : 'physics%Cldprop(cdata%blk_no)',
-        'GFS_tbd_type' : 'physics%Tbd(cdata%blk_no)',
-        'GFS_sfcprop_type' : 'physics%Sfcprop(cdata%blk_no)',
-        'GFS_coupling_type' : 'physics%Coupling(cdata%blk_no)',
-        'GFS_interstitial_type' : 'physics%Interstitial(cdata%blk_no)',
-        'GFS_statein_type' : 'physics%Statein(cdata%blk_no)',
-        'GFS_radtend_type' : 'physics%Radtend(cdata%blk_no)',
-        'GFS_grid_type' : 'physics%Grid(cdata%blk_no)',
-        'GFS_stateout_type' : 'physics%Stateout(cdata%blk_no)',
+        'GFS_diag_type' : 'physics%Diag',
+        'GFS_control_type' : 'physics%Model',
+        'GFS_cldprop_type' : 'physics%Cldprop',
+        'GFS_tbd_type' : 'physics%Tbd',
+        'GFS_sfcprop_type' : 'physics%Sfcprop',
+        'GFS_coupling_type' : 'physics%Coupling',
+        'GFS_interstitial_type' : 'physics%Interstitial',
+        'GFS_statein_type' : 'physics%Statein',
+        'GFS_radtend_type' : 'physics%Radtend',
+        'GFS_grid_type' : 'physics%Grid',
+        'GFS_stateout_type' : 'physics%Stateout',
         'GFS_typedefs' : '',
         },
     'gmtb_scm_physical_constants' : {
@@ -163,6 +163,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/sfcsub.F',
     'ccpp/physics/physics/sflx.f',
     'ccpp/physics/physics/set_soilveg.f',
+    'ccpp/physics/physics/flake.F90',
     'ccpp/physics/physics/surface_perturbation.F90',
     'ccpp/physics/physics/cu_gf_deep.F90',
     'ccpp/physics/physics/cu_gf_sh.F90',
@@ -190,6 +191,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_kind.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_lw.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_sw.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_rte_config.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_fluxes_broadband_kernels.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/kernels/mo_optical_props_kernels.F90',
@@ -201,10 +203,9 @@ SCHEME_FILES_DEPENDENCIES = [
     'ccpp/physics/physics/rte-rrtmgp/extensions/mo_heating_rates.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/mo_rrtmgp_clr_all_sky.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
-    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_sampling.F90',
-    'ccpp/physics/physics/rrtmg_lw_cloud_optics.F90'       ,
-    'ccpp/physics/physics/rrtmg_sw_cloud_optics.F90'       ,
-    'ccpp/physics/physics/rrtmgp_aux.F90'                  ,
+    'ccpp/physics/physics/rrtmg_lw_cloud_optics.F90'        ,
+    'ccpp/physics/physics/rrtmg_sw_cloud_optics.F90'        ,
+    'ccpp/physics/physics/rrtmgp_aux.F90'                   ,
     # derived data type definitions
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
@@ -213,7 +214,7 @@ SCHEME_FILES_DEPENDENCIES = [
 ]
 
 # Add all physics scheme files relative to basedir
-SCHEME_FILES = {
+SCHEME_FILES = [
     # Relative path to source (from where ccpp_prebuild.py is called) : [ list of physics sets in which scheme may be called ];
     # current restrictions are that each scheme can only belong to one physics set, and all schemes within one group in the
     # suite definition file have to belong to the same physics set
@@ -306,24 +307,27 @@ SCHEME_FILES = {
     'ccpp/physics/physics/mp_fer_hires.F90'                 ,
     'ccpp/physics/physics/gmtb_scm_sfc_flux_spec.F90'       ,
     # RRTMGP
-    'ccpp/physics/physics/rrtmgp_lw_gas_optics.F90'        ,
-    'ccpp/physics/physics/rrtmgp_lw_cloud_optics.F90'      ,
-    'ccpp/physics/physics/rrtmgp_sw_gas_optics.F90'        ,
-    'ccpp/physics/physics/rrtmgp_sw_cloud_optics.F90'      ,
-    'ccpp/physics/physics/rrtmgp_sw_aerosol_optics.F90'    ,
-    'ccpp/physics/physics/rrtmgp_lw_rte.F90'               ,
-    'ccpp/physics/physics/rrtmgp_lw_cloud_sampling.F90'    ,
-    'ccpp/physics/physics/rrtmgp_sw_rte.F90'               ,
-    'ccpp/physics/physics/rrtmgp_sw_cloud_sampling.F90'    ,
-    'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'    ,
-    'ccpp/physics/physics/GFS_rrtmgp_setup.F90'            ,
-    'ccpp/physics/physics/GFS_rrtmgp_pre.F90'              ,
-    'ccpp/physics/physics/rrtmgp_lw_pre.F90'               ,
-    'ccpp/physics/physics/GFS_rrtmgp_sw_pre.F90'           ,
-    'ccpp/physics/physics/GFS_rrtmgp_lw_post.F90'          ,
-    'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'          ,
-    'ccpp/physics/physics/GFS_rrtmgp_gfdlmp_pre.F90'       ,
-    }
+    'ccpp/physics/physics/rrtmgp_lw_gas_optics.F90'         ,
+    'ccpp/physics/physics/rrtmgp_lw_cloud_optics.F90'       ,
+    'ccpp/physics/physics/rrtmgp_sw_gas_optics.F90'         ,
+    'ccpp/physics/physics/rrtmgp_sw_cloud_optics.F90'       ,
+    'ccpp/physics/physics/rrtmgp_sw_aerosol_optics.F90'     ,
+    'ccpp/physics/physics/rrtmgp_lw_rte.F90'                ,
+    'ccpp/physics/physics/rrtmgp_sw_rte.F90'                ,
+    'ccpp/physics/physics/rrtmgp_lw_aerosol_optics.F90'     ,
+    'ccpp/physics/physics/GFS_rrtmgp_setup.F90'             ,
+    'ccpp/physics/physics/GFS_rrtmgp_pre.F90'               ,
+    'ccpp/physics/physics/rrtmgp_lw_pre.F90'                ,
+    'ccpp/physics/physics/GFS_rrtmgp_sw_pre.F90'            ,
+    'ccpp/physics/physics/GFS_rrtmgp_lw_post.F90'           ,
+    'ccpp/physics/physics/rrtmgp_lw_cloud_sampling.F90'     ,
+    'ccpp/physics/physics/rrtmgp_sw_cloud_sampling.F90'     ,
+    'ccpp/physics/physics/GFS_cloud_diagnostics.F90'        ,
+    'ccpp/physics/physics/mo_cloud_sampling.F90'            ,
+    'ccpp/physics/physics/GFS_rrtmgp_gfdlmp_pre.F90'        ,
+    'ccpp/physics/physics/GFS_rrtmgp_zhaocarr_pre.F90'      ,
+    'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'
+    ]
 
 # Default build dir, relative to current working directory,
 # if not specified as command-line argument

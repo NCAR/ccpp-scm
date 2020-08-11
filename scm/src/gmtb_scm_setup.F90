@@ -39,8 +39,8 @@ subroutine set_state(scm_input, scm_reference, scm_state)
   
   !> - Set the longitude and latitude and convert from degrees to radians
   do i=1, scm_state%n_cols
-    scm_state%lon(i,1) = scm_input%input_lon*deg_to_rad_const
-    scm_state%lat(i,1) = scm_input%input_lat*deg_to_rad_const
+    scm_state%lon(i) = scm_input%input_lon*deg_to_rad_const
+    scm_state%lat(i) = scm_input%input_lat*deg_to_rad_const
   end do
   
   !> - Calculate water vapor from total water, suspended liquid water, and suspended ice.
@@ -53,13 +53,13 @@ subroutine set_state(scm_input, scm_reference, scm_state)
   !> - For each column, interpolate the water vapor to the model grid.
   if (.NOT. scm_state%model_ics) then ! not a model
      do i=1, scm_state%n_cols
-       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_qv, scm_state%pres_l(i,1,:), &
-         scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1), last_index_init, 1)
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_qv, scm_state%pres_l(i,:), &
+         scm_state%n_levels, scm_state%state_tracer(i,:,scm_state%water_vapor_index,1), last_index_init, 1)
        !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
        if(last_index_init < scm_state%n_levels) THEN
          call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
-           scm_reference%ref_qv, scm_state%pres_l(i,1,:), scm_state%n_levels, &
-           scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1), grid_error)
+           scm_reference%ref_qv, scm_state%pres_l(i,:), scm_state%n_levels, &
+           scm_state%state_tracer(i,:,scm_state%water_vapor_index,1), grid_error)
        end if
      end do
    
@@ -69,35 +69,35 @@ subroutine set_state(scm_input, scm_reference, scm_state)
    
      !> - For each column, interpolate the temperature to the model grid.
      do i=1, scm_state%n_cols
-       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_T, scm_state%pres_l(i,1,:), &
-         scm_state%n_levels, scm_state%state_T(i,1,:,1), last_index_init, 1)
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_T, scm_state%pres_l(i,:), &
+         scm_state%n_levels, scm_state%state_T(i,:,1), last_index_init, 1)
        !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
        if(last_index_init < scm_state%n_levels) THEN
          call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
-           scm_reference%ref_T, scm_state%pres_l(i,1,:), scm_state%n_levels, scm_state%state_T(i,1,:,1), grid_error)
+           scm_reference%ref_T, scm_state%pres_l(i,:), scm_state%n_levels, scm_state%state_T(i,:,1), grid_error)
        end if
      end do
    
      !> - For each column, interpolate the u-wind to the model grid.
      do i=1, scm_state%n_cols
-       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_u, scm_state%pres_l(i,1,:), &
-         scm_state%n_levels, scm_state%state_u(i,1,:,1), last_index_init, 1)
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_u, scm_state%pres_l(i,:), &
+         scm_state%n_levels, scm_state%state_u(i,:,1), last_index_init, 1)
        if(last_index_init < scm_state%n_levels) THEN
          do j=last_index_init + 1, scm_state%n_levels
            !>  - The standard atmosphere doesn't have wind data; assume zero-gradient above the input data.
-           scm_state%state_u(i,1,j,1) = scm_state%state_u(i,1,last_index_init,1)
+           scm_state%state_u(i,j,1) = scm_state%state_u(i,last_index_init,1)
          end do
        end if
      end do
    
      !> - For each column, interpolate the v-wind to the model grid.
      do i=1, scm_state%n_cols
-       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_v, scm_state%pres_l(i,1,:), &
-         scm_state%n_levels, scm_state%state_v(i,1,:,1), last_index_init, 1)
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_v, scm_state%pres_l(i,:), &
+         scm_state%n_levels, scm_state%state_v(i,:,1), last_index_init, 1)
        if(last_index_init < scm_state%n_levels) THEN
          do j=last_index_init + 1, scm_state%n_levels
            !>  - The standard atmosphere doesn't have wind data; assume zero-gradient above the input data.
-           scm_state%state_v(i,1,j,1) = scm_state%state_v(i,1,last_index_init,1)
+           scm_state%state_v(i,j,1) = scm_state%state_v(i,last_index_init,1)
          end do
        end if
      end do
@@ -105,110 +105,110 @@ subroutine set_state(scm_input, scm_reference, scm_state)
      !> - For each column, interpolate the ozone to the model grid.
      if(scm_state%ozone_index > 0) then
        do i=1, scm_state%n_cols
-         call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_ozone, scm_state%pres_l(i,1,:), &
-           scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%ozone_index,1), last_index_init, 1)
+         call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_ozone, scm_state%pres_l(i,:), &
+           scm_state%n_levels, scm_state%state_tracer(i,:,scm_state%ozone_index,1), last_index_init, 1)
          !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
          if(last_index_init < scm_state%n_levels) THEN
            call patch_in_ref(last_index_init, scm_state%n_levels_smooth, scm_reference%ref_nlev, scm_reference%ref_pres, &
-             scm_reference%ref_ozone, scm_state%pres_l(i,1,:), scm_state%n_levels, &
-             scm_state%state_tracer(i,1,:,scm_state%ozone_index,1), grid_error)
+             scm_reference%ref_ozone, scm_state%pres_l(i,:), scm_state%n_levels, &
+             scm_state%state_tracer(i,:,scm_state%ozone_index,1), grid_error)
          end if
        end do
      end if
    
-     scm_state%state_tracer(:,1,:,scm_state%cloud_water_index,1) = 0.0
+     scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = 0.0
    else
      do i=1, scm_state%n_cols
         !input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + (con_hfus/con_cp)*scm_input%input_qi)
-        scm_state%state_u(i,1,:,1) = scm_input%input_u(:)
-        scm_state%state_v(i,1,:,1) = scm_input%input_v(:)
-        scm_state%state_T(i,1,:,1) = scm_input%input_temp(:)
-        scm_state%state_tracer(i,1,:,scm_state%water_vapor_index,1)=scm_input%input_qt
-        scm_state%state_tracer(i,1,:,scm_state%ozone_index,1)=scm_input%input_ozone
-        scm_state%veg_type(i,1) = scm_input%input_vegtyp
-        scm_state%soil_type(i,1) = scm_input%input_soiltyp
-        scm_state%slope_type(i,1) = scm_input%input_slopetype
-        scm_state%veg_frac(i,1) = scm_input%input_vegfrac
-        scm_state%shdmin(i,1) = scm_input%input_shdmin  
-        scm_state%shdmax(i,1) = scm_input%input_shdmax  
+        scm_state%state_u(i,:,1) = scm_input%input_u(:)
+        scm_state%state_v(i,:,1) = scm_input%input_v(:)
+        scm_state%state_T(i,:,1) = scm_input%input_temp(:)
+        scm_state%state_tracer(i,:,scm_state%water_vapor_index,1)=scm_input%input_qt
+        scm_state%state_tracer(i,:,scm_state%ozone_index,1)=scm_input%input_ozone
+        scm_state%veg_type(i) = scm_input%input_vegtyp
+        scm_state%soil_type(i) = scm_input%input_soiltyp
+        scm_state%slope_type(i) = scm_input%input_slopetype
+        scm_state%veg_frac(i) = scm_input%input_vegfrac
+        scm_state%shdmin(i) = scm_input%input_shdmin  
+        scm_state%shdmax(i) = scm_input%input_shdmax  
         scm_state%sfc_roughness_length_cm = scm_input%input_zorl    
-        scm_state%sfc_type(i,1) = scm_input%input_slmsk !< this "overwrites" what is in the SCM case namelist if model ICs are present
-        scm_state%canopy(i,1) = scm_input%input_canopy  
-        scm_state%hice(i,1) = scm_input%input_hice  
-        scm_state%fice(i,1) = scm_input%input_fice  
-        scm_state%tisfc(i,1) = scm_input%input_tisfc  
-        scm_state%snwdph(i,1) = scm_input%input_snwdph  
-        scm_state%snoalb(i,1) = scm_input%input_snoalb  
-        scm_state%sncovr(i,1) = scm_input%input_sncovr  
-        scm_state%area(i,1) = scm_input%input_area    
-        scm_state%tg3(i,1)    = scm_input%input_tg3     
-        scm_state%uustar(i,1) = scm_input%input_uustar  
-        scm_state%stc(i,1,:,1)=scm_input%input_stc
-        scm_state%smc(i,1,:,1)=scm_input%input_smc
-        scm_state%slc(i,1,:,1)=scm_input%input_slc
+        scm_state%sfc_type(i) = scm_input%input_slmsk !< this "overwrites" what is in the SCM case namelist if model ICs are present
+        scm_state%canopy(i) = scm_input%input_canopy  
+        scm_state%hice(i) = scm_input%input_hice  
+        scm_state%fice(i) = scm_input%input_fice  
+        scm_state%tisfc(i) = scm_input%input_tisfc  
+        scm_state%snwdph(i) = scm_input%input_snwdph  
+        scm_state%snoalb(i) = scm_input%input_snoalb  
+        scm_state%sncovr(i) = scm_input%input_sncovr  
+        scm_state%area(i) = scm_input%input_area    
+        scm_state%tg3(i)    = scm_input%input_tg3     
+        scm_state%uustar(i) = scm_input%input_uustar  
+        scm_state%stc(i,:,1)=scm_input%input_stc
+        scm_state%smc(i,:,1)=scm_input%input_smc
+        scm_state%slc(i,:,1)=scm_input%input_slc
         if (scm_input%input_pres_i(1).GT. 0.0) then ! pressure are read in, overwrite values
-           scm_state%pres_i(i,1,:)=scm_input%input_pres_i
-           scm_state%pres_l(i,1,:)=scm_input%input_pres_l
+           scm_state%pres_i(i,:)=scm_input%input_pres_i
+           scm_state%pres_l(i,:)=scm_input%input_pres_l
         endif
-        scm_state%alvsf(i,1)=scm_input%input_alvsf
-        scm_state%alnsf(i,1)=scm_input%input_alnsf
-        scm_state%alvwf(i,1)=scm_input%input_alvwf
-        scm_state%alnwf(i,1)=scm_input%input_alnwf
-        scm_state%hprime(i,1,1)=scm_input%input_stddev
-        scm_state%hprime(i,1,2)=scm_input%input_convexity
-        scm_state%hprime(i,1,3)=scm_input%input_oa1
-        scm_state%hprime(i,1,4)=scm_input%input_oa2
-        scm_state%hprime(i,1,5)=scm_input%input_oa3
-        scm_state%hprime(i,1,6)=scm_input%input_oa4
-        scm_state%hprime(i,1,7)=scm_input%input_ol1
-        scm_state%hprime(i,1,8)=scm_input%input_ol2
-        scm_state%hprime(i,1,9)=scm_input%input_ol3
-        scm_state%hprime(i,1,10)=scm_input%input_ol4
-        scm_state%hprime(i,1,11)=scm_input%input_theta
-        scm_state%hprime(i,1,12)=scm_input%input_gamma
-        scm_state%hprime(i,1,13)=scm_input%input_sigma
-        scm_state%hprime(i,1,14)=scm_input%input_elvmax
-        scm_state%facsf(i,1)=scm_input%input_facsf
-        scm_state%facwf(i,1)=scm_input%input_facwf
+        scm_state%alvsf(i)=scm_input%input_alvsf
+        scm_state%alnsf(i)=scm_input%input_alnsf
+        scm_state%alvwf(i)=scm_input%input_alvwf
+        scm_state%alnwf(i)=scm_input%input_alnwf
+        scm_state%hprime(i,1)=scm_input%input_stddev
+        scm_state%hprime(i,2)=scm_input%input_convexity
+        scm_state%hprime(i,3)=scm_input%input_oa1
+        scm_state%hprime(i,4)=scm_input%input_oa2
+        scm_state%hprime(i,5)=scm_input%input_oa3
+        scm_state%hprime(i,6)=scm_input%input_oa4
+        scm_state%hprime(i,7)=scm_input%input_ol1
+        scm_state%hprime(i,8)=scm_input%input_ol2
+        scm_state%hprime(i,9)=scm_input%input_ol3
+        scm_state%hprime(i,10)=scm_input%input_ol4
+        scm_state%hprime(i,11)=scm_input%input_theta
+        scm_state%hprime(i,12)=scm_input%input_gamma
+        scm_state%hprime(i,13)=scm_input%input_sigma
+        scm_state%hprime(i,14)=scm_input%input_elvmax
+        scm_state%facsf(i)=scm_input%input_facsf
+        scm_state%facwf(i)=scm_input%input_facwf
      enddo
      !check for nonzero NoahMP input variable and fill in the scm_state with values from scm_input if found
      if (scm_input%input_tvxy /= 0.0) then
        do i=1, scm_state%n_cols
-         scm_state%tvxy(i,1) = scm_input%input_tvxy
-         scm_state%tgxy(i,1) = scm_input%input_tgxy
-         scm_state%tahxy(i,1) = scm_input%input_tahxy
-         scm_state%canicexy(i,1) = scm_input%input_canicexy
-         scm_state%canliqxy(i,1) = scm_input%input_canliqxy
-         scm_state%eahxy(i,1) = scm_input%input_eahxy
-         scm_state%cmxy(i,1) = scm_input%input_cmxy
-         scm_state%chxy(i,1) = scm_input%input_chxy
-         scm_state%fwetxy(i,1) = scm_input%input_fwetxy
-         scm_state%sneqvoxy(i,1) = scm_input%input_sneqvoxy
-         scm_state%alboldxy(i,1) = scm_input%input_alboldxy
-         scm_state%qsnowxy(i,1) = scm_input%input_qsnowxy
-         scm_state%wslakexy(i,1) = scm_input%input_wslakexy
-         scm_state%taussxy(i,1) = scm_input%input_taussxy
-         scm_state%waxy(i,1) = scm_input%input_waxy
-         scm_state%wtxy(i,1) = scm_input%input_wtxy
-         scm_state%zwtxy(i,1) = scm_input%input_zwtxy
-         scm_state%xlaixy(i,1) = scm_input%input_xlaixy
-         scm_state%xsaixy(i,1) = scm_input%input_xsaixy
-         scm_state%lfmassxy(i,1) = scm_input%input_lfmassxy
-         scm_state%stmassxy(i,1) = scm_input%input_stmassxy
-         scm_state%rtmassxy(i,1) = scm_input%input_rtmassxy
-         scm_state%woodxy(i,1) = scm_input%input_woodxy
-         scm_state%stblcpxy(i,1) = scm_input%input_stblcpxy
-         scm_state%fastcpxy(i,1) = scm_input%input_fastcpxy
-         scm_state%smcwtdxy(i,1) = scm_input%input_smcwtdxy
-         scm_state%deeprechxy(i,1) = scm_input%input_deeprechxy
-         scm_state%rechxy(i,1) = scm_input%input_rechxy
-         scm_state%snowxy(i,1) = scm_input%input_snowxy
+         scm_state%tvxy(i) = scm_input%input_tvxy
+         scm_state%tgxy(i) = scm_input%input_tgxy
+         scm_state%tahxy(i) = scm_input%input_tahxy
+         scm_state%canicexy(i) = scm_input%input_canicexy
+         scm_state%canliqxy(i) = scm_input%input_canliqxy
+         scm_state%eahxy(i) = scm_input%input_eahxy
+         scm_state%cmxy(i) = scm_input%input_cmxy
+         scm_state%chxy(i) = scm_input%input_chxy
+         scm_state%fwetxy(i) = scm_input%input_fwetxy
+         scm_state%sneqvoxy(i) = scm_input%input_sneqvoxy
+         scm_state%alboldxy(i) = scm_input%input_alboldxy
+         scm_state%qsnowxy(i) = scm_input%input_qsnowxy
+         scm_state%wslakexy(i) = scm_input%input_wslakexy
+         scm_state%taussxy(i) = scm_input%input_taussxy
+         scm_state%waxy(i) = scm_input%input_waxy
+         scm_state%wtxy(i) = scm_input%input_wtxy
+         scm_state%zwtxy(i) = scm_input%input_zwtxy
+         scm_state%xlaixy(i) = scm_input%input_xlaixy
+         scm_state%xsaixy(i) = scm_input%input_xsaixy
+         scm_state%lfmassxy(i) = scm_input%input_lfmassxy
+         scm_state%stmassxy(i) = scm_input%input_stmassxy
+         scm_state%rtmassxy(i) = scm_input%input_rtmassxy
+         scm_state%woodxy(i) = scm_input%input_woodxy
+         scm_state%stblcpxy(i) = scm_input%input_stblcpxy
+         scm_state%fastcpxy(i) = scm_input%input_fastcpxy
+         scm_state%smcwtdxy(i) = scm_input%input_smcwtdxy
+         scm_state%deeprechxy(i) = scm_input%input_deeprechxy
+         scm_state%rechxy(i) = scm_input%input_rechxy
+         scm_state%snowxy(i) = scm_input%input_snowxy
          
-         scm_state%snicexy(i,1,:) = scm_input%input_snicexy(:)
-         scm_state%snliqxy(i,1,:) = scm_input%input_snliqxy(:)
-         scm_state%tsnoxy(i,1,:) = scm_input%input_tsnoxy(:)
-         scm_state%smoiseq(i,1,:) = scm_input%input_smoiseq(:)
-         scm_state%zsnsoxy(i,1,:) = scm_input%input_zsnsoxy(:)
+         scm_state%snicexy(i,:) = scm_input%input_snicexy(:)
+         scm_state%snliqxy(i,:) = scm_input%input_snliqxy(:)
+         scm_state%tsnoxy(i,:) = scm_input%input_tsnoxy(:)
+         scm_state%smoiseq(i,:) = scm_input%input_smoiseq(:)
+         scm_state%zsnsoxy(i,:) = scm_input%input_zsnsoxy(:)
        end do
      endif
    endif
@@ -323,7 +323,7 @@ end subroutine patch_in_ref
 subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                   &
                             Coupling, Grid, Tbd, Cldprop, Radtend, Diag,         &
                             Interstitial, communicator, ntasks, nthreads,        &
-                            Init_parm)
+                            Init_parm, n_cols, lon, lat, area)
 
   use machine,             only: kind_phys
   use GFS_typedefs,        only: GFS_init_type,                          &
@@ -333,27 +333,35 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                                  GFS_tbd_type,      GFS_cldprop_type,    &
                                  GFS_radtend_type,  GFS_diag_type,       &
                                  GFS_interstitial_type
+  use physcons,            only: pi => con_pi
+  
   
   !use cldwat2m_micro,      only: ini_micro
   !use aer_cloud,           only: aer_cloud_init
   !use module_ras,          only: ras_init
 
   !--- interface variables
-  type(GFS_control_type),      intent(inout) :: Model
-  type(GFS_statein_type),      intent(inout) :: Statein
-  type(GFS_stateout_type),     intent(inout) :: Stateout
-  type(GFS_sfcprop_type),      intent(inout) :: Sfcprop
-  type(GFS_coupling_type),     intent(inout) :: Coupling
-  type(GFS_grid_type),         intent(inout) :: Grid
-  type(GFS_tbd_type),          intent(inout) :: Tbd
-  type(GFS_cldprop_type),      intent(inout) :: Cldprop
-  type(GFS_radtend_type),      intent(inout) :: Radtend
-  type(GFS_diag_type),         intent(inout) :: Diag
-  type(GFS_interstitial_type), intent(inout) :: Interstitial
-  type(GFS_init_type),         intent(in)    :: Init_parm
+  type(GFS_control_type),                    intent(inout) :: Model
+  type(GFS_statein_type),                    intent(inout) :: Statein
+  type(GFS_stateout_type),                   intent(inout) :: Stateout
+  type(GFS_sfcprop_type),                    intent(inout) :: Sfcprop
+  type(GFS_coupling_type),                   intent(inout) :: Coupling
+  type(GFS_grid_type),                       intent(inout) :: Grid
+  type(GFS_tbd_type),                        intent(inout) :: Tbd
+  type(GFS_cldprop_type),                    intent(inout) :: Cldprop
+  type(GFS_radtend_type),                    intent(inout) :: Radtend
+  type(GFS_diag_type),                       intent(inout) :: Diag
+  type(GFS_interstitial_type),               intent(inout) :: Interstitial
+  type(GFS_init_type),                       intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: communicator
-  integer,                  intent(in)    :: ntasks, nthreads
+  integer,                  intent(in)    :: ntasks, nthreads, n_cols
+  
+  real(kind=dp), dimension(n_cols), intent(in) :: lon, lat, area
+  
+  real(kind=dp), parameter  :: rad2deg = 180.0_dp/pi
+  
+  integer :: i
   
   !--- set control properties (including namelist read)
   call Model%init (Init_parm%nlunit, Init_parm%fn_nml,           &
@@ -372,21 +380,34 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    communicator, ntasks, nthreads)
 
   !--- initialize DDTs
-  call Statein%create(1, Model)
-  call Stateout%create(1, Model)
-  call Sfcprop%create(1, Model)
-  call Coupling%create(1, Model)
-  call Grid%create(1, Model)
-  call Tbd%create(1, Model)
-  call Cldprop%create(1, Model)
-  call Radtend%create(1, Model)
-  !--- internal representation of diagnostics
-  call Diag%create(1, Model)
-  !--- internal representation of interstitials for CCPP physics
-  call Interstitial%create(1, Model)
-
-  !--- populate the grid components
-  call GFS_grid_populate (Grid, Init_parm%xlon, Init_parm%xlat, Init_parm%area)
+  
+    call Statein%create(n_cols, Model)
+    call Stateout%create(n_cols, Model)
+    call Sfcprop%create(n_cols, Model)
+    call Coupling%create(n_cols, Model)
+    call Grid%create(n_cols, Model)
+    call Tbd%create(n_cols, Model)
+    call Cldprop%create(n_cols, Model)
+    call Radtend%create(n_cols, Model)
+    !--- internal representation of diagnostics
+    call Diag%create(n_cols, Model)
+    !--- internal representation of interstitials for CCPP physics
+    call Interstitial%create(n_cols, Model)
+    
+    !--- populate the grid components
+    !call GFS_grid_populate (Grid(i), Init_parm%xlon, Init_parm%xlat, Init_parm%area)
+    
+    do i=1, n_cols
+     Grid%xlon(i)   = lon(i)
+     Grid%xlat(i)   = lat(i)
+     Grid%xlat_d(i) = lat(i) * rad2deg
+     Grid%xlon_d(i) = lon(i) * rad2deg
+     Grid%sinlat(i) = sin(Grid%xlat(i))
+     Grid%coslat(i) = sqrt(1.0_dp - Grid%sinlat(i)*Grid%sinlat(i))
+     Grid%area(i)   = area(i)
+     Grid%dx(i)     = sqrt(area(i))
+    end do
+    
 
   !--- initialize Morrison-Gettleman microphysics
   !if (Model%ncld == 2) then

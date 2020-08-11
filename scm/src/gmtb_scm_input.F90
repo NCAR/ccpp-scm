@@ -6,6 +6,7 @@ module gmtb_scm_input
 
 use gmtb_scm_kinds, only : sp, dp, qp
 use netcdf
+use gmtb_scm_type_defs, only: character_length
 
 implicit none
 
@@ -28,9 +29,9 @@ subroutine get_config_nml(scm_state)
 
   type(scm_state_type), target, intent(inout) :: scm_state
 
-  character(len=80)    :: experiment_name !< name of the experiment configuration file (usually case name)
-  character(len=80)    :: model_name !< name of the host model (currently only GFS supported)
-  character(len=80)    :: case_name !< name of case initialization and forcing dataset
+  character(len=character_length)    :: experiment_name !< name of the experiment configuration file (usually case name)
+  character(len=character_length)    :: model_name !< name of the host model (currently only GFS supported)
+  character(len=character_length)    :: case_name !< name of case initialization and forcing dataset
   real(kind=dp)        :: dt !< time step in seconds
   real(kind=dp)        :: runtime !< total runtime in seconds
   real(kind=dp)        :: output_frequency !< freqency of output writing in seconds
@@ -40,10 +41,10 @@ subroutine get_config_nml(scm_state)
   integer              :: n_columns !< number of columns to use
   integer              :: n_time_levels
   integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
-  character(len=80)    :: output_dir !< name of the output directory
-  character(len=80)    :: output_file !< name of the output file (without the file extension)
-  character(len=80)    :: case_data_dir !< path to the directory containing case initialization and forcing data
-  character(len=80)    :: vert_coord_data_dir !< path to the directory containing vertical coordinate data
+  character(len=character_length)    :: output_dir !< name of the output directory
+  character(len=character_length)    :: output_file !< name of the output file (without the file extension)
+  character(len=character_length)    :: case_data_dir !< path to the directory containing case initialization and forcing data
+  character(len=character_length)    :: vert_coord_data_dir !< path to the directory containing vertical coordinate data
   integer              :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: C_RES            !< reference "C" resoltiion of FV3 grid (needed for GWD and mountain blocking)
@@ -56,9 +57,11 @@ subroutine get_config_nml(scm_state)
   integer              :: year, month, day, hour
   real(kind=dp)        :: column_area
 
-  character(len=80), allocatable  :: physics_suite(:) !< name of the physics suite name (currently only GFS_operational supported)
-  character(len=64), allocatable   :: physics_nml(:)
-  character(len=80), allocatable, dimension(:) :: tracer_names
+  character(len=character_length)    :: physics_suite !< name of the physics suite name (currently only GFS_operational supported)
+  character(len=character_length)    :: physics_nml
+  
+  character(len=character_length), allocatable, dimension(:) :: tracer_names
+
   integer                          :: ioerror
 
   CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
@@ -124,12 +127,8 @@ subroutine get_config_nml(scm_state)
     write(*,'(a)') 'The current implementation does not allow to run more than one column at a time.'
     STOP
   end if
-
-  !Using n_columns, allocate memory for the physics suite names and number of fields needed by each. If there are more physics suites
-  !than n_columns, notify the user and stop the program. If there are less physics suites than columns, notify the user and attempt to
-  !continue (getting permission from user), filling in the unspecified suites as the same as the last specified suite.
-  allocate(physics_suite(n_columns), physics_nml(n_columns))
-
+  
+  !read in the physics suite and namelist
   read(10, NML=physics_config, iostat=ioerror)
   close(10)
 
@@ -155,7 +154,7 @@ subroutine get_config_nml(scm_state)
   scm_state%case_name = case_name
   scm_state%physics_suite_name = physics_suite
   scm_state%physics_nml = physics_nml
-  scm_state%area(:,1) = column_area
+  scm_state%area(:) = column_area
 
   scm_state%n_cols = n_columns
   scm_state%n_levels = n_levels

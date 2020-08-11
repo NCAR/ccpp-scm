@@ -1,5 +1,7 @@
 default_tracers = {"SCM_GFS_v15p2":"tracers_gfdlmp.txt",
                    "SCM_GFS_v16beta":"tracers_gfdlmp.txt",
+                   "SCM_GFS_v15p2_RRTMGP":"tracers_gfdlmp.txt",
+                   "SCM_GFS_v16beta_RRTMGP":"tracers_gfdlmp.txt",
                    "SCM_csawmg":"tracers_csawmg.txt",
                    "SCM_GFS_v15p2_no_nsst":"tracers_gfdlmp.txt",
                    "SCM_GFS_v16beta_no_nsst":"tracers_gfdlmp.txt",
