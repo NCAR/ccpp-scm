@@ -36,6 +36,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_epsqs]
+  standard_name = minimum_value_of_saturation_mixing_ratio
+  long_name = floor value for saturation mixing ratio
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys 
 [con_epsm1]
   standard_name = ratio_of_dry_air_to_water_vapor_gas_constants_minus_one
   long_name = (rd/rv) - 1
