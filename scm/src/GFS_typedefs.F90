@@ -6985,16 +6985,6 @@ module GFS_typedefs
     end if
     !
 
-	!
-	! RRTMGP
-	!
-	if (Model%do_RRTMGP) then  
-	   if (Model%use_LW_jacobian) then 
-          !Interstitial%fluxlwUP_jac   = clear_val
-          !Interstitial%fluxlwDOWN_jac = clear_val      
-       endif  
-    endif
-    
   end subroutine interstitial_phys_reset
 
   subroutine interstitial_print(Interstitial, Model, mpirank, omprank, blkno)
