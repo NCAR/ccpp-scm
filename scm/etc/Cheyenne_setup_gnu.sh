@@ -22,6 +22,9 @@ module load  NCEPlibs/1.0.0
 
 echo "Loading cmake"
 module load cmake/3.16.4
+export CMAKE_C_COMPILER=gcc
+export CMAKE_CXX_COMPILER=g++
+export CMAKE_Fortran_COMPILER=gfortran
 export CMAKE_Platform=cheyenne.gnu
 
 echo "Setting up python environment for plotting. A NCAR Package Library for python will be cloned into /glade/work/$USER."

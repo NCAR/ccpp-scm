@@ -19,12 +19,14 @@ module use -a /scratch1/BMC/gmtb/software/modulefiles/intel-18.0.5.274/impi-2018
 module load NCEPlibs/1.0.0
 
 echo "Loading cmake"
-module use -a /scratch1/BMC/gmtb/software/modulefiles/generic
-module load cmake/3.16.3
+module load cmake/3.16.1
+export CMAKE_C_COMPILER=icc
+export CMAKE_CXX_COMPILER=icpc
+export CMAKE_Fortran_COMPILER=ifort
 export CMAKE_Platform=hera.intel
 
 echo "Loading the anaconda python distribution"
-module load contrib
+module use -a /contrib/anaconda/modulefiles
 module load anaconda/anaconda2
 
 #install f90nml for the local user
