@@ -18,7 +18,7 @@ setenv FC ifort
 
 echo "Setting NCEPLIBS environment variables"
 module use /glade/p/ral/jntp/GMTB/tools/modulefiles/intel-19.0.5/mpt-2.19
-module load  NCEPlibs/1.0.0
+module load  NCEPlibs/1.1.0
 
 echo "Loading cmake"
 module load cmake/3.16.4
