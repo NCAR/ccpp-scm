@@ -1,13 +1,8 @@
 #!/usr/bin/env python
 
 import sys
-PYTHON2 = sys.version_info[0] < 3
-
 import argparse
-if PYTHON2:
-    from imp import load_source
-else:
-    from importlib.machinery import SourceFileLoader
+import importlib
 import os
 import logging
 import subprocess
@@ -120,10 +115,11 @@ def main():
     if args.file:
         logging.info('Importing {0} to run requested combinations'.format(args.file))
         try:
-            if PYTHON2:
-                scm_runs = load_source(os.path.splitext(args.file)[0], args.file)
-            else:
-                scm_runs = SourceFileLoader(os.path.splitext(args.file)[0], args.file).load_module()
+            dirname, basename = os.path.split(args.file)
+            sys.path.append(dirname)
+            module_name = os.path.splitext(basename)[0]
+            scm_runs = importlib.import_module(module_name)
+            sys.path.pop()
         except ImportError:
             message = 'There was a problem loading {0}. Please check that the path exists.'.format(args.file)
             logging.critical(message)
