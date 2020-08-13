@@ -28,15 +28,15 @@ export CMAKE_Fortran_COMPILER=ifort
 export CMAKE_Platform=cheyenne.intel
 
 echo "Setting up python environment for plotting. A NCAR Package Library for python will be cloned into /glade/work/$USER."
-module load python/2.7.16
+module load python/3.7.5
 ncar_pylib
-if [ -d "/glade/work/$USER/gmtb_scm_python_clone" ]; then
-    echo "gmtb_scm_python_clone NPL exists. Loading..."
-    ncar_pylib gmtb_scm_python_clone
+if [ -d "/glade/work/$USER/gmtb_scm_python3_clone" ]; then
+    echo "gmtb_scm_python3_clone NPL exists. Loading..."
+    ncar_pylib gmtb_scm_python3_clone
 else
-    echo "gmtb_scm_python_clone does not exist yet. Creating..."
-    ncar_pylib -c 20190627 /glade/work/$USER/gmtb_scm_python_clone
-    ncar_pylib gmtb_scm_python_clone
+    echo "gmtb_scm_python3_clone does not exist yet. Creating..."
+    ncar_pylib -c 20200417 /glade/work/$USER/gmtb_scm_python3_clone
+    ncar_pylib gmtb_scm_python3_clone
 fi
 
 #check to see if f90nml is installed locally
