@@ -19,7 +19,7 @@ echo "Setting NCEPLIBS environment variables"
 ## load modules for above compiler / MPI combination
 ##
 module use -a /scratch1/BMC/gmtb/software/modulefiles/intel-18.0.5.274/impi-2018.0.4
-module load NCEPlibs/1.0.0
+module load NCEPlibs/1.1.0
 
 echo "Loading cmake"
 module load cmake/3.16.1
@@ -30,7 +30,7 @@ setenv CMAKE_Platform hera.intel
 
 echo "Loading the anaconda python distribution"
 module use -a /contrib/anaconda/modulefiles
-module load anaconda/anaconda2
+module load anaconda/anaconda3-4.4.0
 
 #install f90nml for the local user
 
@@ -56,4 +56,26 @@ if ( $? != 0 ) then
 	pip install --index-url http://anaconda.rdhpcs.noaa.gov/simple --trusted-host anaconda.rdhpcs.noaa.gov shapely --user
 else
 	echo "shapely is installed"
+endif
+
+#check to see if configobj is installed locally
+echo "Checking if configobj python module is installed"
+python -c "import configobj"
+
+if ( $? != 0 ) then
+	echo "Not found; installing configobj"
+	pip install --index-url http://anaconda.rdhpcs.noaa.gov/simple --trusted-host anaconda.rdhpcs.noaa.gov configobj --user
+else
+	echo "configobj is installed"
+endif
+
+#check to see if netCDF4 is installed locally
+echo "Checking if netCDF4 python module is installed"
+python -c "import netCDF4"
+
+if ( $? != 0 ) then
+	echo "Not found; installing netCDF4"
+	pip install --index-url http://anaconda.rdhpcs.noaa.gov/simple --trusted-host anaconda.rdhpcs.noaa.gov netCDF4 --user
+else
+	echo "netCDF4 is installed"
 endif

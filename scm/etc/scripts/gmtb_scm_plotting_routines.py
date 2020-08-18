@@ -6,6 +6,7 @@ Created on Mon May 16 16:58:28 2016
 
 @author: grantf
 """
+from __future__ import print_function
 
 import numpy as np
 import matplotlib as mpl
@@ -56,7 +57,7 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
     plt.rc('text', usetex=latex_labels)
     
     if np.count_nonzero(values) == 0:
-        print 'The plot for {} will not be created due to all zero values'.format(x_label)
+        print('The plot for {} will not be created due to all zero values'.format(x_label))
         return
     
     fig = plt.figure()
@@ -222,7 +223,7 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
         plt.yticks(np.linspace(yticks[0],yticks[1],yticks[2],endpoint=True))
         plt.gca().get_yaxis().get_major_formatter().labelOnlyBase = False
         plt.gca().get_yaxis().set_major_formatter(mpl.ticker.FormatStrFormatter('%d'))
-    plt.savefig(filename, bbox_inches = 'tight', additional_artists=(first_legend,))
+    plt.savefig(filename, bbox_inches = 'tight')
     plt.close()
 
 def plot_profile_compare(z, values, LES_values, LES_z, x_label, y_label, filename, xticks=[], yticks=[], y_inverted = False, y_log = False, x_lim = [], y_lim = []):
@@ -295,7 +296,7 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
     plt.rc('text', usetex=latex_labels)
     
     if np.count_nonzero(values) == 0:
-        print 'The plot for {} will not be created due to all zero values'.format(y_label)
+        print('The plot for {} will not be created due to all zero values'.format(y_label))
         return
     
     fig = plt.figure()
@@ -400,7 +401,7 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
         else:
             first_legend = plt.legend(lines, legend_labels, loc='best', fontsize='small')
 
-    plt.savefig(filename, bbox_inches = 'tight', pad_inches = 0.1, additional_artists=(first_legend,))
+    plt.savefig(filename, bbox_inches = 'tight', pad_inches = 0.1)
     plt.close()
 
 def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_label, filename, xticks=[], yticks=[], plot_mean = 0, annotation = 0, y_inverted = 0, y_log = False, y_lim = [], conversion_factor=1.0):
@@ -409,7 +410,7 @@ def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_
     plt.rc('text', usetex=latex_labels)
     
     if np.count_nonzero(values) == 0:
-        print 'The plot for {} will not be created due to all zero values'.format(title)
+        print('The plot for {} will not be created due to all zero values'.format(title))
         return
     
     if(min_val != -999 and max_val != -999):
@@ -658,7 +659,7 @@ def plot_profile_multi_ens(z, values, labels, x_label, y_label, filename, obs_z=
         plt.yticks(np.linspace(yticks[0],yticks[1],yticks[2],endpoint=True))
         plt.gca().get_yaxis().get_major_formatter().labelOnlyBase = False
         plt.gca().get_yaxis().set_major_formatter(mpl.ticker.FormatStrFormatter('%d'))
-    plt.savefig(filename, bbox_inches = 'tight', additional_artists=(first_legend,))
+    plt.savefig(filename, bbox_inches = 'tight')
     plt.close()
 
 def plot_time_series_multi_ens(time, values, labels, x_label, y_label, filename, obs_time=None, obs_values=None, obs_label=None, line_type=None, color_index=None, skill_scores=False):
@@ -803,7 +804,7 @@ def plot_time_series_multi_ens(time, values, labels, x_label, y_label, filename,
         else:
             first_legend = plt.legend(lines, legend_labels, loc='best', fontsize='small')
 
-    plt.savefig(filename, bbox_inches = 'tight', pad_inches = 0.1, additional_artists=(first_legend,))
+    plt.savefig(filename, bbox_inches = 'tight', pad_inches = 0.1)
     plt.close()
 
 def plot_scatter_multi(x, y, x_label, y_label, filename, x_lim=[], y_lim=[], color_index=None):
