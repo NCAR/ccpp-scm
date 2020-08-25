@@ -2084,6 +2084,42 @@
   units = flag
   dimensions = ()
   type = logical
+[isc]
+  standard_name = starting_x_index_for_this_MPI_rank
+  long_name = starting index in the x direction for this MPI rank
+  units = count
+  dimensions = ()
+  type = integer
+[jsc]
+  standard_name = starting_y_index_for_this_MPI_rank
+  long_name = starting index in the y direction for this MPI rank
+  units = count
+  dimensions = ()
+  type = integer
+[nx]
+  standard_name = number_of_points_in_x_direction_for_this_MPI_rank
+  long_name = number of points in x direction for this MPI rank
+  units = count
+  dimensions = ()
+  type = integer
+[ny]
+  standard_name = number_of_points_in_y_direction_for_this_MPI_rank
+  long_name = number of points in y direction for this MPI rank
+  units = count
+  dimensions = ()
+  type = integer
+[cnx]
+  standard_name = number_of_points_in_x_direction_for_this_cubed_sphere_face
+  long_name = number of points in x direction for this cubed sphere face
+  units = count
+  dimensions = ()
+  type = integer
+[cny]
+  standard_name = number_of_points_in_y_direction_for_this_cubed_sphere_face
+  long_name = number of points in y direction for this cubed sphere face
+  units = count
+  dimensions = ()
+  type = integer
 [naux2d]
   standard_name = number_of_2d_auxiliary_arrays
   long_name = number of 2d auxiliary arrays to output (for debugging)
@@ -2271,6 +2307,12 @@
 [levrp1]
   standard_name = number_of_vertical_layers_for_radiation_calculations_plus_one
   long_name = number of vertical levels for radiation calculations + 1
+  units = count
+  dimensions = ()
+  type = integer
+[nfxr]
+  standard_name = number_of_radiation_diagnostic_variables
+  long_name = number of variables stored in the fluxr array
   units = count
   dimensions = ()
   type = integer
@@ -3245,6 +3287,12 @@
   units = flag
   dimensions = ()
   type = logical
+[h2o_phys]
+  standard_name = flag_for_stratospheric_water_vapor_physics
+  long_name = flag for stratospheric water vapor physics
+  units = flag
+  dimensions = ()
+  type = logical
 [shcnvcw]
   standard_name = flag_shallow_convective_cloud
   long_name = flag for shallow convective cloud
@@ -4130,6 +4178,42 @@
   units = 
   dimensions = ()
   type = integer
+[nT2delt]
+  standard_name = index_for_air_temperature_two_timesteps_back
+  long_name = the index of air temperature two timesteps back in phy f3d
+  units = 
+  dimensions = ()
+  type = integer
+[nTdelt]
+  standard_name = index_for_air_temperature_at_previous_timestep
+  long_name = the index of air temperature at previous timestep in phy f3d
+  units = 
+  dimensions = ()
+  type = integer
+[nqv2delt]
+  standard_name = index_for_specific_humidity_two_timesteps_back
+  long_name = the index of specific humidity two timesteps back in phy f3d
+  units = 
+  dimensions = ()
+  type = integer
+[nqvdelt]
+  standard_name = index_for_specific_humidity_at_previous_timestep
+  long_name = the index of specific humidity at previous timestep in phy f3d
+  units = 
+  dimensions = ()
+  type = integer
+[nps2delt]
+  standard_name = index_for_surface_air_pressure_two_timesteps_back
+  long_name = the index of surface air pressure two timesteps back in phy f2d
+  units = 
+  dimensions = ()
+  type = integer
+[npsdelt]
+  standard_name = index_for_surface_air_pressure_at_previous_timestep
+  long_name = the index of surface air pressure at previous timestep in phy f2d
+  units = 
+  dimensions = ()
+  type = integer
 [debug]
   standard_name = flag_debug
   long_name = control flag for debug
@@ -4551,6 +4635,127 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[xlon_d]
+  standard_name = longitude_in_degree
+  long_name = longitude in degrees
+  units = degree_east
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[jindx1_o3]
+  standard_name = lower_ozone_interpolation_index
+  long_name = interpolation low index for ozone
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[jindx2_o3]
+  standard_name = upper_ozone_interpolation_index
+  long_name = interpolation high index for ozone
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[ddy_o3]
+  standard_name = ozone_interpolation_weight
+  long_name = interpolation high index for ozone
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[jindx1_h]
+  standard_name = lower_water_vapor_interpolation_index
+  long_name = interpolation low index for stratospheric water vapor
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[jindx2_h]
+  standard_name = upper_water_vapor_interpolation_index
+  long_name = interpolation high index for stratospheric water vapor
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[ddy_h]
+  standard_name = water_vapor_interpolation_weight
+  long_name = interpolation high index for stratospheric water vapor
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[jindx1_aer]
+  standard_name = lower_aerosol_y_interpolation_index
+  long_name = interpolation low index for prescribed aerosols in the y direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[jindx2_aer]
+  standard_name = upper_aerosol_y_interpolation_index
+  long_name = interpolation high index for prescribed aerosols in the y direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[ddy_aer]
+  standard_name = aerosol_y_interpolation_weight
+  long_name = interpolation high index for prescribed aerosols in the y direction
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[iindx1_aer]
+  standard_name = lower_aerosol_x_interpolation_index
+  long_name = interpolation low index for prescribed aerosols in the x direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[iindx2_aer]
+  standard_name = upper_aerosol_x_interpolation_index
+  long_name = interpolation high index for prescribed aerosols in the x direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[ddx_aer]
+  standard_name = aerosol_x_interpolation_weight
+  long_name = interpolation high index for prescribed aerosols in the x direction
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[jindx1_ci]
+  standard_name = lower_cloud_nuclei_y_interpolation_index
+  long_name = interpolation low index for ice and cloud condensation nuclei in the y direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[jindx2_ci]
+  standard_name = upper_cloud_nuclei_y_interpolation_index
+  long_name = interpolation high index for ice and cloud condensation nuclei in the y direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[ddy_ci]
+  standard_name = cloud_nuclei_y_interpolation_weight
+  long_name = interpolation high index for ice and cloud condensation nuclei in the y direction
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[iindx1_ci]
+  standard_name = lower_cloud_nuclei_x_interpolation_index
+  long_name = interpolation low index for ice and cloud condensation nuclei in the x direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[iindx2_ci]
+  standard_name = upper_cloud_nuclei_x_interpolation_index
+  long_name = interpolation high index for ice and cloud condensation nuclei in the x direction
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+[ddx_ci]
+  standard_name = cloud_nuclei_x_interpolation_weight
+  long_name = interpolation high index for ice and cloud condensation nuclei in the x direction
+  units = none
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 
 ########################################################################
 [ccpp-arg-table]
@@ -4678,16 +4883,16 @@
   dimensions = (horizontal_dimension,number_of_cloud_types_CS)
   type = real
   kind = kind_phys
-[phy_f2d(:,1)]
-  standard_name = surface_air_pressure_two_time_steps_back
-  long_name = surface air pressure two time steps back
+[phy_f2d(:,index_for_surface_air_pressure_two_timesteps_back)]
+  standard_name = surface_air_pressure_two_timesteps_back
+  long_name = surface air pressure two timesteps back
   units = Pa
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[phy_f2d(:,2)]
-  standard_name = surface_air_pressure_at_previous_time_step
-  long_name = surface air pressure at previous time step
+[phy_f2d(:,index_for_surface_air_pressure_at_previous_timestep)]
+  standard_name = surface_air_pressure_at_previous_timestep
+  long_name = surface air pressure at previous timestep
   units = Pa
   dimensions = (horizontal_dimension)
   type = real
@@ -4699,30 +4904,30 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-[phy_f3d(:,:,1)]
-  standard_name = air_temperature_two_time_steps_back
-  long_name = air temperature two time steps back
+[phy_f3d(:,:,index_for_air_temperature_two_timesteps_back)]
+  standard_name = air_temperature_two_timesteps_back
+  long_name = air temperature two timesteps back
   units = K
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
-[phy_f3d(:,:,2)]
-  standard_name = water_vapor_specific_humidity_two_time_steps_back
-  long_name = water vapor specific humidity two time steps back
+[phy_f3d(:,:,index_for_specific_humidity_two_timesteps_back)]
+  standard_name = water_vapor_specific_humidity_two_timesteps_back
+  long_name = water vapor specific humidity two timesteps back
   units = kg kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
-[phy_f3d(:,:,3)]
-  standard_name = air_temperature_at_previous_time_step
-  long_name = air temperature at previous time step
+[phy_f3d(:,:,index_for_air_temperature_at_previous_timestep)]
+  standard_name = air_temperature_at_previous_timestep
+  long_name = air temperature at previous timestep
   units = K
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
-[phy_f3d(:,:,4)]
-  standard_name = water_vapor_specific_humidity_at_previous_time_step
-  long_name = water vapor specific humidity at previous time step
+[phy_f3d(:,:,index_for_specific_humidity_at_previous_timestep)]
+  standard_name = water_vapor_specific_humidity_at_previous_timestep
+  long_name = water vapor specific humidity at previous timestep
   units = kg kg-1
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
@@ -5103,6 +5308,13 @@
 [ccpp-arg-table]
   name = GFS_diag_type
   type = ddt
+[fluxr]
+  standard_name = cumulative_radiation_diagnostic
+  long_name = time-accumulated 2D radiation-related diagnostic fields
+  units = various
+  dimensions = (horizontal_dimension,number_of_radiation_diagnostic_variables)
+  type = real
+  kind = kind_phys
 [topfsw]
   standard_name = sw_fluxes_top_atmosphere
   long_name = sw radiation fluxes at toa
@@ -6162,6 +6374,13 @@
   standard_name = radar_reflectivity_10cm
   long_name = instantaneous refl_10cm
   units = dBZ
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
+[cldfra]
+  standard_name = instantaneous_3d_cloud_fraction
+  long_name = instantaneous 3D cloud fraction for all MPs
+  units = frac
   dimensions = (horizontal_dimension,vertical_dimension)
   type = real
   kind = kind_phys
