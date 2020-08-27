@@ -29,6 +29,7 @@ public
   real(kind=dp),parameter:: con_epsqs  =1.0E-10_dp
 
   real(kind=dp),parameter:: con_rocp   =con_rd/con_cp
+  real(kind=dp),parameter:: con_rog    =con_rd/con_g
   real(kind=dp),parameter:: con_fvirt  =con_rv/con_rd - 1
   real(kind=dp),parameter:: con_eps    =con_rd/con_rv
   real(kind=dp),parameter:: con_epsm1  =con_rd/con_rv-1.

@@ -2042,6 +2042,13 @@
   units = none
   dimensions = ()
   type = integer
+[fhzero]
+  standard_name = frequency_for_diagnostic_clearing
+  long_name = frequency for clearing diagnostic fields
+  units = h
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [ldiag3d]
   standard_name = flag_diagnostics_3D
   long_name = flag for 3d diagnostic fields
@@ -2237,7 +2244,13 @@
 [nscyc]
   standard_name = number_of_timesteps_between_surface_cycling_calls
   long_name = number of timesteps between surface cycling calls
-  units = 
+  units = count
+  dimensions = ()
+  type = integer
+[nszero]
+  standard_name = number_of_timesteps_between_diagnostic_clearing
+  long_name = number of timesteps between calls to clear diagnostic variables
+  units = count
   dimensions = ()
   type = integer
 [dtp]
@@ -2659,6 +2672,12 @@
   dimensions = (2)
   type = real
   kind = kind_phys
+[seed0]
+  standard_name = seed_random_numbers_RAS
+  long_name = random number seed for the RAS scheme
+  units = none
+  dimensions = ()
+  type = integer
 [dlqf]
   standard_name = condensate_fraction_detrained_in_updraft_layers
   long_name = condensate fraction detrained with in a updraft layers
@@ -2935,6 +2954,12 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[lgfdlmprad]
+  standard_name = flag_for_GFDL_microphysics_radiation_interaction
+  long_name = flag for GFDL microphysics-radiation interaction
+  units = flag
+  dimensions = ()
+  type = logical
 [lsm]
   standard_name = flag_for_land_surface_scheme
   long_name = flag for land surface model
@@ -3326,6 +3351,12 @@
 [lheatstrg]
   standard_name = flag_for_canopy_heat_storage
   long_name = flag for canopy heat storage parameterization
+  units = flag
+  dimensions = ()
+  type = logical
+[random_clds]
+  standard_name = flag_for_random_clouds_for_RAS
+  long_name = flag for using random clouds with the RAS scheme
   units = flag
   dimensions = ()
   type = logical
@@ -4574,10 +4605,16 @@
   long_name = flag for uni_cld
   units = flag
   dimensions = ()
-  type = logical  
+  type = logical
 [lmfshal]
   standard_name = flag_for_lmfshal
   long_name = flag for lmfshal
+  units = flag
+  dimensions = ()
+  type = logical
+[lmfdeep2]
+  standard_name = flag_for_scale_aware_mass_flux_convection
+  long_name = flag for some scale-aware mass-flux convection scheme active
   units = flag
   dimensions = ()
   type = logical

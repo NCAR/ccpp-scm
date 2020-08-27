@@ -50,6 +50,20 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_rocp]
+  standard_name = ratio_of_gas_constant_dry_air_to_specific_heat_of_dry_air_at_constant_pressure
+  long_name = (rd/cp)
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[con_rog]
+  standard_name = ratio_of_gas_constant_dry_air_to_gravitational_acceleration
+  long_name = (rd/g)
+  units = J s2 K-1 kg-1 m-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [con_fvirt]
   standard_name = ratio_of_vapor_to_dry_air_gas_constants_minus_one
   long_name = (rv/rd) - 1 (rv = ideal gas constant for water vapor)

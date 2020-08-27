@@ -4590,7 +4590,7 @@ module GFS_typedefs
 
 
 !--- BEGIN CODE FROM GLOOPR
-!--- set up parameters for Xu & Randell's cloudiness computation (Radiation)
+!--- set up parameters for Xu & Randall's cloudiness computation (Radiation)
 
     Model%lmfshal  = (Model%shal_cnv .and. Model%imfshalcnv > 0)
     Model%lmfdeep2 = (Model%imfdeepcnv == Model%imfdeepcnv_samf         &
