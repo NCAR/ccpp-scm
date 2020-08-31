@@ -69,7 +69,6 @@
        do_sppt        = .false.
        do_shum        = .false.
        do_skeb        = .false.
-       do_sfcperts    = .false.
        do_RRTMGP      = .true.
        active_gases   = 'h2o_co2_o3_n2o_ch4_o2'
        ngases         = 6
