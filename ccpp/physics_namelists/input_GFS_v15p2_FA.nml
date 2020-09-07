@@ -48,7 +48,6 @@
        do_sppt        = .false.
        do_shum        = .false.
        do_skeb        = .false.
-       do_sfcperts    = .false.
 /
 
 &gfdl_cloud_microphysics_nml

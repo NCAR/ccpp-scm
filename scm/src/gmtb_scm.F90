@@ -62,7 +62,7 @@ subroutine gmtb_scm_main_sub()
       stop
   end select
 
-  allocate(cdata_cols(scm_state%n_cols))
+  !allocate(cdata_cols(scm_state%n_cols))
 
   call set_state(scm_input, scm_reference, scm_state)
 
@@ -72,8 +72,6 @@ subroutine gmtb_scm_main_sub()
   scm_state%itt = 1
 
   call interpolate_forcing(scm_input, scm_state)
-
-  call output_init(scm_state)
 
   scm_state%itt_out = 1
 
@@ -92,66 +90,68 @@ subroutine gmtb_scm_main_sub()
     case default
       cdata_time_index = 2
   end select
+  
+  !open a logfile
+  if (physics%Init_parm%me == physics%Init_parm%master .and. physics%Init_parm%logunit>=0) then
+    write (logfile_name, '(A7,I0.5,A4)') 'logfile.out'
+    open(unit=physics%Init_parm%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
+  end if
+  
+  physics%Init_parm%levs = scm_state%n_levels
+  physics%Init_parm%bdat(1) = scm_state%init_year
+  physics%Init_parm%bdat(2) = scm_state%init_month
+  physics%Init_parm%bdat(3) = scm_state%init_day
+  physics%Init_parm%bdat(5) = scm_state%init_hour
+  physics%Init_parm%cdat(:) = physics%Init_parm%bdat
+  physics%Init_parm%dt_dycore = scm_state%dt
+  physics%Init_parm%dt_phys = scm_state%dt
+  physics%Init_parm%ak => scm_state%a_k
+  physics%Init_parm%bk => scm_state%b_k
+  !physics%Init_parm%xlon => scm_state%lon  !rank mismatch -> why does Init_parm%xlon have 2 dimensions?
+  !physics%Init_parm%xlat => scm_state%lat  !rank mismatch -> why does Init_parm%xlat have 2 dimensions?
+  !physics%Init_parm%area => scm_state%area !rank mismatch -> why does Init_parm%area have 2 dimensions?
+  physics%Init_parm%tracer_names => scm_state%tracer_names
+  physics%Init_parm%fn_nml = scm_state%physics_nml
+  physics%Init_parm%blksz => scm_state%blksz
+  physics%Init_parm%tile_num = 1
+  physics%Init_parm%hydrostatic = .true.
+  physics%Init_parm%restart = .false.
+  
+  ! Allocate and initialize DDTs
+  call GFS_suite_setup(physics%Model, physics%Statein, physics%Stateout,           &
+                       physics%Sfcprop, physics%Coupling, physics%Grid,            &
+                       physics%Tbd, physics%Cldprop, physics%Radtend,              &
+                       physics%Diag, physics%Interstitial, 0, 1, 1,                &
+                       physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
+                       scm_state%lat, scm_state%area)
+  
+  cdata%blk_no = 1
+  cdata%thrd_no = 1
+  
+  call physics%associate(scm_state)
+  
+  ! When asked to calculate 3-dim. tendencies, set Stateout variables to
+  ! Statein variables here in order to capture the first call to dycore
+  if (physics%Model%ldiag3d) then
+    physics%Stateout%gu0 = physics%Statein%ugrs
+    physics%Stateout%gv0 = physics%Statein%vgrs
+    physics%Stateout%gt0 = physics%Statein%tgrs
+    physics%Stateout%gq0 = physics%Statein%qgrs
+  endif
+  
+  !initialize the column's physics
 
-  do i = 1, scm_state%n_cols
-     !set up each column's physics suite (which may be different)
-      ! call ccpp_init(trim(adjustl(scm_state%physics_suite_name(i))), cdata_cols(i), ierr)
-      ! if (ierr/=0) then
-      !     write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
-      !     stop
-      ! end if
+  write(0,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
+  call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
+  write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
+      stop
+  end if
+  
+  physics%Model%first_time_step = .true.
 
-     !open a logfile for each column
-      if (physics%Init_parm(i)%me == physics%Init_parm(i)%master .and. physics%Init_parm(i)%logunit>=0) then
-          write (logfile_name, '(A7,I0.5,A4)') 'logfile', i, '.out'
-          open(unit=physics%Init_parm(i)%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
-      end if
-
-      cdata_cols(i)%blk_no = i
-      cdata_cols(i)%thrd_no = 1
-
-      physics%Init_parm(i)%levs = scm_state%n_levels
-      physics%Init_parm(i)%bdat(1) = scm_state%init_year
-      physics%Init_parm(i)%bdat(2) = scm_state%init_month
-      physics%Init_parm(i)%bdat(3) = scm_state%init_day
-      physics%Init_parm(i)%bdat(5) = scm_state%init_hour
-      physics%Init_parm(i)%cdat(:) = physics%Init_parm(i)%bdat
-      physics%Init_parm(i)%dt_dycore = scm_state%dt
-      physics%Init_parm(i)%dt_phys = scm_state%dt
-      physics%Init_parm(i)%ak => scm_state%a_k(1,:)
-      physics%Init_parm(i)%bk => scm_state%b_k(1,:)
-      physics%Init_parm(i)%xlon => scm_state%lon
-      physics%Init_parm(i)%xlat => scm_state%lat
-      physics%Init_parm(i)%area => scm_state%area
-      physics%Init_parm(i)%tracer_names => scm_state%tracer_names
-      physics%Init_parm(i)%fn_nml = scm_state%physics_nml(1)
-      physics%Init_parm(i)%blksz => scm_state%blksz
-      physics%Init_parm(i)%tile_num = 1
-      physics%Init_parm(i)%hydrostatic = .true.
-      physics%Init_parm(i)%restart = .false.
-      
-      ! Allocate and initialize DDTs
-      call GFS_suite_setup(physics%Model(i), physics%Statein(i), physics%Stateout(i),           &
-                           physics%Sfcprop(i), physics%Coupling(i), physics%Grid(i),            &
-                           physics%Tbd(i), physics%Cldprop(i), physics%Radtend(i),              &
-                           physics%Diag(i), physics%Interstitial(i), 0, 1, 1,                   &
-                           physics%Init_parm(i))
-      
-      call physics%associate(scm_state, i)
-
-      !initialize each column's physics
-
-      write(0,'(a,i0,a)') "Calling ccpp_physics_init for column ", i, " with suite '" // trim(trim(adjustl(scm_state%physics_suite_name(i)))) // "'"
-      call ccpp_physics_init(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
-      write(0,'(a,i0,a,i0)') "Called ccpp_physics_init for column ", i, " with suite '" // trim(trim(adjustl(scm_state%physics_suite_name(i)))) // "', ierr=", ierr
-      if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
-          stop
-      end if
-      
-      physics%Model(i)%first_time_step = .true.
-  end do
-
+  call output_init(scm_state, physics)
   call output_append(scm_state, physics)
 
   !first time step (call once)
@@ -165,7 +165,7 @@ subroutine gmtb_scm_main_sub()
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
      !pass in state variables to be modified by forcing and physics
-     call do_time_step(scm_state, cdata_cols)
+     call do_time_step(scm_state, physics, cdata)
 
   else if (scm_state%time_scheme == 2) then
   !   !if using the leapfrog scheme, we initialize by taking one half forward time step and one half (unfiltered) leapfrog time step to get to the end of the first time step
@@ -173,10 +173,10 @@ subroutine gmtb_scm_main_sub()
     scm_state%model_time = scm_state%dt_now
 
     !save initial state
-    scm_state%temp_tracer(:,:,:,:,1) = scm_state%state_tracer(:,:,:,:,1)
-    scm_state%temp_T(:,:,:,1) = scm_state%state_T(:,:,:,1)
-    scm_state%temp_u(:,:,:,1) = scm_state%state_u(:,:,:,1)
-    scm_state%temp_v(:,:,:,1) = scm_state%state_v(:,:,:,1)
+    scm_state%temp_tracer(:,:,:,1) = scm_state%state_tracer(:,:,:,1)
+    scm_state%temp_T(:,:,1) = scm_state%state_T(:,:,1)
+    scm_state%temp_u(:,:,1) = scm_state%state_u(:,:,1)
+    scm_state%temp_v(:,:,1) = scm_state%state_v(:,:,1)
 
     call interpolate_forcing(scm_input, scm_state)
 
@@ -185,24 +185,42 @@ subroutine gmtb_scm_main_sub()
     call apply_forcing_forward_Euler(scm_state)
 
     !apply_forcing_forward_Euler updates state variables time level 1, so must copy this data to time_level 2 (where cdata points)
-    scm_state%state_T(:,:,:,2) = scm_state%state_T(:,:,:,1)
-    scm_state%state_tracer(:,:,:,:,2) = scm_state%state_tracer(:,:,:,:,1)
-    scm_state%state_u(:,:,:,2) = scm_state%state_u(:,:,:,1)
-    scm_state%state_v(:,:,:,2) = scm_state%state_v(:,:,:,1)
+    scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
+    scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
+    scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
+    scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
 
+    ! Calculate total non-physics tendencies by substracting old Stateout
+    ! variables from new/updated Statein variables (gives the tendencies
+    ! due to anything else than physics)
     do i=1, scm_state%n_cols
-      call ccpp_physics_run(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
-      if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
-          stop
-      end if
+      if (physics%Model%ldiag3d) then
+        physics%Diag%du3dt(i,:,8)  = physics%Diag%du3dt(i,:,8)  &
+                                        + (physics%Statein%ugrs(i,:) - physics%Stateout%gu0(i,:))
+        physics%Diag%dv3dt(i,:,8)  =   physics%Diag%dv3dt(i,:,8)  &
+                                        + (physics%Statein%vgrs(i,:) - physics%Stateout%gv0(i,:))
+        physics%Diag%dt3dt(i,:,11) = physics%Diag%dt3dt(i,:,11) &
+                                        + (physics%Statein%tgrs(i,:) - physics%Stateout%gt0(i,:))
+        if (physics%Model%qdiag3d) then
+          physics%Diag%dq3dt(i,:,12) = physics%Diag%dq3dt(i,:,12) &
+                + (physics%Statein%qgrs(i,:,physics%Model%ntqv) - physics%Stateout%gq0(i,:,physics%Model%ntqv))
+          physics%Diag%dq3dt(i,:,13) = physics%Diag%dq3dt(i,:,13) &
+                + (physics%Statein%qgrs(i,:,physics%Model%ntoz) - physics%Stateout%gq0(i,:,physics%Model%ntoz))
+        endif
+      endif
     end do
+    
+    call ccpp_physics_run(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop
+    end if
 
     !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
-    scm_state%temp_tracer(:,:,:,:,2) = scm_state%state_tracer(:,:,:,:,2)
-    scm_state%temp_T(:,:,:,2) = scm_state%state_T(:,:,:,2)
-    scm_state%temp_u(:,:,:,2) = scm_state%state_u(:,:,:,2)
-    scm_state%temp_v(:,:,:,2) = scm_state%state_v(:,:,:,2)
+    scm_state%temp_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,2)
+    scm_state%temp_T(:,:,2) = scm_state%state_T(:,:,2)
+    scm_state%temp_u(:,:,2) = scm_state%state_u(:,:,2)
+    scm_state%temp_v(:,:,2) = scm_state%state_v(:,:,2)
 
     !do half a leapfrog time step to get to the end of one full time step
     scm_state%model_time = scm_state%dt
@@ -211,20 +229,20 @@ subroutine gmtb_scm_main_sub()
     call calc_pres_exner_geopotential(1, scm_state)
 
     !calling do_time_step with the leapfrog scheme active expects state variables in time level 1 to have values from 2 time steps ago, so set them equal to the initial values
-    scm_state%state_T(:,:,:,1) = scm_state%temp_T(:,:,:,1)
-    scm_state%state_u(:,:,:,1) = scm_state%temp_u(:,:,:,1)
-    scm_state%state_v(:,:,:,1) = scm_state%temp_v(:,:,:,1)
-    scm_state%state_tracer(:,:,:,:,1) = scm_state%temp_tracer(:,:,:,:,1)
+    scm_state%state_T(:,:,1) = scm_state%temp_T(:,:,1)
+    scm_state%state_u(:,:,1) = scm_state%temp_u(:,:,1)
+    scm_state%state_v(:,:,1) = scm_state%temp_v(:,:,1)
+    scm_state%state_tracer(:,:,:,1) = scm_state%temp_tracer(:,:,:,1)
 
     !go forward one leapfrog time step
-    call do_time_step(scm_state, cdata_cols)
+    call do_time_step(scm_state, physics, cdata)
 
     !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
     call filter(scm_state)
 
     !> \todo tracers besides water vapor do not need to be filtered (is this right?)
-    scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,2)
-    scm_state%state_tracer(:,:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,:,scm_state%ozone_index,2)
+    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,scm_state%cloud_water_index,2)
+    scm_state%state_tracer(:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,scm_state%ozone_index,2)
   end if
 
   scm_state%itt_out = scm_state%itt_out + 1
@@ -235,10 +253,8 @@ subroutine gmtb_scm_main_sub()
   scm_state%n_itt_out = floor(scm_state%output_frequency/scm_state%dt)
 
   scm_state%dt_now = scm_state%dt
-
-  do i=1, scm_state%n_cols
-    physics%Model(i)%first_time_step = .false.
-  end do
+  
+  physics%Model%first_time_step = .false.
 
   do i = 2, scm_state%n_timesteps
     scm_state%itt = i
@@ -248,10 +264,8 @@ subroutine gmtb_scm_main_sub()
     rinc = 0
     rinc(4) = (scm_state%itt-1)*scm_state%dt
     !w3movdat is a GFS routine to calculate the current date (jdat) from an elapsed time and an initial date (rinc is single prec.)
-    call w3movdat(rinc, physics%Model(1)%idat, jdat)
-    do j=1, scm_state%n_cols
-      physics%Model(j)%jdat = jdat
-    end do
+    call w3movdat(rinc, physics%Model%idat, jdat)
+    physics%Model%jdat = jdat
 
     !>  - Save previously unfiltered state as temporary for use in the time filter.
     if(scm_state%time_scheme == 2) then
@@ -266,21 +280,19 @@ subroutine gmtb_scm_main_sub()
     call calc_pres_exner_geopotential(1, scm_state)
 
     !zero out diagnostics output on EVERY time step - breaks diagnostics averaged over many timesteps
-    do j=1, scm_state%n_cols
-      call physics%Diag(j)%rad_zero(physics%Model(j))
-      call physics%Diag(j)%phys_zero(physics%Model(j))
-    end do
+    call physics%Diag%rad_zero(physics%Model)
+    call physics%Diag%phys_zero(physics%Model)
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(scm_state, cdata_cols)
+    call do_time_step(scm_state, physics, cdata)
 
     if (scm_state%time_scheme == 2) then
       !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
       call filter(scm_state)
 
       !> \todo tracers besides water vapor do not need to be filtered (is this right?)
-      scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,:,scm_state%cloud_water_index,2)
-      scm_state%state_tracer(:,:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,:,scm_state%ozone_index,2)
+      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,scm_state%cloud_water_index,2)
+      scm_state%state_tracer(:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,scm_state%ozone_index,2)
     end if
 
     if(mod(scm_state%itt, scm_state%n_itt_out)==0) then
@@ -294,14 +306,12 @@ subroutine gmtb_scm_main_sub()
     end if
   end do
 
-  do i=1, scm_state%n_cols
-      call ccpp_physics_finalize(cdata_cols(i), suite_name=trim(trim(adjustl(scm_state%physics_suite_name(i)))), ierr=ierr)
+  call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
 
-      if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, ': ' // trim(cdata_cols(i)%errmsg) // '. Exiting...'
-          stop
-      end if
-  end do
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
+      stop
+  end if
 
 end subroutine gmtb_scm_main_sub
 

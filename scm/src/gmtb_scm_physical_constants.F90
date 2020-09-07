@@ -19,12 +19,14 @@ public
   real(kind=dp),parameter:: con_rv     =4.6150e+2
   real(kind=dp),parameter:: con_cp     =1.0046e+3
   real(kind=dp),parameter:: con_cliq   =4.1855e+3
+  real(kind=dp),parameter:: con_csol   =2.1060e+3
   real(kind=dp),parameter:: con_cvap   =1.8460e+3
   real(kind=dp),parameter:: con_hvap   =2.5000e+6
   real(kind=dp),parameter:: con_hfus   =3.3358e+5
   real(kind=dp),parameter:: con_t0c    =2.7315e+2
   real(kind=dp),parameter:: con_ttp    =2.7316e+2
   real(kind=dp),parameter:: con_epsq   =1.0E-12_dp
+  real(kind=dp),parameter:: con_epsqs  =1.0E-10_dp
 
   real(kind=dp),parameter:: con_rocp   =con_rd/con_cp
   real(kind=dp),parameter:: con_fvirt  =con_rv/con_rd - 1
