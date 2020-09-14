@@ -11,13 +11,11 @@ MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b v4.0.0 https://github.com/NCAR/gmtb-scm
+  && git clone --recursive -b v4.1.0 https://github.com/NCAR/gmtb-scm
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
-RUN cd /comsoftware/gmtb-scm/scm/data/physics_input_data \
-  && curl -L -O https://dtcenter.org/GMTB/freezeH2O.dat \
-  && curl -L -O https://dtcenter.org/GMTB/qr_acr_qg.dat \
-  && curl -L -O https://dtcenter.org/GMTB/qr_acr_qs.dat
+RUN cd /comsoftware/gmtb-scm/ \
+  && . contrib/get_thompson_tables.sh
 
 # Run the machine setup script to set environment variables
 RUN cd /comsoftware/gmtb-scm/scm/ \
