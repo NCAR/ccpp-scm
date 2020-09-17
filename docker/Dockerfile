@@ -15,7 +15,7 @@ RUN cd /comsoftware \
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
 RUN cd /comsoftware/gmtb-scm/ \
-  && . /contrib/get_thompson_tables.sh
+  && . contrib/get_thompson_tables.sh
 
 # Run the machine setup script to set environment variables
 RUN cd /comsoftware/gmtb-scm/scm/ \
