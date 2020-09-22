@@ -25,6 +25,13 @@ ENV BACIO_LIB4 /comsoftware/gmtb-scm/nceplibs/lib/libbacio_v2.2.0_4.a
 ENV SP_LIBd /comsoftware/gmtb-scm/nceplibs/lib/libsp_v2.1.0_d.a
 ENV W3NCO_LIBd /comsoftware/gmtb-scm/nceplibs/lib/libw3nco_v2.1.0_d.a
 
+# Create your own link from python -> python3 
+# This works without setting the system PATH env var
+# since /usr/local/bin is before /usr/bin in the search path.
+USER root
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
+USER comuser
+
 # Invoke cmake on the source code to build
 RUN cd /comsoftware/gmtb-scm/scm \
   && mkdir bin \
