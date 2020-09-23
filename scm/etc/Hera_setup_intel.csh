@@ -21,8 +21,6 @@ echo "Setting NCEPLIBS environment variables"
 module use -a /scratch1/BMC/gmtb/software/modulefiles/intel-18.0.5.274/impi-2018.0.4
 module load NCEPlibs/1.1.0
 
-setenv NETCDF /apps/netcdf/4.7.0/intel/18.0.5.274
-
 echo "Loading cmake"
 module load cmake/3.16.1
 setenv CMAKE_C_COMPILER icc
