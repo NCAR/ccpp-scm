@@ -40,7 +40,7 @@ python -c "import f90nml"
 
 if ( $? != 0 ) then
 	echo "Not found; installing f90nml"
-	pip install -e git://github.com/marshallward/f90nml.git@v0.19#egg=f90nml --user
+	pip install -e git://github.com/marshallward/f90nml.git@v0.19\#egg=f90nml --user
 else
 	echo "f90nml is installed"
 endif
