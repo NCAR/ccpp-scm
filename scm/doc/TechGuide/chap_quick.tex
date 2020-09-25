@@ -63,7 +63,7 @@ cd ../..
 \section{System Requirements, Libraries, and Tools}
 \label{section: systemrequirements}
 
-The source code for the SCM and CCPP component is in the form of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the netCDF libraries. Beyond the standard scripts, the build system relies on use of the Python scripting language, along with cmake, GNU make and date.
+The source code for the SCM and CCPP component is in the form of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the NetCDF libraries. Beyond the standard scripts, the build system relies on use of the Python scripting language, along with cmake, GNU make and date.
 
 The basic requirements for building and running the CCPP and SCM bundle are listed below. The versions listed reflect successful tests and there is no guarantee that the code will work with different versions.
 \begin{itemize}
@@ -82,13 +82,13 @@ The basic requirements for building and running the CCPP and SCM bundle are list
     	\begin{itemize}
 	\item NOTE: Version 3.15+ is required if installing NCEPLIBS
 	\end{itemize}
-   	 \item netCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5 and ZLIB
+   	 \item NetCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5 and ZLIB
     \item Python 2.7.5, 2.7.9, 2.7.13, 2.7.16, 3.6.1, 3.7.5, and 3.8.5 with f90nml module (and Shapely if using the \execout{UFS\_IC\_generator.py} script)
 \end{itemize}
 
-Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) Medium-Range Weather Application release v1.1.0 of September/October, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPlibs on supported platforms (see section~\ref{section: setup_supported_platforms}).
+Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) Medium-Range Weather Application release v1.1.0 of September/October, 2020, provides software packages and detailed instructions to install these prerequisites and the NCEPLIBS on supported platforms (see section~\ref{section: setup_supported_platforms}).
 
-Further, there are several utility libraries as part of the NCEPlibs package that must be installed with environment variables pointing to their locations prior to building the SCM.
+Further, there are several utility libraries as part of the NCEPLIBS package that must be installed with environment variables pointing to their locations prior to building the SCM.
 \begin{itemize}
     \item bacio - Binary I/O Library
     \item sp - Spectral Transformation Library
@@ -168,10 +168,10 @@ git clone -b v0.19 https://github.com/marshallward/f90nml
 cd f90nml
 python setup.py install [--prefix=/my/install/directory or --user]
 \end{lstlisting}
-The directory \execout{/my/install/directory} must exist and its subdirectory \execout{/my/install/directory/lib/python2.7/site-packages} (or \execout{lib64} instead of \execout{lib}, depending on the system) must be in the \execout{PYTHONPATH} environment variable.
+The directory \execout{/my/install/directory} must exist and its subdirectory \execout{/my/install/directory/lib/python[version]/site-packages} (or \execout{lib64} instead of \execout{lib}, depending on the system) must be in the \execout{PYTHONPATH} environment variable.
 
 \subsection{Using Existing Libraries on Preconfigured Platforms}\label{section: use_preconfigured_platforms}
-Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms. These scripts load compiler modules (Fortran 2003-compliant), the netCDF module, Python environment, etc. and set compiler and NCEPlibs environment variables. From the top-level code directory (\execout{gmtb-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
+Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms. These scripts load compiler modules (Fortran 2003-compliant), the NetCDF module, Python environment, etc. and set compiler and NCEPLIBS environment variables. From the top-level code directory (\execout{gmtb-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
 source scm/etc/Hera_setup_intel.csh
 source scm/etc/Cheyenne_setup_gnu.csh
@@ -245,7 +245,7 @@ rm -rfd *
 \end{lstlisting}
 Note: This command can be dangerous (deletes files without confirming), so make sure that you're in the right directory before executing!
 
-If you encounter errors, please capture a log file from all of the steps, and contact the helpdesk at: \url{gmtb-help@ucar.edu}
+If you encounter errors, please capture a log file from all of the steps, and start a thread on the support forum at: \url{https://dtcenter.org/forum/ccpp-user-support/ccpp-single-column-model}
 
 \section{Run the SCM with a supplied case}
 There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two Python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_gmtb\_scm.py} or \execout{multi\_run\_gmtb\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially.
@@ -273,8 +273,8 @@ Also note that some cases require specified surface fluxes. Special suite defini
 
 If specifying a namelist other than the default, the value must be an entire filename that exists in \execout{../../ccpp/physics\_namelists}. Caution should be exercised when modifying physics namelists since some redundancy between flags to control some physics parameterizations and scheme entries in the CCPP suite definition files currently exists. Values of numerical parameters are typically OK to change without fear of inconsistencies. Lastly, the \execout{-g} flag can be used to run the executable through the \exec{gdb} debugger (assuming it is installed on the system), and the \execout{-d} flag is required when running this command in a Docker container in order to successfully mount a volume between the host machine and the Docker container instance and to share the output and plots with the host machine.
 
-A netCDF output file is generated in the location specified in the case
-configuration file, if the \execout{output\_dir} variable exists in that file. Otherwise an output directory is constructed from the case, suite, and namelist used (if different from the default). All output directories are placed in the \execout{bin} directory. If using a Docker container, all output is copied to the \execout{/home} directory in container space for volume-mounting purposes. Any standard netCDF file viewing or analysis tools may be used to
+A NetCDF output file is generated in the location specified in the case
+configuration file, if the \execout{output\_dir} variable exists in that file. Otherwise an output directory is constructed from the case, suite, and namelist used (if different from the default). All output directories are placed in the \execout{bin} directory. If using a Docker container, all output is copied to the \execout{/home} directory in container space for volume-mounting purposes. Any standard NetCDF file viewing or analysis tools may be used to
 examine the output file (ncdump, ncview, NCL, etc).
 
 \subsection{Multiple Run Script Usage}\label{subsection: multirunscript}
@@ -287,7 +287,7 @@ A second Python script is provided for automating the execution of multiple inte
 
 No arguments are required for this script. The \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options form a mutually-exclusive group, so exactly one of these is allowed at one time. If \execout{--c} is specified with a case name, the script will run a set of integrations for all supported suites (defined in \execout{../src/supported\_suites.py}) for that case. If \execout{-s} is specified with a suite name, the script will run a set of integrations for all supported cases (defined in \execout{../src/supported\_cases.py}) for that that suite. If \execout{-f} is specified with the path to a filename, it will read in lists of cases, suites, and namelists to use from that file. An example for this file's syntax can be found in \execout{../src/example\_multi\_run.py}. If multiple namelists are specified in the file, there either must be one suite specified \emph{or} the number of suites must match the number of namelists. If none of the \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options group is specified, the script will run through all permutations of supported cases and suites (as defined in the files previously mentioned).
 
-In addition to the main options, some helper options can also be used with any of those above. The \execout{-v{v} or --verbose} option can be used to output more information from the script to the console and to a log file. If this option is not used, only completion progress messages are written out. If one \execout{-v} is used, the script will write out completion progress messages and all messages and output from the single run script. If two \execout{-vv} are used, the script will also write out all messages and single run script output to a log file (\execout{multi\_run\_gmtb\_scm.log}) in the \execout{bin} directory. The option, \execout{-t or --timer}, can be used to output the elapsed time for each integration executed by the script. Note that the execution time includes file operations performed by the single run script in addition to the execution of the underlying (Fortran) SCM executable. By default, this option will execute one integration of each subprocess. Since some variability is expected for each model run, if greater precision is required, the number of integrations for timing averaging can be set through an internal script variable. This option can be useful, for example, for getting a rough idea of relative computational expense of different physics suites. Finally, the \execout{-d} flag is required when running this command in a Docker container in order to successfully mount a volume between the host machine and the Docker container instance and to share the output and plots with the host machine.
+In addition to the main options, some helper options can also be used with any of those above. The \execout{-v{v} or --verbose} option can be used to output more information from the script to the console and to a log file. If this option is not used, only completion progress messages are written out. If one \execout{-v} is used, the script will write out completion progress messages and all messages and output from the single run script. If two \execout{-vv} are used, the script will also write out all messages and single run script output to a log file (\execout{multi\_run\_gmtb\_scm.log}) in the \execout{bin} directory. The option, \execout{-t or --timer}, can be used to output the elapsed time for each integration executed by the script. Note that the execution time includes file operations performed by the single run script in addition to the execution of the underlying (Fortran) SCM executable. By default, this option will execute one integration of each subprocess. Since some variability is expected for each model run, if greater precision is required, the number of integrations for timing averaging can be set through the internal script variable \execout{timer\_iterations}. This option can be useful, for example, for getting a rough idea of relative computational expense of different physics suites. Finally, the \execout{-d} flag is required when running this command in a Docker container in order to successfully mount a volume between the host machine and the Docker container instance and to share the output and plots with the host machine.
 
 \subsection{Batch Run Script}
 
@@ -324,7 +324,7 @@ The CCPP SCM has a number of system requirements and necessary libraries and too
 \item gfortran - 8.3.1
 \item gcc - 8.3.1
 \item cmake - 3.16.5
-\item netCDF - 4.6.2
+\item NetCDF - 4.6.2
 \item HDF5 - 1.10.4
 \item ZLIB - 1.2.7
 \item SZIP - 2.1.1
