@@ -117,7 +117,7 @@ The following instructions are valid for adding a passive, prognostic tracer to 
 	\end{itemize}
 \item Initialize the new tracer to something other than zero (from an input file).
 	\begin{itemize}
-	\item Edit an existing input file (in \execout{gmtb-scm/scm/data/processed\_case\_input}): add a field in the `initial' group of the netCDF file(s) (with vertical dimension in pressure coordinates) with an appropriate name in one (or all) of the input netCDF files and populate with whatever values are necessary to initialize the new tracer.
+	\item Edit an existing input file (in \execout{gmtb-scm/scm/data/processed\_case\_input}): add a field in the `initial' group of the NetCDF file(s) (with vertical dimension in pressure coordinates) with an appropriate name in one (or all) of the input NetCDF files and populate with whatever values are necessary to initialize the new tracer.
 	\item Create a new input variable to read in the initialized values. In \execout{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90}:
 		\begin{itemize}
 		\item Add a new input variable in \execout{scm\_input\_type}
@@ -164,5 +164,5 @@ The following instructions are valid for adding a passive, prognostic tracer to 
 	\begin{itemize}
 	\item Point the new physics variable to \execout{scm\_state\%state\_tracer(:,:,:,scm\_state\%smoke\_index)} in \execout{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90/physics\_associate}.
 	\end{itemize}
-\item There may be additional steps depending on how the tracer is used in the physics and how the physics scheme is integrated with the current GFS physics suite. For example, the GFS physics has two tracer arrays, one for holding tracer values before the physics timestep (\execout{gmtb-scm/scm/src/GFS\_typedefs.F90/GFS\_statein\_type/qgrs}) and one for holding tracer values that are updated during/after the physics (\execout{gmtb-scm/scm/src/GFS\_typedefs.F90/GFS\_stateout\_type/gq0}). If the tracer needs to be part of these arrays, there are a few additional steps to take.
+\item There may be additional steps depending on how the tracer is used in the physics and how the physics scheme is integrated with the current GFS physics suite. For example, the GFS physics has two tracer arrays, one for holding tracer values before the physics timestep (\execout{gmtb-scm/scm/src/GFS\_typedefs.F90/GFS\_statein\_type/qgrs}) and one for holding tracer values that are updated during/after the physics (\execout{gmtb-scm/scm/src/GFS\_typedefs.F90/GFS\_stateout\_type/gq0}). If the tracer needs to be part of these arrays, there are a few additional steps to take. If you need help, please post on the support forum at: \url{https://dtcenter.org/forum/ccpp-user-support/ccpp-single-column-model}.
 \end{enumerate}
