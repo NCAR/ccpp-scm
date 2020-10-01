@@ -615,8 +615,21 @@ module GFS_typedefs
     integer              :: iems            !< use fixed value of 1.0
     integer              :: iaer            !< default aerosol effect in sw only
     integer              :: icliq_sw        !< sw optical property for liquid clouds
-    integer              :: iovr_sw         !< sw: max-random overlap clouds
-    integer              :: iovr_lw         !< lw: max-random overlap clouds
+    integer              :: iovr_sw         !< sw: cloud overlap method for radiation
+                                            !< 0 => use random overlap
+                                            !< 1 => use maximum-random overlap
+                                            !< 2 => use maximum overlap
+                                            !< 3 => use decorrelation length overlap (NOAA/Hou)
+                                            !< 4 => use exponential overlap (AER)
+                                            !< 5 => use exponential-random overlap (AER)
+    integer              :: iovr_lw         !< lw: cloud overlap method for radiation
+                                            !< 0 => use random overlap
+                                            !< 1 => use maximum-random overlap
+                                            !< 2 => use maximum overlap
+                                            !< 3 => use decorrelation length overlap (NOAA/Hou)
+                                            !< 4 => use exponential overlap (AER)
+                                            !< 5 => use exponential-random overlap (AER)
+    integer              :: iovr            !< max-random overlap clouds for sw & lw (maximum of both)
     integer              :: ictm            !< ictm=0 => use data at initial cond time, if not
                                             !<           available; use latest; no extrapolation.
                                             !< ictm=1 => use data at the forecast time, if not
@@ -1622,6 +1635,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: adjvisdfd(:)       => null()  !<
     real (kind=kind_phys), pointer      :: aerodp(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: alb1d(:)           => null()  !<
+    real (kind=kind_phys), pointer      :: alpha(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: bexp1d(:)          => null()  !<
     real (kind=kind_phys), pointer      :: canopy_save(:)     => null()  !<
     real (kind=kind_phys), pointer      :: cd(:)              => null()  !<
@@ -2035,7 +2049,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: ocss(:)            => null()  !<
     real (kind=kind_phys), pointer      :: oa4ss(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: clxss(:,:)         => null()  !<
-    
+
     !-- Ferrier-Aligo MP scheme
     real (kind=kind_phys), pointer :: f_rain     (:,:)   => null()  !<
     real (kind=kind_phys), pointer :: f_ice      (:,:)   => null()  !<
@@ -2872,8 +2886,20 @@ module GFS_typedefs
     integer              :: iems           =  0              !< use fixed value of 1.0
     integer              :: iaer           =  1              !< default aerosol effect in sw only
     integer              :: icliq_sw       =  1              !< sw optical property for liquid clouds
-    integer              :: iovr_sw        =  1              !< sw: max-random overlap clouds
-    integer              :: iovr_lw        =  1              !< lw: max-random overlap clouds
+    integer              :: iovr_sw        =  1              !< sw: cloud overlap method for radiation
+                                                             !< 0 => use random overlap
+                                                             !< 1 => use maximum-random overlap
+                                                             !< 2 => use maximum overlap
+                                                             !< 3 => use decorrelation length overlap (NOAA/Hou)
+                                                             !< 4 => use exponential overlap (AER)
+                                                             !< 5 => use exponential-random overlap (AER)
+    integer              :: iovr_lw        =  1              !< lw: cloud overlap method for radiation
+                                                             !< 0 => use random overlap
+                                                             !< 1 => use maximum-random overlap
+                                                             !< 2 => use maximum overlap
+                                                             !< 3 => use decorrelation length overlap (NOAA/Hou)
+                                                             !< 4 => use exponential overlap (AER)
+                                                             !< 5 => use exponential-random overlap (AER)
     integer              :: ictm           =  1              !< ictm=0 => use data at initial cond time, if not
                                                              !<           available; use latest; no extrapolation.
                                                              !< ictm=1 => use data at the forecast time, if not
@@ -3606,6 +3632,7 @@ module GFS_typedefs
     Model%icliq_sw         = icliq_sw
     Model%iovr_sw          = iovr_sw
     Model%iovr_lw          = iovr_lw
+    Model%iovr             = max(Model%iovr_sw,Model%iovr_lw)
     Model%ictm             = ictm
     Model%isubc_sw         = isubc_sw
     Model%isubc_lw         = isubc_lw
@@ -4676,6 +4703,7 @@ module GFS_typedefs
       print *, ' icliq_sw          : ', Model%icliq_sw
       print *, ' iovr_sw           : ', Model%iovr_sw
       print *, ' iovr_lw           : ', Model%iovr_lw
+      print *, ' iovr              : ', Model%iovr
       print *, ' ictm              : ', Model%ictm
       print *, ' isubc_sw          : ', Model%isubc_sw
       print *, ' isubc_lw          : ', Model%isubc_lw
@@ -5984,6 +6012,10 @@ module GFS_typedefs
     allocate (Interstitial%adjvisdfd       (IM))
     allocate (Interstitial%aerodp          (IM,NSPC1))
     allocate (Interstitial%alb1d           (IM))
+    if (.not. Model%do_RRTMGP) then
+      ! RRTMGP uses its own cloud_overlap_param
+      allocate (Interstitial%alpha         (IM,Model%levr+LTP))
+    end if
     allocate (Interstitial%bexp1d          (IM))
     allocate (Interstitial%cd              (IM))
     allocate (Interstitial%cd_ice          (IM))
@@ -6578,6 +6610,9 @@ module GFS_typedefs
     !
     Interstitial%aerodp       = clear_val
     Interstitial%alb1d        = clear_val
+    if (.not. Model%do_RRTMGP) then
+      Interstitial%alpha      = clear_val
+    end if
     Interstitial%cldsa        = clear_val
     Interstitial%cldtaulw     = clear_val
     Interstitial%cldtausw     = clear_val
@@ -6990,6 +7025,9 @@ module GFS_typedefs
 
   end subroutine interstitial_phys_reset
 
+  ! DH* 20200901: this routine is no longer used by CCPP's GFS_debug.F90. When new variables are
+  ! added to the GFS_interstitial_type, it is best to add the variable to both interstitial_print
+  ! below and to GFS_interstitialtoscreen in ccpp/physics/physics/GFS_debug.F90
   subroutine interstitial_print(Interstitial, Model, mpirank, omprank, blkno)
     !
     implicit none
@@ -7040,6 +7078,9 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%adjvisdfd       ) = ', sum(Interstitial%adjvisdfd       )
     write (0,*) 'sum(Interstitial%aerodp          ) = ', sum(Interstitial%aerodp          )
     write (0,*) 'sum(Interstitial%alb1d           ) = ', sum(Interstitial%alb1d           )
+    if (.not. Model%do_RRTMGP) then
+      write (0,*) 'sum(Interstitial%alpha           ) = ', sum(Interstitial%alpha         )
+    end if
     write (0,*) 'sum(Interstitial%bexp1d          ) = ', sum(Interstitial%bexp1d          )
     write (0,*) 'sum(Interstitial%cd              ) = ', sum(Interstitial%cd              )
     write (0,*) 'sum(Interstitial%cd_ice          ) = ', sum(Interstitial%cd_ice          )
