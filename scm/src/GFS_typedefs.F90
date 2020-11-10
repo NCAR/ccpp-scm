@@ -747,7 +747,6 @@ module GFS_typedefs
     integer              :: lsm_ruc=3       !< flag for RUC land surface model
     integer              :: lsm_noah_wrfv4 = 4 !< flag for NOAH land surface from WRF v4.0
     integer              :: lsoil           !< number of soil layers
-    integer              :: kice=2          !< number of layers in sice
     integer              :: ivegsrc         !< ivegsrc = 0   => USGS, 
                                             !< ivegsrc = 1   => IGBP (20 category)
                                             !< ivegsrc = 2   => UMD  (13 category)
@@ -757,6 +756,7 @@ module GFS_typedefs
     integer              :: isot            !< isot = 0   => Zobler soil type  ( 9 category)
                                             !< isot = 1   => STATSGO soil type (19 category, AKA 'STAS'(?))
                                             !< isot = 2   => STAS-RUC soil type (19 category, NOAH WRFv4 only)
+    integer              :: kice=2          !< number of layers in sice
     integer              :: lsoil_lsm       !< number of soil layers internal to land surface model
     integer              :: lsnow_lsm       !< maximum number of snow layers internal to land surface model
     integer              :: lsnow_lsm_lbound!< lower bound for snow arrays, depending on lsnow_lsm
@@ -788,15 +788,15 @@ module GFS_typedefs
 
     logical              :: use_ufo         !< flag for gcycle surface option
 
+    ! GFDL Surface Layer options
+    logical              :: lcurr_sf        !< flag for taking ocean currents into account in GFDL surface layer
+    logical              :: pert_cd         !< flag for perturbing the surface drag coefficient for momentum in surface layer scheme (1 = True)
+    integer              :: ntsflg          !< flag for updating skin temperature in the GFDL surface layer scheme
+    real(kind=kind_phys) :: sfenth          !< enthalpy flux factor 0 zot via charnock ..>0 zot enhanced>15m/s
+
 !--- flake model parameters
     integer              :: lkm             !< flag for flake model
 
-    ! GFDL Surface Layer options
-    logical              :: lcurr_sf  !flag for taking ocean currents into account in GFDL surface layer
-    logical              :: pert_cd   !flag for perturbing the surface drag coefficient for momentum in surface layer scheme (1 = True)
-    integer              :: ntsflg    !flag for updating skin temperature in the GFDL surface layer scheme
-    real(kind=kind_phys) :: sfenth    !enthalpy flux factor 0 zot via charnock ..>0 zot enhanced>15m/s
-    
 !--- tuning parameters for physical parameterizations
     logical              :: ras             !< flag for ras convection scheme
     logical              :: flipv           !< flag for vertical direction flip (ras)
@@ -910,9 +910,8 @@ module GFS_typedefs
     integer              :: bl_mynn_edmf_part  !< flag to partitioning og the MF and ED areas
     integer              :: bl_mynn_cloudmix   !< flag to activate mixing of cloud species
     integer              :: bl_mynn_mixqt      !< flag to mix total water or individual species
-    integer              :: bl_mynn_output      !< flag to initialize and write out extra 3D arrays
+    integer              :: bl_mynn_output     !< flag to initialize and write out extra 3D arrays
     integer              :: icloud_bl          !< flag for coupling sgs clouds to radiation
-    
     real(kind=kind_phys) :: var_ric
     real(kind=kind_phys) :: coef_ric_l
     real(kind=kind_phys) :: coef_ric_s
@@ -1039,8 +1038,8 @@ module GFS_typedefs
     character(len=32), pointer :: tracer_names(:) !< array of initialized tracers from dynamic core
     integer              :: ntrac           !< number of tracers
     integer              :: ntracp1         !< number of tracers plus one
-    integer              :: ntqv            !< tracer index for water vapor (specific humidity)
     integer              :: nqrimef         !< tracer index for mass weighted rime factor
+    integer              :: ntqv            !< tracer index for water vapor (specific humidity)
     integer              :: ntoz            !< tracer index for ozone mixing ratio
     integer              :: ntcw            !< tracer index for cloud condensate (or liquid water)
     integer              :: ntiw            !< tracer index for ice water
@@ -1090,7 +1089,7 @@ module GFS_typedefs
     integer              :: nqvdelt         !< the index of specific humidity at the previous timestep for Z-C MP in phy_f3d
     integer              :: nps2delt        !< the index of surface air pressure 2 timesteps back for Z-C MP in phy_f2d
     integer              :: npsdelt         !< the index of surface air pressure at the previous timestep for Z-C MP in phy_f2d
-    
+
 !--- debug flag
     logical              :: debug         
     logical              :: pre_rad         !< flag for testing purpose
@@ -1120,8 +1119,8 @@ module GFS_typedefs
     integer              :: yearlen         !< length of the current forecast year in days
 !
     integer              :: iccn            !< using IN CCN forcing for MG2/3
-    real(kind=kind_phys)          :: sec    !< seconds since model initialization
     real(kind=kind_phys), pointer :: si(:)  !< vertical sigma coordinate for model initialization
+    real(kind=kind_phys)          :: sec    !< seconds since model initialization
 
 !--- IAU
     integer              :: iau_offset
@@ -1454,7 +1453,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dpt2m  (:)     => null()   !< 2 meter dew point temperature
     real (kind=kind_phys), pointer :: zlvl   (:)     => null()   !< layer 1 height (m)
     real (kind=kind_phys), pointer :: psurf  (:)     => null()   !< surface pressure (Pa)
-    real (kind=kind_phys), pointer :: hpbl   (:)     => null()   !< pbl height (m)
     real (kind=kind_phys), pointer :: pwat   (:)     => null()   !< precipitable water
     real (kind=kind_phys), pointer :: t1     (:)     => null()   !< layer 1 temperature (K)
     real (kind=kind_phys), pointer :: q1     (:)     => null()   !< layer 1 specific humidity (kg/kg)
@@ -1513,11 +1511,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: cldcov (:,:)   => null()  !< instantaneous 3D cloud fraction
 !--- F-A MP scheme
     real (kind=kind_phys), pointer :: TRAIN  (:,:)   => null()  !< accumulated stratiform T tendency (K s-1)
-    
     real (kind=kind_phys), pointer :: cldfra  (:,:)   => null()  !< instantaneous 3D cloud fraction
-
     !--- MP quantities for 3D diagnositics 
     real (kind=kind_phys), pointer :: refl_10cm(:,:) => null()  !< instantaneous refl_10cm
+
 !
 !---vay-2018 UGWP-diagnostics daily mean
 !
@@ -2450,13 +2447,13 @@ module GFS_typedefs
     Sfcprop%dgraupelprv = clear_val
     
    endif
-   
-   ! HWRF NOAH LSM allocate and init when used
-   !
-   if (Model%lsm == Model%lsm_noah_wrfv4 ) then
-     allocate(Sfcprop%snotime(IM))
-     Sfcprop%snotime = clear_val
-   end if
+
+    ! HWRF NOAH LSM allocate and init when used
+    !
+    if (Model%lsm == Model%lsm_noah_wrfv4 ) then
+      allocate(Sfcprop%snotime(IM))
+      Sfcprop%snotime = clear_val
+    end if
     
     if (Model%do_myjsfc.or.Model%do_myjpbl.or.(Model%lsm == Model%lsm_noah_wrfv4)) then
       allocate(Sfcprop%z0base(IM))
@@ -2959,7 +2956,7 @@ module GFS_typedefs
 !---Max hourly
     real(kind=kind_phys) :: avg_max_length = 3600.                 !< reset value in seconds for max hourly
 !--- Ferrier-Aligo microphysical parameters
-    real(kind=kind_phys) :: rhgrd             = 0.98               !< fer_hires microphysics only; for 3-km domain
+    real(kind=kind_phys) :: rhgrd             = 1.0                !< fer_hires microphysics only; for 3-km domain
     logical              :: spec_adv          = .true.             !< Individual cloud species advected
     integer              :: icloud            = 0                  !< cloud effect to the optical depth in radiation; this also controls the cloud fraction options
                                                                    !<  3: with cloud effect from FA, and use cloud fraction option 3, based on Sundqvist et al. (1989)
@@ -3018,14 +3015,14 @@ module GFS_typedefs
     logical              :: usemonalb      = .true.          !< flag to read surface diffused shortwave albedo from input file for NOAH LSM WRFv4
     real(kind=kind_phys) :: aoasis         = 1.0             !< potential evaporation multiplication factor for NOAH LSM WRFv4
     integer              :: fasdas         = 0               !< flag to use "flux-adjusting surface data assimilation system"; 0 = OFF, 1 = ON
+    integer              :: iopt_thcnd     = 1               !< option to treat thermal conductivity in Noah LSM (new in 3.8)
+                                                             !< = 1, original (default)
+                                                             !< = 2, McCumber and Pielke for silt loam and sandy loam
     integer              :: ivegsrc        =  2              !< ivegsrc = 0   => USGS,
                                                              !< ivegsrc = 1   => IGBP (20 category)
                                                              !< ivegsrc = 2   => UMD  (13 category)
     integer              :: isot           =  0              !< isot = 0   => Zobler soil type  ( 9 category)
                                                              !< isot = 1   => STATSGO soil type (19 category)
-    integer              :: iopt_thcnd     =  1              !< option to treat thermal conductivity in Noah LSM (new in 3.8)
-                                                             !< = 1, original (default)
-                                                             !< = 2, McCumber and Pielke for silt loam and sandy loam
     ! -- to use Noah MP, lsm needs to be set to 2 and both ivegsrc and isot are set
     ! to 1 - MODIS IGBP and STATSGO - the defaults are the same as in the
     ! scripts;change from namelist
@@ -3045,14 +3042,14 @@ module GFS_typedefs
 
     logical              :: use_ufo        = .false.         !< flag for gcycle surface option
 
-!--- flake model parameters
-    integer              :: lkm            =  0  !< flag for flake model
-
     logical              :: lcurr_sf       = .false.                  !< flag for taking ocean currents into account in GFDL surface layer
     logical              :: pert_cd        = .false.                  !< flag for perturbing the surface drag coefficient for momentum in surface layer scheme
     integer              :: ntsflg         = 0                        !< flag for updating skin temperature in the GFDL surface layer scheme
     real(kind=kind_phys) :: sfenth         = 0.0                      !< enthalpy flux factor 0 zot via charnock ..>0 zot enhanced>15m/s
-    
+
+!--- flake model parameters
+    integer              :: lkm            =  0  !< flag for flake model
+
 !--- tuning parameters for physical parameterizations
     logical              :: ras            = .false.                  !< flag for ras convection scheme
     logical              :: flipv          = .true.                   !< flag for vertical direction flip (ras)
@@ -3334,10 +3331,10 @@ module GFS_typedefs
                           !    Noah MP options
                                iopt_dveg,iopt_crs,iopt_btr,iopt_run,iopt_sfc, iopt_frz,     &
                                iopt_inf, iopt_rad,iopt_alb,iopt_snf,iopt_tbot,iopt_stc,     &
-                          !--- lake model control
-                               lkm,                                                         &
                           !    GFDL surface layer options
                                lcurr_sf, pert_cd, ntsflg, sfenth,                           &
+                          !--- lake model control
+                               lkm,                                                         &
                           !--- physical parameterizations
                                ras, trans_trac, old_monin, cnvgwd, mstrat, moist_adj,       &
                                cscnv, cal_pre, do_aw, do_shoc, shocaftcnv, shoc_cld,        &
@@ -3347,11 +3344,11 @@ module GFS_typedefs
                                bl_mynn_edmf_tke, bl_mynn_edmf_part, bl_mynn_cloudmix,       &
                                bl_mynn_mixqt, bl_mynn_output, icloud_bl, bl_mynn_tkeadvect, &
                                gwd_opt,                                                     &
-                               var_ric, coef_ric_l, coef_ric_s,                             &
+                               var_ric, coef_ric_l, coef_ric_s, hurr_pbl,                   &
                                do_myjsfc, do_myjpbl,                                        &
                                hwrf_samfdeep, hwrf_samfshal,                                &
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
-                               shinhong, do_ysu, acm, dspheat, hurr_pbl, lheatstrg, cnvcld, &
+                               shinhong, do_ysu, acm, dspheat, lheatstrg, cnvcld,           &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, isatmedmf,    &
                                do_deep, jcap,                                               &
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
@@ -3559,12 +3556,12 @@ module GFS_typedefs
     Model%nx               = nx
     Model%ny               = ny
     Model%levs             = levs
-    Model%levsp1           = Model%levs + 1
-    Model%levsm1           = Model%levs - 1
     allocate(Model%ak(1:size(ak)))
     allocate(Model%bk(1:size(bk)))
     Model%ak               = ak
     Model%bk               = bk
+    Model%levsp1           = Model%levs + 1
+    Model%levsm1           = Model%levs - 1
     Model%cnx              = cnx
     Model%cny              = cny
     Model%lonr             = gnx         ! number longitudinal points
@@ -3684,6 +3681,8 @@ module GFS_typedefs
 !--- microphysical switch
     Model%ncld             = ncld
     Model%imp_physics      = imp_physics
+!--- use effective radii in radiation, used by several microphysics options
+    Model%effr_in          = effr_in
     ! turn off ICCN interpolation when MG2/3 are not used
     if (.not. Model%imp_physics==Model%imp_physics_mg) Model%iccn = 0
 !--- Zhao-Carr MP parameters
@@ -3702,7 +3701,6 @@ module GFS_typedefs
     Model%mg_rhmini        = mg_rhmini
     Model%mg_alf           = mg_alf
     Model%mg_qcmin         = mg_qcmin
-    Model%effr_in          = effr_in
     Model%microp_uniform   = microp_uniform
     Model%do_cldice        = do_cldice
     Model%hetfrz_classnuc  = hetfrz_classnuc
@@ -3779,15 +3777,15 @@ module GFS_typedefs
     Model%isot             = isot
     Model%use_ufo          = use_ufo
 
-!--- flake  model parameters
-    Model%lkm              = lkm
-
 ! GFDL surface layer options
     Model%lcurr_sf         = lcurr_sf
     Model%pert_cd          = pert_cd
     Model%ntsflg           = ntsflg
     Model%sfenth           = sfenth
-    
+
+!--- flake  model parameters
+    Model%lkm              = lkm
+
 ! Noah MP options from namelist
 !
     Model%iopt_dveg        = iopt_dveg
@@ -4150,13 +4148,8 @@ module GFS_typedefs
     !--- ak/bk have been flipped from their original FV3 orientation and are defined sfc -> toa
     Model%si = (ak + bk * con_p0 - ak(Model%levr+1)) / (con_p0 - ak(Model%levr+1))
     Model%sec              = 0
-    if (Model%lsm == Model%lsm_noahmp) then
-      Model%yearlen          = 365
-      Model%julian           = -9999.
-    endif
-    ! DH* what happens if LTP>0? Does this have to change? 
-    ! A conversation with Yu-Tai suggests that we can probably
-    ! eliminate LTP altogether *DH
+    Model%yearlen          = 365
+    Model%julian           = -9999.
 
 !--- BEGIN CODE FROM GFS_PHYSICS_INITIALIZE
 !--- define physcons module variables
@@ -4475,9 +4468,14 @@ module GFS_typedefs
       Model%nleffr  = 1
       Model%nieffr  = 2
       Model%nseffr  = 3
-      if (Model%me == Model%master) print *,' Using Thompson double moment', &
-                                          ' microphysics',' ltaerosol = ',Model%ltaerosol, &
+      if (.not. Model%effr_in) then
+          print *,' Thompson MP requires effr_in to be set to .true. - job aborted'
+          stop
+      end if
+      if (Model%me == Model%master) print *,' Using Thompson double moment microphysics', &
+                                          ' ltaerosol = ',Model%ltaerosol, &
                                           ' ttendlim =',Model%ttendlim, &
+                                          ' effr_in =',Model%effr_in, &
                                           ' lradar =',Model%lradar, &
                                           ' nsradar_reset =',Model%nsradar_reset, &
                                           ' num_p3d =',Model%num_p3d, &
@@ -4831,16 +4829,14 @@ module GFS_typedefs
         print *, ' iopt_tbot         : ', Model%iopt_tbot
         print *, ' iopt_stc          : ', Model%iopt_stc
       endif
-
       print *, ' use_ufo           : ', Model%use_ufo
-      print *, ' '
-      print *, 'flake model parameters'
-      print *, 'lkm                : ', Model%lkm
-      print *, ' '
       print *, ' lcurr_sf          : ', Model%lcurr_sf
       print *, ' pert_cd           : ', Model%pert_cd
       print *, ' ntsflg            : ', Model%ntsflg
       print *, ' sfenth            : ', Model%sfenth
+      print *, ' '
+      print *, 'flake model parameters'
+      print *, 'lkm                : ', Model%lkm
       print *, ' '
       print *, 'tuning parameters for physical parameterizations'
       print *, ' ras               : ', Model%ras
@@ -4988,8 +4984,8 @@ module GFS_typedefs
       print *, 'tracers'
       print *, ' tracer_names      : ', Model%tracer_names
       print *, ' ntrac             : ', Model%ntrac
-      print *, ' ntqv              : ', Model%ntqv
       print *, ' nqrimef           : ', Model%nqrimef
+      print *, ' ntqv              : ', Model%ntqv
       print *, ' ntoz              : ', Model%ntoz
       print *, ' ntcw              : ', Model%ntcw
       print *, ' ntiw              : ', Model%ntiw
@@ -5045,8 +5041,8 @@ module GFS_typedefs
       print *, ' zhour             : ', Model%zhour
       print *, ' kdt               : ', Model%kdt
       print *, ' jdat              : ', Model%jdat
-      print *, ' sec               : ', Model%sec
       print *, ' si                : ', Model%si
+      print *, ' sec               : ', Model%sec
       print *, ' first_time_step   : ', Model%first_time_step
       print *, ' restart           : ', Model%restart
       print *, ' hydrostatic       : ', Model%hydrostatic
@@ -5786,7 +5782,6 @@ module GFS_typedefs
     if (Model%imp_physics == Model%imp_physics_fer_hires) then
        Diag%TRAIN      = zero
     end if
-
     Diag%cldfra      = zero
 
     Diag%totprcpb   = zero
@@ -6249,6 +6244,7 @@ module GFS_typedefs
     allocate (Interstitial%zorl_land       (IM))
     allocate (Interstitial%zorl_ocean      (IM))
     allocate (Interstitial%zt1d            (IM))
+
     ! RRTMGP
     allocate (Interstitial%fluxlwDOWN_jac       (IM, Model%levs+1))
     allocate (Interstitial%fluxlwUP_jac         (IM, Model%levs+1))
@@ -6626,7 +6622,7 @@ module GFS_typedefs
     !
     class(GFS_interstitial_type) :: Interstitial
     type(GFS_control_type), intent(in) :: Model
-    !
+    
     Interstitial%aerodp       = clear_val
     Interstitial%alb1d        = clear_val
     if (.not. Model%do_RRTMGP) then
@@ -7393,6 +7389,31 @@ module GFS_typedefs
        write (0,*) 'sum(Interstitial%t2mmp        ) = ', sum(Interstitial%t2mmp           )
        write (0,*) 'sum(Interstitial%q2mp         ) = ', sum(Interstitial%q2mp            )
     end if
+    if (Model%lsm == Model%lsm_noah_wrfv4) then
+       write (0,*) 'sum(Interstitial%canopy_save     ) = ', sum(Interstitial%canopy_save     )
+       write (0,*) 'sum(Interstitial%chk_land        ) = ', sum(Interstitial%chk_land        )
+       write (0,*) 'sum(Interstitial%cmc             ) = ', sum(Interstitial%cmc             )
+       write (0,*) 'sum(Interstitial%dqsdt2          ) = ', sum(Interstitial%dqsdt2          )
+       write (0,*) 'sum(Interstitial%drain_in_m_sm1  ) = ', sum(Interstitial%drain_in_m_sm1  )
+       write (0,*) 'Interstitial%flag_lsm(1)           = ', Interstitial%flag_lsm(1)
+       write (0,*) 'Interstitial%flag_lsm_glacier(1)   = ', Interstitial%flag_lsm_glacier(1)
+       write (0,*) 'sum(Interstitial%qs1             ) = ', sum(Interstitial%qs1             )
+       write (0,*) 'sum(Interstitial%qv1             ) = ', sum(Interstitial%qv1             )
+       write (0,*) 'sum(Interstitial%rho1            ) = ', sum(Interstitial%rho1            )
+       write (0,*) 'sum(Interstitial%runoff_in_m_sm1 ) = ', sum(Interstitial%runoff_in_m_sm1 )
+       write (0,*) 'sum(Interstitial%smcmax          ) = ', sum(Interstitial%smcmax          )
+       write (0,*) 'sum(Interstitial%snowd_land_save ) = ', sum(Interstitial%snowd_land_save )
+       write (0,*) 'sum(Interstitial%snow_depth      ) = ', sum(Interstitial%snow_depth      )
+       write (0,*) 'sum(Interstitial%snohf_snow      ) = ', sum(Interstitial%snohf_snow      )
+       write (0,*) 'sum(Interstitial%snohf_frzgra    ) = ', sum(Interstitial%snohf_frzgra    )
+       write (0,*) 'sum(Interstitial%snohf_snowmelt  ) = ', sum(Interstitial%snohf_snowmelt  )
+       write (0,*) 'sum(Interstitial%soilm_in_m      ) = ', sum(Interstitial%soilm_in_m      )
+       write (0,*) 'sum(Interstitial%sthick          ) = ', sum(Interstitial%sthick          )
+       write (0,*) 'sum(Interstitial%th1             ) = ', sum(Interstitial%th1             )
+       write (0,*) 'sum(Interstitial%tprcp_rate_land ) = ', sum(Interstitial%tprcp_rate_land )
+       write (0,*) 'sum(Interstitial%tsfc_land_save  ) = ', sum(Interstitial%tsfc_land_save  )
+       write (0,*) 'sum(Interstitial%weasd_land_save ) = ', sum(Interstitial%weasd_land_save )
+    end if
     ! RRTMGP
     if (Model%do_RRTMGP) then
        write (0,*) 'sum(Interstitial%aerosolslw           ) = ', sum(Interstitial%aerosolslw  )
@@ -7428,31 +7449,6 @@ module GFS_typedefs
        write (0,*) 'sum(Interstitial%tv_lay               ) = ', sum(Interstitial%tv_lay      )
        write (0,*) 'sum(Interstitial%cloud_overlap_param  ) = ', sum(Interstitial%cloud_overlap_param)
        write (0,*) 'sum(Interstitial%precip_overlap_param ) = ', sum(Interstitial%precip_overlap_param)
-    end if
-    if (Model%lsm == Model%lsm_noah_wrfv4) then
-       write (0,*) 'sum(Interstitial%canopy_save     ) = ', sum(Interstitial%canopy_save     )
-       write (0,*) 'sum(Interstitial%chk_land        ) = ', sum(Interstitial%chk_land        )
-       write (0,*) 'sum(Interstitial%cmc             ) = ', sum(Interstitial%cmc             )
-       write (0,*) 'sum(Interstitial%dqsdt2          ) = ', sum(Interstitial%dqsdt2          )
-       write (0,*) 'sum(Interstitial%drain_in_m_sm1  ) = ', sum(Interstitial%drain_in_m_sm1  )
-       write (0,*) 'Interstitial%flag_lsm(1)           = ', Interstitial%flag_lsm(1)
-       write (0,*) 'Interstitial%flag_lsm_glacier(1)   = ', Interstitial%flag_lsm_glacier(1)
-       write (0,*) 'sum(Interstitial%qs1             ) = ', sum(Interstitial%qs1             )
-       write (0,*) 'sum(Interstitial%qv1             ) = ', sum(Interstitial%qv1             )
-       write (0,*) 'sum(Interstitial%rho1            ) = ', sum(Interstitial%rho1            )
-       write (0,*) 'sum(Interstitial%runoff_in_m_sm1 ) = ', sum(Interstitial%runoff_in_m_sm1 )
-       write (0,*) 'sum(Interstitial%smcmax          ) = ', sum(Interstitial%smcmax          )
-       write (0,*) 'sum(Interstitial%snowd_land_save ) = ', sum(Interstitial%snowd_land_save )
-       write (0,*) 'sum(Interstitial%snow_depth      ) = ', sum(Interstitial%snow_depth      )
-       write (0,*) 'sum(Interstitial%snohf_snow      ) = ', sum(Interstitial%snohf_snow      )
-       write (0,*) 'sum(Interstitial%snohf_frzgra    ) = ', sum(Interstitial%snohf_frzgra    )
-       write (0,*) 'sum(Interstitial%snohf_snowmelt  ) = ', sum(Interstitial%snohf_snowmelt  )
-       write (0,*) 'sum(Interstitial%soilm_in_m      ) = ', sum(Interstitial%soilm_in_m      )
-       write (0,*) 'sum(Interstitial%sthick          ) = ', sum(Interstitial%sthick          )
-       write (0,*) 'sum(Interstitial%th1             ) = ', sum(Interstitial%th1             )
-       write (0,*) 'sum(Interstitial%tprcp_rate_land ) = ', sum(Interstitial%tprcp_rate_land )
-       write (0,*) 'sum(Interstitial%tsfc_land_save  ) = ', sum(Interstitial%tsfc_land_save  )
-       write (0,*) 'sum(Interstitial%weasd_land_save ) = ', sum(Interstitial%weasd_land_save )
     end if
 
     write (0,*) 'Interstitial_print: end'
