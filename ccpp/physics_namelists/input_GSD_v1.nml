@@ -2,6 +2,7 @@
        fhzero         = 6.
        h2o_phys       = .true.
        ldiag3d        = .true.
+       qdiag3d        = .true.
        fhcyc          = 0.
        nst_anl        = .true.
        use_ufo        = .true.
@@ -33,6 +34,7 @@
        lheatstrg      = .false.
        do_mynnedmf    = .true.
        do_mynnsfclay  = .false.
+       effr_in        = .true.
        random_clds    = .false.
        trans_trac     = .true.
        cnvcld         = .true.

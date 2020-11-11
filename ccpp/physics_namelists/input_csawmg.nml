@@ -1,6 +1,7 @@
 &gfs_physics_nml
        fhzero         = 6.
        ldiag3d        = .true.
+       qdiag3d        = .true.
        fhcyc          = 24.
        nst_anl        = .true.
        use_ufo        = .true.
@@ -53,7 +54,6 @@
        oz_phys        = .false.
        oz_phys_2015   = .true.
        debug          = .false.
-
        ras            = .false.
        cscnv          = .true.
        do_shoc        = .false.
@@ -72,7 +72,7 @@
        mg_qcvar       = 1.0
        fprcp          = 2
        pdfflag        = 4
-       iccn           = 0
+       iccn           = 1
        mg_do_graupel  = .true.
        mg_do_hail     = .false.
        do_sb_physics  = .true.
