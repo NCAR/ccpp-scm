@@ -51,12 +51,19 @@ include(CMakeForceCompiler)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
-IF(DEFINED ENV{NETCDF})
-  MESSAGE(STATUS "The NETCDF environment variable is $ENV{NETCDF}")
-  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
-ELSE(DEFINED ENV{NETCDF})
-  MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
-ENDIF(DEFINED ENV{NETCDF})
+#If using Hera, use the FindNetCDF.cmake module to find the NetCDF installed with NCEPLIBS; 
+#otherwise, rely on the NETCDF environment variable to point to the desired NetCDF installation
+if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  MESSAGE(STATUS "Using FindNetCDF.cmake module for $ENV{CMAKE_Platform}")
+  FIND_PACKAGE(NetCDF REQUIRED COMPONENTS C CXX Fortran)
+else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  IF(DEFINED ENV{NETCDF})
+    MESSAGE(STATUS "The NETCDF environment variable is $ENV{NETCDF}")
+    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
+  ELSE(DEFINED ENV{NETCDF})
+    MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
+  ENDIF(DEFINED ENV{NETCDF})
+endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
 
 IF(DEFINED ENV{BACIO_LIB4})
   MESSAGE(STATUS "The BACIO_LIB4 environment variable is $ENV{BACIO_LIB4}")
@@ -199,16 +206,27 @@ endif (${CMAKE_BUILD_TYPE} MATCHES "Debug")
 
 #------------------------------------------------------------------------------
 # Set netCDF flags for preprocessor, compiler and linker (if defined)
-set(NETCDF_DIR $ENV{NETCDF})
-if(NETCDF_DIR)
-  set (NETCDF_INC "-I${NETCDF_DIR}/include")
-  set (NETCDF_LIB "-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf")
-  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${NETCDF_INC} ${NETCDF_LIB}")
+if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  #If using hera.intel, we use the target_link_libraries(NetCDF::NetCDF_[Fortran,C,CXX]), but ccpp-phyics inherits ${CMAKE_Fortran_FLAGS} for compiling physics, so we still need to set these
   ADD_DEFINITIONS(-DNETCDF)
   message (STATUS "Enable netCDF support")
-else(NETCDF_DIR)
-  message (STATUS "Disable netCDF support")
-endif(NETCDF_DIR)
+  message (STATUS "NetCDF_Fortran_INCLUDE_DIRS is ${NetCDF_Fortran_INCLUDE_DIRS}")
+  message (STATUS "NetCDF_Fortran_LIBRARIES is ${NetCDF_Fortran_LIBRARIES}")
+  set (NETCDF_INC "-I${NetCDF_Fortran_INCLUDE_DIRS}")
+  set (NETCDF_LIB ${NetCDF_Fortran_LIBRARIES})
+  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${NETCDF_INC} ${NETCDF_LIB}")
+else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  set(NETCDF_DIR $ENV{NETCDF})
+  if(NETCDF_DIR)
+    set (NETCDF_INC "-I${NETCDF_DIR}/include")
+    set (NETCDF_LIB "-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf")
+    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${NETCDF_INC} ${NETCDF_LIB}")
+    ADD_DEFINITIONS(-DNETCDF)
+    message (STATUS "Enable netCDF support")
+  else(NETCDF_DIR)
+    message (STATUS "Disable netCDF support")
+  endif(NETCDF_DIR)
+endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
 
 #------------------------------------------------------------------------------
 # Set SIONlib flags for preprocessor, compiler and linker (if defined)
@@ -289,9 +307,18 @@ SET(scm_source_files gmtb_scm.F90
             gmtb_scm_output.F90
 )
 
-ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
-TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
-
+if(STATIC)
+  ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
+  if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+    #the FindNetCDF.cmake module suggests to use NetCDF::NetCDF_[Fortran,C,CXX] rather than set compiler flags; you actually need both Fortan and C components to compile successfully
+    TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+  else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+    TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+  endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+else(STATIC)
+  ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
+  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp)
+endif(STATIC)
 
 set_target_properties(gmtb_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"

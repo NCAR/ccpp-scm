@@ -89,15 +89,15 @@ def execute(cmd):
     status = p.returncode
     if status == 0:
         message = 'Execution of "{0}" returned with exit code {1}\n'.format(cmd, status)
-        message += '    stdout: "{0}"\n'.format(stdout.rstrip('\n'.encode()))
-        message += '    stderr: "{0}"'.format(stderr.rstrip('\n'.encode()))
+        message += '    stdout: "{0}"\n'.format(stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'))
+        message += '    stderr: "{0}"'.format(stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
         logging.debug(message)
     else:
         message = 'Execution of command "{0}" failed, exit code {1}\n'.format(cmd, status)
-        message += '    stdout: "{0}"\n'.format(stdout.rstrip('\n'.encode()))
-        message += '    stderr: "{0}"'.format(stderr.rstrip('\n'.encode()))
+        message += '    stdout: "{0}"\n'.format(stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'))
+        message += '    stderr: "{0}"'.format(stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
         logging.debug(message)
-    return (status, stdout.rstrip('\n'.encode()), stderr.rstrip('\n'.encode()))
+    return (status, stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'), stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
 
 def parse_arguments():
     """Parse command line arguments"""
