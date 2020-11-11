@@ -307,18 +307,14 @@ SET(scm_source_files gmtb_scm.F90
             gmtb_scm_output.F90
 )
 
-if(STATIC)
-  ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
-  if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
-    #the FindNetCDF.cmake module suggests to use NetCDF::NetCDF_[Fortran,C,CXX] rather than set compiler flags; you actually need both Fortan and C components to compile successfully
-    TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
-  else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
-    TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
-  endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
-else(STATIC)
-  ADD_EXECUTABLE(gmtb_scm ${scm_source_files})
-  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp)
-endif(STATIC)
+
+ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
+if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  #the FindNetCDF.cmake module suggests to use NetCDF::NetCDF_[Fortran,C,CXX] rather than set compiler flags; you actually need both Fortan and C components to compile successfully
+  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
 
 set_target_properties(gmtb_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
