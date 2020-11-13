@@ -1241,6 +1241,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [wetness]
   standard_name = normalized_soil_wetness_for_land_surface_model
   long_name = normalized soil wetness for lsm
@@ -2559,21 +2560,33 @@
   units = flag
   dimensions = ()
   type = integer
+[icice_sw]
+  standard_name = flag_for_optical_property_for_ice_clouds_for_shortwave_radiation
+  long_name = sw optical property for ice clouds
+  units = flag
+  dimensions = ()
+  type = integer
+[icliq_lw]
+  standard_name = flag_for_optical_property_for_liquid_clouds_for_longwave_radiation
+  long_name = lw optical property for liquid clouds
+  units = flag
+  dimensions = ()
+  type = integer
+[icice_lw]
+  standard_name = flag_for_optical_property_for_ice_clouds_for_longwave_radiation
+  long_name = lw optical property for ice clouds
+  units = flag
+  dimensions = ()
+  type = integer
 [iovr]
   standard_name = flag_for_cloud_overlap_method_for_radiation
-  long_name = max-random overlap clouds
+  long_name = flag for cloud overlap method 
   units = flag
   dimensions = ()
   type = integer
-[iovr_sw]
-  standard_name = flag_for_cloud_overlap_method_for_shortwave_radiation
-  long_name = sw: max-random overlap clouds
-  units = flag
-  dimensions = ()
-  type = integer
-[iovr_lw]
-  standard_name = flag_for_cloud_overlap_method_for_longwave_radiation
-  long_name = lw: max-random overlap clouds
+[idcor]
+  standard_name = flag_for_decorrelation_length_method
+  long_name = flag for decorrelation length method used in cloud overlap method (iovr)
   units = flag
   dimensions = ()
   type = integer
@@ -2584,14 +2597,14 @@
   dimensions = ()
   type = integer
 [isubc_sw]
-  standard_name = flag_for_sw_clouds_without_sub_grid_approximation
-  long_name = flag for sw clouds without sub-grid approximation
+  standard_name = flag_for_sw_clouds_grid_approximation
+  long_name = flag for sw clouds sub-grid approximation
   units = flag
   dimensions = ()
   type = integer
 [isubc_lw]
-  standard_name = flag_for_lw_clouds_without_sub_grid_approximation
-  long_name = flag for lw clouds without sub-grid approximation
+  standard_name = flag_for_lw_clouds_sub_grid_approximation
+  long_name = flag for lw clouds sub-grid approximation
   units = flag
   dimensions = ()
   type = integer
@@ -2799,6 +2812,66 @@
   units = flag
   dimensions = ()
   type = integer
+[iovr_exp]
+  standard_name = flag_for_exponential_cloud_overlap_method
+  long_name = choice of exponential cloud overlap method
+  units         = flag
+  dimensions = ()
+  type = integer
+[iovr_exprand]
+  standard_name = flag_for_exponential_random_cloud_overlap_method
+  long_name = choice of exponential-random cloud overlap method
+  units     = flag
+  dimensions = ()
+  type = integer
+[iovr_max]
+  standard_name = flag_for_maximum_cloud_overlap_method
+  long_name = choice of maximum cloud overlap method
+  units = flag
+  dimensions = ()
+  type = integer
+[iovr_rand]
+  standard_name = flag_for_random_cloud_overlap_method
+  long_name = choice of random cloud overlap method
+  units = flag
+  dimensions = ()
+  type = integer
+[iovr_maxrand]
+  standard_name = flag_for_maximum_random_cloud_overlap_method
+  long_name = choice of maximum-random cloud overlap method
+  units = flag
+  dimensions = ()
+  type = integer
+[iovr_dcorr]
+  standard_name = flag_for_decorrelation_length_cloud_overlap_method
+  long_name = choice of decorrelation-length cloud overlap method
+  units         = flag
+  dimensions = ()
+  type = integer
+[idcor_con]
+  standard_name = flag_for_constant_decorrelation_length_method
+  long_name = choice of decorrelation length computation (costant)
+  units = flag
+  dimensions = ()
+  type = integer
+[idcor_hogan]
+  standard_name = flag_for_hogan_decorrelation_length_method
+  long_name = choice of decorrelation length computation (hogan)
+  units = flag
+  dimensions = ()
+  type = integer
+[idcor_oreopoulos]
+  standard_name = flag_for_oreopoulos_decorrelation_length_method
+  long_name = choice of decorrelation length computation (oreopoulos)
+  units = flag
+  dimensions = ()
+  type = integer
+[dcorr_con]
+  standard_name = decorreltion_length_used_by_overlap_method
+  long_name = decorrelation length (default) used by cloud overlap method (iovr)
+  units = km
+  dimensions = ()
+  type = real
 [psautco]
   standard_name = coefficient_from_cloud_ice_to_snow
   long_name = auto conversion coeff from ice to snow
@@ -3348,12 +3421,6 @@
   units = index
   dimensions = ()
   type = integer
-[lkm]
-  standard_name = flag_for_lake_surface_scheme
-  long_name = flag for lake surface model
-  units = flag
-  dimensions = ()
-  type = integer
 [lcurr_sf]
   standard_name = flag_for_ocean_currents_in_surface_layer_scheme
   long_name = flag for taking ocean currents into account in surface layer scheme
@@ -3379,6 +3446,12 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[lkm]
+  standard_name = flag_for_lake_surface_scheme
+  long_name = flag for lake surface model
+  units = flag
+  dimensions = ()
+  type = integer
 [ras]
   standard_name = flag_for_ras_deep_convection
   long_name = flag for ras convection scheme
@@ -4402,7 +4475,7 @@
 [ipt]
   standard_name = index_for_diagnostic_printout
   long_name = horizontal index for point used for diagnostic printout
-  units =
+  units = index
   dimensions = ()
   type = integer
 [lprnt]
@@ -4962,14 +5035,14 @@
   units = none
   dimensions = (horizontal_loop_extent)
   type = integer
-  active = (flag_for_lw_clouds_without_sub_grid_approximation == 2 .or. flag_for_sw_clouds_without_sub_grid_approximation == 2)
+  active = (flag_for_lw_clouds_sub_grid_approximation == 2 .or. flag_for_sw_clouds_grid_approximation == 2)
 [icsdlw]
   standard_name = seed_random_numbers_lw
   long_name = random seeds for sub-column cloud generators lw
   units = none
   dimensions = (horizontal_loop_extent)
   type = integer
-  active = (flag_for_lw_clouds_without_sub_grid_approximation == 2 .or. flag_for_sw_clouds_without_sub_grid_approximation == 2)
+  active = (flag_for_lw_clouds_sub_grid_approximation == 2 .or. flag_for_sw_clouds_grid_approximation == 2)
 [ozpl]
   standard_name = ozone_forcing
   long_name = ozone forcing data
@@ -7196,6 +7269,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [cd]
   standard_name = surface_drag_coefficient_for_momentum_in_air
   long_name = surface exchange coeff for momentum
@@ -7280,6 +7354,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [cf_upi]
   standard_name = convective_cloud_fraction_for_microphysics
   long_name = convective cloud fraction for microphysics
@@ -7429,6 +7504,14 @@
   dimensions = (horizontal_loop_extent,4)
   type = real
   kind = kind_phys
+[cmc]
+  standard_name = canopy_water_amount_in_m
+  long_name = canopy water amount in m
+  units = m
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [clxss]
   standard_name = fraction_of_grid_box_with_subgrid_orography_higher_than_critical_height_small_scale
   long_name = frac. of grid box with by subgrid orography higher than critical height small scale
@@ -7437,13 +7520,6 @@
   type = real
   kind = kind_phys
   active = (gwd_opt == 3 .or. gwd_opt == 33)
-[cmc]
-  standard_name = canopy_water_amount_in_m
-  long_name = canopy water amount in m
-  units = m
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys
 [cmm_ocean]
   standard_name = surface_drag_wind_speed_for_momentum_in_air_over_ocean
   long_name = momentum exchange coefficient over ocean
@@ -7690,6 +7766,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [dqsfc1]
   standard_name = instantaneous_surface_upward_latent_heat_flux
   long_name = surface upward latent heat flux
@@ -7711,6 +7788,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [dtdt]
   standard_name = tendency_of_air_temperature_due_to_model_physics
   long_name = air temperature tendency due to model physics
@@ -8029,12 +8107,14 @@
   units = flag
   dimensions = (horizontal_loop_extent)
   type = logical
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [flag_lsm_glacier]
   standard_name = flag_for_calling_land_surface_model_glacier
   long_name = flag for calling land surface model over glacier
   units = flag
   dimensions = (horizontal_loop_extent)
   type = logical
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [ffmm_ocean]
   standard_name = Monin_Obukhov_similarity_function_for_momentum_over_ocean
   long_name = Monin-Obukhov similarity function for momentum over ocean
@@ -8869,6 +8949,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [qv1]
   standard_name = bounded_specific_humidity_at_lowest_model_layer_over_land
   long_name = specific humidity at lowest model layer over land bounded between a nonzero epsilon and saturation
@@ -8876,6 +8957,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [radar_reset]
   standard_name = flag_for_resetting_radar_reflectivity_calculation
   long_name = flag for resetting radar reflectivity calculation
@@ -8987,6 +9069,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [save_q(:,:,index_for_ozone)]
   standard_name = ozone_mixing_ratio_save
   long_name = ozone mixing ratio before entering a physics scheme
@@ -9132,6 +9215,7 @@
   dimensions = (horizontal_loop_extent,soil_vertical_dimension)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [slopetype]
   standard_name = surface_slope_classification
   long_name = surface slope type at each grid cell
@@ -9145,6 +9229,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [smc_save]
   standard_name = volume_fraction_of_soil_moisture_save
   long_name = total soil moisture before entering a physics scheme
@@ -9152,6 +9237,7 @@
   dimensions = (horizontal_loop_extent,soil_vertical_dimension)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [snowc]
   standard_name = surface_snow_area_fraction
   long_name = surface snow area fraction
@@ -9180,6 +9266,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [snowd_ice]
   standard_name = surface_snow_thickness_water_equivalent_over_ice
   long_name = water equivalent snow depth over ice
@@ -9194,6 +9281,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [snohf]
   standard_name = snow_freezing_rain_upward_latent_heat_flux
   long_name = latent heat flux due to snow and frz rain
@@ -9208,6 +9296,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [snohf_frzgra]
   standard_name = latent_heat_flux_from_freezing_rain
   long_name = latent heat flux due to freezing rain
@@ -9215,6 +9304,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [snohf_snowmelt]
   standard_name = latent_heat_flux_due_to_snowmelt
   long_name = latent heat flux due to snowmelt phase change
@@ -9222,6 +9312,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [snowmp]
   standard_name = lwe_thickness_of_snow_amount
   long_name = explicit snow fall on physics timestep
@@ -9244,6 +9335,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [soiltype]
   standard_name = soil_type_classification
   long_name = soil type at each grid cell
@@ -9257,6 +9349,7 @@
   dimensions = (horizontal_loop_extent,soil_vertical_dimension)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [sthick]
   standard_name = soil_layer_thickness
   long_name = soil layer thickness
@@ -9264,6 +9357,7 @@
   dimensions = (soil_vertical_dimension)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [stress]
   standard_name = surface_wind_stress
   long_name = surface wind stress
@@ -9314,6 +9408,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [tice]
   standard_name = sea_ice_temperature_interstitial
   long_name = sea ice surface skin temperature use as interstitial
@@ -9363,6 +9458,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [tracers_start_index]
   standard_name = start_index_of_other_tracers
   long_name = beginning index of the non-water tracer species
@@ -9423,6 +9519,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [tsfc_ice]
   standard_name = surface_skin_temperature_over_ice_interstitial
   long_name = surface skin temperature over ice   (temporary use as interstitial)
@@ -9437,13 +9534,6 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[sktp1r]
-  standard_name = surface_ground_temperature_for_radiation_at_previous_rad_time_step
-  long_name = surface ground temperature for radiation at previous radiation time step
-  units = K
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys 
 [tsurf]
   standard_name = surface_skin_temperature_after_iteration
   long_name = surface skin temperature after iteration
@@ -9569,6 +9659,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+  active = (flag_for_land_surface_scheme == flag_for_noah_wrfv4_land_surface_scheme)
 [weasd_ice]
   standard_name = water_equivalent_accumulated_snow_depth_over_ice
   long_name = water equiv of acc snow depth over ice
