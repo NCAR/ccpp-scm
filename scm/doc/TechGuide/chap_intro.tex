@@ -9,21 +9,16 @@ Please refer to the release web page for further documentation and user notes:\\
 
 \section{Version Notes}
 
-The CCPP SCM v4.0 contains the following major and minor changes since v3.0.
+The CCPP SCM v4.1.0 contains the following major and minor changes since v4.0.
 
 Major
 \begin{itemize}
-\item Codebase updated to work with latest ccpp-framework (v4.0) and ccpp-physics (v4.0), allowing use of 6 supported physics suites
-\item Support added for NOAA's Hera HPC platform and Docker containers
-\item Support added for CCPP's ``static'' build. This release no longer supports the ``dynamic'' build.
-\item Added capability to utilize UFS initial conditions and initialize the Noah LSM (without advective forcing)
+\item None
 \end{itemize}
 
 Minor
 \begin{itemize}
-\item Integrated CCPP code generation with the CMake step
-\item Adopted the new CCPP metadata format
-\item Name change: this code is now known as the CCPP SCM instead of the ``GMTB'' SCM, although filenames in the code have not been changed yet.
+\item Added Python 3 compatibility for run scripts and unsupported plotting scripts
 \end{itemize}
 
 \subsection{Limitations}
@@ -40,5 +35,5 @@ This release bundle has some known limitations:
 \item NOTE: If one can develop appropriate initial conditions for the LSMs for the supplied cases over land points, there should be no technical reason why they cannot be used with LSMs, however.
 \end{itemize}
 \item As of this release, using the SCM over a land point with an LSM is possible through the use of UFS initial conditions (see section \ref{sec:UFS ICs}). However, advective forcing terms are unavailable as of this release, so only short integrations using this configuration should be employed. Using dynamical tendencies (advective forcing terms) from the UFS will be part of a future release.
-\item There are several capabilities of the developmental code that have not been tested sufficiently to be considered part of the supported release. Those include additional parameterizations, such as the Noah Multi-Parameterization (Noah-MP) scheme. User that want to use experimental capabilities should refer to Subsection \ref{section: development_code}.
+\item There are several capabilities of the developmental code that have not been tested sufficiently to be considered part of the supported release. Those include additional parameterizations, such as the Noah Multi-Parameterization (Noah-MP) scheme. Users that want to use experimental capabilities should refer to Subsection \ref{section: development_code}.
 \end{itemize}
