@@ -417,7 +417,17 @@ subroutine output_init(scm_state, physics)
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-
+  
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='atmosphere_boundary_layer_thickness',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="atmosphere boundary layer thickness"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='atmosphere_heat_diffusivity',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="diffusivity for heat"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m2 s-1"))
+  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='atmosphere_momentum_diffusivity',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="diffusivity for momentum"))
+  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m2 s-1"))
+  
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_year',XTYPE=NF90_FLOAT,VARID=year_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="description",VALUES="model initialization year"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="units",VALUES=""))
@@ -904,6 +914,32 @@ subroutine output_append(scm_state, physics)
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
+  
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="atmosphere_boundary_layer_thickness",VARID=var_id))
+  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Tbd%hpbl(:),START=(/1,scm_state%itt_out /)))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="atmosphere_heat_diffusivity",VARID=var_id))
+  if (physics%Model%do_mynnedmf) then
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Diag%exch_h(:,:),START=(/1,1,scm_state%itt_out /)))
+  else
+    !since this variable is only defined on n_levels - 1, fill in the top value with zero
+    do i=1, scm_state%n_cols
+      dummy_2D(i,:) = physics%Interstitial%dkt(i,:)
+      dummy_2D(i,scm_state%n_levels) = 0.0
+    end do
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  end if
+  
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="atmosphere_momentum_diffusivity",VARID=var_id))
+  if (physics%Model%do_mynnedmf) then
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Diag%exch_m(:,:),START=(/1,1,scm_state%itt_out /)))
+  else
+    !since this variable is only defined on n_levels - 1, fill in the top value with zero
+    do i=1, scm_state%n_cols
+      dummy_2D(i,:) = physics%Interstitial%dku(i,:)
+      dummy_2D(i,scm_state%n_levels) = 0.0
+    end do
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
+  end if
   
   if (physics%Model%naux2d > 0) then
     do j=1, physics%Model%naux2d
