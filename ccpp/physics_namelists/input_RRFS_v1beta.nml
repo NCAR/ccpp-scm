@@ -1,3 +1,4 @@
+
 &cires_ugwp_nml
     knob_ugwp_azdir = 2,4,4,4
     knob_ugwp_doaxyz = 1
@@ -25,6 +26,7 @@
     debug = .false.
     do_mynnedmf = .true.
     do_mynnsfclay = .true.
+    do_sfcperts = .false.
     do_shum = .false.
     do_skeb = .false.
     do_sppt = .false.
@@ -76,7 +78,4 @@
     ttendlim = 50.0
     use_ufo = .true.
     do_deep = .false.
-    effr_in = .true.
-    iovr_lw = 3
-    iovr_sw = 3
 /
