@@ -77,4 +77,6 @@
     use_ufo = .true.
     do_deep = .false.
     effr_in = .true.
+    iovr_lw = 3
+    iovr_sw = 3
 /
