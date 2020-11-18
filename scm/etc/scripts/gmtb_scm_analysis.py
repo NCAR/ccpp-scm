@@ -222,6 +222,14 @@ rh = []
 rh_500 = []
 rad_net_srf = []
 lwp = []
+atmosphere_boundary_layer_thickness = []
+atmosphere_heat_diffusivity = []
+atmosphere_momentum_diffusivity = []
+upward_mass_flux_of_air_due_to_subgrid_scale_vertical_mixing = []
+subgrid_scale_vertical_flux_of_potential_temperature = []
+subgrid_scale_vertical_flux_of_specific_humidity = []
+subgrid_scale_vertical_flux_of_x_wind = []
+subgrid_scale_vertical_flux_of_y_wind = []
 
 time_slice_indices = []
 time_slice_labels = []
@@ -325,6 +333,53 @@ for i in range(len(gmtb_scm_datasets)):
     # lw_up_sfc_clr.append(nc_fid.variables['lw_up_sfc_clr'][:])
     # lw_dn_sfc_tot.append(nc_fid.variables['lw_dn_sfc_tot'][:])
     # lw_dn_sfc_clr.append(nc_fid.variables['lw_dn_sfc_clr'][:])
+    try:
+        atmosphere_boundary_layer_thickness.append(nc_fid.variables['atmosphere_boundary_layer_thickness'][:])
+    except:
+        print("Could not find {0} in {1}".format("atmosphere_boundary_layer_thickness",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        atmosphere_heat_diffusivity.append(nc_fid.variables['atmosphere_heat_diffusivity'][:])
+    except:
+        print("Could not find {0} in {1}".format("atmosphere_heat_diffusivity",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        atmosphere_momentum_diffusivity.append(nc_fid.variables['atmosphere_momentum_diffusivity'][:])
+    except:
+        print("Could not find {0} in {1}".format("atmosphere_momentum_diffusivity",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        upward_mass_flux_of_air_due_to_subgrid_scale_vertical_mixing.append(nc_fid.variables['upward_mass_flux_of_air_due_to_subgrid_scale_vertical_mixing'][:])
+    except:
+        print("Could not find {0} in {1}".format("upward_mass_flux_of_air_due_to_subgrid_scale_vertical_mixing",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        subgrid_scale_vertical_flux_of_potential_temperature.append(nc_fid.variables['subgrid_scale_vertical_flux_of_potential_temperature'][:])
+    except:
+        print("Could not find {0} in {1}".format("subgrid_scale_vertical_flux_of_potential_temperature",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        subgrid_scale_vertical_flux_of_specific_humidity.append(nc_fid.variables['subgrid_scale_vertical_flux_of_specific_humidity'][:])
+    except:
+        print("Could not find {0} in {1}".format("subgrid_scale_vertical_flux_of_specific_humidity",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        subgrid_scale_vertical_flux_of_x_wind.append(nc_fid.variables['subgrid_scale_vertical_flux_of_x_wind'][:])
+    except:
+        print("Could not find {0} in {1}".format("subgrid_scale_vertical_flux_of_x_wind",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        subgrid_scale_vertical_flux_of_y_wind.append(nc_fid.variables['subgrid_scale_vertical_flux_of_y_wind'][:])
+    except:
+        print("Could not find {0} in {1}".format("subgrid_scale_vertical_flux_of_y_wind",gmtb_scm_datasets[i]))
+        exit()
 
     initial_date = datetime.datetime(year[i], month[i], day[i], hour[i], 0, 0, 0)
     

@@ -1799,6 +1799,7 @@ module GFS_typedefs
     integer                             :: lmk                           !<
     integer                             :: lmp                           !<
     integer,               pointer      :: mbota(:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: mflx_pbl(:,:)      => null()  !<
     logical                             :: mg3_as_mg2                    !<
     integer,               pointer      :: mtopa(:,:)         => null()  !<
     integer                             :: nbdlw                         !<
@@ -1875,6 +1876,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: semis_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: semis_ocean(:)     => null()  !<
     real (kind=kind_phys), pointer      :: sfcalb(:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: sgs_vert_flx_th(:,:) => null()!<
+    real (kind=kind_phys), pointer      :: sgs_vert_flx_q(:,:) => null() !<
+    real (kind=kind_phys), pointer      :: sgs_vert_flx_u(:,:) => null() !<
+    real (kind=kind_phys), pointer      :: sgs_vert_flx_v(:,:) => null() !<
     real (kind=kind_phys), pointer      :: sigma(:)           => null()  !<
     real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !<
     real (kind=kind_phys), pointer      :: sigmafrac(:,:)     => null()  !<
@@ -6161,6 +6166,7 @@ module GFS_typedefs
     allocate (Interstitial%kpbl            (IM))
     allocate (Interstitial%ktop            (IM))
     allocate (Interstitial%mbota           (IM,3))
+    allocate (Interstitial%mflx_pbl        (IM,Model%levs))
     allocate (Interstitial%mtopa           (IM,3))
     allocate (Interstitial%oa4             (IM,4))
     allocate (Interstitial%oc              (IM))
@@ -6195,6 +6201,10 @@ module GFS_typedefs
     allocate (Interstitial%semis_land      (IM))
     allocate (Interstitial%semis_ocean     (IM))
     allocate (Interstitial%sfcalb          (IM,NF_ALBD))
+    allocate (Interstitial%sgs_vert_flx_th (IM,Model%levs))
+    allocate (Interstitial%sgs_vert_flx_q  (IM,Model%levs))
+    allocate (Interstitial%sgs_vert_flx_u  (IM,Model%levs))
+    allocate (Interstitial%sgs_vert_flx_v  (IM,Model%levs))
     allocate (Interstitial%sigma           (IM))
     allocate (Interstitial%sigmaf          (IM))
     allocate (Interstitial%sigmafrac       (IM,Model%levs))
@@ -6669,6 +6679,10 @@ module GFS_typedefs
     Interstitial%scmpsw%visbm = clear_val
     Interstitial%scmpsw%visdf = clear_val
     Interstitial%sfcalb       = clear_val
+    Interstitial%sgs_vert_flx_th = clear_val
+    Interstitial%sgs_vert_flx_q = clear_val
+    Interstitial%sgs_vert_flx_u = clear_val
+    Interstitial%sgs_vert_flx_v = clear_val
     Interstitial%tlvl         = clear_val
     Interstitial%tlyr         = clear_val
     Interstitial%tsfa         = clear_val
@@ -6862,6 +6876,7 @@ module GFS_typedefs
     Interstitial%kinver          = Model%levs
     Interstitial%kpbl            = 0
     Interstitial%ktop            = 1
+    Interstitial%mflx_pbl        = clear_val
     Interstitial%oa4             = clear_val
     Interstitial%oc              = clear_val
     Interstitial%prcpmp          = clear_val
@@ -7231,6 +7246,7 @@ module GFS_typedefs
     write (0,*) 'Interstitial%kt                    = ', Interstitial%kt
     write (0,*) 'sum(Interstitial%ktop            ) = ', sum(Interstitial%ktop            )
     write (0,*) 'sum(Interstitial%mbota           ) = ', sum(Interstitial%mbota           )
+    write (0,*) 'sum(Interstitial%mflx_pbl        ) = ', sum(Interstitial%mflx_pbl        )
     write (0,*) 'sum(Interstitial%mtopa           ) = ', sum(Interstitial%mtopa           )
     write (0,*) 'Interstitial%nday                  = ', Interstitial%nday
     write (0,*) 'sum(Interstitial%oa4             ) = ', sum(Interstitial%oa4             )
@@ -7273,6 +7289,10 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%semis_land      ) = ', sum(Interstitial%semis_land      )
     write (0,*) 'sum(Interstitial%semis_ocean     ) = ', sum(Interstitial%semis_ocean     )
     write (0,*) 'sum(Interstitial%sfcalb          ) = ', sum(Interstitial%sfcalb          )
+    write (0,*) 'sum(Interstitial%sgs_vert_flx_th ) = ', sum(Interstitial%sgs_vert_flx_th )
+    write (0,*) 'sum(Interstitial%sgs_vert_flx_q  ) = ', sum(Interstitial%sgs_vert_flx_q  )
+    write (0,*) 'sum(Interstitial%sgs_vert_flx_u  ) = ', sum(Interstitial%sgs_vert_flx_u  )
+    write (0,*) 'sum(Interstitial%sgs_vert_flx_v  ) = ', sum(Interstitial%sgs_vert_flx_v  )
     write (0,*) 'sum(Interstitial%sigma           ) = ', sum(Interstitial%sigma           )
     write (0,*) 'sum(Interstitial%sigmaf          ) = ', sum(Interstitial%sigmaf          )
     write (0,*) 'sum(Interstitial%sigmafrac       ) = ', sum(Interstitial%sigmafrac       )

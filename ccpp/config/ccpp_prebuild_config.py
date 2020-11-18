@@ -153,6 +153,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/mp_thompson_post.F90'             ,
     'ccpp/physics/physics/ozphys.f'                         ,
     'ccpp/physics/physics/ozphys_2015.f'                    ,
+    'ccpp/physics/physics/PBL_flux_diag.F90'                ,
     'ccpp/physics/physics/precpd.f'                         ,
     'ccpp/physics/physics/phys_tend.F90'                    ,
     'ccpp/physics/physics/radlw_main.F90'                   ,
