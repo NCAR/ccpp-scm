@@ -57,6 +57,7 @@
       <scheme>sfc_diag_post</scheme>
       <scheme>GFS_surface_generic_post</scheme>
       <scheme>mynnedmf_wrapper</scheme>
+      <scheme>PBL_flux_diag</scheme>
       <scheme>GFS_GWD_generic_pre</scheme>
       <scheme>cires_ugwp</scheme>
       <scheme>cires_ugwp_post</scheme>

@@ -3353,7 +3353,7 @@ module GFS_typedefs
                                bl_mynn_cloudpdf, bl_mynn_edmf, bl_mynn_edmf_mom,            &
                                bl_mynn_edmf_tke, bl_mynn_edmf_part, bl_mynn_cloudmix,       &
                                bl_mynn_mixqt, bl_mynn_output, icloud_bl, bl_mynn_tkeadvect, &
-                               gwd_opt,                                                     &
+                               bl_mynn_tkebudget, gwd_opt,                                  &
                                var_ric, coef_ric_l, coef_ric_s, hurr_pbl,                   &
                                do_myjsfc, do_myjpbl,                                        &
                                hwrf_samfdeep, hwrf_samfshal,                                &
@@ -3908,6 +3908,7 @@ module GFS_typedefs
     Model%bl_mynn_mixqt     = bl_mynn_mixqt
     Model%bl_mynn_output    = bl_mynn_output
     Model%bl_mynn_edmf_part = bl_mynn_edmf_part
+    Model%bl_mynn_tkebudget = bl_mynn_tkebudget
     Model%bl_mynn_tkeadvect = bl_mynn_tkeadvect
     Model%grav_settling     = grav_settling
     Model%icloud_bl         = icloud_bl

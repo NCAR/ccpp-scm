@@ -992,7 +992,11 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%sgs_vert_flx_v(:,:),START=(/1,1,scm_state%itt_out /)))
   if (scm_state%tke_index > 0) then
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="turbulent_mixing_length",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%tke_mix_len(:,:),START=(/1,1,scm_state%itt_out /)))
+    if (physics%Model%do_mynnedmf) then
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Tbd%el_pbl(:,:),START=(/1,1,scm_state%itt_out /)))
+    else
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%tke_mix_len(:,:),START=(/1,1,scm_state%itt_out /)))
+    end if
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="surface_layer_turbulent_mixing_length",VARID=var_id))
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%sfc_lay_mix_len(:,:),START=(/1,1,scm_state%itt_out /)))
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="turbulent_kinetic_energy_buoyancy_production_term",VARID=var_id))
