@@ -1913,6 +1913,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: theta(:)           => null()  !<
     real (kind=kind_phys), pointer      :: th1(:)             => null()  !<
     real (kind=kind_phys), pointer      :: tice(:)            => null()  !<
+    real (kind=kind_phys), pointer      :: tke_mix_len(:,:)   => null()  !<
+    real (kind=kind_phys), pointer      :: tke_buoy_prod(:,:) => null()  !<
+    real (kind=kind_phys), pointer      :: tke_shear_prod(:,:)=> null()  !<
+    real (kind=kind_phys), pointer      :: tke_diss(:,:)      => null()  !<
+    real (kind=kind_phys), pointer      :: sfc_lay_mix_len(:,:) => null()  !<
     real (kind=kind_phys), pointer      :: tlvl(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tlyr(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tprcp_ice(:)       => null()  !<
@@ -6222,6 +6227,11 @@ module GFS_typedefs
     allocate (Interstitial%stress_land     (IM))
     allocate (Interstitial%stress_ocean    (IM))
     allocate (Interstitial%theta           (IM))
+    allocate (Interstitial%tke_mix_len     (IM,Model%levs))
+    allocate (Interstitial%tke_buoy_prod   (IM,Model%levs))
+    allocate (Interstitial%tke_shear_prod  (IM,Model%levs))
+    allocate (Interstitial%tke_diss        (IM,Model%levs))
+    allocate (Interstitial%sfc_lay_mix_len (IM,Model%levs))
     allocate (Interstitial%tice            (IM))
     allocate (Interstitial%tlvl            (IM,Model%levr+1+LTP))
     allocate (Interstitial%tlyr            (IM,Model%levr+LTP))
@@ -6921,6 +6931,11 @@ module GFS_typedefs
     Interstitial%stress_ocean    = huge
     Interstitial%theta           = clear_val
     Interstitial%tice            = clear_val
+    Interstitial%tke_mix_len     = clear_val
+    Interstitial%tke_buoy_prod   = clear_val
+    Interstitial%tke_shear_prod  = clear_val
+    Interstitial%tke_diss        = clear_val
+    Interstitial%sfc_lay_mix_len = clear_val
     Interstitial%tprcp_ice       = huge
     Interstitial%tprcp_land      = huge
     Interstitial%tprcp_ocean     = huge
@@ -7311,6 +7326,11 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%stress_ocean    ) = ', sum(Interstitial%stress_ocean    )
     write (0,*) 'sum(Interstitial%theta           ) = ', sum(Interstitial%theta           )
     write (0,*) 'sum(Interstitial%tice            ) = ', sum(Interstitial%tice            )
+    write (0,*) 'sum(Interstitial%tke_mix_len     ) = ', sum(Interstitial%tke_mix_len     )
+    write (0,*) 'sum(Interstitial%tke_buoy_prod   ) = ', sum(Interstitial%tke_buoy_prod   )
+    write (0,*) 'sum(Interstitial%tke_shear_prod  ) = ', sum(Interstitial%tke_shear_prod  )
+    write (0,*) 'sum(Interstitial%tke_diss        ) = ', sum(Interstitial%tke_diss        )
+    write (0,*) 'sum(Interstitial%sfc_lay_mix_len ) = ', sum(Interstitial%sfc_lay_mix_len )
     write (0,*) 'sum(Interstitial%tlvl            ) = ', sum(Interstitial%tlvl            )
     write (0,*) 'sum(Interstitial%tlyr            ) = ', sum(Interstitial%tlyr            )
     write (0,*) 'sum(Interstitial%tprcp_ice       ) = ', sum(Interstitial%tprcp_ice       )

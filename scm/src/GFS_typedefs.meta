@@ -9458,6 +9458,41 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+[tke_mix_len]
+  standard_name = turbulent_mixing_length
+  long_name = characteristic turbulence mixing length
+  units = m
+  dimensions = (horizontal_loop_extent, vertical_dimension)
+  type = real
+  kind = kind_phys
+[tke_buoy_prod]
+  standard_name = turbulent_kinetic_energy_buoyancy_production_term
+  long_name = buoyancy term in the TKE prognostic equation
+  units = m2 s-3
+  dimensions = (horizontal_loop_extent, vertical_dimension)
+  type = real
+  kind = kind_phys
+[tke_shear_prod]
+  standard_name = turbulent_kinetic_energy_shear_production_term
+  long_name = shear term in the TKE prognostic equation
+  units = m2 s-3
+  dimensions = (horizontal_loop_extent, vertical_dimension)
+  type = real
+  kind = kind_phys
+[tke_diss]
+  standard_name = turbulent_kinetic_energy_dissipation_term
+  long_name = dissipation term in the TKE prognostic term
+  units = m2 s-3
+  dimensions = (horizontal_loop_extent, vertical_dimension)
+  type = real
+  kind = kind_phys
+[sfc_lay_mix_len]
+  standard_name = surface_layer_turbulent_mixing_length
+  long_name = turbulent mixing length for the surface layer
+  units = m
+  dimensions = (horizontal_loop_extent, vertical_dimension)
+  type = real
+  kind = kind_phys
 [tlvl]
   standard_name = air_temperature_at_interface_for_radiation
   long_name = air temperature at vertical interface for radiation calculation

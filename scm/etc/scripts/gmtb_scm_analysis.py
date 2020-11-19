@@ -134,6 +134,7 @@ T = []
 u = []
 v = []
 qc = []
+tke = []
 qv_force_tend = []
 T_force_tend = []
 u_force_tend = []
@@ -230,6 +231,11 @@ subgrid_scale_vertical_flux_of_potential_temperature = []
 subgrid_scale_vertical_flux_of_specific_humidity = []
 subgrid_scale_vertical_flux_of_x_wind = []
 subgrid_scale_vertical_flux_of_y_wind = []
+turbulent_mixing_length = []
+surface_layer_turbulent_mixing_length = []
+turbulent_kinetic_energy_buoyancy_production_term = []
+turbulent_kinetic_energy_shear_production_term = []
+turbulent_kinetic_energy_dissipation_term = []
 
 time_slice_indices = []
 time_slice_labels = []
@@ -256,6 +262,11 @@ for i in range(len(gmtb_scm_datasets)):
     u.append(nc_fid.variables['u'][:])
     v.append(nc_fid.variables['v'][:])
     qc.append(nc_fid.variables['qc'][:])
+    try:
+        tke.append(nc_fid.variables['tke'][:])
+    except:
+        print("Could not find {0} in {1}".format("tke",gmtb_scm_datasets[i]))
+        exit()
     qv_force_tend.append(nc_fid.variables['qv_force_tend'][:]*86400.0*1.0E3)
     T_force_tend.append(nc_fid.variables['T_force_tend'][:]*86400.0)
     u_force_tend.append(nc_fid.variables['u_force_tend'][:]*86400.0)
@@ -380,7 +391,37 @@ for i in range(len(gmtb_scm_datasets)):
     except:
         print("Could not find {0} in {1}".format("subgrid_scale_vertical_flux_of_y_wind",gmtb_scm_datasets[i]))
         exit()
-
+    
+    try:
+        turbulent_mixing_length.append(nc_fid.variables['turbulent_mixing_length'][:])
+    except:
+        print("Could not find {0} in {1}".format("turbulent_mixing_length",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        surface_layer_turbulent_mixing_length.append(nc_fid.variables['surface_layer_turbulent_mixing_length'][:])
+    except:
+        print("Could not find {0} in {1}".format("surface_layer_turbulent_mixing_length",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        turbulent_kinetic_energy_buoyancy_production_term.append(nc_fid.variables['turbulent_kinetic_energy_buoyancy_production_term'][:])
+    except:
+        print("Could not find {0} in {1}".format("turbulent_kinetic_energy_buoyancy_production_term",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        turbulent_kinetic_energy_shear_production_term.append(nc_fid.variables['turbulent_kinetic_energy_shear_production_term'][:])
+    except:
+        print("Could not find {0} in {1}".format("turbulent_kinetic_energy_shear_production_term",gmtb_scm_datasets[i]))
+        exit()
+    
+    try:
+        turbulent_kinetic_energy_dissipation_term.append(-1*nc_fid.variables['turbulent_kinetic_energy_dissipation_term'][:])
+    except:
+        print("Could not find {0} in {1}".format("turbulent_kinetic_energy_dissipation_term",gmtb_scm_datasets[i]))
+        exit()
+    
     initial_date = datetime.datetime(year[i], month[i], day[i], hour[i], 0, 0, 0)
     
     #convert times to datetime objects starting from initial date

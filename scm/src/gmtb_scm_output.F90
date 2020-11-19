@@ -79,7 +79,11 @@ subroutine output_init(scm_state, physics)
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="suspended total cloud water on model layer centers"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
-
+  if(scm_state%tke_index > 0) then
+    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tke',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="turbulent kinetic energy on model layer centers"))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m2 s-2"))
+  end if
   !> - Define the forcing-related variables.
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qv_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
     VARID=dummy_id))
@@ -442,7 +446,23 @@ subroutine output_init(scm_state, physics)
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='subgrid_scale_vertical_flux_of_y_wind',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="subgrid-scale vertical flux of y-wind from PBL scheme"))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m2 s-2"))
-  
+  if(scm_state%tke_index > 0) then
+    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='turbulent_mixing_length',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="characteristic turbulence mixing length"))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m"))
+    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='surface_layer_turbulent_mixing_length',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="turbulent mixing length for the surface layer"))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m"))
+    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='turbulent_kinetic_energy_buoyancy_production_term',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="buoyancy term in the TKE prognostic equation"))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m2 s-3"))
+    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='turbulent_kinetic_energy_shear_production_term',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="shear term in the TKE prognostic equation"))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m2 s-3"))
+    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='turbulent_kinetic_energy_dissipation_term',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="dissipation term in the TKE prognostic equation"))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m2 s-3"))
+  end if
   
   CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_year',XTYPE=NF90_FLOAT,VARID=year_id))
   CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="description",VALUES="model initialization year"))
@@ -552,6 +572,10 @@ subroutine output_append(scm_state, physics)
       scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1),&
       START=(/1,1,scm_state%itt_out /)))
   endif
+  if (scm_state%tke_index > 0) then
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tke",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_tracer(:,:,scm_state%tke_index,1),START=(/1,1,scm_state%itt_out /)))
+  end if
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv_force_tend",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%qv_force_tend(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_force_tend",VARID=var_id))
@@ -966,6 +990,18 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%sgs_vert_flx_u(:,:),START=(/1,1,scm_state%itt_out /)))
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="subgrid_scale_vertical_flux_of_y_wind",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%sgs_vert_flx_v(:,:),START=(/1,1,scm_state%itt_out /)))
+  if (scm_state%tke_index > 0) then
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="turbulent_mixing_length",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%tke_mix_len(:,:),START=(/1,1,scm_state%itt_out /)))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="surface_layer_turbulent_mixing_length",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%sfc_lay_mix_len(:,:),START=(/1,1,scm_state%itt_out /)))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="turbulent_kinetic_energy_buoyancy_production_term",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%tke_buoy_prod(:,:),START=(/1,1,scm_state%itt_out /)))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="turbulent_kinetic_energy_shear_production_term",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%tke_shear_prod(:,:),START=(/1,1,scm_state%itt_out /)))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="turbulent_kinetic_energy_dissipation_term",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%tke_diss(:,:),START=(/1,1,scm_state%itt_out /)))
+  end if
   
   if (physics%Model%naux2d > 0) then
     do j=1, physics%Model%naux2d
