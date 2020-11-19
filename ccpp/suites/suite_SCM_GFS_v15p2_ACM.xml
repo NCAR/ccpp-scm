@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_GFS_v15p2_saYSU_ps" version="1">
+<suite name="SCM_GFS_v15p2_ACM" version="1">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>
@@ -29,11 +29,30 @@
       <scheme>get_prs_fv3</scheme>
       <scheme>GFS_suite_interstitial_1</scheme>
       <scheme>GFS_surface_generic_pre</scheme>
+      <scheme>GFS_surface_composites_pre</scheme>
       <scheme>dcyc2t3</scheme>
+      <scheme>GFS_surface_composites_inter</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
-      <scheme>gmtb_scm_sfc_flux_spec</scheme>
+      </subcycle>
+    <!-- Surface iteration loop -->
+    <subcycle loop="2">
+      <scheme>sfc_diff</scheme>
+      <scheme>GFS_surface_loop_control_part1</scheme>
+      <scheme>sfc_nst_pre</scheme>
+      <scheme>sfc_nst</scheme>
+      <scheme>sfc_nst_post</scheme>
+      <scheme>lsm_noah</scheme>
+      <scheme>sfc_sice</scheme>
+      <scheme>GFS_surface_loop_control_part2</scheme>
+    </subcycle>
+    <!-- End of surface iteration loop -->
+    <subcycle loop="1">
+      <scheme>GFS_surface_composites_post</scheme>
+      <scheme>sfc_diag</scheme>
+      <scheme>sfc_diag_post</scheme>
+      <scheme>GFS_surface_generic_post</scheme>
       <scheme>GFS_PBL_generic_pre</scheme>
-      <scheme>shinhongvdif</scheme>
+      <scheme>bl_acm</scheme>
       <scheme>GFS_PBL_generic_post</scheme>
       <scheme>PBL_flux_diag</scheme>
       <scheme>GFS_GWD_generic_pre</scheme>

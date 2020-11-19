@@ -21,6 +21,7 @@ import gmtb_scm_plotting_routines as gspr
 import pandas as pd
 import bisect
 import gmtb_scm_read_obs as gsro
+import traceback
 
 Rd = 287.0
 Rv = 461.0
@@ -264,9 +265,11 @@ for i in range(len(gmtb_scm_datasets)):
     qc.append(nc_fid.variables['qc'][:])
     try:
         tke.append(nc_fid.variables['tke'][:])
-    except:
+    except KeyError:
         print("Could not find {0} in {1}".format("tke",gmtb_scm_datasets[i]))
-        exit()
+        print("Filling with zero values for dataset {0}".format(gmtb_scm_datasets[i]))
+        #assume TKE has same shape as qv since they both are advected tracers
+        tke.append(np.zeros(np.shape(qv[-1])))
     qv_force_tend.append(nc_fid.variables['qv_force_tend'][:]*86400.0*1.0E3)
     T_force_tend.append(nc_fid.variables['T_force_tend'][:]*86400.0)
     u_force_tend.append(nc_fid.variables['u_force_tend'][:]*86400.0)
@@ -346,9 +349,11 @@ for i in range(len(gmtb_scm_datasets)):
     # lw_dn_sfc_clr.append(nc_fid.variables['lw_dn_sfc_clr'][:])
     try:
         atmosphere_boundary_layer_thickness.append(nc_fid.variables['atmosphere_boundary_layer_thickness'][:])
-    except:
+    except KeyError:
         print("Could not find {0} in {1}".format("atmosphere_boundary_layer_thickness",gmtb_scm_datasets[i]))
-        exit()
+        print("Filling with zero values for dataset {0}".format(gmtb_scm_datasets[i]))
+        #assume atmosphere_boundary_layer_thickness has same shape as shf since they both "2D" variables
+        atmosphere_boundary_layer_thickness.append(np.zeros(np.shape(shf[-1])))
     
     try:
         atmosphere_heat_diffusivity.append(nc_fid.variables['atmosphere_heat_diffusivity'][:])
@@ -394,33 +399,43 @@ for i in range(len(gmtb_scm_datasets)):
     
     try:
         turbulent_mixing_length.append(nc_fid.variables['turbulent_mixing_length'][:])
-    except:
+    except KeyError:
         print("Could not find {0} in {1}".format("turbulent_mixing_length",gmtb_scm_datasets[i]))
-        exit()
-    
+        print("Filling with zero values for dataset {0}".format(gmtb_scm_datasets[i]))
+        #assume turbulent_mixing_length has same shape as qv since they are both "3D" variables
+        turbulent_mixing_length.append(np.zeros(np.shape(qv[-1])))
+
     try:
         surface_layer_turbulent_mixing_length.append(nc_fid.variables['surface_layer_turbulent_mixing_length'][:])
-    except:
+    except KeyError:
         print("Could not find {0} in {1}".format("surface_layer_turbulent_mixing_length",gmtb_scm_datasets[i]))
-        exit()
+        print("Filling with zero values for dataset {0}".format(gmtb_scm_datasets[i]))
+        #assume surface_layer_turbulent_mixing_length has same shape as qv since they are both "3D" variables
+        surface_layer_turbulent_mixing_length.append(np.zeros(np.shape(qv[-1])))
     
     try:
         turbulent_kinetic_energy_buoyancy_production_term.append(nc_fid.variables['turbulent_kinetic_energy_buoyancy_production_term'][:])
     except:
         print("Could not find {0} in {1}".format("turbulent_kinetic_energy_buoyancy_production_term",gmtb_scm_datasets[i]))
-        exit()
+        print("Filling with zero values for dataset {0}".format(gmtb_scm_datasets[i]))
+        #assume turbulent_kinetic_energy_buoyancy_production_term has same shape as qv since they are both "3D" variables
+        turbulent_kinetic_energy_buoyancy_production_term.append(np.zeros(np.shape(qv[-1])))
     
     try:
         turbulent_kinetic_energy_shear_production_term.append(nc_fid.variables['turbulent_kinetic_energy_shear_production_term'][:])
     except:
         print("Could not find {0} in {1}".format("turbulent_kinetic_energy_shear_production_term",gmtb_scm_datasets[i]))
-        exit()
+        print("Filling with zero values for dataset {0}".format(gmtb_scm_datasets[i]))
+        #assume turbulent_kinetic_energy_shear_production_term has same shape as qv since they are both "3D" variables
+        turbulent_kinetic_energy_shear_production_term.append(np.zeros(np.shape(qv[-1])))
     
     try:
         turbulent_kinetic_energy_dissipation_term.append(-1*nc_fid.variables['turbulent_kinetic_energy_dissipation_term'][:])
     except:
         print("Could not find {0} in {1}".format("turbulent_kinetic_energy_dissipation_term",gmtb_scm_datasets[i]))
-        exit()
+        print("Filling with zero values for dataset {0}".format(gmtb_scm_datasets[i]))
+        #assume turbulent_kinetic_energy_dissipation_term has same shape as qv since they are both "3D" variables
+        turbulent_kinetic_energy_dissipation_term.append(np.zeros(np.shape(qv[-1])))
     
     initial_date = datetime.datetime(year[i], month[i], day[i], hour[i], 0, 0, 0)
     
