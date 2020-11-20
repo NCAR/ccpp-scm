@@ -3585,6 +3585,12 @@
   units = flag
   dimensions = ()
   type = logical
+[pbl_mass_flux]
+  standard_name = flag_for_activating_pbl_mass_flux
+  long_name = flag for turning on mass flux code in EDMF-based PBL schemes
+  units = flag
+  dimensions = ()
+  type = logical
 [dspheat]
   standard_name = flag_TKE_dissipation_heating
   long_name = flag for tke dissipative heating

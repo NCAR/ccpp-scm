@@ -835,6 +835,7 @@ module GFS_typedefs
     logical              :: hybedmf         !< flag for hybrid edmf pbl scheme
     logical              :: satmedmf        !< flag for scale-aware TKE-based moist edmf
                                             !< vertical turbulent mixing scheme
+    logical              :: pbl_mass_flux   !< flag for activating the mass-flux component of EDMF schemes
     logical              :: shinhong        !< flag for scale-aware Shinhong vertical turbulent mixing scheme
     logical              :: do_ysu          !< flag for YSU turbulent mixing scheme
     logical              :: acm             !< flag for ACM turbulent mixing scheme
@@ -3094,6 +3095,7 @@ module GFS_typedefs
     logical              :: shcnvcw        = .false.                  !< flag for shallow convective cloud
     logical              :: redrag         = .false.                  !< flag for reduced drag coeff. over sea
     logical              :: hybedmf        = .false.                  !< flag for hybrid edmf pbl scheme
+    logical              :: pbl_mass_flux  = .true.                   !< flag for activating the mass-flux component of EDMF schemes
     logical              :: satmedmf       = .false.                  !< flag for scale-aware TKE-based moist edmf
                                                                       !< vertical turbulent mixing scheme
     logical              :: shinhong       = .false.                  !< flag for scale-aware Shinhong vertical turbulent mixing scheme
@@ -3357,8 +3359,8 @@ module GFS_typedefs
                                var_ric, coef_ric_l, coef_ric_s, hurr_pbl,                   &
                                do_myjsfc, do_myjpbl,                                        &
                                hwrf_samfdeep, hwrf_samfshal,                                &
-                               h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
-                               shinhong, do_ysu, acm, dspheat, lheatstrg, cnvcld,           &
+                               h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, pbl_mass_flux,   &
+                               satmedmf, shinhong, do_ysu, acm, dspheat, lheatstrg, cnvcld, &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, isatmedmf,    &
                                do_deep, jcap,                                               &
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
@@ -3866,6 +3868,7 @@ module GFS_typedefs
     Model%shcnvcw           = shcnvcw
     Model%redrag            = redrag
     Model%hybedmf           = hybedmf
+    Model%pbl_mass_flux     = pbl_mass_flux
     Model%satmedmf          = satmedmf
     Model%shinhong          = shinhong
     Model%do_ysu            = do_ysu
@@ -4219,7 +4222,7 @@ module GFS_typedefs
       ! DH* substitute for MYNN namelist section
       Model%icloud_bl         = 1
       !Model%bl_mynn_tkeadvect = .true.
-      Model%bl_mynn_edmf      = 1
+      !Model%bl_mynn_edmf      = 1
       !Model%bl_mynn_edmf_mom  = 1
       ! *DH
       if (Model%me == Model%master) print *,' MYNN-EDMF scheme is used for both',                &
@@ -4885,6 +4888,7 @@ module GFS_typedefs
       print *, ' shcnvcw           : ', Model%shcnvcw
       print *, ' redrag            : ', Model%redrag
       print *, ' hybedmf           : ', Model%hybedmf
+      print *, ' pbl_mass_flux     : ', Model%pbl_mass_flux
       print *, ' satmedmf          : ', Model%satmedmf
       print *, ' isatmedmf         : ', Model%isatmedmf
       print *, ' shinhong          : ', Model%shinhong
