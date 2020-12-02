@@ -1143,49 +1143,9 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     nsnow = len(surface["snicexy"])
     nice = len(surface["tiice"])
     
-    #find out if noahmp ICs have been generated
-    #noahmp = False
-    #if "snicexy" in surface.keys():
-    #    noahmp = True
-        
-    # surface = {
-    #     #NSST
-    #     "tref": tref_in,
-    #     "z_c": z_c_in,
-    #     "c_0": c_0_in,
-    #     "c_d": c_d_in,
-    #     "w_0": w_0_in,
-    #     "w_d": w_d_in,
-    #     "xt": xt_in,
-    #     "xs": xs_in,
-    #     "xu": xu_in,
-    #     "xv": xv_in,
-    #     "xz": xz_in,
-    #     "zm": zm_in,
-    #     "xtts": xtts_in,
-    #     "xzts": xzts_in,
-    #     "d_conv": d_conv_in,
-    #     "ifd": ifd_in,
-    #     "dt_cool": dt_cool_in,
-    #     "qrain": qrain_in,
-    #     #RUC LSM
-    #     "wetness": wetness_in,
-    #     "clw_surf": clw_surf_in,
-    #     "qwv_surf": qwv_surf_in,
-    #     "tsnow": tsnow_in,
-    #     "snowfall_acc": snowfall_acc_in,
-    #     "swe_snowfall_acc": swe_snowfall_acc_in,
-    #     "lai": lai_in,  
-    #     #RUC LSM 3D variables
-    #     "tslb": tslb_in,
-    #     "smois": smois_in,
-    #     "sh2o": sh2o_in,
-    #     "smfr": smfr_in,
-    #     "flfr": flfr_in,        
-    # }
-    
     nc_file = Dataset(os.path.join(PROCESSED_CASE_DIR, case + '.nc'), 'w', format='NETCDF4')
     nc_file.description = "FV3GFS model profile input (no forcing)"
+    nc_file.missing_value = missing_value
     
     #create groups for scalars, intitialization, and forcing
 
@@ -1213,10 +1173,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     soil_depth_var.units = 'm'
     soil_depth_var.description = 'depth of bottom of soil layers'
     
-    #if noahmp:
     snow_dim = nc_file.createDimension('nsnow',None)
     soil_plus_snow_dim = nc_file.createDimension('nsoil_plus_nsnow',None)
-    
     ice_dim = nc_file.createDimension('nice',None)
         
     #initial group
@@ -1276,7 +1234,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     slc_var.units = "kg"
     slc_var.description = "initial profile of soil liquid moisture"
     
-    #if noahmp:
     snicexy_var = initial_grp.createVariable('snicexy',real_type,('nsnow',))
     snicexy_var[:] = surface["snicexy"][0:nsnow]
     snicexy_var.units = "mm"
@@ -1306,6 +1263,31 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     tiice_var[:] = surface["tiice"][0:nice]
     tiice_var.units = "K"
     tiice_var.description = "sea ice internal temperature"
+    
+    tslb_var = initial_grp.createVariable('tslb',real_type,('nsoil',))
+    tslb_var[:] = surface["tslb"][0:nsoil]
+    tslb_var.units = "K"
+    tslb_var.description = "soil temperature for RUC LSM"
+    
+    smois_var = initial_grp.createVariable('smois',real_type,('nsoil',))
+    smois_var[:] = surface["smois"][0:nsoil]
+    smois_var.units = "None"
+    smois_var.description = "volume fraction of soil moisture for RUC LSM"
+    
+    sh2o_var = initial_grp.createVariable('sh2o',real_type,('nsoil',))
+    sh2o_var[:] = surface["sh2o"][0:nsoil]
+    sh2o_var.units = "None"
+    sh2o_var.description = "volume fraction of unfrozen soil moisture for RUC LSM"
+    
+    smfr_var = initial_grp.createVariable('smfr',real_type,('nsoil',))
+    smfr_var[:] = surface["smfr"][0:nsoil]
+    smfr_var.units = "None"
+    smfr_var.description = "volume fraction of frozen soil moisture for RUC LSM"
+    
+    flfr_var = initial_grp.createVariable('flfr',real_type,('nsoil',))
+    flfr_var[:] = surface["flfr"][0:nsoil]
+    flfr_var.units = "None"
+    flfr_var.description = "flag for frozen soil physics for RUC LSM"
     
     #forcing group
 
@@ -1705,7 +1687,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     lake_depth.description = "lake depth"
     
     #NoahMP initial scalar parameters
-    #if noahmp:
     tvxy = scalar_grp.createVariable('tvxy',real_type)
     tvxy[:] = surface["tvxy"]
     tvxy.units = "K"
@@ -1850,6 +1831,133 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     snowxy[:] = surface["snowxy"]
     snowxy.units = ""
     snowxy.description = "number of snow layers"
+    
+    #NSST initial scalar parameters
+    tref = scalar_grp.createVariable('tref',real_type)
+    tref[:] = surface["tref"]
+    tref.units = "K"
+    tref.description = "sea surface reference temperature for NSST"
+    
+    z_c = scalar_grp.createVariable('z_c',real_type)
+    z_c[:] = surface["z_c"]
+    z_c.units = "m"
+    z_c.description = "sub-layer cooling thickness for NSST"
+    
+    c_0 = scalar_grp.createVariable('c_0',real_type)
+    c_0[:] = surface["c_0"]
+    c_0.units = ""
+    c_0.description = "coefficient 1 to calculate d(Tz)/d(Ts) for NSST"
+    
+    c_d = scalar_grp.createVariable('c_d',real_type)
+    c_d[:] = surface["c_d"]
+    c_d.units = ""
+    c_d.description = "coefficient 2 to calculate d(Tz)/d(Ts) for NSST"
+    
+    w_0 = scalar_grp.createVariable('w_0',real_type)
+    w_0[:] = surface["w_0"]
+    w_0.units = ""
+    w_0.description = "coefficient 3 to calculate d(Tz)/d(Ts) for NSST"
+    
+    w_d = scalar_grp.createVariable('w_d',real_type)
+    w_d[:] = surface["w_d"]
+    w_d.units = ""
+    w_d.description = "coefficient 4 to calculate d(Tz)/d(Ts) for NSST"
+    
+    xt = scalar_grp.createVariable('xt',real_type)
+    xt[:] = surface["xt"]
+    xt.units = "K m"
+    xt.description = "heat content in diurnal thermocline layer for NSST"
+    
+    xs = scalar_grp.createVariable('xs',real_type)
+    xs[:] = surface["xs"]
+    xs.units = "ppt m"
+    xs.description = "salinity content in diurnal thermocline layer for NSST"
+    
+    xu = scalar_grp.createVariable('xu',real_type)
+    xu[:] = surface["xu"]
+    xu.units = "m2 s-1"
+    xu.description = "u-current in diurnal thermocline layer for NSST"
+    
+    xv = scalar_grp.createVariable('xv',real_type)
+    xv[:] = surface["xv"]
+    xv.units = "m2 s-1"
+    xv.description = "v-current in diurnal thermocline layer for NSST"
+    
+    xz = scalar_grp.createVariable('xz',real_type)
+    xz[:] = surface["xz"]
+    xz.units = "m"
+    xz.description = "thickness of diurnal thermocline layer for NSST"
+    
+    zm = scalar_grp.createVariable('zm',real_type)
+    zm[:] = surface["zm"]
+    zm.units = "m"
+    zm.description = "thickness of ocean mixed layer for NSST"
+    
+    xtts = scalar_grp.createVariable('xtts',real_type)
+    xtts[:] = surface["xtts"]
+    xtts.units = "m"
+    xtts.description = "sensitivity of diurnal thermocline layer heat content to surface temperature [d(xt)/d(ts)] for NSST"
+    
+    xzts = scalar_grp.createVariable('xzts',real_type)
+    xzts[:] = surface["xzts"]
+    xzts.units = "m K-1"
+    xzts.description = "sensitivity of diurnal thermocline layer thickness to surface temperature [d(xz)/d(ts)] for NSST"
+    
+    d_conv = scalar_grp.createVariable('d_conv',real_type)
+    d_conv[:] = surface["d_conv"]
+    d_conv.units = "m"
+    d_conv.description = "thickness of free convection layer for NSST"
+    
+    ifd = scalar_grp.createVariable('ifd',real_type)
+    ifd[:] = surface["ifd"]
+    ifd.units = ""
+    ifd.description = "index to start DTM run for NSST"
+    
+    dt_cool = scalar_grp.createVariable('dt_cool',real_type)
+    dt_cool[:] = surface["dt_cool"]
+    dt_cool.units = "K"
+    dt_cool.description = "sub-layer cooling amount for NSST"
+    
+    qrain = scalar_grp.createVariable('qrain',real_type)
+    qrain[:] = surface["qrain"]
+    qrain.units = "W"
+    qrain.description = "sensible heat due to rainfall for NSST"
+    
+    #RUC LSM
+    wetness = scalar_grp.createVariable('wetness',real_type)
+    wetness[:] = surface["wetness"]
+    wetness.units = ""
+    wetness.description = "normalized soil wetness for RUC LSM"
+    
+    clw_surf = scalar_grp.createVariable('clw_surf',real_type)
+    clw_surf[:] = surface["clw_surf"]
+    clw_surf.units = "kg kg-1"
+    clw_surf.description = "cloud condensed water mixing ratio at surface for RUC LSM"
+    
+    qwv_surf = scalar_grp.createVariable('qwv_surf',real_type)
+    qwv_surf[:] = surface["qwv_surf"]
+    qwv_surf.units = "kg kg-1"
+    qwv_surf.description = "water vapor mixing ratio at surface for RUC LSM"
+    
+    tsnow = scalar_grp.createVariable('tsnow',real_type)
+    tsnow[:] = surface["tsnow"]
+    tsnow.units = "K"
+    tsnow.description = "snow temperature at the bottom of the first snow layer for RUC LSM"
+    
+    snowfall_acc = scalar_grp.createVariable('snowfall_acc',real_type)
+    snowfall_acc[:] = surface["snowfall_acc"]
+    snowfall_acc.units = "kg m-2"
+    snowfall_acc.description = "run-total snow accumulation on the ground for RUC LSM"
+    
+    swe_snowfall_acc = scalar_grp.createVariable('swe_snowfall_acc',real_type)
+    swe_snowfall_acc[:] = surface["swe_snowfall_acc"]
+    swe_snowfall_acc.units = "kg m-2"
+    swe_snowfall_acc.description = "snow water equivalent of run-total frozen precip for RUC LSM"
+    
+    lai = scalar_grp.createVariable('lai',real_type)
+    lai[:] = surface["lai"]
+    lai.units = ""
+    lai.description = "leaf area index for RUC LSM"
     
     nc_file.close()
 
