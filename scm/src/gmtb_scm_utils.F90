@@ -95,3 +95,169 @@ end subroutine w_to_omega
 !> @}
 !> @}
 end module gmtb_scm_utils
+
+module NetCDF_read
+  use gmtb_scm_kinds, only : sp, dp, qp
+  use netcdf
+  
+  implicit none
+  
+  real(kind=dp) :: missing_value = -9999.0
+  
+  interface NetCDF_read_var
+    module procedure NetCDF_read_var_0d_int
+    module procedure NetCDF_read_var_0d
+    module procedure NetCDF_read_var_1d
+    module procedure NetCDF_read_var_2d
+  end interface
+  
+  contains
+  
+  subroutine NetCDF_read_var_0d_int(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    integer, intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_0d_int
+  
+  subroutine NetCDF_read_var_0d(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_0d
+  
+  subroutine NetCDF_read_var_1d(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), dimension(:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_1d
+  
+  subroutine NetCDF_read_var_2d(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), dimension(:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_2d
+  
+  !Generic subroutine to check for netCDF I/O errors
+  subroutine check(status)
+    integer, intent ( in) :: status
+
+    if(status /= NF90_NOERR) then
+      print *, trim(nf90_strerror(status))
+      stop "stopped"
+    end if
+  end subroutine check
+  
+end module NetCDF_read  
+  
+module data_qc
+  use gmtb_scm_kinds, only : sp, dp, qp
+  use NetCDF_read, only: missing_value
+  
+  implicit none
+  
+  interface check_missing
+    module procedure check_missing_0d
+  end interface
+  
+  interface conditionally_set_var
+    module procedure conditionally_set_var_0d
+  end interface
+  
+  contains
+    
+  subroutine check_missing_0d(var, missing)
+    real(kind=dp), intent(in) :: var
+    logical, intent(out) :: missing
+    
+    missing = .false.
+    if (var == missing_value) missing = .true.
+  end subroutine check_missing_0d
+  
+  subroutine conditionally_set_var_0d(input, set_var, input_name, req, missing)
+    real(kind=dp), intent(in) :: input
+    real(kind=dp), intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+    
+    call check_missing(input, missing)
+    
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        STOP
+      end if
+    end if
+    
+  end subroutine conditionally_set_var_0d
+end module data_qc

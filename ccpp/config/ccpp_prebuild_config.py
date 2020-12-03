@@ -22,6 +22,7 @@ VARIABLE_DEFINITION_FILES = [
     'scm/src/gmtb_scm_kinds.F90',
     'scm/src/gmtb_scm_type_defs.F90',
     'scm/src/gmtb_scm_physical_constants.F90',
+    'scm/src/gmtb_scm_utils.F90', #no definitions, but gmtb_scm_type_defs.F90 uses a module from this file
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
