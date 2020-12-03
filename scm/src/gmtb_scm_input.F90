@@ -242,10 +242,11 @@ subroutine get_case_init(scm_state, scm_input)
   integer                     :: input_slopetype !< slope type
   real(kind=dp)               :: input_lat !< column latitude (deg)
   real(kind=dp)               :: input_lon !< column longitude (deg)
+  real(kind=dp)               :: input_tsfco !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
   real(kind=dp)               :: input_vegfrac  !< vegetation fraction
   real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
   real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
-  real(kind=dp)               :: input_zorl    !< surfce roughness length [cm]
+  real(kind=dp)               :: input_zorlo    !< surfce roughness length over ocean [cm]
   real(kind=dp)               :: input_slmsk   !< sea land ice mask [0,1,2]
   real(kind=dp)               :: input_canopy  !< amount of water stored in canopy (kg m-2)
   real(kind=dp)               :: input_hice    !< sea ice thickness (m)
@@ -254,7 +255,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_snwdph  !< water equivalent snow depth (mm)
   real(kind=dp)               :: input_snoalb  !< maximum snow albedo (frac)
   real(kind=dp)               :: input_sncovr  !< snow area fraction (frac)
-  real(kind=dp)               :: input_area    !< surfce area [m^2]
+  real(kind=dp)               :: input_area    !< surface area [m^2]
   real(kind=dp)               :: input_tg3     !< deep soil temperature (K)
   real(kind=dp)               :: input_uustar  !< surface friction velocity (m s-1)
   real(kind=dp)               :: input_alvsf !< 60 degree vis albedo with strong cosz dependency
@@ -497,10 +498,11 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_0D_var_int(grp_ncid, "vegtyp",   .False., input_vegtyp   )
   call NetCDF_read_0D_var_int(grp_ncid, "soiltyp",  .False., input_soiltyp  )
   call NetCDF_read_0D_var_int(grp_ncid, "slopetyp", .False., input_slopetype)
+  call NetCDF_read_0D_var(grp_ncid, "tsfco",   .False., input_tsfco)
   call NetCDF_read_0D_var(grp_ncid, "vegfrac", .False., input_vegfrac)
   call NetCDF_read_0D_var(grp_ncid, "shdmin",  .False., input_shdmin)
   call NetCDF_read_0D_var(grp_ncid, "shdmax",  .False., input_shdmax)
-  call NetCDF_read_0D_var(grp_ncid, "zorl",    .False., input_zorl)
+  call NetCDF_read_0D_var(grp_ncid, "zorlo",   .False., input_zorlo)
   call NetCDF_read_0D_var(grp_ncid, "slmsk",   .False., input_slmsk)
   call NetCDF_read_0D_var(grp_ncid, "canopy",  .False., input_canopy)
   call NetCDF_read_0D_var(grp_ncid, "hice",    .False., input_hice)
@@ -651,22 +653,16 @@ subroutine get_case_init(scm_state, scm_input)
 
   call check(NF90_CLOSE(NCID=ncid))
 
-  call scm_input%create(input_ntimes, input_nlev)
-  if (scm_state%model_ics) then
-     call scm_input%create_modelics(input_nsoil,input_nsnow,input_nlev,noahmp)
-  endif
-  
+  call scm_input%create(input_ntimes, input_nlev, input_nsoil, input_nsnow, input_nice)
+    
   ! GJF already done in scm_input%create routine
   !scm_input%input_nlev = input_nlev
   !scm_input%input_ntimes = input_ntimes
 
   scm_input%input_pres = input_pres
   scm_input%input_time = input_time
-  if (scm_state%model_ics) then
-     scm_input%input_temp = input_temp
-  else
-     scm_input%input_thetail = input_thetail
-  endif
+  scm_input%input_temp = input_temp
+  scm_input%input_thetail = input_thetail
   scm_input%input_qt = input_qt
   scm_input%input_ql = input_ql
   scm_input%input_qi = input_qi
@@ -694,89 +690,140 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_T_nudge = input_T_nudge
   scm_input%input_thil_nudge = input_thil_nudge
   scm_input%input_qt_nudge = input_qt_nudge
-  if (scm_state%model_ics) then
-     scm_input%input_stc   = input_stc  
-     scm_input%input_smc   = input_smc  
-     scm_input%input_slc   = input_slc  
-     scm_input%input_vegsrc   = input_vegsrc
-     scm_input%input_vegtyp   = REAL(input_vegtyp, kind=dp)
-     scm_input%input_soiltyp  = REAL(input_soiltyp, kind=dp)
-     scm_input%input_slopetype = REAL(input_slopetype, kind=dp)
-     scm_input%input_vegfrac  = input_vegfrac 
-     scm_input%input_shdmin   = input_shdmin  
-     scm_input%input_shdmax   = input_shdmax  
-     scm_input%input_zorl     = input_zorl    
-     scm_input%input_slmsk    = input_slmsk   
-     scm_input%input_canopy   = input_canopy  
-     scm_input%input_hice     = input_hice    
-     scm_input%input_fice     = input_fice    
-     scm_input%input_tisfc    = input_tisfc   
-     scm_input%input_snwdph   = input_snwdph  
-     scm_input%input_snoalb   = input_snoalb  
-     scm_input%input_sncovr   = input_sncovr  
-     scm_input%input_area     = input_area    
-     scm_input%input_tg3      = input_tg3     
-     scm_input%input_uustar   = input_uustar  
-     scm_input%input_alvsf    = input_alvsf   
-     scm_input%input_alnsf    = input_alnsf   
-     scm_input%input_alvwf    = input_alvwf   
-     scm_input%input_alnwf    = input_alnwf   
-     scm_input%input_convexity= input_convexity
-     scm_input%input_stddev   = input_stddev  
-     scm_input%input_oa1      = input_oa1     
-     scm_input%input_oa2      = input_oa2     
-     scm_input%input_oa3      = input_oa3     
-     scm_input%input_oa4      = input_oa4     
-     scm_input%input_ol1      = input_ol1     
-     scm_input%input_ol2      = input_ol2    
-     scm_input%input_ol3      = input_ol3     
-     scm_input%input_ol4      = input_ol4     
-     scm_input%input_sigma    = input_sigma   
-     scm_input%input_theta    = input_theta   
-     scm_input%input_gamma    = input_gamma   
-     scm_input%input_elvmax   = input_elvmax  
-     scm_input%input_facsf    = input_facsf   
-     scm_input%input_facwf    = input_facwf   
-     ! scm_input%input_pres_i   = input_pres_i  
-     ! scm_input%input_pres_l   = input_pres_l
-     if (noahmp) then
-       scm_input%input_snicexy    = input_snicexy
-       scm_input%input_snliqxy    = input_snliqxy
-       scm_input%input_tsnoxy     = input_tsnoxy
-       scm_input%input_smoiseq    = input_smoiseq
-       scm_input%input_zsnsoxy    = input_zsnsoxy
-       scm_input%input_tvxy = input_tvxy
-       scm_input%input_tgxy = input_tgxy
-       scm_input%input_tahxy = input_tahxy
-       scm_input%input_canicexy = input_canicexy
-       scm_input%input_canliqxy = input_canliqxy
-       scm_input%input_eahxy = input_eahxy
-       scm_input%input_cmxy = input_cmxy
-       scm_input%input_chxy = input_chxy
-       scm_input%input_fwetxy = input_fwetxy
-       scm_input%input_sneqvoxy = input_sneqvoxy
-       scm_input%input_alboldxy = input_alboldxy
-       scm_input%input_qsnowxy = input_qsnowxy
-       scm_input%input_wslakexy = input_wslakexy
-       scm_input%input_taussxy = input_taussxy
-       scm_input%input_waxy = input_waxy
-       scm_input%input_wtxy = input_wtxy
-       scm_input%input_zwtxy = input_zwtxy
-       scm_input%input_xlaixy = input_xlaixy
-       scm_input%input_xsaixy = input_xsaixy
-       scm_input%input_lfmassxy = input_lfmassxy
-       scm_input%input_stmassxy = input_stmassxy
-       scm_input%input_rtmassxy = input_rtmassxy
-       scm_input%input_woodxy = input_woodxy
-       scm_input%input_stblcpxy = input_stblcpxy
-       scm_input%input_fastcpxy = input_fastcpxy
-       scm_input%input_smcwtdxy = input_smcwtdxy
-       scm_input%input_deeprechxy = input_deeprechxy
-       scm_input%input_rechxy = input_rechxy
-       scm_input%input_snowxy = input_snowxy
-     endif
-  endif
-
+  
+  scm_input%input_stc   = input_stc  
+  scm_input%input_smc   = input_smc  
+  scm_input%input_slc   = input_slc  
+  
+  scm_input%input_snicexy    = input_snicexy
+  scm_input%input_snliqxy    = input_snliqxy
+  scm_input%input_tsnoxy     = input_tsnoxy
+  scm_input%input_smoiseq    = input_smoiseq
+  scm_input%input_zsnsoxy    = input_zsnsoxy
+  
+  scm_input%input_tiice      = input_tiice
+  scm_input%input_tslb       = input_tslb
+  scm_input%input_smois      = input_smois
+  scm_input%input_sh2o       = input_sh2o
+  scm_input%input_smfr       = input_smfr
+  scm_input%input_flfr       = input_flfr
+  
+  scm_input%input_vegsrc   = input_vegsrc
+  scm_input%input_vegtyp   = REAL(input_vegtyp, kind=dp)
+  scm_input%input_soiltyp  = REAL(input_soiltyp, kind=dp)
+  scm_input%input_slopetype = REAL(input_slopetype, kind=dp)
+  scm_input%input_tsfco    = input_tsfco
+  scm_input%input_vegfrac  = input_vegfrac
+  scm_input%input_shdmin   = input_shdmin
+  scm_input%input_shdmax   = input_shdmax
+  scm_input%input_zorlo    = input_zorlo
+  scm_input%input_slmsk    = input_slmsk
+  scm_input%input_canopy   = input_canopy
+  scm_input%input_hice     = input_hice
+  scm_input%input_fice     = input_fice
+  scm_input%input_tisfc    = input_tisfc
+  scm_input%input_snwdph   = input_snwdph
+  scm_input%input_snoalb   = input_snoalb
+  scm_input%input_sncovr   = input_sncovr
+  scm_input%input_area     = input_area
+  scm_input%input_tg3      = input_tg3
+  scm_input%input_uustar   = input_uustar
+  scm_input%input_alvsf    = input_alvsf
+  scm_input%input_alnsf    = input_alnsf
+  scm_input%input_alvwf    = input_alvwf
+  scm_input%input_alnwf    = input_alnwf
+  scm_input%input_facsf    = input_facsf
+  scm_input%input_facwf    = input_facwf
+  scm_input%input_weasd    = input_weasd
+  scm_input%input_f10m     = input_f10m
+  scm_input%input_t2m      = input_t2m
+  scm_input%input_q2m      = input_q2m
+  scm_input%input_ffmm     = input_ffmm
+  scm_input%input_ffhh     = input_ffhh
+  scm_input%input_tprcp    = input_tprcp
+  scm_input%input_srflag   = input_srflag
+  scm_input%input_tsfcl    = input_tsfcl
+  scm_input%input_zorll    = input_zorll
+  scm_input%input_zorli    = input_zorli
+  scm_input%input_zorlw    = input_zorlw
+  
+  scm_input%input_stddev   = input_stddev
+  scm_input%input_convexity= input_convexity
+  scm_input%input_oa1      = input_oa1
+  scm_input%input_oa2      = input_oa2
+  scm_input%input_oa3      = input_oa3
+  scm_input%input_oa4      = input_oa4
+  scm_input%input_ol1      = input_ol1
+  scm_input%input_ol2      = input_ol2
+  scm_input%input_ol3      = input_ol3
+  scm_input%input_ol4      = input_ol4
+  scm_input%input_sigma    = input_sigma
+  scm_input%input_theta    = input_theta
+  scm_input%input_gamma    = input_gamma
+  scm_input%input_elvmax   = input_elvmax
+  scm_input%input_oro      = input_oro
+  scm_input%input_oro_uf   = input_oro_uf
+  scm_input%input_landfrac = input_landfrac
+  scm_input%input_lakefrac = input_lakefrac
+  scm_input%input_lakedepth= input_lakedepth
+  
+  scm_input%input_tvxy = input_tvxy
+  scm_input%input_tgxy = input_tgxy
+  scm_input%input_tahxy = input_tahxy
+  scm_input%input_canicexy = input_canicexy
+  scm_input%input_canliqxy = input_canliqxy
+  scm_input%input_eahxy = input_eahxy
+  scm_input%input_cmxy = input_cmxy
+  scm_input%input_chxy = input_chxy
+  scm_input%input_fwetxy = input_fwetxy
+  scm_input%input_sneqvoxy = input_sneqvoxy
+  scm_input%input_alboldxy = input_alboldxy
+  scm_input%input_qsnowxy = input_qsnowxy
+  scm_input%input_wslakexy = input_wslakexy
+  scm_input%input_taussxy = input_taussxy
+  scm_input%input_waxy = input_waxy
+  scm_input%input_wtxy = input_wtxy
+  scm_input%input_zwtxy = input_zwtxy
+  scm_input%input_xlaixy = input_xlaixy
+  scm_input%input_xsaixy = input_xsaixy
+  scm_input%input_lfmassxy = input_lfmassxy
+  scm_input%input_stmassxy = input_stmassxy
+  scm_input%input_rtmassxy = input_rtmassxy
+  scm_input%input_woodxy = input_woodxy
+  scm_input%input_stblcpxy = input_stblcpxy
+  scm_input%input_fastcpxy = input_fastcpxy
+  scm_input%input_smcwtdxy = input_smcwtdxy
+  scm_input%input_deeprechxy = input_deeprechxy
+  scm_input%input_rechxy = input_rechxy
+  scm_input%input_snowxy = input_snowxy
+  
+  scm_input%input_tref    = input_tref
+  scm_input%input_z_c     = input_z_c
+  scm_input%input_c_0     = input_c_0
+  scm_input%input_c_d     = input_c_d
+  scm_input%input_w_0     = input_w_0
+  scm_input%input_w_d     = input_w_d
+  scm_input%input_xt      = input_xt
+  scm_input%input_xs      = input_xs
+  scm_input%input_xu      = input_xu
+  scm_input%input_xv      = input_xv
+  scm_input%input_xz      = input_xz
+  scm_input%input_zm      = input_zm
+  scm_input%input_xtts    = input_xtts
+  scm_input%input_xzts    = input_xzts
+  scm_input%input_d_conv  = input_d_conv
+  scm_input%input_ifd     = input_ifd
+  scm_input%input_dt_cool = input_dt_cool
+  scm_input%input_qrain   = input_qrain
+  
+  scm_input%input_wetness    = input_wetness
+  scm_input%input_clw_surf   = input_clw_surf
+  scm_input%input_qwv_surf   = input_qwv_surf
+  scm_input%input_tsnow      = input_tsnow
+  scm_input%input_snowfallac = input_snowfallac
+  scm_input%input_acsnow     = input_acsnow
+  scm_input%input_lai        = input_lai
+  
 !> @}
 end subroutine get_case_init
 

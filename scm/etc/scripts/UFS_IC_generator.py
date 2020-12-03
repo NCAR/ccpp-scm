@@ -431,7 +431,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     #read in scalars (would be 2D variables in a 3D model)
     
     # surface properties (assuming Noah LSM; may contain variables needed for fractional land fraction)
-    ts_in = read_NetCDF_surface_var(nc_file, 'tsea', i, j, old_chgres, 0)
+    tsfco_in = read_NetCDF_surface_var(nc_file, 'tsea', i, j, old_chgres, 0)
     tg3_in = read_NetCDF_surface_var(nc_file, 'tg3', i, j, old_chgres, 0)
     uustar_in = read_NetCDF_surface_var(nc_file, 'uustar', i, j, old_chgres, 0)
     alvsf_in = read_NetCDF_surface_var(nc_file, 'alvsf', i, j, old_chgres, 0)
@@ -446,7 +446,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     vfrac_in = read_NetCDF_surface_var(nc_file, 'vfrac', i, j, old_chgres, 0)
     shdmin_in = read_NetCDF_surface_var(nc_file, 'shdmin', i, j, old_chgres, 0)
     shdmax_in = read_NetCDF_surface_var(nc_file, 'shdmax', i, j, old_chgres, 0)
-    zorl_in = read_NetCDF_surface_var(nc_file, 'zorl', i, j, old_chgres, 0)
+    zorlo_in = read_NetCDF_surface_var(nc_file, 'zorl', i, j, old_chgres, 0)
     slmsk_in = read_NetCDF_surface_var(nc_file, 'slmsk', i, j, old_chgres, 0)
     canopy_in = read_NetCDF_surface_var(nc_file, 'canopy', i, j, old_chgres, 0)
     hice_in = read_NetCDF_surface_var(nc_file, 'hice', i, j, old_chgres, 0)
@@ -561,7 +561,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     #put data in a dictionary
     surface = {
         #Noah LSM
-        "T_surf": ts_in,  
+        "tsfco": tsfco_in,  
         "tg3": tg3_in,
         "uustar": uustar_in,
         "alvsf": alvsf_in,
@@ -576,7 +576,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
         "vfrac": vfrac_in,
         "shdmin": shdmin_in,
         "shdmax": shdmax_in,
-        "zorl": zorl_in,
+        "zorlo": zorlo_in,
         "slmsk": slmsk_in,
         "canopy": canopy_in,
         "hice": hice_in,
@@ -882,11 +882,11 @@ def add_noahmp_coldstart(surface, date):
     surface["zsnsoxy"]  = np.ones(n_snow_layers + n_soil_layers)*missing_value
     
     if surface["slmsk"] > 0.01:
-        surface["tvxy"] = surface["T_surf"]
-        surface["tgxy"] = surface["T_surf"]
-        surface["tahxy"] = surface["T_surf"]
+        surface["tvxy"] = surface["tsfco"]
+        surface["tgxy"] = surface["tsfco"]
+        surface["tahxy"] = surface["tsfco"]
         
-        if (surface["snwdph"] > 0.01 and surface["T_surf"] > 273.15 ):
+        if (surface["snwdph"] > 0.01 and surface["tsfco"] > 273.15 ):
             surface["tvxy"] = 273.15
             surface["tgxy"] = 273.15
             surface["tahxy"]= 273.15
@@ -1297,9 +1297,9 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     p_surf_var.description = 'surface pressure'
 
     T_surf_var = forcing_grp.createVariable('T_surf', real_type, ('time',))
-    T_surf_var[:] = surface["T_surf"]
+    T_surf_var[:] = missing_value
     T_surf_var.units = 'K'
-    T_surf_var.description = 'surface absolute temperature'
+    T_surf_var.description = 'surface absolute temperature forcing'
 
     w_ls_var = forcing_grp.createVariable('w_ls', real_type, ('levels','time',))
     w_ls_var[:] = forcing["w_ls"]
@@ -1419,6 +1419,11 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     
     #Noah initial parameters
     
+    tsfco = scalar_grp.createVariable('tsfco',real_type)
+    tsfco[:] = surface["tsfco"]
+    tsfco.units = "K"  
+    tsfco.description = "sea surface temperature OR surface skin temperature over land OR sea ice surface skin temperature (depends on value of slmsk)"
+    
     vegsrc  = scalar_grp.createVariable('vegsrc',int_type)
     vegsrc[:] = 1 #when would this be 2?
     vegsrc.description = "vegetation soure (1-2)"
@@ -1447,10 +1452,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     shdmax[:] = surface["shdmax"]
     shdmax.description = "maximum vegetation fraction"
     
-    zorl = scalar_grp.createVariable('zorl',real_type)
-    zorl[:] = surface["zorl"]
-    zorl.units = "cm"
-    zorl.description = "surface roughness length"
+    zorlo = scalar_grp.createVariable('zorlo',real_type)
+    zorlo[:] = surface["zorlo"]
+    zorlo.units = "cm"
+    zorlo.description = "surface roughness length over ocean"
     
     islmsk = scalar_grp.createVariable('slmsk',real_type)
     islmsk[:] = surface["slmsk"]

@@ -37,11 +37,11 @@ subroutine gmtb_scm_main_sub()
   character(len=16) :: logfile_name
 
   call get_config_nml(scm_state)
-
+  
   call get_case_init(scm_state, scm_input)
-
+  
   call get_reference_profile(scm_state, scm_reference)
-
+  
   select case(trim(adjustl(scm_state%model_name)))
     case("GFS")
       !>  - Call get_GFS_grid in \ref vgrid to read in the necessary coefficients and calculate the pressure-related variables on the grid.
@@ -61,7 +61,7 @@ subroutine gmtb_scm_main_sub()
       write(*,*) 'Only the GFS (GSM) and FV3 vertical coordinates are currently supported. Exiting...'
       stop
   end select
-
+  
   !allocate(cdata_cols(scm_state%n_cols))
 
   call set_state(scm_input, scm_reference, scm_state)
@@ -76,7 +76,7 @@ subroutine gmtb_scm_main_sub()
   scm_state%itt_out = 1
 
   call physics%create(scm_state%n_cols)
-  
+    
   !physics initialization section
 
   !set the array index of the time level of the state variables that the cdata
@@ -129,6 +129,7 @@ subroutine gmtb_scm_main_sub()
   cdata%thrd_no = 1
   
   call physics%associate(scm_state)
+  call physics%set(scm_input, scm_state)
   
   ! When asked to calculate 3-dim. tendencies, set Stateout variables to
   ! Statein variables here in order to capture the first call to dycore
