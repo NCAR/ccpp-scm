@@ -1153,8 +1153,6 @@ module gmtb_scm_type_defs
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if
       
-      write(*,*) "zorl and tsfc = ",physics%Sfcprop%zorl(i), physics%Sfcprop%tsfc(i)
-      
       !!!!NoahMP cold start code
       
     end do

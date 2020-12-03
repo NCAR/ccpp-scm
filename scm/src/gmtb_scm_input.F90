@@ -2,6 +2,127 @@
 !!  Contains input-related subroutines -- reading in model configuration from file or the command line and reading in the case
 !!  initial conditions and forcing; also contains reference profile input (temporarily hard-coded).
 
+module NetCDF_read
+  use gmtb_scm_kinds, only : sp, dp, qp
+  use netcdf
+  
+  implicit none
+  
+  real(kind=dp) :: missing_value = -9999.0
+  
+  interface NetCDF_read_var
+    module procedure NetCDF_read_var_0d_int
+    module procedure NetCDF_read_var_0d
+    module procedure NetCDF_read_var_1d
+    module procedure NetCDF_read_var_2d
+  end interface
+  
+  contains
+  
+  subroutine NetCDF_read_var_0d_int(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    integer, intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_0d_int
+  
+  subroutine NetCDF_read_var_0d(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_0d
+  
+  subroutine NetCDF_read_var_1d(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), dimension(:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_1d
+  
+  subroutine NetCDF_read_var_2d(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), dimension(:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_2d
+  
+  !Generic subroutine to check for netCDF I/O errors
+  subroutine check(status)
+    integer, intent ( in) :: status
+
+    if(status /= NF90_NOERR) then
+      print *, trim(nf90_strerror(status))
+      stop "stopped"
+    end if
+  end subroutine check
+  
+end module NetCDF_read
+
 module gmtb_scm_input
 
 use gmtb_scm_kinds, only : sp, dp, qp
@@ -10,7 +131,6 @@ use gmtb_scm_type_defs, only: character_length
 
 implicit none
 
-real(kind=dp) :: missing_value = -9999.0
 integer :: missing_snow_layers = 3
 integer :: missing_soil_layers = 4
 integer :: missing_ice_layers = 2
@@ -192,6 +312,7 @@ end subroutine get_config_nml
 !! "processed_case_input" directory.
 subroutine get_case_init(scm_state, scm_input)
   use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
+  use NetCDF_read, only: NetCDF_read_var, check, missing_value
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
   
@@ -424,8 +545,8 @@ subroutine get_case_init(scm_state, scm_input)
   allocate(input_pres(input_nlev),input_time(input_ntimes), stat=allocate_status)
 
   !> - Read in the dimension variables (required).
-  call NetCDF_read_1D_var(ncid, "levels", .True., input_pres)
-  call NetCDF_read_1D_var(ncid, "time", .True., input_time)
+  call NetCDF_read_var(ncid, "levels", .True., input_pres)
+  call NetCDF_read_var(ncid, "time", .True., input_time)
 
   !> - Read in the initial conditions.
 
@@ -439,179 +560,179 @@ subroutine get_case_init(scm_state, scm_input)
   !>  - Read in the initial profiles. The variable names in all input files are expected to be identical.
   
   !Either thetail or T must be present
-  call NetCDF_read_1D_var(grp_ncid, "thetail", .False., input_thetail)
-  call NetCDF_read_1D_var(grp_ncid, "temp", .False., input_temp)
+  call NetCDF_read_var(grp_ncid, "thetail", .False., input_thetail)
+  call NetCDF_read_var(grp_ncid, "temp", .False., input_temp)
   if (maxval(input_thetail) < 0 .and. maxval(input_temp) < 0) then
     write(*,*) "One of thetail or temp variables must be present in ",trim(adjustl(scm_state%case_name))//'.nc',". Stopping..."
     STOP
   end if
-  call NetCDF_read_1D_var(grp_ncid, "qt",    .True., input_qt   )
-  call NetCDF_read_1D_var(grp_ncid, "ql",    .True., input_ql   )
-  call NetCDF_read_1D_var(grp_ncid, "qi",    .True., input_qi   )
-  call NetCDF_read_1D_var(grp_ncid, "u",     .True., input_u    )
-  call NetCDF_read_1D_var(grp_ncid, "v",     .True., input_v    )
-  call NetCDF_read_1D_var(grp_ncid, "tke",   .True., input_tke  )
-  call NetCDF_read_1D_var(grp_ncid, "ozone", .True., input_ozone)
+  call NetCDF_read_var(grp_ncid, "qt",    .True., input_qt   )
+  call NetCDF_read_var(grp_ncid, "ql",    .True., input_ql   )
+  call NetCDF_read_var(grp_ncid, "qi",    .True., input_qi   )
+  call NetCDF_read_var(grp_ncid, "u",     .True., input_u    )
+  call NetCDF_read_var(grp_ncid, "v",     .True., input_v    )
+  call NetCDF_read_var(grp_ncid, "tke",   .True., input_tke  )
+  call NetCDF_read_var(grp_ncid, "ozone", .True., input_ozone)
   
   !possible initial profiles
   !needed for Noah LSM and others (when running with model ICs)
   allocate(input_stc(input_nsoil), input_smc(input_nsoil), input_slc(input_nsoil), &
            stat=allocate_status)
-  call NetCDF_read_1D_var(grp_ncid, "stc", .False., input_stc)
-  call NetCDF_read_1D_var(grp_ncid, "smc", .False., input_smc)
-  call NetCDF_read_1D_var(grp_ncid, "slc", .False., input_slc)
+  call NetCDF_read_var(grp_ncid, "stc", .False., input_stc)
+  call NetCDF_read_var(grp_ncid, "smc", .False., input_smc)
+  call NetCDF_read_var(grp_ncid, "slc", .False., input_slc)
   
   !needed for NoahMP LSM (when running with model ICs)
   allocate(input_snicexy(input_nsnow), input_snliqxy(input_nsnow), input_tsnoxy(input_nsnow), &
      input_smoiseq(input_nsoil), input_zsnsoxy(input_nsnow + input_nsoil))
-  call NetCDF_read_1D_var(grp_ncid, "snicexy", .False., input_snicexy)
-  call NetCDF_read_1D_var(grp_ncid, "snliqxy", .False., input_snliqxy)
-  call NetCDF_read_1D_var(grp_ncid, "tsnoxy",  .False., input_tsnoxy )
-  call NetCDF_read_1D_var(grp_ncid, "smoiseq", .False., input_smoiseq)
-  call NetCDF_read_1D_var(grp_ncid, "zsnsoxy", .False., input_zsnsoxy)
+  call NetCDF_read_var(grp_ncid, "snicexy", .False., input_snicexy)
+  call NetCDF_read_var(grp_ncid, "snliqxy", .False., input_snliqxy)
+  call NetCDF_read_var(grp_ncid, "tsnoxy",  .False., input_tsnoxy )
+  call NetCDF_read_var(grp_ncid, "smoiseq", .False., input_smoiseq)
+  call NetCDF_read_var(grp_ncid, "zsnsoxy", .False., input_zsnsoxy)
   
   !needed for fractional grid (when running with model ICs)
   allocate(input_tiice(input_nice))
-  call NetCDF_read_1D_var(grp_ncid, "tiice", .False., input_tiice)
+  call NetCDF_read_var(grp_ncid, "tiice", .False., input_tiice)
   
   !needed for RUC LSM (when running with model ICs)
   allocate(input_tslb(input_nsoil), input_smois(input_nsoil), input_sh2o(input_nsoil), &
       input_smfr(input_nsoil), input_flfr(input_nsoil))
-  call NetCDF_read_1D_var(grp_ncid, "tslb",  .False., input_tslb )
-  call NetCDF_read_1D_var(grp_ncid, "smois", .False., input_smois)
-  call NetCDF_read_1D_var(grp_ncid, "sh2o",  .False., input_sh2o )
-  call NetCDF_read_1D_var(grp_ncid, "smfr",  .False., input_smfr )
-  call NetCDF_read_1D_var(grp_ncid, "flfr",  .False., input_flfr )
+  call NetCDF_read_var(grp_ncid, "tslb",  .False., input_tslb )
+  call NetCDF_read_var(grp_ncid, "smois", .False., input_smois)
+  call NetCDF_read_var(grp_ncid, "sh2o",  .False., input_sh2o )
+  call NetCDF_read_var(grp_ncid, "smfr",  .False., input_smfr )
+  call NetCDF_read_var(grp_ncid, "flfr",  .False., input_flfr )
   
   !>  - Find group ncid for scalar group.
   call check(NF90_INQ_GRP_NCID(ncid,"scalars",grp_ncid))
   
   !required
-  call NetCDF_read_0D_var(grp_ncid, "lat", .True., input_lat)
-  call NetCDF_read_0D_var(grp_ncid, "lon", .True., input_lon)
+  call NetCDF_read_var(grp_ncid, "lat", .True., input_lat)
+  call NetCDF_read_var(grp_ncid, "lon", .True., input_lon)
   !time data and area in file ignored?
-  call NetCDF_read_0D_var(grp_ncid, "area", .False., input_area)
+  call NetCDF_read_var(grp_ncid, "area", .False., input_area)
   
   !possible scalars
   !Noah LSM parameters (when running with model ICs)
-  call NetCDF_read_0D_var_int(grp_ncid, "vegsrc",   .False., input_vegsrc   )
-  call NetCDF_read_0D_var_int(grp_ncid, "vegtyp",   .False., input_vegtyp   )
-  call NetCDF_read_0D_var_int(grp_ncid, "soiltyp",  .False., input_soiltyp  )
-  call NetCDF_read_0D_var_int(grp_ncid, "slopetyp", .False., input_slopetype)
-  call NetCDF_read_0D_var(grp_ncid, "tsfco",   .False., input_tsfco)
-  call NetCDF_read_0D_var(grp_ncid, "vegfrac", .False., input_vegfrac)
-  call NetCDF_read_0D_var(grp_ncid, "shdmin",  .False., input_shdmin)
-  call NetCDF_read_0D_var(grp_ncid, "shdmax",  .False., input_shdmax)
-  call NetCDF_read_0D_var(grp_ncid, "zorlo",   .False., input_zorlo)
-  call NetCDF_read_0D_var(grp_ncid, "slmsk",   .False., input_slmsk)
-  call NetCDF_read_0D_var(grp_ncid, "canopy",  .False., input_canopy)
-  call NetCDF_read_0D_var(grp_ncid, "hice",    .False., input_hice)
-  call NetCDF_read_0D_var(grp_ncid, "fice",    .False., input_fice)
-  call NetCDF_read_0D_var(grp_ncid, "tisfc",   .False., input_tisfc)
-  call NetCDF_read_0D_var(grp_ncid, "snwdph",  .False., input_snwdph)
-  call NetCDF_read_0D_var(grp_ncid, "snoalb",  .False., input_snoalb)
-  call NetCDF_read_0D_var(grp_ncid, "tg3",     .False., input_tg3)
-  call NetCDF_read_0D_var(grp_ncid, "uustar",  .False., input_uustar)
-  call NetCDF_read_0D_var(grp_ncid, "alvsf",   .False., input_alvsf)
-  call NetCDF_read_0D_var(grp_ncid, "alnsf",   .False., input_alnsf)
-  call NetCDF_read_0D_var(grp_ncid, "alvwf",   .False., input_alvwf)
-  call NetCDF_read_0D_var(grp_ncid, "alnwf",   .False., input_alnwf)
-  call NetCDF_read_0D_var(grp_ncid, "facsf",   .False., input_facsf)
-  call NetCDF_read_0D_var(grp_ncid, "facwf",   .False., input_facwf)
-  call NetCDF_read_0D_var(grp_ncid, "weasd",   .False., input_weasd)
-  call NetCDF_read_0D_var(grp_ncid, "f10m",    .False., input_f10m)
-  call NetCDF_read_0D_var(grp_ncid, "t2m",     .False., input_t2m)
-  call NetCDF_read_0D_var(grp_ncid, "q2m",     .False., input_q2m)
-  call NetCDF_read_0D_var(grp_ncid, "ffmm",    .False., input_ffmm)
-  call NetCDF_read_0D_var(grp_ncid, "ffhh",    .False., input_ffhh)
-  call NetCDF_read_0D_var(grp_ncid, "tprcp",   .False., input_tprcp)
-  call NetCDF_read_0D_var(grp_ncid, "srflag",  .False., input_srflag)
-  call NetCDF_read_0D_var(grp_ncid, "sncovr",  .False., input_sncovr)
-  call NetCDF_read_0D_var(grp_ncid, "tsfcl",   .False., input_tsfcl)
-  call NetCDF_read_0D_var(grp_ncid, "zorll",   .False., input_zorll)
-  call NetCDF_read_0D_var(grp_ncid, "zorli",   .False., input_zorli)
-  call NetCDF_read_0D_var(grp_ncid, "zorlw",   .False., input_zorlw)
+  call NetCDF_read_var(grp_ncid, "vegsrc",   .False., input_vegsrc   )
+  call NetCDF_read_var(grp_ncid, "vegtyp",   .False., input_vegtyp   )
+  call NetCDF_read_var(grp_ncid, "soiltyp",  .False., input_soiltyp  )
+  call NetCDF_read_var(grp_ncid, "slopetyp", .False., input_slopetype)
+  call NetCDF_read_var(grp_ncid, "tsfco",   .False., input_tsfco)
+  call NetCDF_read_var(grp_ncid, "vegfrac", .False., input_vegfrac)
+  call NetCDF_read_var(grp_ncid, "shdmin",  .False., input_shdmin)
+  call NetCDF_read_var(grp_ncid, "shdmax",  .False., input_shdmax)
+  call NetCDF_read_var(grp_ncid, "zorlo",   .False., input_zorlo)
+  call NetCDF_read_var(grp_ncid, "slmsk",   .False., input_slmsk)
+  call NetCDF_read_var(grp_ncid, "canopy",  .False., input_canopy)
+  call NetCDF_read_var(grp_ncid, "hice",    .False., input_hice)
+  call NetCDF_read_var(grp_ncid, "fice",    .False., input_fice)
+  call NetCDF_read_var(grp_ncid, "tisfc",   .False., input_tisfc)
+  call NetCDF_read_var(grp_ncid, "snwdph",  .False., input_snwdph)
+  call NetCDF_read_var(grp_ncid, "snoalb",  .False., input_snoalb)
+  call NetCDF_read_var(grp_ncid, "tg3",     .False., input_tg3)
+  call NetCDF_read_var(grp_ncid, "uustar",  .False., input_uustar)
+  call NetCDF_read_var(grp_ncid, "alvsf",   .False., input_alvsf)
+  call NetCDF_read_var(grp_ncid, "alnsf",   .False., input_alnsf)
+  call NetCDF_read_var(grp_ncid, "alvwf",   .False., input_alvwf)
+  call NetCDF_read_var(grp_ncid, "alnwf",   .False., input_alnwf)
+  call NetCDF_read_var(grp_ncid, "facsf",   .False., input_facsf)
+  call NetCDF_read_var(grp_ncid, "facwf",   .False., input_facwf)
+  call NetCDF_read_var(grp_ncid, "weasd",   .False., input_weasd)
+  call NetCDF_read_var(grp_ncid, "f10m",    .False., input_f10m)
+  call NetCDF_read_var(grp_ncid, "t2m",     .False., input_t2m)
+  call NetCDF_read_var(grp_ncid, "q2m",     .False., input_q2m)
+  call NetCDF_read_var(grp_ncid, "ffmm",    .False., input_ffmm)
+  call NetCDF_read_var(grp_ncid, "ffhh",    .False., input_ffhh)
+  call NetCDF_read_var(grp_ncid, "tprcp",   .False., input_tprcp)
+  call NetCDF_read_var(grp_ncid, "srflag",  .False., input_srflag)
+  call NetCDF_read_var(grp_ncid, "sncovr",  .False., input_sncovr)
+  call NetCDF_read_var(grp_ncid, "tsfcl",   .False., input_tsfcl)
+  call NetCDF_read_var(grp_ncid, "zorll",   .False., input_zorll)
+  call NetCDF_read_var(grp_ncid, "zorli",   .False., input_zorli)
+  call NetCDF_read_var(grp_ncid, "zorlw",   .False., input_zorlw)
   
   !orographic parameters
-  call NetCDF_read_0D_var(grp_ncid, "stddev",    .False., input_stddev)
-  call NetCDF_read_0D_var(grp_ncid, "convexity", .False., input_convexity)
-  call NetCDF_read_0D_var(grp_ncid, "oa1",       .False., input_oa1)
-  call NetCDF_read_0D_var(grp_ncid, "oa2",       .False., input_oa2)
-  call NetCDF_read_0D_var(grp_ncid, "oa3",       .False., input_oa3)
-  call NetCDF_read_0D_var(grp_ncid, "oa4",       .False., input_oa4)
-  call NetCDF_read_0D_var(grp_ncid, "ol1",       .False., input_ol1)
-  call NetCDF_read_0D_var(grp_ncid, "ol2",       .False., input_ol2)
-  call NetCDF_read_0D_var(grp_ncid, "ol3",       .False., input_ol3)
-  call NetCDF_read_0D_var(grp_ncid, "ol4",       .False., input_ol4)
-  call NetCDF_read_0D_var(grp_ncid, "theta",     .False., input_theta)
-  call NetCDF_read_0D_var(grp_ncid, "gamma",     .False., input_gamma)
-  call NetCDF_read_0D_var(grp_ncid, "sigma",     .False., input_sigma)
-  call NetCDF_read_0D_var(grp_ncid, "elvmax",    .False., input_elvmax)
-  call NetCDF_read_0D_var(grp_ncid, "oro",       .False., input_oro)
-  call NetCDF_read_0D_var(grp_ncid, "oro_uf",    .False., input_oro_uf)
-  call NetCDF_read_0D_var(grp_ncid, "landfrac",  .False., input_landfrac)
-  call NetCDF_read_0D_var(grp_ncid, "lakefrac",  .False., input_lakefrac)
-  call NetCDF_read_0D_var(grp_ncid, "lakedepth", .False., input_lakedepth)
+  call NetCDF_read_var(grp_ncid, "stddev",    .False., input_stddev)
+  call NetCDF_read_var(grp_ncid, "convexity", .False., input_convexity)
+  call NetCDF_read_var(grp_ncid, "oa1",       .False., input_oa1)
+  call NetCDF_read_var(grp_ncid, "oa2",       .False., input_oa2)
+  call NetCDF_read_var(grp_ncid, "oa3",       .False., input_oa3)
+  call NetCDF_read_var(grp_ncid, "oa4",       .False., input_oa4)
+  call NetCDF_read_var(grp_ncid, "ol1",       .False., input_ol1)
+  call NetCDF_read_var(grp_ncid, "ol2",       .False., input_ol2)
+  call NetCDF_read_var(grp_ncid, "ol3",       .False., input_ol3)
+  call NetCDF_read_var(grp_ncid, "ol4",       .False., input_ol4)
+  call NetCDF_read_var(grp_ncid, "theta",     .False., input_theta)
+  call NetCDF_read_var(grp_ncid, "gamma",     .False., input_gamma)
+  call NetCDF_read_var(grp_ncid, "sigma",     .False., input_sigma)
+  call NetCDF_read_var(grp_ncid, "elvmax",    .False., input_elvmax)
+  call NetCDF_read_var(grp_ncid, "oro",       .False., input_oro)
+  call NetCDF_read_var(grp_ncid, "oro_uf",    .False., input_oro_uf)
+  call NetCDF_read_var(grp_ncid, "landfrac",  .False., input_landfrac)
+  call NetCDF_read_var(grp_ncid, "lakefrac",  .False., input_lakefrac)
+  call NetCDF_read_var(grp_ncid, "lakedepth", .False., input_lakedepth)
   
   !NoahMP parameters
-  call NetCDF_read_0D_var(grp_ncid, "tvxy",      .False., input_tvxy)
-  call NetCDF_read_0D_var(grp_ncid, "tgxy",      .False., input_tgxy)
-  call NetCDF_read_0D_var(grp_ncid, "tahxy",     .False., input_tahxy)
-  call NetCDF_read_0D_var(grp_ncid, "canicexy",  .False., input_canicexy)
-  call NetCDF_read_0D_var(grp_ncid, "canliqxy",  .False., input_canliqxy)
-  call NetCDF_read_0D_var(grp_ncid, "eahxy",     .False., input_eahxy)
-  call NetCDF_read_0D_var(grp_ncid, "cmxy",      .False., input_cmxy)
-  call NetCDF_read_0D_var(grp_ncid, "chxy",      .False., input_chxy)
-  call NetCDF_read_0D_var(grp_ncid, "fwetxy",    .False., input_fwetxy)
-  call NetCDF_read_0D_var(grp_ncid, "sneqvoxy",  .False., input_sneqvoxy)
-  call NetCDF_read_0D_var(grp_ncid, "alboldxy",  .False., input_alboldxy)
-  call NetCDF_read_0D_var(grp_ncid, "qsnowxy",   .False., input_qsnowxy)
-  call NetCDF_read_0D_var(grp_ncid, "wslakexy",  .False., input_wslakexy)
-  call NetCDF_read_0D_var(grp_ncid, "taussxy",   .False., input_taussxy)
-  call NetCDF_read_0D_var(grp_ncid, "waxy",      .False., input_waxy)
-  call NetCDF_read_0D_var(grp_ncid, "wtxy",      .False., input_wtxy)
-  call NetCDF_read_0D_var(grp_ncid, "zwtxy",     .False., input_zwtxy)
-  call NetCDF_read_0D_var(grp_ncid, "xlaixy",    .False., input_xlaixy)
-  call NetCDF_read_0D_var(grp_ncid, "xsaixy",    .False., input_xsaixy)
-  call NetCDF_read_0D_var(grp_ncid, "lfmassxy",  .False., input_lfmassxy)
-  call NetCDF_read_0D_var(grp_ncid, "stmassxy",  .False., input_stmassxy)
-  call NetCDF_read_0D_var(grp_ncid, "rtmassxy",  .False., input_rtmassxy)
-  call NetCDF_read_0D_var(grp_ncid, "woodxy",    .False., input_woodxy)
-  call NetCDF_read_0D_var(grp_ncid, "stblcpxy",  .False., input_stblcpxy)
-  call NetCDF_read_0D_var(grp_ncid, "fastcpxy",  .False., input_fastcpxy)
-  call NetCDF_read_0D_var(grp_ncid, "smcwtdxy",  .False., input_smcwtdxy)
-  call NetCDF_read_0D_var(grp_ncid, "deeprechxy",.False., input_deeprechxy)
-  call NetCDF_read_0D_var(grp_ncid, "rechxy",    .False., input_rechxy)
-  call NetCDF_read_0D_var(grp_ncid, "snowxy",    .False., input_snowxy)
+  call NetCDF_read_var(grp_ncid, "tvxy",      .False., input_tvxy)
+  call NetCDF_read_var(grp_ncid, "tgxy",      .False., input_tgxy)
+  call NetCDF_read_var(grp_ncid, "tahxy",     .False., input_tahxy)
+  call NetCDF_read_var(grp_ncid, "canicexy",  .False., input_canicexy)
+  call NetCDF_read_var(grp_ncid, "canliqxy",  .False., input_canliqxy)
+  call NetCDF_read_var(grp_ncid, "eahxy",     .False., input_eahxy)
+  call NetCDF_read_var(grp_ncid, "cmxy",      .False., input_cmxy)
+  call NetCDF_read_var(grp_ncid, "chxy",      .False., input_chxy)
+  call NetCDF_read_var(grp_ncid, "fwetxy",    .False., input_fwetxy)
+  call NetCDF_read_var(grp_ncid, "sneqvoxy",  .False., input_sneqvoxy)
+  call NetCDF_read_var(grp_ncid, "alboldxy",  .False., input_alboldxy)
+  call NetCDF_read_var(grp_ncid, "qsnowxy",   .False., input_qsnowxy)
+  call NetCDF_read_var(grp_ncid, "wslakexy",  .False., input_wslakexy)
+  call NetCDF_read_var(grp_ncid, "taussxy",   .False., input_taussxy)
+  call NetCDF_read_var(grp_ncid, "waxy",      .False., input_waxy)
+  call NetCDF_read_var(grp_ncid, "wtxy",      .False., input_wtxy)
+  call NetCDF_read_var(grp_ncid, "zwtxy",     .False., input_zwtxy)
+  call NetCDF_read_var(grp_ncid, "xlaixy",    .False., input_xlaixy)
+  call NetCDF_read_var(grp_ncid, "xsaixy",    .False., input_xsaixy)
+  call NetCDF_read_var(grp_ncid, "lfmassxy",  .False., input_lfmassxy)
+  call NetCDF_read_var(grp_ncid, "stmassxy",  .False., input_stmassxy)
+  call NetCDF_read_var(grp_ncid, "rtmassxy",  .False., input_rtmassxy)
+  call NetCDF_read_var(grp_ncid, "woodxy",    .False., input_woodxy)
+  call NetCDF_read_var(grp_ncid, "stblcpxy",  .False., input_stblcpxy)
+  call NetCDF_read_var(grp_ncid, "fastcpxy",  .False., input_fastcpxy)
+  call NetCDF_read_var(grp_ncid, "smcwtdxy",  .False., input_smcwtdxy)
+  call NetCDF_read_var(grp_ncid, "deeprechxy",.False., input_deeprechxy)
+  call NetCDF_read_var(grp_ncid, "rechxy",    .False., input_rechxy)
+  call NetCDF_read_var(grp_ncid, "snowxy",    .False., input_snowxy)
   
   !NSST variables
-  call NetCDF_read_0D_var(grp_ncid, "tref",    .False., input_tref)
-  call NetCDF_read_0D_var(grp_ncid, "z_c",     .False., input_z_c)
-  call NetCDF_read_0D_var(grp_ncid, "c_0",     .False., input_c_0)
-  call NetCDF_read_0D_var(grp_ncid, "c_d",     .False., input_c_d)
-  call NetCDF_read_0D_var(grp_ncid, "w_0",     .False., input_w_0)
-  call NetCDF_read_0D_var(grp_ncid, "w_d",     .False., input_w_d)
-  call NetCDF_read_0D_var(grp_ncid, "xt",      .False., input_xt)
-  call NetCDF_read_0D_var(grp_ncid, "xs",      .False., input_xs)
-  call NetCDF_read_0D_var(grp_ncid, "xu",      .False., input_xu)
-  call NetCDF_read_0D_var(grp_ncid, "xv",      .False., input_xv)
-  call NetCDF_read_0D_var(grp_ncid, "xz",      .False., input_xz)
-  call NetCDF_read_0D_var(grp_ncid, "zm",      .False., input_zm)
-  call NetCDF_read_0D_var(grp_ncid, "xtts",    .False., input_xtts)
-  call NetCDF_read_0D_var(grp_ncid, "xzts",    .False., input_xzts)
-  call NetCDF_read_0D_var(grp_ncid, "d_conv",  .False., input_d_conv)
-  call NetCDF_read_0D_var(grp_ncid, "ifd",     .False., input_ifd)
-  call NetCDF_read_0D_var(grp_ncid, "dt_cool", .False., input_dt_cool)
-  call NetCDF_read_0D_var(grp_ncid, "qrain",   .False., input_qrain)
+  call NetCDF_read_var(grp_ncid, "tref",    .False., input_tref)
+  call NetCDF_read_var(grp_ncid, "z_c",     .False., input_z_c)
+  call NetCDF_read_var(grp_ncid, "c_0",     .False., input_c_0)
+  call NetCDF_read_var(grp_ncid, "c_d",     .False., input_c_d)
+  call NetCDF_read_var(grp_ncid, "w_0",     .False., input_w_0)
+  call NetCDF_read_var(grp_ncid, "w_d",     .False., input_w_d)
+  call NetCDF_read_var(grp_ncid, "xt",      .False., input_xt)
+  call NetCDF_read_var(grp_ncid, "xs",      .False., input_xs)
+  call NetCDF_read_var(grp_ncid, "xu",      .False., input_xu)
+  call NetCDF_read_var(grp_ncid, "xv",      .False., input_xv)
+  call NetCDF_read_var(grp_ncid, "xz",      .False., input_xz)
+  call NetCDF_read_var(grp_ncid, "zm",      .False., input_zm)
+  call NetCDF_read_var(grp_ncid, "xtts",    .False., input_xtts)
+  call NetCDF_read_var(grp_ncid, "xzts",    .False., input_xzts)
+  call NetCDF_read_var(grp_ncid, "d_conv",  .False., input_d_conv)
+  call NetCDF_read_var(grp_ncid, "ifd",     .False., input_ifd)
+  call NetCDF_read_var(grp_ncid, "dt_cool", .False., input_dt_cool)
+  call NetCDF_read_var(grp_ncid, "qrain",   .False., input_qrain)
   
   !RUC LSM variables
-  call NetCDF_read_0D_var(grp_ncid, "wetness",          .False., input_wetness)
-  call NetCDF_read_0D_var(grp_ncid, "clw_surf",         .False., input_clw_surf)
-  call NetCDF_read_0D_var(grp_ncid, "qwv_surf",         .False., input_qwv_surf)
-  call NetCDF_read_0D_var(grp_ncid, "tsnow",            .False., input_tsnow)
-  call NetCDF_read_0D_var(grp_ncid, "snowfall_acc",     .False., input_snowfallac)
-  call NetCDF_read_0D_var(grp_ncid, "swe_snowfall_acc", .False., input_acsnow)
-  call NetCDF_read_0D_var(grp_ncid, "lai",              .False., input_lai)
+  call NetCDF_read_var(grp_ncid, "wetness",          .False., input_wetness)
+  call NetCDF_read_var(grp_ncid, "clw_surf",         .False., input_clw_surf)
+  call NetCDF_read_var(grp_ncid, "qwv_surf",         .False., input_qwv_surf)
+  call NetCDF_read_var(grp_ncid, "tsnow",            .False., input_tsnow)
+  call NetCDF_read_var(grp_ncid, "snowfall_acc",     .False., input_snowfallac)
+  call NetCDF_read_var(grp_ncid, "swe_snowfall_acc", .False., input_acsnow)
+  call NetCDF_read_var(grp_ncid, "lai",              .False., input_lai)
     
   !> - Read in the forcing data.
 
@@ -631,25 +752,25 @@ subroutine get_case_init(scm_state, scm_input)
     stat=allocate_status)
 
   !>  - Read in the time-series and 2D forcing data.
-  call NetCDF_read_1D_var(grp_ncid, "p_surf", .True., input_pres_surf)
-  call NetCDF_read_1D_var(grp_ncid, "T_surf", .True., input_T_surf)
-  call NetCDF_read_1D_var(grp_ncid, "sh_flux_spec", .False., input_sh_flux_sfc)
-  call NetCDF_read_1D_var(grp_ncid, "lh_flux_spec", .False., input_lh_flux_sfc)
+  call NetCDF_read_var(grp_ncid, "p_surf", .True., input_pres_surf)
+  call NetCDF_read_var(grp_ncid, "T_surf", .True., input_T_surf)
+  call NetCDF_read_var(grp_ncid, "sh_flux_spec", .False., input_sh_flux_sfc)
+  call NetCDF_read_var(grp_ncid, "lh_flux_spec", .False., input_lh_flux_sfc)
   
-  call NetCDF_read_2D_var(grp_ncid, "w_ls", .True., input_w_ls)
-  call NetCDF_read_2D_var(grp_ncid, "omega", .True., input_omega)
-  call NetCDF_read_2D_var(grp_ncid, "u_g", .True., input_u_g)
-  call NetCDF_read_2D_var(grp_ncid, "v_g", .True., input_v_g)
-  call NetCDF_read_2D_var(grp_ncid, "u_nudge", .True., input_u_nudge)
-  call NetCDF_read_2D_var(grp_ncid, "v_nudge", .True., input_v_nudge)
-  call NetCDF_read_2D_var(grp_ncid, "T_nudge", .True., input_T_nudge)
-  call NetCDF_read_2D_var(grp_ncid, "thil_nudge", .True., input_thil_nudge)
-  call NetCDF_read_2D_var(grp_ncid, "qt_nudge", .True., input_qt_nudge)
-  call NetCDF_read_2D_var(grp_ncid, "dT_dt_rad", .True., input_dT_dt_rad)
-  call NetCDF_read_2D_var(grp_ncid, "h_advec_thetail", .True., input_h_advec_thetail)
-  call NetCDF_read_2D_var(grp_ncid, "h_advec_qt", .True., input_h_advec_qt)
-  call NetCDF_read_2D_var(grp_ncid, "v_advec_thetail", .True., input_v_advec_thetail)
-  call NetCDF_read_2D_var(grp_ncid, "v_advec_qt", .True., input_v_advec_qt)
+  call NetCDF_read_var(grp_ncid, "w_ls", .True., input_w_ls)
+  call NetCDF_read_var(grp_ncid, "omega", .True., input_omega)
+  call NetCDF_read_var(grp_ncid, "u_g", .True., input_u_g)
+  call NetCDF_read_var(grp_ncid, "v_g", .True., input_v_g)
+  call NetCDF_read_var(grp_ncid, "u_nudge", .True., input_u_nudge)
+  call NetCDF_read_var(grp_ncid, "v_nudge", .True., input_v_nudge)
+  call NetCDF_read_var(grp_ncid, "T_nudge", .True., input_T_nudge)
+  call NetCDF_read_var(grp_ncid, "thil_nudge", .True., input_thil_nudge)
+  call NetCDF_read_var(grp_ncid, "qt_nudge", .True., input_qt_nudge)
+  call NetCDF_read_var(grp_ncid, "dT_dt_rad", .True., input_dT_dt_rad)
+  call NetCDF_read_var(grp_ncid, "h_advec_thetail", .True., input_h_advec_thetail)
+  call NetCDF_read_var(grp_ncid, "h_advec_qt", .True., input_h_advec_qt)
+  call NetCDF_read_var(grp_ncid, "v_advec_thetail", .True., input_v_advec_thetail)
+  call NetCDF_read_var(grp_ncid, "v_advec_qt", .True., input_v_advec_qt)
 
   call check(NF90_CLOSE(NCID=ncid))
 
@@ -830,7 +951,8 @@ end subroutine get_case_init
 !> Subroutine to get reference profile to use above the case data (temporarily hard-coded profile)
 subroutine get_reference_profile(scm_state, scm_reference)
   use gmtb_scm_type_defs, only : scm_state_type, scm_reference_type
-
+  use NetCDF_read, only: check
+  
   type(scm_state_type), target, intent(in) :: scm_state
   type(scm_reference_type), target, intent(inout) :: scm_reference
 
@@ -968,111 +1090,6 @@ subroutine get_tracers(tracer_names)
     close (fu)
 end subroutine get_tracers
 
-!> Generic subroutine for reading a 2D variable and filling with missing value if not present
-subroutine NetCDF_read_2D_var(ncid, var_name, req, var_data)
-  
-  integer, intent(in) :: ncid
-  character (*), intent(in) :: var_name
-  logical, intent(in) :: req
-  real(kind=dp), dimension(:,:), intent(out) :: var_data
-  
-  integer :: varID, ierr
-  
-  if (req) then
-    call check(NF90_INQ_VARID(ncid,var_name,varID))
-    call check(NF90_GET_VAR(ncid,varID,var_data))
-  else
-    ierr = NF90_INQ_VARID(ncid,var_name,varID)
-    if (ierr /= NF90_NOERR) then
-      var_data = missing_value
-    else
-      call check(NF90_GET_VAR(ncid,varID,var_data))
-    end if
-  end if
-  
-end subroutine NetCDF_read_2D_var
-
-!> Generic subroutine for reading a 1D variable and filling with missing value if not present
-subroutine NetCDF_read_1D_var(ncid, var_name, req, var_data)
-  
-  integer, intent(in) :: ncid
-  character (*), intent(in) :: var_name
-  logical, intent(in) :: req
-  real(kind=dp), dimension(:), intent(out) :: var_data
-  
-  integer :: varID, ierr
-  
-  if (req) then
-    call check(NF90_INQ_VARID(ncid,var_name,varID))
-    call check(NF90_GET_VAR(ncid,varID,var_data))
-  else
-    ierr = NF90_INQ_VARID(ncid,var_name,varID)
-    if (ierr /= NF90_NOERR) then
-      var_data = missing_value
-    else
-      call check(NF90_GET_VAR(ncid,varID,var_data))
-    end if
-  end if
-  
-end subroutine NetCDF_read_1D_var
-
-!> Generic subroutine for reading a scalar variable (real) and filling with missing value if not present
-subroutine NetCDF_read_0D_var(ncid, var_name, req, var_data)
-  
-  integer, intent(in) :: ncid
-  character (*), intent(in) :: var_name
-  logical, intent(in) :: req
-  real(kind=dp), intent(out) :: var_data
-  
-  integer :: varID, ierr
-  
-  if (req) then
-    call check(NF90_INQ_VARID(ncid,var_name,varID))
-    call check(NF90_GET_VAR(ncid,varID,var_data))
-  else
-    ierr = NF90_INQ_VARID(ncid,var_name,varID)
-    if (ierr /= NF90_NOERR) then
-      var_data = missing_value
-    else
-      call check(NF90_GET_VAR(ncid,varID,var_data))
-    end if
-  end if
-  
-end subroutine NetCDF_read_0D_var
-
-!> Generic subroutine for reading a scalar variable (real) and filling with missing value if not present
-subroutine NetCDF_read_0D_var_int(ncid, var_name, req, var_data)
-  
-  integer, intent(in) :: ncid
-  character (*), intent(in) :: var_name
-  logical, intent(in) :: req
-  integer, intent(out) :: var_data
-  
-  integer :: varID, ierr
-  
-  if (req) then
-    call check(NF90_INQ_VARID(ncid,var_name,varID))
-    call check(NF90_GET_VAR(ncid,varID,var_data))
-  else
-    ierr = NF90_INQ_VARID(ncid,var_name,varID)
-    if (ierr /= NF90_NOERR) then
-      var_data = missing_value
-    else
-      call check(NF90_GET_VAR(ncid,varID,var_data))
-    end if
-  end if
-  
-end subroutine NetCDF_read_0D_var_int
-
-!> Generic subroutine to check for netCDF I/O errors
-subroutine check(status)
-  integer, intent ( in) :: status
-
-  if(status /= NF90_NOERR) then
-    print *, trim(nf90_strerror(status))
-    stop "stopped"
-  end if
-end subroutine check
 !> @}
 !> @}
 end module gmtb_scm_input
