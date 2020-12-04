@@ -299,12 +299,16 @@ ADD_DEPENDENCIES(ccppphys ccpp)
 
 SET(scm_source_files gmtb_scm.F90
             gmtb_scm_input.F90
-            gmtb_scm_utils.F90
+            #gmtb_scm_utils.F90               #gets compiled with CCPP
             gmtb_scm_vgrid.F90
             gmtb_scm_setup.F90
             gmtb_scm_forcing.F90
             gmtb_scm_time_integration.F90
             gmtb_scm_output.F90
+            #gmtb_scm_type_defs.F90           #gets compiled with CCPP
+            #GFS_typedefs.F90                 #gets compiled with CCPP
+            #gmtb_scm_kinds.F90               #gets compiled with CCPP
+            #gmtb_scm_physical_constants.F90  #gets compiled with CCPP
 )
 
 
