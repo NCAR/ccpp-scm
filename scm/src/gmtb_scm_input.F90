@@ -195,8 +195,6 @@ subroutine get_case_init(scm_state, scm_input)
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
   
-  logical               :: noahmp
-  
   integer               :: input_nlev !< number of levels in the input file
   integer               :: input_nsoil !< number of soil levels in the input file
   integer               :: input_ntimes !< number of times represented in the input file
