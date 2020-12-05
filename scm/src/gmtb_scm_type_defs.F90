@@ -794,6 +794,12 @@ module gmtb_scm_type_defs
       end do
     end if
     
+    if (scm_state%sfc_flux_spec) then
+      do i =1, physics%Model%ncols
+          physics%Sfcprop%tsfc => scm_state%T_surf
+      end do
+    end if
+    
     if(scm_state%time_scheme == 2) then
       physics%Stateout%gu0 => scm_state%state_u(:,:,2)
       physics%Stateout%gv0 => scm_state%state_v(:,:,2)

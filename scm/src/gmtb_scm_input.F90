@@ -631,8 +631,8 @@ subroutine get_case_init(scm_state, scm_input)
   !>  - Read in the time-series and 2D forcing data.
   call NetCDF_read_var(grp_ncid, "p_surf", .True., input_pres_surf)
   call NetCDF_read_var(grp_ncid, "T_surf", .True., input_T_surf)
-  call NetCDF_read_var(grp_ncid, "sh_flux_spec", .False., input_sh_flux_sfc)
-  call NetCDF_read_var(grp_ncid, "lh_flux_spec", .False., input_lh_flux_sfc)
+  call NetCDF_read_var(grp_ncid, "sh_flux_sfc", .False., input_sh_flux_sfc)
+  call NetCDF_read_var(grp_ncid, "lh_flux_sfc", .False., input_lh_flux_sfc)
   
   call NetCDF_read_var(grp_ncid, "w_ls", .True., input_w_ls)
   call NetCDF_read_var(grp_ncid, "omega", .True., input_omega)
