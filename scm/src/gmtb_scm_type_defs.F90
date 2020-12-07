@@ -1151,8 +1151,8 @@ module gmtb_scm_type_defs
         missing_var = .false.
       end if
       
-      if (scm_state%model_ics .and. physics%Model%lsm == physics%Model%lsm_noah .or. &
-          physics%Model%lsm == physics%Model%lsm_noahmp) then    !.or. (.not. warm_start) from FV3GFS_io is not implemented
+      if (scm_state%model_ics .and. (physics%Model%lsm == physics%Model%lsm_noah .or. &
+          physics%Model%lsm == physics%Model%lsm_noahmp)) then    !.or. (.not. warm_start) from FV3GFS_io is not implemented
         !check for nonmissing values
         !--- 3D variables
         ! do lsoil = 1,physics%Model%lsoil
