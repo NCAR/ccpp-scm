@@ -979,13 +979,14 @@ module gmtb_scm_type_defs
       
       if(scm_state%model_ics .and. physics%Model%frac_grid) then ! obtain slmsk from landfrac
         !! next 5 lines are temporary till lake model is available
-        if (physics%Sfcprop%lakefrac(i) > real_zero) then
-          !physics%Sfcprop%lakefrac(i) = nint(physics%Sfcprop%lakefrac(i))
-          physics%Sfcprop%landfrac(i) = real_one - physics%Sfcprop%lakefrac(i)
-          if (physics%Sfcprop%lakefrac(i) == real_zero) physics%Sfcprop%fice(i) = real_zero
-        endif 
-        physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i))
-        if (physics%Sfcprop%fice(i) > physics%Model%min_lakeice .and. physics%Sfcprop%landfrac(i) == real_zero) physics%Sfcprop%slmsk(i) = 2 ! land dominates ice if co-exist
+        !if (physics%Sfcprop%lakefrac(i) > real_zero) then
+        !  !physics%Sfcprop%lakefrac(i) = nint(physics%Sfcprop%lakefrac(i))
+        !  physics%Sfcprop%landfrac(i) = real_one - physics%Sfcprop%lakefrac(i)
+        !  if (physics%Sfcprop%lakefrac(i) == real_zero) physics%Sfcprop%fice(i) = real_zero
+        !endif 
+        !physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i))
+        !if (physics%Sfcprop%fice(i) > physics%Model%min_lakeice .and. physics%Sfcprop%landfrac(i) == real_zero) physics%Sfcprop%slmsk(i) = 2 ! land dominates ice if co-exist
+        physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i)) !nint/floor are options
       else ! obtain landfrac from slmsk
         if (physics%Sfcprop%slmsk(i) > 1.9_dp) then
           physics%Sfcprop%landfrac(i) = real_zero
@@ -996,16 +997,41 @@ module gmtb_scm_type_defs
       
       if (physics%Sfcprop%lakefrac(i) > real_zero) then
         physics%Sfcprop%oceanfrac(i) = real_zero ! lake & ocean don't coexist in a cell
-        if (physics%Sfcprop%fice(i) < physics%Model%min_lakeice) then
-           physics%Sfcprop%fice(i) = real_zero
-           if (physics%Sfcprop%slmsk(i) == 2) physics%Sfcprop%slmsk(i) = 0
-        endif
+        !GJF: the following code was taken from fv3atm/develop branch commit d10e450 from 2020/12/2, but the if statements seem like they are in error (reproduced here)
+        if (physics%Sfcprop%slmsk(i) /= real_one) then
+          if (physics%Sfcprop%fice(i) >= physics%Model%min_lakeice) then
+            if (physics%Sfcprop%slmsk(i) < 1.9_dp)      &
+              write(*,'(a,2i3,3f6.2)') 'reset lake slmsk=2 at i=' &
+              ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%lakefrac(i)
+            physics%Sfcprop%slmsk(i) = 2.
+          else if (physics%Sfcprop%slmsk(i) > 1.e-7) then
+            write(*,'(a,2i3,3f6.2)') 'reset lake slmsk=0 at i=' &
+            ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%lakefrac(i)
+            physics%Sfcprop%slmsk(i) = real_zero
+          end if
+        end if
+        !if (physics%Sfcprop%fice(i) < physics%Model%min_lakeice) then
+        !   physics%Sfcprop%fice(i) = real_zero
+        !   if (physics%Sfcprop%slmsk(i) == 2) physics%Sfcprop%slmsk(i) = 0
+        !endif
       else
         physics%Sfcprop%oceanfrac(i) = real_one - physics%Sfcprop%landfrac(i)
-        if (physics%Sfcprop%fice(i) < physics%Model%min_seaice) then
-           physics%Sfcprop%fice(i) = real_zero
-           if (physics%Sfcprop%slmsk(i) == 2) physics%Sfcprop%slmsk(i) = 0
-        endif
+        if (physics%Sfcprop%slmsk(i) /= real_one) then
+          if (physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
+            if (physics%Sfcprop%slmsk(i) < 1.9_dp)      &
+              write(*,'(a,2i3,3f6.2)') 'reset sea slmsk=2 at i,=' &
+              ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%landfrac(i)
+            physics%Sfcprop%slmsk(i) = 2.
+          else if (physics%Sfcprop%slmsk(i) > 1.e-7) then
+            write(*,'(a,2i3,4f6.2)') 'reset sea slmsk=0 at i=' &
+            ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%landfrac(i)
+            physics%Sfcprop%slmsk(i) = real_zero
+          end if
+        end if
+        ! if (physics%Sfcprop%fice(i) < physics%Model%min_seaice) then
+        !    physics%Sfcprop%fice(i) = real_zero
+        !    if (physics%Sfcprop%slmsk(i) == 2) physics%Sfcprop%slmsk(i) = 0
+        ! endif
       endif
       
       !--- NSSTM variables
@@ -1226,7 +1252,7 @@ module gmtb_scm_type_defs
       end if
       
       if(physics%Model%frac_grid .and. scm_state%model_ics) then ! 3-way composite
-            physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
+            if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
             tem1 = real_one - physics%Sfcprop%landfrac(i)
             tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
             physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
