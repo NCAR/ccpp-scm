@@ -934,6 +934,22 @@ module gmtb_scm_type_defs
           physics%Sfcprop%zorlw(i)  = physics%Sfcprop%zorlo(i)
         end if
         
+        !GJF: computing sncovr if model_ics and sncovr is missing: (this requires data from namelist_soilveg module, which is not set until after the CCPP physics_init stage)
+        !this should happen inside of the init stage of a CCPP scheme (after the LSM is initialized -- or at least after set_soilveg is called)
+        !For now, just set sncovr = 0 is missing
+        if (missing_var(32)) physics%Sfcprop%sncovr(i) = real_zero
+        ! physics%Sfcprop%sncovr(i) = zero
+        ! if (physics%Sfcprop%landfrac(i) >= drythresh .or. physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
+        !   vegtyp = physics%Sfcprop%vtype(i)
+        !   if (vegtyp == 0) vegtyp = 7
+        !   rsnow  = 0.001_dp*physics%Sfcprop%weasd(i)/snupx(vegtyp)
+        !   if (0.001_dp*physics%Sfcprop%weasd(i) < snupx(vegtyp)) then
+        !     physics%Sfcprop%sncovr(i) = real_one - (exp(-salp_data*rsnow) - rsnow*exp(-salp_data))
+        !   else
+        !     physics%Sfcprop%sncovr(i) = real_one
+        !   endif
+        ! endif
+        
         !write out warning if missing data for non-required variables
         n = 36
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
@@ -1192,19 +1208,6 @@ module gmtb_scm_type_defs
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to the internal sea ice temperature. These will be set from the internal soil temperature variable (stc)."
         end if
       end if
-      
-      !GJF: computing sncovr if model_ics and sncovr is missing:
-      ! Sfcprop(nb)%sncovr(ix) = zero
-      ! if (Sfcprop(nb)%landfrac(ix) >= drythresh .or. Sfcprop(nb)%fice(ix) >= Model%min_seaice) then
-      !   vegtyp = Sfcprop(nb)%vtype(ix)
-      !   if (vegtyp == 0) vegtyp = 7
-      !   rsnow  = 0.001_r8*Sfcprop(nb)%weasd(ix)/snupx(vegtyp)
-      !   if (0.001_r8*Sfcprop(nb)%weasd(ix) < snupx(vegtyp)) then
-      !     Sfcprop(nb)%sncovr(ix) = one - (exp(-salp_data*rsnow) - rsnow*exp(-salp_data))
-      !   else
-      !     Sfcprop(nb)%sncovr(ix) = one
-      !   endif
-      ! endif
       
       if (scm_input%input_tsfcl < real_zero) then
         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i) !--- compute tsfcl from existing variables
