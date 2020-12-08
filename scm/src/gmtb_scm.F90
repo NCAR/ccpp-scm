@@ -129,6 +129,7 @@ subroutine gmtb_scm_main_sub()
   cdata%thrd_no = 1
   
   call physics%associate(scm_state)
+  call physics%set(scm_input, scm_state)
   
   ! When asked to calculate 3-dim. tendencies, set Stateout variables to
   ! Statein variables here in order to capture the first call to dycore
