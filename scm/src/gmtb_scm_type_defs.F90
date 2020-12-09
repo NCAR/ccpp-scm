@@ -87,6 +87,7 @@ module gmtb_scm_type_defs
     integer                           :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
     integer                           :: C_RES !< effective model resolution in cubed sphere resolution (needed for GWD)
     logical                           :: model_ics !<  true means have land info too
+    logical                           :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
 
     real(kind=dp)                           :: model_time !< elapsed model time (s)
     real(kind=dp)                           :: dt !< physics time step (s)
@@ -782,7 +783,7 @@ module gmtb_scm_type_defs
     physics%Statein%tgrs => scm_state%state_T(:,:,1)
     physics%Statein%qgrs => scm_state%state_tracer(:,:,:,1)
     
-    if (.not. scm_state%model_ics .and. .not. scm_state%sfc_flux_spec) then
+    if (.not. (scm_state%model_ics .or. scm_state%lsm_ics) .and. .not. scm_state%sfc_flux_spec) then
       do i =1, physics%Model%ncols
         if (scm_state%sfc_type(i) == 0) then
           physics%Sfcprop%tsfco => scm_state%T_surf
@@ -889,7 +890,9 @@ module gmtb_scm_type_defs
           end do
         end if
         missing_var = .false.
-        
+      end if
+      
+      if (scm_state%model_ics .or. scm_state%lsm_ics) then  
         write(0,'(a)') "Setting internal physics variables from the surface section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_slmsk, physics%Sfcprop%slmsk(i), "slmsk", (.not. physics%Model%frac_grid), missing_var(1))
         call conditionally_set_var(scm_input%input_tsfco, physics%Sfcprop%tsfco(i), "tsfco", .true., missing_var(2))
@@ -936,7 +939,7 @@ module gmtb_scm_type_defs
         
         !GJF: computing sncovr if model_ics and sncovr is missing: (this requires data from namelist_soilveg module, which is not set until after the CCPP physics_init stage)
         !this should happen inside of the init stage of a CCPP scheme (after the LSM is initialized -- or at least after set_soilveg is called)
-        !For now, just set sncovr = 0 is missing
+        !For now, just set sncovr = 0 if missing
         if (missing_var(32)) physics%Sfcprop%sncovr(i) = real_zero
         ! physics%Sfcprop%sncovr(i) = zero
         ! if (physics%Sfcprop%landfrac(i) >= drythresh .or. physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
@@ -1036,7 +1039,7 @@ module gmtb_scm_type_defs
       
       !--- NSSTM variables
       if (physics%Model%nstf_name(1) > 0) then
-        if (physics%Model%nstf_name(2) == 1 .or. .not. scm_state%model_ics) then             ! nsst spinup
+        if (physics%Model%nstf_name(2) == 1 .or. .not. (scm_state%model_ics .or. scm_state%lsm_ics)) then             ! nsst spinup
           !--- nsstm tref
           physics%Sfcprop%tref(i)    = physics%Sfcprop%tsfco(i)
           physics%Sfcprop%z_c(i)     = real_zero
@@ -1081,7 +1084,7 @@ module gmtb_scm_type_defs
         endif
       endif
       
-      if (scm_state%model_ics .and. physics%Model%lsm == physics%Model%lsm_ruc) then !.and. warm_start (not implemented here -- assuming that RUC LSM has warm start data from file)
+      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then !.and. warm_start (not implemented here -- assuming that RUC LSM has warm start data from file)
         !--- Extra RUC LSM variables
         write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .false., missing_var(1))
@@ -1105,7 +1108,7 @@ module gmtb_scm_type_defs
           end do
         end if
         missing_var = .false.
-      elseif (scm_state%model_ics .and. physics%Model%lsm == physics%Model%lsm_noahmp) then
+      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_noahmp) then
         write(0,'(a)') "Setting internal physics variables from the NoahMP section of the case input file (scalars)..."
         !all of these can be missing, since a method exists to "cold start" these variables
         call conditionally_set_var(scm_input%input_snowxy, physics%Sfcprop%snowxy(i), "snowxy", .false., missing_var(1))
@@ -1151,7 +1154,7 @@ module gmtb_scm_type_defs
         missing_var = .false.
       end if
       
-      if (scm_state%model_ics .and. (physics%Model%lsm == physics%Model%lsm_noah .or. &
+      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. (physics%Model%lsm == physics%Model%lsm_noah .or. &
           physics%Model%lsm == physics%Model%lsm_noahmp)) then    !.or. (.not. warm_start) from FV3GFS_io is not implemented
         !check for nonmissing values
         !--- 3D variables
@@ -1197,7 +1200,7 @@ module gmtb_scm_type_defs
           missing_var = .false.
         endif
 
-      else if (scm_state%model_ics .and. physics%Model%lsm == physics%Model%lsm_ruc) then
+      else if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then
         !--- 3D variables
         ! do lsoil = 1,Model%lsoil_lsm
         !   physics%Sfcprop%tslb(i,lsoil) = scm_input%input_tslb(lsoil)
@@ -1224,7 +1227,7 @@ module gmtb_scm_type_defs
         missing_var = .false.
       end if
 
-      if (scm_state%model_ics) then
+      if (scm_state%model_ics .or. scm_state%lsm_ics) then
         !check for nonmissing values
         ! do k = 1,Model%kice
         !   physics%Sfcprop%tiice(i,k) = scm_input%input_tiice(k)   !--- internal ice temp
@@ -1251,7 +1254,7 @@ module gmtb_scm_type_defs
         physics%Sfcprop%zorlw(i) = physics%Sfcprop%zorlo(i) !--- compute zorlw from existing variables
       end if
       
-      if(physics%Model%frac_grid .and. scm_state%model_ics) then ! 3-way composite
+      if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics)) then ! 3-way composite
             if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
             tem1 = real_one - physics%Sfcprop%landfrac(i)
             tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
@@ -1282,7 +1285,7 @@ module gmtb_scm_type_defs
             endif
       endif ! if (Model%frac_grid)
       
-      if (scm_state%model_ics .and. MAXVAL(scm_input%input_tiice) < real_zero) then
+      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. MAXVAL(scm_input%input_tiice) < real_zero) then
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if

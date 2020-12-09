@@ -57,6 +57,7 @@ subroutine get_config_nml(scm_state)
   real(kind=dp)        :: sfc_roughness_length_cm !< surface roughness length used for calculating surface layer parameters from specified fluxes
   integer              :: sfc_type !< 0: sea surface, 1: land surface, 2: sea-ice surface
   logical              :: model_ics !<  true means have land info too
+  logical              :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour
   real(kind=dp)        :: column_area
@@ -71,7 +72,8 @@ subroutine get_config_nml(scm_state)
   CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
 
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
-    n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, model_ics,C_RES,mom_forcing_type, relax_time, &
+    n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, model_ics, &
+    lsm_ics, C_RES,mom_forcing_type, relax_time, &
     sfc_type, sfc_flux_spec, sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, column_area
     
   NAMELIST /physics_config/ physics_suite, physics_nml
@@ -102,6 +104,7 @@ subroutine get_config_nml(scm_state)
   sfc_roughness_length_cm = 1.0
   sfc_type = 0
   model_ics = .false.
+  lsm_ics = .false.
   reference_profile_choice = 1
   year = 2006
   month = 1
@@ -179,6 +182,7 @@ subroutine get_config_nml(scm_state)
   scm_state%sfc_roughness_length_cm(:) = sfc_roughness_length_cm
   scm_state%sfc_type = REAL(sfc_type, kind=dp)
   scm_state%model_ics = model_ics
+  scm_state%lsm_ics = lsm_ics
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
   
