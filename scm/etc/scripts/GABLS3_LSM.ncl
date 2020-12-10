@@ -14,6 +14,7 @@ begin
   l_v   = 2.5e6   ;latent heat of vaporization (J kg-1)
   l_s   = 2.836e6 ;latent heat of sublimation (J kg-1)
   P0    = 100000. ;intial pressure (Pa)
+  von_K = 0.4     ;vonKarmann constant
   kappa = R_dry/c_p
 
 ; GABLS initial vertical profiles and forcings. For levels with no entries,
@@ -446,18 +447,18 @@ begin
   alnwf = 0.23 ;corresponds to case specs
   alnwf@long_name = "60 degree nir albedo with weak cosz dependency"
   
-  facsf = 0.860249102115631 ;corresponds to value from UFS ICs
+  facsf = 0.50556319952 ;corresponds to value from UFS ICs (static from fix files for C768)
   facsf@long_name = "fractional coverage with strong cosz dependency"
   
-  facwf = 0.139750882983208 ;corresponds to value from UFS ICs
+  facwf = 0.49443680048 ;corresponds to value from UFS ICs (static from fix files for C768)
   facwf@long_name = "fractional coverage with weak cosz dependency"
   
-  vegfrac = 0.769999980926514 ; the value of 100% specified in the case 
+  vegfrac = 1.0 ; the value of 100% specified in the case 
                               ; specifications clashes with the maximum value
                               ; for this gridpoint from UFS ICs
   vegfrac@long_name = "vegetation fraction"
   
-  canopy = 0.01 ;corresponds to value from UFS ICs
+  canopy = 0.5 ;corresponds to typical value for grassland in the growing season
   canopy@units = "kg m-2"
   canopy@long_name = "amount of water stored in canopy"
   
@@ -479,7 +480,9 @@ begin
   soiltyp = 12 ;corresponds to "clay" soil type
   soiltyp@long_name = "soil type (1-12)"
   
-  uustar = 0.531229078769684 ;corresponds to value from UFS ICs
+  ;derive friction velocity from known values
+  wind_speed = (u_specified(1)^2 + v_specified(1)^2)^0.5
+  uustar = von_K*wind_speed/log(uh(1)/(0.01*zorlo))
   uustar@units = "m s-1"
   uustar@long_name = "friction velocity"
   
@@ -511,16 +514,16 @@ begin
   snwdph@units = "mm"
   snwdph@long_name = "water equivalent snow depth"
   
-  shdmin = 0.216057792305946
+  shdmin = 0.01 ; corresponds to minimum vegetation fraction from surface fixed data (is not actually used in Noah LSM)
   shdmin@long_name = "minimum vegetation fraction"
   
-  shdmax = 0.769999980926514
+  shdmax = 1.0 ; the maximum value from the surface fixed data is closer to 0.75 (is not actually used in Noah LSM)
   shdmax@long_name = "maximum vegetation fraction"
   
   slopetyp = 1
   slopetyp@long_name = "slope type (1-9)"
   
-  snoalb = 0.616528332233429 ;corresponds to value from UFS ICs
+  snoalb = 0.728796124458 ;corresponds to value from UFS ICs (static from fix files for C768)
   snoalb@long_name = "maximum snow albedo"
   
   sncovr = 0.0 ;corresponds to case specs
