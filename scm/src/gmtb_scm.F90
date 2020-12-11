@@ -35,6 +35,7 @@ subroutine gmtb_scm_main_sub()
   integer                           :: cdata_time_index
   integer                           :: ierr
   character(len=16) :: logfile_name
+  logical                           :: in_spinup
 
   call get_config_nml(scm_state)
 
@@ -71,8 +72,14 @@ subroutine gmtb_scm_main_sub()
   scm_state%model_time = 0.0
   scm_state%itt = 1
 
-  call interpolate_forcing(scm_input, scm_state)
-
+  in_spinup = (scm_state%do_spinup .and. scm_state%itt <= scm_state%spinup_timesteps)
+  
+  if (in_spinup) then
+    call set_spinup_nudging(scm_state)
+  end if
+  
+  call interpolate_forcing(scm_input, scm_state, in_spinup)
+  
   scm_state%itt_out = 1
 
   call physics%create(scm_state%n_cols)
@@ -158,20 +165,24 @@ subroutine gmtb_scm_main_sub()
   !first time step (call once)
 
   if (scm_state%time_scheme == 1) then
-     scm_state%dt_now = scm_state%dt
-     scm_state%model_time = scm_state%dt_now
-
-     call interpolate_forcing(scm_input, scm_state)
+     if (.not. in_spinup) then
+       scm_state%dt_now = scm_state%dt
+       scm_state%model_time = scm_state%dt_now
+     end if
+     
+     call interpolate_forcing(scm_input, scm_state, in_spinup)
 
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
      !pass in state variables to be modified by forcing and physics
-     call do_time_step(scm_state, physics, cdata)
+     call do_time_step(scm_state, physics, cdata, in_spinup)
 
   else if (scm_state%time_scheme == 2) then
   !   !if using the leapfrog scheme, we initialize by taking one half forward time step and one half (unfiltered) leapfrog time step to get to the end of the first time step
-    scm_state%dt_now = 0.5*scm_state%dt
-    scm_state%model_time = scm_state%dt_now
+    if (.not. in_spinup) then
+      scm_state%dt_now = 0.5*scm_state%dt
+      scm_state%model_time = scm_state%dt_now
+    end if
 
     !save initial state
     scm_state%temp_tracer(:,:,:,1) = scm_state%state_tracer(:,:,:,1)
@@ -179,11 +190,11 @@ subroutine gmtb_scm_main_sub()
     scm_state%temp_u(:,:,1) = scm_state%state_u(:,:,1)
     scm_state%temp_v(:,:,1) = scm_state%state_v(:,:,1)
 
-    call interpolate_forcing(scm_input, scm_state)
+    call interpolate_forcing(scm_input, scm_state, in_spinup)
 
     call calc_pres_exner_geopotential(1, scm_state)
 
-    call apply_forcing_forward_Euler(scm_state)
+    call apply_forcing_forward_Euler(scm_state, in_spinup)
 
     !apply_forcing_forward_Euler updates state variables time level 1, so must copy this data to time_level 2 (where cdata points)
     scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
@@ -224,8 +235,10 @@ subroutine gmtb_scm_main_sub()
     scm_state%temp_v(:,:,2) = scm_state%state_v(:,:,2)
 
     !do half a leapfrog time step to get to the end of one full time step
-    scm_state%model_time = scm_state%dt
-    call interpolate_forcing(scm_input, scm_state)
+    if (.not. in_spinup) then
+      scm_state%model_time = scm_state%dt
+    end if
+    call interpolate_forcing(scm_input, scm_state, in_spinup)
 
     call calc_pres_exner_geopotential(1, scm_state)
 
@@ -236,7 +249,7 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_tracer(:,:,:,1) = scm_state%temp_tracer(:,:,:,1)
 
     !go forward one leapfrog time step
-    call do_time_step(scm_state, physics, cdata)
+    call do_time_step(scm_state, physics, cdata, in_spinup)
 
     !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
     call filter(scm_state)
@@ -246,27 +259,40 @@ subroutine gmtb_scm_main_sub()
     scm_state%state_tracer(:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,scm_state%ozone_index,2)
   end if
 
-  scm_state%itt_out = scm_state%itt_out + 1
-  call output_append(scm_state, physics)
+  if (.not. in_spinup) then
+    scm_state%itt_out = scm_state%itt_out + 1
+    call output_append(scm_state, physics)
+  end if
 
   !prepare for time loop
-  scm_state%n_timesteps = ceiling(scm_state%runtime/scm_state%dt)
+  scm_state%n_timesteps = ceiling(scm_state%runtime/scm_state%dt) + scm_state%spinup_timesteps
   scm_state%n_itt_out = floor(scm_state%output_frequency/scm_state%dt)
 
   scm_state%dt_now = scm_state%dt
   
-  physics%Model%first_time_step = .false.
+  !if (.not. in_spinup) then
+    physics%Model%first_time_step = .false.
+  !end if
 
   do i = 2, scm_state%n_timesteps
-    scm_state%itt = i
+    !are we still in spinup mode?
+    if (scm_state%do_spinup .and. i <= scm_state%spinup_timesteps) then
+      in_spinup = .true.
+    else
+      in_spinup = .false.
+      scm_state%itt = i - scm_state%spinup_timesteps
+    end if
+        
     !>  - Calculate the elapsed model time.
-    scm_state%model_time = scm_state%itt*scm_state%dt
+    if (.not. in_spinup) then
+      scm_state%model_time = scm_state%itt*scm_state%dt
 
-    rinc = 0
-    rinc(4) = (scm_state%itt-1)*scm_state%dt
-    !w3movdat is a GFS routine to calculate the current date (jdat) from an elapsed time and an initial date (rinc is single prec.)
-    call w3movdat(rinc, physics%Model%idat, jdat)
-    physics%Model%jdat = jdat
+      rinc = 0
+      rinc(4) = (scm_state%itt-1)*scm_state%dt
+      !w3movdat is a GFS routine to calculate the current date (jdat) from an elapsed time and an initial date (rinc is single prec.)
+      call w3movdat(rinc, physics%Model%idat, jdat)
+      physics%Model%jdat = jdat
+    end if
 
     !>  - Save previously unfiltered state as temporary for use in the time filter.
     if(scm_state%time_scheme == 2) then
@@ -276,8 +302,8 @@ subroutine gmtb_scm_main_sub()
       scm_state%temp_v = scm_state%state_v
     end if
 
-    call interpolate_forcing(scm_input, scm_state)
-
+    call interpolate_forcing(scm_input, scm_state, in_spinup)
+    
     call calc_pres_exner_geopotential(1, scm_state)
 
     !zero out diagnostics output on EVERY time step - breaks diagnostics averaged over many timesteps
@@ -285,7 +311,7 @@ subroutine gmtb_scm_main_sub()
     call physics%Diag%phys_zero(physics%Model)
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(scm_state, physics, cdata)
+    call do_time_step(scm_state, physics, cdata, in_spinup)
 
     if (scm_state%time_scheme == 2) then
       !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
@@ -297,16 +323,18 @@ subroutine gmtb_scm_main_sub()
     end if
 
     if(mod(scm_state%itt, scm_state%n_itt_out)==0) then
-      scm_state%itt_out = scm_state%itt_out+1
+      
       write(*,*) "itt = ",scm_state%itt
       write(*,*) "model time (s) = ",scm_state%model_time
+      write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
+      write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
+      write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
       write(*,*) "calling output routine..."
-      if (scm_state%lsm_ics) then
-        write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
-        write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
-        write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
+      
+      if (.not. in_spinup) then
+        scm_state%itt_out = scm_state%itt_out+1
+        call output_append(scm_state, physics)
       end if
-      call output_append(scm_state, physics)
 
     end if
   end do
