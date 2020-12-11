@@ -545,7 +545,7 @@ begin
   stc@units = "K"
   stc@long_name = "initial profile of soil temperature"
   
-  smc = (/ 0.180, 0.180, 0.180, 0.180 /)
+  smc = (/ 0.197, 0.197, 0.197, 0.197 /)
   smc@units = "m3 m-3"
   smc@long_name = "initial profile of soil moisture"
   
