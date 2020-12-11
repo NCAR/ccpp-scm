@@ -944,7 +944,7 @@ subroutine output_append(scm_state, physics)
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
   !
   do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcflw(i)%upfx0
+     dummy_1D(i) = physics%Radtend%sfcflw(i)%dnfx0
   end do
   CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_clr",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
