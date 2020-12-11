@@ -419,7 +419,7 @@ begin
   slmsk = 1.0 ;corresponds to land from the UFS ICs
   slmsk@long_name = "land-sea-ice mask"
   
-  tsfco = T_surf(0)
+  tsfco = 305.0 
   tsfco@long_name = "sea surface temperature OR surface skin temperature over land OR sea ice surface skin temperature (depends on value of slmsk)"
   tsfco@units     = "K"
   
@@ -453,7 +453,7 @@ begin
   facwf = 0.49443680048 ;corresponds to value from UFS ICs (static from fix files for C768)
   facwf@long_name = "fractional coverage with weak cosz dependency"
   
-  vegfrac = 1.0 ; the value of 100% specified in the case 
+  vegfrac = 0.75 ; the value of 100% specified in the case 
                               ; specifications clashes with the maximum value
                               ; for this gridpoint from UFS ICs
   vegfrac@long_name = "vegetation fraction"
@@ -481,8 +481,8 @@ begin
   soiltyp@long_name = "soil type (1-12)"
   
   ;derive friction velocity from known values
-  wind_speed = (u_specified(1)^2 + v_specified(1)^2)^0.5
-  uustar = von_K*wind_speed/log(uh(1)/(0.01*zorlo))
+  wind1 = sqrt(u_specified(1)^2 + v_specified(1)^2)
+  uustar = von_K*wind1/log(u_h(1)/(0.01*zorlo))
   uustar@units = "m s-1"
   uustar@long_name = "friction velocity"
   
@@ -499,7 +499,7 @@ begin
   fice = 0.0 ;corresponds to value from UFS ICs
   fice@long_name = "ice fraction"
   
-  tisfc = 300.15 ;corresponds to case specs
+  tisfc = tsfco ; there is no ice, but this corresponds to the surface skin temperature
   tisfc@units = "K"
   tisfc@long_name = "ice surface temperature"
   
@@ -517,7 +517,7 @@ begin
   shdmin = 0.01 ; corresponds to minimum vegetation fraction from surface fixed data (is not actually used in Noah LSM)
   shdmin@long_name = "minimum vegetation fraction"
   
-  shdmax = 1.0 ; the maximum value from the surface fixed data is closer to 0.75 (is not actually used in Noah LSM)
+  shdmax = 0.8 ; the maximum value from the surface fixed data is closer to 0.75 (is not actually used in Noah LSM)
   shdmax@long_name = "maximum vegetation fraction"
   
   slopetyp = 1
@@ -529,7 +529,7 @@ begin
   sncovr = 0.0 ;corresponds to case specs
   sncovr@long_name = "snow area fraction"
   
-  tsfcl = T_surf(0)
+  tsfcl = tsfco
   tsfcl@long_name = "surface skin temperature over land"
   tsfcl@units     = "K"
   
@@ -545,7 +545,7 @@ begin
   stc@units = "K"
   stc@long_name = "initial profile of soil temperature"
   
-  smc = (/ 0.195, 0.195, 0.195, 0.195 /)
+  smc = (/ 0.180, 0.180, 0.180, 0.180 /)
   smc@units = "m3 m-3"
   smc@long_name = "initial profile of soil moisture"
   
