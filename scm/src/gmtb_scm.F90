@@ -326,9 +326,11 @@ subroutine gmtb_scm_main_sub()
       
       write(*,*) "itt = ",scm_state%itt
       write(*,*) "model time (s) = ",scm_state%model_time
-      write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
-      write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
-      write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
+      if (scm_state%lsm_ics .or. scm_state%model_ics) then
+        write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
+        write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
+        write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
+      end if
       write(*,*) "calling output routine..."
       
       if (.not. in_spinup) then
