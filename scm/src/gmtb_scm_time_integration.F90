@@ -49,12 +49,13 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, physics, cdata)
+subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   use gmtb_scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout)          :: scm_state
   type(physics_type), intent(inout)            :: physics
   type(ccpp_t), intent(inout)                  :: cdata
+  logical, intent(in)                          :: in_spinup
 
   integer :: i, ierr
 
@@ -64,11 +65,11 @@ subroutine do_time_step(scm_state, physics, cdata)
   !> - Call apply_forcing_* from \ref forcing. This routine updates the "input" state variables for the physics call (updates filtered values from previous timestep, if leapfrog scheme). It effectively replaces the change of the state variables due to dynamics.
   select case(scm_state%time_scheme)
     case(1)
-      call apply_forcing_forward_Euler(scm_state)
+      call apply_forcing_forward_Euler(scm_state, in_spinup)
     case(2)
       call apply_forcing_leapfrog(scm_state)
     case default
-      call apply_forcing_forward_Euler(scm_state)
+      call apply_forcing_forward_Euler(scm_state, in_spinup)
   end select
 
   if (scm_state%time_scheme == 2) then

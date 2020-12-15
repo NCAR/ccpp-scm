@@ -20,11 +20,12 @@ contains
 
 !> This subroutine interpolates the model forcing, column position, and surface properties to the current model time and to the model grid.
 !! \note The input forcing file contains forcing for one column, yet the SCM code can accommodate more than one column. Right now, all columns are assumed to have the same forcing.
-subroutine interpolate_forcing(scm_input, scm_state)
+subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
   use gmtb_scm_type_defs, only: scm_input_type, scm_state_type
 
   type(scm_input_type), intent(in) :: scm_input
   type(scm_state_type), intent(inout) :: scm_state
+  logical, intent(in) :: in_spinup
 
   integer :: i, n
   integer :: low_t_index, top_index !< index of the time in the input file immediately before the current model time, index of the last calculated level
@@ -38,7 +39,21 @@ subroutine interpolate_forcing(scm_input, scm_state)
 
   !> \section interpolate_forcing_alg Algorithm
   !! @{
-
+  
+  if (in_spinup) then
+    do i=1, scm_state%n_cols
+      scm_state%pres_surf(i) = scm_input%input_pres_surf(1)
+      scm_state%T_surf(i) = scm_input%input_T_surf(1)
+      scm_state%sh_flux(i) = scm_input%input_sh_flux_sfc(1)
+      scm_state%lh_flux(i) = scm_input%input_lh_flux_sfc(1)
+      !need to keep soil properties constant?
+      !scm_state%stc(i,:,1) = scm_input%input_stc
+      !scm_state%smc(i,:,1) = scm_input%input_smc
+      !scm_state%slc(i,:,1) = scm_input%input_slc
+    end do
+    return
+  end if
+  
   !> - Check for the case where the elapsed model time extends beyond the supplied forcing.
   if(scm_state%model_time >= scm_input%input_time(scm_input%input_ntimes)) then
     !>  - If so, hold the forcing terms constant at the last supplied values. The forcing still needs to be interpolated to the grid.
@@ -450,10 +465,11 @@ subroutine apply_forcing_leapfrog(scm_state)
 
 end subroutine apply_forcing_leapfrog
 
-subroutine apply_forcing_forward_Euler(scm_state)
+subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
   use gmtb_scm_type_defs, only: scm_state_type
 
   type(scm_state_type), intent(inout) :: scm_state
+  logical, intent(in) :: in_spinup
 
   real(kind=dp) :: old_u(scm_state%n_cols, scm_state%n_levels), old_v(scm_state%n_cols, scm_state%n_levels), &
     old_T(scm_state%n_cols, scm_state%n_levels), old_qv(scm_state%n_cols, scm_state%n_levels)
@@ -462,11 +478,13 @@ subroutine apply_forcing_forward_Euler(scm_state)
 
   integer :: i,k
   real(kind=dp) :: f_coriolis, grav_inv, g_over_cp, omega_plus, omega_minus, dth_dp_plus, dth_dp_minus, &
-    dqv_dp_plus, dqv_dp_minus
-
+    dqv_dp_plus, dqv_dp_minus, spinup_relax_time
+  
   !> \section apply_leapfrog_forcing_alg Algorithm
   !! @{
-
+  
+  spinup_relax_time = scm_state%dt
+  
   grav_inv = 1.0/con_g
   g_over_cp = con_g/con_cp
 
@@ -497,114 +515,131 @@ subroutine apply_forcing_forward_Euler(scm_state)
       zi(i,scm_state%n_levels+1) = scm_state%geopotential_i(i,scm_state%n_levels+1)*grav_inv
     end do
   !end if
-
-  select case(scm_state%mom_forcing_type)
-    case (1)
-      write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
-      stop
-    case (2)
-      !> - Calculate change in state momentum variables due to vertical advection (subsidence).
-
-      !>  - Calculate tendencies due to vertical advection using same discretization as in previous GFS SCM implmentation (staggered central difference)
-      !!    \f[
-      !!    \frac{\partial x}{\partial t}|_{vert. advection} = \frac{w_{k+1}\left(x_{k+1} - x_{k}\right) + w_k\left(x_k - x_{k-1}\right)}{-2\left(z_{k+1}-z_{k}\right)}
-      !!    \f]
-      !!    where \f$w\f$ is the vertical velocity on interface levels, \f$x\f$ is some state variable on grid centers, \f$z\f$ is the height of interface levels. An model layer shares the same index as the interface below.
-      do i=1, scm_state%n_cols
-        do k=2, scm_state%n_levels-1
-          scm_state%u_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_u(i,k+1) - old_u(i,k)) + w_ls_i(i,k)*(old_u(i,k) - old_u(i,k-1)))/&
-            (zi(i,k+1)-zi(i,k))
-          scm_state%v_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_v(i,k+1) - old_v(i,k)) + w_ls_i(i,k)*(old_v(i,k) - old_v(i,k-1)))/&
-            (zi(i,k+1)-zi(i,k))
-        end do
-        !>  - Handle the top and bottom levels separately using special discretizations.
-        scm_state%u_force_tend(i,1) = -w_ls_i(i,2)*(old_u(i,2) - old_u(i,1))/(zi(i,2)-zi(i,1))
-        scm_state%u_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*&
-          (old_u(i,scm_state%n_levels) - old_u(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
-        scm_state%v_force_tend(i,1) = -w_ls_i(i,2)*(old_v(i,2) - old_v(i,1))/(zi(i,2)-zi(i,1))
-        scm_state%v_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*&
-          (old_v(i,scm_state%n_levels) - old_v(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
-
-        !> - Add forcing due to geostrophic wind
-        !>  - Calculate Coriolis parameter.
-        f_coriolis = 2.0*con_omega*sin(scm_state%lat(i))
-        do k=1, scm_state%n_levels
-          !accumulate forcing tendencies
-          scm_state%u_force_tend(i,k) = scm_state%u_force_tend(i,k) +  f_coriolis*(old_v(i,k) - scm_state%v_g(i,k))
-          scm_state%v_force_tend(i,k) = scm_state%v_force_tend(i,k) -  f_coriolis*(old_u(i,k) - scm_state%u_g(i,k))
-        end do
+  
+  if (in_spinup) then
+    do i=1, scm_state%n_cols
+      do k=1, scm_state%n_levels
+        !accumulate forcing tendencies
+        scm_state%u_force_tend(i,k) = (scm_state%u_nudge(i,k) - old_u(i,k))/spinup_relax_time
+        scm_state%v_force_tend(i,k) = (scm_state%v_nudge(i,k) - old_v(i,k))/spinup_relax_time
       end do
-    case (3)
-      !> - Calculate change in state momentum variables due to nudging.
-      do i=1, scm_state%n_cols
-        do k=1, scm_state%n_levels
-          !accumulate forcing tendencies
-          scm_state%u_force_tend(i,k) = (scm_state%u_nudge(i,k) - old_u(i,k))/scm_state%relax_time
-          scm_state%v_force_tend(i,k) = (scm_state%v_nudge(i,k) - old_v(i,k))/scm_state%relax_time
-        end do
+    end do
+    do i=1, scm_state%n_cols
+      do k=1, scm_state%n_levels
+        !accumulate forcing tendencies
+        scm_state%T_force_tend(i,k) = (scm_state%T_nudge(i,k) - old_T(i,k))/spinup_relax_time
+        scm_state%qv_force_tend(i,k) = (scm_state%qt_nudge(i,k) - old_qv(i,k))/spinup_relax_time
       end do
-    case default
-      scm_state%u_force_tend = 0.0
-      scm_state%v_force_tend = 0.0
-  end select
-
-  select case (scm_state%thermo_forcing_type)
-    case (1)
-      do i=1, scm_state%n_cols
-        !> - Add forcing due to prescribed radiation and horizontal advection
-        do k=1, scm_state%n_levels
-          scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + scm_state%dT_dt_rad(i,k) + &
-            scm_state%exner_l(i,k)*(scm_state%h_advec_thil(i,k) +scm_state%v_advec_thil(i,k))
-          scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) + scm_state%h_advec_qt(i,k) + scm_state%v_advec_qt(i,k)
-        end do
-      end do
-    case (2)
-      do i=1, scm_state%n_cols
-        do k=2, scm_state%n_levels-1
-          !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
-          omega_plus = MAX(scm_state%omega(i,k), 0.0)
-          omega_minus = MIN(scm_state%omega(i,k), 0.0)
-          dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
-          dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
-          dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
-          dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
-          scm_state%qv_force_tend(i,k) = -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
-          scm_state%T_force_tend(i,k) = scm_state%exner_l(i,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
-        end do
-
-        !> - Add forcing due to prescribed radiation and horizontal advection
-        do k=1, scm_state%n_levels
-          scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + scm_state%dT_dt_rad(i,k) + &
-            scm_state%exner_l(i,k)*scm_state%h_advec_thil(i,k)
-          scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) + scm_state%h_advec_qt(i,k)
-        end do
-      end do
-    case (3)
-      !> - Calculate change in state temperature/moisture variables due to nudging.
-      do i=1, scm_state%n_cols
-        do k=1, scm_state%n_levels
-          !accumulate forcing tendencies
-          scm_state%T_force_tend(i,k) = (scm_state%T_nudge(i,k) - old_T(i,k))/scm_state%relax_time
-          scm_state%qv_force_tend(i,k) = (scm_state%qt_nudge(i,k) - old_qv(i,k))/scm_state%relax_time
-        end do
-
-        do k=2, scm_state%n_levels-1
-          !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
-          omega_plus = MAX(scm_state%omega(i,k), 0.0)
-          omega_minus = MIN(scm_state%omega(i,k), 0.0)
-          dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
-          dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
-          dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
-          dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
-          scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
-          scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + &
-            scm_state%exner_l(i,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
-        end do
-      end do
-    case default
-      scm_state%T_force_tend = 0.0
-      scm_state%qv_force_tend = 0.0
-  end select
+    end do
+  else
+    select case(scm_state%mom_forcing_type)
+      case (1)
+        write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
+        stop
+      case (2)
+        !> - Calculate change in state momentum variables due to vertical advection (subsidence).
+        
+        !>  - Calculate tendencies due to vertical advection using same discretization as in previous GFS SCM implmentation (staggered central difference)
+        !!    \f[
+        !!    \frac{\partial x}{\partial t}|_{vert. advection} = \frac{w_{k+1}\left(x_{k+1} - x_{k}\right) + w_k\left(x_k - x_{k-1}\right)}{-2\left(z_{k+1}-z_{k}\right)}
+        !!    \f]
+        !!    where \f$w\f$ is the vertical velocity on interface levels, \f$x\f$ is some state variable on grid centers, \f$z\f$ is the height of interface levels. An model layer shares the same index as the interface below.
+        do i=1, scm_state%n_cols
+          do k=2, scm_state%n_levels-1
+            scm_state%u_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_u(i,k+1) - old_u(i,k)) + w_ls_i(i,k)*(old_u(i,k) - old_u(i,k-1)))/&
+              (zi(i,k+1)-zi(i,k))
+              scm_state%v_force_tend(i,k) = -0.5*(w_ls_i(i,k+1)*(old_v(i,k+1) - old_v(i,k)) + w_ls_i(i,k)*(old_v(i,k) - old_v(i,k-1)))/&
+              (zi(i,k+1)-zi(i,k))
+            end do
+            !>  - Handle the top and bottom levels separately using special discretizations.
+            scm_state%u_force_tend(i,1) = -w_ls_i(i,2)*(old_u(i,2) - old_u(i,1))/(zi(i,2)-zi(i,1))
+            scm_state%u_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*&
+            (old_u(i,scm_state%n_levels) - old_u(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
+            scm_state%v_force_tend(i,1) = -w_ls_i(i,2)*(old_v(i,2) - old_v(i,1))/(zi(i,2)-zi(i,1))
+            scm_state%v_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*&
+            (old_v(i,scm_state%n_levels) - old_v(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
+            
+            !> - Add forcing due to geostrophic wind
+            !>  - Calculate Coriolis parameter.
+            f_coriolis = 2.0*con_omega*sin(scm_state%lat(i))
+            do k=1, scm_state%n_levels
+              !accumulate forcing tendencies
+              scm_state%u_force_tend(i,k) = scm_state%u_force_tend(i,k) +  f_coriolis*(old_v(i,k) - scm_state%v_g(i,k))
+              scm_state%v_force_tend(i,k) = scm_state%v_force_tend(i,k) -  f_coriolis*(old_u(i,k) - scm_state%u_g(i,k))
+            end do
+          end do
+        case (3)
+          !> - Calculate change in state momentum variables due to nudging.
+          do i=1, scm_state%n_cols
+            do k=1, scm_state%n_levels
+              !accumulate forcing tendencies
+              scm_state%u_force_tend(i,k) = (scm_state%u_nudge(i,k) - old_u(i,k))/scm_state%relax_time
+              scm_state%v_force_tend(i,k) = (scm_state%v_nudge(i,k) - old_v(i,k))/scm_state%relax_time
+            end do
+          end do
+        case default
+          scm_state%u_force_tend = 0.0
+          scm_state%v_force_tend = 0.0
+        end select
+        
+        select case (scm_state%thermo_forcing_type)
+        case (1)
+          do i=1, scm_state%n_cols
+            !> - Add forcing due to prescribed radiation and horizontal advection
+            do k=1, scm_state%n_levels
+              scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + scm_state%dT_dt_rad(i,k) + &
+              scm_state%exner_l(i,k)*(scm_state%h_advec_thil(i,k) +scm_state%v_advec_thil(i,k))
+              scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) + scm_state%h_advec_qt(i,k) + scm_state%v_advec_qt(i,k)
+            end do
+          end do
+        case (2)
+          do i=1, scm_state%n_cols
+            do k=2, scm_state%n_levels-1
+              !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
+              omega_plus = MAX(scm_state%omega(i,k), 0.0)
+              omega_minus = MIN(scm_state%omega(i,k), 0.0)
+              dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
+              dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
+              dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
+              dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
+              scm_state%qv_force_tend(i,k) = -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
+              scm_state%T_force_tend(i,k) = scm_state%exner_l(i,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
+            end do
+            
+            !> - Add forcing due to prescribed radiation and horizontal advection
+            do k=1, scm_state%n_levels
+              scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + scm_state%dT_dt_rad(i,k) + &
+              scm_state%exner_l(i,k)*scm_state%h_advec_thil(i,k)
+              scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) + scm_state%h_advec_qt(i,k)
+            end do
+          end do
+        case (3)
+          !> - Calculate change in state temperature/moisture variables due to nudging.
+          do i=1, scm_state%n_cols
+            do k=1, scm_state%n_levels
+              !accumulate forcing tendencies
+              scm_state%T_force_tend(i,k) = (scm_state%T_nudge(i,k) - old_T(i,k))/scm_state%relax_time
+              scm_state%qv_force_tend(i,k) = (scm_state%qt_nudge(i,k) - old_qv(i,k))/scm_state%relax_time
+            end do
+            
+            do k=2, scm_state%n_levels-1
+              !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
+              omega_plus = MAX(scm_state%omega(i,k), 0.0)
+              omega_minus = MIN(scm_state%omega(i,k), 0.0)
+              dth_dp_plus = (theta(i,k) - theta(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
+              dth_dp_minus = (theta(i,k+1) - theta(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
+              dqv_dp_plus = (old_qv(i,k)-old_qv(i,k-1))/(scm_state%pres_l(i,k)-scm_state%pres_l(i,k-1))
+              dqv_dp_minus = (old_qv(i,k+1)-old_qv(i,k))/(scm_state%pres_l(i,k+1)-scm_state%pres_l(i,k))
+              scm_state%qv_force_tend(i,k) = scm_state%qv_force_tend(i,k) -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
+              scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + &
+              scm_state%exner_l(i,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
+            end do
+          end do
+        case default
+          scm_state%T_force_tend = 0.0
+          scm_state%qv_force_tend = 0.0
+        end select
+  end if
 
   do i=1, scm_state%n_cols
     do k=1, scm_state%n_levels
@@ -623,6 +658,22 @@ subroutine apply_forcing_forward_Euler(scm_state)
   !> @}
 
 end subroutine apply_forcing_forward_Euler
+
+subroutine set_spinup_nudging(scm_state)
+  use gmtb_scm_type_defs, only: scm_state_type
+
+  type(scm_state_type), intent(inout) :: scm_state
+  
+  integer :: i
+  
+  do i=1, scm_state%n_cols
+    scm_state%u_nudge(i,:) = scm_state%state_u(i,:,1)
+    scm_state%v_nudge(i,:) = scm_state%state_v(i,:,1)
+    scm_state%T_nudge(i,:) = scm_state%state_T(i,:,1)
+    scm_state%qt_nudge(i,:) = scm_state%state_tracer(i,:,scm_state%water_vapor_index,1)
+  end do
+  
+end subroutine set_spinup_nudging
 
 !> @}
 !> @}
