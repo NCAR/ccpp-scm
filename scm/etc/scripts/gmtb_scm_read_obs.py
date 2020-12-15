@@ -4,6 +4,7 @@ from netCDF4 import Dataset
 import datetime
 import numpy as np
 import sys
+import math
 import forcing_file_common as ffc
 
 def read_twpice_obs(obs_file, time_slices, date):
@@ -236,4 +237,91 @@ def read_LASSO_obs(obs_file, time_slices, date):
 
     obs_fid.close()
 
+    return return_dict
+
+def read_gabls3_obs(obs_file, time_slices, date):
+    
+    con_g = 9.81
+    con_rd = 287.0
+    con_cp = 1004.0
+    con_vir = 0.61
+    p0 = 100000.0
+    
+    obs_time_slice_indices = []
+
+    obs_fid = Dataset(obs_file, 'r')
+    obs_fid.set_auto_mask(False)
+    
+    obs_time_hours_elapsed = obs_fid.variables['time'][:]
+    obs_date_ints = obs_fid.variables['date'][:]
+    n_times = len(obs_time_hours_elapsed)
+    
+    obs_time_hours = np.mod(obs_time_hours_elapsed,24.0*np.ones(n_times))
+        
+    obs_date = []
+    for i in range(obs_time_hours.size):
+        obs_year = int(str(obs_date_ints[i])[0:4])
+        obs_month = int(str(obs_date_ints[i])[4:6])
+        obs_day = int(str(obs_date_ints[i])[6:])
+        obs_hour = int(math.floor(obs_time_hours[i]))
+        obs_minutes = int((obs_time_hours[i] - obs_hour)*60.0)
+        obs_seconds = int(((obs_time_hours[i] - obs_hour) - obs_minutes/60.0)*3600.0)
+        #disregard milliseconds
+        obs_date.append(datetime.datetime(obs_year, obs_month, obs_day, obs_hour, obs_minutes, obs_seconds, 0))
+    obs_date = np.array(obs_date)
+    
+    for time_slice in time_slices:
+      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3])
+      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3])
+      start_date_index = np.where(obs_date == start_date)[0][0]
+      try:
+          end_date_index = np.where(obs_date == end_date)[0][0]
+      except IndexError:
+          end_date_index = len(obs_date) - 1
+      obs_time_slice_indices.append([start_date_index, end_date_index])
+    
+    obs_start_index = np.where(obs_date == date[0][0])[0]
+    obs_time = 3600.0*(obs_time_hours_elapsed - obs_time_hours_elapsed[obs_start_index])
+    
+    obs_zt = np.fliplr(obs_fid.variables['zt'][:])
+    obs_zf = np.fliplr(obs_fid.variables['zf'][:])
+    obs_t = np.fliplr(obs_fid.variables['t'][:])
+    obs_t_fill_value = obs_fid.variables['t']._FillValue
+    obs_q = np.fliplr(obs_fid.variables['q'][:])
+    obs_q_fill_value = obs_fid.variables['q']._FillValue
+    obs_th = np.fliplr(obs_fid.variables['th'][:])
+    
+    obs_hpbl = obs_fid.variables['hpbl'][:]
+    obs_tsk = obs_fid.variables['tsk'][:]
+    obs_shf = obs_fid.variables['shf'][:]
+    obs_lhf = obs_fid.variables['lhf'][:]
+    
+    obs_fid.close()
+    
+    p_surf = 102440.0 #case specifications
+    
+    #find where T has valid values
+    good_t_indices = np.where(obs_t[0,:] != obs_t_fill_value)[0]
+    
+    #assume missing values always appear at same vertical indices
+    good_t = obs_t[:,good_t_indices]
+    good_zf = obs_zf[:,good_t_indices]
+    
+    #good_q_indices = np.where(obs_q[0,:] != obs_q_fill_value)[0]
+    good_q = obs_q[:,good_t_indices]
+    good_th = obs_th[:,good_t_indices]
+        
+    #p_good_lev = np.zeros(len(good_t_indices))
+    #calculate p from hydrostatic equation, surface pressure, and T and q
+    #p_good_lev[0] = p_surf*np.exp(-con_g/(con_rd*good_t[0]*(1.0 + con_vir*good_q[0]))*good_zf[0])
+    #for k in range(1,len(good_t_indices)):
+    #    p_good_lev[k] = p_good_lev[k-1]*np.exp((-con_g/(con_rd*0.5*(good_t[k-1]+good_t[k])*(1.0 + con_vir*0.5*(good_q[k-1]+good_q[k])))*(good_zf[k]-good_zf[k-1])))
+    
+    #calculate p from temperature and potential temperature
+    
+    p_good_lev_from_th = p0/(good_th[0,:]/good_t[0,:])**(con_cp/con_rd)
+    
+    return_dict = {'time': obs_time, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices, 'pres_l': p_good_lev_from_th,
+        'T': good_t, 'qv': good_q, 'shf': obs_shf, 'lhf': obs_lhf, 'time_h': obs_time/3600.0}
+    
     return return_dict
