@@ -405,6 +405,8 @@ if(obs_compare and obs_file):
         obs_dict = gsro.read_arm_sgp_summer_1997_obs(obs_file, time_slices, date)
     elif('LASSO' in case_name.strip()):
         obs_dict = gsro.read_LASSO_obs(obs_file, time_slices, date)
+    elif('gabls3' in case_name.strip()):
+        obs_dict = gsro.read_gabls3_obs(obs_file, time_slices, date)
 
 try:
     os.makedirs(plot_dir)
