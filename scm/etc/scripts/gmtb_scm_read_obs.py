@@ -41,10 +41,10 @@ def read_twpice_obs(obs_file, time_slices, date):
   obs_q = obs_fid.variables['q'][:]/1000.0
   obs_u = obs_fid.variables['u'][:]
   obs_v = obs_fid.variables['v'][:]
-  obs_precip = obs_fid.variables['prec_srf'][:]
+  obs_precip = obs_fid.variables['prec_srf'][:]/3.6E7 #convert from mm/hr to m/s
   obs_shf = obs_fid.variables['SH'][:]
   obs_lhf = obs_fid.variables['LH'][:]
-  obs_pwat = obs_fid.variables['PW'][:]
+  obs_pwat = obs_fid.variables['PW'][:]*10.0 #convert from cm to kg/m2
   obs_lw_net_toa = obs_fid.variables['lw_net_toa'][:]
   obs_rad_net_srf = obs_fid.variables['rad_net_srf'][:]
   obs_sw_dn_toa = obs_fid.variables['sw_dn_toa'][:]
@@ -80,8 +80,8 @@ def read_twpice_obs(obs_file, time_slices, date):
   return_dict = {'year': obs_year, 'month': obs_month, 'day': obs_day, 'hour': obs_hour,
     'time': obs_time, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices,
     'pres_l': obs_pres_l, 'cld': obs_cld, 'T': obs_T, 'q': obs_q, 'u': obs_u, 'v': obs_v,
-    'precip': obs_precip, 'shf': obs_shf, 'lhf': obs_lhf, 'pwat': obs_pwat, 'time_h': obs_time_h,
-    'rain': obs_precip, 'rainc': obs_precip, 'qv': obs_q, 'rh': obs_rh, 'rh_500': obs_rh_500,
+    'shf': obs_shf, 'lhf': obs_lhf, 'pwat': obs_pwat, 'time_h': obs_time_h,
+    'tprcp_rate_accum': obs_precip, 'qv': obs_q, 'rh': obs_rh, 'rh_500': obs_rh_500,
     'lw_up_TOA_tot': obs_lw_net_toa, 'rad_net_srf': obs_rad_net_srf, 'sw_dn_TOA_tot': obs_sw_dn_toa,
     'lw_dn_sfc_tot': obs_lw_dn_srf, 'sw_dn_sfc_tot': obs_sw_dn_srf, 'lwp': obs_lwp,
     'T_force_tend': obs_T_forcing, 'qv_force_tend': obs_q_forcing}

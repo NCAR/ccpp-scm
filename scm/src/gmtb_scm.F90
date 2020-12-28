@@ -79,8 +79,6 @@ subroutine gmtb_scm_main_sub()
   end if
   
   call interpolate_forcing(scm_input, scm_state, in_spinup)
-  
-  scm_state%itt_out = 1
 
   call physics%create(scm_state%n_cols)
   
@@ -132,6 +130,37 @@ subroutine gmtb_scm_main_sub()
                        physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
                        scm_state%lat, scm_state%area)
   
+  !override fhzero in physics namelist if n_itt_diag is set in the case namelist
+  if (scm_state%n_itt_diag >= 1) then
+    physics%Model%nszero = scm_state%n_itt_diag
+    physics%Model%fhzero = scm_state%n_itt_diag*scm_state%dt/3600.0
+  end if
+    
+  !check for problematic diagnostic and radiation periods
+  if (mod(physics%Model%nszero,scm_state%n_itt_out) /= 0) then
+    write(*,*) "***ERROR***: The diagnostic output period must be a multiple of the output period."
+    write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhzero = ",physics%Model%fhzero
+    write(*,*) "implying a diagnostic output period of ", physics%Model%nszero*scm_state%dt, "seconds."
+    write(*,*) "The given output period in the case configuration namelist is ", scm_state%output_period,"seconds."
+    STOP
+  end if
+  
+  if (mod(physics%Model%nsswr,scm_state%n_itt_out) /= 0) then
+    write(*,*) "***WARNING***: The shortwave radiation calling period is different than the output period."
+    write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhswr = ",physics%Model%fhswr
+    write(*,*) "The given output period in the case configuration namelist is ", scm_state%output_period
+    write(*,*) "This will cause the effective output period of variables that are only given values during shortwave calls to be ",&
+      lcm(scm_state%n_itt_out,physics%Model%nsswr)*scm_state%dt," seconds."
+  end if
+  
+  if (mod(physics%Model%nslwr,scm_state%n_itt_out) /= 0) then
+    write(*,*) "***WARNING***: The longwave radiation calling period is different than the output period."
+    write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhlwr = ",physics%Model%fhlwr
+    write(*,*) "The given output period in the case configuration namelist is ", scm_state%output_period
+    write(*,*) "This will cause the effective output period of variables that are only given values during longwave calls to be ",&
+      lcm(scm_state%n_itt_out,physics%Model%nslwr)*scm_state%dt," seconds."
+  end if
+  
   cdata%blk_no = 1
   cdata%thrd_no = 1
   
@@ -160,6 +189,7 @@ subroutine gmtb_scm_main_sub()
   physics%Model%first_time_step = .true.
 
   call output_init(scm_state, physics)
+  scm_state%itt_out = 1
   call output_append(scm_state, physics)
 
   !first time step (call once)
@@ -266,8 +296,7 @@ subroutine gmtb_scm_main_sub()
 
   !prepare for time loop
   scm_state%n_timesteps = ceiling(scm_state%runtime/scm_state%dt) + scm_state%spinup_timesteps
-  scm_state%n_itt_out = floor(scm_state%output_frequency/scm_state%dt)
-
+  
   scm_state%dt_now = scm_state%dt
   
   !if (.not. in_spinup) then
@@ -307,8 +336,8 @@ subroutine gmtb_scm_main_sub()
     call calc_pres_exner_geopotential(1, scm_state)
 
     !zero out diagnostics output on EVERY time step - breaks diagnostics averaged over many timesteps
-    call physics%Diag%rad_zero(physics%Model)
-    call physics%Diag%phys_zero(physics%Model)
+    !call physics%Diag%rad_zero(physics%Model)
+    !call physics%Diag%phys_zero(physics%Model)
 
     !pass in state variables to be modified by forcing and physics
     call do_time_step(scm_state, physics, cdata, in_spinup)

@@ -32,7 +32,7 @@
     fhcyc = 0.0
     fhlwr = 1200.0
     fhswr = 1200.0
-    fhzero = 1.0
+    fhzero = 0.16667
     h2o_phys = .true.
     hybedmf = .false.
     iaer = 111

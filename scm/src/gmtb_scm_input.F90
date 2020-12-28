@@ -38,7 +38,8 @@ subroutine get_config_nml(scm_state)
   character(len=character_length)    :: case_name !< name of case initialization and forcing dataset
   real(kind=dp)        :: dt !< time step in seconds
   real(kind=dp)        :: runtime !< total runtime in seconds
-  real(kind=dp)        :: output_frequency !< freqency of output writing in seconds
+  integer              :: n_itt_out !< multiple of timestep for writing output
+  integer              :: n_itt_diag !< multiple of timestep for resetting diagnostics (overwrites fhzero from physics namelist if present)
   integer              :: n_levels !< number of model levels (currently only 64 supported)
   integer              :: n_soil   !< number of model soil levels (currently only 4 supported)
   integer              :: n_snow   !< number of model snow levels (currently only 3 supported)
@@ -73,7 +74,7 @@ subroutine get_config_nml(scm_state)
 
   CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
 
-  NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, output_frequency, &
+  NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, n_itt_out, n_itt_diag, &
     n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, model_ics, &
     lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
     sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, column_area
@@ -90,7 +91,8 @@ subroutine get_config_nml(scm_state)
   dt = 600.0
   time_scheme = 2
   runtime = 2138400.0
-  output_frequency = 600.0
+  n_itt_out = 1
+  n_itt_diag = -999
   n_levels = 64
   n_soil   = 4
   n_snow   = 3
@@ -171,6 +173,8 @@ subroutine get_config_nml(scm_state)
   scm_state%n_levels = n_levels
   scm_state%n_time_levels = n_time_levels
   scm_state%dt = dt
+  scm_state%n_itt_out = n_itt_out
+  scm_state%n_itt_diag = n_itt_diag
   scm_state%runtime = runtime
   scm_state%time_scheme = time_scheme
   scm_state%init_year = year
@@ -178,7 +182,7 @@ subroutine get_config_nml(scm_state)
   scm_state%init_day = day
   scm_state%init_hour = hour
 
-  scm_state%output_frequency = output_frequency
+  scm_state%output_period = n_itt_out*dt
   scm_state%thermo_forcing_type = thermo_forcing_type
   scm_state%mom_forcing_type = mom_forcing_type
   scm_state%C_RES            = C_RES

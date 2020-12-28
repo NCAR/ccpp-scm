@@ -92,6 +92,22 @@ subroutine w_to_omega(n_col, n_lev, w, p, T, omega)
   omega = -1*w*rho*con_g
 
 end subroutine w_to_omega
+
+integer function lcm(a,b)
+    integer:: a,b
+        lcm = a*b / gcd(a,b)
+end function lcm
+ 
+integer function gcd(a,b)
+    integer :: a,b,t
+    do while (b/=0)
+      t = b
+      b = mod(a,b)
+      a = t
+    end do
+    gcd = abs(a)
+end function gcd
+
 !> @}
 !> @}
 end module gmtb_scm_utils
@@ -102,7 +118,7 @@ module NetCDF_read
   
   implicit none
   
-  real(kind=dp) :: missing_value = -9999.0
+  real(kind=sp) :: missing_value = -9999.0
   
   interface NetCDF_read_var
     module procedure NetCDF_read_var_0d_int
@@ -226,6 +242,7 @@ module NetCDF_def
   contains
   
   subroutine NetCDF_def_var(ncid, var_name, var_type, desc, unit, varid, dims)
+    use NetCDF_read, only: missing_value
     integer, intent(in) :: ncid
     character (*), intent(in) :: var_name
     integer, intent(in) :: var_type
@@ -234,7 +251,7 @@ module NetCDF_def
     character (*), intent(in) :: unit
     integer, intent(out) :: varid
     
-    !write(*,*) 'Defining variable: ',var_name
+    write(*,*) 'Defining variable: ',var_name
     if (present(dims)) then
       CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,DIMIDS=dims,VARID=varid))
     else
@@ -242,6 +259,7 @@ module NetCDF_def
     end if
     CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="description",VALUES=desc))
     CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="units",VALUES=unit))
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value))
   
   end subroutine NetCDF_def_var
 end module NetCDF_def
@@ -279,29 +297,39 @@ module NetCDF_put
     
   end subroutine NetCDF_put_var_int_0d
   
-  subroutine NetCDF_put_var_1d(ncid, var_name, var, itt)
+  subroutine NetCDF_put_var_1d(ncid, var_name, var, itt, mult_const)
     integer, intent(in) :: ncid, itt
     character (*), intent(in) :: var_name
     real(kind=dp), intent(in), dimension(:) :: var
+    real(kind=dp), intent(in), optional :: mult_const
     
     integer :: var_id
     
     !write(*,*) 'Putting variable: ',var_name
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,itt /)))
+    if (present(mult_const)) then
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var*mult_const,START=(/1,itt /)))
+    else
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,itt /)))
+    end if
     
   end subroutine NetCDF_put_var_1d
   
-  subroutine NetCDF_put_var_2d(ncid, var_name, var, itt)
+  subroutine NetCDF_put_var_2d(ncid, var_name, var, itt, mult_const)
     integer, intent(in) :: ncid, itt
     character (*), intent(in) :: var_name
     real(kind=dp), intent(in), dimension(:,:) :: var
+    real(kind=dp), intent(in), optional :: mult_const
     
     integer :: var_id
     
     !write(*,*) 'Putting variable: ',var_name
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,1,itt /)))
+    if (present(mult_const)) then
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var*mult_const,START=(/1,1,itt /)))
+    else
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,1,itt /)))
+    end if
     
   end subroutine NetCDF_put_var_2d
 end module NetCDF_put
