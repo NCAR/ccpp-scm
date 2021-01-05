@@ -170,6 +170,10 @@ subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id,
   call NetCDF_def_var(ncid, 'shf', NF90_FLOAT, "surface sensible heat flux", "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'tprcp_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation", "m", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'tprcp_rate_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation rate (tprcp_inst/dt)", "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 't2m', NF90_FLOAT, "2-m temperature", "K", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'q2m', NF90_FLOAT, "2-m specific humidity", "kg kg-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'ustar', NF90_FLOAT, "surface friction velocity", "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'tsfc', NF90_FLOAT, "surface skin temperature", "m s-1K", dummy_id, (/ hor_dim_id, time_inst_id /))
   
 end subroutine output_init_sfcprop
 
@@ -283,6 +287,10 @@ subroutine output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_d
   call NetCDF_def_var(ncid, 'sfc_up_sw',       NF90_FLOAT, "surface upwelling shortwave flux (valid all timesteps)",                     "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_net_sw',      NF90_FLOAT, "surface net shortwave flux (downwelling - upwelling) (valid all timesteps)", "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_dwn_lw',      NF90_FLOAT, "surface downwelling longwave flux (valid all timesteps)",                    "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'gflux',           NF90_FLOAT, "instantaneous surface ground heat flux (valid all timesteps)",               "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'u10m',            NF90_FLOAT, "instantaneous 10-m zonal wind",                                              "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'v10m',            NF90_FLOAT, "instantaneous 10-m meridional wind",                                         "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'hpbl',            NF90_FLOAT, "instantaneous planetary boundary layer height",                              "m",     dummy_id, (/ hor_dim_id, time_inst_id /))
   
   call NetCDF_def_var(ncid, 'tprcp_accum',          NF90_FLOAT, "cumulative surface liquid water equivalent thickness of total precipitation (valid over diagnostic interval)",           "m",     dummy_id, (/ hor_dim_id, time_diag_id /))
   call NetCDF_def_var(ncid, 'ice_accum',            NF90_FLOAT, "cumulative surface liquid water equivalent thickness of ice precipitation (valid over diagnostic interval)",             "m",     dummy_id, (/ hor_dim_id, time_diag_id /))
@@ -455,6 +463,10 @@ subroutine output_append_sfcprop(ncid, scm_state, physics)
   call NetCDF_put_var(ncid, 'shf', shf, scm_state%itt_out)
   call NetCDF_put_var(ncid, 'tprcp_inst', physics%Sfcprop%tprcp(:), scm_state%itt_out)
   call NetCDF_put_var(ncid, 'tprcp_rate_inst', physics%Sfcprop%tprcp(:)/scm_state%dt, scm_state%itt_out)
+  call NetCDF_put_var(ncid, 't2m', physics%Sfcprop%t2m(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'q2m', physics%Sfcprop%q2m(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'ustar', physics%Sfcprop%uustar(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'tsfc', physics%Sfcprop%tsfc(:), scm_state%itt_out)
   
 end subroutine output_append_sfcprop
 
@@ -551,6 +563,11 @@ subroutine output_append_diag_inst(ncid, scm_state, physics)
     call NetCDF_put_var(ncid, "sfc_up_sw",   physics%Diag%dswsfci(:) - physics%Diag%nswsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
     call NetCDF_put_var(ncid, "sfc_net_sw",  physics%Diag%nswsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
     call NetCDF_put_var(ncid, "sfc_dwn_lw",  physics%Diag%dlwsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
+    
+    call NetCDF_put_var(ncid, "gflux",       physics%Diag%gfluxi(:), scm_state%itt_out)  !do not average (this variable is set from an interstitial variable in GFS_surface_generic_post)
+    call NetCDF_put_var(ncid, "u10m",        physics%Diag%u10m(:),   scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in sfc_diag)
+    call NetCDF_put_var(ncid, "v10m",        physics%Diag%v10m(:),   scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in sfc_diag)
+    call NetCDF_put_var(ncid, "hpbl",        physics%Tbd%hpbl(:),    scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in individual PBL schemes)
     
     !all auxilliary diagnostics will be output every timestep (logic will need to be added to implement time averaging [move this to output_append_diag_avg when that happens] -- including resetting in GFS_typedefs/phys_diag_zero)
     if (physics%Model%naux2d > 0) then

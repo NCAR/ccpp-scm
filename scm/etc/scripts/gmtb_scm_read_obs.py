@@ -295,6 +295,16 @@ def read_gabls3_obs(obs_file, time_slices, date):
     obs_tsk = obs_fid.variables['tsk'][:]
     obs_shf = obs_fid.variables['shf'][:]
     obs_lhf = obs_fid.variables['lhf'][:]
+    obs_lw_up = obs_fid.variables['lup'][:]
+    obs_lw_dn = obs_fid.variables['ldw'][:]
+    obs_sw_up = obs_fid.variables['qup'][:]
+    obs_sw_dn = obs_fid.variables['qdw'][:]
+    obs_gflux = obs_fid.variables['g'][:]
+    obs_t2m = obs_fid.variables['t2m'][:]
+    obs_q2m = obs_fid.variables['q2m'][:]
+    obs_ustar = obs_fid.variables['ustar'][:]
+    obs_u10m = obs_fid.variables['u10m'][:]
+    obs_v10m = obs_fid.variables['v10m'][:]
     
     obs_fid.close()
     
@@ -321,7 +331,11 @@ def read_gabls3_obs(obs_file, time_slices, date):
     
     p_good_lev_from_th = p0/(good_th[0,:]/good_t[0,:])**(con_cp/con_rd)
     
+    obs_sfc_rad_net = (obs_sw_dn - obs_sw_up) + (obs_lw_dn - obs_lw_up)
+    
     return_dict = {'time': obs_time, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices, 'pres_l': p_good_lev_from_th,
-        'T': good_t, 'qv': good_q, 'shf': obs_shf, 'lhf': obs_lhf, 'time_h': obs_time/3600.0}
+        'T': good_t, 'qv': good_q, 'shf': obs_shf, 'lhf': obs_lhf, 'time_h': obs_time/3600.0, 'sfc_up_lw_land': obs_lw_up, 'sfc_dwn_lw': obs_lw_dn,
+        'sfc_dwn_sw': obs_sw_dn, 'sfc_up_sw': obs_sw_up, 'sfc_rad_net_land': obs_sfc_rad_net, 'gflux': -1*obs_gflux, 't2m':obs_t2m, 'q2m':obs_q2m, 
+        'ustar':obs_ustar,'u10m':obs_u10m, 'v10m':obs_v10m, 'hpbl':obs_hpbl, 'tsfc':obs_tsk}
     
     return return_dict

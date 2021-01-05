@@ -168,6 +168,10 @@ lhf = []
 shf = []
 tprcp_inst = []
 tprcp_rate_inst = []
+t2m = []
+q2m = []
+ustar = []
+tsfc = []
 
 tau_u = []
 tau_v = []
@@ -206,6 +210,14 @@ sfc_dwn_sw = []
 sfc_up_sw  = []
 sfc_net_sw = []
 sfc_dwn_lw = []
+gflux = []
+u10m = []
+v10m = []
+hpbl = []
+sfc_rad_net_land   = []
+sfc_rad_net_ice    = []
+sfc_rad_net_ocean  = []
+
 
 dT_dt_lwrad = []
 dT_dt_swrad = []
@@ -263,7 +275,6 @@ snow_rate_accum = []
 graupel_rate_accum = []
 conv_prcp_rate_accum = []
 
-PBL_height = []
 sw_up_TOA_tot = []
 sw_dn_TOA_tot = []
 sw_up_TOA_clr = []
@@ -279,8 +290,6 @@ lw_dn_sfc_tot = []
 lw_dn_sfc_clr = []
 rh = []
 rh_500 = []
-rad_net_srf = []
-lwp = []
 
 inst_time_group = []
 diag_time_group = []
@@ -414,6 +423,18 @@ for i in range(len(gmtb_scm_datasets)):
     tprcp_rate_inst.append(nc_fid.variables['tprcp_rate_inst'][:])
     inst_time_group.append('tprcp_rate_inst')
     
+    t2m.append(nc_fid.variables['t2m'][:])
+    inst_time_group.append('t2m')
+    
+    q2m.append(nc_fid.variables['q2m'][:])
+    inst_time_group.append('q2m')
+    
+    ustar.append(nc_fid.variables['ustar'][:])
+    inst_time_group.append('ustar')
+    
+    tsfc.append(nc_fid.variables['tsfc'][:])
+    inst_time_group.append('tsfc')
+    
     tau_u.append(nc_fid.variables['tau_u'][:])
     inst_time_group.append('tau_u')
     
@@ -518,6 +539,18 @@ for i in range(len(gmtb_scm_datasets)):
     
     sfc_dwn_lw.append(nc_fid.variables['sfc_dwn_lw'][:])
     inst_time_group.append('sfc_dwn_lw')
+    
+    gflux.append(nc_fid.variables['gflux'][:])
+    inst_time_group.append('gflux')
+    
+    u10m.append(nc_fid.variables['u10m'][:])
+    inst_time_group.append('u10m')
+    
+    v10m.append(nc_fid.variables['v10m'][:])
+    inst_time_group.append('v10m')
+    
+    hpbl.append(nc_fid.variables['hpbl'][:])
+    inst_time_group.append('hpbl')
     
     dT_dt_lwrad.append(nc_fid.variables['dT_dt_lwrad'][:])
     diag_time_group.append('dT_dt_lwrad')
@@ -681,7 +714,15 @@ for i in range(len(gmtb_scm_datasets)):
     conv_prcp_rate_accum.append(nc_fid.variables['conv_prcp_rate_accum'][:])
     diag_time_group.append('conv_prcp_rate_accum')
     
-    # PBL_height.append(nc_fid.variables['PBL_height'][:])
+    sfc_rad_net_land.append((sfc_dwn_sw[-1] - sfc_up_sw[-1]) + (sfc_dwn_lw[-1] - sfc_up_lw_land[-1]))
+    inst_time_group.append('sfc_rad_net_land')
+    
+    sfc_rad_net_ice.append((sfc_dwn_sw[-1] - sfc_up_sw[-1]) + (sfc_dwn_lw[-1] - sfc_up_lw_ice[-1]))
+    inst_time_group.append('sfc_rad_net_ice')
+    
+    sfc_rad_net_ocean.append((sfc_dwn_sw[-1] - sfc_up_sw[-1]) + (sfc_dwn_lw[-1] - sfc_up_lw_ocean[-1]))
+    inst_time_group.append('sfc_rad_net_ocean')
+    
     # sw_up_TOA_tot.append(nc_fid.variables['sw_up_TOA_tot'][:])
     # sw_dn_TOA_tot.append(nc_fid.variables['sw_dn_TOA_tot'][:])
     # sw_up_TOA_clr.append(nc_fid.variables['sw_up_TOA_clr'][:])
