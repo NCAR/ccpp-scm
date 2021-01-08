@@ -1,6 +1,6 @@
 ﻿
 &gfs_physics_nml
-      fhzero         = 6.
+      fhzero         = 0.16667
       ldiag3d        = .true.
       qdiag3d        = .true.
       fhcyc          = 0

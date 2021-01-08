@@ -20,11 +20,16 @@ contains
 !> This subroutine initializes the output netCDF file, "output.nc", placed in the directory specified by the case_config file used.
 subroutine output_init(scm_state, physics)
   use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use NetCDF_def, only: NetCDF_def_var
+  use NetCDF_put, only: NetCDF_put_var
 
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type),   intent(in) :: physics
-
-  INTEGER :: i, ncid, time_id, hor_dim_id, vert_dim_id, vert_dim_i_id, dummy_id, year_id, month_id, day_id, hour_id
+  
+  integer :: n_timesteps, n_inst, n_diag, n_swrad, n_lwrad
+  integer :: ncid, hor_dim_id, vert_dim_id, vert_dim_i_id, vert_dim_rad_id, vert_dim_soil_id, dummy_id
+  integer :: time_inst_id, time_diag_id, time_swrad_id, time_lwrad_id
+  integer :: year_id, month_id, day_id, hour_id
   character(2) :: idx
   !> \section output_init_alg Algorithm
   !! @{
@@ -33,483 +38,299 @@ subroutine output_init(scm_state, physics)
   CALL CHECK(NF90_CREATE(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",CMODE=NF90_CLOBBER,NCID=ncid))
 
   !> - Define netCDF dimensions.
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_dim",LEN=NF90_UNLIMITED,DIMID=time_id))
+  n_timesteps = ceiling(scm_state%runtime/scm_state%dt)
+  
+  !output_append is hard-coded to be called once after initialization and once after the first timestep
+  if(scm_state%n_itt_out > 1) then
+    n_inst = n_timesteps/scm_state%n_itt_out + 1 !one added for hard-coded output after first time step
+  else
+    n_inst = n_timesteps + 1 !one added for hard-coded initialization output
+  end if
+  if(physics%Model%nszero == 1) then
+    n_diag = n_timesteps/physics%Model%nszero + 1
+  else
+    n_diag = n_timesteps/physics%Model%nszero
+  end if
+  n_swrad = n_timesteps/physics%Model%nsswr
+  n_lwrad = n_timesteps/physics%Model%nslwr
+  
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id))
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id))
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_swrad_dim",LEN=n_swrad,DIMID=time_swrad_id))
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_lwrad_dim",LEN=n_lwrad,DIMID=time_lwrad_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="hor_dim_layer",LEN=scm_state%n_cols,DIMID=hor_dim_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_layer",LEN=scm_state%n_levels,DIMID=vert_dim_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_interface",LEN=scm_state%n_levels+1,DIMID=vert_dim_i_id))
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_rad",LEN=physics%Interstitial%lmk,DIMID=vert_dim_rad_id))
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_soil",LEN=physics%Model%lsoil,DIMID=vert_dim_soil_id))
 
   !> - Define the dimension variables.
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME="time",XTYPE=NF90_FLOAT,DIMIDS=(/ time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="model elapsed time"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="s"))
+  call NetCDF_def_var(ncid, 'time_inst', NF90_FLOAT, "model elapsed time for instantaneous variables", "s", dummy_id, (/ time_inst_id /))
+  call NetCDF_def_var(ncid, 'time_diag', NF90_FLOAT, "model elapsed time for diagnostic variables", "s", dummy_id, (/ time_diag_id /))
+  call NetCDF_def_var(ncid, 'time_swrad', NF90_FLOAT, "model elapsed time for shortwave radiation variables", "s", dummy_id, (/ time_swrad_id /))
+  call NetCDF_def_var(ncid, 'time_lwrad', NF90_FLOAT, "model elapsed time for longwave radiation variables", "s", dummy_id, (/ time_lwrad_id /))
 
-  !> - Define the pressure-related variables.
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pres',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="pressure on model layer centers"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pres_i',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_i_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="pressure on model layer interfaces"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sigma',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="sigma (p/p_s) on model layer centers"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sigma_i',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_i_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="sigma (p/p_s) on model layer interfaces"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='phi',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='phi_i',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_i_id, time_id /), &
-  !   VARID=dummy_id))
-
-  !> - Define the state variables.
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="water vapor specific humidity on model layer centers"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="absolute temperature on model layer centers"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='u',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="x-wind on model layer centers"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="y-wind on model layer centers"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="suspended total cloud water on model layer centers"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
-
-  !> - Define the forcing-related variables.
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qv_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="total forcing tendency for water vapor specific humidity"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="total forcing tendency for absolute temperature"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='u_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="total forcing tendency for x-wind"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_force_tend',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="total forcing tendency for y-wind"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='w_ls',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="large-scale vertical velocity forcing"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='u_g',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="geostrophic x-wind forcing"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_g',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="geostrophic y-wind forcing"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_rad_forc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="prescribed radiative heating rate forcing"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='h_advec_thil',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="large-scale horizontal advective heating rate for ice-liquid water potential temperature"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='h_advec_qt',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="large-scale horizontal advective moistening rate for total water specific humidity"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_advec_thil',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="large-scale vertical advective heating rate for ice-liquid water potential temperature"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='v_advec_qt',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="large-scale vertical advective moistening rate for total water specific humidity"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_s',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface temperature"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
-  if (scm_state%model_ics .or. scm_state%lsm_ics) then
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_soil_1',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil temperature layer 1"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_soil_2',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil temperature layer 2"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_soil_3',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil temperature layer 3"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='T_soil_4',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil temperature layer 4"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K"))
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='soil_moisture_1',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil moisture layer 1"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m3 m-3"))
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='soil_moisture_2',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil moisture layer 2"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m3 m-3"))
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='soil_moisture_3',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil moisture layer 3"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m3 m-3"))
-    CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='soil_moisture_4',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="soil moisture layer 4"))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m3 m-3"))
-  end if
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pres_s',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface pressure"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lhf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface latent heat flux"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="W m-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='shf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface sensible heat flux"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="W m-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_u',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface x-wind stress"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='tau_v',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface y-wind stress"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="Pa"))
-
-  !> - Define the diagnostics variables.
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='cldcov',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="cloud fraction"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='cldcov_conv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="convective cloud fraction"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="none"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='ql',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="cloud liquid water"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qi',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="cloud ice water"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='qc_conv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="convective total cloud water"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_rad_heating_rate',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="shortwave radiative heating rate"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_rad_heating_rate',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="longwave radiative heating rate"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='rain',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface total rain rate"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='rainc',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="surface convective rain rate"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='pwat',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="column precipitable water"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_lwrad',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-    VALUES="temperature tendency due to longwave radiation scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_swrad',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /),&
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="temperature tendency due to shortwave radiation scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="temperature tendency due to PBL scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="temperature tendency due to deep convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="temperature tendency due to shallow convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_micro',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="temperature tendency due to microphysics scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_ogwd',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="temperature tendency due to orographic gravity wave drag scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_rayleigh',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="temperature tendency due to rayleigh damping scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_cgwd',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="temperature tendency due to convective gravity wave drag scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_phys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="temperature tendency due to all physics schemes"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dT_dt_nonphys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="temperature tendency due to all processes other than physics"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="K s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="moisture tendency due to PBL scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="moisture tendency due to deep convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="moisture tendency due to shallow convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_micro',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="moisture tendency due to microphysics scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='doz_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="ozone tendency due to PBL scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='doz_dt_prodloss',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="ozone tendency due to ozone production and loss"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='doz_dt_oz',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="ozone tendency due to ozone"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='doz_dt_T',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="ozone tendency due to temperature"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='doz_dt_ovhd',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="ozone tendency due to overhead ozone column"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_phys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="moisture tendency due to all physics"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='doz_dt_phys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="ozone tendency due to all physics"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dq_dt_nonphys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="moisture tendency due to all processes other than physics"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='doz_dt_nonphys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-     VALUES="ozone tendency due to all processes other than physics"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg kg-1 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to PBL scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_OGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to orographic GWD scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to deep convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_CGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to convective GWD scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_rayleigh',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to rayleigh damping scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to shallow convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_phys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to all physics schemes"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='du_dt_nonphys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="x-wind tendency due to all processes other than physics"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_PBL',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to PBL scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_OGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to orographic GWD scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_deepconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to deep convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_CGWD',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to convective GWD scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_rayleigh',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to rayleigh damping scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_shalconv',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to shallow convection scheme"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_phys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to all physics schemes"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dv_dt_nonphys',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id, time_id /), &
-    VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",&
-   VALUES="y-wind tendency due to all processes other than physics"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="m s-2"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='upd_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="updraft mass flux"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='dwn_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="downdraft mass flux"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2 s-1"))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='det_mf',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, vert_dim_id,time_id /), &
-     VARID=dummy_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="description",VALUES="detrainment mass flux"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=dummy_id,NAME="units",VALUES="kg m-2 s-1"))
-  ! CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='PBL_height',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_TOA_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_up_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='sw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_TOA_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_TOA_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_up_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_tot',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='lw_dn_sfc_clr',XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id, time_id /), VARID=dummy_id))
-
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_year',XTYPE=NF90_FLOAT,VARID=year_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="description",VALUES="model initialization year"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=year_id,NAME="units",VALUES=""))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_month',XTYPE=NF90_FLOAT,VARID=month_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=month_id,NAME="description",VALUES="model initialization month"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=month_id,NAME="units",VALUES=""))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_day',XTYPE=NF90_FLOAT,VARID=day_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=day_id,NAME="description",VALUES="model initialization day"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=day_id,NAME="units",VALUES=""))
-  CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='init_hour',XTYPE=NF90_FLOAT,VARID=hour_id))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=hour_id,NAME="description",VALUES="model initialization hour"))
-  CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=hour_id,NAME="units",VALUES=""))
+  !> - Define the state variables
+  CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
+  !> - Define the forcing variables
+  CALL output_init_forcing(ncid, time_inst_id, hor_dim_id, vert_dim_id)
   
+  !> - Define all diagnostic/physics variables
+  CALL output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id, scm_state, physics)
+  CALL output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
+  CALL output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
+  CALL output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id, physics)
+  
+  call NetCDF_def_var(ncid, 'init_year',  NF90_FLOAT, "model initialization year",  "year",  year_id)
+  call NetCDF_def_var(ncid, 'init_month', NF90_FLOAT, "model initialization month", "month", month_id)
+  call NetCDF_def_var(ncid, 'init_day',   NF90_FLOAT, "model initialization day",   "day",   day_id)
+  call NetCDF_def_var(ncid, 'init_hour',  NF90_FLOAT, "model initialization hour",  "hour",  hour_id)
+  
+  !> - Close variable definition and the file.
+  CALL CHECK(NF90_ENDDEF(NCID=ncid))
+  
+  call NetCDF_put_var(ncid, "init_year",  scm_state%init_year,  year_id)
+  call NetCDF_put_var(ncid, "init_month", scm_state%init_month, month_id)
+  call NetCDF_put_var(ncid, "init_day",   scm_state%init_day,   day_id)
+  call NetCDF_put_var(ncid, "init_hour",  scm_state%init_hour,  hour_id)
+
+  CALL CHECK(NF90_CLOSE(NCID=ncid))
+
+  !> @}
+end subroutine output_init
+
+subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
+  use NetCDF_def, only : NetCDF_def_var
+  
+  integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id
+  
+  integer :: dummy_id
+  
+  !> - Define the pressure-related variables.
+  call NetCDF_def_var(ncid, 'pres',    NF90_FLOAT, "pressure on model layer centers",         "Pa",   dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'pres_i',  NF90_FLOAT, "pressure on model layer interfaces",      "Pa",   dummy_id, (/ hor_dim_id, vert_dim_i_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sigma',   NF90_FLOAT, "sigma (p/p_s) on model layer centers",    "none", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'sigma_i', NF90_FLOAT, "sigma (p/p_s) on model layer interfaces", "none", dummy_id, (/ hor_dim_id, vert_dim_i_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'pres_s',  NF90_FLOAT, "surface pressure",                        "Pa",   dummy_id, (/ hor_dim_id,                time_inst_id /))
+  
+  !> - Define the state variables.
+  call NetCDF_def_var(ncid, 'qv', NF90_FLOAT, "water vapor specific humidity on model layer centers",                "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'T',  NF90_FLOAT, "absolute temperature on model layer centers",                         "K",       dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'u',  NF90_FLOAT, "x-wind on model layer centers",                                       "m s-1",   dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'v',  NF90_FLOAT, "y-wind on model layer centers",                                       "m s-1",   dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'ql', NF90_FLOAT, "suspended resolved liquid cloud water on model layer centers",        "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'qi', NF90_FLOAT, "suspended resolved ice cloud water on model layer centers",           "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'qc', NF90_FLOAT, "suspended (resolved + SGS) total cloud water on model layer centers", "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  
+end subroutine output_init_state
+
+subroutine output_init_forcing(ncid, time_inst_id, hor_dim_id, vert_dim_id)
+  use NetCDF_def, only : NetCDF_def_var
+  
+  integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_id
+  
+  integer :: dummy_id
+  
+  !> - Define the forcing-related variables.
+  call NetCDF_def_var(ncid, 'qv_force_tend',  NF90_FLOAT, "total forcing tendency for water vapor specific humidity",                                 "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'T_force_tend',   NF90_FLOAT, "total forcing tendency for absolute temperature",                                          "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'u_force_tend',   NF90_FLOAT, "total forcing tendency for x-wind",                                                        "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'v_force_tend',   NF90_FLOAT, "total forcing tendency for y-wind",                                                        "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'w_ls',           NF90_FLOAT, "large-scale vertical velocity forcing",                                                    "m s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'u_g',            NF90_FLOAT, "geostrophic x-wind forcing",                                                               "m s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'v_g',            NF90_FLOAT, "geostrophic y-wind forcing",                                                               "m s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_rad_forc', NF90_FLOAT, "prescribed radiative heating rate forcing",                                                "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'h_advec_thil',   NF90_FLOAT, "large-scale horizontal advective heating rate for ice-liquid water potential temperature", "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'h_advec_qt',     NF90_FLOAT, "large-scale horizontal advective moistening rate for total water specific humidity",       "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'v_advec_thil',   NF90_FLOAT, "large-scale vertical advective heating rate for ice-liquid water potential temperature",   "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'v_advec_qt',     NF90_FLOAT, "large-scale vertical advective moistening rate for total water specific humidity",         "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'T_s',            NF90_FLOAT, "surface temperature forcing",                                                              "K",           dummy_id, (/ hor_dim_id,              time_inst_id /))
+
+end subroutine output_init_forcing
+
+subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id, scm_state, physics)
+  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use NetCDF_def, only : NetCDF_def_var
+  
+  integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_soil_id
+  type(scm_state_type), intent(in) :: scm_state
+  type(physics_type), intent(in) :: physics
+
+  integer :: i, dummy_id
+  
+  if (scm_state%model_ics .or. scm_state%lsm_ics) then
+    if (physics%Model%lsoil > 0) then
+      call NetCDF_def_var(ncid, 'soil_T',  NF90_FLOAT, "soil temperature profile ", "K", dummy_id, (/ hor_dim_id, vert_dim_soil_id, time_inst_id /))
+      call NetCDF_def_var(ncid, 'soil_moisture',  NF90_FLOAT, "soil moisture profile ", "m3 m-3", dummy_id, (/ hor_dim_id, vert_dim_soil_id, time_inst_id /))
+      call NetCDF_def_var(ncid, 'soil_moisture_unfrozen',  NF90_FLOAT, "unfrozen soil moisture profile ", "m3 m-3", dummy_id, (/ hor_dim_id, vert_dim_soil_id, time_inst_id /))
+    end if
+  end if
+  
+  call NetCDF_def_var(ncid, 'lhf', NF90_FLOAT, "surface latent heat flux", "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'shf', NF90_FLOAT, "surface sensible heat flux", "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'tprcp_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation", "m", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'tprcp_rate_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation rate (tprcp_inst/dt)", "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 't2m', NF90_FLOAT, "2-m temperature", "K", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'q2m', NF90_FLOAT, "2-m specific humidity", "kg kg-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'ustar', NF90_FLOAT, "surface friction velocity", "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'tsfc', NF90_FLOAT, "surface skin temperature", "m s-1K", dummy_id, (/ hor_dim_id, time_inst_id /))
+  
+end subroutine output_init_sfcprop
+
+subroutine output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
+  use NetCDF_def, only : NetCDF_def_var
+  
+  integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_rad_id
+  
+  integer :: dummy_id
+  
+  call NetCDF_def_var(ncid, 'tau_u',  NF90_FLOAT, "surface x-wind stress", "Pa",         dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'tau_v',  NF90_FLOAT, "surface y-wind stress", "Pa",         dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'upd_mf', NF90_FLOAT, "updraft mass flux",     "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'dwn_mf', NF90_FLOAT, "downdraft mass flux",   "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'det_mf', NF90_FLOAT, "detrainment mass flux", "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  
+  call NetCDF_def_var(ncid, 'sfc_up_lw_land',     NF90_FLOAT, "surface upwelling longwave flux over land fraction (valid all timesteps)",                 "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_lw_ice',      NF90_FLOAT, "surface upwelling longwave flux over ice fraction (valid all timesteps)",                  "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_lw_ocean',    NF90_FLOAT, "surface upwelling longwave flux over ocean fraction (valid all timesteps)",                "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_sw_dir_nir',  NF90_FLOAT, "surface upwelling shortwave direct near-infrared flux (valid all timesteps)",              "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_sw_dif_nir',  NF90_FLOAT, "surface upwelling shortwave diffuse near-infrared flux (valid all timesteps)",             "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_sw_dir_vis',  NF90_FLOAT, "surface upwelling shortwave direct visible and ultraviolet flux (valid all timesteps)",    "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_sw_dif_vis',  NF90_FLOAT, "surface upwelling shortwave diffuse visible and ultraviolet flux (valid all timesteps)",   "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_dwn_sw_dir_nir', NF90_FLOAT, "surface downwelling shortwave direct near-infrared flux (valid all timesteps)",            "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_dwn_sw_dif_nir', NF90_FLOAT, "surface downwelling shortwave diffuse near-infrared flux (valid all timesteps)",           "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_dwn_sw_dir_vis', NF90_FLOAT, "surface downwelling shortwave direct visible and ultraviolet flux (valid all timesteps)",  "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_dwn_sw_dif_vis', NF90_FLOAT, "surface downwelling shortwave diffuse visible and ultraviolet flux (valid all timesteps)", "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  
+  call NetCDF_def_var(ncid, 'mp_prcp_inst',   NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation from microphysics scheme",       "m", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'dcnv_prcp_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation from deep convection scheme",    "m", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'scnv_prcp_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation from shallow convection scheme", "m", dummy_id, (/ hor_dim_id, time_inst_id /))
+  
+  call NetCDF_def_var(ncid, 'rad_cloud_fraction', NF90_FLOAT, "instantaneous cloud fraction used in radiation",                   "fraction", dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_lwp',      NF90_FLOAT, "instantaneous cloud liquid water path used in radiation",          "g m-2",    dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_ql',     NF90_FLOAT, "instantaneous effective radius for liquid cloud used in radiation", "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_iwp',      NF90_FLOAT, "instantaneous cloud ice water path used in radiation",              "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_qi',     NF90_FLOAT, "instantaneous effective radius for ice cloud used in radiation",    "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_rwp',      NF90_FLOAT, "instantaneous rain water path used in radiation",                   "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_qr',     NF90_FLOAT, "instantaneous effective radius for raindrop used in radiation",     "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_swp',      NF90_FLOAT, "instantaneous snow water path used in radiation",                   "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_qs',     NF90_FLOAT, "instantaneous effective radius for snowflake in radiation",         "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  
+end subroutine output_init_interstitial
+
+subroutine output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
+  use NetCDF_def, only : NetCDF_def_var
+  
+  integer, intent(in) :: ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id
+  
+  integer :: dummy_id
+  
+  call NetCDF_def_var(ncid, 'sw_rad_heating_rate', NF90_FLOAT, "total sky shortwave radiative heating rate (radiation timesteps only)", "K s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_swrad_id /))
+  call NetCDF_def_var(ncid, 'lw_rad_heating_rate', NF90_FLOAT, "total sky longwave radiative heating rate (radiation timesteps only)",  "K s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_lwrad_id /))
+  
+end subroutine output_init_radtend
+
+subroutine output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id, physics)
+  use gmtb_scm_type_defs, only: physics_type
+  use NetCDF_def, only : NetCDF_def_var
+  
+  integer, intent(in) :: ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id
+  type(physics_type), intent(in) :: physics
+  
+  integer :: i, dummy_id
+  character(2) :: idx
+  
+  call NetCDF_def_var(ncid, 'pwat',            NF90_FLOAT, "column precipitable water", "kg m-2", dummy_id, (/ hor_dim_id, time_inst_id /)) !the variable is reset every timestep in GFS_MP_generic
+  
+  call NetCDF_def_var(ncid, 'dT_dt_lwrad',     NF90_FLOAT, "temperature tendency due to longwave radiation scheme",           "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_swrad',     NF90_FLOAT, "temperature tendency due to shortwave radiation scheme",          "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_pbl',       NF90_FLOAT, "temperature tendency due to PBL scheme",                          "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_deepconv',  NF90_FLOAT, "temperature tendency due to deep convection scheme",              "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_shalconv',  NF90_FLOAT, "temperature tendency due to shallow convection scheme",           "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_micro',     NF90_FLOAT, "temperature tendency due to deep microphysics scheme",            "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_ogwd',      NF90_FLOAT, "temperature tendency due to orographic gravity wave drag scheme", "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_rayleigh',  NF90_FLOAT, "temperature tendency due to rayleigh damping scheme",             "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_cgwd',      NF90_FLOAT, "temperature tendency due to convective gravity wave drag scheme", "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_phys',      NF90_FLOAT, "temperature tendency due to all physics schemes",                 "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dT_dt_nonphys',   NF90_FLOAT, "temperature tendency due to all processes other than physics",    "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dq_dt_pbl',       NF90_FLOAT, "moisture tendency due to PBL scheme",                             "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dq_dt_deepconv',  NF90_FLOAT, "moisture tendency due to deep convection scheme",                 "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dq_dt_shalconv',  NF90_FLOAT, "moisture tendency due to shallow convection scheme",              "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dq_dt_micro',     NF90_FLOAT, "moisture tendency due to microphysics scheme",                    "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dq_dt_phys',      NF90_FLOAT, "moisture tendency due to all physics schemes",                    "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dq_dt_nonphys',   NF90_FLOAT, "moisture tendency due to all processes other than physics",       "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'doz_dt_pbl',      NF90_FLOAT, "ozone tendency due to PBL scheme",                                "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'doz_dt_prodloss', NF90_FLOAT, "ozone tendency due to ozone production/loss",                     "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'doz_dt_oz',       NF90_FLOAT, "ozone tendency due to ozone",                                     "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'doz_dt_T',        NF90_FLOAT, "ozone tendency due to temperature",                               "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'doz_dt_ovhd',     NF90_FLOAT, "ozone tendency due to overhead ozone column",                     "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'doz_dt_phys',     NF90_FLOAT, "ozone tendency due to all physics schemes",                       "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'doz_dt_nonphys',  NF90_FLOAT, "ozone tendency due to all processes other than physics",          "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_pbl',       NF90_FLOAT, "x-wind tendency due to PBL scheme",                               "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_ogwd',      NF90_FLOAT, "x-wind tendency due to orographic GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_deepconv',  NF90_FLOAT, "x-wind tendency due to deep convection scheme",                   "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_cgwd',      NF90_FLOAT, "x-wind tendency due to convective GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_rayleigh',  NF90_FLOAT, "x-wind tendency due to rayleigh damping scheme",                  "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_shalconv',  NF90_FLOAT, "x-wind tendency due to shallow convection scheme",                "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_phys',      NF90_FLOAT, "x-wind tendency due to all physics schemes",                      "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'du_dt_nonphys',   NF90_FLOAT, "x-wind tendency due to all processes other than physics",         "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_pbl',       NF90_FLOAT, "y-wind tendency due to PBL scheme",                               "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_ogwd',      NF90_FLOAT, "y-wind tendency due to orographic GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_deepconv',  NF90_FLOAT, "y-wind tendency due to deep convection scheme",                   "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_cgwd',      NF90_FLOAT, "y-wind tendency due to convective GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_rayleigh',  NF90_FLOAT, "y-wind tendency due to rayleigh damping scheme",                  "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_shalconv',  NF90_FLOAT, "y-wind tendency due to shallow convection scheme",                "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_phys',      NF90_FLOAT, "y-wind tendency due to all physics schemes",                      "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'dv_dt_nonphys',   NF90_FLOAT, "y-wind tendency due to all processes other than physics",         "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
+  
+  call NetCDF_def_var(ncid, 'sfc_dwn_sw',      NF90_FLOAT, "surface downwelling shortwave flux (valid all timesteps)",                   "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_sw',       NF90_FLOAT, "surface upwelling shortwave flux (valid all timesteps)",                     "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_net_sw',      NF90_FLOAT, "surface net shortwave flux (downwelling - upwelling) (valid all timesteps)", "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_dwn_lw',      NF90_FLOAT, "surface downwelling longwave flux (valid all timesteps)",                    "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'gflux',           NF90_FLOAT, "instantaneous surface ground heat flux (valid all timesteps)",               "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'u10m',            NF90_FLOAT, "instantaneous 10-m zonal wind",                                              "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'v10m',            NF90_FLOAT, "instantaneous 10-m meridional wind",                                         "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'hpbl',            NF90_FLOAT, "instantaneous planetary boundary layer height",                              "m",     dummy_id, (/ hor_dim_id, time_inst_id /))
+  
+  call NetCDF_def_var(ncid, 'tprcp_accum',          NF90_FLOAT, "cumulative surface liquid water equivalent thickness of total precipitation (valid over diagnostic interval)",           "m",     dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'ice_accum',            NF90_FLOAT, "cumulative surface liquid water equivalent thickness of ice precipitation (valid over diagnostic interval)",             "m",     dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'snow_accum',           NF90_FLOAT, "cumulative surface liquid water equivalent thickness of snow precipitation (valid over diagnostic interval)",            "m",     dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'graupel_accum',        NF90_FLOAT, "cumulative surface liquid water equivalent thickness of graupel precipitation (valid over diagnostic interval)",         "m",     dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'conv_prcp_accum',      NF90_FLOAT, "cumulative surface liquid water equivalent thickness of convective precipitation (valid over diagnostic interval)",      "m",     dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'tprcp_rate_accum',     NF90_FLOAT, "cumulative surface liquid water equivalent thickness of total precipitation rate (valid over diagnostic interval)",      "m s-1", dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'ice_rate_accum',       NF90_FLOAT, "cumulative surface liquid water equivalent thickness of ice precipitation rate (valid over diagnostic interval)",        "m s-1", dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'snow_rate_accum',      NF90_FLOAT, "cumulative surface liquid water equivalent thickness of snow precipitation rate (valid over diagnostic interval)",       "m s-1", dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'graupel_rate_accum',   NF90_FLOAT, "cumulative surface liquid water equivalent thickness of graupel precipitation rate (valid over diagnostic interval)",    "m s-1", dummy_id, (/ hor_dim_id, time_diag_id /))
+  call NetCDF_def_var(ncid, 'conv_prcp_rate_accum', NF90_FLOAT, "cumulative surface liquid water equivalent thickness of convective precipitation rate (valid over diagnostic interval)", "m s-1", dummy_id, (/ hor_dim_id, time_diag_id /))
+  
+  
+  !all auxilliary diagnostics will be output every timestep (logic will need to be added to implement time averaging -- including resetting in GFS_typedefs/phys_diag_zero)
   if (physics%Model%naux2d > 0) then
     do i=1, physics%Model%naux2d
       write(idx,'(I2)') i
-      CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='aux2d'//idx,XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id,time_id /), &
-        VARID=dummy_id))
+      call NetCDF_def_var(ncid, 'aux2d'//adjustl(trim(idx)), NF90_FLOAT, "generic 2-D diagnostics array with index "//adjustl(trim(idx)), "unknown", dummy_id, (/ hor_dim_id, time_inst_id /))
     end do
   end if
   
   if (physics%Model%naux3d > 0) then
     do i=1, physics%Model%naux3d
       write(idx,'(I2)') i
-      CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME='aux3d'//idx,XTYPE=NF90_FLOAT,DIMIDS= (/ hor_dim_id,vert_dim_id,time_id /), &
-        VARID=dummy_id))
+      call NetCDF_def_var(ncid, 'aux3d'//adjustl(trim(idx)), NF90_FLOAT, "generic 3-D diagnostics array with index "//adjustl(trim(idx)), "unknown", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
     end do
   end if
   
-  !> - Close variable definition and the file.
-  CALL CHECK(NF90_ENDDEF(NCID=ncid))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=year_id,VALUES=scm_state%init_year))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=month_id,VALUES=scm_state%init_month))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=day_id,VALUES=scm_state%init_day))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=hour_id,VALUES=scm_state%init_hour))
-  CALL CHECK(NF90_CLOSE(NCID=ncid))
-
-  !> @}
-end subroutine output_init
+end subroutine output_init_diag
 
 !> This subroutine appends data to the "output.nc" file.
 subroutine output_append(scm_state, physics)
 
   use gmtb_scm_type_defs, only: scm_state_type, physics_type
 
-  type(scm_state_type), intent(in) :: scm_state
+  type(scm_state_type), intent(inout) :: scm_state
   type(physics_type), intent(in) :: physics
 
   real(kind=dp), allocatable :: dummy_1D(:), dummy_2d(:,:)
-
-  ! real(kind=dp), intent(in)          :: hpbl(:) !< PBL height (m) (horizontal)
-  ! real(kind=dp), intent(in)          :: sw_up_TOA_tot(:) !< total sky upward sw flux at toa (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: sw_dn_TOA_tot(:) !< total sky downward sw flux at toa (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: sw_up_TOA_clr(:) !< clear sky upward sw flux at toa (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: sw_up_sfc_tot(:) !< total sky upward sw flux at sfc (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: sw_dn_sfc_tot(:) !< total sky downward sw flux at sfc (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: sw_up_sfc_clr(:) !< clear sky upward sw flux at sfc (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: sw_dn_sfc_clr(:) !< clear sky downward sw flux at sfc (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: lw_up_TOA_tot(:) !< total sky upward LW flux at toa (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: lw_up_TOA_clr(:) !< clear sky upward LW flux at toa (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: lw_up_sfc_tot(:) !< total sky upward LW flux at sfc (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: lw_up_sfc_clr(:) !< clear sky upward LW flux at sfc (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: lw_dn_sfc_tot(:) !< total sky downward LW flux at sfc (\f$W/m^2\f$) (horizontal)
-  ! real(kind=dp), intent(in)          :: lw_dn_sfc_clr(:) !< clear sky downward LW flux at sfc (\f$W/m^2\f$) (horizontal)
-
-
+  
   integer :: ncid, var_id, i, j
   character(2) :: idx
 
@@ -520,463 +341,322 @@ subroutine output_append(scm_state, physics)
 
   !> - Open the file.
   CALL CHECK(NF90_OPEN(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",MODE=NF90_WRITE,NCID=ncid))
-
+  
   !> - Append all of the variables to the file.
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time",VARID=var_id))
+  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_inst",VARID=var_id))
   CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_out /)))
 
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pres",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_l(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pres_i",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_i(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sigma",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%sl(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sigma_i",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%si(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_tracer(:,:,scm_state%water_vapor_index,1),&
-    START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_T(:,:,1),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="u",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_u(:,:,1),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%state_v(:,:,1),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qc",VARID=var_id))
-  if (physics%model%do_mynnedmf) then
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
-      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1) + &
-      physics%Tbd%QC_BL(:,:), START=(/1,1,scm_state%itt_out /)))
-  else
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=&
-      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1),&
-      START=(/1,1,scm_state%itt_out /)))
-  endif
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qv_force_tend",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%qv_force_tend(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_force_tend",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%T_force_tend(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="u_force_tend",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%u_force_tend(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v_force_tend",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%v_force_tend(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="w_ls",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%w_ls(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="u_g",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%u_g(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v_g",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%v_g(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_rad_forc",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%dT_dt_rad(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="h_advec_thil",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%h_advec_thil(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="h_advec_qt",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%h_advec_qt(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v_advec_thil",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%v_advec_thil(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="v_advec_qt",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%v_advec_qt(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_s",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%T_surf(:),START=(/1,scm_state%itt_out /)))
-  if (scm_state%model_ics .or. scm_state%lsm_ics) then
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_soil_1",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%stc(:,1),START=(/1,scm_state%itt_out /)))
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_soil_2",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%stc(:,2),START=(/1,scm_state%itt_out /)))
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_soil_3",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%stc(:,3),START=(/1,scm_state%itt_out /)))
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="T_soil_4",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%stc(:,4),START=(/1,scm_state%itt_out /)))
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="soil_moisture_1",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%smc(:,1),START=(/1,scm_state%itt_out /)))
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="soil_moisture_2",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%smc(:,2),START=(/1,scm_state%itt_out /)))
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="soil_moisture_3",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%smc(:,3),START=(/1,scm_state%itt_out /)))
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="soil_moisture_4",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Sfcprop%smc(:,4),START=(/1,scm_state%itt_out /)))
-  end if
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pres_s",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%pres_surf(:),START=(/1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lhf",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dqsfc1(:),START=(/1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="shf",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dtsfc1(:),START=(/1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_u",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dusfc1(:),START=(/1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="tau_v",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dvsfc1(:),START=(/1,scm_state%itt_out /)))
-
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="cldcov",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%clouds(:,:,1),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="cldcov_conv",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%cnvc(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="ql",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%clw(:,:,2),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qi",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%clw(:,:,1),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="qc_conv",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%cnvw(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rain",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Diag%rain(i)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="rainc",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_1D(i) = physics%Diag%rainc(i)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="pwat",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Diag%pwat(:),START=(/1,scm_state%itt_out /)))
-
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_rad_heating_rate",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Radtend%htrsw(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_rad_heating_rate",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Radtend%htrlw(:,:),START=(/1,1,scm_state%itt_out /)))
+  call output_append_state(ncid, scm_state, physics)
+  call output_append_forcing(ncid, scm_state)
   
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_lwrad",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,1)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_swrad",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,2)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_PBL",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,3)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_deepconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,4)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_shalconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,5)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_micro",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,6)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_ogwd",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,7)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_rayleigh",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,8)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_cgwd",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,9)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_phys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,10)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dT_dt_nonphys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dt3dt(i,:,11)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_PBL",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,1)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_deepconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,2)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_shalconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,3)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_micro",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,4)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_PBL",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,5)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_prodloss",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,6)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_oz",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,7)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_T",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,8)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_ovhd",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,9)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_phys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,10)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_phys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,11)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dq_dt_nonphys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,12)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="doz_dt_nonphys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dq3dt(i,:,13)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_PBL",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,1)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_OGWD",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,2)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_deepconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,3)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_CGWD",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,4)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_rayleigh",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,5)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_shalconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,6)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_phys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,7)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="du_dt_nonphys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%du3dt(i,:,8)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_PBL",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,1)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_OGWD",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,2)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_deepconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,3)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_CGWD",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,4)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_rayleigh",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,5)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_shalconv",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,6)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_phys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,7)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dv_dt_nonphys",VARID=var_id))
-  do i=1, scm_state%n_cols
-    dummy_2D(i,:) = physics%Diag%dv3dt(i,:,8)/scm_state%dt
-  end do
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="upd_mf",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%ud_mf(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="dwn_mf",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dd_mf(:,:),START=(/1,1,scm_state%itt_out /)))
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="det_mf",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=physics%Interstitial%dt_mf(:,:),START=(/1,1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="PBL_height",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=hpbl(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_tot",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=sw_up_TOA_tot(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_TOA_tot",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=sw_dn_TOA_tot(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_clr",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=sw_up_TOA_clr(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_tot",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=sw_up_sfc_tot(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_tot",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=sw_dn_sfc_tot(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_clr",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=sw_up_sfc_clr(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_clr",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=sw_dn_sfc_clr(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_tot",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_up_TOA_tot(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_clr",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_up_TOA_clr(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_tot",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_up_sfc_tot(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_clr",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_up_sfc_clr(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_tot",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_dn_sfc_tot(:),START=(/1,scm_state%itt_out /)))
-  ! CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_clr",VARID=var_id))
-  ! CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=lw_dn_sfc_clr(:),START=(/1,scm_state%itt_out /)))
-
-  ! TOA/SFC fluxes
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag%topfsw(i)%upfxc
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_tot",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag%topfsw(i)%dnfxc
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_TOA_tot",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag%topfsw(i)%upfx0
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_TOA_clr",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcfsw(i)%upfxc
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_tot",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcfsw(i)%dnfxc
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_tot",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcfsw(i)%upfx0
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_up_sfc_clr",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcfsw(i)%dnfx0
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="sw_dn_sfc_clr",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag%topflw(i)%upfxc
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_tot",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Diag%topflw(i)%upfx0
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_TOA_clr",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcflw(i)%upfxc
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_tot",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcflw(i)%dnfxc
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_tot",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcflw(i)%upfx0
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_up_sfc_clr",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  !
-  do i=1, scm_state%n_cols
-     dummy_1D(i) = physics%Radtend%sfcflw(i)%dnfx0
-  end do
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="lw_dn_sfc_clr",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-  
-  if (physics%Model%naux2d > 0) then
-    do j=1, physics%Model%naux2d
-      write(idx,'(I2)') j
-      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="aux2d"//idx,VARID=var_id))
-      do i=1, scm_state%n_cols
-         dummy_1D(i) = physics%Diag%aux2d(i,j)
-      end do
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_1D,START=(/1,scm_state%itt_out /)))
-    end do
+  call output_append_sfcprop(ncid, scm_state, physics)
+  call output_append_interstitial(ncid, scm_state, physics)
+  if(physics%Model%lslwr .or. physics%Model%lsswr) then
+    if (physics%Model%lsswr) then
+      scm_state%itt_swrad = scm_state%itt_swrad + 1
+      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_swrad",VARID=var_id))
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_swrad /)))
+    end if
+    if (physics%Model%lslwr) then
+      scm_state%itt_lwrad = scm_state%itt_lwrad + 1
+      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_lwrad",VARID=var_id))
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_lwrad /)))
+    end if
+    call output_append_radtend(ncid, scm_state, physics)
   end if
-  
-  if (physics%Model%naux3d > 0) then
-    do j=1, physics%Model%naux3d
-      write(idx,'(I2)') j
-      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="aux3d"//idx,VARID=var_id))
-      do i=1, scm_state%n_cols
-         dummy_2D(i,:) = physics%Diag%aux3d(i,:,j)
-      end do
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=dummy_2D,START=(/1,1,scm_state%itt_out /)))
-    end do
+  call output_append_diag_inst(ncid, scm_state, physics)
+  if(mod(scm_state%itt,physics%Model%nszero) == 0) then
+    scm_state%itt_diag = scm_state%itt_diag + 1
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_diag",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_diag /)))
+    call output_append_diag_avg(ncid, scm_state, physics)
   end if
-
+    
   !> - Close the file.
   CALL CHECK(NF90_CLOSE(ncid))
 
   !> @}
 end subroutine output_append
 
+subroutine output_append_state(ncid, scm_state, physics)
+  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use NetCDF_put, only: NetCDF_put_var
+  
+  integer, intent(in) :: ncid
+  type(scm_state_type), intent(in) :: scm_state
+  type(physics_type), intent(in) :: physics
+  
+  call NetCDF_put_var(ncid, "pres",    scm_state%pres_l(:,:),  scm_state%itt_out)
+  call NetCDF_put_var(ncid, "pres_i",  scm_state%pres_i(:,:),  scm_state%itt_out)
+  call NetCDF_put_var(ncid, "sigma",   scm_state%sl(:,:),      scm_state%itt_out)
+  call NetCDF_put_var(ncid, "sigma_i", scm_state%si(:,:),      scm_state%itt_out)
+  call NetCDF_put_var(ncid, "pres_s",  scm_state%pres_surf(:), scm_state%itt_out)
+  
+  call NetCDF_put_var(ncid, "qv",      scm_state%state_tracer(:,:,scm_state%water_vapor_index,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "T",       scm_state%state_T(:,:,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "u",       scm_state%state_u(:,:,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "v",       scm_state%state_v(:,:,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "ql",      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "qi",      scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1), scm_state%itt_out)
+  if (physics%model%do_mynnedmf) then
+    call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
+                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1)   + &
+                                       physics%Tbd%QC_BL(:,:), scm_state%itt_out)
+  else
+    call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
+                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1),    &
+                                       scm_state%itt_out)
+  endif
+  
+end subroutine output_append_state
+
+subroutine output_append_forcing(ncid, scm_state)
+    use gmtb_scm_type_defs, only: scm_state_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    
+    call NetCDF_put_var(ncid, "qv_force_tend",  scm_state%qv_force_tend(:,:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "T_force_tend",   scm_state%T_force_tend(:,:),  scm_state%itt_out)
+    call NetCDF_put_var(ncid, "u_force_tend",   scm_state%u_force_tend(:,:),  scm_state%itt_out)
+    call NetCDF_put_var(ncid, "v_force_tend",   scm_state%v_force_tend(:,:),  scm_state%itt_out)
+    call NetCDF_put_var(ncid, "w_ls",           scm_state%w_ls(:,:),          scm_state%itt_out)
+    call NetCDF_put_var(ncid, "u_g",            scm_state%u_g(:,:),           scm_state%itt_out)
+    call NetCDF_put_var(ncid, "v_g",            scm_state%v_g(:,:),           scm_state%itt_out)
+    call NetCDF_put_var(ncid, "dT_dt_rad_forc", scm_state%dT_dt_rad(:,:),     scm_state%itt_out)
+    call NetCDF_put_var(ncid, "h_advec_thil",   scm_state%h_advec_thil(:,:),  scm_state%itt_out)
+    call NetCDF_put_var(ncid, "h_advec_qt",     scm_state%h_advec_qt(:,:),    scm_state%itt_out)
+    call NetCDF_put_var(ncid, "v_advec_thil",   scm_state%v_advec_thil(:,:),  scm_state%itt_out)
+    call NetCDF_put_var(ncid, "v_advec_qt",     scm_state%v_advec_qt(:,:),    scm_state%itt_out)
+    call NetCDF_put_var(ncid, "T_s",            scm_state%T_surf(:),          scm_state%itt_out)
+    
+end subroutine output_append_forcing
+
+subroutine output_append_sfcprop(ncid, scm_state, physics)
+  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use NetCDF_put, only: NetCDF_put_var
+  use gmtb_scm_physical_constants, only: con_rd, con_fvirt, con_cp, con_hvap
+  
+  integer, intent(in) :: ncid
+  type(scm_state_type), intent(in) :: scm_state
+  type(physics_type), intent(in) :: physics
+  
+  integer :: i
+  real(kind=dp), dimension(scm_state%n_cols) :: rho, shf, lhf
+  
+  if (scm_state%model_ics .or. scm_state%lsm_ics) then
+    if (physics%Model%lsoil > 0) then
+      call NetCDF_put_var(ncid, 'soil_T',                 physics%Sfcprop%stc(:,:), scm_state%itt_out)
+      call NetCDF_put_var(ncid, 'soil_moisture',          physics%Sfcprop%smc(:,:), scm_state%itt_out)
+      call NetCDF_put_var(ncid, 'soil_moisture_unfrozen', physics%Sfcprop%slc(:,:), scm_state%itt_out)
+    end if
+  end if
+  
+  !convert kinematic surface fluxes to W m-2
+  do i=1, scm_state%n_cols
+    rho(i) = physics%Statein%pgr(i) / (con_rd*physics%Statein%tgrs(i,1)*(1.0 + con_fvirt*physics%Statein%qgrs(i,1,physics%Model%ntqv)))
+    shf(i) = con_cp*rho(i)*physics%Sfcprop%hflx(i)
+    lhf(i) = con_hvap*rho(i)*physics%Sfcprop%evap(i)
+  end do
+  call NetCDF_put_var(ncid, 'lhf', lhf, scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'shf', shf, scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'tprcp_inst', physics%Sfcprop%tprcp(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'tprcp_rate_inst', physics%Sfcprop%tprcp(:)/scm_state%dt, scm_state%itt_out)
+  call NetCDF_put_var(ncid, 't2m', physics%Sfcprop%t2m(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'q2m', physics%Sfcprop%q2m(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'ustar', physics%Sfcprop%uustar(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'tsfc', physics%Sfcprop%tsfc(:), scm_state%itt_out)
+  
+end subroutine output_append_sfcprop
+
+subroutine output_append_interstitial(ncid, scm_state, physics)
+    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    type(physics_type), intent(in) :: physics
+    
+    call NetCDF_put_var(ncid, "tau_u",   physics%Interstitial%dusfc1(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "tau_v",   physics%Interstitial%dvsfc1(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "upd_mf",  physics%Interstitial%ud_mf(:,:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "dwn_mf",  physics%Interstitial%dd_mf(:,:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "det_mf",  physics%Interstitial%dt_mf(:,:), scm_state%itt_out)
+    
+    call NetCDF_put_var(ncid, "sfc_up_lw_land",     physics%Interstitial%adjsfculw_land(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_lw_ice",      physics%Interstitial%adjsfculw_ice(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_lw_ocean",    physics%Interstitial%adjsfculw_ocean(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dir_nir",  physics%Interstitial%adjnirbmu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dif_nir",  physics%Interstitial%adjnirdfu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dir_vis",  physics%Interstitial%adjvisbmu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dif_vis",  physics%Interstitial%adjvisdfu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dir_nir", physics%Interstitial%adjnirbmd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dif_nir", physics%Interstitial%adjnirdfd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dir_vis", physics%Interstitial%adjvisbmd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dif_vis", physics%Interstitial%adjvisdfd(:), scm_state%itt_out)
+    
+    call NetCDF_put_var(ncid, "mp_prcp_inst",    physics%Interstitial%prcpmp(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "dcnv_prcp_inst",  physics%Interstitial%raincd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "scnv_prcp_inst",  physics%Interstitial%raincs(:), scm_state%itt_out)
+    
+    call NetCDF_put_var(ncid, "rad_cloud_fraction", physics%Interstitial%clouds(:,:,1), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_cloud_lwp",      physics%Interstitial%clouds(:,:,2), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_eff_rad_ql",     physics%Interstitial%clouds(:,:,3), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_cloud_iwp",      physics%Interstitial%clouds(:,:,4), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qi",     physics%Interstitial%clouds(:,:,5), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_cloud_rwp",      physics%Interstitial%clouds(:,:,6), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qr",     physics%Interstitial%clouds(:,:,7), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_cloud_swp",      physics%Interstitial%clouds(:,:,8), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qs",     physics%Interstitial%clouds(:,:,9), scm_state%itt_out)
+
+end subroutine output_append_interstitial
+
+subroutine output_append_radtend(ncid, scm_state, physics)
+    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    type(physics_type), intent(in) :: physics
+    
+    if (physics%Model%lsswr) then
+      call NetCDF_put_var(ncid, "sw_rad_heating_rate",  physics%Radtend%htrsw(:,:), scm_state%itt_swrad)
+    end if
+    if (physics%Model%lslwr) then
+      call NetCDF_put_var(ncid, "lw_rad_heating_rate",  physics%Radtend%htrlw(:,:), scm_state%itt_lwrad)
+    end if
+    ! TOA/SFC fluxes (on radiation timesteps)
+    !physics%Diag%topfsw(i)%upfxc !sw_up_TOA_tot
+    !physics%Diag%topfsw(i)%dnfxc !sw_dn_TOA_tot
+    !physics%Diag%topfsw(i)%upfx0 !sw_up_TOA_clr
+    !physics%Radtend%sfcfsw(i)%upfxc !sw_up_sfc_tot
+    !physics%Radtend%sfcfsw(i)%dnfxc !sw_dn_sfc_tot
+    !physics%Radtend%sfcfsw(i)%upfx0 !sw_up_sfc_clr
+    !physics%Radtend%sfcfsw(i)%dnfx0 !sw_dn_sfc_clr
+    !physics%Diag%topflw(i)%upfxc !lw_up_TOA_tot
+    !physics%Diag%topflw(i)%upfx0 !lw_up_TOA_clr
+    !physics%Radtend%sfcflw(i)%upfxc !lw_up_sfc_tot
+    !physics%Radtend%sfcflw(i)%dnfxc !lw_dn_sfc_tot
+    !physics%Radtend%sfcflw(i)%upfx0 !lw_up_sfc_clr
+    !physics%Radtend%sfcflw(i)%dnfx0 !lw_dn_sfc_clr 
+    
+end subroutine output_append_radtend
+
+subroutine output_append_diag_inst(ncid, scm_state, physics)
+    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    type(physics_type), intent(in) :: physics
+    
+    integer :: i,j
+    character(2) :: idx
+    
+    real(kind=dp), dimension(scm_state%n_cols) :: temp_1d
+    real(kind=dp), dimension(scm_state%n_cols, scm_state%n_levels) :: temp_2d
+    
+    call NetCDF_put_var(ncid, "pwat",  physics%Diag%pwat(:), scm_state%itt_out)  !do not average (this variable is reset every physics timestep in GFS_MP_generic)
+    
+    call NetCDF_put_var(ncid, "sfc_dwn_sw",  physics%Diag%dswsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
+    call NetCDF_put_var(ncid, "sfc_up_sw",   physics%Diag%dswsfci(:) - physics%Diag%nswsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
+    call NetCDF_put_var(ncid, "sfc_net_sw",  physics%Diag%nswsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
+    call NetCDF_put_var(ncid, "sfc_dwn_lw",  physics%Diag%dlwsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
+    
+    call NetCDF_put_var(ncid, "gflux",       physics%Diag%gfluxi(:), scm_state%itt_out)  !do not average (this variable is set from an interstitial variable in GFS_surface_generic_post)
+    call NetCDF_put_var(ncid, "u10m",        physics%Diag%u10m(:),   scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in sfc_diag)
+    call NetCDF_put_var(ncid, "v10m",        physics%Diag%v10m(:),   scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in sfc_diag)
+    call NetCDF_put_var(ncid, "hpbl",        physics%Tbd%hpbl(:),    scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in individual PBL schemes)
+    
+    !all auxilliary diagnostics will be output every timestep (logic will need to be added to implement time averaging [move this to output_append_diag_avg when that happens] -- including resetting in GFS_typedefs/phys_diag_zero)
+    if (physics%Model%naux2d > 0) then
+      do j=1, physics%Model%naux2d
+        write(idx,'(I2)') j
+        do i=1, scm_state%n_cols
+           temp_1d(i) = physics%Diag%aux2d(i,j)
+        end do
+        call NetCDF_put_var(ncid, "aux2d"//adjustl(trim(idx)),  temp_1d(:), scm_state%itt_out)
+      end do
+    end if
+    
+    if (physics%Model%naux3d > 0) then
+      do j=1, physics%Model%naux3d
+        write(idx,'(I2)') j
+        do i=1, scm_state%n_cols
+           temp_2d(i,:) = physics%Diag%aux3d(i,:,j)
+        end do
+        call NetCDF_put_var(ncid, "aux3d"//adjustl(trim(idx)),  temp_2d(:,:), scm_state%itt_out)
+      end do
+    end if
+end subroutine output_append_diag_inst
+
+subroutine output_append_diag_avg(ncid, scm_state, physics)
+    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    type(physics_type), intent(in) :: physics
+    
+    real(kind=dp) :: inverse_n_diag, inverse_dt
+    
+    inverse_n_diag = 1.0/physics%Model%nszero
+    inverse_dt = 1.0/scm_state%dt
+    
+    call NetCDF_put_var(ncid, "dT_dt_lwrad",     physics%Diag%dt3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_swrad",     physics%Diag%dt3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_pbl",       physics%Diag%dt3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_deepconv",  physics%Diag%dt3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_shalconv",  physics%Diag%dt3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_micro",     physics%Diag%dt3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_ogwd",      physics%Diag%dt3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_rayleigh",  physics%Diag%dt3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_cgwd",      physics%Diag%dt3dt(:,:,9),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_phys",      physics%Diag%dt3dt(:,:,10), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dT_dt_nonphys",   physics%Diag%dt3dt(:,:,11), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dq_dt_pbl",       physics%Diag%dq3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dq_dt_deepconv",  physics%Diag%dq3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dq_dt_shalconv",  physics%Diag%dq3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dq_dt_micro",     physics%Diag%dq3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "doz_dt_pbl",      physics%Diag%dq3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "doz_dt_prodloss", physics%Diag%dq3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "doz_dt_oz",       physics%Diag%dq3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "doz_dt_T",        physics%Diag%dq3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "doz_dt_ovhd",     physics%Diag%dq3dt(:,:,9),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dq_dt_phys",      physics%Diag%dq3dt(:,:,10), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "doz_dt_phys",     physics%Diag%dq3dt(:,:,11), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dq_dt_nonphys",   physics%Diag%dq3dt(:,:,12), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "doz_dt_nonphys",  physics%Diag%dq3dt(:,:,13), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_pbl",       physics%Diag%du3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_ogwd",      physics%Diag%du3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_deepconv",  physics%Diag%du3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_cgwd",      physics%Diag%du3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_rayleigh",  physics%Diag%du3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_shalconv",  physics%Diag%du3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_phys",      physics%Diag%du3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "du_dt_nonphys",   physics%Diag%du3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_pbl",       physics%Diag%dv3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_ogwd",      physics%Diag%dv3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_deepconv",  physics%Diag%dv3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_cgwd",      physics%Diag%dv3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_rayleigh",  physics%Diag%dv3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_shalconv",  physics%Diag%dv3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_phys",      physics%Diag%dv3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "dv_dt_nonphys",   physics%Diag%dv3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    
+    call NetCDF_put_var(ncid, "tprcp_accum",          physics%Diag%totprcpb(:), scm_state%itt_diag, inverse_n_diag)
+    call NetCDF_put_var(ncid, "ice_accum",            physics%Diag%toticeb(:),  scm_state%itt_diag, inverse_n_diag)
+    call NetCDF_put_var(ncid, "snow_accum",           physics%Diag%totsnwb(:),  scm_state%itt_diag, inverse_n_diag)
+    call NetCDF_put_var(ncid, "graupel_accum",        physics%Diag%totgrpb(:),  scm_state%itt_diag, inverse_n_diag)
+    call NetCDF_put_var(ncid, "conv_prcp_accum",      physics%Diag%cnvprcpb(:), scm_state%itt_diag, inverse_n_diag)
+    call NetCDF_put_var(ncid, "tprcp_rate_accum",     physics%Diag%totprcpb(:), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "ice_rate_accum",       physics%Diag%toticeb(:),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "snow_rate_accum",      physics%Diag%totsnwb(:),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "graupel_rate_accum",   physics%Diag%totgrpb(:),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "conv_prcp_rate_accum", physics%Diag%cnvprcpb(:), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    
+end subroutine output_append_diag_avg
 
 !> @}
 !> @}

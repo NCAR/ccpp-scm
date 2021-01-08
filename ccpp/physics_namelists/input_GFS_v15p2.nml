@@ -1,5 +1,5 @@
 &gfs_physics_nml
-       fhzero         = 6.
+       fhzero         = 0.16667
        h2o_phys       = .true.
        ldiag3d        = .true.
        qdiag3d        = .true.

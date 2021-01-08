@@ -51,13 +51,15 @@ module gmtb_scm_type_defs
     integer                           :: n_soil  !< number of model levels (must be 4 for prototype)
     integer                           :: itt !< current model iteration
     integer                           :: itt_out  !< output iteration counter
+    integer                           :: itt_swrad  !< sw radiation iteration counter
+    integer                           :: itt_lwrad  !< lw radiation iteration counter
+    integer                           :: itt_diag !< diagnostics iteration counter
     integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
     integer                           :: n_cols !< number of columns
     integer                           :: n_timesteps !< number of timesteps needed to integrate over runtime
     integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme (2 for leapfrog)
-    integer                           :: n_itt_swrad !< number of iterations between calls to SW rad
-    integer                           :: n_itt_lwrad !< number of iterations between calls to LW rad
     integer                           :: n_itt_out !< number of iterations between calls to write the output
+    integer                           :: n_itt_diag !< number of iterations between diagnostics resetting to zero
     integer                           :: n_levels_smooth !< the number of levels over which the input profiles are smoothed into the reference profiles
     integer                           :: n_tracers !< number of tracers
     integer                           :: water_vapor_index
@@ -95,7 +97,7 @@ module gmtb_scm_type_defs
     real(kind=dp)                           :: dt !< physics time step (s)
     real(kind=dp)                           :: dt_now !< time step currently being used (if it changes due to time-stepping scheme)
     real(kind=dp)                           :: runtime !< total runtime (s)
-    real(kind=dp)                           :: output_frequency !< how often output is written (s)
+    real(kind=dp)                           :: output_period !< how often output is written (s)
     real(kind=dp)                           :: relax_time !< time scale for hor. wind nudging (s)
     real(kind=dp)                           :: deg_to_rad_const !< conversion constant from degrees to radians
     real(kind=dp)                           :: c_filter !< parameter that controls the amount of damping in the leapfrog filter
@@ -374,6 +376,9 @@ module gmtb_scm_type_defs
     scm_state%n_levels = n_levels
     scm_state%itt = int_zero
     scm_state%itt_out = int_zero
+    scm_state%itt_swrad = int_zero
+    scm_state%itt_lwrad = int_zero
+    scm_state%itt_diag = int_zero
     scm_state%time_scheme = int_zero
     scm_state%n_cols = n_columns
     scm_state%n_timesteps = int_zero
@@ -400,9 +405,8 @@ module gmtb_scm_type_defs
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
     scm_state%mass_weighted_rime_factor_index = get_tracer_index(scm_state%tracer_names,"q_rimef")
     
-    scm_state%n_itt_swrad = int_zero
-    scm_state%n_itt_lwrad = int_zero
     scm_state%n_itt_out = int_zero
+    scm_state%n_itt_diag = int_zero
     scm_state%n_levels_smooth = 5
     allocate(scm_state%blksz(n_columns))
     scm_state%blksz = int_one
@@ -417,7 +421,7 @@ module gmtb_scm_type_defs
     scm_state%dt = real_zero
     scm_state%dt_now = real_zero
     scm_state%runtime = real_zero
-    scm_state%output_frequency = real_zero
+    scm_state%output_period = real_zero
     scm_state%relax_time = real_zero
     scm_state%deg_to_rad_const = real_zero
     scm_state%c_filter = 0.15
