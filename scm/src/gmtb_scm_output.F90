@@ -51,8 +51,8 @@ subroutine output_init(scm_state, physics)
   else
     n_diag = n_timesteps/physics%Model%nszero
   end if
-  n_swrad = n_timesteps/physics%Model%nsswr
-  n_lwrad = n_timesteps/physics%Model%nslwr
+  n_swrad = n_timesteps/physics%Model%nsswr + 1
+  n_lwrad = n_timesteps/physics%Model%nslwr + 1
   
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id))
@@ -371,7 +371,7 @@ subroutine output_append(scm_state, physics)
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_diag /)))
     call output_append_diag_avg(ncid, scm_state, physics)
   end if
-    
+  
   !> - Close the file.
   CALL CHECK(NF90_CLOSE(ncid))
 

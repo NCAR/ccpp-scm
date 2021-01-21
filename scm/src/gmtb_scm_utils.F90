@@ -119,12 +119,33 @@ module NetCDF_read
   implicit none
   
   real(kind=sp) :: missing_value = -9999.0
+  integer       :: missing_value_int = -9999
+  character (3) :: missing_value_char = "mis"
   
   interface NetCDF_read_var
     module procedure NetCDF_read_var_0d_int
-    module procedure NetCDF_read_var_0d
-    module procedure NetCDF_read_var_1d
-    module procedure NetCDF_read_var_2d
+    module procedure NetCDF_read_var_0d_sp
+    module procedure NetCDF_read_var_1d_sp
+    module procedure NetCDF_read_var_2d_sp
+    module procedure NetCDF_read_var_3d_sp
+    module procedure NetCDF_read_var_4d_sp
+    module procedure NetCDF_read_var_0d_dp
+    module procedure NetCDF_read_var_1d_dp
+    module procedure NetCDF_read_var_2d_dp
+    module procedure NetCDF_read_var_3d_dp
+    module procedure NetCDF_read_var_4d_dp
+  end interface
+  
+  interface NetCDF_conditionally_read_var
+    module procedure NetCDF_conditionally_read_var_3d_sp
+    module procedure NetCDF_conditionally_read_var_4d_sp
+  end interface NetCDF_conditionally_read_var
+  
+  interface NetCDF_read_att
+    module procedure NetCDF_read_att_char
+    module procedure NetCDF_read_att_int
+    module procedure NetCDF_read_att_char_or_int
+    module procedure NetCDF_read_att_sp
   end interface
   
   contains
@@ -152,7 +173,122 @@ module NetCDF_read
     
   end subroutine NetCDF_read_var_0d_int
   
-  subroutine NetCDF_read_var_0d(ncid, var_name, req, var_data)
+  subroutine NetCDF_read_var_0d_sp(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=sp), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_0d_sp
+  
+  subroutine NetCDF_read_var_1d_sp(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=sp), dimension(:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_1d_sp
+  
+  subroutine NetCDF_read_var_2d_sp(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=sp), dimension(:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_2d_sp
+  
+  subroutine NetCDF_read_var_3d_sp(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=sp), dimension(:,:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_3d_sp
+  
+  subroutine NetCDF_read_var_4d_sp(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=sp), dimension(:,:,:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_4d_sp
+  
+  subroutine NetCDF_read_var_0d_dp(ncid, var_name, req, var_data)
     
     integer, intent(in) :: ncid
     character (*), intent(in) :: var_name
@@ -173,9 +309,9 @@ module NetCDF_read
       end if
     end if
     
-  end subroutine NetCDF_read_var_0d
+  end subroutine NetCDF_read_var_0d_dp
   
-  subroutine NetCDF_read_var_1d(ncid, var_name, req, var_data)
+  subroutine NetCDF_read_var_1d_dp(ncid, var_name, req, var_data)
     
     integer, intent(in) :: ncid
     character (*), intent(in) :: var_name
@@ -196,9 +332,9 @@ module NetCDF_read
       end if
     end if
     
-  end subroutine NetCDF_read_var_1d
+  end subroutine NetCDF_read_var_1d_dp
   
-  subroutine NetCDF_read_var_2d(ncid, var_name, req, var_data)
+  subroutine NetCDF_read_var_2d_dp(ncid, var_name, req, var_data)
     
     integer, intent(in) :: ncid
     character (*), intent(in) :: var_name
@@ -219,7 +355,53 @@ module NetCDF_read
       end if
     end if
     
-  end subroutine NetCDF_read_var_2d
+  end subroutine NetCDF_read_var_2d_dp
+  
+  subroutine NetCDF_read_var_3d_dp(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), dimension(:,:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_3d_dp
+  
+  subroutine NetCDF_read_var_4d_dp(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    real(kind=dp), dimension(:,:,:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_4d_dp
   
   !Generic subroutine to check for netCDF I/O errors
   subroutine check(status)
@@ -230,6 +412,170 @@ module NetCDF_read
       stop "stopped"
     end if
   end subroutine check
+  
+  subroutine NetCDF_read_att_int(ncid, var_id, att_name, req, att_data)
+  
+    integer, intent(in) :: ncid, var_id
+    character (*), intent(in) :: att_name
+    logical, intent(in) :: req
+    integer, intent(out) :: att_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
+      if (ierr /= NF90_NOERR) then
+        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        stop
+      else
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+      end if
+    else
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
+      if (ierr /= NF90_NOERR) then
+        att_data = missing_value_int
+      else
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_att_int
+  
+  subroutine NetCDF_read_att_sp(ncid, var_id, att_name, req, att_data)
+  
+    integer, intent(in) :: ncid, var_id
+    character (*), intent(in) :: att_name
+    logical, intent(in) :: req
+    real(kind=sp), intent(out) :: att_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
+      if (ierr /= NF90_NOERR) then
+        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        stop
+      else
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+      end if
+    else
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
+      if (ierr /= NF90_NOERR) then
+        att_data = missing_value
+      else
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_att_sp
+  
+  subroutine NetCDF_read_att_char(ncid, var_id, att_name, req, att_data)
+  
+    integer, intent(in) :: ncid, var_id
+    character (*), intent(in) :: att_name
+    logical, intent(in) :: req
+    character (*), intent(out) :: att_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
+      if (ierr /= NF90_NOERR) then
+        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        stop
+      else
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+      end if
+    else
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
+      if (ierr /= NF90_NOERR) then
+        att_data = missing_value_char
+      else
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_att_char
+  
+  subroutine NetCDF_read_att_char_or_int(ncid, var_id, att_name, req, att_data, char_att_data)
+  
+    integer, intent(in) :: ncid, var_id
+    character (*), intent(in) :: att_name
+    logical, intent(in) :: req
+    character (*), intent(out) :: char_att_data
+    integer, intent(out) :: att_data
+    
+    integer :: varID, ierr, type
+    
+    if (req) then
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name, xtype = type)
+      if (ierr /= NF90_NOERR) then
+        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        stop
+      else
+        if (type == NF90_CHAR) then
+          call check(NF90_GET_ATT(ncid, var_id, att_name, char_att_data))
+          att_data = missing_value_int
+        else if (type == NF90_INT) then
+          call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+          char_att_data = missing_value_char
+        else
+          att_data = missing_value_int
+          char_att_data = missing_value_char
+        end if
+      end if
+    else
+      ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name, xtype = type)
+      if (ierr /= NF90_NOERR) then
+        char_att_data = missing_value_char
+        att_data = missing_value_int
+      else
+        if (type == NF90_CHAR) then
+          call check(NF90_GET_ATT(ncid, var_id, att_name, char_att_data))
+          att_data = missing_value_int
+        else if (type == NF90_INT) then
+          call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+          char_att_data = missing_value_char
+        else
+          att_data = missing_value_int
+          char_att_data = missing_value_char
+        end if
+      end if
+    end if
+    
+  end subroutine NetCDF_read_att_char_or_int
+  
+  subroutine NetCDF_conditionally_read_var_3d_sp(var_ctl, var_att, var_name, filename, ncid, var_data)
+    integer, intent(in) :: var_ctl, ncid
+    character (*), intent(in) :: var_att, var_name, filename
+    real(kind=sp), dimension(:,:,:), intent(out) :: var_data
+    
+    if (var_ctl > 0) then
+      call NetCDF_read_var(ncid, var_name, .False., var_data)
+      if (maxval(var_data) < 0) then
+        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        stop
+      end if
+    else
+      var_data = missing_value
+    end if
+  end subroutine NetCDF_conditionally_read_var_3d_sp
+  
+  subroutine NetCDF_conditionally_read_var_4d_sp(var_ctl, var_att, var_name, filename, ncid, var_data)
+    integer, intent(in) :: var_ctl, ncid
+    character (*), intent(in) :: var_att, var_name, filename
+    real(kind=sp), dimension(:,:,:,:), intent(out) :: var_data
+    
+    if (var_ctl > 0) then
+      call NetCDF_read_var(ncid, var_name, .False., var_data)
+      if (maxval(var_data) < 0) then
+        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        stop
+      end if
+    else
+      var_data = missing_value
+    end if
+  end subroutine NetCDF_conditionally_read_var_4d_sp
   
 end module NetCDF_read  
 

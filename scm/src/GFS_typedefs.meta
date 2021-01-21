@@ -4516,6 +4516,12 @@
   units = flag
   dimensions = ()
   type = logical
+[no_rad]
+  standard_name = flag_to_deactivate_radiation
+  long_name = logical flag set to true to turn off radiation completely
+  units = flag
+  dimensions = ()
+  type = logical
 [solhr]
   standard_name = forecast_hour_of_the_day
   long_name = time in hours after 00z at the current timestep

@@ -62,8 +62,9 @@ subroutine get_config_nml(scm_state)
   logical              :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
   logical              :: do_spinup
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
-  integer              :: year, month, day, hour
+  integer              :: year, month, day, hour, min
   real(kind=dp)        :: column_area
+  integer              :: input_type !< 0 => original DTC format, 1 => DEPHY-SCM format
 
   character(len=character_length)    :: physics_suite !< name of the physics suite name (currently only GFS_operational supported)
   character(len=character_length)    :: physics_nml
@@ -77,7 +78,7 @@ subroutine get_config_nml(scm_state)
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, n_itt_out, n_itt_diag, &
     n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, model_ics, &
     lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
-    sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, column_area
+    sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, column_area, input_type
     
   NAMELIST /physics_config/ physics_suite, physics_nml
 
@@ -116,6 +117,8 @@ subroutine get_config_nml(scm_state)
   month = 1
   day = 19
   hour = 3
+  min = 0
+  input_type = 0
   
   open(unit=10, file=experiment_namelist, status='old', action='read', iostat=ioerror)
   if(ioerror /= 0) then
@@ -181,6 +184,7 @@ subroutine get_config_nml(scm_state)
   scm_state%init_month = month
   scm_state%init_day = day
   scm_state%init_hour = hour
+  scm_state%init_min = min
 
   scm_state%output_period = n_itt_out*dt
   scm_state%thermo_forcing_type = thermo_forcing_type
@@ -195,6 +199,7 @@ subroutine get_config_nml(scm_state)
   scm_state%do_spinup = do_spinup
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
+  scm_state%input_type = input_type
   
   deallocate(tracer_names)
 !> @}
@@ -838,6 +843,977 @@ subroutine get_case_init(scm_state, scm_input)
   
 !> @}
 end subroutine get_case_init
+
+subroutine get_case_init_DEPHY(scm_state, scm_input)
+  !corresponds to the DEPHY-SCM specs, version 1
+  
+  use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
+  use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check, missing_value, missing_value_int
+  use gmtb_scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_rd
+  type(scm_state_type), intent(inout) :: scm_state
+  type(scm_input_type), target, intent(inout) :: scm_input
+  
+  ! dimension variables
+  real(kind=dp), allocatable  :: input_t0(:) !< input initialization times (seconds since global attribute "startdate")
+  real(kind=dp), allocatable  :: input_time(:) !< input forcing times (seconds since the beginning of the case)
+  real(kind=dp), allocatable  :: input_lat(:) !< column latitude (deg)
+  real(kind=dp), allocatable  :: input_lon(:) !< column longitude (deg)
+  real(kind=dp), allocatable  :: input_lev(:) !< corresponds to either pressure or height (depending on attribute) - why is this needed when both pressure and height also provided in ICs?
+  
+  ! global attributes
+  character(len=14)    :: char_startDate, char_endDate !format YYYYMMDDHHMMSS
+  integer :: init_year, init_month, init_day, init_hour, init_min, init_sec, end_year, end_month, end_day, end_hour, end_min, end_sec
+  integer :: adv_u, adv_v, adv_temp, adv_theta, adv_thetal, adv_qv, adv_qt, adv_rv, adv_rt, forc_w, forc_omega, forc_geo
+  integer :: rad_temp, rad_theta, rad_thetal
+  character(len=3) :: char_rad_temp, char_rad_theta, char_rad_thetal
+  integer :: nudging_temp, nudging_theta, nudging_thetal, nudging_qv, nudging_qt, nudging_rv, nudging_rt, nudging_u, nudging_v
+  real(kind=sp) :: z_nudging_temp, z_nudging_theta, z_nudging_thetal, z_nudging_qv, z_nudging_qt, z_nudging_rv, z_nudging_rt, z_nudging_u, z_nudging_v
+  real(kind=sp) :: p_nudging_temp, p_nudging_theta, p_nudging_thetal, p_nudging_qv, p_nudging_qt, p_nudging_rv, p_nudging_rt, p_nudging_u, p_nudging_v
+  real(kind=sp) :: input_zorog, input_z0
+  character(len=5) :: input_surfaceType
+  character(len=11) :: input_surfaceForcing
+  character(len=5) :: input_surfaceForcingWind
+  
+  ! initial variables (IC = Initial Condition)
+  real(kind=sp), allocatable :: input_pres(:,:,:,:) !< IC pressure levels (Pa)
+  real(kind=sp), allocatable :: input_height(:,:,:,:) !< IC height levels (m)
+  real(kind=sp), allocatable :: input_pres_surf(:,:,:) !< IC surface pressure (Pa)
+  real(kind=sp), allocatable :: input_u(:,:,:,:) !< IC east-west horizontal wind profile (m s^-1)
+  real(kind=sp), allocatable :: input_v(:,:,:,:) !< IC north-south horizontal wind profile (m s^-1)
+  real(kind=sp), allocatable :: input_temp(:,:,:,:) !< IC temperature profile (K)
+  real(kind=sp), allocatable :: input_theta(:,:,:,:) !< IC potential temperature profile (K)
+  real(kind=sp), allocatable :: input_thetal(:,:,:,:) !< IC liquid potential temperature profile (K)
+  real(kind=sp), allocatable :: input_qv(:,:,:,:) !< IC specific humidity profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_qt(:,:,:,:) !< IC total water specific humidity profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_ql(:,:,:,:) !< IC liquid water specific humidity profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_qi(:,:,:,:) !< IC ice water specific humidity profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_rv(:,:,:,:) !< IC water vapor mixing ratio profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_rt(:,:,:,:) !< IC total water mixing ratio profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_rl(:,:,:,:) !< IC liquid water mixing ratio profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_ri(:,:,:,:) !< IC ice water mixing ratio profile (kg kg^-1)
+  real(kind=sp), allocatable :: input_rh(:,:,:,:) !< IC relative humidity profile (%)
+  real(kind=sp), allocatable :: input_tke(:,:,:,:) !< IC TKE profile (m^2 s^-2)
+  
+  ! forcing variables
+  real(kind=sp), allocatable :: input_force_pres_surf(:,:,:) !< forcing surface pressure (Pa)
+  real(kind=sp), allocatable :: input_force_height(:,:,:,:) !< forcing height levels (m)
+  real(kind=sp), allocatable :: input_force_pres(:,:,:,:) !< forcing pressure levels (Pa)
+  real(kind=sp), allocatable :: input_force_u_g(:,:,:,:) !< forcing 2D geostrophic east-west wind (m s^-1)
+  real(kind=sp), allocatable :: input_force_v_g(:,:,:,:) !< forcing 2D geostrophic north-south wind (m s^-1)
+  real(kind=sp), allocatable :: input_force_w(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_omega(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_u_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_v_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_temp_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_theta_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_thetal_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_qt_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_qv_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_rt_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_rv_adv(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_temp_rad(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_theta_rad(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_thetal_rad(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_sfc_sens_flx(:,:,:)
+  real(kind=sp), allocatable :: input_force_sfc_lat_flx(:,:,:)
+  real(kind=sp), allocatable :: input_force_wpthetap(:,:,:)
+  real(kind=sp), allocatable :: input_force_wpqvp(:,:,:)
+  real(kind=sp), allocatable :: input_force_wpqtp(:,:,:)
+  real(kind=sp), allocatable :: input_force_wprvp(:,:,:)
+  real(kind=sp), allocatable :: input_force_wprtp(:,:,:)
+  real(kind=sp), allocatable :: input_force_ts(:,:,:)
+  real(kind=sp), allocatable :: input_force_ustar(:,:,:)
+  real(kind=sp), allocatable :: input_force_temp_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_theta_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_thetal_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_qv_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_qt_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_rv_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_rt_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_u_nudging(:,:,:,:)
+  real(kind=sp), allocatable :: input_force_v_nudging(:,:,:,:)
+  
+  integer :: ncid, varID, allocate_status, ierr, i, k
+  integer :: active_lon, active_lat, active_init_time
+  CHARACTER(LEN=nf90_max_name) :: tmpName
+  real(kind=sp), parameter :: p0 = 100000.0
+  real(kind=sp) :: exner, exner_inv, rho, elapsed_sec
+  real(kind=dp) :: rinc(5)
+  integer :: jdat(1:8), idat(1:8) !(yr, mon, day, t-zone, hr, min, sec, mil-sec)
+  
+  integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_lat, input_n_lon, input_n_snow, input_n_ice, input_n_soil
+  
+  !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
+  
+  !> - Get the dimensions.
+  
+  !required dimensions
+  call check(NF90_INQ_DIMID(ncid,"t0",varID))
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_init_times))
+  call check(NF90_INQ_DIMID(ncid,"time",varID))
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_forcing_times))
+  call check(NF90_INQ_DIMID(ncid,"lev",varID))
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lev))
+  !Check whether long_name = 'altitude', units='m' OR long_name = 'pressure', units='Pa'?
+  !It may not matter, because 'lev' may not be needed when the IC pressure and height are BOTH already provided
+  call check(NF90_INQ_DIMID(ncid,"lat",varID))
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lat))
+  call check(NF90_INQ_DIMID(ncid,"lon",varID))
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lon))
+  
+  !### TO BE USED IF DEPHY-SCM can be extended to include model ICs ###
+  !possible dimensions (if using model ICs)
+  ierr = NF90_INQ_DIMID(ncid,"nsoil",varID)
+  if(ierr /= NF90_NOERR) then
+    input_n_soil = missing_soil_layers
+  else
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_soil))
+  end if
+  ierr = NF90_INQ_DIMID(ncid,"nsnow",varID)
+  if(ierr /= NF90_NOERR) then
+    input_n_snow = missing_snow_layers
+  else
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_snow))
+  end if
+  ierr = NF90_INQ_DIMID(ncid,"nice",varID)
+  if(ierr /= NF90_NOERR) then
+    input_n_ice = missing_ice_layers
+  else
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_ice))
+  end if  
+  
+  !> - Allocate the dimension variables.
+  allocate(input_t0    (input_n_init_times),                                        &
+           input_time  (input_n_forcing_times),                                     &
+           input_lat   (input_n_lat),                                               &
+           input_lon   (input_n_lon),                                               &
+           input_lev   (input_n_lev),                                               &
+    stat=allocate_status)
+
+  !> - Read in the dimension variables (required).
+  call NetCDF_read_var(ncid, "t0", .True., input_t0)
+  call NetCDF_read_var(ncid, "time", .True., input_time)
+  call NetCDF_read_var(ncid, "lev", .True., input_lev)
+  call NetCDF_read_var(ncid, "lat", .True., input_lat)
+  call NetCDF_read_var(ncid, "lon", .True., input_lon)
+  
+  !> - Read in global attributes
+
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'startDate', .True., char_startDate)
+    
+  read(char_startDate(1:4),'(i4)')   init_year
+  read(char_startDate(5:6),'(i2)')   init_month
+  read(char_startDate(7:8),'(i2)')   init_day
+  read(char_startDate(9:10),'(i2)')  init_hour
+  read(char_startDate(11:12),'(i2)') init_min
+  read(char_startDate(13:14),'(i2)') init_sec
+  
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'endDate', .True., char_endDate)
+  
+  read(char_endDate(1:4),'(i4)')   end_year
+  read(char_endDate(5:6),'(i2)')   end_month
+  read(char_endDate(7:8),'(i2)')   end_day
+  read(char_endDate(9:10),'(i2)')  end_hour
+  read(char_endDate(11:12),'(i2)') end_min
+  read(char_endDate(13:14),'(i2)') end_sec
+  
+  !compare init time to what was in case config file? replace?
+  
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_u',              .False., adv_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_v',              .False., adv_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_temp',           .False., adv_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_theta',          .False., adv_theta)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_thetal',         .False., adv_thetal)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'rad_temp',           .False., rad_temp, char_rad_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'rad_theta',          .False., rad_theta, char_rad_theta)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'rad_thetal',         .False., rad_thetal, char_rad_thetal)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_qv',             .False., adv_qv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_qt',             .False., adv_qt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_rv',             .False., adv_rv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_rt',             .False., adv_rt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_w',             .False., forc_w)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_omega',         .False., forc_omega)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_geo',           .False., forc_geo)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_temp',       .False., nudging_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_theta',      .False., nudging_theta)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_thetal',     .False., nudging_thetal)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_qv',         .False., nudging_qv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_qt',         .False., nudging_qt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_rv',         .False., nudging_rv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_rt',         .False., nudging_rt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_u',          .False., nudging_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_v',          .False., nudging_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_temp',     .False., z_nudging_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_theta',    .False., z_nudging_theta)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_thetal',   .False., z_nudging_thetal)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_qv',       .False., z_nudging_qv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_qt',       .False., z_nudging_qt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_rv',       .False., z_nudging_rv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_rt',       .False., z_nudging_rt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_u',        .False., z_nudging_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_v',        .False., z_nudging_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_temp',     .False., p_nudging_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_theta',    .False., p_nudging_theta)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_thetal',   .False., p_nudging_thetal)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_qv',       .False., p_nudging_qv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_qt',       .False., p_nudging_qt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_rv',       .False., p_nudging_rv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_rt',       .False., p_nudging_rt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_u',        .False., p_nudging_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_v',        .False., p_nudging_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zorog',              .False., input_zorog)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z0',                 .False., input_z0)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surfaceType',        .False., input_surfaceType)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surfaceForcing',     .False., input_surfaceForcing)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surfaceForcingWind', .False., input_surfaceForcingWind)
+  
+  !> - Allocate the initial variables.
+  allocate(input_pres     (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_height   (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_pres_surf(input_n_lon, input_n_lat, input_n_init_times),              &
+           input_u        (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_v        (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_temp     (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_theta    (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_thetal   (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_qv       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_qt       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_ql       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_qi       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_rv       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_rt       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_rl       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_ri       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_rh       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+           input_tke      (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
+    stat=allocate_status)
+  
+  !>  - Read in the initial profiles.
+  
+  call NetCDF_read_var(ncid, "pressure", .True., input_pres)
+  call NetCDF_read_var(ncid, "height", .True., input_height)
+  call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
+  call NetCDF_read_var(ncid, "u", .True., input_u)
+  call NetCDF_read_var(ncid, "v", .True., input_v)
+  
+  !one of the following should be present, but not all, hence they are not requried
+  call NetCDF_read_var(ncid, "temp", .False., input_temp)
+  call NetCDF_read_var(ncid, "theta", .False., input_theta)
+  call NetCDF_read_var(ncid, "thetal", .False., input_thetal)
+  
+  !one or more of the following should be present, but not all, hence they are not requried
+  call NetCDF_read_var(ncid, "qv", .False., input_qv)
+  call NetCDF_read_var(ncid, "qt", .False., input_qt)
+  call NetCDF_read_var(ncid, "ql", .False., input_ql)
+  call NetCDF_read_var(ncid, "qi", .False., input_qi)
+  call NetCDF_read_var(ncid, "rv", .False., input_rv)
+  call NetCDF_read_var(ncid, "rt", .False., input_rt)
+  call NetCDF_read_var(ncid, "rl", .False., input_rl)
+  call NetCDF_read_var(ncid, "ri", .False., input_ri)
+  call NetCDF_read_var(ncid, "rh", .False., input_rh)
+  
+  call NetCDF_read_var(ncid, "tke", .True., input_tke)
+  
+  !> - Allocate the forcing variables.
+  
+  !allocate all, but conditionally read forcing variables given global atts; set unused forcing variables to missing
+  
+  allocate(input_force_pres_surf  (input_n_lon, input_n_lat, input_n_forcing_times),              &
+           input_force_pres       (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_height     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_u_g        (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_v_g        (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_w          (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_omega      (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_u_adv      (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_v_adv      (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_temp_adv   (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_theta_adv  (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_thetal_adv (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_qt_adv     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_qv_adv     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_rt_adv     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_rv_adv     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_temp_rad   (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_theta_rad  (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_thetal_rad (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_sfc_sens_flx (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_sfc_lat_flx  (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_wpthetap     (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_wpqvp        (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_wpqtp        (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_wprvp        (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_wprtp        (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_ts           (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_ustar        (input_n_lon, input_n_lat, input_n_forcing_times),            &
+           input_force_u_nudging      (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_v_nudging      (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_temp_nudging   (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_theta_nudging  (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_thetal_nudging (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_qt_nudging     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_qv_nudging     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_rt_nudging     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+           input_force_rv_nudging     (input_n_lon, input_n_lat, input_n_lev, input_n_forcing_times), &
+    stat=allocate_status)
+  
+  call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
+  call NetCDF_read_var(ncid, "height_forc", .True., input_force_height)
+  call NetCDF_read_var(ncid, "pressure_forc", .True., input_force_pres) !existing code assumes this is equal to the initial condition pressure
+  
+  !conditionally read forcing vars (or set to missing); if the global attribute is set to expect a variable and it doesn't exist, stop the model
+  call NetCDF_conditionally_read_var(adv_u,      "adv_u",      "u_adv",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_adv)
+  call NetCDF_conditionally_read_var(adv_v,      "adv_v",      "v_adv",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_adv)
+  call NetCDF_conditionally_read_var(adv_temp,   "adv_temp",   "temp_adv",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_adv)
+  call NetCDF_conditionally_read_var(adv_theta,  "adv_theta",  "theta_adv",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_adv)
+  call NetCDF_conditionally_read_var(adv_thetal, "adv_thetal", "thetal_adv", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_adv)
+  call NetCDF_conditionally_read_var(adv_qt,     "adv_qt",     "qt_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qt_adv)
+  call NetCDF_conditionally_read_var(adv_qv,     "adv_qv",     "qv_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qv_adv)
+  call NetCDF_conditionally_read_var(adv_rt,     "adv_rt",     "rt_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rt_adv)
+  call NetCDF_conditionally_read_var(adv_rv,     "adv_rv",     "rv_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rv_adv)
+  
+  call NetCDF_conditionally_read_var(rad_temp,   "rad_temp",   "temp_rad",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_rad)
+  call NetCDF_conditionally_read_var(rad_theta,  "rad_theta",  "theta_rad",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_rad)
+  call NetCDF_conditionally_read_var(rad_thetal, "rad_thetal", "thetal_rad", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_rad)
+  !need to also handle the case when rad_[temp,theta,thetal]_char = 'adv' (make sure [temp,theta,thetal]_adv is not missing)
+  !need to also turn off radiation when radiation is being forced (put in a warning that this is not supported for now?)
+  
+  call NetCDF_conditionally_read_var(forc_w,     "forc_w",   "w",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_w)
+  call NetCDF_conditionally_read_var(forc_omega, "forc_w",   "omega", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_omega)
+  call NetCDF_conditionally_read_var(forc_geo,   "forc_geo", "ug",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_g)
+  call NetCDF_conditionally_read_var(forc_geo,   "forc_geo", "vg",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_g)
+  
+  call NetCDF_conditionally_read_var(nudging_u,      "nudging_u",      "u_nudging",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_nudging)
+  call NetCDF_conditionally_read_var(nudging_v,      "nudging_v",      "v_nudging",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_nudging)
+  call NetCDF_conditionally_read_var(nudging_temp,   "nudging_temp",   "temp_nudging",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_nudging)
+  call NetCDF_conditionally_read_var(nudging_theta,  "nudging_theta",  "theta_nudging",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_nudging)
+  call NetCDF_conditionally_read_var(nudging_thetal, "nudging_thetal", "thetal_nudging", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_nudging)
+  call NetCDF_conditionally_read_var(nudging_qv,     "nudging_qv",     "qv_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qv_nudging)
+  call NetCDF_conditionally_read_var(nudging_qt,     "nudging_qt",     "qt_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qt_nudging)
+  call NetCDF_conditionally_read_var(nudging_rv,     "nudging_rv",     "rv_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rv_nudging)
+  call NetCDF_conditionally_read_var(nudging_rt,     "nudging_rt",     "rt_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rt_nudging)
+  
+  if (input_surfaceForcing == 'Flux') then
+    !read kinematic surface flux variables
+    call NetCDF_read_var(ncid, "wpthetap", .False., input_force_wpthetap)
+    call NetCDF_read_var(ncid, "wpqvp", .False., input_force_wpqvp)
+    call NetCDF_read_var(ncid, "wpqtp", .False., input_force_wpqtp)
+    call NetCDF_read_var(ncid, "wprvp", .False., input_force_wprvp)
+    call NetCDF_read_var(ncid, "wprtp", .False., input_force_wprtp)
+    !try to read in ts when surface fluxes are specified (needed for calculating bulk-Richardson number in specified surface flux scheme)
+    call NetCDF_read_var(ncid, "ts", .False., input_force_ts)
+  else if (input_surfaceForcing == 'surfaceFlux') then
+    !read W/m2 variables
+    call NetCDF_read_var(ncid, "sfc_sens_flx", .False., input_force_sfc_sens_flx)
+    call NetCDF_read_var(ncid, "sfc_lat_flx", .False., input_force_sfc_lat_flx)
+    !try to read in ts when surface fluxes are in W m-2 in order to be able to convert to kinematic (also needed for calculating bulk-Richardson number in specified surface flux scheme)
+    call NetCDF_read_var(ncid, "ts", .False., input_force_ts)
+  else if (input_surfaceForcing == 'ts') then
+    !read surface temperature
+    call NetCDF_read_var(ncid, "ts", .False., input_force_ts)
+  end if
+  
+  if (input_surfaceForcingWind == 'z0') then
+    !check that z0 was not missing in the global attributes
+    if (input_z0 < 0) then
+      write(*,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the global attribute z0 should be present, but it is missing. Stopping ...'
+      stop
+    end if
+  else if (input_surfaceForcingWind == 'ustar') then
+    call NetCDF_read_var(ncid, "ustar", .False., input_force_ustar)
+  end if
+  
+  call check(NF90_CLOSE(NCID=ncid))
+  
+  call scm_input%create(input_n_forcing_times, input_n_lev, input_n_soil, input_n_snow, input_n_ice)
+  
+  !fill the scm_input DDT
+  
+  !There may need to be logic to control which of the lon, lat, and init_times to use in the future, but for now, just take the first
+  active_lon = 1
+  active_lat = 1
+  active_init_time = 1
+  
+  rinc(1:5)   = 0
+  idat = 0
+  jdat = 0
+  idat(1) = init_year
+  idat(2) = init_month
+  idat(3) = init_day
+  idat(5) = init_hour
+  idat(6) = init_min
+  idat(7) = init_sec
+  jdat(1) = end_year
+  jdat(2) = end_month
+  jdat(3) = end_day
+  jdat(5) = end_hour
+  jdat(6) = end_min
+  jdat(7) = end_sec
+  call w3difdat(jdat,idat,4,rinc)
+  elapsed_sec = rinc(4)
+  
+  !the following variables replace what is in the case configuration file
+  scm_state%init_year = init_year
+  scm_state%init_month = init_month
+  scm_state%init_day = init_day
+  scm_state%init_hour = init_hour
+  scm_state%init_min = init_min
+  scm_state%runtime = elapsed_sec
+  
+  scm_input%input_time = input_time
+  scm_input%input_pres_surf(1) = input_pres_surf(active_lon,active_lat,active_init_time) !perhaps input_pres_surf should only be equal to input_force_pres_surf?
+  scm_input%input_pres = input_pres(active_lon,active_lat,:,active_init_time)
+  scm_input%input_u = input_u(active_lon,active_lat,:,active_init_time)
+  scm_input%input_v = input_v(active_lon,active_lat,:,active_init_time)
+  scm_input%input_tke = input_tke(active_lon,active_lat,:,active_init_time)
+  
+  !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
+  if ((maxval(input_qv(active_lon,active_lat,:,active_init_time)) < 0 .and. &
+       maxval(input_qt(active_lon,active_lat,:,active_init_time)) < 0) .and. &
+      (maxval(input_rv(active_lon,active_lat,:,active_init_time)) > 0 .or. &
+       maxval(input_rt(active_lon,active_lat,:,active_init_time)) > 0)) then
+     if (maxval(input_rv(active_lon,active_lat,:,active_init_time)) > 0) then
+       do k=1, input_n_lev
+         input_qv(active_lon,active_lat,k,active_init_time) = input_rv(active_lon,active_lat,k,active_init_time)/&
+            (1.0 + input_rv(active_lon,active_lat,k,active_init_time))
+       end do
+     end if
+     if (maxval(input_rt(active_lon,active_lat,:,active_init_time)) > 0) then
+       do k=1, input_n_lev
+         input_qt(active_lon,active_lat,k,active_init_time) = input_rt(active_lon,active_lat,k,active_init_time)/&
+            (1.0 + input_rt(active_lon,active_lat,k,active_init_time))
+       end do
+     end if
+     if (maxval(input_rl(active_lon,active_lat,:,active_init_time)) > 0) then
+       do k=1, input_n_lev
+         input_ql(active_lon,active_lat,k,active_init_time) = input_rl(active_lon,active_lat,k,active_init_time)/&
+            (1.0 + input_rl(active_lon,active_lat,k,active_init_time))
+       end do
+     end if
+     if (maxval(input_ri(active_lon,active_lat,:,active_init_time)) > 0) then
+       do k=1, input_n_lev
+         input_qi(active_lon,active_lat,k,active_init_time) = input_ri(active_lon,active_lat,k,active_init_time)/&
+            (1.0 + input_ri(active_lon,active_lat,k,active_init_time))
+       end do
+     end if
+  end if
+  
+  !make sure that one of qv or qt (and rv or rt due to above conversion) is present (add support for rh later)
+  if (maxval(input_qv(active_lon,active_lat,:,active_init_time)) > 0) then
+    if (maxval(input_qt(active_lon,active_lat,:,active_init_time)) > 0) then
+      if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) > 0) then
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then
+          !all of qv, qt, ql, qi (need to check for consistency that they add up correctly?)
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+          scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
+        else !qv, qt, ql, but not qi
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+          scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
+          !derive qi
+          do k=1, input_n_lev
+            scm_input%input_qi(k) = max(0.0, scm_input%input_qt(k) - scm_input%input_qv(k) - scm_input%input_ql(k))
+          end do
+        end if !qi test
+      else 
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !qv, qt, qi, but no ql
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
+          !derive ql
+          do k=1, input_n_lev
+            scm_input%input_ql(k) = max(0.0, scm_input%input_qt(k) - scm_input%input_qv(k) - scm_input%input_qi(k))
+          end do
+        else !qv, qt, no ql or qi
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+          !assume that all cloud is liquid for now (could implement partitioning later)
+          do k=1, input_n_lev
+            scm_input%input_ql(k) = max(0.0, scm_input%input_qt(k) - scm_input%input_qv(k))
+          end do
+          scm_input%input_qi = 0.0
+        end if !qi test
+      end if !ql test
+    else !qv, but not qt
+      if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) > 0) then
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !qv, no qt, ql, qi
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
+          !derive qt
+          do k=1, input_n_lev
+            scm_input%input_qt(k) = max(0.0, scm_input%input_qv(k) + scm_input%input_ql(k) + scm_input%input_qi(k))
+          end do
+        else !qv, no qt, ql, no qi
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
+          !derive qt
+          do k=1, input_n_lev
+            scm_input%input_qt(k) = max(0.0, scm_input%input_qv(k) + scm_input%input_ql(k))
+          end do
+          scm_input%input_qi = 0.0          
+        end if ! qi test
+      else
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !qv, no qt, no ql, qi
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
+          !derive qt
+          do k=1, input_n_lev
+            scm_input%input_qt(k) = max(0.0, scm_input%input_qv(k) + scm_input%input_qi(k))
+          end do
+          scm_input%input_ql = 0.0
+        else !qv, no qt, no ql, no qi
+          scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
+          scm_input%input_qt = scm_input%input_qv
+          scm_input%input_ql = 0.0
+          scm_input%input_qi = 0.0
+        end if ! qi test
+      end if ! ql test
+    end if !qt test
+  else if (maxval(input_qt(active_lon,active_lat,:,active_init_time)) > 0) then !qt, but not qv
+    if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) > 0) then
+      if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !no qv, qt, ql, qi
+        scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+        scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
+        scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
+        !derive qv
+        do k=1, input_n_lev
+          scm_input%input_qv(k) = max(0.0, scm_input%input_qt(k) - scm_input%input_ql(k) - scm_input%input_qi(k))
+        end do
+      else !no qv, qt, ql, no qi
+        scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+        scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
+        !derive qv
+        do k=1, input_n_lev
+          scm_input%input_qv(k) = max(0.0, scm_input%input_qt(k) - scm_input%input_ql(k))
+        end do
+        scm_input%input_qi = 0.0
+      end if
+    else
+      if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !no qv, qt, no ql, qi
+        scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+        scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
+        !derive qv
+        do k=1, input_n_lev
+          scm_input%input_qv(k) = max(0.0, scm_input%input_qt(k) - scm_input%input_qi(k))
+        end do
+        scm_input%input_ql = 0.0
+      else !no qv, qt, no ql, no qi
+        scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
+        scm_input%input_qv = scm_input%input_qt
+        scm_input%input_ql = 0.0
+        scm_input%input_qi = 0.0
+      end if
+    end if !ql test
+  else
+    !no qv or qt
+    write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported moisture variables (qv, qt, rv, rt) were missing. Stopping...'
+    stop
+  end if
+  
+  !make sure that at least one of temp, theta, thetal is present;
+  !the priority for use is temp, thetal, theta
+  if (maxval(input_temp(active_lon,active_lat,:,active_init_time)) > 0) then
+    scm_input%input_temp = input_temp(active_lon,active_lat,:,active_init_time)
+    !since temperature was present (and is ultimately needed in the physics), choose to use it, and set the alternative to missing, even if it is also present in the file
+    scm_input%input_thetail = missing_value
+  else if (maxval(input_thetal(active_lon,active_lat,:,active_init_time)) > 0) then
+    !convert thetal to thetail
+    do k=1, input_n_lev
+      exner_inv = (p0/scm_input%input_pres(k))**con_rocp
+      scm_input%input_thetail(k) = input_thetal(active_lon,active_lat,k,active_init_time) - &
+        (con_hfus/con_cp)*exner_inv*(scm_input%input_qi(k)/(1.0 - scm_input%input_qi(k)))
+    end do
+    !since thetail is present, choose to use it, and set the alternative temperature to missing, even if it is also present in the file
+    scm_input%input_temp = missing_value
+  else if (maxval(input_theta(active_lon,active_lat,:,active_init_time)) > 0) then
+    !convert theta to thetail
+    do k=1, input_n_lev
+      exner_inv = (p0/scm_input%input_pres(k))**con_rocp
+      scm_input%input_thetail(k) = input_theta(active_lon,active_lat,k,active_init_time) - &
+        (con_hvap/con_cp)*exner_inv*(scm_input%input_ql(k)/(1.0 - scm_input%input_ql(k))) - &
+        (con_hfus/con_cp)*exner_inv*(scm_input%input_qi(k)/(1.0 - scm_input%input_qi(k)))
+    end do
+    !since thetail is present, choose to use it, and set the alternative temperature to missing, even if it is also present in the file
+    scm_input%input_temp = missing_value
+  else
+    write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
+    stop
+  end if
+  
+  !### what to do about ozone??? ### read in standard profile if not included in DEPHY file?
+  scm_input%input_ozone = 0.0
+  scm_input%input_lat = input_lat(active_lat)
+  scm_input%input_lon = input_lon(active_lon)
+  
+  scm_input%input_pres_surf = input_force_pres_surf(active_lon,active_lat,:)
+  
+  !check if the forcing pressure levels are identical to the initial conditions pressure levels (need to be identical for existing code to function)
+  do i=1, input_n_forcing_times
+    do k = 1, input_n_lev
+      if (input_force_pres(active_lon,active_lat,k,i) /= input_pres(active_lon,active_lat,k,active_init_time)) then
+        write(*,*) 'A difference was detected between the input pressure levels and the forcing pressure levels. This is incompatible with existing code. Stopping...'
+        stop
+      end if
+    end do
+  end do
+  
+  if (input_SurfaceType == 'ocean') then
+    scm_state%sfc_type = 0.0
+  else if (input_SurfaceType == 'land') then
+    scm_state%sfc_type = 1.0
+  end if
+  !no sea ice type?
+  
+  if (input_surfaceForcing == 'ts') then
+    if (maxval(input_force_ts) < 0) then
+      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
+      stop
+    else
+      !overwrite sfc_flux_spec
+      scm_state%sfc_flux_spec = .false.
+      scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
+      scm_state%surface_thermo_control = 1
+    end if
+  else if (input_surfaceForcing == 'Flux') then
+    !overwrite sfc_flux_spec
+    scm_state%sfc_flux_spec = .true.
+    scm_state%surface_thermo_control = 0
+    
+    if (maxval(input_force_ts) < 0) then
+      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface fluxes are specified. The surface temperature variable also needs to be specified to calculate surface bulk Richardson number. Stopping ...'
+      stop
+    else
+      scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
+    end if
+    
+    !kinematic surface fluxes are specified (but may need to be converted)
+    if (maxval(input_force_wpthetap(active_lon,active_lat,:)) < 0) then
+      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
+      stop
+    else
+      !convert from theta to T
+      do i=1, input_n_forcing_times
+        exner = (scm_input%input_pres_surf(i)/p0)**con_rocp
+        scm_input%input_sh_flux_sfc(i) = exner*input_force_wpthetap(active_lon,active_lat,i)
+      end do
+    end if
+    
+    !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
+    if ((maxval(input_force_wpqvp(active_lon,active_lat,:)) < 0 .and. &
+         maxval(input_force_wpqtp(active_lon,active_lat,:)) < 0) .and. &
+        (maxval(input_force_wprvp(active_lon,active_lat,:)) > 0 .or. &
+         maxval(input_force_wprtp(active_lon,active_lat,:)) > 0)) then
+       if (maxval(input_force_wprvp(active_lon,active_lat,:)) > 0) then
+         do i=1, input_n_forcing_times
+           input_force_wpqvp(active_lon,active_lat,i) = input_force_wprvp(active_lon,active_lat,i)/&
+              (1.0 + input_force_wprvp(active_lon,active_lat,i))
+         end do
+       end if
+       if (maxval(input_force_wprtp(active_lon,active_lat,:)) > 0) then
+         do i=1, input_n_forcing_times
+           input_force_wpqtp(active_lon,active_lat,i) = input_force_wprtp(active_lon,active_lat,i)/&
+              (1.0 + input_force_wprtp(active_lon,active_lat,i))
+         end do
+       end if
+    end if
+    
+    if (maxval(input_force_wpqvp(active_lon,active_lat,:)) < 0 .and. maxval(input_force_wpqtp(active_lon,active_lat,:)) < 0) then
+      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
+      stop
+    else
+      if (maxval(input_force_wpqvp(active_lon,active_lat,:)) > 0) then !use wpqvp if available
+        scm_input%input_lh_flux_sfc = input_force_wpqvp(active_lon,active_lat,:)
+      else
+        !surface total flux of water should just be vapor
+        scm_input%input_lh_flux_sfc = input_force_wpqtp(active_lon,active_lat,:)
+      end if
+    end if
+  else if (input_surfaceForcing == 'surfaceFlux') then
+    !overwrite sfc_flux_spec
+    scm_state%sfc_flux_spec = .true.
+    scm_state%surface_thermo_control = 0
+    
+    if (maxval(input_force_sfc_sens_flx(active_lon,active_lat,:)) < 0) then
+      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
+      stop
+    else
+      !convert to kinematic surface fluxes (need some kind of surface temperature to calculate density in order to do the conversion)
+      if (maxval(input_force_ts) < 0) then
+        write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface fluxes are specified in W m-2. The surface temperature variable also needs to be specified to calculate kinematic fluxes. Stopping ...'
+        stop
+      else
+        do i=1, input_n_forcing_times
+          rho = scm_input%input_pres_surf(i)/(con_rd*input_force_ts(active_lon,active_lat,i))
+          scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
+          scm_input%input_sh_flux_sfc(i) = (1.0/(con_cp*rho))*input_force_sfc_sens_flx(active_lon,active_lat,i)
+        end do
+      end if
+    end if
+    
+    if (maxval(input_force_sfc_lat_flx(active_lon,active_lat,:)) < 0) then
+      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
+      stop
+    else
+      !convert to kinematic surface fluxes (need some kind of surface temperature to calculate density in order to do the conversion)
+      if (maxval(input_force_ts) < 0) then
+        write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface fluxes are specified in W m-2. The surface temperature variable also needs to be specified to calculate kinematic fluxes. Stopping ...'
+        stop
+      else
+        do i=1, input_n_forcing_times
+          rho = scm_input%input_pres_surf(i)/(con_rd*input_force_ts(active_lon,active_lat,i))
+          scm_input%input_lh_flux_sfc(i) = (1.0/(con_hvap*rho))*input_force_sfc_lat_flx(active_lon,active_lat,i)
+        end do
+      end if
+    end if
+  end if
+  
+  if (input_surfaceForcingWind == 'z0') then
+    scm_state%surface_momentum_control = 0
+    scm_state%sfc_roughness_length_cm = input_z0*100.0 !convert from m to cm
+  else if (input_surfaceForcingWind == 'ustar') then
+    !not supported
+    scm_state%surface_momentum_control = 1
+    write(*,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported. Stopping ...'
+    stop
+  end if
+  
+  if (forc_omega > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_omega(i,:) = input_force_omega(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_omega = .true.
+    scm_state%force_w = .false. ! only one of forc_w, forc_omega should be true, with forc_omega having higher priority
+    !set all individual w forcing controls to .true. until finer control is available from the input file
+    scm_state%force_sub_for_T = .true.
+    scm_state%force_sub_for_qv = .true.
+    scm_state%force_sub_for_u = .true.
+    scm_state%force_sub_for_v = .true.
+  else if (forc_w > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_w_ls(i,:) = input_force_w(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_w = .true.
+    scm_state%force_omega = .false.
+    !set all individual w forcing controls to .true. until finer control is available from the input file
+    scm_state%force_sub_for_T = .true.
+    scm_state%force_sub_for_qv = .true.
+    scm_state%force_sub_for_u = .true.
+    scm_state%force_sub_for_v = .true.
+  end if
+
+  if (forc_geo > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_u_g(i,:) = input_force_u_g(active_lon,active_lat,:,i)
+      scm_input%input_v_g(i,:) = input_force_v_g(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_geo = .true.
+  end if
+  
+  if (adv_temp > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_tot_advec_T(i,:) = input_force_temp_adv(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_adv_T = 1
+  else if (adv_theta > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_tot_advec_theta(i,:) = input_force_theta_adv(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_adv_T = 2
+  else if (adv_thetal > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_tot_advec_thetal(i,:) = input_force_thetal_adv(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_adv_T = 3
+  end if
+  
+  if (adv_qv > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_tot_advec_qv(i,:) = input_force_qv_adv(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_adv_qv = .true.
+  else if (adv_qt > 0) then
+    !since there is no information about individual advected species, assume it is all vapor
+    do i=1, input_n_forcing_times
+      scm_input%input_tot_advec_qv(i,:) = input_force_qt_adv(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_adv_qv = .true.
+  else if (adv_rv > 0 .or. adv_rt > 0) then
+    !convert to specific humidity
+    if (adv_rv > 0) then
+      do i=1, input_n_forcing_times
+        do k=1, input_n_lev
+          scm_input%input_tot_advec_qv(i,k) = input_force_rv_adv(active_lon,active_lat,k,i)/&
+            (1.0 + input_force_rv_adv(active_lon,active_lat,k,i))
+        end do
+      end do
+    else if (adv_rt > 0) then
+      !since there is no information about individual advected species, assume it is all vapor
+      do i=1, input_n_forcing_times
+        do k=1, input_n_lev
+          scm_input%input_tot_advec_qv(i,k) = input_force_rt_adv(active_lon,active_lat,k,i)/&
+            (1.0 + input_force_rt_adv(active_lon,active_lat,k,i))
+        end do
+      end do
+    end if
+    scm_state%force_adv_qv = .true.
+  end if
+  
+  if (adv_u > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_tot_advec_u(i,:) = input_force_u_adv(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_adv_u = .true.
+  end if
+  
+  if (adv_v > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_tot_advec_v(i,:) = input_force_v_adv(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_adv_v = .true.
+  end if
+  
+  if (char_rad_temp == 'adv' .or. char_rad_theta == 'adv' .or. char_rad_thetal == 'adv') then
+    scm_state%force_rad_T = 4
+    if (scm_state%force_adv_T == 0) then
+      write(*,*) 'The global attribute rad_temp, rad_theta, or rad_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that radiative forcing is included in the advection term, but there is no advection term. Stopping ...'
+      stop
+    end if
+  else if (rad_temp > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_dT_dt_rad(i,:) = input_force_temp_rad(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_rad_T = 1
+  else if (rad_theta > 0) then
+    scm_state%force_rad_T = 2
+    do i=1, input_n_forcing_times
+      do k=1, input_n_lev
+        exner = (scm_input%input_pres(k)/p0)**con_rocp
+        scm_input%input_dT_dt_rad(i,k) = exner*input_force_theta_rad(active_lon,active_lat,k,i)
+      end do
+    end do
+  else if (rad_thetal > 0) then
+    scm_state%force_rad_T = 3
+    do i=1, input_n_forcing_times
+      do k=1, input_n_lev
+        exner = (scm_input%input_pres(k)/p0)**con_rocp
+        scm_input%input_dT_dt_rad(i,k) = exner*input_force_thetal_rad(active_lon,active_lat,k,i)
+      end do
+    end do
+  else
+    scm_state%force_rad_T = 0
+  end if
+  
+  if (nudging_temp > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_T_nudge(i,:) = input_force_temp_nudging(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_nudging_T = 1
+    scm_state%force_nudging_T_time = nudging_temp
+    if (z_nudging_temp > 0 .or. p_nudging_temp > 0) then
+      write(*,*) 'The global attribute z_nudging_temp or p_nudging_temp in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of temperature should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  else if (nudging_theta > 0) then
+    !assume no cloud water since there is no associate [ql,qi]_nudge in the input?
+    do i=1, input_n_forcing_times
+      scm_input%input_thil_nudge(i,:) = input_force_theta_nudging(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_nudging_T = 2
+    scm_state%force_nudging_T_time = nudging_theta
+    if (z_nudging_theta > 0 .or. p_nudging_theta > 0) then
+      write(*,*) 'The global attribute z_nudging_theta or p_nudging_theta in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of theta should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  else if (nudging_thetal > 0) then
+    !assume no cloud water since there is no associate [ql,qi]_nudge in the input?
+    do i=1, input_n_forcing_times
+      scm_input%input_thil_nudge(i,:) = input_force_thetal_nudging(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_nudging_T = 3
+    scm_state%force_nudging_T_time = nudging_thetal
+    if (z_nudging_thetal > 0 .or. p_nudging_thetal > 0) then
+      write(*,*) 'The global attribute z_nudging_thetal or p_nudging_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of thetal should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  end if
+  
+  if (nudging_qv > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_qt_nudge(i,:) = input_force_qv_nudging(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_nudging_qv = .true.
+    scm_state%force_nudging_qv_time = nudging_qv
+    if (z_nudging_qv > 0 .or. p_nudging_qv > 0) then
+      write(*,*) 'The global attribute z_nudging_qv or p_nudging_qv in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of qv should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  else if (nudging_qt > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_qt_nudge(i,:) = input_force_qt_nudging(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_nudging_qv = .true.
+    scm_state%force_nudging_qv_time = nudging_qt
+    if (z_nudging_qt > 0 .or. p_nudging_qt > 0) then
+      write(*,*) 'The global attribute z_nudging_qt or p_nudging_qt in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of qv should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  else if (nudging_rv > 0) then
+    do i=1, input_n_forcing_times
+      do k=1, input_n_lev
+        scm_input%input_qt_nudge(i,:) = input_force_rv_nudging(active_lon,active_lat,:,i)/&
+          (1.0 + input_force_rv_nudging(active_lon,active_lat,:,i))
+      end do
+    end do
+    scm_state%force_nudging_qv = .true.
+    scm_state%force_nudging_qv_time = nudging_rv
+    if (z_nudging_rv > 0 .or. p_nudging_rv > 0) then
+      write(*,*) 'The global attribute z_nudging_rv or p_nudging_rv in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of rv should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  else if (nudging_rt > 0) then
+    do i=1, input_n_forcing_times
+      do k=1, input_n_lev
+        scm_input%input_qt_nudge(i,:) = input_force_rt_nudging(active_lon,active_lat,:,i)/&
+          (1.0 + input_force_rt_nudging(active_lon,active_lat,:,i))
+      end do
+    end do
+    scm_state%force_nudging_qv = .true.
+    scm_state%force_nudging_qv_time = nudging_rt
+    if (z_nudging_rt > 0 .or. p_nudging_rt > 0) then
+      write(*,*) 'The global attribute z_nudging_rt or p_nudging_rt in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of rt should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  end if
+  
+  if (nudging_u > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_u_nudge(i,:) = input_force_u_nudging(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_nudging_u = .true.
+    scm_state%force_nudging_u_time = nudging_u
+    if (z_nudging_u > 0 .or. p_nudging_u > 0) then
+      write(*,*) 'The global attribute z_nudging_u or p_nudging_u in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of u should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  end if
+  
+  if (nudging_v > 0) then
+    do i=1, input_n_forcing_times
+      scm_input%input_v_nudge(i,:) = input_force_v_nudging(active_lon,active_lat,:,i)
+    end do
+    scm_state%force_nudging_v = .true.
+    scm_state%force_nudging_v_time = nudging_v
+    if (z_nudging_v > 0 .or. p_nudging_v > 0) then
+      write(*,*) 'The global attribute z_nudging_v or p_nudging_v in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of v should be a function of height. This is not currently supported. Stopping ...'
+      stop
+    end if
+  end if
+  
+end subroutine get_case_init_DEPHY
 
 !> Subroutine to get reference profile to use above the case data (temporarily hard-coded profile)
 subroutine get_reference_profile(scm_state, scm_reference)

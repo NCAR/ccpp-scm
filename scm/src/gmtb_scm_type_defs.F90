@@ -79,7 +79,7 @@ module gmtb_scm_type_defs
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
     integer                           :: mass_weighted_rime_factor_index !< index for mass-weighted rime factor
-    integer                           :: init_year, init_month, init_day, init_hour
+    integer                           :: init_year, init_month, init_day, init_hour, init_min
     character(len=32), allocatable    :: tracer_names(:) !< name of physics suite (must be "GFS_operational" for prototype)
     integer, allocatable              :: blksz(:)
 
@@ -92,7 +92,30 @@ module gmtb_scm_type_defs
     logical                           :: model_ics !<  true means have land info too
     logical                           :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
     logical                           :: do_spinup !< true when allowing the model to spin up before the "official" model integration starts
-
+    integer                           :: input_type !< 0=> original DTC format, 1=> DEPHY-SCM format
+    integer                           :: force_adv_T !< 0=> off, 1=> temperature, 2=> theta, 3=> thetal
+    logical                           :: force_adv_qv !< true = on
+    logical                           :: force_adv_u !< true = on
+    logical                           :: force_adv_v !< true = on
+    integer                           :: force_rad_T !< 0 => off, 1=> temperature, 2=> theta, 3=> thetal, 4=> included in advective forcing
+    logical                           :: force_w !< master flag for subsidence of all state variables using w (true = on)
+    logical                           :: force_omega !< master flag for subsidence of all state variables using omega (true = on)
+    logical                           :: force_sub_for_T !< flag for subsidence of T variable only (true = on)
+    logical                           :: force_sub_for_qv !< flag for subsidence of qv variable only (true = on)
+    logical                           :: force_sub_for_u !< flag for subsidence of u variable only (true = on)
+    logical                           :: force_sub_for_v !< flag for subsidence of v variable only (true = on)
+    logical                           :: force_geo !< flag for geostrophic forcing of u and v (true = on)
+    logical                           :: force_nudging_u !< flag for nudging of u to specified profile (true = on)
+    logical                           :: force_nudging_v !< flag for nudging of v to specified profile (true = on)
+    integer                           :: force_nudging_T !< control for nudging of T to specified profile (0 => off, 1=> temperature, 2=> theta, 3=> thetal)
+    logical                           :: force_nudging_qv !< flag for nudging of u to specified profile (true = on)
+    real(kind=dp)                     :: force_nudging_u_time !< timescale for nudging u (s)
+    real(kind=dp)                     :: force_nudging_v_time !< timescale for nudging v (s)
+    real(kind=dp)                     :: force_nudging_T_time !< timescale for nudging T, theta, theta_il (s)
+    real(kind=dp)                     :: force_nudging_qv_time !< timescale for nudging qv (s)
+    integer                           :: surface_thermo_control !< 0=> prescribed surface fluxes, 1=> prescribed SST (ocean only) with active ocean, 2=> LSM
+    integer                           :: surface_momentum_control !< 0=> prescribed roughness length (constant), 1=> prescribed ustar (time-varying)
+    
     real(kind=dp)                           :: model_time !< elapsed model time (s)
     real(kind=dp)                           :: dt !< physics time step (s)
     real(kind=dp)                           :: dt_now !< time step currently being used (if it changes due to time-stepping scheme)
@@ -123,7 +146,8 @@ module gmtb_scm_type_defs
     !> - Define forcing-related variables (indexing is (horizontal, vertical)).
     real(kind=dp), allocatable              :: u_force_tend(:,:), v_force_tend(:,:), T_force_tend(:,:), qv_force_tend(:,:) !< total u, v, T, q forcing (units/s) (horizontal, vertical)
     real(kind=dp), allocatable              :: w_ls(:,:), omega(:,:), u_g(:,:), v_g(:,:), dT_dt_rad(:,:), h_advec_thil(:,:), &
-      h_advec_qt(:,:), v_advec_thil(:,:), v_advec_qt(:,:), u_nudge(:,:), v_nudge(:,:), T_nudge(:,:), thil_nudge(:,:), qt_nudge(:,:) !< forcing terms interpolated to the model time and grid
+      h_advec_qt(:,:), v_advec_thil(:,:), v_advec_qt(:,:), u_nudge(:,:), v_nudge(:,:), T_nudge(:,:), thil_nudge(:,:), qt_nudge(:,:), &
+      tot_advec_t(:,:), tot_advec_theta(:,:), tot_advec_thetal(:,:), tot_advec_qv(:,:), tot_advec_u(:,:), tot_advec_v(:,:) !< forcing terms interpolated to the model time and grid
     real(kind=dp), allocatable              :: T_surf(:), pres_surf(:) !< surface temperature and pressure interpolated to the model time
     real(kind=dp), allocatable              :: sh_flux(:), lh_flux(:) !< surface sensible and latent heat fluxes interpolated to the model time
     real(kind=dp), allocatable              :: sfc_roughness_length_cm(:) !< surface roughness length used for calculating surface layer parameters from specified fluxes
@@ -268,6 +292,7 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: input_thetail(:) !< ice-liquid water potential temperature(K) (initial)
     real(kind=dp), allocatable              :: input_temp(:) !< temperature(K) (initial)
     real(kind=dp), allocatable              :: input_qt(:) !< total water specific humidity (kg/kg) (initial)
+    real(kind=dp), allocatable              :: input_qv(:) !< specific humidity (kg/kg) (initial)
     real(kind=dp), allocatable              :: input_ql(:) !< suspended liquid specific humidity (kg/kg) (initial)
     real(kind=dp), allocatable              :: input_qi(:) !< suspended ice specific humidity (kg/kg) (initial)
     real(kind=dp), allocatable              :: input_u(:) !< zonal wind (m/s) (initial)
@@ -306,6 +331,12 @@ module gmtb_scm_type_defs
     real(kind=dp), allocatable              :: input_v_advec_qt(:,:) !< large-scale tendency of total water specific humidity due to vertical advection (kg/kg /s) (time, levels)
     real(kind=dp), allocatable              :: input_sh_flux_sfc(:) !< time-series of surface sensible heat flux (K m s^-1)
     real(kind=dp), allocatable              :: input_lh_flux_sfc(:) !< time-series of surface latent heat flux (kg kg^-1 m s^-1)
+    real(kind=dp), allocatable              :: input_tot_advec_t(:,:) !< large-scale tendency of temperature due to combined horizontal and vertical advection (K/s) (time, levels)
+    real(kind=dp), allocatable              :: input_tot_advec_theta(:,:) !< large-scale tendency of potential temperature due to combined horizontal and vertical advection (K/s) (time, levels)
+    real(kind=dp), allocatable              :: input_tot_advec_thetal(:,:) !< large-scale tendency of liquid water potential temperature due to combined horizontal and vertical advection (K/s) (time, levels)
+    real(kind=dp), allocatable              :: input_tot_advec_qv(:,:) !< large-scale tendency of specific humidity due to combined horizontal and vertical advection (kg/kg/s) (time, levels)
+    real(kind=dp), allocatable              :: input_tot_advec_u(:,:) !< large-scale tendency of zonal wind due to combined horizontal and vertical advection (m/s/s) (time, levels)
+    real(kind=dp), allocatable              :: input_tot_advec_v(:,:) !< large-scale tendency of meridional wind due to combined horizontal and vertical advection (m/s/s) (time, levels)
 
     contains
       procedure :: create  => scm_input_create
@@ -416,7 +447,31 @@ module gmtb_scm_type_defs
     scm_state%mom_forcing_type = int_zero
     scm_state%thermo_forcing_type = int_zero
     scm_state%reference_profile_choice = int_zero
-
+    scm_state%input_type = int_zero
+    
+    scm_state%force_adv_T = int_zero
+    scm_state%force_adv_qv = .false.
+    scm_state%force_adv_u = .false.
+    scm_state%force_adv_v = .false.
+    scm_state%force_rad_T = int_zero
+    scm_state%force_w = .false.
+    scm_state%force_omega = .false.
+    scm_state%force_sub_for_T = .false.
+    scm_state%force_sub_for_qv = .false.
+    scm_state%force_sub_for_u = .false.
+    scm_state%force_sub_for_v = .false.
+    scm_state%force_geo = .false.
+    scm_state%force_nudging_u = .false.
+    scm_state%force_nudging_v = .false.
+    scm_state%force_nudging_T = int_zero
+    scm_state%force_nudging_qv = .false.
+    scm_state%force_nudging_u_time = real_zero
+    scm_state%force_nudging_v_time = real_zero
+    scm_state%force_nudging_T_time = real_zero
+    scm_state%force_nudging_qv_time = real_zero
+    scm_state%surface_thermo_control = int_zero
+    scm_state%surface_momentum_control = int_zero
+    
     scm_state%model_time = real_zero
     scm_state%dt = real_zero
     scm_state%dt_now = real_zero
@@ -430,6 +485,7 @@ module gmtb_scm_type_defs
     scm_state%init_month = int_zero
     scm_state%init_day = int_zero
     scm_state%init_hour = int_zero
+    scm_state%init_min = int_zero
 
     allocate(scm_state%pres_l(n_columns, n_levels), scm_state%pres_i(n_columns, n_levels+1), &
       scm_state%exner_l(n_columns, n_levels), scm_state%exner_i(n_columns, n_levels+1), &
@@ -472,7 +528,11 @@ module gmtb_scm_type_defs
     allocate(scm_state%w_ls(n_columns, n_levels), scm_state%omega(n_columns, n_levels), scm_state%u_g(n_columns, n_levels), &
       scm_state%v_g(n_columns, n_levels), scm_state%dT_dt_rad(n_columns, n_levels), scm_state%h_advec_thil(n_columns, n_levels), &
       scm_state%h_advec_qt(n_columns, n_levels), scm_state%v_advec_thil(n_columns, n_levels), &
-      scm_state%v_advec_qt(n_columns, n_levels), scm_state%pres_surf(n_columns), scm_state%T_surf(n_columns), &
+      scm_state%v_advec_qt(n_columns, n_levels), scm_state%tot_advec_t(n_columns, n_levels), &
+      scm_state%tot_advec_theta(n_columns, n_levels), scm_state%tot_advec_thetal(n_columns, n_levels), &
+      scm_state%tot_advec_qv(n_columns, n_levels), scm_state%tot_advec_u(n_columns, n_levels), &
+      scm_state%tot_advec_v(n_columns, n_levels), &
+      scm_state%pres_surf(n_columns), scm_state%T_surf(n_columns), &
       scm_state%u_nudge(n_columns, n_levels), scm_state%v_nudge(n_columns, n_levels), &
       scm_state%T_nudge(n_columns, n_levels), scm_state%thil_nudge(n_columns, n_levels), &
       scm_state%qt_nudge(n_columns, n_levels), scm_state%sh_flux(n_columns), scm_state%lh_flux(n_columns), &
@@ -488,6 +548,12 @@ module gmtb_scm_type_defs
     scm_state%h_advec_qt = real_zero
     scm_state%v_advec_thil = real_zero
     scm_state%v_advec_qt = real_zero
+    scm_state%tot_advec_t = real_zero
+    scm_state%tot_advec_theta = real_zero
+    scm_state%tot_advec_thetal = real_zero
+    scm_state%tot_advec_qv = real_zero
+    scm_state%tot_advec_u = real_zero
+    scm_state%tot_advec_v = real_zero
     scm_state%pres_surf = real_zero
     scm_state%T_surf = real_zero
     scm_state%u_nudge = real_zero
@@ -523,13 +589,14 @@ module gmtb_scm_type_defs
     scm_input%input_pres = real_zero
     scm_input%input_time = real_zero
 
-    allocate(scm_input%input_height(nlev), scm_input%input_thetail(nlev), scm_input%input_qt(nlev), scm_input%input_ql(nlev), &
-      scm_input%input_qi(nlev), scm_input%input_u(nlev), scm_input%input_v(nlev), scm_input%input_tke(nlev), &
+    allocate(scm_input%input_height(nlev), scm_input%input_thetail(nlev), scm_input%input_qt(nlev), scm_input%input_qv(nlev), &
+      scm_input%input_ql(nlev), scm_input%input_qi(nlev), scm_input%input_u(nlev), scm_input%input_v(nlev), scm_input%input_tke(nlev), &
       scm_input%input_ozone(nlev), scm_input%input_temp(nlev))
     scm_input%input_height = real_zero
     scm_input%input_thetail = real_zero
     scm_input%input_temp = real_zero
     scm_input%input_qt = real_zero
+    scm_input%input_qv = real_zero
     scm_input%input_ql = real_zero
     scm_input%input_qi = real_zero
     scm_input%input_u = real_zero
@@ -552,6 +619,10 @@ module gmtb_scm_type_defs
     scm_input%input_T_surf = real_zero
     scm_input%input_lat = real_zero
     scm_input%input_lon = real_zero
+    
+    allocate(scm_input%input_tot_advec_t(ntimes, nlev), scm_input%input_tot_advec_theta(ntimes, nlev), &
+      scm_input%input_tot_advec_thetal(ntimes, nlev), scm_input%input_tot_advec_qv(ntimes, nlev), &
+      scm_input%input_tot_advec_u(ntimes, nlev), scm_input%input_tot_advec_v(ntimes, nlev))
     
     allocate(scm_input%input_stc(nsoil), scm_input%input_smc(nsoil), scm_input%input_slc(nsoil))
     scm_input%input_stc = real_zero
@@ -709,6 +780,12 @@ module gmtb_scm_type_defs
     scm_input%input_T_nudge = real_zero
     scm_input%input_thil_nudge = real_zero
     scm_input%input_qt_nudge = real_zero
+    scm_input%input_tot_advec_t = real_zero
+    scm_input%input_tot_advec_theta = real_zero
+    scm_input%input_tot_advec_thetal = real_zero
+    scm_input%input_tot_advec_qv = real_zero
+    scm_input%input_tot_advec_u = real_zero
+    scm_input%input_tot_advec_v = real_zero
 
   end subroutine scm_input_create
 

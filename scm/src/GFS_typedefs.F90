@@ -1112,6 +1112,7 @@ module GFS_typedefs
     logical              :: lprnt           !< control flag for diagnostic print out
     logical              :: lsswr           !< logical flags for sw radiation calls
     logical              :: lslwr           !< logical flags for lw radiation calls
+    logical              :: no_rad          !< flag to turn off all radiation calls
     real(kind=kind_phys) :: solhr           !< hour time after 00z at the t-step
     real(kind=kind_phys) :: solcon          !< solar constant (sun-earth distant adjusted)  [set via radupdate]
     real(kind=kind_phys) :: slag            !< equation of time ( radian )                  [set via radupdate]
@@ -4171,6 +4172,7 @@ module GFS_typedefs
     Model%lprnt            = .false.
     Model%lsswr            = .false.
     Model%lslwr            = .false.
+    Model%no_rad           = .false.
     Model%solhr            = -9999.
     Model%solcon           = -9999.
     Model%slag             = -9999.
@@ -5086,6 +5088,7 @@ module GFS_typedefs
       print *, ' lprnt             : ', Model%lprnt
       print *, ' lsswr             : ', Model%lsswr
       print *, ' lslwr             : ', Model%lslwr
+      print *, ' no_rad            : ', Model%no_rad
       print *, ' solhr             : ', Model%solhr
       print *, ' solcon            : ', Model%solcon
       print *, ' slag              : ', Model%slag

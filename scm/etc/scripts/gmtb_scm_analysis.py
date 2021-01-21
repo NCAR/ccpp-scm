@@ -519,11 +519,11 @@ for i in range(len(gmtb_scm_datasets)):
     rad_eff_rad_qs.append(nc_fid.variables['rad_eff_rad_qs'][:])
     inst_time_group.append('rad_eff_rad_qs')
     
-    sw_rad_heating_rate.append(nc_fid.variables['sw_rad_heating_rate'][:])
-    swrad_time_group.append('sw_rad_heating_rate')
+    #sw_rad_heating_rate.append(nc_fid.variables['sw_rad_heating_rate'][:])
+    #swrad_time_group.append('sw_rad_heating_rate')
     
-    lw_rad_heating_rate.append(nc_fid.variables['lw_rad_heating_rate'][:])
-    lwrad_time_group.append('lw_rad_heating_rate')
+    #lw_rad_heating_rate.append(nc_fid.variables['lw_rad_heating_rate'][:])
+    #lwrad_time_group.append('lw_rad_heating_rate')
     
     pwat.append(nc_fid.variables['pwat'][:]) #convert to cm
     inst_time_group.append('pwat')
@@ -795,17 +795,25 @@ for time_slice in time_slices:
     end_date_index_diag = valid_diag_indices[0][-1]
     
     valid_swrad_indices = np.where((date_swrad[0] >= start_date) & (date_swrad[0] <= end_date))
-    start_date_index_swrad = valid_swrad_indices[0][0]
-    end_date_index_swrad = valid_swrad_indices[0][-1]
+    if (len(valid_swrad_indices[0]) > 0):
+        start_date_index_swrad = valid_swrad_indices[0][0]
+        end_date_index_swrad = valid_swrad_indices[0][-1]
+        time_slice_indices_swrad.append([start_date_index_swrad, end_date_index_swrad])
+    else:
+        start_date_index_swrad = 0
+        end_date_index_swrad = 0
     
     valid_lwrad_indices = np.where((date_lwrad[0] >= start_date) & (date_lwrad[0] <= end_date))
-    start_date_index_lwrad = valid_lwrad_indices[0][0]
-    end_date_index_lwrad = valid_lwrad_indices[0][-1]    
+    if (len(valid_lwrad_indices[0]) > 0):
+        start_date_index_lwrad = valid_lwrad_indices[0][0]
+        end_date_index_lwrad = valid_lwrad_indices[0][-1]
+        time_slice_indices_lwrad.append([start_date_index_lwrad, end_date_index_lwrad])
+    else:
+        start_date_index_lwrad = 0
+        end_date_index_lwrad = 0
     
     time_slice_indices_inst.append([start_date_index_inst, end_date_index_inst])
     time_slice_indices_diag.append([start_date_index_diag, end_date_index_diag])
-    time_slice_indices_swrad.append([start_date_index_swrad, end_date_index_swrad])
-    time_slice_indices_lwrad.append([start_date_index_lwrad, end_date_index_lwrad])
 
 #fill the obs_dict by calling the appropriate observation file read routine
 if(obs_compare and obs_file):
