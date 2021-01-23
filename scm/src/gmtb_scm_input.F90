@@ -50,6 +50,7 @@ subroutine get_config_nml(scm_state)
   character(len=character_length)    :: output_file !< name of the output file (without the file extension)
   character(len=character_length)    :: case_data_dir !< path to the directory containing case initialization and forcing data
   character(len=character_length)    :: vert_coord_data_dir !< path to the directory containing vertical coordinate data
+  character(len=character_length)    :: reference_profile_dir !< path to the directory containing the reference profile
   integer              :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: C_RES            !< reference "C" resoltiion of FV3 grid (needed for GWD and mountain blocking)
@@ -78,7 +79,8 @@ subroutine get_config_nml(scm_state)
   NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, n_itt_out, n_itt_diag, &
     n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, model_ics, &
     lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
-    sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, column_area, input_type
+    sfc_roughness_length_cm, reference_profile_choice, reference_profile_dir, year, month, day, hour, min, &
+    column_area, input_type
     
   NAMELIST /physics_config/ physics_suite, physics_nml
 
@@ -113,6 +115,7 @@ subroutine get_config_nml(scm_state)
   lsm_ics = .false.
   do_spinup = .false.
   reference_profile_choice = 1
+  reference_profile_dir = case_data_dir
   year = 2006
   month = 1
   day = 19
@@ -166,6 +169,7 @@ subroutine get_config_nml(scm_state)
   scm_state%output_dir = output_dir
   scm_state%case_data_dir = case_data_dir
   scm_state%vert_coord_data_dir = vert_coord_data_dir
+  scm_state%reference_profile_dir = reference_profile_dir
   scm_state%output_file = output_file
   scm_state%case_name = case_name
   scm_state%physics_suite_name = physics_suite
@@ -937,14 +941,16 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   integer :: active_lon, active_lat, active_init_time
   CHARACTER(LEN=nf90_max_name) :: tmpName
   real(kind=sp), parameter :: p0 = 100000.0
-  real(kind=sp) :: exner, exner_inv, rho, elapsed_sec
+  real(kind=sp) :: exner, exner_inv, rho, elapsed_sec, missing_value_eps
   real(kind=dp) :: rinc(5)
   integer :: jdat(1:8), idat(1:8) !(yr, mon, day, t-zone, hr, min, sec, mil-sec)
   
   integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_lat, input_n_lon, input_n_snow, input_n_ice, input_n_soil
   
+  missing_value_eps = missing_value + 0.01
+  
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
-  call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//trim(adjustl(scm_state%case_name))//'_SCM_driver.nc',nf90_nowrite,ncid))
   
   !> - Get the dimensions.
   
@@ -1300,10 +1306,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   end if
   
   !make sure that one of qv or qt (and rv or rt due to above conversion) is present (add support for rh later)
-  if (maxval(input_qv(active_lon,active_lat,:,active_init_time)) > 0) then
-    if (maxval(input_qt(active_lon,active_lat,:,active_init_time)) > 0) then
-      if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) > 0) then
-        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then
+  if (maxval(input_qv(active_lon,active_lat,:,active_init_time)) >= 0) then
+    if (maxval(input_qt(active_lon,active_lat,:,active_init_time)) >= 0) then
+      if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) >= 0) then
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) >= 0) then
           !all of qv, qt, ql, qi (need to check for consistency that they add up correctly?)
           scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
           scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
@@ -1319,7 +1325,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           end do
         end if !qi test
       else 
-        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !qv, qt, qi, but no ql
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) >= 0) then !qv, qt, qi, but no ql
           scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
           scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
           scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
@@ -1338,8 +1344,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if !qi test
       end if !ql test
     else !qv, but not qt
-      if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) > 0) then
-        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !qv, no qt, ql, qi
+      if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) >= 0) then
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) >= 0) then !qv, no qt, ql, qi
           scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
           scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
           scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
@@ -1357,7 +1363,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_qi = 0.0          
         end if ! qi test
       else
-        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !qv, no qt, no ql, qi
+        if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) >= 0) then !qv, no qt, no ql, qi
           scm_input%input_qv = input_qv(active_lon,active_lat,:,active_init_time)
           scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
           !derive qt
@@ -1373,9 +1379,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if ! qi test
       end if ! ql test
     end if !qt test
-  else if (maxval(input_qt(active_lon,active_lat,:,active_init_time)) > 0) then !qt, but not qv
-    if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) > 0) then
-      if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !no qv, qt, ql, qi
+  else if (maxval(input_qt(active_lon,active_lat,:,active_init_time)) >= 0) then !qt, but not qv
+    if (maxval(input_ql(active_lon,active_lat,:,active_init_time)) >= 0) then
+      if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) >= 0) then !no qv, qt, ql, qi
         scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
         scm_input%input_ql = input_ql(active_lon,active_lat,:,active_init_time)
         scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
@@ -1393,7 +1399,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         scm_input%input_qi = 0.0
       end if
     else
-      if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) > 0) then !no qv, qt, no ql, qi
+      if (maxval(input_qi(active_lon,active_lat,:,active_init_time)) >= 0) then !no qv, qt, no ql, qi
         scm_input%input_qt = input_qt(active_lon,active_lat,:,active_init_time)
         scm_input%input_qi = input_qi(active_lon,active_lat,:,active_init_time)
         !derive qv
@@ -1451,16 +1457,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   
   scm_input%input_pres_surf = input_force_pres_surf(active_lon,active_lat,:)
   
-  !check if the forcing pressure levels are identical to the initial conditions pressure levels (need to be identical for existing code to function)
   do i=1, input_n_forcing_times
-    do k = 1, input_n_lev
-      if (input_force_pres(active_lon,active_lat,k,i) /= input_pres(active_lon,active_lat,k,active_init_time)) then
-        write(*,*) 'A difference was detected between the input pressure levels and the forcing pressure levels. This is incompatible with existing code. Stopping...'
-        stop
-      end if
-    end do
+    scm_input%input_pres_forcing(i,:) = input_force_pres(active_lon,active_lat,:,i)
   end do
-  
+    
   if (input_SurfaceType == 'ocean') then
     scm_state%sfc_type = 0.0
   else if (input_SurfaceType == 'land') then
@@ -1476,7 +1476,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       !overwrite sfc_flux_spec
       scm_state%sfc_flux_spec = .false.
       scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
-      scm_state%surface_thermo_control = 1
+      scm_state%surface_thermo_control = 2
     end if
   else if (input_surfaceForcing == 'Flux') then
     !overwrite sfc_flux_spec
@@ -1484,36 +1484,46 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%surface_thermo_control = 0
     
     if (maxval(input_force_ts) < 0) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface fluxes are specified. The surface temperature variable also needs to be specified to calculate surface bulk Richardson number. Stopping ...'
-      stop
+      !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
+      if (maxval(scm_input%input_temp) > 0) then
+        !temperature profile is available
+        scm_input%input_T_surf = scm_input%input_temp(1)
+      else
+        !ice-liquid potential temperature profile is available
+        exner = (scm_input%input_pres(1)/p0)**con_rocp
+        exner_inv = (p0/scm_input%input_pres(1))**con_rocp
+        scm_input%input_T_surf = exner*(scm_input%input_thetail(1) + &
+          (con_hvap/con_cp)*exner_inv*(scm_input%input_ql(1)/(1.0 - scm_input%input_ql(1))) + &
+          (con_hfus/con_cp)*exner_inv*(scm_input%input_qi(1)/(1.0 - scm_input%input_qi(1))))
+      end if
     else
       scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
     end if
     
     !kinematic surface fluxes are specified (but may need to be converted)
-    if (maxval(input_force_wpthetap(active_lon,active_lat,:)) < 0) then
+    if (maxval(input_force_wpthetap(active_lon,active_lat,:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
       stop
     else
       !convert from theta to T
       do i=1, input_n_forcing_times
         exner = (scm_input%input_pres_surf(i)/p0)**con_rocp
-        scm_input%input_sh_flux_sfc(i) = exner*input_force_wpthetap(active_lon,active_lat,i)
+        scm_input%input_sh_flux_sfc_kin(i) = exner*input_force_wpthetap(active_lon,active_lat,i)
       end do
     end if
     
     !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
-    if ((maxval(input_force_wpqvp(active_lon,active_lat,:)) < 0 .and. &
-         maxval(input_force_wpqtp(active_lon,active_lat,:)) < 0) .and. &
-        (maxval(input_force_wprvp(active_lon,active_lat,:)) > 0 .or. &
-         maxval(input_force_wprtp(active_lon,active_lat,:)) > 0)) then
-       if (maxval(input_force_wprvp(active_lon,active_lat,:)) > 0) then
+    if ((maxval(input_force_wpqvp(active_lon,active_lat,:)) < missing_value_eps .and. &
+         maxval(input_force_wpqtp(active_lon,active_lat,:)) < missing_value_eps) .and. &
+        (maxval(input_force_wprvp(active_lon,active_lat,:)) > missing_value_eps .or. &
+         maxval(input_force_wprtp(active_lon,active_lat,:)) > missing_value_eps)) then
+       if (maxval(input_force_wprvp(active_lon,active_lat,:)) > missing_value_eps) then
          do i=1, input_n_forcing_times
            input_force_wpqvp(active_lon,active_lat,i) = input_force_wprvp(active_lon,active_lat,i)/&
               (1.0 + input_force_wprvp(active_lon,active_lat,i))
          end do
        end if
-       if (maxval(input_force_wprtp(active_lon,active_lat,:)) > 0) then
+       if (maxval(input_force_wprtp(active_lon,active_lat,:)) > missing_value_eps) then
          do i=1, input_n_forcing_times
            input_force_wpqtp(active_lon,active_lat,i) = input_force_wprtp(active_lon,active_lat,i)/&
               (1.0 + input_force_wprtp(active_lon,active_lat,i))
@@ -1521,53 +1531,52 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
        end if
     end if
     
-    if (maxval(input_force_wpqvp(active_lon,active_lat,:)) < 0 .and. maxval(input_force_wpqtp(active_lon,active_lat,:)) < 0) then
+    if (maxval(input_force_wpqvp(active_lon,active_lat,:)) < missing_value_eps .and. maxval(input_force_wpqtp(active_lon,active_lat,:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
       stop
     else
-      if (maxval(input_force_wpqvp(active_lon,active_lat,:)) > 0) then !use wpqvp if available
-        scm_input%input_lh_flux_sfc = input_force_wpqvp(active_lon,active_lat,:)
+      if (maxval(input_force_wpqvp(active_lon,active_lat,:)) > missing_value_eps) then !use wpqvp if available
+        scm_input%input_lh_flux_sfc_kin = input_force_wpqvp(active_lon,active_lat,:)
       else
         !surface total flux of water should just be vapor
-        scm_input%input_lh_flux_sfc = input_force_wpqtp(active_lon,active_lat,:)
+        scm_input%input_lh_flux_sfc_kin = input_force_wpqtp(active_lon,active_lat,:)
       end if
     end if
   else if (input_surfaceForcing == 'surfaceFlux') then
     !overwrite sfc_flux_spec
     scm_state%sfc_flux_spec = .true.
-    scm_state%surface_thermo_control = 0
+    scm_state%surface_thermo_control = 1
     
-    if (maxval(input_force_sfc_sens_flx(active_lon,active_lat,:)) < 0) then
+    if (maxval(input_force_ts) < 0) then
+      !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
+      if (maxval(scm_input%input_temp) > 0) then
+        !temperature profile is available
+        scm_input%input_T_surf = scm_input%input_temp(1)
+      else
+        !ice-liquid potential temperature profile is available
+        exner = (scm_input%input_pres(1)/p0)**con_rocp
+        exner_inv = (p0/scm_input%input_pres(1))**con_rocp
+        scm_input%input_T_surf = exner*(scm_input%input_thetail(1) + &
+          (con_hvap/con_cp)*exner_inv*(scm_input%input_ql(1)/(1.0 - scm_input%input_ql(1))) + &
+          (con_hfus/con_cp)*exner_inv*(scm_input%input_qi(1)/(1.0 - scm_input%input_qi(1))))
+      end if
+    else
+      scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
+    end if
+    
+    
+    if (maxval(input_force_sfc_sens_flx(active_lon,active_lat,:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
       stop
     else
-      !convert to kinematic surface fluxes (need some kind of surface temperature to calculate density in order to do the conversion)
-      if (maxval(input_force_ts) < 0) then
-        write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface fluxes are specified in W m-2. The surface temperature variable also needs to be specified to calculate kinematic fluxes. Stopping ...'
-        stop
-      else
-        do i=1, input_n_forcing_times
-          rho = scm_input%input_pres_surf(i)/(con_rd*input_force_ts(active_lon,active_lat,i))
-          scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
-          scm_input%input_sh_flux_sfc(i) = (1.0/(con_cp*rho))*input_force_sfc_sens_flx(active_lon,active_lat,i)
-        end do
-      end if
+      scm_input%input_sh_flux_sfc = input_force_sfc_sens_flx(active_lon,active_lat,:)
     end if
     
-    if (maxval(input_force_sfc_lat_flx(active_lon,active_lat,:)) < 0) then
+    if (maxval(input_force_sfc_lat_flx(active_lon,active_lat,:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
       stop
     else
-      !convert to kinematic surface fluxes (need some kind of surface temperature to calculate density in order to do the conversion)
-      if (maxval(input_force_ts) < 0) then
-        write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface fluxes are specified in W m-2. The surface temperature variable also needs to be specified to calculate kinematic fluxes. Stopping ...'
-        stop
-      else
-        do i=1, input_n_forcing_times
-          rho = scm_input%input_pres_surf(i)/(con_rd*input_force_ts(active_lon,active_lat,i))
-          scm_input%input_lh_flux_sfc(i) = (1.0/(con_hvap*rho))*input_force_sfc_lat_flx(active_lon,active_lat,i)
-        end do
-      end if
+      scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(active_lon,active_lat,:)
     end if
   end if
   
@@ -1713,9 +1722,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_T = 1
     scm_state%force_nudging_T_time = nudging_temp
-    if (z_nudging_temp > 0 .or. p_nudging_temp > 0) then
-      write(*,*) 'The global attribute z_nudging_temp or p_nudging_temp in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of temperature should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_temp > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_temp, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_T_nudge(i))
+        if (scm_input%input_k_T_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_T_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_temp > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_temp, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_T_nudge(i))
+        if (scm_input%input_k_T_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_T_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_T_nudge = 1
     end if
   else if (nudging_theta > 0) then
     !assume no cloud water since there is no associate [ql,qi]_nudge in the input?
@@ -1724,9 +1748,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_T = 2
     scm_state%force_nudging_T_time = nudging_theta
-    if (z_nudging_theta > 0 .or. p_nudging_theta > 0) then
-      write(*,*) 'The global attribute z_nudging_theta or p_nudging_theta in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of theta should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_theta > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_theta, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_thil_nudge(i))
+        if (scm_input%input_k_thil_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_thil_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_theta > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_theta, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_thil_nudge(i))
+        if (scm_input%input_k_thil_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_thil_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_thil_nudge = 1
     end if
   else if (nudging_thetal > 0) then
     !assume no cloud water since there is no associate [ql,qi]_nudge in the input?
@@ -1735,9 +1774,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_T = 3
     scm_state%force_nudging_T_time = nudging_thetal
-    if (z_nudging_thetal > 0 .or. p_nudging_thetal > 0) then
-      write(*,*) 'The global attribute z_nudging_thetal or p_nudging_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of thetal should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_thetal > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_thetal, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_thil_nudge(i))
+        if (scm_input%input_k_thil_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_thil_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_thetal > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_thetal, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_thil_nudge(i))
+        if (scm_input%input_k_thil_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_thil_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_thil_nudge = 1
     end if
   end if
   
@@ -1747,9 +1801,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_qv = .true.
     scm_state%force_nudging_qv_time = nudging_qv
-    if (z_nudging_qv > 0 .or. p_nudging_qv > 0) then
-      write(*,*) 'The global attribute z_nudging_qv or p_nudging_qv in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of qv should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_qv > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_qv, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_qv > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_qv, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_qt_nudge = 1
     end if
   else if (nudging_qt > 0) then
     do i=1, input_n_forcing_times
@@ -1757,9 +1826,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_qv = .true.
     scm_state%force_nudging_qv_time = nudging_qt
-    if (z_nudging_qt > 0 .or. p_nudging_qt > 0) then
-      write(*,*) 'The global attribute z_nudging_qt or p_nudging_qt in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of qv should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_qt > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_qt, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_qt > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_qt, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_qt_nudge = 1
     end if
   else if (nudging_rv > 0) then
     do i=1, input_n_forcing_times
@@ -1770,9 +1854,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_qv = .true.
     scm_state%force_nudging_qv_time = nudging_rv
-    if (z_nudging_rv > 0 .or. p_nudging_rv > 0) then
-      write(*,*) 'The global attribute z_nudging_rv or p_nudging_rv in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of rv should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_rv > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_rv, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_rv > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_rv, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_qt_nudge = 1
     end if
   else if (nudging_rt > 0) then
     do i=1, input_n_forcing_times
@@ -1783,9 +1882,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_qv = .true.
     scm_state%force_nudging_qv_time = nudging_rt
-    if (z_nudging_rt > 0 .or. p_nudging_rt > 0) then
-      write(*,*) 'The global attribute z_nudging_rt or p_nudging_rt in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of rt should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_rt > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_rt, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_rt > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_rt, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_qt_nudge(i))
+        if (scm_input%input_k_qt_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_qt_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_qt_nudge = 1
     end if
   end if
   
@@ -1795,9 +1909,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_u = .true.
     scm_state%force_nudging_u_time = nudging_u
-    if (z_nudging_u > 0 .or. p_nudging_u > 0) then
-      write(*,*) 'The global attribute z_nudging_u or p_nudging_u in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of u should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_u > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_u, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_u_nudge(i))
+        if (scm_input%input_k_u_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_u_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_u > 0) then 
+      do i=1, input_n_forcing_times 
+        call find_vertical_index_height(z_nudging_u, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_u_nudge(i))
+        if (scm_input%input_k_u_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_u_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_u_nudge = 1
     end if
   end if
   
@@ -1807,9 +1936,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_nudging_v = .true.
     scm_state%force_nudging_v_time = nudging_v
-    if (z_nudging_v > 0 .or. p_nudging_v > 0) then
-      write(*,*) 'The global attribute z_nudging_v or p_nudging_v in '//trim(adjustl(scm_state%case_name))//'.nc indicates that nudging of v should be a function of height. This is not currently supported. Stopping ...'
-      stop
+    if (p_nudging_v > 0) then
+      do i=1, input_n_forcing_times
+        call find_vertical_index_pressure(p_nudging_v, input_force_pres(active_lon,active_lat,:,i), scm_input%input_k_v_nudge(i))
+        if (scm_input%input_k_v_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_v_nudge(i) = input_n_lev
+        end if
+      end do
+    else if (z_nudging_v > 0) then 
+      do i=1, input_n_forcing_times
+        call find_vertical_index_height(z_nudging_v, input_force_height(active_lon,active_lat,:,i), scm_input%input_k_v_nudge(i))
+        if (scm_input%input_k_v_nudge(i) < 0) then
+          !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
+          scm_input%input_k_v_nudge(i) = input_n_lev
+        end if
+      end do
+    else
+      scm_input%input_k_v_nudge = 1
     end if
   end if
   
@@ -1838,7 +1982,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
 
   select case (scm_state%reference_profile_choice)
     case (1)
-      open(unit=1, file=trim(adjustl(scm_state%case_data_dir))//'/'//'McCProfiles.dat', status='old', action='read', iostat=ioerror)
+      open(unit=1, file=trim(adjustl(scm_state%reference_profile_dir))//'/'//'McCProfiles.dat', status='old', action='read', iostat=ioerror)
       if(ioerror /= 0) then
         write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
           Error code = ',ioerror
@@ -1863,7 +2007,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
       END DO
       close(1)
     case (2)
-      call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//'mid_lat_summer_std.nc',nf90_nowrite,ncid))
+      call check(NF90_OPEN(trim(adjustl(scm_state%reference_profile_dir))//'/'//'mid_lat_summer_std.nc',nf90_nowrite,ncid))
 
       call check(NF90_INQ_DIMID(ncid,"height",varID))
       call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, nlev))
@@ -1891,7 +2035,6 @@ subroutine get_reference_profile(scm_state, scm_reference)
   scm_reference%ref_T = T
   scm_reference%ref_qv = qv
   scm_reference%ref_ozone = ozone
-
 
 end subroutine get_reference_profile
 
@@ -1956,6 +2099,40 @@ subroutine get_tracers(tracer_names)
 
     close (fu)
 end subroutine get_tracers
+
+subroutine find_vertical_index_pressure(p_thresh, pres, k_out)
+  real(kind=sp), intent(in) :: p_thresh
+  real(kind=sp), intent(in) :: pres(:)
+  integer, intent(out) :: k_out
+  
+  integer :: k
+  
+  k_out = -999
+  do k=1, size(pres)
+    if (pres(k) <= p_thresh) then
+      k_out = k
+      exit
+    end if
+  end do
+  
+end subroutine find_vertical_index_pressure
+
+subroutine find_vertical_index_height(z_thresh, height, k_out)
+  real(kind=sp), intent(in) :: z_thresh
+  real(kind=sp), intent(in) :: height(:)
+  integer, intent(out) :: k_out
+  
+  integer k
+  
+  k_out = -999
+  do k=1, size(height)
+    if (height(k) >= z_thresh) then
+      k_out = k
+      exit
+    end if
+  end do
+  
+end subroutine find_vertical_index_height
 
 !> @}
 !> @}

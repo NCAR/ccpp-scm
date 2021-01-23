@@ -78,6 +78,24 @@ subroutine interpolate_to_grid_centers(n_input_levels, input_pres, input_field, 
   !> @}
 end subroutine
 
+subroutine find_state_vertical_index_from_input(input_pres, pres_l, k_in, k_out)
+  real(kind=dp), intent(in) :: input_pres(:)  !< pressure levels for the input profile (Pa)
+  real(kind=dp), intent(in) :: pres_l(:) !< model pressure levels (Pa)
+  integer, intent(in) :: k_in !< input level index
+  integer, intent(out) :: k_out !< corresponding state level index
+  
+  integer :: k
+  
+  k_out = -999
+  do k=1, size(pres_l)
+    if (pres_l(k) <= input_pres(k_in)) then
+      k_out = k
+      exit
+    end if
+  end do
+  
+end subroutine find_state_vertical_index_from_input
+
 subroutine w_to_omega(n_col, n_lev, w, p, T, omega)
   integer, intent(in)    :: n_col
   integer, intent(in)    :: n_lev
@@ -549,10 +567,13 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:,:), intent(out) :: var_data
+    real(kind=sp) :: missing_value_eps
+    
+    missing_value_eps = missing_value + 0.01
     
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < 0) then
+      if (maxval(var_data) < missing_value_eps) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         stop
       end if
@@ -565,10 +586,13 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:,:,:), intent(out) :: var_data
+    real(kind=sp) :: missing_value_eps
+    
+    missing_value_eps = missing_value + 0.01
     
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < 0) then
+      if (maxval(var_data) < missing_value_eps) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         stop
       end if
@@ -597,7 +621,6 @@ module NetCDF_def
     character (*), intent(in) :: unit
     integer, intent(out) :: varid
     
-    write(*,*) 'Defining variable: ',var_name
     if (present(dims)) then
       CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,DIMIDS=dims,VARID=varid))
     else

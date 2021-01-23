@@ -11,6 +11,7 @@ import sys
 import time
 from default_namelists import default_physics_namelists
 from default_tracers import default_tracers
+from netCDF4 import Dataset
 
 ###############################################################################
 # Global settings                                                             #
@@ -253,7 +254,21 @@ class Experiment(object):
             surface_flux_spec = case_nml['case_config']['sfc_flux_spec']
         except KeyError:
             surface_flux_spec = False
-            
+        
+        #if using the DEPHY format, need to also check the case data file for the surfaceForcing global attribute for 'Flux' or 'surfaceFlux', which denotes prescribed surface fluxes
+        try:
+            input_type = case_nml['case_config']['input_type']
+            if input_type == 1:
+                #open the case data file and read the surfaceForcing global attribute
+                case_data_dir = case_nml['case_config']['case_data_dir']
+                nc_fid = Dataset(case_data_dir + '/' + self._case + '_SCM_driver.nc' , 'r')
+                surfaceForcing = nc_fid.getncattr('surfaceForcing')
+                nc_fid.close()
+                if (surfaceForcing.lower() == 'flux' or surfaceForcing.lower() == 'surfaceflux'):
+                    surface_flux_spec = True
+        except KeyError:
+            surface_flux_spec = False
+        
         # If surface fluxes are specified for this case, use the SDF modified to use them
         if surface_flux_spec:
             logging.info('Specified surface fluxes are used for case {0}. Switching to SDF {1} from {2}'.format(self._case,'suite_' + self._suite + '_ps' + '.xml','suite_' + self._suite + '.xml'))
