@@ -22,6 +22,7 @@ subroutine output_init(scm_state, physics)
   use gmtb_scm_type_defs, only: scm_state_type, physics_type
   use NetCDF_def, only: NetCDF_def_var
   use NetCDF_put, only: NetCDF_put_var
+  use NetCDF_read, only: missing_value
 
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type),   intent(in) :: physics
@@ -29,8 +30,11 @@ subroutine output_init(scm_state, physics)
   integer :: n_timesteps, n_inst, n_diag, n_swrad, n_lwrad
   integer :: ncid, hor_dim_id, vert_dim_id, vert_dim_i_id, vert_dim_rad_id, vert_dim_soil_id, dummy_id
   integer :: time_inst_id, time_diag_id, time_swrad_id, time_lwrad_id
-  integer :: year_id, month_id, day_id, hour_id
+  integer :: year_id, month_id, day_id, hour_id, min_id, time_swrad_var_id, time_lwrad_var_id
   character(2) :: idx
+  
+  real(kind=dp), dimension(scm_state%n_cols,scm_state%n_levels) :: missing_value_2D
+  
   !> \section output_init_alg Algorithm
   !! @{
 
@@ -51,8 +55,18 @@ subroutine output_init(scm_state, physics)
   else
     n_diag = n_timesteps/physics%Model%nszero
   end if
-  n_swrad = n_timesteps/physics%Model%nsswr + 1
-  n_lwrad = n_timesteps/physics%Model%nslwr + 1
+  if (physics%Model%nsswr > 0) then
+    n_swrad = n_timesteps/physics%Model%nsswr + 1
+  else
+    !if SW radiation is not called, write out missing values for one time level
+    n_swrad = 1
+  end if
+  if (physics%Model%nslwr > 0) then
+    !if LW radiation is not called, write out missing values for one time level
+    n_lwrad = n_timesteps/physics%Model%nslwr + 1
+  else
+    n_lwrad = 1
+  end if
   
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id))
@@ -67,8 +81,8 @@ subroutine output_init(scm_state, physics)
   !> - Define the dimension variables.
   call NetCDF_def_var(ncid, 'time_inst', NF90_FLOAT, "model elapsed time for instantaneous variables", "s", dummy_id, (/ time_inst_id /))
   call NetCDF_def_var(ncid, 'time_diag', NF90_FLOAT, "model elapsed time for diagnostic variables", "s", dummy_id, (/ time_diag_id /))
-  call NetCDF_def_var(ncid, 'time_swrad', NF90_FLOAT, "model elapsed time for shortwave radiation variables", "s", dummy_id, (/ time_swrad_id /))
-  call NetCDF_def_var(ncid, 'time_lwrad', NF90_FLOAT, "model elapsed time for longwave radiation variables", "s", dummy_id, (/ time_lwrad_id /))
+  call NetCDF_def_var(ncid, 'time_swrad', NF90_FLOAT, "model elapsed time for shortwave radiation variables", "s", time_swrad_var_id, (/ time_swrad_id /))
+  call NetCDF_def_var(ncid, 'time_lwrad', NF90_FLOAT, "model elapsed time for longwave radiation variables", "s", time_lwrad_var_id, (/ time_lwrad_id /))
 
   !> - Define the state variables
   CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
@@ -81,19 +95,34 @@ subroutine output_init(scm_state, physics)
   CALL output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
   CALL output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id, physics)
   
-  call NetCDF_def_var(ncid, 'init_year',  NF90_FLOAT, "model initialization year",  "year",  year_id)
-  call NetCDF_def_var(ncid, 'init_month', NF90_FLOAT, "model initialization month", "month", month_id)
-  call NetCDF_def_var(ncid, 'init_day',   NF90_FLOAT, "model initialization day",   "day",   day_id)
-  call NetCDF_def_var(ncid, 'init_hour',  NF90_FLOAT, "model initialization hour",  "hour",  hour_id)
+  call NetCDF_def_var(ncid, 'init_year',   NF90_FLOAT, "model initialization year",   "year",   year_id)
+  call NetCDF_def_var(ncid, 'init_month',  NF90_FLOAT, "model initialization month",  "month",  month_id)
+  call NetCDF_def_var(ncid, 'init_day',    NF90_FLOAT, "model initialization day",    "day",    day_id)
+  call NetCDF_def_var(ncid, 'init_hour',   NF90_FLOAT, "model initialization hour",   "hour",   hour_id)
+  call NetCDF_def_var(ncid, 'init_minute', NF90_FLOAT, "model initialization minute", "minute", min_id)
   
   !> - Close variable definition and the file.
   CALL CHECK(NF90_ENDDEF(NCID=ncid))
   
-  call NetCDF_put_var(ncid, "init_year",  scm_state%init_year,  year_id)
-  call NetCDF_put_var(ncid, "init_month", scm_state%init_month, month_id)
-  call NetCDF_put_var(ncid, "init_day",   scm_state%init_day,   day_id)
-  call NetCDF_put_var(ncid, "init_hour",  scm_state%init_hour,  hour_id)
-
+  call NetCDF_put_var(ncid, "init_year",   scm_state%init_year,  year_id)
+  call NetCDF_put_var(ncid, "init_month",  scm_state%init_month, month_id)
+  call NetCDF_put_var(ncid, "init_day",    scm_state%init_day,   day_id)
+  call NetCDF_put_var(ncid, "init_hour",   scm_state%init_hour,  hour_id)
+  call NetCDF_put_var(ncid, "init_minute", scm_state%init_min,   min_id)
+  
+  if (physics%Model%nsswr <= 0) then
+    !write out missing values at the initial time
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_swrad_var_id,VALUES=0.0,START=(/ 1 /)))
+    missing_value_2D = missing_value
+    call NetCDF_put_var(ncid, "sw_rad_heating_rate",  missing_value_2D, 1)
+  end if
+  if (physics%Model%nslwr <= 0) then
+    !write out missing values at the initial time
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_lwrad_var_id,VALUES=0.0,START=(/ 1 /)))
+    missing_value_2D = missing_value
+    call NetCDF_put_var(ncid, "lw_rad_heating_rate",  missing_value_2D, 1)
+  end if
+  
   CALL CHECK(NF90_CLOSE(NCID=ncid))
 
   !> @}
