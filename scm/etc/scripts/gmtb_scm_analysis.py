@@ -93,6 +93,14 @@ if(len(gmtb_scm_datasets) > 1):
 
 num_plots_completed = 0
 
+#make sure that each time slice is a list of length 5 -- year, month, day, hour, min (append zero for minute if necessary)
+for time_slice in time_slices:
+    if (len(time_slices[time_slice]['start']) < 5):
+        for i in range(5 - len(time_slices[time_slice]['start'])):
+            time_slices[time_slice]['start'].append(0)
+    if (len(time_slices[time_slice]['end']) < 5):
+        for i in range(5 - len(time_slices[time_slice]['end'])):
+            time_slices[time_slice]['end'].append(0)
 
 #perform any special checks on the config file data
 if len(gmtb_scm_datasets) != len(gmtb_scm_datasets_labels):
@@ -123,6 +131,7 @@ year = []
 month = []
 day = []
 hour = []
+minute = []
 time_inst = []
 time_diag = []
 time_swrad = []
@@ -312,6 +321,7 @@ for i in range(len(gmtb_scm_datasets)):
     month.append(nc_fid.variables['init_month'][:])
     day.append(nc_fid.variables['init_day'][:])
     hour.append(nc_fid.variables['init_hour'][:])
+    minute.append(nc_fid.variables['init_minute'][:])
 
     time_inst.append(nc_fid.variables['time_inst'][:])
     time_diag.append(nc_fid.variables['time_diag'][:])
@@ -737,7 +747,7 @@ for i in range(len(gmtb_scm_datasets)):
     # lw_dn_sfc_tot.append(nc_fid.variables['lw_dn_sfc_tot'][:])
     # lw_dn_sfc_clr.append(nc_fid.variables['lw_dn_sfc_clr'][:])
 
-    initial_date = datetime.datetime(year[i], month[i], day[i], hour[i], 0, 0, 0)
+    initial_date = datetime.datetime(year[i], month[i], day[i], hour[i], minute[i], 0, 0)
     
     #convert times to datetime objects starting from initial date
     date_inst.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_inst[-1]]))
@@ -783,8 +793,8 @@ time_h_lwrad = [x/3600.0 for x in time_lwrad]
 #find the indices corresponding to the start and end times of the time slices defined in the config file
 for time_slice in time_slices:
     time_slice_labels.append(time_slice)
-    start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3])
-    end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3])
+    start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3],time_slices[time_slice]['start'][4])
+    end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3],time_slices[time_slice]['end'][4])
     
     valid_inst_indices = np.where((date_inst[0] >= start_date) & (date_inst[0] <= end_date))
     start_date_index_inst = valid_inst_indices[0][0]
@@ -795,17 +805,29 @@ for time_slice in time_slices:
     end_date_index_diag = valid_diag_indices[0][-1]
     
     valid_swrad_indices = np.where((date_swrad[0] >= start_date) & (date_swrad[0] <= end_date))
-    start_date_index_swrad = valid_swrad_indices[0][0]
-    end_date_index_swrad = valid_swrad_indices[0][-1]
+    
+    if (len(valid_swrad_indices[0]) > 1):
+        start_date_index_swrad = valid_swrad_indices[0][0]
+        end_date_index_swrad = valid_swrad_indices[0][-1]
+        time_slice_indices_swrad.append([start_date_index_swrad, end_date_index_swrad])
+    else:
+        start_date_index_swrad = valid_swrad_indices[0][0]
+        end_date_index_swrad = valid_swrad_indices[0][-1]
+        time_slice_indices_swrad.append([start_date_index_swrad, end_date_index_swrad+1])
+        
     
     valid_lwrad_indices = np.where((date_lwrad[0] >= start_date) & (date_lwrad[0] <= end_date))
-    start_date_index_lwrad = valid_lwrad_indices[0][0]
-    end_date_index_lwrad = valid_lwrad_indices[0][-1]    
+    if (len(valid_lwrad_indices[0]) > 1):
+        start_date_index_lwrad = valid_lwrad_indices[0][0]
+        end_date_index_lwrad = valid_lwrad_indices[0][-1]
+        time_slice_indices_lwrad.append([start_date_index_lwrad, end_date_index_lwrad])
+    else:
+        start_date_index_lwrad = valid_lwrad_indices[0][0]
+        end_date_index_lwrad = valid_lwrad_indices[0][-1]
+        time_slice_indices_lwrad.append([start_date_index_lwrad, end_date_index_lwrad+1])
     
     time_slice_indices_inst.append([start_date_index_inst, end_date_index_inst])
     time_slice_indices_diag.append([start_date_index_diag, end_date_index_diag])
-    time_slice_indices_swrad.append([start_date_index_swrad, end_date_index_swrad])
-    time_slice_indices_lwrad.append([start_date_index_lwrad, end_date_index_lwrad])
 
 #fill the obs_dict by calling the appropriate observation file read routine
 if(obs_compare and obs_file):

@@ -69,11 +69,25 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   !> - Call apply_forcing_* from \ref forcing. This routine updates the "input" state variables for the physics call (updates filtered values from previous timestep, if leapfrog scheme). It effectively replaces the change of the state variables due to dynamics.
   select case(scm_state%time_scheme)
     case(1)
-      call apply_forcing_forward_Euler(scm_state, in_spinup)
+      if (scm_state%input_type == 0) then
+        call apply_forcing_forward_Euler(scm_state, in_spinup)
+      else
+        call apply_forcing_DEPHY(scm_state, in_spinup)
+      end if
     case(2)
-      call apply_forcing_leapfrog(scm_state)
+      if (scm_state%input_type == 0) then
+        call apply_forcing_leapfrog(scm_state)
+      else
+        write(*,*) 'The application of forcing terms from the DEPHY file format has not been implemented for the leapfrog time scheme.'
+        stop
+      end if
+      
     case default
-      call apply_forcing_forward_Euler(scm_state, in_spinup)
+      if (scm_state%input_type == 0) then
+        call apply_forcing_forward_Euler(scm_state, in_spinup)
+      else
+        call apply_forcing_DEPHY(scm_state, in_spinup)
+      end if
   end select
 
   if (scm_state%time_scheme == 2) then

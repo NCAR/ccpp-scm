@@ -43,15 +43,23 @@ subroutine set_state(scm_input, scm_reference, scm_state)
     scm_state%lat(i) = scm_input%input_lat*deg_to_rad_const
   end do
   
-  !> - Calculate water vapor from total water, suspended liquid water, and suspended ice.
-  input_qv = scm_input%input_qt - scm_input%input_ql - scm_input%input_qi
+  
 
   !> - \todo When patching in a reference sounding, need to handle the case when the reference sounding is too short; patch_in_ref
   !! checks for the case, but as of now, it just extrapolates where it needs to and returns an error code; error should be handled
   !! here or passed up to the main program.
 
-  !> - For each column, interpolate the water vapor to the model grid.
+  
   if (.NOT. scm_state%model_ics) then ! not a model
+     
+     if (scm_state%input_type == 0) then
+       !> - Calculate water vapor from total water, suspended liquid water, and suspended ice.
+       input_qv = scm_input%input_qt - scm_input%input_ql - scm_input%input_qi
+     else
+       input_qv = scm_input%input_qv
+     end if
+     
+     !> - For each column, interpolate the water vapor to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_qv, scm_state%pres_l(i,:), &
          scm_state%n_levels, scm_state%state_tracer(i,:,scm_state%water_vapor_index,1), last_index_init, 1)
@@ -63,9 +71,18 @@ subroutine set_state(scm_input, scm_reference, scm_state)
        end if
      end do
    
-     !> - Calculate the input absolute temperature from input pressure, theta_il, ql, and qi.
-     input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
-       (con_hfus/con_cp)*scm_input%input_qi)
+     if (scm_state%input_type == 0) then
+       !> - Calculate the input absolute temperature from input pressure, theta_il, ql, and qi.
+       input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
+         (con_hfus/con_cp)*scm_input%input_qi)
+     else
+       if (maxval(scm_input%input_temp) > 0) then
+         input_T = scm_input%input_temp
+       else
+         input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
+           (con_hfus/con_cp)*scm_input%input_qi)
+       end if
+     end if
    
      !> - For each column, interpolate the temperature to the model grid.
      do i=1, scm_state%n_cols
@@ -116,7 +133,25 @@ subroutine set_state(scm_input, scm_reference, scm_state)
        end do
      end if
    
-     scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = 0.0
+     !> - For each column, interpolate the cloud liquid water to the model grid.
+     do i=1, scm_state%n_cols
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_ql, scm_state%pres_l(i,:), &
+         scm_state%n_levels, scm_state%state_tracer(i,:,scm_state%cloud_water_index,1), last_index_init, 1)
+       !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
+       if(last_index_init < scm_state%n_levels) THEN
+         scm_state%state_tracer(i,last_index_init+1:,scm_state%cloud_water_index,1) = 0.0
+       end if
+     end do
+     
+     !> - For each column, interpolate the cloud ice water to the model grid.
+     do i=1, scm_state%n_cols
+       call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_qi, scm_state%pres_l(i,:), &
+         scm_state%n_levels, scm_state%state_tracer(i,:,scm_state%cloud_ice_index,1), last_index_init, 1)
+       !>  - If the input domain does not span the model domain, patch in McClatchey tropical standard atmosphere (smoothly over a number of levels) above.
+       if(last_index_init < scm_state%n_levels) THEN
+         scm_state%state_tracer(i,last_index_init+1:,scm_state%cloud_ice_index,1) = 0.0
+       end if
+     end do
    else
      do i=1, scm_state%n_cols
         !input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + (con_hfus/con_cp)*scm_input%input_qi)

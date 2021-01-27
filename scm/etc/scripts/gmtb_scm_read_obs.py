@@ -24,8 +24,8 @@ def read_twpice_obs(obs_file, time_slices, date):
   obs_date = np.array(obs_date)
 
   for time_slice in time_slices:
-      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3])
-      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3])
+      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
       start_date_index = np.where(obs_date == start_date)[0][0]
       end_date_index = np.where(obs_date == end_date)[0][0]
       obs_time_slice_indices.append([start_date_index, end_date_index])
@@ -110,8 +110,8 @@ def read_arm_sgp_summer_1997_obs(obs_file, time_slices, date):
   obs_date = np.array(obs_date)
 
   for time_slice in time_slices:
-    start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3])
-    end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3])
+    start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+    end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
     start_date_index = np.where(obs_date == start_date)[0][0]
     end_date_index = np.where(obs_date == end_date)[0][0]
     obs_time_slice_indices.append([start_date_index, end_date_index])
@@ -205,8 +205,8 @@ def read_LASSO_obs(obs_file, time_slices, date):
     obs_date = np.array(obs_date)
 
     for time_slice in time_slices:
-      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3])
-      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3])
+      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
       start_date_index = np.where(obs_date == start_date)[0][0]
       end_date_index = np.where(obs_date == end_date)[0][0]
       obs_time_slice_indices.append([start_date_index, end_date_index])
@@ -271,8 +271,8 @@ def read_gabls3_obs(obs_file, time_slices, date):
     obs_date = np.array(obs_date)
     
     for time_slice in time_slices:
-      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3])
-      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3])
+      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
       start_date_index = np.where(obs_date == start_date)[0][0]
       try:
           end_date_index = np.where(obs_date == end_date)[0][0]

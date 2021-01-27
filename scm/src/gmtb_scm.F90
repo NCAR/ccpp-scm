@@ -40,9 +40,17 @@ subroutine gmtb_scm_main_sub()
   logical                           :: in_spinup
 
   call get_config_nml(scm_state)
-
-  call get_case_init(scm_state, scm_input)
-
+  
+  select case(scm_state%input_type)
+    case(0)
+      call get_case_init(scm_state, scm_input)
+    case(1)
+      call get_case_init_DEPHY(scm_state, scm_input)
+    case default
+      write(*,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
+      stop
+  end select
+  
   call get_reference_profile(scm_state, scm_reference)
 
   select case(trim(adjustl(scm_state%model_name)))
@@ -131,6 +139,14 @@ subroutine gmtb_scm_main_sub()
                        physics%Diag, physics%Interstitial, 0, 1, 1,                &
                        physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
                        scm_state%lat, scm_state%area)
+  
+  !override radiation frequency
+  if (scm_state%force_rad_T > 0) then
+    !turn off radiation since it is already accounted for in the forcing
+    !set radiation calling periods to -1 in order to prevent lsswr/lslwr from being be set to true in GFS_time_vary_pre
+    physics%Model%nsswr = -1
+    physics%Model%nslwr = -1
+  end if
   
   !override fhzero in physics namelist if n_itt_diag is set in the case namelist
   if (scm_state%n_itt_diag >= 1) then
@@ -226,7 +242,11 @@ subroutine gmtb_scm_main_sub()
 
     call calc_pres_exner_geopotential(1, scm_state)
 
-    call apply_forcing_forward_Euler(scm_state, in_spinup)
+    if (scm_state%input_type == 0) then
+      call apply_forcing_forward_Euler(scm_state, in_spinup)
+    else
+      call apply_forcing_DEPHY(scm_state, in_spinup)
+    end if
 
     !apply_forcing_forward_Euler updates state variables time level 1, so must copy this data to time_level 2 (where cdata points)
     scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)

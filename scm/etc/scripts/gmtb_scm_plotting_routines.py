@@ -412,6 +412,10 @@ def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_
     if np.count_nonzero(values) == 0:
         print('The plot for {} will not be created due to all zero values'.format(title))
         return
+        
+    if np.amax(values) == np.amin(values):
+        print('The plot for {} will not be created due to all values being equal'.format(title))
+        return
     
     if(min_val != -999 and max_val != -999):
         min_val = conversion_factor*min_val
