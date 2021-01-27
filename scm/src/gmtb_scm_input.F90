@@ -854,6 +854,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
   use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check, missing_value, missing_value_int
   use gmtb_scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_rd
+  use gmtb_scm_utils, only: find_vertical_index_pressure, find_vertical_index_height
+  
   type(scm_state_type), intent(inout) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
   
@@ -2099,40 +2101,6 @@ subroutine get_tracers(tracer_names)
 
     close (fu)
 end subroutine get_tracers
-
-subroutine find_vertical_index_pressure(p_thresh, pres, k_out)
-  real(kind=sp), intent(in) :: p_thresh
-  real(kind=sp), intent(in) :: pres(:)
-  integer, intent(out) :: k_out
-  
-  integer :: k
-  
-  k_out = -999
-  do k=1, size(pres)
-    if (pres(k) <= p_thresh) then
-      k_out = k
-      exit
-    end if
-  end do
-  
-end subroutine find_vertical_index_pressure
-
-subroutine find_vertical_index_height(z_thresh, height, k_out)
-  real(kind=sp), intent(in) :: z_thresh
-  real(kind=sp), intent(in) :: height(:)
-  integer, intent(out) :: k_out
-  
-  integer k
-  
-  k_out = -999
-  do k=1, size(height)
-    if (height(k) >= z_thresh) then
-      k_out = k
-      exit
-    end if
-  end do
-  
-end subroutine find_vertical_index_height
 
 !> @}
 !> @}
