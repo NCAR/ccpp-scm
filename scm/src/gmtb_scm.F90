@@ -50,7 +50,7 @@ subroutine gmtb_scm_main_sub()
   end select
   
   call get_reference_profile(scm_state, scm_reference)
-  
+
   select case(trim(adjustl(scm_state%model_name)))
     case("GFS")
       !>  - Call get_GFS_grid in \ref vgrid to read in the necessary coefficients and calculate the pressure-related variables on the grid.
@@ -72,7 +72,7 @@ subroutine gmtb_scm_main_sub()
   end select
 
   !allocate(cdata_cols(scm_state%n_cols))
-  
+
   call set_state(scm_input, scm_reference, scm_state)
 
   call calc_geopotential(1, scm_state)
@@ -324,7 +324,6 @@ subroutine gmtb_scm_main_sub()
   !end if
 
   do i = 2, scm_state%n_timesteps
-    
     !are we still in spinup mode?
     if (scm_state%do_spinup .and. i <= scm_state%spinup_timesteps) then
       in_spinup = .true.
@@ -351,18 +350,18 @@ subroutine gmtb_scm_main_sub()
       scm_state%temp_u = scm_state%state_u
       scm_state%temp_v = scm_state%state_v
     end if
-    
+
     call interpolate_forcing(scm_input, scm_state, in_spinup)
     
     call calc_pres_exner_geopotential(1, scm_state)
-    
+
     !zero out diagnostics output on EVERY time step - breaks diagnostics averaged over many timesteps
     !call physics%Diag%rad_zero(physics%Model)
     !call physics%Diag%phys_zero(physics%Model)
 
     !pass in state variables to be modified by forcing and physics
     call do_time_step(scm_state, physics, cdata, in_spinup)
-    
+
     if (scm_state%time_scheme == 2) then
       !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
       call filter(scm_state)
@@ -389,7 +388,6 @@ subroutine gmtb_scm_main_sub()
       end if
 
     end if
-    
   end do
 
   call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
