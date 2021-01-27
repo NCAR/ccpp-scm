@@ -8,6 +8,11 @@ use gmtb_scm_physical_constants, only: con_rd, con_g
 
 implicit none
 
+interface find_vertical_index_pressure
+  module procedure find_vertical_index_pressure_sp
+  module procedure find_vertical_index_pressure_dp
+end interface
+
 contains
 
 !> \ingroup SCM
@@ -78,23 +83,56 @@ subroutine interpolate_to_grid_centers(n_input_levels, input_pres, input_field, 
   !> @}
 end subroutine
 
-subroutine find_state_vertical_index_from_input(input_pres, pres_l, k_in, k_out)
-  real(kind=dp), intent(in) :: input_pres(:)  !< pressure levels for the input profile (Pa)
-  real(kind=dp), intent(in) :: pres_l(:) !< model pressure levels (Pa)
-  integer, intent(in) :: k_in !< input level index
-  integer, intent(out) :: k_out !< corresponding state level index
+subroutine find_vertical_index_pressure_sp(p_thresh, pres, k_out)
+  real(kind=sp), intent(in) :: p_thresh
+  real(kind=sp), intent(in) :: pres(:)
+  integer, intent(out) :: k_out
   
   integer :: k
   
   k_out = -999
-  do k=1, size(pres_l)
-    if (pres_l(k) <= input_pres(k_in)) then
+  do k=1, size(pres)
+    if (pres(k) <= p_thresh) then
       k_out = k
       exit
     end if
   end do
   
-end subroutine find_state_vertical_index_from_input
+end subroutine find_vertical_index_pressure_sp
+
+subroutine find_vertical_index_pressure_dp(p_thresh, pres, k_out)
+  real(kind=dp), intent(in) :: p_thresh
+  real(kind=dp), intent(in) :: pres(:)
+  integer, intent(out) :: k_out
+  
+  integer :: k
+  
+  k_out = -999
+  do k=1, size(pres)
+    if (pres(k) <= p_thresh) then
+      k_out = k
+      exit
+    end if
+  end do
+  
+end subroutine find_vertical_index_pressure_dp
+
+subroutine find_vertical_index_height(z_thresh, height, k_out)
+  real(kind=sp), intent(in) :: z_thresh
+  real(kind=sp), intent(in) :: height(:)
+  integer, intent(out) :: k_out
+  
+  integer k
+  
+  k_out = -999
+  do k=1, size(height)
+    if (height(k) >= z_thresh) then
+      k_out = k
+      exit
+    end if
+  end do
+  
+end subroutine find_vertical_index_height
 
 subroutine w_to_omega(n_col, n_lev, w, p, T, omega)
   integer, intent(in)    :: n_col
