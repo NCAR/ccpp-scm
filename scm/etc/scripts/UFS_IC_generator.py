@@ -31,6 +31,8 @@ p0           = 100000.0
 
 missing_value = -9999.0 #9.99e20
 
+n_lam_halo_points = 3
+
 missing_variable_snow_layers = 3
 missing_variable_soil_layers = 4
 missing_variable_ice_layers = 2
@@ -57,11 +59,13 @@ parser.add_argument('-d', '--date',       help='date corresponding to initial co
 parser.add_argument('-i', '--in_dir',     help='input directory path containing FV3 input files', required=True)
 parser.add_argument('-g', '--grid_dir',   help='directory path containing FV3 tile supergrid files', required=True)
 parser.add_argument('-f', '--forcing_dir',help='directory path containing physics diag files', required=True)
-parser.add_argument('-t', '--tile',       help='tile of desired point (if known - bypasses tile search if present)', type=int, choices=range(1,7))
+parser.add_argument('-t', '--tile',       help='tile of desired point (if known - bypasses tile search if present)', type=int, choices=range(1,8))
 parser.add_argument('-a', '--area',       help='area of grid cell in m^2', type=float)
 parser.add_argument('-mp','--noahmp',     help='flag to generate cold-start ICs for NoahMP LSM from Noah LSM ICs', action='store_true')
+parser.add_argument('-lam','--lam',       help='flag to signal that the ICs and forcing is from a limited-area model run', action='store_true')
 parser.add_argument('-n', '--case_name',  help='name of case', required=True)
 parser.add_argument('-oc','--old_chgres', help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
+
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -81,6 +85,7 @@ def parse_arguments():
     case_name = args.case_name
     noahmp = args.noahmp
     old_chgres = args.old_chgres
+    lam = args.lam
     
     #validate args
     if not os.path.exists(in_dir):
@@ -110,14 +115,19 @@ def parse_arguments():
         date_dict["day"] = int(date[6:8])
         date_dict["hour"] = int(date[8:10])
         date_dict["minute"] = int(date[10:])
-        
-    return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres)
+    
+    if (not lam and tile > 6):
+        message = 'The entered tile {0} is not compatibile with the global cubed-sphere grid'.format(date)
+        logging.critical(message)
+        raise Exception(message)
+    
+    return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam)
 
 def setup_logging():
     """Sets up the logging module."""
     logging.basicConfig(format='%(levelname)s: %(message)s', level=LOGLEVEL)
     
-def find_tile(loc, dir):
+def find_tile(loc, dir, lam):
     """Find the FV3 tile with the given lon/lat"""
     #returns the integer tile number
     
@@ -186,7 +196,10 @@ def find_tile(loc, dir):
                 loc_point = Point(temp_loc)
                 if tile_polygon.contains(loc_point):
                     found_tile = True
-                    return f_name.split('tile')[1].split('.nc')[0] 
+                    if (lam):
+                        return f_name.split('tile')[1].split('.halo')[0] 
+                    else:
+                        return f_name.split('tile')[1].split('.nc')[0] 
             else:
                 polar_tile_filenames.append(f_name)
                 
@@ -199,31 +212,56 @@ def find_tile(loc, dir):
         #if the sign of the mean latitude of the tile is the same as that of the point, the tile has been found
         if np.sign(np.mean(latitude)) == np.sign(loc[1]):
             found_tile = True
-            return f_name.split('tile')[1].split('.nc')[0]        
+            if (lam):
+                return f_name.split('tile')[1].split('.halo')[0] 
+            else:
+                return f_name.split('tile')[1].split('.nc')[0]        
     return -1
 
-def find_loc_indices(loc, dir, tile):
+def find_loc_indices(loc, dir, tile, lam):
     """Find the nearest neighbor FV3 grid point given a lon/lat pair and the tile number"""
     #returns the indices of the nearest neighbor point in the given tile, the lon/lat of the nearest neighbor, 
     #and the distance (m) from the given point to the nearest neighbor grid cell
     
-    filename_pattern = '*grid.tile{0}.nc'.format(tile)
-    for f_name in os.listdir(dir):
-       if fnmatch.fnmatch(f_name, filename_pattern):
-          filename = f_name
-    if not filename:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-        logging.critical(message)
-        raise Exception(message)
+    if (lam):
+        filename_pattern = '*grid.tile7.halo{}.nc'.format(n_lam_halo_points)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
+    else:
+        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    
     #read in supergrid longitude and latitude
-    lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    #get the longitude and latitude data for the grid centers by slicing the supergrid 
-    #and taking only odd-indexed values
-    longitude = lon_super[1::2,1::2]
-    latitude = lat_super[1::2,1::2]
+    if (lam):
+        #strip ghost/halo points and return central (A-grid) points
+        lon_super = np.asarray(nc_file['x'])
+        lat_super = np.asarray(nc_file['y'])
+        #assuming n_lam_halo_points
+        lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
+        lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
+        longitude = lon_super_no_halo[1::2,1::2]
+        latitude = lat_super_no_halo[1::2,1::2]
+    else:
+        lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        #get the longitude and latitude data for the grid centers by slicing the supergrid 
+        #and taking only odd-indexed values
+        longitude = lon_super[1::2,1::2]
+        latitude = lat_super[1::2,1::2]
+    
     nc_file.close()
     
     adj_long = False        
@@ -256,26 +294,48 @@ def find_loc_indices(loc, dir, tile):
     
     return (i,j,longitude[i,j]%360.0, latitude[i,j], eucl_dist[i,j])
 
-def find_lon_lat_of_indices(indices, dir, tile):
+def find_lon_lat_of_indices(indices, dir, tile, lam):
     """Find the longitude and latitude of the given indices within the given tile."""
     
-    filename_pattern = '*grid.tile{0}.nc'.format(tile)
-    for f_name in os.listdir(dir):
-       if fnmatch.fnmatch(f_name, filename_pattern):
-          filename = f_name
-    if not filename:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-        logging.critical(message)
-        raise Exception(message)
+    if (lam):
+        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
+    else:
+        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
-    #read in supergrid longitude and latitude
-    lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    #get the longitude and latitude data for the grid centers by slicing the supergrid 
-    #and taking only odd-indexed values
-    longitude = lon_super[1::2,1::2]
-    latitude = lat_super[1::2,1::2]
+    
+    if (lam):
+        #strip ghost/halo points and return central (A-grid) points
+        lon_super = np.asarray(nc_file['x'])
+        lat_super = np.asarray(nc_file['y'])
+        #assuming n_lam_halo_points
+        lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
+        lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
+        longitude = lon_super_no_halo[1::2,1::2]
+        latitude = lat_super_no_halo[1::2,1::2]
+    else:
+        #read in supergrid longitude and latitude
+        lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        #get the longitude and latitude data for the grid centers by slicing the supergrid 
+        #and taking only odd-indexed values
+        longitude = lon_super[1::2,1::2]
+        latitude = lat_super[1::2,1::2]
+    
     nc_file.close()
     
     return (longitude[indices[1],indices[0]], latitude[indices[1],indices[0]])
@@ -333,14 +393,14 @@ def read_NetCDF_surface_var(nc_file, var_name, i, j, old_chgres, vert_dim):
                 var = missing_value
     return var
 
-def get_UFS_IC_data(dir, grid_dir, forcing_dir, tile, i, j, old_chgres):
+def get_UFS_IC_data(dir, grid_dir, forcing_dir, tile, i, j, old_chgres, lam):
     """Get the state, surface, and orographic data for the given tile and indices"""
     #returns dictionaries with the data
     
     vgrid_data = get_UFS_vgrid_data(grid_dir) #only needed for ak, bk to calculate pressure
-    state_data = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres)
-    surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres)
-    oro_data = get_UFS_oro_data(dir, tile, i, j)
+    state_data = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres, lam)
+    surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres, lam)
+    oro_data = get_UFS_oro_data(dir, tile, i, j, lam)
     
     # #calculate derived quantities
     # if old_chgres:
@@ -361,7 +421,7 @@ def get_UFS_IC_data(dir, grid_dir, forcing_dir, tile, i, j, old_chgres):
     
     return (state_data, surface_data, oro_data)
     
-def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres):
+def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     """Get the state data for the given tile and indices"""
     
     # filename_pattern = '*grid.tile*.nc'
@@ -396,7 +456,10 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres):
     #     #    for i in range(0, longitude.shape[1]):
     #     #        print longitude[j,i]
         
-    nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.tile{0}.nc'.format(tile)))
+    if lam:
+        nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.nc'))
+    else:
+        nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.tile{0}.nc'.format(tile)))
     
     # get nlevs from the gfs_ctrl.nc data
     nlevs_model=vgrid["nlevs"]
@@ -480,9 +543,9 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres):
                     break
             m = l
         
-        temp_model_rev = np.zeros(nlevs_model)
+        temp_model_rev = np.zeros((1,nlevs_model))
         for k in range(0, nlevs_model):
-            temp_model_rev[k] = (gz_fv[k]-gz_fv[k+1])/(rdgas*(log_pressure_model_interfaces_rev[k+1]-log_pressure_model_interfaces_rev[k])*(1.+zvir*sphum_model_rev[0,k]) )
+            temp_model_rev[0,k] = (gz_fv[k]-gz_fv[k+1])/(rdgas*(log_pressure_model_interfaces_rev[k+1]-log_pressure_model_interfaces_rev[k])*(1.+zvir*sphum_model_rev[0,k]) )
     else:
         temp_rev = nc_file_data['t'][:,j,i]
         
@@ -495,27 +558,27 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres):
     intermediate_threshold = 258.16
     cloud_ice_mixing_ratio_threshold = 1.0E-5
     for k in range(0, nlevs_model):
-        cloud_water = liqwat_model_rev[0][k]
-        if (temp_model_rev[k] > all_liquid_threshold):
-            liqwat_model_rev[0][k] = cloud_water
+        cloud_water = liqwat_model_rev[0,k]
+        if (temp_model_rev[0,k] > all_liquid_threshold):
+            liqwat_model_rev[0,k] = cloud_water
             icewat_model_rev[k] = 0.0
-        elif (temp_model_rev[k] < all_ice_threshold):
-            liqwat_model_rev[0][k] = 0.0
+        elif (temp_model_rev[0,k] < all_ice_threshold):
+            liqwat_model_rev[0,k] = 0.0
             icewat_model_rev[k] = cloud_water
         else:
             if k == 0:
-                liqwat_model_rev[0][k] = cloud_water*(temp_model_rev[k]-all_ice_threshold)/(all_liquid_threshold - all_ice_threshold)
-                icewat_model_rev[k] = cloud_water - liqwat_model_rev[0][k]
+                liqwat_model_rev[0,k] = cloud_water*(temp_model_rev[0,k]-all_ice_threshold)/(all_liquid_threshold - all_ice_threshold)
+                icewat_model_rev[k] = cloud_water - liqwat_model_rev[0,k]
             else:
-                if (temp_model_rev[k] < intermediate_threshold and icewat_model_rev[k-1] > cloud_ice_mixing_ratio_threshold):
-                    liqwat_model_rev[0][k] = 0.0
+                if (temp_model_rev[0,k] < intermediate_threshold and icewat_model_rev[k-1] > cloud_ice_mixing_ratio_threshold):
+                    liqwat_model_rev[0,k] = 0.0
                     icewat_model_rev[k] = cloud_water
                 else:
-                    liqwat_model_rev[0][k] = cloud_water*(temp_model_rev[k]-all_ice_threshold)/(all_liquid_threshold - all_ice_threshold)
-                    icewat_model_rev[k] = cloud_water - liqwat_model_rev[0][k]
-        (liqwat_model_rev[0][k], dummy_rain, icewat_model_rev[k], dummy_snow) = fv3_remap.mp_auto_conversion(liqwat_model_rev[0][k], icewat_model_rev[k])
+                    liqwat_model_rev[0,k] = cloud_water*(temp_model_rev[0,k]-all_ice_threshold)/(all_liquid_threshold - all_ice_threshold)
+                    icewat_model_rev[k] = cloud_water - liqwat_model_rev[0,k]
+        (liqwat_model_rev[0,k], dummy_rain, icewat_model_rev[k], dummy_snow) = fv3_remap.mp_auto_conversion(liqwat_model_rev[0,k], icewat_model_rev[k])
     
-    [u_s, u_n, v_w, v_e] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data)
+    [u_s, u_n, v_w, v_e] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam)
     
     #put C/D grid zonal/meridional winds on model pressure levels
     u_s_model_rev = fv3_remap.mappm(levp_data, pressure_from_data_rev[np.newaxis, :], u_s[np.newaxis, :], nlevs_model, pressure_model_interfaces_rev[np.newaxis, :], 1, 1, -1, 8, ptop_data)
@@ -549,29 +612,46 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres):
         "o3": o3_model_rev[0][::-1],
         "ql": liqwat_model_rev[0][::-1],
         "p_surf": ps_calc,
-        "T": temp_model_rev[::-1],
+        "T": temp_model_rev[0,::-1],
         "pres": pressure_model,
         "pres_i": pressure_model_interfaces
     }
         
     return state
 
-def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data):
-    filename_pattern = '*grid.tile{0}.nc'.format(tile)
-    
-    for f_name in os.listdir(dir):
-       if fnmatch.fnmatch(f_name, filename_pattern):
-          filename = f_name
-    if not filename:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-        logging.critical(message)
-        raise Exception(message)
+def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam):
+    if lam:
+        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
+    else:
+        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+        
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
     
     nc_file_grid = Dataset('{0}/{1}'.format(dir,filename))
     
-    #read in supergrid longitude and latitude
-    lon_super = np.asarray(nc_file_grid['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    lat_super = np.asarray(nc_file_grid['y'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    if (lam):
+        #strip ghost/halo points and return supergrid
+        lon_super_data = np.asarray(nc_file_grid['x'])
+        lat_super_data = np.asarray(nc_file_grid['y'])
+        #assuming n_lam_halo_points
+        lon_super = lon_super_data[2*n_lam_halo_points:lon_super_data.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super_data.shape[1]-2*n_lam_halo_points]
+        lat_super = lat_super_data[2*n_lam_halo_points:lat_super_data.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super_data.shape[1]-2*n_lam_halo_points]
+    else:
+        lon_super = np.asarray(nc_file_grid['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        lat_super = np.asarray(nc_file_grid['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     
     num_agrid_x = int(0.5*(lon_super.shape[1]-1))
     num_agrid_y = int(0.5*(lon_super.shape[0]-1))
@@ -960,10 +1040,13 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data):
     
     return [u_s, u_n, v_w, v_e]
 
-def get_UFS_surface_data(dir, tile, i, j, old_chgres):
+def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     """Get the surface data for the given tile and indices"""
     
-    nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.tile{0}.nc'.format(tile)))
+    if lam:
+        nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.nc'))
+    else:
+        nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.tile{0}.nc'.format(tile)))
     
     #FV3/io/FV3GFS_io.F90/sfc_prop_restart_read was used as reference for variables that can be read in    
     
@@ -1215,15 +1298,19 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     }
     return surface
 
-def get_UFS_oro_data(dir, tile, i, j):
+def get_UFS_oro_data(dir, tile, i, j, lam):
     """Get the orographic data for the given tile and indices"""
     
-    filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
-    for f_name in os.listdir(dir):
-       if fnmatch.fnmatch(f_name, filename_pattern):
-          filename = f_name
+    if lam:
+        nc_file = Dataset('{0}/{1}'.format(dir,'oro_data.nc'))
+    else:
+        filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+              
+        nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
-    nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
     # orographyic properties
     stddev_in = read_NetCDF_var(nc_file, "stddev", i, j)
@@ -1298,21 +1385,32 @@ def get_UFS_vgrid_data(dir):
     
     return vgrid    
 
-def get_UFS_grid_area(dir, tile, i, j):
+def get_UFS_grid_area(dir, tile, i, j, lam):
     """Get the horizontal grid cell area for the given tile and indices"""
     #this information is in the supergrid files
     
-    filename_pattern = '*grid.tile{0}.nc'.format(tile)
-    
-    for f_name in os.listdir(dir):
-       if fnmatch.fnmatch(f_name, filename_pattern):
-          filename = f_name
-    if not filename:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-        logging.critical(message)
-        raise Exception(message)
-    
+    if lam:
+        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
+    else:
+        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+        
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
+        
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    
     
     # extract out area of grid cell
     
@@ -1321,15 +1419,24 @@ def get_UFS_grid_area(dir, tile, i, j):
     ipt2 = i*2+1
     
     #from Phil Pegion: the area is calculated by adding up the 4 components of the contained supergrid cells
-    area_in=nc_file['area'][jpt2-1:jpt2+1,ipt2-1:ipt2+1]
+    if lam:
+        area_data = nc_file['area'][:,:]
+        area_data_no_halo = area_data[2*n_lam_halo_points:area_data.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:area_data.shape[1]-2*n_lam_halo_points]
+        area_in = area_data_no_halo[jpt2-1:jpt2+1,ipt2-1:ipt2+1]
+    else:
+        area_in=nc_file['area'][jpt2-1:jpt2+1,ipt2-1:ipt2+1]
     
     return area_in.sum()
 
-def get_UFS_forcing_data(nlevs, state, dir, tile, i, j):
+def get_UFS_forcing_data(nlevs, state, dir, tile, i, j, lam):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
     
-    dyn_filename_pattern = 'dynf*.tile{0}.nc'.format(tile)
-    phy_filename_pattern = 'phyf*.tile{0}.nc'.format(tile)
+    if lam:
+        dyn_filename_pattern = 'dynf*.nc'.format(tile)
+        phy_filename_pattern = 'phyf*.nc'.format(tile)
+    else:
+        dyn_filename_pattern = 'dynf*.tile{0}.nc'.format(tile)
+        phy_filename_pattern = 'phyf*.tile{0}.nc'.format(tile)
     
     dyn_filenames = []
     phy_filenames = []
@@ -1371,6 +1478,9 @@ def get_UFS_forcing_data(nlevs, state, dir, tile, i, j):
     time_dyn_hours = []
     for filename in dyn_filenames:
         nc_file = Dataset('{0}/{1}'.format(dir,filename))
+        if lam:
+            print('Check if you need to reproject onto the native grid. If so, do it here before grabbing data.')
+            exit()
         
         nlevs=len(nc_file.dimensions['pfull'])
         
@@ -1416,6 +1526,9 @@ def get_UFS_forcing_data(nlevs, state, dir, tile, i, j):
     time_phys_hours = []
     for filename in phy_filenames:
         nc_file = Dataset('{0}/{1}'.format(dir,filename))
+        if lam:
+            print('Check if you need to reproject onto the native grid. If so, do it here before grabbing data.')
+            exit()
         
         nlevs=len(nc_file.dimensions['pfull'])
         
@@ -2960,11 +3073,12 @@ def main():
     setup_logging()
     
     #read in arguments
-    (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres) = parse_arguments()
+    (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
+    #if not tile and not lam:
     if not tile:
-        tile = int(find_tile(location, grid_dir))
+        tile = int(find_tile(location, grid_dir, lam))
         if tile < 0:
             message = 'No tile was found for location {0}'.format(location)
             logging.critical(message)
@@ -2973,7 +3087,7 @@ def main():
     
     #find index of closest point in the tile if indices are not specified
     if not indices:
-        (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile)
+        (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile, lam)
         print('The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j))
         print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
         print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
@@ -2981,12 +3095,12 @@ def main():
         tile_i = indices[0]
         tile_j = indices[1]
         #still need to grab the lon/lat if the tile and indices are supplied
-        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile)
+        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile, lam)
         
         print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
     
     #get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement different file reads)
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, forcing_dir, tile, tile_i, tile_j, old_chgres)
+    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, forcing_dir, tile, tile_i, tile_j, old_chgres, lam)
     
     #cold start NoahMP variables
     if (noahmp):
@@ -2994,14 +3108,14 @@ def main():
     
     #get grid cell area if not given
     if not area:
-        area = get_UFS_grid_area(grid_dir, tile, tile_i, tile_j)
+        area = get_UFS_grid_area(grid_dir, tile, tile_i, tile_j, lam)
     surface_data["area"] = area
     
     surface_data["lon"] = point_lon
     surface_data["lat"] = point_lat
     
     #get UFS forcing data (zeros for now; only placeholder)
-    forcing_data = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, tile, tile_i, tile_j)
+    forcing_data = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, tile, tile_i, tile_j, lam)
     
     #write SCM case file
     write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date)

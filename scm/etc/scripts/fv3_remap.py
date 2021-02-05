@@ -32,7 +32,7 @@ def ppm_limiters(dm, a4, itot, lmt):
             if(dm[i] == 0.):
                 a4[1,i] = a4[0,i]
                 a4[2,i] = a4[0,i]
-                a4[2,i] = 0.
+                a4[3,i] = 0.
             else:
                 da1  = a4[2,i] - a4[1,i]
                 da2  = da1*da1
@@ -48,9 +48,8 @@ def ppm_limiters(dm, a4, itot, lmt):
     #! Note: no need to provide first guess of A6 <-- a4(4,i)
         for i in range(0,itot):
             qmp = 2.*dm[i]
-            #GJF: this code is probably not identical to the Fortran version
-            a4[1,i] = a4[0,i]-np.sign(qmp)[0]*np.min([np.abs(qmp),np.abs(a4[1,i]-a4[0,i])])
-            a4[2,i] = a4[0,i]+np.sign(qmp)[0]*np.min([np.abs(qmp),np.abs(a4[2,i]-a4[0,i])])
+            a4[1,i] = a4[0,i]-np.sign(qmp)*np.abs(np.min([np.abs(qmp),np.abs(a4[1,i]-a4[0,i])]))
+            a4[2,i] = a4[0,i]+np.sign(qmp)*np.abs(np.min([np.abs(qmp),np.abs(a4[2,i]-a4[0,i])]))
             a4[3,i] = 3.*( 2.*a4[0,i] - (a4[1,i]+a4[2,i]) )
     elif (lmt == 2):
     #! Positive definite constraint
@@ -172,13 +171,16 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
      #real  fac
      #real  a1, a2, c1, c2, c3, d1, d2
      #real  qm, dq, lac, qmp, pmp
-
+     
+     
+     
      km1 = km - 1
      
      for k in range(1,km):
          for i in range(i1-1,i2):
              delq[i,k-1] =   a4[0,i,k] - a4[0,i,k-1]
              d4[i,k  ]   = delp[i,k-1] + delp[i,k]
+     
      for k in range(1,km1):
          for i in range(i1-1,i2):
              c1  = (delp[i,k-1]+0.5*delp[i,k])/d4[i,k+1]
@@ -215,10 +217,10 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
          #!-------------------------------------------------------
          #! No over- and undershoot condition
          a4[1,i,1] = np.max([a4[1,i,1], np.min([a4[0,i,0], a4[0,i,1]])])
-         a4[0,i,1] = np.min([a4[1,i,1], np.max([a4[0,i,0], a4[0,i,1]])])
+         a4[1,i,1] = np.min([a4[1,i,1], np.max([a4[0,i,0], a4[0,i,1]])])
          dc[i,0] =  0.5*(a4[1,i,1] - a4[0,i,0])
 
-         #! Enforce monotonicity  within the top layer
+     #! Enforce monotonicity  within the top layer
      
      if (iv == 0):
         for i in range(i1-1,i2):
@@ -232,7 +234,7 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
          for i in range(i1-1,i2):
              a4[1,i,0] = a4[0,i,0]
              a4[2,i,0] = a4[0,i,0]
-
+      
      #! Bottom
      #! Area preserving cubic with 2nd deriv. = 0 at the surface
      for i in range(i1-1,i2):
@@ -253,7 +255,6 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
          a4[1,i,km-1] = np.max([a4[1,i,km-1], np.min([a4[0,i,km-1], a4[0,i,km1-1]])])
          a4[1,i,km-1] = np.min([a4[1,i,km-1], np.max([a4[0,i,km-1], a4[0,i,km1-1]])])
          dc[i,km-1] = 0.5*(a4[0,i,km-1] - a4[1,i,km-1])
-
 
      #! Enforce constraint on the "slope" at the surface
 
@@ -282,7 +283,7 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
              if (a4[0,i,km-1]*a4[2,i,km-1] <= 0.):
                  a4[2,i,km-1] = 0.
      ##endif
-
+     
      for k in range(0,km1):
          for i in range(i1-1,i2):
             a4[2,i,k] = a4[1,i,k+1]
@@ -295,7 +296,7 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
          for i in range(i1-1,i2):
              a4[3,i,k] = 3.*(2.*a4[0,i,k] - (a4[1,i,k]+a4[2,i,k]))
          a4[:,:,k] = ppm_limiters(dc[:,k], a4[:,:,k], it, 0)
-     
+
      if (kord >= 7):
          #!-----------------------
          #! Huynh's 2nd constraint
@@ -305,7 +306,7 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
                  #! Method#1
                  #!           h2[i,k] = delq[i,k] - delq[i,k-1]
                  #! Method#2 - better
-                 h2[i,k] = 2.*(dc[i,k+1]/delp[i,k+1] - dc[i,k-1]/delp[i,k-1]) / (delp[i,k]+0.5*(delp[i,k-1]+delp[i,k+1])) * delp[i,k]**2 
+                 h2[i,k] = 2.*(dc[i,k+1]/delp[i,k+1] - dc[i,k-1]/delp[i,k-1]) / (delp[i,k]+0.5*(delp[i,k-1]+delp[i,k+1])) * delp[i,k]**2
                  #! Method#3
                  #!!!         h2[i,k] = dc[i,k+1] - dc[i,k-1]
          fac = 1.5           #! original quasi-monotone
@@ -346,12 +347,12 @@ def ppm_profile(a4, delp, km, i1, i2, iv, kord):
              
             if(kord != 6):
                  a4[:,:,k] = ppm_limiters(dc[:,k], a4[:,:,k], it, lmt)
-
+        
      for k in range(km1-1,km):
          for i in range(i1-1,i2):
              a4[3,i,k] = 3.*(2.*a4[0,i,k] - (a4[1,i,k]+a4[2,i,k]))
          a4[:,:,k] = ppm_limiters(dc[:,k], a4[:,:,k], it, 0)
-    
+
      return a4
 
 def scalar_profile(qs, a4, delp, km, i1, i2, iv, kord, qmin):
