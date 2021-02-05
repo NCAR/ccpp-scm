@@ -12,6 +12,7 @@ import math
 import f90nml
 import re
 import fv3_remap
+import xesmf
 
 ###############################################################################
 # Global settings                                                             #
@@ -116,10 +117,11 @@ def parse_arguments():
         date_dict["hour"] = int(date[8:10])
         date_dict["minute"] = int(date[10:])
     
-    if (not lam and tile > 6):
-        message = 'The entered tile {0} is not compatibile with the global cubed-sphere grid'.format(date)
-        logging.critical(message)
-        raise Exception(message)
+    if tile:
+        if (not lam and tile > 6):
+            message = 'The entered tile {0} is not compatibile with the global cubed-sphere grid'.format(date)
+            logging.critical(message)
+            raise Exception(message)
     
     return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam)
 
@@ -339,7 +341,51 @@ def find_lon_lat_of_indices(indices, dir, tile, lam):
     nc_file.close()
     
     return (longitude[indices[1],indices[0]], latitude[indices[1],indices[0]])
+
+def get_initial_lon_lat_grid(dir, tile, lam):
+    if (lam):
+        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
+    else:
+        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, filename_pattern):
+              filename = f_name
+        if not filename:
+            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+            logging.critical(message)
+            raise Exception(message)
     
+    nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    
+    if (lam):
+        #strip ghost/halo points and return central (A-grid) points
+        lon_super = np.asarray(nc_file['x'])
+        lat_super = np.asarray(nc_file['y'])
+        #assuming n_lam_halo_points
+        lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
+        lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
+        longitude = lon_super_no_halo[1::2,1::2]
+        latitude = lat_super_no_halo[1::2,1::2]
+    else:
+        #read in supergrid longitude and latitude
+        lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        #get the longitude and latitude data for the grid centers by slicing the supergrid 
+        #and taking only odd-indexed values
+        longitude = lon_super[1::2,1::2]
+        latitude = lat_super[1::2,1::2]
+    
+    nc_file.close()
+    
+    return (longitude, latitude)
+
 def sph2cart(az, el, r):
     """Calculate the Cartesian coordiates from spherical coordinates"""
     
@@ -1428,8 +1474,11 @@ def get_UFS_grid_area(dir, tile, i, j, lam):
     
     return area_in.sum()
 
-def get_UFS_forcing_data(nlevs, state, dir, tile, i, j, lam):
+def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
+    
+    regrid_output = 'point'
+    #regrid_output = 'all'
     
     if lam:
         dyn_filename_pattern = 'dynf*.nc'.format(tile)
@@ -1440,24 +1489,24 @@ def get_UFS_forcing_data(nlevs, state, dir, tile, i, j, lam):
     
     dyn_filenames = []
     phy_filenames = []
-    for f_name in os.listdir(dir):
+    for f_name in os.listdir(forcing_dir):
        if fnmatch.fnmatch(f_name, dyn_filename_pattern):
           dyn_filenames.append(f_name)
        if fnmatch.fnmatch(f_name, phy_filename_pattern):
           phy_filenames.append(f_name)
     if not dyn_filenames:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(dyn_filename_pattern,dir)
+        message = 'No filenames matching the pattern {0} found in {1}'.format(dyn_filename_pattern,forcing_dir)
         logging.critical(message)
         raise Exception(message)
     if not phy_filenames:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(phy_filename_pattern,dir)
+        message = 'No filenames matching the pattern {0} found in {1}'.format(phy_filename_pattern,forcing_dir)
         logging.critical(message)
         raise Exception(message)
     dyn_filenames = sorted(dyn_filenames)
     phy_filenames = sorted(phy_filenames)
     
     if (len(dyn_filenames) != len(phy_filenames)):
-        message = 'The number of dyn files and phy files in {0} matching the patterns does not match.'.format(dir)
+        message = 'The number of dyn files and phy files in {0} matching the patterns does not match.'.format(forcing_dir)
         logging.critical(message)
         raise Exception(message)
     
@@ -1476,18 +1525,62 @@ def get_UFS_forcing_data(nlevs, state, dir, tile, i, j, lam):
     u_layers = []
     v_layers = []
     time_dyn_hours = []
-    for filename in dyn_filenames:
-        nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    (ic_grid_lon, ic_grid_lat) = get_initial_lon_lat_grid(grid_dir, tile, lam)
+    for count, filename in enumerate(dyn_filenames, start=1):
+        nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
+        nc_file.set_always_mask(False)
+        
+        #check if output grid is different than initial (native) grid
         if lam:
-            print('Check if you need to reproject onto the native grid. If so, do it here before grabbing data.')
-            exit()
+            data_grid_lon = nc_file['lon'][:,:]
+            data_grid_lat = nc_file['lat'][:,:]
+        else:
+            data_grid_lon = nc_file['grid_xt'][:,:]
+            data_grid_lat = nc_file['grid_yt'][:,:]
+        
+        equal_grids = False
+        if (ic_grid_lon.shape == data_grid_lon.shape and ic_grid_lat.shape == ic_grid_lat.shape):
+            if (np.equal(ic_grid_lon,data_grid_lon).all() and np.equal(ic_grid_lat,data_grid_lat).all()):
+                equal_grids = True
+        
+        if (not equal_grids):
+            grid_in = {'lon': data_grid_lon, 'lat': data_grid_lat}
+            if regrid_output == 'all':
+                grid_out = {'lon': ic_grid_lon, 'lat': ic_grid_lat}
+                i_get = i
+                j_get = j
+            elif regrid_output == 'point':
+                grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
+                i_get = 0
+                j_get = 0
+            else:
+                print('Unrecognized regrid_output variable. Exiting...')
+                exit()
+            
+            print('Regridding {} onto native grid: regridding progress = {}%'.format(filename, 100.0*count/(len(dyn_filenames) + len(phy_filenames))))
+            regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
+            #print(regridder)            
+            
+            ps_data = regridder(nc_file['pressfc'][0,:,:])
+            t_data = regridder(nc_file['tmp'][0,::-1,:,:])
+            qv_data = regridder(nc_file['spfh'][0,::-1,:,:])
+            u_data = regridder(nc_file['ugrd'][0,::-1,:,:])
+            v_data = regridder(nc_file['vgrd'][0,::-1,:,:])
+        else:
+            ps_data = nc_file['pressfc'][0,:,:]
+            t_data = nc_file['tmp'][0,::-1,:,:]
+            qv_data = nc_file['spfh'][0,::-1,:,:]
+            u_data = nc_file['ugrd'][0,::-1,:,:]
+            v_data = nc_file['vgrd'][0,::-1,:,:]
+            i_get = i
+            j_get = j
         
         nlevs=len(nc_file.dimensions['pfull'])
         
         ak = getattr(nc_file, "ak")[::-1]
         bk = getattr(nc_file, "bk")[::-1]
     
-        ps=nc_file['pressfc'][0,j,i]
+        ps=ps_data[j_get,i_get]
         
         p_interface = np.zeros(nlevs+1)
         for k in range(nlevs+1):
@@ -1501,10 +1594,11 @@ def get_UFS_forcing_data(nlevs, state, dir, tile, i, j, lam):
         
         p_layers.append(p_layer)
         
-        t_layers.append(nc_file['tmp'][0,::-1,j,i])
-        qv_layers.append(nc_file['spfh'][0,::-1,j,i])
-        u_layers.append(nc_file['ugrd'][0,::-1,j,i])
-        v_layers.append(nc_file['vgrd'][0,::-1,j,i])
+        #t_layers.append(nc_file['tmp'][0,::-1,j,i])
+        t_layers.append(t_data[:,j_get,i_get])
+        qv_layers.append(qv_data[:,j_get,i_get])
+        u_layers.append(u_data[:,j_get,i_get])
+        v_layers.append(v_data[:,j_get,i_get])
             
         time_dyn_hours.append(nc_file['time'][0])
         
@@ -1524,33 +1618,95 @@ def get_UFS_forcing_data(nlevs, state, dir, tile, i, j, lam):
     du3dt_nophys = []
     dv3dt_nophys = []
     time_phys_hours = []
-    for filename in phy_filenames:
-        nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    for count, filename in enumerate(phy_filenames, start=1):
+    #for filename in phy_filenames:
+        nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
+        nc_file.set_always_mask(False)
+        
+        #check if output grid is different than initial (native) grid
         if lam:
-            print('Check if you need to reproject onto the native grid. If so, do it here before grabbing data.')
-            exit()
+            data_grid_lon = nc_file['lon'][:,:]
+            data_grid_lat = nc_file['lat'][:,:]
+        else:
+            data_grid_lon = nc_file['grid_xt'][:,:]
+            data_grid_lat = nc_file['grid_yt'][:,:]
+        
+        equal_grids = False
+        if (ic_grid_lon.shape == data_grid_lon.shape and ic_grid_lat.shape == ic_grid_lat.shape):
+            if (np.equal(ic_grid_lon,data_grid_lon).all() and np.equal(ic_grid_lat,data_grid_lat).all()):
+                equal_grids = True
+        
+        if (not equal_grids):
+            grid_in = {'lon': data_grid_lon, 'lat': data_grid_lat}
+            if regrid_output == 'all':
+                grid_out = {'lon': ic_grid_lon, 'lat': ic_grid_lat}
+                i_get = i
+                j_get = j
+            elif regrid_output == 'point':
+                grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
+                i_get = 0
+                j_get = 0
+            else:
+                print('Unrecognized regrid_output variable. Exiting...')
+                exit()
+            
+            print('Regridding {} onto native grid: regridding progress = {}%'.format(filename, 100.0*(count + len(dyn_filenames))/(len(dyn_filenames) + len(phy_filenames))))
+            regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
+            
+            try:
+                dt3dt_nophys_data = regridder(nc_file['dt3dt_nophys'][0,::-1,:,:])
+            except:
+                print('dt3dt_nophys not found in {0}'.format(filename))
+                
+            try:
+                dq3dt_nophys_data = regridder(nc_file['dq3dt_nophys'][0,::-1,:,:])
+            except:
+                print('dq3dt_nophys not found in {0}'.format(filename))
+                
+            try:
+                du3dt_nophys_data = regridder(nc_file['du3dt_nophys'][0,::-1,:,:])
+            except:
+                print('du3dt_nophys not found in {0}'.format(filename))
+                
+            try:
+                dv3dt_nophys_data = regridder(nc_file['dv3dt_nophys'][0,::-1,:,:])
+            except:
+                print('dv3dt_nophys not found in {0}'.format(filename))
+            
+        else:
+            dt3dt_nophys_data = nc_file['dt3dt_nophys'][0,::-1,:,:]
+            dq3dt_nophys_data = nc_file['dq3dt_nophys'][0,::-1,:,:]
+            du3dt_nophys_data = nc_file['du3dt_nophys'][0,::-1,:,:]
+            dv3dt_nophys_data = nc_file['dv3dt_nophys'][0,::-1,:,:]
+            i_get = i
+            j_get = j
         
         nlevs=len(nc_file.dimensions['pfull'])
         
-        try:
-            dt3dt_nophys.append(nc_file['dt3dt_nophys'][0,::-1,j,i])
-        except:
-            print('dt3dt_nophys not found in {0}'.format(filename))
+        # try:
+        #     dt3dt_nophys.append(nc_file['dt3dt_nophys'][0,::-1,j,i])
+        # except:
+        #     print('dt3dt_nophys not found in {0}'.format(filename))
         
-        try:
-            dq3dt_nophys.append(nc_file['dq3dt_nophys'][0,::-1,j,i])
-        except:
-            print('dq3dt_nophys not found in {0}'.format(filename))
+        dt3dt_nophys.append(dt3dt_nophys_data[:,j_get,i_get])
+        dq3dt_nophys.append(dq3dt_nophys_data[:,j_get,i_get])
+        du3dt_nophys.append(du3dt_nophys_data[:,j_get,i_get])
+        dv3dt_nophys.append(dv3dt_nophys_data[:,j_get,i_get])
         
-        try:
-            du3dt_nophys.append(nc_file['du3dt_nophys'][0,::-1,j,i])
-        except:
-            print('du3dt_nophys not found in {0}'.format(filename))
+        # try:
+        #     dq3dt_nophys.append(nc_file['dq3dt_nophys'][0,::-1,j,i])
+        # except:
+        #     print('dq3dt_nophys not found in {0}'.format(filename))
+        
+        # try:
+        #     du3dt_nophys.append(nc_file['du3dt_nophys'][0,::-1,j,i])
+        # except:
+        #     print('du3dt_nophys not found in {0}'.format(filename))
             
-        try:
-            dv3dt_nophys.append(nc_file['dv3dt_nophys'][0,::-1,j,i])
-        except:
-            print('dv3dt_nophys not found in {0}'.format(filename))
+        # try:
+        #     dv3dt_nophys.append(nc_file['dv3dt_nophys'][0,::-1,j,i])
+        # except:
+        #     print('dv3dt_nophys not found in {0}'.format(filename))
         
         time_phys_hours.append(nc_file['time'][0])
         
@@ -3115,7 +3271,7 @@ def main():
     surface_data["lat"] = point_lat
     
     #get UFS forcing data (zeros for now; only placeholder)
-    forcing_data = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, tile, tile_i, tile_j, lam)
+    forcing_data = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, lam)
     
     #write SCM case file
     write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date)
