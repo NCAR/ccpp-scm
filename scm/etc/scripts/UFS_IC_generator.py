@@ -13,6 +13,7 @@ import f90nml
 import re
 import fv3_remap
 import xesmf
+from datetime import datetime, timedelta
 
 ###############################################################################
 # Global settings                                                             #
@@ -56,7 +57,7 @@ parser = argparse.ArgumentParser()
 group1 = parser.add_mutually_exclusive_group(required=True)
 group1.add_argument('-l', '--location',   help='longitude and latitude in degress E and N, respectively, separated by a space', nargs=2, type=float)
 group1.add_argument('-ij','--index',      help='i,j indices within the tile (if known - bypasses search for closest model point to lon/lat location)', nargs=2, type=int)
-parser.add_argument('-d', '--date',       help='date corresponding to initial conditions in YYYYMMDDHHMM format', required=True)
+parser.add_argument('-d', '--date',       help='date corresponding to initial conditions in YYYYMMDDHHMM format', required=False)
 parser.add_argument('-i', '--in_dir',     help='input directory path containing FV3 input files', required=True)
 parser.add_argument('-g', '--grid_dir',   help='directory path containing FV3 tile supergrid files', required=True)
 parser.add_argument('-f', '--forcing_dir',help='directory path containing physics diag files', required=True)
@@ -106,16 +107,17 @@ def parse_arguments():
             raise Exception(message)
     
     date_dict = {}
-    if len(date) != 12:
-        message = 'The entered date {0} does not have the 12 characters expected in the format YYYYMMDDHHMM'.format(date)
-        logging.critical(message)
-        raise Exception(message)
-    else:
-        date_dict["year"] = int(date[0:4])
-        date_dict["month"] = int(date[4:6])
-        date_dict["day"] = int(date[6:8])
-        date_dict["hour"] = int(date[8:10])
-        date_dict["minute"] = int(date[10:])
+    if date:
+        if len(date) != 12:
+            message = 'The entered date {0} does not have the 12 characters expected in the format YYYYMMDDHHMM'.format(date)
+            logging.critical(message)
+            raise Exception(message)
+        else:
+            date_dict["year"] = int(date[0:4])
+            date_dict["month"] = int(date[4:6])
+            date_dict["day"] = int(date[6:8])
+            date_dict["hour"] = int(date[8:10])
+            date_dict["minute"] = int(date[10:])
     
     if tile:
         if (not lam and tile > 6):
@@ -657,6 +659,7 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
         "qv": sphum_model_rev[0][::-1],
         "o3": o3_model_rev[0][::-1],
         "ql": liqwat_model_rev[0][::-1],
+        "qi": icewat_model_rev[::-1],
         "p_surf": ps_calc,
         "T": temp_model_rev[0,::-1],
         "pres": pressure_model,
@@ -1480,9 +1483,11 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
     regrid_output = 'point'
     #regrid_output = 'all'
     
+    orig_SCM_format = False
+    
     if lam:
-        dyn_filename_pattern = 'dynf*.nc'.format(tile)
-        phy_filename_pattern = 'phyf*.nc'.format(tile)
+        dyn_filename_pattern = 'dynf*.nc'
+        phy_filename_pattern = 'phyf*.nc'
     else:
         dyn_filename_pattern = 'dynf*.tile{0}.nc'.format(tile)
         phy_filename_pattern = 'phyf*.tile{0}.nc'.format(tile)
@@ -1518,6 +1523,7 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
     t_min = 184.0
     q_min = 0.0
     
+    ps = []
     p_interfaces = []
     p_layers = []
     t_layers = []
@@ -1580,11 +1586,11 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         ak = getattr(nc_file, "ak")[::-1]
         bk = getattr(nc_file, "bk")[::-1]
     
-        ps=ps_data[j_get,i_get]
+        ps.append(ps_data[j_get,i_get])
         
         p_interface = np.zeros(nlevs+1)
         for k in range(nlevs+1):
-            p_interface[k]=ak[k]+ps*bk[k]
+            p_interface[k]=ak[k]+ps[-1]*bk[k]
         
         p_interfaces.append(p_interface)
         
@@ -1603,6 +1609,7 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         time_dyn_hours.append(nc_file['time'][0])
         
         nc_file.close()
+    ps = np.asarray(ps)
     p_interfaces = np.asarray(p_interfaces)
     p_layers = np.asarray(p_layers)
     t_layers = np.asarray(t_layers)
@@ -1892,29 +1899,30 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
     #than resort to linear interpolation or something else.
     #(this interpolation can be removed when using DEPHY, that allows for varying pressure levels for forcing)
     
-    dqvdt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
-    dtdt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
-    dudt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
-    dvdt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
-    from_log_pres_rev = np.zeros([1,len(state["pres_i"])])
-    to_log_pres_rev = np.zeros([1,len(state["pres_i"])])
-    
-    dqvdt_adv_at_init_pres_rev[0,0,:] = dqvdt_adv[0,::-1]
-    dtdt_adv_at_init_pres_rev[0,0,:] = dtdt_adv[0,::-1]
-    dudt_adv_at_init_pres_rev[0,0,:] = dudt_adv[0,::-1]
-    dvdt_adv_at_init_pres_rev[0,0,:] = dvdt_adv[0,::-1]
-    for t in range(1,n_files): #don't need to remap the first time interval because it is already valid at the initial pressure levels
-        from_log_pres_rev[0,:] = np.log(valid_pres_i_adv[t,::-1])
-        to_log_pres_rev[0,:] = np.log(valid_pres_i_adv[0,::-1])
-        dqvdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dqvdt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
-        dtdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dtdt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
-        dudt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dudt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
-        dvdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dvdt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
-    
-    dtdt_adv_at_init_pres = dtdt_adv_at_init_pres_rev[:,0,::-1]
-    dqvdt_adv_at_init_pres = dqvdt_adv_at_init_pres_rev[:,0,::-1]
-    dudt_adv_at_init_pres = dudt_adv_at_init_pres_rev[:,0,::-1]
-    dvdt_adv_at_init_pres = dvdt_adv_at_init_pres_rev[:,0,::-1]
+    if orig_SCM_format:
+        dqvdt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
+        dtdt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
+        dudt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
+        dvdt_adv_at_init_pres_rev = np.zeros([n_files,1,p_layers.shape[1]])
+        from_log_pres_rev = np.zeros([1,len(state["pres_i"])])
+        to_log_pres_rev = np.zeros([1,len(state["pres_i"])])
+        
+        dqvdt_adv_at_init_pres_rev[0,0,:] = dqvdt_adv[0,::-1]
+        dtdt_adv_at_init_pres_rev[0,0,:] = dtdt_adv[0,::-1]
+        dudt_adv_at_init_pres_rev[0,0,:] = dudt_adv[0,::-1]
+        dvdt_adv_at_init_pres_rev[0,0,:] = dvdt_adv[0,::-1]
+        for t in range(1,n_files): #don't need to remap the first time interval because it is already valid at the initial pressure levels
+            from_log_pres_rev[0,:] = np.log(valid_pres_i_adv[t,::-1])
+            to_log_pres_rev[0,:] = np.log(valid_pres_i_adv[0,::-1])
+            dqvdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dqvdt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
+            dtdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dtdt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
+            dudt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dudt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
+            dvdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dvdt_adv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, 0.0)
+        
+        dtdt_adv_at_init_pres = dtdt_adv_at_init_pres_rev[:,0,::-1]
+        dqvdt_adv_at_init_pres = dqvdt_adv_at_init_pres_rev[:,0,::-1]
+        dudt_adv_at_init_pres = dudt_adv_at_init_pres_rev[:,0,::-1]
+        dvdt_adv_at_init_pres = dvdt_adv_at_init_pres_rev[:,0,::-1]
     
     #if we had dynf,phyf files at every timestep (and the SCM timestep is made to match the UFS), then dqvdt_adv should be
     #applied uninterpolated for each time step. If dynf and phyf files represent time averages over the previous diagnostic period,
@@ -1931,24 +1939,50 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         print('Forcing should not be interpolated in time. Rather, forcing should held constant at their current values until the next forcing interval is reached.')
         ntimes = n_files
         time = np.zeros(ntimes)
-        h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
         
-        h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
-        for k in range(nlevs):
-            h_advec_thil[k,0] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[0,k]
-        h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
-        h_advec_v[:,0] = dvdt_adv_at_init_pres[0,:]
+        if orig_SCM_format:
+            h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+        else:
+            p_s = np.zeros((ntimes),dtype=float)
+            pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)        
+        
+        if orig_SCM_format:
+            h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
+            for k in range(nlevs):
+                h_advec_thil[k,0] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[0,k]
+            h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
+            h_advec_v[:,0] = dvdt_adv_at_init_pres[0,:]
+        else:
+            p_s[0] = ps[0]
+            pressure_forc[:,0] = valid_pres_adv[0,:]
+            tot_advec_T[:,0] = dtdt_adv[0,:]
+            tot_advec_qv[:,0] = dqvdt_adv[0,:]
+            tot_advec_u[:,0] = dudt_adv[0,:]
+            tot_advec_v[:,0] = dvdt_adv[0,:]
         
         for t in range(1,n_files):
             time[t] = 3600.0*time_dyn_hours[t-1]
-            h_advec_qt[:,t] = dqvdt_adv_at_init_pres[t,:]
-            for k in range(nlevs):
-                h_advec_thil[k,t] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
-            h_advec_u[:,t] = dudt_adv_at_init_pres[t,:]
-            h_advec_v[:,t] = dvdt_adv_at_init_pres[t,:]
+            
+            if orig_SCM_format:
+                h_advec_qt[:,t] = dqvdt_adv_at_init_pres[t,:]
+                for k in range(nlevs):
+                    h_advec_thil[k,t] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
+                h_advec_u[:,t] = dudt_adv_at_init_pres[t,:]
+                h_advec_v[:,t] = dvdt_adv_at_init_pres[t,:]
+            else:
+                p_s[t] = ps[t]
+                pressure_forc[:,t] = valid_pres_adv[t,:]
+                tot_advec_T[:,t] = dtdt_adv[t,:]
+                tot_advec_qv[:,t] = dqvdt_adv[t,:]
+                tot_advec_u[:,t] = dudt_adv[t,:]
+                tot_advec_v[:,t] = dvdt_adv[t,:]
         #for t in range(n_files):
              #print h_advec_qt[:,t]
              #print dqvdt_adv_at_init_pres[t,:]
@@ -1960,37 +1994,75 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         time_setback = 1.0 #s
         
         time = np.zeros(ntimes)
-        h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
         
+        if orig_SCM_format:
+            h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+        else:
+            p_s = np.zeros((ntimes),dtype=float)
+            pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+            
         time[0] = 0.0
         time[1] = 3600.0*time_dyn_hours[0] - time_setback #forcing period should extend from beginning of diagnostic period to right BEFORE the next one
-        h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
-        h_advec_qt[:,1] = h_advec_qt[:,0]
-        for k in range(nlevs):
-            h_advec_thil[k,0] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[0,k]
-        h_advec_thil[:,1] = h_advec_thil[:,0]
-        h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
-        h_advec_u[:,1] = h_advec_u[:,0]
-        h_advec_v[:,0] = dvdt_adv_at_init_pres[0,:]
-        h_advec_v[:,1] = h_advec_v[:,0]
+        
+        if orig_SCM_format:
+            h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
+            h_advec_qt[:,1] = h_advec_qt[:,0]
+            for k in range(nlevs):
+                h_advec_thil[k,0] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[0,k]
+            h_advec_thil[:,1] = h_advec_thil[:,0]
+            h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
+            h_advec_u[:,1] = h_advec_u[:,0]
+            h_advec_v[:,0] = dvdt_adv_at_init_pres[0,:]
+            h_advec_v[:,1] = h_advec_v[:,0]
+        else:
+            p_s[0] = ps[0]
+            p_s[1] = p_s[0]
+            pressure_forc[:,0] = valid_pres_adv[0,:]
+            pressure_forc[:,1] = pressure_forc[:,0]
+            tot_advec_T[:,0] = dtdt_adv[0,:]
+            tot_advec_T[:,1] = tot_advec_T[:,0]
+            tot_advec_qv[:,0] = dqvdt_adv[0,:]
+            tot_advec_qv[:,1] = tot_advec_qv[:,0]
+            tot_advec_u[:,0] = dudt_adv[0,:]
+            tot_advec_u[:,1] = tot_advec_u[:,0]
+            tot_advec_v[:,0] = dvdt_adv[0,:]
+            tot_advec_v[:,1] = tot_advec_v[:,0]
         
         for t in range(1,n_files):
             time[2*t] = 3600.0*time_dyn_hours[t-1]
             time[2*t+1] = 3600*time_dyn_hours[t] - time_setback
             
-            h_advec_qt[:,2*t] = dqvdt_adv_at_init_pres[t,:]
-            h_advec_qt[:,2*t+1] = h_advec_qt[:,2*t]
-            for k in range(nlevs):
-                h_advec_thil[k,2*t] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
-            h_advec_thil[:,2*t+1] = h_advec_thil[:,2*t]
-            h_advec_u[:,2*t] = dudt_adv_at_init_pres[t,:]
-            h_advec_u[:,2*t+1] = h_advec_u[:,2*t]
-            h_advec_v[:,2*t] = dvdt_adv_at_init_pres[t,:]
-            h_advec_v[:,2*t+1] = h_advec_v[:,2*t]
-        
+            if orig_SCM_format:
+                h_advec_qt[:,2*t] = dqvdt_adv_at_init_pres[t,:]
+                h_advec_qt[:,2*t+1] = h_advec_qt[:,2*t]
+                for k in range(nlevs):
+                    h_advec_thil[k,2*t] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
+                h_advec_thil[:,2*t+1] = h_advec_thil[:,2*t]
+                h_advec_u[:,2*t] = dudt_adv_at_init_pres[t,:]
+                h_advec_u[:,2*t+1] = h_advec_u[:,2*t]
+                h_advec_v[:,2*t] = dvdt_adv_at_init_pres[t,:]
+                h_advec_v[:,2*t+1] = h_advec_v[:,2*t]
+            else:
+                p_s[2*t] = ps[t]
+                p_s[2*t+1] = p_s[2*t]
+                pressure_forc[:,2*t] = valid_pres_adv[t,:]
+                pressure_forc[:,2*t+1] = pressure_forc[:,2*t]
+                tot_advec_T[:,2*t] = dtdt_adv[t,:]
+                tot_advec_T[:,2*t+1] = tot_advec_T[:,2*t]
+                tot_advec_qv[:,2*t] = dqvdt_adv[t,:]
+                tot_advec_qv[:,2*t+1] = tot_advec_qv[:,2*t]
+                tot_advec_u[:,2*t] = dudt_adv[t,:]
+                tot_advec_u[:,2*t+1] = tot_advec_u[:,2*t]
+                tot_advec_v[:,2*t] = dvdt_adv[t,:]
+                tot_advec_v[:,2*t+1] = tot_advec_v[:,2*t]
+                
         #for t in range(ntimes):
         #     print time[t], h_advec_qt[:,t]
         #     print h_advec_thil[:,t]
@@ -2000,39 +2072,86 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         
         ntimes = 2*n_files + 1
         time = np.zeros(ntimes)
-        h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
         
-        h_advec_qt[:,0] = 0.0
-        h_advec_thil[:,0] = 0.0
-        h_advec_u[:,0] = 0.0
-        h_advec_v[:,0] = 0.0
+        if orig_SCM_format:
+            h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+            h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+        else:
+            p_s = np.zeros((ntimes),dtype=float)
+            pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+            tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+        
+        if orig_SCM_format:
+            h_advec_qt[:,0] = 0.0
+            h_advec_thil[:,0] = 0.0
+            h_advec_u[:,0] = 0.0
+            h_advec_v[:,0] = 0.0
+        else:
+            p_s[0] = state['p_surf']
+            pressure_forc[:,0] = state['pres']
+            tot_advec_T[:,0] = 0.0
+            tot_advec_qv[:,0] = 0.0
+            tot_advec_u[:,0] = 0.0
+            tot_advec_v[:,0] = 0.0
         
         for t in range(n_files):
-            time[2*t + 1] = 0.5*3600.0*time_dyn_hours[t]
+            time[2*t + 1] = time[2*t] + 0.5*(3600*time_dyn_hours[t] - time[2*t])
             time[2*t + 2] = 3600.0*time_dyn_hours[t]
             
-            h_advec_qt[:,2*t + 1] = dqvdt_adv_at_init_pres[t,:]
-            for k in range(nlevs):
-                h_advec_thil[k,2*t + 1] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
-            h_advec_u[:,2*t + 1] = dudt_adv_at_init_pres[t,:]
-            h_advec_v[:,2*t + 1] = dvdt_adv_at_init_pres[t,:]
+            if orig_SCM_format:
+                h_advec_qt[:,2*t + 1] = dqvdt_adv_at_init_pres[t,:]
+                for k in range(nlevs):
+                    h_advec_thil[k,2*t + 1] = (p0/state["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
+                h_advec_u[:,2*t + 1] = dudt_adv_at_init_pres[t,:]
+                h_advec_v[:,2*t + 1] = dvdt_adv_at_init_pres[t,:]
+            else:
+                p_s[2*t+1] = ps[t]
+                pressure_forc[:,2*t+1] = valid_pres_adv[t,:]
+                tot_advec_T[:,2*t+1] = dtdt_adv[t,:]
+                tot_advec_qv[:,2*t+1] = dqvdt_adv[t,:]
+                tot_advec_u[:,2*t+1] = dudt_adv[t,:]
+                tot_advec_v[:,2*t+1] = dvdt_adv[t,:]
             
-            #calculate gradient in time and extrapolate for time (2t + 2)
-            for k in range(nlevs):
-                grad = (h_advec_qt[k,2*t + 1] - h_advec_qt[k, 2*t])/(time[2*t + 1] - time[2*t])
-                h_advec_qt[k,2*t + 2] = h_advec_qt[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+            if orig_SCM_format:
+                #calculate gradient in time and extrapolate for time (2t + 2)
+                for k in range(nlevs):
+                    grad = (h_advec_qt[k,2*t + 1] - h_advec_qt[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    h_advec_qt[k,2*t + 2] = h_advec_qt[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                    
+                    grad = (h_advec_thil[k,2*t + 1] - h_advec_thil[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    h_advec_thil[k,2*t + 2] = h_advec_thil[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                    
+                    grad = (h_advec_u[k,2*t + 1] - h_advec_u[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    h_advec_u[k,2*t + 2] = h_advec_u[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                    
+                    grad = (h_advec_v[k,2*t + 1] - h_advec_v[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    h_advec_v[k,2*t + 2] = h_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+            else:
+                #calculate gradient in time and extrapolate for time (2t + 2)
+                #print((time[2*t + 1] - time[2*t]))
+                grad = (p_s[2*t + 1] - p_s[2*t])/(time[2*t + 1] - time[2*t])
+                p_s[2*t + 2] = p_s[2*t + 1] + grad*(time[2*t + 2] - time[2*t + 1])
                 
-                grad = (h_advec_thil[k,2*t + 1] - h_advec_thil[k, 2*t])/(time[2*t + 1] - time[2*t])
-                h_advec_thil[k,2*t + 2] = h_advec_thil[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                
-                grad = (h_advec_u[k,2*t + 1] - h_advec_u[k, 2*t])/(time[2*t + 1] - time[2*t])
-                h_advec_u[k,2*t + 2] = h_advec_u[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                
-                grad = (h_advec_v[k,2*t + 1] - h_advec_v[k, 2*t])/(time[2*t + 1] - time[2*t])
-                h_advec_v[k,2*t + 2] = h_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                for k in range(nlevs):
+                    grad = (pressure_forc[k,2*t + 1] - pressure_forc[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    pressure_forc[k,2*t + 2] = pressure_forc[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                    
+                    grad = (tot_advec_T[k,2*t + 1] - tot_advec_T[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    tot_advec_T[k,2*t + 2] = tot_advec_T[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                    
+                    grad = (tot_advec_qv[k,2*t + 1] - tot_advec_qv[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    tot_advec_qv[k,2*t + 2] = tot_advec_qv[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                    
+                    grad = (tot_advec_u[k,2*t + 1] - tot_advec_u[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    tot_advec_u[k,2*t + 2] = tot_advec_u[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                    
+                    grad = (tot_advec_v[k,2*t + 1] - tot_advec_v[k, 2*t])/(time[2*t + 1] - time[2*t])
+                    tot_advec_v[k,2*t + 2] = tot_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
         
         #for t in range(ntimes):
         #     print time[t], h_advec_qt[:,t]
@@ -2059,7 +2178,28 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
     rad_heating = np.zeros((nlevs,ntimes),dtype=float)
     v_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
     v_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
+    if orig_SCM_format:
+        p_s = np.zeros((ntimes),dtype=float)
+        pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+    else:
+        h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
+        h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
+        h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+        h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
     
+    # print(tot_advec_T[:,1])
+    # print(h_advec_thil[:,1])
+    # print(tot_advec_qv[:,1])
+    # print(h_advec_qt[:,1])
+    # print(pressure_forc[:,0])
+    # print(pressure_forc[:,1])
+    # print(p_s[0])
+    # print(p_s[1])
+    # exit()
     forcing = {
         "time": time,
         "w_ls": w_ls,
@@ -2077,7 +2217,14 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         "h_advec_qt": h_advec_qt,
         "v_advec_qt": v_advec_qt,
         "h_advec_u": h_advec_u,
-        "h_advec_v": h_advec_v
+        "h_advec_v": h_advec_v,
+        #"ps_forc": p_s,
+        "ps_forc": np.ones(ntimes)*ps[0],
+        "pressure_forc": pressure_forc,
+        "tot_advec_T": tot_advec_T,
+        "tot_advec_qv": tot_advec_qv,
+        "tot_advec_u": tot_advec_u,
+        "tot_advec_v": tot_advec_v
     }
     
     return forcing
@@ -2390,7 +2537,7 @@ def read_noahmp_soil_table():
     
     return soilparm
 
-def write_SCM_case_file(state, surface, oro, forcing, case, date):
+def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     """Write all data to a netCDF file that the SCM can read"""
     #expects the data to write, the name of the generated file, and the date corresponding to the ICs
     
@@ -3225,6 +3372,900 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     
     nc_file.close()
 
+def write_SCM_case_file_DEPHY(state, surface, oro, forcing, case, date):
+    """Write all data to a netCDF file in the DEPHY-SCM format"""
+    
+    real_type = np.float64
+    int_type = np.int32
+    
+    nlevs = state["nlevs"]
+    nsoil = len(surface["stc"])
+    nsnow = len(surface["snicexy"])
+    nice = len(surface["tiice"])
+    
+    start_date = datetime(date["year"],date["month"],date["day"],date["hour"],date["minute"],date["second"])
+    runtime = timedelta(seconds=forcing['time'][-1])
+    end_date = start_date + runtime
+    start_date_string = start_date.strftime("%Y%m%d%H%M%S")
+    
+    loc_string = str(round(surface["lon"],2)) + "E" + str(round(surface["lat"],2)) + "N"
+    case_string = 'UFS_' + start_date_string + '_' + loc_string
+    
+    if surface["slmsk"] > 1.5:
+        surface_string = 'ice'
+    elif surface["slmsk"] > 0.5:
+        surface_string = 'land'
+    else:
+        surface_string = 'ocean'
+    
+    nc_file = Dataset(os.path.join(PROCESSED_CASE_DIR, case + '.nc'), 'w', format='NETCDF3_CLASSIC')
+    nc_file.case = case_string
+    nc_file.title = 'Forcing and Initial Conditions for ' + case_string
+    nc_file.reference = ''
+    nc_file.author = 'Grant J. Firl'
+    nc_file.version = 'Created on ' + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+    nc_file.format_version = '1.0'
+    nc_file.modifications = 'contains initial conditions for Noah LSM'
+    nc_file.script = os.path.basename(__file__)
+    nc_file.comment = ''
+    nc_file.startDate = start_date_string
+    nc_file.endDate = end_date.strftime("%Y%m%d%H%M%S")
+    nc_file.adv_temp = 1
+    nc_file.adv_theta = 0
+    nc_file.adv_thetal = 0
+    nc_file.rad_temp = 0
+    nc_file.rad_theta = 0
+    nc_file.rad_thetal = 0
+    nc_file.adv_qv = 1
+    nc_file.adv_qt = 0
+    nc_file.adv_rv = 0
+    nc_file.adv_rt = 0
+    nc_file.adv_u = 1
+    nc_file.adv_v = 1
+    nc_file.forc_w = 0
+    nc_file.forc_omega = 0
+    nc_file.forc_geo = 0
+    nc_file.nudging_u = 0
+    nc_file.nudging_v = 0
+    nc_file.nudging_temp = 0
+    nc_file.nudging_theta = 0
+    nc_file.nudging_thetal = 0
+    nc_file.nudging_qv = 0
+    nc_file.nudging_qt = 0
+    nc_file.nudging_rv = 0
+    nc_file.nudging_rt = 0
+    nc_file.zorog = oro['orog_filt']
+    nc_file.z0 = surface['zorlo']
+    nc_file.surfaceType = surface_string
+    nc_file.surfaceForcing = 'lsm'
+    nc_file.surfaceForcingWind = 'lsm'
+    nc_file.missing_value = missing_value
+    
+    initial_time_dim = nc_file.createDimension('t0', size=1)
+    initial_time_var = nc_file.createVariable('t0', real_type, ('t0',))
+    initial_time_var.units = 'seconds since ' + str(start_date)
+    initial_time_var.longname = 'Initial time'
+    initial_time_var.calendar = 'gregorian'
+    initial_time_var[:] = 0.0
+    
+    lat_dim = nc_file.createDimension('lat', size=1)
+    lat_var = nc_file.createVariable('lat', real_type, ('lat',))
+    lat_var.units = 'degrees_north'
+    lat_var.long_name = "Latitude"
+    lat_var[:] = surface["lat"]
+    
+    lon_dim = nc_file.createDimension('lon', size=1)
+    lon_var = nc_file.createVariable('lon', real_type, ('lon',))
+    lon_var.units = 'degrees_east'
+    lon_var.long_name = "Longitude"
+    lon_var[:] = surface["lon"]
+    
+    lev_dim = nc_file.createDimension('lev', size=nlevs)
+    lev_var = nc_file.createVariable('lev', real_type, ('lev',))
+    lev_var.units = 'Pa'
+    lev_var.long_name = 'pressure'
+    lev_var[:] = state["pres"]
+    
+    time_dim = nc_file.createDimension('time', size=len(forcing['time']))
+    time_var = nc_file.createVariable('time', real_type, ('time',))
+    time_var.units = 'seconds since ' + str(start_date)
+    time_var.long_name = 'Forcing time'
+    time_var[:] = forcing['time']
+    
+    #nonstandard DEPHY dimensions
+    soil_dim  = nc_file.createDimension('nsoil',nsoil)
+    soil_depth_var = nc_file.createVariable('soil_depth', real_type, ('nsoil',))
+    soil_depth_var[:] = [0.1,0.4,1.0,2.0]
+    soil_depth_var.units = 'm'
+    soil_depth_var.description = 'depth of bottom of soil layers'
+    
+    snow_dim = nc_file.createDimension('nsnow',nsnow)
+    soil_plus_snow_dim = nc_file.createDimension('nsoil_plus_nsnow',nsnow + nsoil)
+    ice_dim = nc_file.createDimension('nice',nice)
+    
+    temperature_var = nc_file.createVariable('temp', real_type, ('t0', 'lev', 'lat', 'lon'))
+    temperature_var.units = 'K'
+    temperature_var.long_name = 'Temperature'
+    temperature_var[:] = state["T"]
+    
+    theta_var = nc_file.createVariable('theta', real_type, ('t0', 'lev', 'lat', 'lon'))
+    theta_var.units = 'K'
+    theta_var.long_name = 'Potential temperature'
+    theta_var[:] = missing_value
+    
+    thetal_var = nc_file.createVariable('thetal', real_type, ('t0', 'lev', 'lat', 'lon'))
+    thetal_var.units = 'K'
+    thetal_var.long_name = 'Liquid potential temperature'
+    thetal_var[:] = missing_value
+    
+    qv_var = nc_file.createVariable('qv', real_type, ('t0', 'lev', 'lat', 'lon'))
+    qv_var.units = 'kg kg-1'
+    qv_var.long_name = 'Specific humidity'
+    qv_var[:] = state["qv"]
+    
+    qt_var = nc_file.createVariable('qt', real_type, ('t0', 'lev', 'lat', 'lon'))
+    qt_var.units = 'kg kg-1'
+    qt_var.long_name = 'Total water content'
+    qt_var[:] = missing_value
+    
+    rv_var = nc_file.createVariable('rv', real_type, ('t0', 'lev', 'lat', 'lon'))
+    rv_var.units = 'kg kg-1'
+    rv_var.long_name = 'Water vapor mixing ratio'
+    rv_var[:] = missing_value
+    
+    rt_var = nc_file.createVariable('rt', real_type, ('t0', 'lev', 'lat', 'lon'))
+    rt_var.units = 'kg kg-1'
+    rt_var.long_name = 'Total water mixing ratio'
+    rt_var[:] = missing_value
+    
+    u_var = nc_file.createVariable('u', real_type, ('t0', 'lev', 'lat', 'lon'))
+    u_var.units = 'm s-1'
+    u_var.long_name = 'Zonal wind'
+    u_var[:] = state["u"]
+    
+    v_var = nc_file.createVariable('v', real_type, ('t0', 'lev', 'lat', 'lon'))
+    v_var.units = 'm s-1'
+    v_var.long_name = 'Meridional wind'
+    v_var[:] = state["v"]
+    
+    pressure_var = nc_file.createVariable('pressure', real_type, ('t0', 'lev', 'lat', 'lon'))
+    pressure_var.units = 'Pa'
+    pressure_var.long_name = 'Pressure'
+    pressure_var[:] = state["pres"]
+    
+    height_var = nc_file.createVariable('height', real_type, ('t0', 'lev', 'lat', 'lon'))
+    height_var.units = 'm'
+    height_var.long_name = 'Height above ground'
+    height_var[:] = missing_value
+    
+    ps_var = nc_file.createVariable('ps', real_type, ('t0', 'lat', 'lon'))
+    ps_var.units = 'Pa'
+    ps_var.long_name = 'Surface pressure'
+    ps_var[:] = state["p_surf"]
+    
+    ql_var = nc_file.createVariable('ql', real_type, ('t0', 'lev', 'lat', 'lon'))
+    ql_var.units = 'kg kg-1'
+    ql_var.long_name = 'Liquid water content'
+    ql_var[:] = state["ql"]
+    
+    qi_var = nc_file.createVariable('qi', real_type, ('t0', 'lev', 'lat', 'lon'))
+    qi_var.units = 'kg kg-1'
+    qi_var.long_name = 'Ice water content'
+    qi_var[:] = state["qi"]
+    
+    rl_var = nc_file.createVariable('rl', real_type, ('t0', 'lev', 'lat', 'lon'))
+    rl_var.units = 'kg kg-1'
+    rl_var.long_name = 'Liquid water mixing ratio'
+    rl_var[:] = missing_value
+    
+    ri_var = nc_file.createVariable('ri', real_type, ('t0', 'lev', 'lat', 'lon'))
+    ri_var.units = 'kg kg-1'
+    ri_var.long_name = 'Ice water mixing ratio'
+    ri_var[:] = missing_value
+    
+    tke_var = nc_file.createVariable('tke', real_type, ('t0', 'lev', 'lat', 'lon'))
+    tke_var.units = 'm2 s-2'
+    tke_var.long_name = 'Turbulent kinetic energy'
+    tke_var[:] = missing_value
+    
+    #LSM ICs and other non-standard DEPHY variablesbelow
+    ozone_var = nc_file.createVariable('ozone', real_type, ('t0','lev','lat','lon',))
+    ozone_var[:] = state["o3"][0:nlevs]
+    ozone_var.units = 'kg kg^-1'
+    ozone_var.description = 'initial profile of ozone mass mixing ratio'
+    
+    stc_var = nc_file.createVariable('stc',real_type,('t0','nsoil','lat','lon',))
+    stc_var[:] = surface["stc"][0:nsoil]
+    stc_var.units = "K"
+    stc_var.description = "initial profile of soil temperature"
+    
+    smc_var = nc_file.createVariable('smc',real_type,('t0','nsoil','lat','lon',))
+    smc_var[:] = surface["smc"][0:nsoil]
+    smc_var.units = "kg"
+    smc_var.description = "initial profile of soil moisture"
+    
+    slc_var = nc_file.createVariable('slc',real_type,('t0','nsoil','lat','lon',))
+    slc_var[:] = surface["slc"][0:nsoil]
+    slc_var.units = "kg"
+    slc_var.description = "initial profile of soil liquid moisture"
+    
+    snicexy_var = nc_file.createVariable('snicexy',real_type,('t0','nsnow','lat','lon',))
+    snicexy_var[:] = surface["snicexy"][0:nsnow]
+    snicexy_var.units = "mm"
+    snicexy_var.description = "initial profile of snow layer ice"
+        
+    snliqxy_var = nc_file.createVariable('snliqxy',real_type,('t0','nsnow','lat','lon',))
+    snliqxy_var[:] = surface["snliqxy"][0:nsnow]
+    snliqxy_var.units = "mm"
+    snliqxy_var.description = "initial profile of snow layer liquid"
+        
+    tsnoxy_var = nc_file.createVariable('tsnoxy',real_type,('t0','nsnow','lat','lon',))
+    tsnoxy_var[:] = surface["tsnoxy"][0:nsnow]
+    tsnoxy_var.units = "K"
+    tsnoxy_var.description = "initial profile of snow layer temperature"
+        
+    smoiseq_var = nc_file.createVariable('smoiseq',real_type,('t0','nsoil','lat','lon',))
+    smoiseq_var[:] = surface["smoiseq"][0:nsoil]
+    smoiseq_var.units = "m3 m-3"
+    smoiseq_var.description = "initial profile of equilibrium soil water content"
+        
+    zsnsoxy_var = nc_file.createVariable('zsnsoxy',real_type,('t0','nsoil_plus_nsnow','lat','lon',))
+    zsnsoxy_var[:] = surface["zsnsoxy"][0:nsoil + nsnow]
+    zsnsoxy_var.units = "m"
+    zsnsoxy_var.description = "layer bottom depth from snow surface"
+    
+    tiice_var = nc_file.createVariable('tiice',real_type,('t0','nice','lat','lon',))
+    tiice_var[:] = surface["tiice"][0:nice]
+    tiice_var.units = "K"
+    tiice_var.description = "sea ice internal temperature"
+    
+    tslb_var = nc_file.createVariable('tslb',real_type,('t0','nsoil','lat','lon',))
+    tslb_var[:] = surface["tslb"][0:nsoil]
+    tslb_var.units = "K"
+    tslb_var.description = "soil temperature for RUC LSM"
+    
+    smois_var = nc_file.createVariable('smois',real_type,('t0','nsoil','lat','lon',))
+    smois_var[:] = surface["smois"][0:nsoil]
+    smois_var.units = "None"
+    smois_var.description = "volume fraction of soil moisture for RUC LSM"
+    
+    sh2o_var = nc_file.createVariable('sh2o',real_type,('t0','nsoil','lat','lon',))
+    sh2o_var[:] = surface["sh2o"][0:nsoil]
+    sh2o_var.units = "None"
+    sh2o_var.description = "volume fraction of unfrozen soil moisture for RUC LSM"
+    
+    smfr_var = nc_file.createVariable('smfr',real_type,('t0','nsoil','lat','lon',))
+    smfr_var[:] = surface["smfr"][0:nsoil]
+    smfr_var.units = "None"
+    smfr_var.description = "volume fraction of frozen soil moisture for RUC LSM"
+    
+    flfr_var = nc_file.createVariable('flfr',real_type,('t0','nsoil','lat','lon',))
+    flfr_var[:] = surface["flfr"][0:nsoil]
+    flfr_var.units = "None"
+    flfr_var.description = "flag for frozen soil physics for RUC LSM"
+    
+    area = nc_file.createVariable('area', real_type, ('t0','lat','lon',))
+    area[:] = surface["area"]
+    area.units = "m^2" 
+    area.description = "grid cell area"
+    
+    #Noah initial parameters
+    
+    tsfco = nc_file.createVariable('tsfco',real_type, ('t0','lat','lon',))
+    tsfco[:] = surface["tsfco"]
+    tsfco.units = "K"  
+    tsfco.description = "sea surface temperature OR surface skin temperature over land OR sea ice surface skin temperature (depends on value of slmsk)"
+    
+    vegsrc  = nc_file.createVariable('vegsrc',int_type, ('t0','lat','lon',))
+    vegsrc[:] = 1 #when would this be 2?
+    vegsrc.description = "vegetation soure (1-2)"
+    
+    vegtyp  = nc_file.createVariable('vegtyp',int_type, ('t0','lat','lon',))
+    vegtyp[:] = surface["vtyp"]
+    vegtyp.description = "vegetation type (1-12)"
+
+    soiltyp = nc_file.createVariable('soiltyp',int_type, ('t0','lat','lon',))
+    soiltyp[:] = surface["styp"]
+    soiltyp.description = "soil type (1-12)"
+    
+    slopetyp = nc_file.createVariable('slopetyp',int_type, ('t0','lat','lon',))
+    slopetyp[:] = surface["slope"]
+    slopetyp.description = "slope type (1-9)"
+    
+    vegfrac = nc_file.createVariable('vegfrac',real_type, ('t0','lat','lon',))
+    vegfrac[:] = surface["vfrac"]
+    vegfrac.description = "vegetation fraction"
+    
+    shdmin = nc_file.createVariable('shdmin',real_type, ('t0','lat','lon',))
+    shdmin[:] = surface["shdmin"]
+    shdmin.description = "minimum vegetation fraction"
+    
+    shdmax = nc_file.createVariable('shdmax',real_type, ('t0','lat','lon',))
+    shdmax[:] = surface["shdmax"]
+    shdmax.description = "maximum vegetation fraction"
+    
+    zorlo = nc_file.createVariable('zorlo',real_type, ('t0','lat','lon',))
+    zorlo[:] = surface["zorlo"]
+    zorlo.units = "cm"
+    zorlo.description = "surface roughness length over ocean"
+    
+    islmsk = nc_file.createVariable('slmsk',real_type, ('t0','lat','lon',))
+    islmsk[:] = surface["slmsk"]
+    islmsk.description = "land-sea-ice mask"
+    
+    canopy = nc_file.createVariable('canopy',real_type, ('t0','lat','lon',))
+    canopy[:] = surface["canopy"]
+    canopy.units = "kg m-2"
+    canopy.description = "amount of water stored in canopy"
+    
+    hice = nc_file.createVariable('hice',real_type, ('t0','lat','lon',))
+    hice[:] = surface["hice"]
+    hice.units = "m"
+    hice.description = "sea ice thickness"
+    
+    fice = nc_file.createVariable('fice',real_type, ('t0','lat','lon',))
+    fice[:] = surface["fice"]
+    fice.description = "ice fraction"
+    
+    tisfc = nc_file.createVariable('tisfc',real_type, ('t0','lat','lon',))
+    tisfc[:] = surface["tisfc"]
+    tisfc.units = "K"
+    tisfc.description = "ice surface temperature"
+    
+    snwdph = nc_file.createVariable('snwdph',real_type, ('t0','lat','lon',))
+    snwdph[:] = surface["snwdph"]
+    snwdph.units = "mm"
+    snwdph.description = "water equivalent snow depth"
+    
+    snoalb = nc_file.createVariable('snoalb',real_type, ('t0','lat','lon',))
+    snoalb[:] = surface["snoalb"]
+    snoalb.description = "maximum snow albedo"
+        
+    tg3 = nc_file.createVariable('tg3',real_type, ('t0','lat','lon',))
+    tg3[:] = surface["tg3"]
+    tg3.units = "K"  
+    tg3.description = "deep soil temperature"
+    
+    uustar = nc_file.createVariable('uustar',real_type, ('t0','lat','lon',))
+    uustar[:] = surface["uustar"]
+    uustar.units = "m s-1"  
+    uustar.description = "friction velocity"
+    
+    alvsf = nc_file.createVariable('alvsf',real_type, ('t0','lat','lon',))
+    alvsf[:] = surface["alvsf"]
+    alvsf.units = "None" 
+    alvsf.description = "60 degree vis albedo with strong cosz dependency"
+    
+    alnsf = nc_file.createVariable('alnsf',real_type, ('t0','lat','lon',))
+    alnsf[:] = surface["alnsf"]
+    alnsf.units = "None"
+    alnsf.description = "60 degree nir albedo with strong cosz dependency"
+    
+    alvwf = nc_file.createVariable('alvwf',real_type, ('t0','lat','lon',))
+    alvwf[:] = surface["alvwf"]
+    alvwf.units = "None"
+    alvwf.description = "60 degree vis albedo with weak cosz dependency"
+    
+    alnwf = nc_file.createVariable('alnwf',real_type, ('t0','lat','lon',))
+    alnwf[:] = surface["alnwf"]
+    alnwf.units = "None"
+    alnwf.description = "60 degree nir albedo with weak cosz dependency"
+    
+    facsf = nc_file.createVariable('facsf',real_type, ('t0','lat','lon',))
+    facsf[:] = surface["facsf"]
+    facsf.units = "None" 
+    facsf.description = "fractional coverage with strong cosz dependency"
+    
+    facwf = nc_file.createVariable('facwf',real_type, ('t0','lat','lon',))
+    facwf[:] = surface["facwf"]
+    facwf.units = "None" 
+    facwf.description = "fractional coverage with weak cosz dependency"
+    
+    weasd = nc_file.createVariable('weasd',real_type, ('t0','lat','lon',))
+    weasd[:] = surface["sheleg"]
+    weasd.units = "mm" 
+    weasd.description = "water equivalent accumulated snow depth"
+    
+    f10m = nc_file.createVariable('f10m',real_type, ('t0','lat','lon',))
+    f10m[:] = surface["f10m"]
+    f10m.units = "None" 
+    f10m.description = "ratio of sigma level 1 wind and 10m wind"
+    
+    t2m = nc_file.createVariable('t2m',real_type, ('t0','lat','lon',))
+    t2m[:] = surface["t2m"]
+    t2m.units = "K" 
+    t2m.description = "2-meter absolute temperature"
+    
+    q2m = nc_file.createVariable('q2m',real_type, ('t0','lat','lon',))
+    q2m[:] = surface["q2m"]
+    q2m.units = "kg kg-1" 
+    q2m.description = "2-meter specific humidity"
+    
+    ffmm = nc_file.createVariable('ffmm',real_type, ('t0','lat','lon',))
+    ffmm[:] = surface["ffmm"]
+    ffmm.units = "None" 
+    ffmm.description = "Monin-Obukhov similarity function for momentum"
+    
+    ffhh = nc_file.createVariable('ffhh',real_type, ('t0','lat','lon',))
+    ffhh[:] = surface["ffhh"]
+    ffhh.units = "None" 
+    ffhh.description = "Monin-Obukhov similarity function for heat"
+    
+    tprcp = nc_file.createVariable('tprcp',real_type, ('t0','lat','lon',))
+    tprcp[:] = surface["tprcp"]
+    tprcp.units = "m" 
+    tprcp.description = "instantaneous total precipitation amount"
+    
+    srflag = nc_file.createVariable('srflag',real_type, ('t0','lat','lon',))
+    srflag[:] = surface["srflag"]
+    srflag.units = "None" 
+    srflag.description = "snow/rain flag for precipitation"
+    
+    sncovr = nc_file.createVariable('sncovr',real_type, ('t0','lat','lon',))
+    sncovr[:] = surface["sncovr"]
+    sncovr.units = "None" 
+    sncovr.description = "surface snow area fraction"
+    
+    tsfcl = nc_file.createVariable('tsfcl',real_type, ('t0','lat','lon',))
+    tsfcl[:] = surface["tsfcl"]
+    tsfcl.units = "K" 
+    tsfcl.description = "surface skin temperature over land"
+    
+    zorll = nc_file.createVariable('zorll',real_type, ('t0','lat','lon',))
+    zorll[:] = surface["zorll"]
+    zorll.units = "cm" 
+    zorll.description = "surface roughness length over land"
+    
+    zorli = nc_file.createVariable('zorli',real_type, ('t0','lat','lon',))
+    zorli[:] = surface["zorli"]
+    zorli.units = "cm" 
+    zorli.description = "surface roughness length over ice"
+    
+    zorlw = nc_file.createVariable('zorlw',real_type, ('t0','lat','lon',))
+    zorlw[:] = surface["zorlw"]
+    zorlw.units = "cm" 
+    zorlw.description = "surface roughness length from wave model"
+    
+    #Orography initial parameters
+    
+    stddev = nc_file.createVariable('stddev',real_type, ('t0','lat','lon',))
+    stddev[:] = oro["stddev"]
+    stddev.units = "m"
+    stddev.description = "standard deviation of subgrid orography"
+    
+    convexity = nc_file.createVariable('convexity',real_type, ('t0','lat','lon',))
+    convexity[:] = oro["convexity"]
+    convexity.units = ""
+    convexity.description = "convexity of subgrid orography"
+    
+    oa1 = nc_file.createVariable('oa1',real_type, ('t0','lat','lon',))
+    oa1[:] = oro["oa1"]
+    oa1.units = ""
+    oa1.description = "assymetry of subgrid orography 1"
+    
+    oa2 = nc_file.createVariable('oa2',real_type, ('t0','lat','lon',))
+    oa2[:] = oro["oa2"]
+    oa2.units = ""
+    oa2.description = "assymetry of subgrid orography 2"
+    
+    oa3 = nc_file.createVariable('oa3',real_type, ('t0','lat','lon',))
+    oa3[:] = oro["oa3"]
+    oa3.units = ""
+    oa3.description = "assymetry of subgrid orography 3"
+    
+    oa4 = nc_file.createVariable('oa4',real_type, ('t0','lat','lon',))
+    oa4[:] = oro["oa4"]
+    oa4.units = ""
+    oa4.description = "assymetry of subgrid orography 4"
+    
+    ol1 = nc_file.createVariable('ol1',real_type, ('t0','lat','lon',))
+    ol1[:] = oro["ol1"]
+    ol1.units = ""
+    ol1.description = "fraction of grid box with subgrid orography higher than critical height 1"
+    
+    ol2 = nc_file.createVariable('ol2',real_type, ('t0','lat','lon',))
+    ol2[:] = oro["ol2"]
+    ol2.units = ""
+    ol2.description = "fraction of grid box with subgrid orography higher than critical height 2"
+    
+    ol3 = nc_file.createVariable('ol3',real_type, ('t0','lat','lon',))
+    ol3[:] = oro["ol3"]
+    ol3.units = ""
+    ol3.description = "fraction of grid box with subgrid orography higher than critical height 3"
+    
+    ol4 = nc_file.createVariable('ol4',real_type, ('t0','lat','lon',))
+    ol4[:] = oro["ol4"]
+    ol4.units = ""
+    ol4.description = "fraction of grid box with subgrid orography higher than critical height 4"
+    
+    theta_oro = nc_file.createVariable('theta_oro',real_type, ('t0','lat','lon',))
+    theta_oro[:] = oro["theta"]
+    theta_oro.units = "deg"
+    theta_oro.description = "angle with respect to east of maximum subgrid orographic variations"
+    
+    gamma = nc_file.createVariable('gamma',real_type, ('t0','lat','lon',))
+    gamma[:] = oro["gamma"]
+    gamma.units = ""
+    gamma.description = "anisotropy of subgrid orography"
+    
+    sigma = nc_file.createVariable('sigma',real_type, ('t0','lat','lon',))
+    sigma[:] = oro["sigma"]
+    sigma.units = ""
+    sigma.description = "slope of subgrid orography"
+    
+    elvmax = nc_file.createVariable('elvmax',real_type, ('t0','lat','lon',))
+    elvmax[:] = oro["elvmax"]
+    elvmax.units = "m"
+    elvmax.description = "maximum of subgrid orography"
+    
+    orog_filt = nc_file.createVariable('oro',real_type, ('t0','lat','lon',))
+    orog_filt[:] = oro["orog_filt"]
+    orog_filt.units = "m"
+    orog_filt.description = "orography"
+    
+    orog_raw = nc_file.createVariable('oro_uf',real_type, ('t0','lat','lon',))
+    orog_raw[:] = oro["orog_raw"]
+    orog_raw.units = "m"
+    orog_raw.description = "unfiltered orography"
+    
+    land_frac = nc_file.createVariable('landfrac',real_type, ('t0','lat','lon',))
+    land_frac[:] = oro["land_frac"]
+    land_frac.units = "None"
+    land_frac.description = "fraction of horizontal grid area occupied by land"
+    
+    lake_frac = nc_file.createVariable('lakefrac',real_type, ('t0','lat','lon',))
+    lake_frac[:] = oro["lake_frac"]
+    lake_frac.units = "None"
+    lake_frac.description = "fraction of horizontal grid area occupied by lake"
+    
+    lake_depth = nc_file.createVariable('lakedepth',real_type, ('t0','lat','lon',))
+    lake_depth[:] = oro["lake_depth"]
+    lake_depth.units = "m"
+    lake_depth.description = "lake depth"
+    
+    #NoahMP initial scalar parameters
+    tvxy = nc_file.createVariable('tvxy',real_type, ('t0','lat','lon',))
+    tvxy[:] = surface["tvxy"]
+    tvxy.units = "K"
+    tvxy.description = "vegetation temperature"
+    
+    tgxy = nc_file.createVariable('tgxy',real_type, ('t0','lat','lon',))
+    tgxy[:] = surface["tgxy"]
+    tgxy.units = "K"
+    tgxy.description = "ground temperature for NoahMP"
+    
+    tahxy = nc_file.createVariable('tahxy',real_type, ('t0','lat','lon',))
+    tahxy[:] = surface["tahxy"]
+    tahxy.units = "K"
+    tahxy.description = "canopy air temperature"
+    
+    canicexy = nc_file.createVariable('canicexy',real_type, ('t0','lat','lon',))
+    canicexy[:] = surface["canicexy"]
+    canicexy.units = "mm"
+    canicexy.description = "canopy intercepted ice mass"
+    
+    canliqxy = nc_file.createVariable('canliqxy',real_type, ('t0','lat','lon',))
+    canliqxy[:] = surface["canliqxy"]
+    canliqxy.units = "mm"
+    canliqxy.description = "canopy intercepted liquid water"
+    
+    eahxy = nc_file.createVariable('eahxy',real_type, ('t0','lat','lon',))
+    eahxy[:] = surface["eahxy"]
+    eahxy.units = "Pa"
+    eahxy.description = "canopy air vapor pressure"
+    
+    cmxy = nc_file.createVariable('cmxy',real_type, ('t0','lat','lon',))
+    cmxy[:] = surface["cmxy"]
+    cmxy.units = ""
+    cmxy.description = "surface drag coefficient for momentum for NoahMP"        
+    
+    chxy = nc_file.createVariable('chxy',real_type, ('t0','lat','lon',))
+    chxy[:] = surface["chxy"]
+    chxy.units = ""
+    chxy.description = "surface exchange coeff heat & moisture for NoahMP"
+    
+    fwetxy = nc_file.createVariable('fwetxy',real_type, ('t0','lat','lon',))
+    fwetxy[:] = surface["fwetxy"]
+    fwetxy.units = ""
+    fwetxy.description = "area fraction of canopy that is wetted/snowed"
+    
+    sneqvoxy = nc_file.createVariable('sneqvoxy',real_type, ('t0','lat','lon',))
+    sneqvoxy[:] = surface["sneqvoxy"]
+    sneqvoxy.units = "mm"
+    sneqvoxy.description = "snow mass at previous time step"
+    
+    alboldxy = nc_file.createVariable('alboldxy',real_type, ('t0','lat','lon',))
+    alboldxy[:] = surface["alboldxy"]
+    alboldxy.units = ""
+    alboldxy.description = "snow albedo at previous time step"
+    
+    qsnowxy = nc_file.createVariable('qsnowxy',real_type, ('t0','lat','lon',))
+    qsnowxy[:] = surface["qsnowxy"]
+    qsnowxy.units = "mm s-1"
+    qsnowxy.description = "snow precipitation rate at surface"
+    
+    wslakexy = nc_file.createVariable('wslakexy',real_type, ('t0','lat','lon',))
+    wslakexy[:] = surface["wslakexy"]
+    wslakexy.units = "mm"
+    wslakexy.description = "lake water storage"
+    
+    taussxy = nc_file.createVariable('taussxy',real_type, ('t0','lat','lon',))
+    taussxy[:] = surface["taussxy"]
+    taussxy.units = ""
+    taussxy.description = "non-dimensional snow age"
+    
+    waxy = nc_file.createVariable('waxy',real_type, ('t0','lat','lon',))
+    waxy[:] = surface["waxy"]
+    waxy.units = "mm"
+    waxy.description = "water storage in aquifer"
+    
+    wtxy = nc_file.createVariable('wtxy',real_type, ('t0','lat','lon',))
+    wtxy[:] = surface["wtxy"]
+    wtxy.units = "mm"
+    wtxy.description = "water storage in aquifer and saturated soil"
+    
+    zwtxy = nc_file.createVariable('zwtxy',real_type, ('t0','lat','lon',))
+    zwtxy[:] = surface["zwtxy"]
+    zwtxy.units = "m"
+    zwtxy.description = "water table depth"
+    
+    xlaixy = nc_file.createVariable('xlaixy',real_type, ('t0','lat','lon',))
+    xlaixy[:] = surface["xlaixy"]
+    xlaixy.units = ""
+    xlaixy.description = "leaf area index"
+    
+    xsaixy = nc_file.createVariable('xsaixy',real_type, ('t0','lat','lon',))
+    xsaixy[:] = surface["xsaixy"]
+    xsaixy.units = ""
+    xsaixy.description = "stem area index"
+
+    lfmassxy = nc_file.createVariable('lfmassxy',real_type, ('t0','lat','lon',))
+    lfmassxy[:] = surface["lfmassxy"]
+    lfmassxy.units = "g m-2"
+    lfmassxy.description = "leaf mass"
+    
+    stmassxy = nc_file.createVariable('stmassxy',real_type, ('t0','lat','lon',))
+    stmassxy[:] = surface["stmassxy"]
+    stmassxy.units = "g m-2"
+    stmassxy.description = "stem mass"
+    
+    rtmassxy = nc_file.createVariable('rtmassxy',real_type, ('t0','lat','lon',))
+    rtmassxy[:] = surface["rtmassxy"]
+    rtmassxy.units = "g m-2"
+    rtmassxy.description = "fine root mass"
+    
+    woodxy = nc_file.createVariable('woodxy',real_type, ('t0','lat','lon',))
+    woodxy[:] = surface["woodxy"]
+    woodxy.units = "g m-2"
+    woodxy.description = "wood mass including woody roots"
+    
+    stblcpxy = nc_file.createVariable('stblcpxy',real_type, ('t0','lat','lon',))
+    stblcpxy[:] = surface["stblcpxy"]
+    stblcpxy.units = "g m-2"
+    stblcpxy.description = "stable carbon in deep soil"
+    
+    fastcpxy = nc_file.createVariable('fastcpxy',real_type, ('t0','lat','lon',))
+    fastcpxy[:] = surface["fastcpxy"]
+    fastcpxy.units = "g m-2"
+    fastcpxy.description = "short-lived carbon in shallow soil"
+    
+    smcwtdxy = nc_file.createVariable('smcwtdxy',real_type, ('t0','lat','lon',))
+    smcwtdxy[:] = surface["smcwtdxy"]
+    smcwtdxy.units = "m3 m-3"
+    smcwtdxy.description = "soil water content between the bottom of the soil and the water table"
+    
+    deeprechxy = nc_file.createVariable('deeprechxy',real_type, ('t0','lat','lon',))
+    deeprechxy[:] = surface["deeprechxy"]
+    deeprechxy.units = "m"
+    deeprechxy.description = "recharge to or from the water table when deep"
+    
+    rechxy = nc_file.createVariable('rechxy',real_type, ('t0','lat','lon',))
+    rechxy[:] = surface["rechxy"]
+    rechxy.units = "m"
+    rechxy.description = "recharge to or from the water table when shallow"
+    
+    snowxy = nc_file.createVariable('snowxy',real_type, ('t0','lat','lon',))
+    snowxy[:] = surface["snowxy"]
+    snowxy.units = ""
+    snowxy.description = "number of snow layers"
+    
+    #NSST initial scalar parameters
+    tref = nc_file.createVariable('tref',real_type, ('t0','lat','lon',))
+    tref[:] = surface["tref"]
+    tref.units = "K"
+    tref.description = "sea surface reference temperature for NSST"
+    
+    z_c = nc_file.createVariable('z_c',real_type, ('t0','lat','lon',))
+    z_c[:] = surface["z_c"]
+    z_c.units = "m"
+    z_c.description = "sub-layer cooling thickness for NSST"
+    
+    c_0 = nc_file.createVariable('c_0',real_type, ('t0','lat','lon',))
+    c_0[:] = surface["c_0"]
+    c_0.units = ""
+    c_0.description = "coefficient 1 to calculate d(Tz)/d(Ts) for NSST"
+    
+    c_d = nc_file.createVariable('c_d',real_type, ('t0','lat','lon',))
+    c_d[:] = surface["c_d"]
+    c_d.units = ""
+    c_d.description = "coefficient 2 to calculate d(Tz)/d(Ts) for NSST"
+    
+    w_0 = nc_file.createVariable('w_0',real_type, ('t0','lat','lon',))
+    w_0[:] = surface["w_0"]
+    w_0.units = ""
+    w_0.description = "coefficient 3 to calculate d(Tz)/d(Ts) for NSST"
+    
+    w_d = nc_file.createVariable('w_d',real_type, ('t0','lat','lon',))
+    w_d[:] = surface["w_d"]
+    w_d.units = ""
+    w_d.description = "coefficient 4 to calculate d(Tz)/d(Ts) for NSST"
+    
+    xt = nc_file.createVariable('xt',real_type, ('t0','lat','lon',))
+    xt[:] = surface["xt"]
+    xt.units = "K m"
+    xt.description = "heat content in diurnal thermocline layer for NSST"
+    
+    xs = nc_file.createVariable('xs',real_type, ('t0','lat','lon',))
+    xs[:] = surface["xs"]
+    xs.units = "ppt m"
+    xs.description = "salinity content in diurnal thermocline layer for NSST"
+    
+    xu = nc_file.createVariable('xu',real_type, ('t0','lat','lon',))
+    xu[:] = surface["xu"]
+    xu.units = "m2 s-1"
+    xu.description = "u-current in diurnal thermocline layer for NSST"
+    
+    xv = nc_file.createVariable('xv',real_type, ('t0','lat','lon',))
+    xv[:] = surface["xv"]
+    xv.units = "m2 s-1"
+    xv.description = "v-current in diurnal thermocline layer for NSST"
+    
+    xz = nc_file.createVariable('xz',real_type, ('t0','lat','lon',))
+    xz[:] = surface["xz"]
+    xz.units = "m"
+    xz.description = "thickness of diurnal thermocline layer for NSST"
+    
+    zm = nc_file.createVariable('zm',real_type, ('t0','lat','lon',))
+    zm[:] = surface["zm"]
+    zm.units = "m"
+    zm.description = "thickness of ocean mixed layer for NSST"
+    
+    xtts = nc_file.createVariable('xtts',real_type, ('t0','lat','lon',))
+    xtts[:] = surface["xtts"]
+    xtts.units = "m"
+    xtts.description = "sensitivity of diurnal thermocline layer heat content to surface temperature [d(xt)/d(ts)] for NSST"
+    
+    xzts = nc_file.createVariable('xzts',real_type, ('t0','lat','lon',))
+    xzts[:] = surface["xzts"]
+    xzts.units = "m K-1"
+    xzts.description = "sensitivity of diurnal thermocline layer thickness to surface temperature [d(xz)/d(ts)] for NSST"
+    
+    d_conv = nc_file.createVariable('d_conv',real_type, ('t0','lat','lon',))
+    d_conv[:] = surface["d_conv"]
+    d_conv.units = "m"
+    d_conv.description = "thickness of free convection layer for NSST"
+    
+    ifd = nc_file.createVariable('ifd',real_type, ('t0','lat','lon',))
+    ifd[:] = surface["ifd"]
+    ifd.units = ""
+    ifd.description = "index to start DTM run for NSST"
+    
+    dt_cool = nc_file.createVariable('dt_cool',real_type, ('t0','lat','lon',))
+    dt_cool[:] = surface["dt_cool"]
+    dt_cool.units = "K"
+    dt_cool.description = "sub-layer cooling amount for NSST"
+    
+    qrain = nc_file.createVariable('qrain',real_type, ('t0','lat','lon',))
+    qrain[:] = surface["qrain"]
+    qrain.units = "W"
+    qrain.description = "sensible heat due to rainfall for NSST"
+    
+    #RUC LSM
+    wetness = nc_file.createVariable('wetness',real_type, ('t0','lat','lon',))
+    wetness[:] = surface["wetness"]
+    wetness.units = ""
+    wetness.description = "normalized soil wetness for RUC LSM"
+    
+    clw_surf = nc_file.createVariable('clw_surf',real_type, ('t0','lat','lon',))
+    clw_surf[:] = surface["clw_surf"]
+    clw_surf.units = "kg kg-1"
+    clw_surf.description = "cloud condensed water mixing ratio at surface for RUC LSM"
+    
+    qwv_surf = nc_file.createVariable('qwv_surf',real_type, ('t0','lat','lon',))
+    qwv_surf[:] = surface["qwv_surf"]
+    qwv_surf.units = "kg kg-1"
+    qwv_surf.description = "water vapor mixing ratio at surface for RUC LSM"
+    
+    tsnow = nc_file.createVariable('tsnow',real_type, ('t0','lat','lon',))
+    tsnow[:] = surface["tsnow"]
+    tsnow.units = "K"
+    tsnow.description = "snow temperature at the bottom of the first snow layer for RUC LSM"
+    
+    snowfall_acc = nc_file.createVariable('snowfall_acc',real_type, ('t0','lat','lon',))
+    snowfall_acc[:] = surface["snowfall_acc"]
+    snowfall_acc.units = "kg m-2"
+    snowfall_acc.description = "run-total snow accumulation on the ground for RUC LSM"
+    
+    swe_snowfall_acc = nc_file.createVariable('swe_snowfall_acc',real_type, ('t0','lat','lon',))
+    swe_snowfall_acc[:] = surface["swe_snowfall_acc"]
+    swe_snowfall_acc.units = "kg m-2"
+    swe_snowfall_acc.description = "snow water equivalent of run-total frozen precip for RUC LSM"
+    
+    lai = nc_file.createVariable('lai',real_type, ('t0','lat','lon',))
+    lai[:] = surface["lai"]
+    lai.units = ""
+    lai.description = "leaf area index for RUC LSM"
+    
+    #forcing terms below
+    ps_forc_var = nc_file.createVariable('ps_forc', real_type, ('time', 'lat', 'lon'))
+    ps_forc_var.units = 'Pa'
+    ps_forc_var.long_name = 'Surface pressure for forcing'
+    ps_forc_var[:] = forcing['ps_forc']
+    
+    pressure_forc_var = nc_file.createVariable('pressure_forc', real_type, ('time', 'lev', 'lat', 'lon'))
+    pressure_forc_var.units = 'Pa'
+    pressure_forc_var.long_name = 'Pressure for forcing'
+    pressure_forc_var[:] = forcing['pressure_forc'].swapaxes(0,1)
+    
+    height_forc_var = nc_file.createVariable('height_forc', real_type, ('time', 'lev', 'lat', 'lon'))
+    height_forc_var.units = 'm'
+    height_forc_var.long_name = 'Height above the ground for forcing'
+    height_forc_var[:] = 1.0 #temporary - can get from 'delz' variable in dynf file
+    
+    temp_adv_var = nc_file.createVariable('temp_adv', real_type, ('time', 'lev', 'lat', 'lon'))
+    temp_adv_var.units = 'K s-1'
+    temp_adv_var.long_name = 'Temperature large-scale advection'
+    temp_adv_var[:] = forcing['tot_advec_T'].swapaxes(0,1)
+    
+    qv_adv_var = nc_file.createVariable('qv_adv', real_type, ('time', 'lev', 'lat', 'lon'))
+    qv_adv_var.units = 'kg kg-1 s-1'
+    qv_adv_var.long_name = 'Specific humidity large-scale advection'
+    qv_adv_var[:] = forcing['tot_advec_qv'].swapaxes(0,1)
+    
+    u_adv_var = nc_file.createVariable('u_adv', real_type, ('time', 'lev', 'lat', 'lon'))
+    u_adv_var.units = 'm s-2'
+    u_adv_var.long_name = 'Zonal wind large-scale advection'
+    u_adv_var[:] = forcing['tot_advec_u'].swapaxes(0,1)
+    
+    v_adv_var = nc_file.createVariable('v_adv', real_type, ('time', 'lev', 'lat', 'lon'))
+    v_adv_var.units = 'm s-2'
+    v_adv_var.long_name = 'Meridional wind large-scale advection'
+    v_adv_var[:] = forcing['tot_advec_v'].swapaxes(0,1)
+    
+    nc_file.close()
+
+def find_date(forcing_dir, lam):
+    
+    dyn_filename_pattern = 'dynf*.nc'
+    
+    dyn_filenames = []
+    for f_name in os.listdir(forcing_dir):
+       if fnmatch.fnmatch(f_name, dyn_filename_pattern):
+          dyn_filenames.append(f_name)
+    if not dyn_filenames:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(dyn_filename_pattern,forcing_dir)
+        logging.critical(message)
+        raise Exception(message)
+    dyn_filenames = sorted(dyn_filenames)
+    
+    nc_file = Dataset('{0}/{1}'.format(forcing_dir,dyn_filenames[0]))
+    
+    #starting date is in the units attribute of time
+    
+    date_string = nc_file['time'].getncattr('units').split('since ')[1] #should be in format YYYY-MM-DD HH:MM:SS
+    
+    nc_file.close()
+    
+    date_dict = {}
+    date_dict["year"] = int(date_string[0:4])
+    date_dict["month"] = int(date_string[5:7])
+    date_dict["day"] = int(date_string[8:10])
+    date_dict["hour"] = int(date_string[11:13])
+    date_dict["minute"] = int(date_string[14:16])
+    date_dict["second"] = int(date_string[17:])
+    
+    return date_dict
+    
 def main():
     setup_logging()
     
@@ -3258,6 +4299,10 @@ def main():
     #get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement different file reads)
     (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, forcing_dir, tile, tile_i, tile_j, old_chgres, lam)
     
+    if not date:
+        #date was not included on command line; look in dynf* file for initial date
+        date = find_date(forcing_dir, lam)
+    
     #cold start NoahMP variables
     if (noahmp):
         surface_data = add_noahmp_coldstart(surface_data, date)
@@ -3272,9 +4317,11 @@ def main():
     
     #get UFS forcing data (zeros for now; only placeholder)
     forcing_data = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, lam)
+    #forcing_data = {}
     
     #write SCM case file
-    write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date)
+    #write_SCM_case_file_orig(state_data, surface_data, oro_data, forcing_data, case_name, date)
+    write_SCM_case_file_DEPHY(state_data, surface_data, oro_data, forcing_data, case_name, date)
     
     
 if __name__ == '__main__':

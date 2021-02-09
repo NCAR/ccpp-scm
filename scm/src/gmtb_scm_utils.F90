@@ -180,6 +180,9 @@ module NetCDF_read
   
   interface NetCDF_read_var
     module procedure NetCDF_read_var_0d_int
+    module procedure NetCDF_read_var_1d_int
+    module procedure NetCDF_read_var_2d_int
+    module procedure NetCDF_read_var_3d_int
     module procedure NetCDF_read_var_0d_sp
     module procedure NetCDF_read_var_1d_sp
     module procedure NetCDF_read_var_2d_sp
@@ -228,6 +231,75 @@ module NetCDF_read
     end if
     
   end subroutine NetCDF_read_var_0d_int
+  
+  subroutine NetCDF_read_var_1d_int(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    integer, dimension(:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_1d_int
+  
+  subroutine NetCDF_read_var_2d_int(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    integer, dimension(:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_2d_int
+  
+  subroutine NetCDF_read_var_3d_int(ncid, var_name, req, var_data)
+    
+    integer, intent(in) :: ncid
+    character (*), intent(in) :: var_name
+    logical, intent(in) :: req
+    integer, dimension(:,:,:), intent(out) :: var_data
+    
+    integer :: varID, ierr
+    
+    if (req) then
+      call check(NF90_INQ_VARID(ncid,var_name,varID))
+      call check(NF90_GET_VAR(ncid,varID,var_data))
+    else
+      ierr = NF90_INQ_VARID(ncid,var_name,varID)
+      if (ierr /= NF90_NOERR) then
+        var_data = missing_value
+      else
+        call check(NF90_GET_VAR(ncid,varID,var_data))
+      end if
+    end if
+    
+  end subroutine NetCDF_read_var_3d_int
   
   subroutine NetCDF_read_var_0d_sp(ncid, var_name, req, var_data)
     

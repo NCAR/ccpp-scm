@@ -510,7 +510,7 @@ subroutine get_case_init(scm_state, scm_input)
   !required
   call NetCDF_read_var(grp_ncid, "lat", .True., input_lat)
   call NetCDF_read_var(grp_ncid, "lon", .True., input_lon)
-  !time data and area in file ignored?
+  !time data in file ignored?
   call NetCDF_read_var(grp_ncid, "area", .False., input_area)
   
   !possible scalars
@@ -746,7 +746,9 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_snwdph   = input_snwdph
   scm_input%input_snoalb   = input_snoalb
   scm_input%input_sncovr   = input_sncovr
-  scm_input%input_area     = input_area
+  if (input_area > missing_value) then
+    scm_input%input_area   = input_area
+  end if
   scm_input%input_tg3      = input_tg3
   scm_input%input_uustar   = input_uustar
   scm_input%input_alvsf    = input_alvsf
@@ -866,6 +868,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_lon(:) !< column longitude (deg)
   real(kind=dp), allocatable  :: input_lev(:) !< corresponds to either pressure or height (depending on attribute) - why is this needed when both pressure and height also provided in ICs?
   
+  !non-standard dimensions (may or may not exist in the file)
+  real(kind=dp), allocatable :: input_soil(:) !< soil depth
+  
   ! global attributes
   character(len=14)    :: char_startDate, char_endDate !format YYYYMMDDHHMMSS
   integer :: init_year, init_month, init_day, init_hour, init_min, init_sec, end_year, end_month, end_day, end_hour, end_min, end_sec
@@ -899,6 +904,139 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp), allocatable :: input_ri(:,:,:,:) !< IC ice water mixing ratio profile (kg kg^-1)
   real(kind=sp), allocatable :: input_rh(:,:,:,:) !< IC relative humidity profile (%)
   real(kind=sp), allocatable :: input_tke(:,:,:,:) !< IC TKE profile (m^2 s^-2)
+  
+  ! Model ICs (extension of DEPHY format)
+  real(kind=dp), allocatable  :: input_ozone(:,:,:,:)   !< ozone profile (kg kg^-1)
+  real(kind=dp), allocatable  :: input_stc(:,:,:,:)     !< soil temperature (K)
+  real(kind=dp), allocatable  :: input_smc(:,:,:,:)     !< total soil moisture content (fraction)  
+  real(kind=dp), allocatable  :: input_slc(:,:,:,:)     !< liquid soil moisture content (fraction)
+  real(kind=dp), allocatable  :: input_snicexy(:,:,:,:) !< snow layer ice (mm)
+  real(kind=dp), allocatable  :: input_snliqxy(:,:,:,:) !< snow layer liquid (mm)
+  real(kind=dp), allocatable  :: input_tsnoxy(:,:,:,:)  !< snow temperature (K)
+  real(kind=dp), allocatable  :: input_smoiseq(:,:,:,:) !< equilibrium soil water content (m3 m-3)
+  real(kind=dp), allocatable  :: input_zsnsoxy(:,:,:,:) !< layer bottom depth from snow surface (m)
+  real(kind=dp), allocatable  :: input_tiice(:,:,:,:)   !< sea ice internal temperature (K)
+  real(kind=dp), allocatable  :: input_tslb(:,:,:,:)    !< soil temperature for RUC LSM (K)
+  real(kind=dp), allocatable  :: input_smois(:,:,:,:)   !< volume fraction of soil moisture for RUC LSM (frac)
+  real(kind=dp), allocatable  :: input_sh2o(:,:,:,:)    !< volume fraction of unfrozen soil moisture for RUC LSM (frac)
+  real(kind=dp), allocatable  :: input_smfr(:,:,:,:)    !< volume fraction of frozen soil moisture for RUC LSM (frac)
+  real(kind=dp), allocatable  :: input_flfr(:,:,:,:)    !< flag for frozen soil physics
+  
+  real(kind=dp), allocatable  :: input_area(:,:,:)      !< surface area [m^2]
+  real(kind=dp), allocatable  :: input_tsfco(:,:,:) !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
+  integer      , allocatable  :: input_vegsrc(:,:,:) !< vegetation source
+  integer      , allocatable  :: input_vegtyp(:,:,:) !< vegetation type
+  integer      , allocatable  :: input_soiltyp(:,:,:)!< soil type
+  integer      , allocatable  :: input_slopetype(:,:,:) !< slope type
+  real(kind=dp), allocatable  :: input_vegfrac(:,:,:)  !< vegetation fraction
+  real(kind=dp), allocatable  :: input_shdmin(:,:,:)  !< minimun vegetation fraction
+  real(kind=dp), allocatable  :: input_shdmax(:,:,:)  !< maximun vegetation fraction
+  real(kind=dp), allocatable  :: input_zorlo(:,:,:)    !< surfce roughness length over ocean [cm]
+  real(kind=dp), allocatable  :: input_slmsk(:,:,:)   !< sea land ice mask [0,1,2]
+  real(kind=dp), allocatable  :: input_canopy(:,:,:)  !< amount of water stored in canopy (kg m-2)
+  real(kind=dp), allocatable  :: input_hice(:,:,:)    !< sea ice thickness (m)
+  real(kind=dp), allocatable  :: input_fice(:,:,:)    !< ice fraction (frac)
+  real(kind=dp), allocatable  :: input_tisfc(:,:,:)   !< ice surface temperature (K)
+  real(kind=dp), allocatable  :: input_snwdph(:,:,:)  !< water equivalent snow depth (mm)
+  real(kind=dp), allocatable  :: input_snoalb(:,:,:)  !< maximum snow albedo (frac)
+  real(kind=dp), allocatable  :: input_sncovr(:,:,:)  !< snow area fraction (frac)
+  real(kind=dp), allocatable  :: input_tg3(:,:,:)     !< deep soil temperature (K)
+  real(kind=dp), allocatable  :: input_uustar(:,:,:)  !< surface friction velocity (m s-1)
+  real(kind=dp), allocatable  :: input_alvsf(:,:,:) !< 60 degree vis albedo with strong cosz dependency
+  real(kind=dp), allocatable  :: input_alnsf(:,:,:) !< 60 degree nir albedo with strong cosz dependency
+  real(kind=dp), allocatable  :: input_alvwf(:,:,:) !< 60 degree vis albedo with weak cosz dependency
+  real(kind=dp), allocatable  :: input_alnwf(:,:,:) !< 60 degree nir albedo with weak cosz dependency
+  real(kind=dp), allocatable  :: input_facsf(:,:,:) !< fractional coverage with strong cosz dependency
+  real(kind=dp), allocatable  :: input_facwf(:,:,:) !< fractional coverage with weak cosz dependency
+  real(kind=dp), allocatable  :: input_weasd(:,:,:) !< water equivalent accumulated snow depth (mm)
+  real(kind=dp), allocatable  :: input_f10m(:,:,:)  !< ratio of sigma level 1 wind and 10m wind
+  real(kind=dp), allocatable  :: input_t2m(:,:,:)    !< 2-meter absolute temperature (K)
+  real(kind=dp), allocatable  :: input_q2m(:,:,:)    !< 2-meter specific humidity (kg kg-1)
+  real(kind=dp), allocatable  :: input_ffmm(:,:,:)    !< Monin-Obukhov similarity function for momentum
+  real(kind=dp), allocatable  :: input_ffhh(:,:,:)    !< Monin-Obukhov similarity function for heat
+  real(kind=dp), allocatable  :: input_tprcp(:,:,:)   !< instantaneous total precipitation amount (m)
+  real(kind=dp), allocatable  :: input_srflag(:,:,:)  !< snow/rain flag for precipitation
+  real(kind=dp), allocatable  :: input_tsfcl(:,:,:)   !< surface skin temperature over land (K)
+  real(kind=dp), allocatable  :: input_zorll(:,:,:)   !< surface roughness length over land (cm)
+  real(kind=dp), allocatable  :: input_zorli(:,:,:)   !< surface roughness length over ice (cm)
+  real(kind=dp), allocatable  :: input_zorlw(:,:,:)   !< surface roughness length from wave model (cm)
+  
+  real(kind=dp), allocatable  :: input_stddev(:,:,:) !< standard deviation of subgrid orography (m)
+  real(kind=dp), allocatable  :: input_convexity(:,:,:) !< convexity of subgrid orography 
+  real(kind=dp), allocatable  :: input_ol1(:,:,:) !< fraction of grid box with subgrid orography higher than critical height 1
+  real(kind=dp), allocatable  :: input_ol2(:,:,:) !< fraction of grid box with subgrid orography higher than critical height 2
+  real(kind=dp), allocatable  :: input_ol3(:,:,:) !< fraction of grid box with subgrid orography higher than critical height 3
+  real(kind=dp), allocatable  :: input_ol4(:,:,:) !< fraction of grid box with subgrid orography higher than critical height 4
+  real(kind=dp), allocatable  :: input_oa1(:,:,:) !< assymetry of subgrid orography 1
+  real(kind=dp), allocatable  :: input_oa2(:,:,:) !< assymetry of subgrid orography 2
+  real(kind=dp), allocatable  :: input_oa3(:,:,:) !< assymetry of subgrid orography 3
+  real(kind=dp), allocatable  :: input_oa4(:,:,:) !< assymetry of subgrid orography 4
+  real(kind=dp), allocatable  :: input_sigma(:,:,:) !< slope of subgrid orography
+  real(kind=dp), allocatable  :: input_theta_oro(:,:,:) !< angle with respect to east of maximum subgrid orographic variations (deg)
+  real(kind=dp), allocatable  :: input_gamma(:,:,:) !< anisotropy of subgrid orography
+  real(kind=dp), allocatable  :: input_elvmax(:,:,:)!< maximum of subgrid orography (m)
+  real(kind=dp), allocatable  :: input_oro(:,:,:) !< orography (m)
+  real(kind=dp), allocatable  :: input_oro_uf(:,:,:) !< unfiltered orography (m)
+  real(kind=dp), allocatable  :: input_landfrac(:,:,:) !< fraction of horizontal grid area occupied by land
+  real(kind=dp), allocatable  :: input_lakefrac(:,:,:) !< fraction of horizontal grid area occupied by lake
+  real(kind=dp), allocatable  :: input_lakedepth(:,:,:) !< lake depth (m)
+  
+  real(kind=dp), allocatable  :: input_tvxy(:,:,:) !< vegetation temperature (K)
+  real(kind=dp), allocatable  :: input_tgxy(:,:,:) !< ground temperature for Noahmp (K)
+  real(kind=dp), allocatable  :: input_tahxy(:,:,:) !< canopy air temperature (K)
+  real(kind=dp), allocatable  :: input_canicexy(:,:,:) !< canopy intercepted ice mass (mm)
+  real(kind=dp), allocatable  :: input_canliqxy(:,:,:) !< canopy intercepted liquid water (mm)
+  real(kind=dp), allocatable  :: input_eahxy(:,:,:) !< canopy air vapor pressure (Pa)
+  real(kind=dp), allocatable  :: input_cmxy(:,:,:) !< surface drag coefficient for momentum for noahmp
+  real(kind=dp), allocatable  :: input_chxy(:,:,:) !< surface exchange coeff heat & moisture for noahmp
+  real(kind=dp), allocatable  :: input_fwetxy(:,:,:) !< area fraction of canopy that is wetted/snowed
+  real(kind=dp), allocatable  :: input_sneqvoxy(:,:,:) !< snow mass at previous time step (mm)
+  real(kind=dp), allocatable  :: input_alboldxy(:,:,:) !< snow albedo at previous time step (frac)
+  real(kind=dp), allocatable  :: input_qsnowxy(:,:,:) !< snow precipitation rate at surface (mm s-1)
+  real(kind=dp), allocatable  :: input_wslakexy(:,:,:) !< lake water storage (mm)
+  real(kind=dp), allocatable  :: input_taussxy(:,:,:) !< non-dimensional snow age
+  real(kind=dp), allocatable  :: input_waxy(:,:,:) !< water storage in aquifer (mm)
+  real(kind=dp), allocatable  :: input_wtxy(:,:,:) !< water storage in aquifer and saturated soil (mm)
+  real(kind=dp), allocatable  :: input_zwtxy(:,:,:) !< water table depth (m)
+  real(kind=dp), allocatable  :: input_xlaixy(:,:,:) !< leaf area index
+  real(kind=dp), allocatable  :: input_xsaixy(:,:,:) !< stem area index
+  real(kind=dp), allocatable  :: input_lfmassxy(:,:,:) !< leaf mass (g m-2)
+  real(kind=dp), allocatable  :: input_stmassxy(:,:,:) !< stem mass (g m-2)
+  real(kind=dp), allocatable  :: input_rtmassxy(:,:,:) !< fine root mass (g m-2)
+  real(kind=dp), allocatable  :: input_woodxy(:,:,:) !< wood mass including woody roots (g m-2)
+  real(kind=dp), allocatable  :: input_stblcpxy(:,:,:) !< stable carbon in deep soil (g m-2)
+  real(kind=dp), allocatable  :: input_fastcpxy(:,:,:) !< short-lived carbon in shallow soil (g m-2)
+  real(kind=dp), allocatable  :: input_smcwtdxy(:,:,:) !< soil water content between the bottom of the soil and the water table (m3 m-3)
+  real(kind=dp), allocatable  :: input_deeprechxy(:,:,:) !< recharge to or from the water table when deep (m)
+  real(kind=dp), allocatable  :: input_rechxy(:,:,:) !< recharge to or from the water table when shallow (m)
+  real(kind=dp), allocatable  :: input_snowxy(:,:,:) !< number of snow layers
+  
+  real(kind=dp), allocatable  :: input_tref(:,:,:) !< sea surface reference temperature for NSST (K)
+  real(kind=dp), allocatable  :: input_z_c(:,:,:) !< sub-layer cooling thickness for NSST (m)
+  real(kind=dp), allocatable  :: input_c_0(:,:,:) !< coefficient 1 to calculate d(Tz)/d(Ts) for NSST
+  real(kind=dp), allocatable  :: input_c_d(:,:,:) !< coefficient 2 to calculate d(Tz)/d(Ts) for NSST
+  real(kind=dp), allocatable  :: input_w_0(:,:,:) !< coefficient 3 to calculate d(Tz)/d(Ts) for NSST
+  real(kind=dp), allocatable  :: input_w_d(:,:,:) !< coefficient 4 to calculate d(Tz)/d(Ts) for NSST
+  real(kind=dp), allocatable  :: input_xt(:,:,:) !< heat content in diurnal thermocline layer for NSST (K m)
+  real(kind=dp), allocatable  :: input_xs(:,:,:) !< salinity content in diurnal thermocline layer for NSST (ppt m)
+  real(kind=dp), allocatable  :: input_xu(:,:,:) !< u-current in diurnal thermocline layer for NSST (m2 s-1)
+  real(kind=dp), allocatable  :: input_xv(:,:,:) !< v-current in diurnal thermocline layer for NSST (m2 s-1)
+  real(kind=dp), allocatable  :: input_xz(:,:,:) !< thickness of diurnal thermocline layer for NSST (m)
+  real(kind=dp), allocatable  :: input_zm(:,:,:) !< thickness of ocean mixed layer for NSST (m)
+  real(kind=dp), allocatable  :: input_xtts(:,:,:) !< sensitivity of diurnal thermocline layer heat content to surface temperature [d(xt)/d(ts)] for NSST (m)
+  real(kind=dp), allocatable  :: input_xzts(:,:,:) !< sensitivity of diurnal thermocline layer thickness to surface temperature [d(xz)/d(ts)] for NSST (m K-1)
+  real(kind=dp), allocatable  :: input_d_conv(:,:,:) !< thickness of free convection layer for NSST (m)
+  real(kind=dp), allocatable  :: input_ifd(:,:,:) !< index to start DTM run for NSST
+  real(kind=dp), allocatable  :: input_dt_cool(:,:,:) !< sub-layer cooling amount for NSST (K)
+  real(kind=dp), allocatable  :: input_qrain(:,:,:) !< sensible heat due to rainfall for NSST (W)
+  
+  real(kind=dp), allocatable  :: input_wetness(:,:,:) !< normalized soil wetness for RUC LSM
+  real(kind=dp), allocatable  :: input_clw_surf(:,:,:) !< cloud condensed water mixing ratio at surface for RUC LSM (kg kg-1)
+  real(kind=dp), allocatable  :: input_qwv_surf(:,:,:) !< water vapor mixing ratio at surface for RUC LSM (kg kg-1)
+  real(kind=dp), allocatable  :: input_tsnow(:,:,:) !< snow temperature at the bottom of the first snow layer for RUC LSM (K)
+  real(kind=dp), allocatable  :: input_snowfallac(:,:,:) !< run-total snow accumulation on the ground for RUC LSM (kg m-2)
+  real(kind=dp), allocatable  :: input_acsnow(:,:,:) !< snow water equivalent of run-total frozen precip for RUC LSM (kg m-2)
+  real(kind=dp), allocatable  :: input_lai(:,:,:) !< leaf area index for RUC LSM
   
   ! forcing variables
   real(kind=sp), allocatable :: input_force_pres_surf(:,:,:) !< forcing surface pressure (Pa)
@@ -946,6 +1084,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp) :: exner, exner_inv, rho, elapsed_sec, missing_value_eps
   real(kind=dp) :: rinc(5)
   integer :: jdat(1:8), idat(1:8) !(yr, mon, day, t-zone, hr, min, sec, mil-sec)
+  logical :: model_ics
   
   integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_lat, input_n_lon, input_n_snow, input_n_ice, input_n_soil
   
@@ -990,6 +1129,11 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_ice))
   end if  
+  
+  if(input_n_soil > 0) then
+    model_ics = .true.
+    scm_state%model_ics = .true.
+  end if
   
   !> - Allocate the dimension variables.
   allocate(input_t0    (input_n_init_times),                                        &
@@ -1095,7 +1239,148 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
            input_ri       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
            input_rh       (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
            input_tke      (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
-    stat=allocate_status)
+           stat=allocate_status)
+  
+  if (model_ics) then
+    !if model ICs are included in the file
+    
+    !variables with vertical extent
+    allocate(input_ozone   (input_n_lon, input_n_lat, input_n_lev,  input_n_init_times), &
+             input_stc     (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_smc     (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_slc     (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_snicexy (input_n_lon, input_n_lat, input_n_snow, input_n_init_times), &
+             input_snliqxy (input_n_lon, input_n_lat, input_n_snow, input_n_init_times), &
+             input_tsnoxy  (input_n_lon, input_n_lat, input_n_snow, input_n_init_times), &
+             input_smoiseq (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_zsnsoxy (input_n_lon, input_n_lat, input_n_soil + input_n_snow, input_n_init_times), &
+             input_tiice   (input_n_lon, input_n_lat, input_n_ice,  input_n_init_times), &
+             input_tslb    (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_smois   (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_sh2o    (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_smfr    (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             input_flfr    (input_n_lon, input_n_lat, input_n_soil, input_n_init_times), &
+             stat=allocate_status)
+             
+             
+    !variables without vertical extent
+    allocate(input_area      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tsfco     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_vegsrc    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_vegtyp    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_soiltyp   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_slopetype (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_vegfrac   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_shdmin    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_shdmax    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_zorlo     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_slmsk     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_canopy    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_hice      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_fice      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tisfc     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_snwdph    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_snoalb    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_sncovr    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tg3       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_uustar    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_alvsf     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_alnsf     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_alvwf     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_alnwf     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_facsf     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_facwf     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_weasd     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_f10m      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_t2m       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_q2m       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_ffmm      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_ffhh      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tprcp     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_srflag    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tsfcl     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_zorll     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_zorli     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_zorlw     (input_n_lon, input_n_lat,           input_n_init_times), &
+             stat=allocate_status)
+    allocate(input_stddev    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_convexity (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_ol1       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_ol2       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_ol3       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_ol4       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_oa1       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_oa2       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_oa3       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_oa4       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_sigma     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_theta_oro (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_gamma     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_elvmax    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_oro       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_oro_uf    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_landfrac  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_lakefrac  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_lakedepth (input_n_lon, input_n_lat,           input_n_init_times), &
+             stat=allocate_status)
+    allocate(input_tvxy      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tgxy      (input_n_lon, input_n_lat,           input_n_init_times), & 
+             input_tahxy     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_canicexy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_canliqxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_eahxy     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_cmxy      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_chxy      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_fwetxy    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_sneqvoxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_alboldxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_qsnowxy   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_wslakexy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_taussxy   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_waxy      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_wtxy      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_zwtxy     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xlaixy    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xsaixy    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_lfmassxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_stmassxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_rtmassxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_woodxy    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_stblcpxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_fastcpxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_smcwtdxy  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_deeprechxy(input_n_lon, input_n_lat,           input_n_init_times), &
+             input_rechxy    (input_n_lon, input_n_lat,           input_n_init_times), & 
+             input_snowxy    (input_n_lon, input_n_lat,           input_n_init_times), & 
+             stat=allocate_status)
+    allocate(input_tref      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_z_c       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_c_0       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_c_d       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_w_0       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_w_d       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xt        (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xs        (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xu        (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xv        (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xz        (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_zm        (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xtts      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_xzts      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_d_conv    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_ifd       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_dt_cool   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_qrain     (input_n_lon, input_n_lat,           input_n_init_times), &
+             stat=allocate_status)
+    allocate(input_wetness   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_clw_surf  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_qwv_surf  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tsnow     (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_snowfallac(input_n_lon, input_n_lat,           input_n_init_times), &
+             input_acsnow    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_lai       (input_n_lon, input_n_lat,           input_n_init_times), &
+             stat=allocate_status)
+  end if
   
   !>  - Read in the initial profiles.
   
@@ -1122,6 +1407,52 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "rh", .False., input_rh)
   
   call NetCDF_read_var(ncid, "tke", .True., input_tke)
+  
+  if (model_ics) then
+    call NetCDF_read_var(ncid, "ozone",   .True.,  input_ozone)
+    call NetCDF_read_var(ncid, "area",    .True.,  input_area)
+    
+    !orographic parameters
+    call NetCDF_read_var(ncid, "stddev",    .True., input_stddev)
+    call NetCDF_read_var(ncid, "convexity", .True., input_convexity)
+    call NetCDF_read_var(ncid, "oa1",       .True., input_oa1)
+    call NetCDF_read_var(ncid, "oa2",       .True., input_oa2)
+    call NetCDF_read_var(ncid, "oa3",       .True., input_oa3)
+    call NetCDF_read_var(ncid, "oa4",       .True., input_oa4)
+    call NetCDF_read_var(ncid, "ol1",       .True., input_ol1)
+    call NetCDF_read_var(ncid, "ol2",       .True., input_ol2)
+    call NetCDF_read_var(ncid, "ol3",       .True., input_ol3)
+    call NetCDF_read_var(ncid, "ol4",       .True., input_ol4)
+    call NetCDF_read_var(ncid, "theta_oro", .True., input_theta_oro)
+    call NetCDF_read_var(ncid, "gamma",     .True., input_gamma)
+    call NetCDF_read_var(ncid, "sigma",     .True., input_sigma)
+    call NetCDF_read_var(ncid, "elvmax",    .True., input_elvmax)
+    call NetCDF_read_var(ncid, "oro",       .True., input_oro)
+    call NetCDF_read_var(ncid, "oro_uf",    .True., input_oro_uf)
+    call NetCDF_read_var(ncid, "landfrac",  .True., input_landfrac)
+    call NetCDF_read_var(ncid, "lakefrac",  .True., input_lakefrac)
+    call NetCDF_read_var(ncid, "lakedepth", .True., input_lakedepth)
+    
+    !NSST variables
+    call NetCDF_read_var(ncid, "tref",    .True., input_tref)
+    call NetCDF_read_var(ncid, "z_c",     .True., input_z_c)
+    call NetCDF_read_var(ncid, "c_0",     .True., input_c_0)
+    call NetCDF_read_var(ncid, "c_d",     .True., input_c_d)
+    call NetCDF_read_var(ncid, "w_0",     .True., input_w_0)
+    call NetCDF_read_var(ncid, "w_d",     .True., input_w_d)
+    call NetCDF_read_var(ncid, "xt",      .True., input_xt)
+    call NetCDF_read_var(ncid, "xs",      .True., input_xs)
+    call NetCDF_read_var(ncid, "xu",      .True., input_xu)
+    call NetCDF_read_var(ncid, "xv",      .True., input_xv)
+    call NetCDF_read_var(ncid, "xz",      .True., input_xz)
+    call NetCDF_read_var(ncid, "zm",      .True., input_zm)
+    call NetCDF_read_var(ncid, "xtts",    .True., input_xtts)
+    call NetCDF_read_var(ncid, "xzts",    .True., input_xzts)
+    call NetCDF_read_var(ncid, "d_conv",  .True., input_d_conv)
+    call NetCDF_read_var(ncid, "ifd",     .True., input_ifd)
+    call NetCDF_read_var(ncid, "dt_cool", .True., input_dt_cool)
+    call NetCDF_read_var(ncid, "qrain",   .True., input_qrain)
+  end if
   
   !> - Allocate the forcing variables.
   
@@ -1168,7 +1499,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
   call NetCDF_read_var(ncid, "height_forc", .True., input_force_height)
-  call NetCDF_read_var(ncid, "pressure_forc", .True., input_force_pres) !existing code assumes this is equal to the initial condition pressure
+  call NetCDF_read_var(ncid, "pressure_forc", .True., input_force_pres)
   
   !conditionally read forcing vars (or set to missing); if the global attribute is set to expect a variable and it doesn't exist, stop the model
   call NetCDF_conditionally_read_var(adv_u,      "adv_u",      "u_adv",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_adv)
@@ -1220,6 +1551,104 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else if (input_surfaceForcing == 'ts') then
     !read surface temperature
     call NetCDF_read_var(ncid, "ts", .False., input_force_ts)
+  else if (input_surfaceForcing == "lsm") then
+    if (model_ics) then
+      call NetCDF_read_var(ncid, "stc",     .True., input_stc)
+      call NetCDF_read_var(ncid, "smc",     .True., input_smc)
+      call NetCDF_read_var(ncid, "slc",     .True., input_slc)
+      call NetCDF_read_var(ncid, "snicexy", .True., input_snicexy)
+      call NetCDF_read_var(ncid, "snliqxy", .True., input_snliqxy)
+      call NetCDF_read_var(ncid, "tsnoxy",  .True., input_tsnoxy )
+      call NetCDF_read_var(ncid, "smoiseq", .True., input_smoiseq)
+      call NetCDF_read_var(ncid, "zsnsoxy", .True., input_zsnsoxy)
+      call NetCDF_read_var(ncid, "tiice",   .True., input_tiice)
+      call NetCDF_read_var(ncid, "tslb",    .True., input_tslb )
+      call NetCDF_read_var(ncid, "smois",   .True., input_smois)
+      call NetCDF_read_var(ncid, "sh2o",    .True., input_sh2o )
+      call NetCDF_read_var(ncid, "smfr",    .True., input_smfr )
+      call NetCDF_read_var(ncid, "flfr",    .True., input_flfr )
+      
+      call NetCDF_read_var(ncid, "vegsrc",   .True., input_vegsrc   )
+      call NetCDF_read_var(ncid, "vegtyp",   .True., input_vegtyp   )
+      call NetCDF_read_var(ncid, "soiltyp",  .True., input_soiltyp  )
+      call NetCDF_read_var(ncid, "slopetyp", .True., input_slopetype)
+      call NetCDF_read_var(ncid, "tsfco",    .True., input_tsfco)
+      call NetCDF_read_var(ncid, "vegfrac",  .True., input_vegfrac)
+      call NetCDF_read_var(ncid, "shdmin",   .True., input_shdmin)
+      call NetCDF_read_var(ncid, "shdmax",   .True., input_shdmax)
+      call NetCDF_read_var(ncid, "zorlo",    .True., input_zorlo)
+      call NetCDF_read_var(ncid, "slmsk",    .True., input_slmsk)
+      call NetCDF_read_var(ncid, "canopy",   .True., input_canopy)
+      call NetCDF_read_var(ncid, "hice",     .True., input_hice)
+      call NetCDF_read_var(ncid, "fice",     .True., input_fice)
+      call NetCDF_read_var(ncid, "tisfc",    .True., input_tisfc)
+      call NetCDF_read_var(ncid, "snwdph",   .True., input_snwdph)
+      call NetCDF_read_var(ncid, "snoalb",   .True., input_snoalb)
+      call NetCDF_read_var(ncid, "tg3",      .True., input_tg3)
+      call NetCDF_read_var(ncid, "uustar",   .True., input_uustar)
+      call NetCDF_read_var(ncid, "alvsf",    .True., input_alvsf)
+      call NetCDF_read_var(ncid, "alnsf",    .True., input_alnsf)
+      call NetCDF_read_var(ncid, "alvwf",    .True., input_alvwf)
+      call NetCDF_read_var(ncid, "alnwf",    .True., input_alnwf)
+      call NetCDF_read_var(ncid, "facsf",    .True., input_facsf)
+      call NetCDF_read_var(ncid, "facwf",    .True., input_facwf)
+      call NetCDF_read_var(ncid, "weasd",    .True., input_weasd)
+      call NetCDF_read_var(ncid, "f10m",     .True., input_f10m)
+      call NetCDF_read_var(ncid, "t2m",      .True., input_t2m)
+      call NetCDF_read_var(ncid, "q2m",      .True., input_q2m)
+      call NetCDF_read_var(ncid, "ffmm",     .True., input_ffmm)
+      call NetCDF_read_var(ncid, "ffhh",     .True., input_ffhh)
+      call NetCDF_read_var(ncid, "tprcp",    .True., input_tprcp)
+      call NetCDF_read_var(ncid, "srflag",   .True., input_srflag)
+      call NetCDF_read_var(ncid, "sncovr",   .True., input_sncovr)
+      call NetCDF_read_var(ncid, "tsfcl",    .True., input_tsfcl)
+      call NetCDF_read_var(ncid, "zorll",    .True., input_zorll)
+      call NetCDF_read_var(ncid, "zorli",    .True., input_zorli)
+      call NetCDF_read_var(ncid, "zorlw",    .True., input_zorlw)
+      
+      !NoahMP parameters
+      call NetCDF_read_var(ncid, "tvxy",      .False., input_tvxy)
+      call NetCDF_read_var(ncid, "tgxy",      .False., input_tgxy)
+      call NetCDF_read_var(ncid, "tahxy",     .False., input_tahxy)
+      call NetCDF_read_var(ncid, "canicexy",  .False., input_canicexy)
+      call NetCDF_read_var(ncid, "canliqxy",  .False., input_canliqxy)
+      call NetCDF_read_var(ncid, "eahxy",     .False., input_eahxy)
+      call NetCDF_read_var(ncid, "cmxy",      .False., input_cmxy)
+      call NetCDF_read_var(ncid, "chxy",      .False., input_chxy)
+      call NetCDF_read_var(ncid, "fwetxy",    .False., input_fwetxy)
+      call NetCDF_read_var(ncid, "sneqvoxy",  .False., input_sneqvoxy)
+      call NetCDF_read_var(ncid, "alboldxy",  .False., input_alboldxy)
+      call NetCDF_read_var(ncid, "qsnowxy",   .False., input_qsnowxy)
+      call NetCDF_read_var(ncid, "wslakexy",  .False., input_wslakexy)
+      call NetCDF_read_var(ncid, "taussxy",   .False., input_taussxy)
+      call NetCDF_read_var(ncid, "waxy",      .False., input_waxy)
+      call NetCDF_read_var(ncid, "wtxy",      .False., input_wtxy)
+      call NetCDF_read_var(ncid, "zwtxy",     .False., input_zwtxy)
+      call NetCDF_read_var(ncid, "xlaixy",    .False., input_xlaixy)
+      call NetCDF_read_var(ncid, "xsaixy",    .False., input_xsaixy)
+      call NetCDF_read_var(ncid, "lfmassxy",  .False., input_lfmassxy)
+      call NetCDF_read_var(ncid, "stmassxy",  .False., input_stmassxy)
+      call NetCDF_read_var(ncid, "rtmassxy",  .False., input_rtmassxy)
+      call NetCDF_read_var(ncid, "woodxy",    .False., input_woodxy)
+      call NetCDF_read_var(ncid, "stblcpxy",  .False., input_stblcpxy)
+      call NetCDF_read_var(ncid, "fastcpxy",  .False., input_fastcpxy)
+      call NetCDF_read_var(ncid, "smcwtdxy",  .False., input_smcwtdxy)
+      call NetCDF_read_var(ncid, "deeprechxy",.False., input_deeprechxy)
+      call NetCDF_read_var(ncid, "rechxy",    .False., input_rechxy)
+      call NetCDF_read_var(ncid, "snowxy",    .False., input_snowxy)
+      
+      !RUC LSM variables
+      call NetCDF_read_var(ncid, "wetness",          .False., input_wetness)
+      call NetCDF_read_var(ncid, "clw_surf",         .False., input_clw_surf)
+      call NetCDF_read_var(ncid, "qwv_surf",         .False., input_qwv_surf)
+      call NetCDF_read_var(ncid, "tsnow",            .False., input_tsnow)
+      call NetCDF_read_var(ncid, "snowfall_acc",     .False., input_snowfallac)
+      call NetCDF_read_var(ncid, "swe_snowfall_acc", .False., input_acsnow)
+      call NetCDF_read_var(ncid, "lai",              .False., input_lai)
+    else
+      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that an LSM should be used, but the required initial conditions are missing. Stopping ...'
+      stop
+    end if
   end if
   
   if (input_surfaceForcingWind == 'z0') then
@@ -1451,9 +1880,53 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
     stop
   end if
-  
-  !### what to do about ozone??? ### read in standard profile if not included in DEPHY file?
-  scm_input%input_ozone = 0.0
+
+  if (model_ics) then
+    scm_input%input_ozone = input_ozone(active_lon,active_lat,:,active_init_time)
+    scm_input%input_area = input_area(active_lon,active_lat,active_init_time)
+    
+    scm_input%input_stddev   = input_stddev(active_lon,active_lat,active_init_time)
+    scm_input%input_convexity= input_convexity(active_lon,active_lat,active_init_time)
+    scm_input%input_oa1      = input_oa1(active_lon,active_lat,active_init_time)
+    scm_input%input_oa2      = input_oa2(active_lon,active_lat,active_init_time)
+    scm_input%input_oa3      = input_oa3(active_lon,active_lat,active_init_time)
+    scm_input%input_oa4      = input_oa4(active_lon,active_lat,active_init_time)
+    scm_input%input_ol1      = input_ol1(active_lon,active_lat,active_init_time)
+    scm_input%input_ol2      = input_ol2(active_lon,active_lat,active_init_time)
+    scm_input%input_ol3      = input_ol3(active_lon,active_lat,active_init_time)
+    scm_input%input_ol4      = input_ol4(active_lon,active_lat,active_init_time)
+    scm_input%input_sigma    = input_sigma(active_lon,active_lat,active_init_time)
+    scm_input%input_theta    = input_theta_oro(active_lon,active_lat,active_init_time)
+    scm_input%input_gamma    = input_gamma(active_lon,active_lat,active_init_time)
+    scm_input%input_elvmax   = input_elvmax(active_lon,active_lat,active_init_time)
+    scm_input%input_oro      = input_oro(active_lon,active_lat,active_init_time)
+    scm_input%input_oro_uf   = input_oro_uf(active_lon,active_lat,active_init_time)
+    scm_input%input_landfrac = input_landfrac(active_lon,active_lat,active_init_time)
+    scm_input%input_lakefrac = input_lakefrac(active_lon,active_lat,active_init_time)
+    scm_input%input_lakedepth= input_lakedepth(active_lon,active_lat,active_init_time)
+    
+    scm_input%input_tref    = input_tref(active_lon,active_lat,active_init_time)
+    scm_input%input_z_c     = input_z_c(active_lon,active_lat,active_init_time)
+    scm_input%input_c_0     = input_c_0(active_lon,active_lat,active_init_time)
+    scm_input%input_c_d     = input_c_d(active_lon,active_lat,active_init_time)
+    scm_input%input_w_0     = input_w_0(active_lon,active_lat,active_init_time)
+    scm_input%input_w_d     = input_w_d(active_lon,active_lat,active_init_time)
+    scm_input%input_xt      = input_xt(active_lon,active_lat,active_init_time)
+    scm_input%input_xs      = input_xs(active_lon,active_lat,active_init_time)
+    scm_input%input_xu      = input_xu(active_lon,active_lat,active_init_time)
+    scm_input%input_xv      = input_xv(active_lon,active_lat,active_init_time)
+    scm_input%input_xz      = input_xz(active_lon,active_lat,active_init_time)
+    scm_input%input_zm      = input_zm(active_lon,active_lat,active_init_time)
+    scm_input%input_xtts    = input_xtts(active_lon,active_lat,active_init_time)
+    scm_input%input_xzts    = input_xzts(active_lon,active_lat,active_init_time)
+    scm_input%input_d_conv  = input_d_conv(active_lon,active_lat,active_init_time)
+    scm_input%input_ifd     = input_ifd(active_lon,active_lat,active_init_time)
+    scm_input%input_dt_cool = input_dt_cool(active_lon,active_lat,active_init_time)
+    scm_input%input_qrain   = input_qrain(active_lon,active_lat,active_init_time)
+  else
+    !### what to do about ozone??? ### read in standard profile if not included in DEPHY file as part of model ICs?
+    scm_input%input_ozone = 0.0
+  end if
   scm_input%input_lat = input_lat(active_lat)
   scm_input%input_lon = input_lon(active_lon)
   
@@ -1580,6 +2053,100 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     else
       scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(active_lon,active_lat,:)
     end if
+  else if (input_surfaceForcing == 'lsm') then
+    !these were considered required variables above, so they should not need to be checked for missing
+    scm_input%input_stc   = input_stc(active_lon,active_lat,:,active_init_time)
+    scm_input%input_smc   = input_smc(active_lon,active_lat,:,active_init_time)  
+    scm_input%input_slc   = input_slc(active_lon,active_lat,:,active_init_time)  
+    
+    scm_input%input_snicexy    = input_snicexy(active_lon,active_lat,:,active_init_time)
+    scm_input%input_snliqxy    = input_snliqxy(active_lon,active_lat,:,active_init_time)
+    scm_input%input_tsnoxy     = input_tsnoxy(active_lon,active_lat,:,active_init_time)
+    scm_input%input_smoiseq    = input_smoiseq(active_lon,active_lat,:,active_init_time)
+    scm_input%input_zsnsoxy    = input_zsnsoxy(active_lon,active_lat,:,active_init_time)
+    
+    scm_input%input_tiice      = input_tiice(active_lon,active_lat,:,active_init_time)
+    scm_input%input_tslb       = input_tslb(active_lon,active_lat,:,active_init_time)
+    scm_input%input_smois      = input_smois(active_lon,active_lat,:,active_init_time)
+    scm_input%input_sh2o       = input_sh2o(active_lon,active_lat,:,active_init_time)
+    scm_input%input_smfr       = input_smfr(active_lon,active_lat,:,active_init_time)
+    scm_input%input_flfr       = input_flfr(active_lon,active_lat,:,active_init_time)
+    
+    scm_input%input_vegsrc   = input_vegsrc(active_lon,active_lat,active_init_time)
+    scm_input%input_vegtyp   = REAL(input_vegtyp(active_lon,active_lat,active_init_time), kind=dp)
+    scm_input%input_soiltyp  = REAL(input_soiltyp(active_lon,active_lat,active_init_time), kind=dp)
+    scm_input%input_slopetype = REAL(input_slopetype(active_lon,active_lat,active_init_time), kind=dp)
+    scm_input%input_tsfco    = input_tsfco(active_lon,active_lat,active_init_time)
+    scm_input%input_vegfrac  = input_vegfrac(active_lon,active_lat,active_init_time)
+    scm_input%input_shdmin   = input_shdmin(active_lon,active_lat,active_init_time)
+    scm_input%input_shdmax   = input_shdmax(active_lon,active_lat,active_init_time)
+    scm_input%input_zorlo    = input_zorlo(active_lon,active_lat,active_init_time)
+    scm_input%input_slmsk    = input_slmsk(active_lon,active_lat,active_init_time)
+    scm_input%input_canopy   = input_canopy(active_lon,active_lat,active_init_time)
+    scm_input%input_hice     = input_hice(active_lon,active_lat,active_init_time)
+    scm_input%input_fice     = input_fice(active_lon,active_lat,active_init_time)
+    scm_input%input_tisfc    = input_tisfc(active_lon,active_lat,active_init_time)
+    scm_input%input_snwdph   = input_snwdph(active_lon,active_lat,active_init_time)
+    scm_input%input_snoalb   = input_snoalb(active_lon,active_lat,active_init_time)
+    scm_input%input_sncovr   = input_sncovr(active_lon,active_lat,active_init_time)
+    scm_input%input_tg3      = input_tg3(active_lon,active_lat,active_init_time)
+    scm_input%input_uustar   = input_uustar(active_lon,active_lat,active_init_time)
+    scm_input%input_alvsf    = input_alvsf(active_lon,active_lat,active_init_time)
+    scm_input%input_alnsf    = input_alnsf(active_lon,active_lat,active_init_time)
+    scm_input%input_alvwf    = input_alvwf(active_lon,active_lat,active_init_time)
+    scm_input%input_alnwf    = input_alnwf(active_lon,active_lat,active_init_time)
+    scm_input%input_facsf    = input_facsf(active_lon,active_lat,active_init_time)
+    scm_input%input_facwf    = input_facwf(active_lon,active_lat,active_init_time)
+    scm_input%input_weasd    = input_weasd(active_lon,active_lat,active_init_time)
+    scm_input%input_f10m     = input_f10m(active_lon,active_lat,active_init_time)
+    scm_input%input_t2m      = input_t2m(active_lon,active_lat,active_init_time)
+    scm_input%input_q2m      = input_q2m(active_lon,active_lat,active_init_time)
+    scm_input%input_ffmm     = input_ffmm(active_lon,active_lat,active_init_time)
+    scm_input%input_ffhh     = input_ffhh(active_lon,active_lat,active_init_time)
+    scm_input%input_tprcp    = input_tprcp(active_lon,active_lat,active_init_time)
+    scm_input%input_srflag   = input_srflag(active_lon,active_lat,active_init_time)
+    scm_input%input_tsfcl    = input_tsfcl(active_lon,active_lat,active_init_time)
+    scm_input%input_zorll    = input_zorll(active_lon,active_lat,active_init_time)
+    scm_input%input_zorli    = input_zorli(active_lon,active_lat,active_init_time)
+    scm_input%input_zorlw    = input_zorlw(active_lon,active_lat,active_init_time)
+    
+    scm_input%input_tvxy     = input_tvxy(active_lon,active_lat,active_init_time)
+    scm_input%input_tgxy     = input_tgxy(active_lon,active_lat,active_init_time)
+    scm_input%input_tahxy    = input_tahxy(active_lon,active_lat,active_init_time)
+    scm_input%input_canicexy = input_canicexy(active_lon,active_lat,active_init_time)
+    scm_input%input_canliqxy = input_canliqxy(active_lon,active_lat,active_init_time)
+    scm_input%input_eahxy    = input_eahxy(active_lon,active_lat,active_init_time)
+    scm_input%input_cmxy     = input_cmxy(active_lon,active_lat,active_init_time)
+    scm_input%input_chxy     = input_chxy(active_lon,active_lat,active_init_time)
+    scm_input%input_fwetxy   = input_fwetxy(active_lon,active_lat,active_init_time)
+    scm_input%input_sneqvoxy = input_sneqvoxy(active_lon,active_lat,active_init_time)
+    scm_input%input_alboldxy = input_alboldxy(active_lon,active_lat,active_init_time)
+    scm_input%input_qsnowxy  = input_qsnowxy(active_lon,active_lat,active_init_time)
+    scm_input%input_wslakexy = input_wslakexy(active_lon,active_lat,active_init_time)
+    scm_input%input_taussxy  = input_taussxy(active_lon,active_lat,active_init_time)
+    scm_input%input_waxy     = input_waxy(active_lon,active_lat,active_init_time)
+    scm_input%input_wtxy     = input_wtxy(active_lon,active_lat,active_init_time)
+    scm_input%input_zwtxy    = input_zwtxy(active_lon,active_lat,active_init_time)
+    scm_input%input_xlaixy   = input_xlaixy(active_lon,active_lat,active_init_time)
+    scm_input%input_xsaixy   = input_xsaixy(active_lon,active_lat,active_init_time)
+    scm_input%input_lfmassxy = input_lfmassxy(active_lon,active_lat,active_init_time)
+    scm_input%input_stmassxy = input_stmassxy(active_lon,active_lat,active_init_time)
+    scm_input%input_rtmassxy = input_rtmassxy(active_lon,active_lat,active_init_time)
+    scm_input%input_woodxy   = input_woodxy(active_lon,active_lat,active_init_time)
+    scm_input%input_stblcpxy = input_stblcpxy(active_lon,active_lat,active_init_time)
+    scm_input%input_fastcpxy = input_fastcpxy(active_lon,active_lat,active_init_time)
+    scm_input%input_smcwtdxy = input_smcwtdxy(active_lon,active_lat,active_init_time)
+    scm_input%input_deeprechxy = input_deeprechxy(active_lon,active_lat,active_init_time)
+    scm_input%input_rechxy   = input_rechxy(active_lon,active_lat,active_init_time)
+    scm_input%input_snowxy   = input_snowxy(active_lon,active_lat,active_init_time)
+    
+    scm_input%input_wetness    = input_wetness(active_lon,active_lat,active_init_time)
+    scm_input%input_clw_surf   = input_clw_surf(active_lon,active_lat,active_init_time)
+    scm_input%input_qwv_surf   = input_qwv_surf(active_lon,active_lat,active_init_time)
+    scm_input%input_tsnow      = input_tsnow(active_lon,active_lat,active_init_time)
+    scm_input%input_snowfallac = input_snowfallac(active_lon,active_lat,active_init_time)
+    scm_input%input_acsnow     = input_acsnow(active_lon,active_lat,active_init_time)
+    scm_input%input_lai        = input_lai(active_lon,active_lat,active_init_time)
   end if
   
   if (input_surfaceForcingWind == 'z0') then
