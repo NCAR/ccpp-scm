@@ -249,11 +249,6 @@ class Experiment(object):
                 output_dir = 'output_' + self._case + '_' + self._suite + '_' + os.path.splitext(self._physics_namelist)[0]
             output_dir_patch_nml = {'case_config':{'output_dir':output_dir}}
             custom_output_dir = False
-        # check to see if surface fluxes are specified in the case configuration file (default is False)
-        try:
-            surface_flux_spec = case_nml['case_config']['sfc_flux_spec']
-        except KeyError:
-            surface_flux_spec = False
         
         #if using the DEPHY format, need to also check the case data file for the surfaceForcing global attribute for 'Flux' or 'surfaceFlux', which denotes prescribed surface fluxes
         try:
@@ -267,7 +262,11 @@ class Experiment(object):
                 if (surfaceForcing.lower() == 'flux' or surfaceForcing.lower() == 'surfaceflux'):
                     surface_flux_spec = True
         except KeyError:
-            surface_flux_spec = False
+            # if not using DEPHY format, check to see if surface fluxes are specified in the case configuration file (default is False)
+            try:
+                surface_flux_spec = case_nml['case_config']['sfc_flux_spec']
+            except KeyError:
+                surface_flux_spec = False
         
         # If surface fluxes are specified for this case, use the SDF modified to use them
         if surface_flux_spec:
