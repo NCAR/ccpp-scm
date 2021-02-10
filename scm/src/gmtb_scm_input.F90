@@ -695,8 +695,8 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_lon = input_lon
   scm_input%input_pres_surf = input_pres_surf
   scm_input%input_T_surf = input_T_surf
-  scm_input%input_sh_flux_sfc = input_sh_flux_sfc
-  scm_input%input_lh_flux_sfc = input_lh_flux_sfc
+  scm_input%input_sh_flux_sfc_kin = input_sh_flux_sfc
+  scm_input%input_lh_flux_sfc_kin = input_lh_flux_sfc
   scm_input%input_w_ls = input_w_ls
   scm_input%input_omega = input_omega
   scm_input%input_u_g = input_u_g
