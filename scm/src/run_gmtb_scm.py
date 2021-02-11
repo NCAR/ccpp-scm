@@ -251,6 +251,7 @@ class Experiment(object):
             custom_output_dir = False
         
         #if using the DEPHY format, need to also check the case data file for the surfaceForcing global attribute for 'Flux' or 'surfaceFlux', which denotes prescribed surface fluxes
+        surface_flux_spec = False
         try:
             input_type = case_nml['case_config']['input_type']
             if input_type == 1:

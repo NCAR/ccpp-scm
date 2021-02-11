@@ -42,6 +42,9 @@ missing_variable_ice_layers = 2
 # Path to the directory containing processed case input files
 PROCESSED_CASE_DIR = '../../data/processed_case_input'
 
+# Path to the directory containing comparison data files
+COMPARISON_DATA_DIR = '../../data/comparison_data'
+
 # Path to the directory containing NoahMP table files (need MPTABLE.TBL and SOILPARM.TBL)
 NOAHMP_TABLES_DIR = '../../data/raw_case_input/NoahMP_tables'
 
@@ -1477,7 +1480,7 @@ def get_UFS_grid_area(dir, tile, i, j, lam):
     
     return area_in.sum()
 
-def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
+def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, save_comp_data):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
     
     regrid_output = 'point'
@@ -1625,6 +1628,32 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
     du3dt_nophys = []
     dv3dt_nophys = []
     time_phys_hours = []
+    if (save_comp_data):
+        dq3dt_deepcnv = []
+        dq3dt_mp = []
+        dq3dt_pbl = []
+        dq3dt_shalcnv = []
+        dt3dt_cnvgwd = []
+        dt3dt_deepcnv = []
+        dt3dt_lw = []
+        dt3dt_mp = []
+        dt3dt_orogwd = []
+        dt3dt_pbl = []
+        dt3dt_rdamp = []
+        dt3dt_shalcnv = []
+        dt3dt_sw = []
+        du3dt_cnvgwd = []
+        du3dt_deepcnv = []
+        du3dt_orogwd = []
+        du3dt_pbl = []
+        du3dt_rdamp = []
+        du3dt_shalcnv = []
+        dv3dt_cnvgwd = []
+        dv3dt_deepcnv = []
+        dv3dt_orogwd = []
+        dv3dt_pbl = []
+        dv3dt_rdamp = []
+        dv3dt_shalcnv = []
     for count, filename in enumerate(phy_filenames, start=1):
     #for filename in phy_filenames:
         nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
@@ -1680,6 +1709,22 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
             except:
                 print('dv3dt_nophys not found in {0}'.format(filename))
             
+            if (save_comp_data):
+                try:
+                    dq3dt_deepcnv_data = regridder(nc_file['dq3dt_deepcnv'][0,::-1,:,:])
+                except:
+                    print('dq3dt_deepcnv not found in {0}'.format(filename))
+                
+                try:
+                    dq3dt_pbl_data = regridder(nc_file['dq3dt_pbl'][0,::-1,:,:])
+                except:
+                    print('dq3dt_pbl not found in {0}'.format(filename))
+                
+                try:
+                    dt3dt_pbl_data = regridder(nc_file['dt3dt_pbl'][0,::-1,:,:])
+                except:
+                    print('dt3dt_pbl not found in {0}'.format(filename))
+            
         else:
             dt3dt_nophys_data = nc_file['dt3dt_nophys'][0,::-1,:,:]
             dq3dt_nophys_data = nc_file['dq3dt_nophys'][0,::-1,:,:]
@@ -1687,6 +1732,10 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
             dv3dt_nophys_data = nc_file['dv3dt_nophys'][0,::-1,:,:]
             i_get = i
             j_get = j
+            if (save_comp_data):
+                dq3dt_deepcnv_data = nc_file['dq3dt_deepcnv'][0,::-1,:,:]
+                dq3dt_pbl_data = nc_file['dq3dt_pbl'][0,::-1,:,:]
+                dt3dt_pbl_data = nc_file['dt3dt_pbl'][0,::-1,:,:]
         
         nlevs=len(nc_file.dimensions['pfull'])
         
@@ -1699,6 +1748,10 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         dq3dt_nophys.append(dq3dt_nophys_data[:,j_get,i_get])
         du3dt_nophys.append(du3dt_nophys_data[:,j_get,i_get])
         dv3dt_nophys.append(dv3dt_nophys_data[:,j_get,i_get])
+        if (save_comp_data):
+            dq3dt_deepcnv.append(dq3dt_deepcnv_data[:,j_get,i_get])
+            dq3dt_pbl.append(dq3dt_pbl_data[:,j_get,i_get])
+            dt3dt_pbl.append(dt3dt_pbl_data[:,j_get,i_get])
         
         # try:
         #     dq3dt_nophys.append(nc_file['dq3dt_nophys'][0,::-1,j,i])
@@ -1723,6 +1776,10 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
     du3dt_nophys = np.asarray(du3dt_nophys)
     dv3dt_nophys = np.asarray(dv3dt_nophys)
     time_phys_hours = np.asarray(time_phys_hours)
+    if (save_comp_data):
+        dq3dt_deepcnv = np.asarray(dq3dt_deepcnv)
+        dq3dt_pbl = np.asarray(dq3dt_pbl)
+        dt3dt_pbl = np.asarray(dt3dt_pbl)
     
     dummy = np.zeros(1)
     
@@ -1924,6 +1981,52 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         dudt_adv_at_init_pres = dudt_adv_at_init_pres_rev[:,0,::-1]
         dvdt_adv_at_init_pres = dvdt_adv_at_init_pres_rev[:,0,::-1]
     
+    if save_comp_data:
+        t_layers_at_pres1_rev = np.zeros([t_layers.shape[0],1,t_layers.shape[1]])
+        qv_layers_at_pres1_rev = np.zeros([qv_layers.shape[0],1,qv_layers.shape[1]])
+        u_layers_at_pres1_rev = np.zeros([u_layers.shape[0],1,u_layers.shape[1]])
+        v_layers_at_pres1_rev = np.zeros([v_layers.shape[0],1,u_layers.shape[1]])
+        dq3dt_deepcnv_at_pres1_rev = np.zeros([p_layers.shape[0],1,p_layers.shape[1]])
+        dq3dt_pbl_at_pres1_rev = np.zeros([p_layers.shape[0],1,p_layers.shape[1]])
+        dt3dt_pbl_at_pres1_rev = np.zeros([p_layers.shape[0],1,p_layers.shape[1]])
+        from_log_pres_rev = np.zeros([1,p_interfaces.shape[1]])
+        to_log_pres_rev = np.zeros([1,p_interfaces.shape[1]])
+        from_pres_rev = np.zeros([1,p_interfaces.shape[1]])
+        to_pres_rev = np.zeros([1,p_interfaces.shape[1]])
+        
+        dp2 = np.zeros([1,qv_layers.shape[1]])
+        
+        
+        t_layers_at_pres1_rev[0,0,:] = t_layers[0,::-1]
+        qv_layers_at_pres1_rev[0,0,:] = qv_layers[0,::-1]
+        u_layers_at_pres1_rev[0,0,:] = u_layers[0,::-1]
+        v_layers_at_pres1_rev[0,0,:] = v_layers[0,::-1]
+        dq3dt_deepcnv_at_pres1_rev[0,0,:] = dq3dt_deepcnv[0,::-1]
+        dq3dt_pbl_at_pres1_rev[0,0,:] = dq3dt_pbl[0,::-1]
+        dt3dt_pbl_at_pres1_rev[0,0,:] = dt3dt_pbl[0,::-1]
+        for t in range(1,t_layers.shape[0]):
+            from_log_pres_rev[0,:] = np.log(p_interfaces[t,::-1])
+            to_log_pres_rev[0,:] = np.log(p_interfaces[0,::-1])
+            from_pres_rev[0,:] = p_interfaces[t,::-1]
+            to_pres_rev[0,:] = p_interfaces[0,::-1]
+            for k in range(0,qv_layers.shape[1]):
+                dp2[0,k] = to_pres_rev[0,k+1] - to_pres_rev[0,k]
+            t_layers_at_pres1_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, t_layers[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, np.abs(kord_tm), t_min)
+            qv_layers_at_pres1_rev[t,:,:] = fv3_remap.map1_q2(p_layers.shape[1], from_pres_rev, qv_layers[t,np.newaxis,::-1], p_layers.shape[1], to_pres_rev, dp2, 0, 0, 0, kord_tr, q_min)
+            u_layers_at_pres1_rev[t,:,:] = fv3_remap.map1_ppm(p_layers.shape[1], from_pres_rev, u_layers[t,np.newaxis,::-1], 0.0, p_layers.shape[1], to_pres_rev, 0, 0, -1, kord_tm)
+            v_layers_at_pres1_rev[t,:,:] = fv3_remap.map1_ppm(p_layers.shape[1], from_pres_rev, v_layers[t,np.newaxis,::-1], 0.0, p_layers.shape[1], to_pres_rev, 0, 0, -1, kord_tm)
+            dq3dt_deepcnv_at_pres1_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dq3dt_deepcnv[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, -9999.99)
+            dq3dt_pbl_at_pres1_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dq3dt_pbl[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, -9999.99)
+            dt3dt_pbl_at_pres1_rev[t,:,:] = fv3_remap.map_scalar(p_layers.shape[1], from_log_pres_rev, dt3dt_pbl[t,np.newaxis,::-1], dummy, p_layers.shape[1], to_log_pres_rev, 0, 0, 1, 1, -9999.99)
+        t_layers_at_pres1 = t_layers_at_pres1_rev[:,0,::-1]
+        qv_layers_at_pres1 = qv_layers_at_pres1_rev[:,0,::-1]
+        u_layers_at_pres1 = u_layers_at_pres1_rev[:,0,::-1]
+        v_layers_at_pres1 = v_layers_at_pres1_rev[:,0,::-1]
+        dq3dt_deepcnv_at_pres1 = dq3dt_deepcnv_at_pres1_rev[:,0,::-1]
+        dq3dt_pbl_at_pres1 = dq3dt_pbl_at_pres1_rev[:,0,::-1]
+        dt3dt_pbl_at_pres1 = dt3dt_pbl_at_pres1_rev[:,0,::-1]
+        
+        
     #if we had dynf,phyf files at every timestep (and the SCM timestep is made to match the UFS), then dqvdt_adv should be
     #applied uninterpolated for each time step. If dynf and phyf files represent time averages over the previous diagnostic period,
     #and if forcing terms are interpolatd in time in the SCM, then dqvdt_adv should represent the forcing values in the 
@@ -2227,7 +2330,22 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam):
         "tot_advec_v": tot_advec_v
     }
     
-    return forcing
+    if (save_comp_data):
+        comp_data = {
+            "time": time_dyn_hours*3600.0,
+            "pressure": p_layers[0,:],
+            "temperature" : t_layers_at_pres1, #(time,nlevs)
+            "qv" : qv_layers_at_pres1,
+            "u" : u_layers_at_pres1,
+            "v" : v_layers_at_pres1,
+            "dq3dt_deepcnv": dq3dt_deepcnv_at_pres1,
+            "dq3dt_pbl": dq3dt_pbl_at_pres1,
+            "dt3dt_pbl": dt3dt_pbl_at_pres1
+        }
+    else:
+        comp_data = {}
+    
+    return (forcing, comp_data)
     
 def add_noahmp_coldstart(surface, date):
     """Add cold-start ICs for the NoahMP LSM from Noah LSM variables"""
@@ -3372,7 +3490,7 @@ def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     
     nc_file.close()
 
-def write_SCM_case_file_DEPHY(state, surface, oro, forcing, case, date):
+def write_SCM_case_file_DEPHY(state, surface, oro, forcing, case, date, no_force):
     """Write all data to a netCDF file in the DEPHY-SCM format"""
     
     real_type = np.float64
@@ -3398,7 +3516,10 @@ def write_SCM_case_file_DEPHY(state, surface, oro, forcing, case, date):
     else:
         surface_string = 'ocean'
     
-    nc_file = Dataset(os.path.join(PROCESSED_CASE_DIR, case + '.nc'), 'w', format='NETCDF3_CLASSIC')
+    if (no_force):
+        nc_file = Dataset(os.path.join(PROCESSED_CASE_DIR, 'noforce_' + case + '.nc'), 'w', format='NETCDF3_CLASSIC')
+    else:
+        nc_file = Dataset(os.path.join(PROCESSED_CASE_DIR, case + '.nc'), 'w', format='NETCDF3_CLASSIC')
     nc_file.case = case_string
     nc_file.title = 'Forcing and Initial Conditions for ' + case_string
     nc_file.reference = ''
@@ -3410,18 +3531,28 @@ def write_SCM_case_file_DEPHY(state, surface, oro, forcing, case, date):
     nc_file.comment = ''
     nc_file.startDate = start_date_string
     nc_file.endDate = end_date.strftime("%Y%m%d%H%M%S")
-    nc_file.adv_temp = 1
+    if (no_force):
+        nc_file.adv_temp = 0
+    else:
+        nc_file.adv_temp = 1
     nc_file.adv_theta = 0
     nc_file.adv_thetal = 0
     nc_file.rad_temp = 0
     nc_file.rad_theta = 0
     nc_file.rad_thetal = 0
-    nc_file.adv_qv = 1
+    if (no_force):
+        nc_file.adv_qv = 0
+    else:
+        nc_file.adv_qv = 1
     nc_file.adv_qt = 0
     nc_file.adv_rv = 0
     nc_file.adv_rt = 0
-    nc_file.adv_u = 1
-    nc_file.adv_v = 1
+    if (no_force):
+        nc_file.adv_u = 0
+        nc_file.adv_v = 0
+    else:
+        nc_file.adv_u = 1
+        nc_file.adv_v = 1
     nc_file.forc_w = 0
     nc_file.forc_omega = 0
     nc_file.forc_geo = 0
@@ -4234,6 +4365,111 @@ def write_SCM_case_file_DEPHY(state, surface, oro, forcing, case, date):
     
     nc_file.close()
 
+def write_comparison_file(comp_data, case_name, date, surface):
+    """Write UFS history file data to netCDF file for comparison"""
+    
+    real_type = np.float64
+    int_type = np.int32
+    
+    nlevs = comp_data["pressure"].shape[0]
+    ntime = comp_data["time"].shape[0]
+    
+    start_date = datetime(date["year"],date["month"],date["day"],date["hour"],date["minute"],date["second"])
+    start_date_string = start_date.strftime("%Y%m%d%H%M%S")
+    
+    loc_string = str(round(surface["lon"],2)) + "E" + str(round(surface["lat"],2)) + "N"
+    case_string = 'UFS_' + start_date_string + '_' + loc_string
+    
+    nc_file = Dataset(os.path.join(COMPARISON_DATA_DIR, case_name + '_comp_data.nc'), 'w', format='NETCDF3_CLASSIC')
+    nc_file.case = case_string
+    nc_file.title = 'UFS history file data for ' + case_string
+    nc_file.reference = ''
+    nc_file.author = 'Grant J. Firl'
+    nc_file.version = 'Created on ' + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+    nc_file.script = os.path.basename(__file__)
+    nc_file.startDate = start_date_string
+    
+    lev_dim = nc_file.createDimension('lev', size=nlevs)
+    lev_var = nc_file.createVariable('lev', real_type, ('lev',))
+    lev_var.units = 'Pa'
+    lev_var.long_name = 'pressure'
+    lev_var[:] = comp_data["pressure"]
+    
+    time_dim = nc_file.createDimension('time', size=ntime)
+    time_var = nc_file.createVariable('time', real_type, ('time',))
+    time_var.units = 'seconds since ' + str(start_date)
+    time_var.long_name = 'history file time'
+    time_var[:] = comp_data['time']
+    
+    init_year_var = nc_file.createVariable('init_year', int_type)
+    init_year_var.units = 'year'
+    init_year_var.description = 'UFS initialization year'
+    init_year_var[:] = date["year"]
+    
+    init_month_var = nc_file.createVariable('init_month', int_type)
+    init_month_var.units = 'month'
+    init_month_var.description = 'UFS initialization month'
+    init_month_var[:] = date["month"]
+    
+    init_day_var = nc_file.createVariable('init_day', int_type)
+    init_day_var.units = 'day'
+    init_day_var.description = 'UFS initialization day'
+    init_day_var[:] = date["day"]
+    
+    init_hour_var = nc_file.createVariable('init_hour', int_type)
+    init_hour_var.units = 'hour'
+    init_hour_var.description = 'UFS initialization hour'
+    init_hour_var[:] = date["hour"]
+    
+    init_minute_var = nc_file.createVariable('init_minute', int_type)
+    init_minute_var.units = 'minute'
+    init_minute_var.description = 'UFS initialization minute'
+    init_minute_var[:] = date["minute"]
+    
+    init_second_var = nc_file.createVariable('init_second', int_type)
+    init_second_var.units = 'second'
+    init_second_var.description = 'UFS initialization second'
+    init_second_var[:] = date["second"]
+    
+    temperature_var = nc_file.createVariable('temp', real_type, ('time', 'lev',))
+    temperature_var.units = 'K'
+    temperature_var.long_name = 'Temperature'
+    temperature_var[:] = comp_data["temperature"]
+    
+    qv_var = nc_file.createVariable('qv', real_type, ('time', 'lev',))
+    qv_var.units = 'kg kg-1'
+    qv_var.long_name = 'specific humidity'
+    qv_var[:] = comp_data["qv"]
+    
+    u_var = nc_file.createVariable('u', real_type, ('time', 'lev',))
+    u_var.units = 'm s-1'
+    u_var.long_name = 'zonal wind'
+    u_var[:] = comp_data["u"]
+    
+    v_var = nc_file.createVariable('v', real_type, ('time', 'lev',))
+    v_var.units = 'm s-1'
+    v_var.long_name = 'meridional wind'
+    v_var[:] = comp_data["v"]
+    
+    dq3dt_deepcnv_var = nc_file.createVariable('dq3dt_deepcnv', real_type, ('time', 'lev',))
+    dq3dt_deepcnv_var.units = 'kg kg-1 s-1'
+    dq3dt_deepcnv_var.long_name = 'tendency of specific humidity due to deep convection'
+    dq3dt_deepcnv_var[:] = comp_data["dq3dt_deepcnv"]
+    
+    dq3dt_pbl_var = nc_file.createVariable('dq3dt_pbl', real_type, ('time', 'lev',))
+    dq3dt_pbl_var.units = 'kg kg-1 s-1'
+    dq3dt_pbl_var.long_name = 'tendency of specific humidity due to PBL'
+    dq3dt_pbl_var[:] = comp_data["dq3dt_pbl"]
+    
+    dt3dt_pbl_var = nc_file.createVariable('dt3dt_pbl', real_type, ('time', 'lev',))
+    dt3dt_pbl_var.units = 'K s-1'
+    dt3dt_pbl_var.long_name = 'tendency of temperature due to PBL'
+    dt3dt_pbl_var[:] = comp_data["dt3dt_pbl"]
+    
+    nc_file.close()
+    
+    return
+
 def find_date(forcing_dir, lam):
     
     dyn_filename_pattern = 'dynf*.nc'
@@ -4316,13 +4552,17 @@ def main():
     surface_data["lat"] = point_lat
     
     #get UFS forcing data (zeros for now; only placeholder)
-    forcing_data = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, lam)
+    save_comp_data = True
+    (forcing_data, comp_data) = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, lam, save_comp_data)
     #forcing_data = {}
     
     #write SCM case file
     #write_SCM_case_file_orig(state_data, surface_data, oro_data, forcing_data, case_name, date)
-    write_SCM_case_file_DEPHY(state_data, surface_data, oro_data, forcing_data, case_name, date)
+    no_force = True
+    write_SCM_case_file_DEPHY(state_data, surface_data, oro_data, forcing_data, case_name, date, no_force)
     
+    #read in and remap the state variables to the first history file pressure profile and write them out to compare SCM output to (dynf for state variables and phyf for physics tendencies)
+    write_comparison_file(comp_data, case_name, date, surface_data)
     
 if __name__ == '__main__':
     main()
