@@ -70,7 +70,8 @@ parser.add_argument('-mp','--noahmp',     help='flag to generate cold-start ICs 
 parser.add_argument('-lam','--lam',       help='flag to signal that the ICs and forcing is from a limited-area model run', action='store_true')
 parser.add_argument('-n', '--case_name',  help='name of case', required=True)
 parser.add_argument('-oc','--old_chgres', help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
-
+parser.add_argument('-nf','--no_force',   help='flag to additionally write out a case data file with forcing turned off', action='store_true')
+parser.add_argument('-sc','--save_comp',  help='flag to save and write out a file with UFS output data to compare SCM simulations with', action='store_true')
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -91,6 +92,8 @@ def parse_arguments():
     noahmp = args.noahmp
     old_chgres = args.old_chgres
     lam = args.lam
+    no_force = args.no_force
+    save_comp = args.save_comp
     
     #validate args
     if not os.path.exists(in_dir):
@@ -128,7 +131,7 @@ def parse_arguments():
             logging.critical(message)
             raise Exception(message)
     
-    return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam)
+    return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam, no_force, save_comp)
 
 def setup_logging():
     """Sets up the logging module."""
@@ -232,38 +235,32 @@ def find_loc_indices(loc, dir, tile, lam):
     
     if (lam):
         filename_pattern = '*grid.tile7.halo{}.nc'.format(n_lam_halo_points)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
     else:
         filename_pattern = '*grid.tile{0}.nc'.format(tile)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
+    
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, filename_pattern):
+          filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
     #read in supergrid longitude and latitude
+    lon_super = np.asarray(nc_file['x'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     if (lam):
         #strip ghost/halo points and return central (A-grid) points
-        lon_super = np.asarray(nc_file['x'])
-        lat_super = np.asarray(nc_file['y'])
         #assuming n_lam_halo_points
         lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
         lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
+        #get the longitude and latitude data for the grid centers by slicing the supergrid 
+        #and taking only odd-indexed values
         longitude = lon_super_no_halo[1::2,1::2]
         latitude = lat_super_no_halo[1::2,1::2]
     else:
-        lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-        lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
         #get the longitude and latitude data for the grid centers by slicing the supergrid 
         #and taking only odd-indexed values
         longitude = lon_super[1::2,1::2]
@@ -306,38 +303,32 @@ def find_lon_lat_of_indices(indices, dir, tile, lam):
     
     if (lam):
         filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
     else:
         filename_pattern = '*grid.tile{0}.nc'.format(tile)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
+    
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, filename_pattern):
+          filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
+    #read in supergrid longitude and latitude
+    lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     if (lam):
         #strip ghost/halo points and return central (A-grid) points
-        lon_super = np.asarray(nc_file['x'])
-        lat_super = np.asarray(nc_file['y'])
         #assuming n_lam_halo_points
         lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
         lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
+        #get the longitude and latitude data for the grid centers by slicing the supergrid 
+        #and taking only odd-indexed values
         longitude = lon_super_no_halo[1::2,1::2]
         latitude = lat_super_no_halo[1::2,1::2]
     else:
-        #read in supergrid longitude and latitude
-        lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-        lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
         #get the longitude and latitude data for the grid centers by slicing the supergrid 
         #and taking only odd-indexed values
         longitude = lon_super[1::2,1::2]
@@ -350,38 +341,32 @@ def find_lon_lat_of_indices(indices, dir, tile, lam):
 def get_initial_lon_lat_grid(dir, tile, lam):
     if (lam):
         filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
     else:
         filename_pattern = '*grid.tile{0}.nc'.format(tile)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
+    
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, filename_pattern):
+          filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
+    #read in supergrid longitude and latitude
+    lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     if (lam):
         #strip ghost/halo points and return central (A-grid) points
-        lon_super = np.asarray(nc_file['x'])
-        lat_super = np.asarray(nc_file['y'])
         #assuming n_lam_halo_points
         lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
         lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
+        #get the longitude and latitude data for the grid centers by slicing the supergrid 
+        #and taking only odd-indexed values
         longitude = lon_super_no_halo[1::2,1::2]
         latitude = lat_super_no_halo[1::2,1::2]
     else:
-        #read in supergrid longitude and latitude
-        lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-        lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
         #get the longitude and latitude data for the grid centers by slicing the supergrid 
         #and taking only odd-indexed values
         longitude = lon_super[1::2,1::2]
@@ -453,60 +438,11 @@ def get_UFS_IC_data(dir, grid_dir, forcing_dir, tile, i, j, old_chgres, lam):
     surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres, lam)
     oro_data = get_UFS_oro_data(dir, tile, i, j, lam)
     
-    # #calculate derived quantities
-    # if old_chgres:
-    #     #temperature
-    #     nlevs = state_data["nlevs"]
-    #     gz=state_data["z"]*grav
-    #     pn1=np.zeros([nlevs+1])
-    #     temp=np.zeros([nlevs])
-    #     for k in range(nlevs+1):
-    #       pn1[k]=np.log(vgrid_data["ak"][k]+state_data["p_surf"]*vgrid_data["bk"][k])
-    #     for k in range(nlevs):
-    #       temp[k] = (gz[k]-gz[k+1])/( rdgas*(pn1[k+1]-pn1[k])*(1.+zvir*state_data["qv"][k]) )
-    #     state_data["T"] = temp
-    #     state_data["pres"] = np.exp(pn1[0:nlevs])
-    
-    #print "qv = ",state_data["qv"]
-    #print len(state_data["qv"])
-    
     return (state_data, surface_data, oro_data)
     
 def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     """Get the state data for the given tile and indices"""
     
-    # filename_pattern = '*grid.tile*.nc'
-    # 
-    # #find all supergrid files in the directory
-    # grid_fnames = []
-    # for f_name in os.listdir(dir):
-    #    if fnmatch.fnmatch(f_name, filename_pattern):
-    #       grid_fnames.append(f_name)
-    # if not grid_fnames:
-    #     message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-    #     logging.critical(message)
-    #     raise Exception(message)
-    # 
-    # for f_name in grid_fnames:
-    #     nc_file = Dataset('{0}/{1}'.format(dir,f_name))
-    #     lon_super = np.asarray(nc_file['x'])#.swapaxes(0,1)
-    #     lat_super = np.asarray(nc_file['y'])#.swapaxes(0,1)
-    #     nc_file.close()
-    #     stride = 32
-    #     lon_super_reduced = lon_super[0::stride,0::stride]
-    #     lat_super_reduced = lat_super[0::stride,0::stride]
-    #     #print f_name
-    #     #print DataFrame(lon_super_reduced)
-    #     #print DataFrame(lat_super_reduced)
-    # 
-    #     #for i in range(0, lon_super_reduced.shape[0]):
-    #     #    print i, lon_super_reduced[i,:]
-    #     #print lon_super_reduced
-    #     #print lat_super_reduced
-    #     #for j in range(0, longitude.shape[0]):
-    #     #    for i in range(0, longitude.shape[1]):
-    #     #        print longitude[j,i]
-        
     if lam:
         nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.nc'))
     else:
@@ -641,7 +577,6 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     
     u_model_rev = np.zeros(nlevs_model)
     v_model_rev = np.zeros(nlevs_model)
-    #print u_s_model_rev
     u_model_rev = 0.5*(u_s_model_rev + u_n_model_rev)
     v_model_rev = 0.5*(v_w_model_rev + v_e_model_rev)
     
@@ -750,9 +685,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*(j+1),2*i],lat_super[2*(j+1),2*i]))
@@ -768,9 +700,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         elif north_test_point == 3:
             #latitude increases most along the negative j axis
             # <--- j- north
@@ -793,9 +722,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j-1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j-1,i]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*(j-1),2*i],lat_super[2*(j-1),2*i]))
@@ -811,9 +737,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         else:
             print('unknown grid orientation')
     elif east_test_point == 1:
@@ -840,9 +763,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*(j+1),2*i],lat_super[2*(j+1),2*i]))
@@ -858,9 +778,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         elif north_test_point == 3:
             #latitude increases most along the negative j axis
             #     i- east
@@ -883,9 +800,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j-1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j-1,i]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*(j-1),2*i],lat_super[2*(j-1),2*i]))
@@ -901,9 +815,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         else:
             print('unknown grid orientation')
     elif east_test_point == 2:
@@ -930,9 +841,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j,i+1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j,i+1]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*j,2*(i+1)],lat_super[2*j,2*(i+1)]))
@@ -948,9 +856,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         elif north_test_point == 1:
             #latitude increases most along the negative i axis
             #     i- north
@@ -973,9 +878,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j,i-1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j,i-1]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*j,2*(i-1)],lat_super[2*j,2*(i-1)]))
@@ -991,9 +893,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         else:
             print('unknown grid orientation')
     elif east_test_point == 3:
@@ -1020,9 +919,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j,i+1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j,i+1]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*j,2*(i+1)],lat_super[2*j,2*(i+1)]))
@@ -1038,9 +934,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         elif north_test_point == 1:
             #latitude increases most along the negative i axis
             #     i- north
@@ -1063,9 +956,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             u_n = nc_file_data['u_s'][:,j,i-1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_s'][:,j,i-1]*fv3_remap.inner_prod(e1, ey)
             
-            #calculation of zonal wind on A-grid (simple average for now)
-            #u_agrid_rev = 0.5*(u_s + u_n)
-            
             #calculation of meridionial wind on first (west) D-grid point
             p1 = np.asarray((lon_super[2*j,2*i],lat_super[2*j,2*i]))
             p2 = np.asarray((lon_super[2*j,2*(i-1)],lat_super[2*j,2*(i-1)]))
@@ -1081,9 +971,6 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ey)
-            
-            #calculation of zonal wind on A-grid (simple average for now)
-            #v_agrid_rev = 0.5*(v_w + v_e)
         else:
             print('unknown grid orientation')
     
@@ -1739,11 +1626,6 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
         
         nlevs=len(nc_file.dimensions['pfull'])
         
-        # try:
-        #     dt3dt_nophys.append(nc_file['dt3dt_nophys'][0,::-1,j,i])
-        # except:
-        #     print('dt3dt_nophys not found in {0}'.format(filename))
-        
         dt3dt_nophys.append(dt3dt_nophys_data[:,j_get,i_get])
         dq3dt_nophys.append(dq3dt_nophys_data[:,j_get,i_get])
         du3dt_nophys.append(du3dt_nophys_data[:,j_get,i_get])
@@ -1752,21 +1634,6 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
             dq3dt_deepcnv.append(dq3dt_deepcnv_data[:,j_get,i_get])
             dq3dt_pbl.append(dq3dt_pbl_data[:,j_get,i_get])
             dt3dt_pbl.append(dt3dt_pbl_data[:,j_get,i_get])
-        
-        # try:
-        #     dq3dt_nophys.append(nc_file['dq3dt_nophys'][0,::-1,j,i])
-        # except:
-        #     print('dq3dt_nophys not found in {0}'.format(filename))
-        
-        # try:
-        #     du3dt_nophys.append(nc_file['du3dt_nophys'][0,::-1,j,i])
-        # except:
-        #     print('du3dt_nophys not found in {0}'.format(filename))
-            
-        # try:
-        #     dv3dt_nophys.append(nc_file['dv3dt_nophys'][0,::-1,j,i])
-        # except:
-        #     print('dv3dt_nophys not found in {0}'.format(filename))
         
         time_phys_hours.append(nc_file['time'][0])
         
@@ -1829,6 +1696,7 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
     u_rev = np.zeros([1,u_layers.shape[1]])
     u_init_rev = state["u"][::-1]
     
+    #momentum remapping uses same initial pressure interfaces as map1_q2
     u_rev_new = fv3_remap.map1_ppm(len(u_init_rev), pres_init_rev, u_init_rev[np.newaxis, :], 0.0, len(u_init_rev), pres_1_rev, 0, 0, -1, kord_tm )
     u_layers_remap_1[0,:] = u_rev_new[0,::-1]
     
@@ -1838,21 +1706,8 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
     v_rev_new = fv3_remap.map1_ppm(len(v_init_rev), pres_init_rev, v_init_rev[np.newaxis, :], 0.0, len(v_init_rev), pres_1_rev, 0, 0, -1, kord_tm )
     v_layers_remap_1[0,:] = v_rev_new[0,::-1]
     
-    #momentum remapping uses same initial pressure interfaces as map1_q2
-    
-    
-    # print state["T"]
-    # print t_layers_remap_1[0]
-    # print t_layers[0,:]
-    # 
-    # print state["qv"]
-    # print qv_layers_remap_1[0]
-    # print qv_layers[0,:]
-    
     dtdt_remap_1 = np.zeros([1,t_layers.shape[1]])
-    #dtdt_adv_1 = np.zeros([1,t_layers.shape[1]])
     dqvdt_remap_1 = np.zeros([1,qv_layers.shape[1]])
-    #dqvdt_adv_1 = np.zeros([1,qv_layers.shape[1]])
     dudt_remap_1 = np.zeros([1,u_layers.shape[1]])
     dvdt_remap_1 = np.zeros([1,v_layers.shape[1]])
     
@@ -1860,14 +1715,10 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
     valid_pres_i_adv[0,:] = state["pres_i"]
     
     dqvdt_remap_1[0,:] = (qv_layers_remap_1[0,:] - state["qv"][:])/(3600.0*(time_dyn_hours[0]))
-    #print(dqvdt_remap_1[0,:])
     dqvdt_adv[0,:] = dq3dt_nophys[0,:] - dqvdt_remap_1[0,:]  #valid at state["pres"] levels
-    #print(dqvdt_adv[0,:])
-    
+        
     dtdt_remap_1[0,:] = (t_layers_remap_1[0,:] - state["T"][:])/(3600.0*(time_dyn_hours[0]))
-    #print(dtdt_remap_1[0,:])
     dtdt_adv[0,:] = dt3dt_nophys[0,:] - dtdt_remap_1[0,:]  #valid at state["pres"] levels
-    #print(dtdt_adv[0,:])
     
     dudt_remap_1[0,:] = (u_layers_remap_1[0,:] - state["u"][:])/(3600.0*(time_dyn_hours[0]))
     dudt_adv[0,:] = du3dt_nophys[0,:] - dudt_remap_1[0,:]  #valid at state["pres"] levels
@@ -1902,8 +1753,6 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
         v_rev = np.zeros([1,v_layers.shape[1]])
         v_rev[0,:] = v_layers[t,::-1]
         
-        #print pres_2_rev[0,:], pres_1_rev[0,:]
-        
         tv_rev_new = fv3_remap.map_scalar(tv_rev.shape[1], log_pres_1_rev, tv_rev, dummy, tv_rev.shape[1], log_pres_2_rev, 0, 0, 1, np.abs(kord_tm), t_min)
         
         dp2 = np.zeros([1,qv_rev.shape[1]])
@@ -1914,7 +1763,6 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
         
         u_rev_new = fv3_remap.map1_ppm(u_rev.shape[1], pres_1_rev, u_rev, 0.0, u_rev.shape[1], pres_2_rev, 0, 0, -1, kord_tm )
         v_rev_new = fv3_remap.map1_ppm(v_rev.shape[1], pres_1_rev, v_rev, 0.0, v_rev.shape[1], pres_2_rev, 0, 0, -1, kord_tm )
-        
         
         tv_layers_remap[t+1,:] = tv_rev_new[0,::-1]
         qv_layers_remap[t+1,:] = qv_rev_new[0,::-1]
@@ -1931,25 +1779,15 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
         valid_pres_adv[t+1,:] = p_layers[t]
         valid_pres_i_adv[t+1,:] = p_interfaces[t]
         dqvdt_remap[t,:] = (qv_layers_remap[t+1,:] - qv_layers[t,:])/(3600.0*(time_dyn_hours[t+1] - time_dyn_hours[t]))
-        #print(dqvdt_remap[t,:])
         dqvdt_adv[t+1,:] = dq3dt_nophys[t+1,:] - dqvdt_remap[t,:]  #valid at p_layers[t]
-        #print(dqvdt_adv[t+1,:])
+        
         dtdt_remap[t,:] = (t_layers_remap[t+1,:] - t_layers[t,:])/(3600.0*(time_dyn_hours[t+1] - time_dyn_hours[t]))
-        #print(dtdt_remap[t,:])
         dtdt_adv[t+1,:] = dt3dt_nophys[t+1,:] - dtdt_remap[t,:]  #valid at p_layers[t]
-        #print(dtdt_adv[t+1,:])
+        
         dudt_remap[t,:] = (u_layers_remap[t+1,:] - u_layers[t,:])/(3600.0*(time_dyn_hours[t+1] - time_dyn_hours[t]))
         dudt_adv[t+1,:] = du3dt_nophys[t+1,:] - dudt_remap[t,:]  #valid at p_layers[t]
         dvdt_remap[t,:] = (v_layers_remap[t+1,:] - v_layers[t,:])/(3600.0*(time_dyn_hours[t+1] - time_dyn_hours[t]))
         dvdt_adv[t+1,:] = dv3dt_nophys[t+1,:] - dvdt_remap[t,:]  #valid at p_layers[t]
-    
-    #for t in range(n_files):
-    #    print("time = {0}".format(t))
-        #pres_1_rev = p_interfaces[t,::-1]
-        #pres_2_rev = p_interfaces[t+1,::-1]
-        #for k in range(t_layers.shape[1]):
-            #print "k = ",k,"dqvdt_adv=",dqvdt_adv[t,k],dqvdt_adv[t,k]/dq3dt_nophys[t,k],"dtdt_adv=",dtdt_adv[t,k],dtdt_adv[t,k]/dt3dt_nophys[t,k],valid_pres_adv[t,k]
-            #print pres_2_rev[k], pres_2_rev[k] - pres_1_rev[k]
     
     #for the original SCM forcing input file, all forcing terms should be valid on the initial pressure levels;
     #one should be able to use fv3_remap.map_scalar to remap these forcing terms to the initial pressure profile, rather
@@ -1996,7 +1834,6 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
         
         dp2 = np.zeros([1,qv_layers.shape[1]])
         
-        
         t_layers_at_pres1_rev[0,0,:] = t_layers[0,::-1]
         qv_layers_at_pres1_rev[0,0,:] = qv_layers[0,::-1]
         u_layers_at_pres1_rev[0,0,:] = u_layers[0,::-1]
@@ -2034,9 +1871,9 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
     #be equal to what is derived from dynf/phyf. (preference should be to have option to remove time-interpolation of forcing such
     #that the constant forcing applied converged to time-step values as the diag interval approaches the time step)    
     
-    #time_method = 'constant_simple'
+    #time_method = 'constant_simple' #this is not implemented in the SCM code yet
     time_method = 'constant_interp'
-    #time_method = 'gradient'
+    #time_method = 'gradient' #this produced wonky results in the SCM; avoid until investigated more
     
     if (time_method == 'constant_simple'):
         print('Forcing should not be interpolated in time. Rather, forcing should held constant at their current values until the next forcing interval is reached.')
@@ -2086,10 +1923,6 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
                 tot_advec_qv[:,t] = dqvdt_adv[t,:]
                 tot_advec_u[:,t] = dudt_adv[t,:]
                 tot_advec_v[:,t] = dvdt_adv[t,:]
-        #for t in range(n_files):
-             #print h_advec_qt[:,t]
-             #print dqvdt_adv_at_init_pres[t,:]
-             #print h_advec_thil[:,t]
     elif (time_method == 'constant_interp'):
         print('Forcing can be interpolated in time, but the time values are chosen such that forcing will effectively be held consant during a diagnostic time interval.')
         ntimes = 2*n_files
@@ -2165,12 +1998,8 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
                 tot_advec_u[:,2*t+1] = tot_advec_u[:,2*t]
                 tot_advec_v[:,2*t] = dvdt_adv[t,:]
                 tot_advec_v[:,2*t+1] = tot_advec_v[:,2*t]
-                
-        #for t in range(ntimes):
-        #     print time[t], h_advec_qt[:,t]
-        #     print h_advec_thil[:,t]
         
-    elif (time_method == 'gradient'):
+    elif (time_method == 'gradient'): #this produced wonky results in the SCM; avoid until investigated more
         print('Forcing can be interpolated in time since the forcing terms are assumed to follow a constant time-gradient.')
         
         ntimes = 2*n_files + 1
@@ -2236,7 +2065,6 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
                     h_advec_v[k,2*t + 2] = h_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
             else:
                 #calculate gradient in time and extrapolate for time (2t + 2)
-                #print((time[2*t + 1] - time[2*t]))
                 grad = (p_s[2*t + 1] - p_s[2*t])/(time[2*t + 1] - time[2*t])
                 p_s[2*t + 2] = p_s[2*t + 1] + grad*(time[2*t + 2] - time[2*t + 1])
                 
@@ -2255,20 +2083,10 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
                     
                     grad = (tot_advec_v[k,2*t + 1] - tot_advec_v[k, 2*t])/(time[2*t + 1] - time[2*t])
                     tot_advec_v[k,2*t + 2] = tot_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-        
-        #for t in range(ntimes):
-        #     print time[t], h_advec_qt[:,t]
-        #     print h_advec_thil[:,t]
-        
-        #for t in range(n_files):
-        #    print t, dqvdt_adv_at_init_pres[t,:]
-        #    print dtdt_adv_at_init_pres[t,:]
-                    
     else:
         print('Unrecognized forcing time method. Exiting.')
         exit()
         
-    #time = np.zeros(ntimes)
     w_ls = np.zeros((nlevs,ntimes),dtype=float)
     omega = np.zeros((nlevs,ntimes),dtype=float)
     u_g = np.zeros((nlevs,ntimes),dtype=float)
@@ -2293,16 +2111,7 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
         h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
         h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
         h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
-    
-    # print(tot_advec_T[:,1])
-    # print(h_advec_thil[:,1])
-    # print(tot_advec_qv[:,1])
-    # print(h_advec_qt[:,1])
-    # print(pressure_forc[:,0])
-    # print(pressure_forc[:,1])
-    # print(p_s[0])
-    # print(p_s[1])
-    # exit()
+
     forcing = {
         "time": time,
         "w_ls": w_ls,
@@ -2321,7 +2130,7 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
         "v_advec_qt": v_advec_qt,
         "h_advec_u": h_advec_u,
         "h_advec_v": h_advec_v,
-        #"ps_forc": p_s,
+        #"ps_forc": p_s, #uncomment when SCM switches to semi-Lagrangian vertical coordinate
         "ps_forc": np.ones(ntimes)*ps[0],
         "pressure_forc": pressure_forc,
         "tot_advec_T": tot_advec_T,
@@ -4506,7 +4315,7 @@ def main():
     setup_logging()
     
     #read in arguments
-    (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam) = parse_arguments()
+    (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam, no_force, save_comp) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     #if not tile and not lam:
@@ -4539,7 +4348,7 @@ def main():
         #date was not included on command line; look in dynf* file for initial date
         date = find_date(forcing_dir, lam)
     
-    #cold start NoahMP variables
+    #cold start NoahMP variables (shouldn't be necessary to use this anymore, since same capability exists in SCM code if given Noah ICs only)
     if (noahmp):
         surface_data = add_noahmp_coldstart(surface_data, date)
     
@@ -4552,17 +4361,17 @@ def main():
     surface_data["lat"] = point_lat
     
     #get UFS forcing data (zeros for now; only placeholder)
-    save_comp_data = True
-    (forcing_data, comp_data) = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, lam, save_comp_data)
-    #forcing_data = {}
+    (forcing_data, comp_data) = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, lam, save_comp)
     
     #write SCM case file
     #write_SCM_case_file_orig(state_data, surface_data, oro_data, forcing_data, case_name, date)
-    no_force = True
-    write_SCM_case_file_DEPHY(state_data, surface_data, oro_data, forcing_data, case_name, date, no_force)
+    write_SCM_case_file_DEPHY(state_data, surface_data, oro_data, forcing_data, case_name, date, False)
+    if (no_force):
+        write_SCM_case_file_DEPHY(state_data, surface_data, oro_data, forcing_data, case_name, date, no_force)
     
     #read in and remap the state variables to the first history file pressure profile and write them out to compare SCM output to (dynf for state variables and phyf for physics tendencies)
-    write_comparison_file(comp_data, case_name, date, surface_data)
+    if (save_comp):
+        write_comparison_file(comp_data, case_name, date, surface_data)
     
 if __name__ == '__main__':
     main()
