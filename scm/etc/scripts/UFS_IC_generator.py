@@ -60,7 +60,7 @@ parser = argparse.ArgumentParser()
 group1 = parser.add_mutually_exclusive_group(required=True)
 group1.add_argument('-l', '--location',   help='longitude and latitude in degress E and N, respectively, separated by a space', nargs=2, type=float)
 group1.add_argument('-ij','--index',      help='i,j indices within the tile (if known - bypasses search for closest model point to lon/lat location)', nargs=2, type=int)
-parser.add_argument('-d', '--date',       help='date corresponding to initial conditions in YYYYMMDDHHMM format', required=False)
+parser.add_argument('-d', '--date',       help='date corresponding to initial conditions in YYYYMMDDHHMMSS format', required=False)
 parser.add_argument('-i', '--in_dir',     help='input directory path containing FV3 input files', required=True)
 parser.add_argument('-g', '--grid_dir',   help='directory path containing FV3 tile supergrid files', required=True)
 parser.add_argument('-f', '--forcing_dir',help='directory path containing physics diag files', required=True)
@@ -123,7 +123,8 @@ def parse_arguments():
             date_dict["month"] = int(date[4:6])
             date_dict["day"] = int(date[6:8])
             date_dict["hour"] = int(date[8:10])
-            date_dict["minute"] = int(date[10:])
+            date_dict["minute"] = int(date[10:12])
+            date_dict["second"] = int(date[12:])
     
     if tile:
         if (not lam and tile > 6):
@@ -2734,7 +2735,7 @@ def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     minute_var.description = "minute at time of initial values"
     
     second_var = scalar_grp.createVariable('init_second',int_type)
-    second_var[:] = 0.0
+    second_var[:] = date["second"]
     second_var.units = "seconds"
     second_var.description = "second at time of initial values"
     
