@@ -464,7 +464,7 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     
     # following remap_scalar_nggps in external_ic.F90
     levp_data = len(sphum_rev)
-    
+        
     ak_rev = vgrid["ak"][::-1]
     bk_rev = vgrid["bk"][::-1]
     ak_rev[0] = np.max([1.0E-9, ak_rev[0]])
@@ -477,24 +477,26 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     gz_rev = np.zeros(2*levp_data +1)
     pn_rev = np.zeros(2*levp_data +1)
         
-    gz_rev[0:levp_data+1] = zh_rev*grav
-    pn_rev[0:levp_data+1] = log_pressure_from_data_rev
+    for k in range(0,levp_data+1):
+        gz_rev[k] = zh_rev[k]*grav
+        pn_rev[k] = log_pressure_from_data_rev[k]
     k2 = int(np.max([10, levp_data/2]))
-    for k in range(levp_data+1,levp_data+k2-1):
+    for k in range(levp_data+1,levp_data+k2):
         #do k=km+2, km+k2
-        l = 2*(levp_data+1) - k
-        gz_rev[k] = 2.*gz_rev[levp_data+1] - gz_rev[l]
-        pn_rev[k] = 2.*pn_rev[levp_data+1] - pn_rev[l]
+        l = 2*(levp_data) - k
+        gz_rev[k] = 2.*gz_rev[levp_data] - gz_rev[l]
+        pn_rev[k] = 2.*pn_rev[levp_data] - pn_rev[l]
     
-    phis = zh_rev[levp_data]*grav
+    phis = zh_rev[-1]*grav
     
     for k in range(levp_data+k2-2,0,-1):
         #do k=km+k2-1, 2, -1
         if (phis <= gz_rev[k] and phis >= gz_rev[k+1]):
             log_ps_calc = pn_rev[k] + (pn_rev[k+1]-pn_rev[k])*(gz_rev[k]-phis)/(gz_rev[k]-gz_rev[k+1])
             break
+    
     ps_calc = np.exp(log_ps_calc)
-        
+    
     pressure_model_interfaces_rev = np.zeros(nlevs_model+1)
     log_pressure_model_interfaces_rev = np.zeros(nlevs_model+1)
     pressure_model_interfaces_rev[0] = ak_rev[1]
@@ -1455,9 +1457,10 @@ def get_UFS_forcing_data(nlevs, state, forcing_dir, grid_dir, tile, i, j, lam, s
             
             print('Regridding {} onto native grid: regridding progress = {}%'.format(filename, 100.0*count/(len(dyn_filenames) + len(phy_filenames))))
             regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
-            #print(regridder)            
+            #print(regridder.weights)            
             
             ps_data = regridder(nc_file['pressfc'][0,:,:])
+            
             t_data = regridder(nc_file['tmp'][0,::-1,:,:])
             qv_data = regridder(nc_file['spfh'][0,::-1,:,:])
             u_data = regridder(nc_file['ugrd'][0,::-1,:,:])
