@@ -1861,6 +1861,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[hsnoin_cpl]
+  standard_name = surface_snow_thickness_for_coupling
+  long_name = sfc snow depth in meters over sea ice for coupling
+  units = m
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [slimskin_cpl]
   standard_name = sea_land_ice_mask_in	
   long_name = sea/land/ice mask input (=0/1/2)
@@ -2489,7 +2496,7 @@
   long_name = logical flag to control RRTMGP LW calculation
   units = flag
   dimensions = ()
-  type = logical  
+  type = logical 
 [rrtmgp_nrghice]
   standard_name = number_of_rrtmgp_ice_roughness
   long_name = number of ice-roughness categories in RRTMGP calculation (Model%rrtmgp_nrghice)
@@ -4241,12 +4248,6 @@
   units = flag
   dimensions = ()
   type = logical
-[cycling]
-  standard_name = flag_for_cycling
-  long_name = flag for cycling or coldstart
-  units = flag
-  dimensions = ()
-  type = logical
 [hydrostatic]
   standard_name = flag_for_hydrostatic_solver
   long_name = flag for hydrostatic solver from dynamics
@@ -4497,7 +4498,7 @@
   units = flag
   dimensions = ()
   type = logical
-  
+
 ########################################################################
 [ccpp-arg-table]
   name = GFS_grid_type
@@ -6453,6 +6454,7 @@
   dimensions = (horizontal_dimension,vertical_dimension,number_of_3d_auxiliary_arrays)
   type = real
   kind = kind_phys
+
 
 ########################################################################
 [ccpp-arg-table]
@@ -9607,7 +9609,7 @@
   dimensions =  (number_of_active_gases_used_by_RRTMGP)
   type = character
   kind = len=128
-    
+
 ########################################################################
 [ccpp-arg-table]
   name = GFS_data_type

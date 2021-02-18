@@ -285,6 +285,7 @@ SCHEME_FILES = [
 #    'ccpp/physics/physics/radsw_main.F90'                  ],
     'ccpp/physics/physics/radlw_main.f'                     ,
     'ccpp/physics/physics/radsw_main.f'                     ,
+    'ccpp/physics/physics/rascnv.F90'                       ,
     'ccpp/physics/physics/rayleigh_damp.f'                  ,
     'ccpp/physics/physics/rrtmg_lw_post.F90'                ,
     'ccpp/physics/physics/rrtmg_lw_pre.F90'                 ,
