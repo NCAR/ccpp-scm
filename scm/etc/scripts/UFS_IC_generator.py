@@ -97,11 +97,11 @@ def parse_arguments():
         logging.critical(message)
         raise Exception(message)
     else:
-        date_dict["year"] = np.int(date[0:4])
-        date_dict["month"] = np.int(date[4:6])
-        date_dict["day"] = np.int(date[6:8])
-        date_dict["hour"] = np.int(date[8:10])
-        date_dict["minute"] = np.int(date[10:])
+        date_dict["year"] = int(date[0:4])
+        date_dict["month"] = int(date[4:6])
+        date_dict["day"] = int(date[6:8])
+        date_dict["hour"] = int(date[8:10])
+        date_dict["minute"] = int(date[10:])
         
     return (location, index, date_dict, in_dir, grid_dir, tile, area, noahmp, case_name, old_chgres)
 
@@ -133,8 +133,8 @@ def find_tile(loc, dir):
     for f_name in grid_fnames:
         if not found_tile:
             nc_file = Dataset('{0}/{1}'.format(dir,f_name))
-            longitude = np.array(nc_file['x']).swapaxes(0,1)
-            latitude = np.array(nc_file['y']).swapaxes(0,1)
+            longitude = np.asarray(nc_file['x']).swapaxes(0,1)
+            latitude = np.asarray(nc_file['y']).swapaxes(0,1)
             nc_file.close()
             
             adj_long = False        
@@ -149,20 +149,20 @@ def find_tile(loc, dir):
             
             edge_1_lon = longitude[0,:]
             edge_1_lat = latitude[0,:]
-            edge_1 = zip(edge_1_lon, edge_1_lat)
+            edge_1 = list(zip(edge_1_lon, edge_1_lat))
                         
             edge_2_lon = longitude[:,-1]
             edge_2_lat = latitude[:,-1]
-            edge_2 = zip(edge_2_lon, edge_2_lat)
+            edge_2 = list(zip(edge_2_lon, edge_2_lat))
                         
             edge_3_lon = longitude[-1,:]
             edge_3_lat = latitude[-1,:]
-            edge_3 = zip(edge_3_lon, edge_3_lat)
+            edge_3 = list(zip(edge_3_lon, edge_3_lat))
             edge_3.reverse() #need to reverse the direction of this edge to form a regular polygon
             
             edge_4_lon = longitude[:,0]
             edge_4_lat = latitude[:,0]
-            edge_4 = zip(edge_4_lon, edge_4_lat)
+            edge_4 = list(zip(edge_4_lon, edge_4_lat))
             edge_4.reverse() #need to reverse the direction of this edge to form a regular polygon
                         
             polygon_points = edge_1 + edge_2 + edge_3 + edge_4
@@ -185,7 +185,7 @@ def find_tile(loc, dir):
     #if the tile hasn't been found by this point, it must be contained within a polar tile
     for f_name in polar_tile_filenames:
         nc_file = Dataset('{0}/{1}'.format(dir,f_name))
-        latitude = np.array(nc_file['y']).swapaxes(0,1)
+        latitude = np.asarray(nc_file['y']).swapaxes(0,1)
         nc_file.close()
         
         #if the sign of the mean latitude of the tile is the same as that of the point, the tile has been found
@@ -210,8 +210,8 @@ def find_loc_indices(loc, dir, tile):
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     #read in supergrid longitude and latitude
-    lon_super = np.array(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    lat_super = np.array(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     #get the longitude and latitude data for the grid centers by slicing the supergrid 
     #and taking only odd-indexed values
     longitude = lon_super[1::2,1::2]
@@ -233,12 +233,12 @@ def find_loc_indices(loc, dir, tile):
     eucl_dist = np.zeros((longitude.shape[0],longitude.shape[1]))
     
     #get the Cartesian location of the given point
-    cart_loc = np.array(sph2cart(math.radians(temp_loc[0]), math.radians(temp_loc[1]), earth_radius))
+    cart_loc = np.asarray(sph2cart(math.radians(temp_loc[0]), math.radians(temp_loc[1]), earth_radius))
     
     for i in range(len(longitude)):
         for j in range(len(longitude[i])):
             #get the Cartesian location of all grid points
-            cart_cell = np.array(sph2cart(math.radians(longitude[i,j]), math.radians(latitude[i,j]), earth_radius))
+            cart_cell = np.asarray(sph2cart(math.radians(longitude[i,j]), math.radians(latitude[i,j]), earth_radius))
             
             #calculate the euclidean distance from the given point to the current grid cell
             eucl_dist[i,j] = np.linalg.norm(cart_loc - cart_cell)
@@ -262,8 +262,8 @@ def find_lon_lat_of_indices(indices, dir, tile):
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     #read in supergrid longitude and latitude
-    lon_super = np.array(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    lat_super = np.array(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     #get the longitude and latitude data for the grid centers by slicing the supergrid 
     #and taking only odd-indexed values
     longitude = lon_super[1::2,1::2]
@@ -838,10 +838,10 @@ def add_noahmp_coldstart(surface, date):
     n_soil_layers = 4
     
     #thickness of each soil level
-    dzs = np.array([0.1,0.3,0.6,1.0])
+    dzs = np.asarray([0.1,0.3,0.6,1.0])
     
     #bottom depth of each soil level
-    zsoil = np.array([-0.1,-0.4,-1.0,-2.0])
+    zsoil = np.asarray([-0.1,-0.4,-1.0,-2.0])
     
     #initialize all NoahMP vars as missing
     surface["tvxy"]     = missing_value
@@ -911,7 +911,7 @@ def add_noahmp_coldstart(surface, date):
         surface["wtxy"]     = surface["waxy"]
         surface["zwtxy"]    = (25.0 + 2.0) - surface["waxy"] / 1000.0 /0.2
         
-        vegtyp = np.int(surface['vtyp'])
+        vegtyp = int(surface['vtyp'])
         if (vegtyp == 0):
             vegtyp = 7
         if ((vegtyp == mptable_nml_active['ISBARREN']) or (vegtyp == mptable_nml_active['ISSNOW']) or  (vegtyp == mptable_nml_active['ISURBAN']) or (vegtyp == mptable_nml_active['ISWATER'])) :
@@ -927,13 +927,13 @@ def add_noahmp_coldstart(surface, date):
             surface["fastcpxy"] = 0.0
         else:
             #laim gives monthly values for each of the vegetation types
-            laim = np.array(mptable_nml_active['LAIM']).reshape(12,20)
+            laim = np.asarray(mptable_nml_active['LAIM']).reshape(12,20)
             
             #be sure to use month-1, vegtyp-1 since python is 0-indexed
             surface["xlaixy"] = np.amax([laim[date["month"]-1,vegtyp-1],0.05])
             surface["xsaixy"] = np.amax([surface["xlaixy"]*0.1,0.05])
             
-            sla = np.array(mptable_nml_active['SLA'])
+            sla = np.asarray(mptable_nml_active['SLA'])
             masslai = 1000.0 / np.amax([sla[vegtyp-1],1.0])
             surface["lfmassxy"] = surface["xlaixy"]*masslai
             masssai = 1000.0 / 3.0
@@ -996,7 +996,7 @@ def add_noahmp_coldstart(surface, date):
         surface["snliqxy"][:] = 0.0
         surface["zsnsoxy"][:] = 0.0
         
-        isnow = np.int(surface["snowxy"] + n_snow_layers)
+        isnow = int(surface["snowxy"] + n_snow_layers)
         dzsnso = np.zeros(n_snow_layers + n_soil_layers)
         for k in range(isnow, n_snow_layers):
             surface["tsnoxy"][k]  = surface["tgxy"]
@@ -1974,26 +1974,26 @@ def main():
         
     #find tile containing the point using the supergrid if no tile is specified 
     if not tile:
-        tile = find_tile(location, grid_dir)
+        tile = int(find_tile(location, grid_dir))
         if tile < 0:
             message = 'No tile was found for location {0}'.format(location)
             logging.critical(message)
             raise Exception(message)
-        print 'Tile found: {0}'.format(tile)
+        print('Tile found: {0}'.format(tile))
     
     #find index of closest point in the tile if indices are not specified
     if not indices:
         (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile)
-        print 'The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j)
-        print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
-        print 'This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1])
+        print('The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j))
+        print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
+        print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
     else:
         tile_i = indices[0]
         tile_j = indices[1]
         #still need to grab the lon/lat if the tile and indices are supplied
         (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile)
         
-        print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
+        print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
     
     #get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement different file reads)
     (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i, tile_j, old_chgres)
