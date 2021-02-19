@@ -1,1 +1,1 @@
-suites = ["SCM_GFS_v15p2","SCM_GFS_v16beta","SCM_csawmg","SCM_GSD_v1","SCM_RRFS_v1beta"]
+suites = ["SCM_GFS_v15p2","SCM_GFS_v16beta","SCM_csawmg","SCM_GSD_v1","SCM_RRFS_v1alpha"]

@@ -4,7 +4,7 @@
 module gmtb_scm_output
 
 use netcdf
-use gmtb_scm_input, only: check
+use NetCDF_read, only: check
 use gmtb_scm_kinds, only: sp, dp, qp
 
 implicit none

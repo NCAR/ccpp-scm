@@ -23,7 +23,11 @@ rvgas        = 461.50
 zvir         = rvgas/rdgas - 1.
 grav         = 9.80665
 
-missing_value = 9.99e20
+missing_value = -9999.0 #9.99e20
+
+missing_variable_snow_layers = 3
+missing_variable_soil_layers = 4
+missing_variable_ice_layers = 2
 
 # Path to the directory containing processed case input files
 PROCESSED_CASE_DIR = '../../data/processed_case_input'
@@ -278,14 +282,57 @@ def sph2cart(az, el, r):
     
     return (x, y, z)    
 
-def get_UFS_IC_data(dir, tile, i, j, old_chgres):
+def read_NetCDF_var(nc_file, var_name, i, j):
+    try:
+        var = nc_file[var_name][j,i]
+    except (KeyError, IndexError):
+        message = "Variable {0} is not found in {1}. Filling with missing value.".format(var_name,nc_file.filepath())
+        logging.debug(message)
+        var = missing_value
+    return var
+
+def read_NetCDF_surface_var(nc_file, var_name, i, j, old_chgres, vert_dim):
+    if old_chgres:
+        if vert_dim > 0:
+            try:
+                var = nc_file[var_name][:,j,i]
+            except (KeyError, IndexError):
+                message = "Variable {0} is not found in {1}. Filling with array of size {2} with missing value.".format(var_name,nc_file.filepath(),vert_dim)
+                logging.debug(message)
+                var = missing_value*np.ma.ones(vert_dim)
+        else:
+            try:
+                var = nc_file[var_name][j,i]
+            except (KeyError, IndexError):
+                message = "Variable {0} is not found in {1}. Filling with missing value.".format(var_name,nc_file.filepath())
+                logging.debug(message)
+                var = missing_value
+    else:
+        #the sfc_data.tileX.nc files created from chgres_cube have an extra time dimension in front compared to those created from global_chgres
+        if vert_dim > 0:
+            try:
+                var = nc_file[var_name][0,:,j,i]
+            except (KeyError, IndexError):
+                message = "Variable {0} is not found in {1}. Filling with array of size {2} with missing value.".format(var_name,nc_file.filepath(),vert_dim)
+                logging.debug(message)
+                var = missing_value*np.ma.ones(vert_dim)
+        else:
+            try:
+                var = nc_file[var_name][0,j,i]
+            except (KeyError, IndexError):
+                message = "Variable {0} is not found in {1}. Filling with missing value.".format(var_name,nc_file.filepath())
+                logging.debug(message)
+                var = missing_value
+    return var
+
+def get_UFS_IC_data(dir, grid_dir, tile, i, j, old_chgres):
     """Get the state, surface, and orographic data for the given tile and indices"""
     #returns dictionaries with the data
     
     state_data = get_UFS_state_data(dir, tile, i, j, old_chgres)
     surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres)
     oro_data = get_UFS_oro_data(dir, tile, i, j)
-    vgrid_data = get_UFS_vgrid_data(dir) #only needed for ak, bk to calculate pressure
+    vgrid_data = get_UFS_vgrid_data(grid_dir) #only needed for ak, bk to calculate pressure
     
     #calculate derived quantities
     if old_chgres:
@@ -379,80 +426,142 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     
     nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.tile{0}.nc'.format(tile)))
     
-    if old_chgres:
-        ts_in=nc_file['tsea'][j,i]
+    #FV3/io/FV3GFS_io.F90/sfc_prop_restart_read was used as reference for variables that can be read in    
+    
+    #read in scalars (would be 2D variables in a 3D model)
+    
+    # surface properties (assuming Noah LSM; may contain variables needed for fractional land fraction)
+    tsfco_in = read_NetCDF_surface_var(nc_file, 'tsea', i, j, old_chgres, 0)
+    tg3_in = read_NetCDF_surface_var(nc_file, 'tg3', i, j, old_chgres, 0)
+    uustar_in = read_NetCDF_surface_var(nc_file, 'uustar', i, j, old_chgres, 0)
+    alvsf_in = read_NetCDF_surface_var(nc_file, 'alvsf', i, j, old_chgres, 0)
+    alvwf_in = read_NetCDF_surface_var(nc_file, 'alvwf', i, j, old_chgres, 0)
+    alnsf_in = read_NetCDF_surface_var(nc_file, 'alnsf', i, j, old_chgres, 0)
+    alnwf_in = read_NetCDF_surface_var(nc_file, 'alnwf', i, j, old_chgres, 0)
+    facsf_in = read_NetCDF_surface_var(nc_file, 'facsf', i, j, old_chgres, 0)
+    facwf_in = read_NetCDF_surface_var(nc_file, 'facwf', i, j, old_chgres, 0)
+    styp_in = read_NetCDF_surface_var(nc_file, 'stype', i, j, old_chgres, 0)
+    slope_in = read_NetCDF_surface_var(nc_file, 'slope', i, j, old_chgres, 0)
+    vtyp_in = read_NetCDF_surface_var(nc_file, 'vtype', i, j, old_chgres, 0)
+    vfrac_in = read_NetCDF_surface_var(nc_file, 'vfrac', i, j, old_chgres, 0)
+    shdmin_in = read_NetCDF_surface_var(nc_file, 'shdmin', i, j, old_chgres, 0)
+    shdmax_in = read_NetCDF_surface_var(nc_file, 'shdmax', i, j, old_chgres, 0)
+    zorlo_in = read_NetCDF_surface_var(nc_file, 'zorl', i, j, old_chgres, 0)
+    slmsk_in = read_NetCDF_surface_var(nc_file, 'slmsk', i, j, old_chgres, 0)
+    canopy_in = read_NetCDF_surface_var(nc_file, 'canopy', i, j, old_chgres, 0)
+    hice_in = read_NetCDF_surface_var(nc_file, 'hice', i, j, old_chgres, 0)
+    fice_in = read_NetCDF_surface_var(nc_file, 'fice', i, j, old_chgres, 0)
+    tisfc_in = read_NetCDF_surface_var(nc_file, 'tisfc', i, j, old_chgres, 0)
+    snwdph_in = read_NetCDF_surface_var(nc_file, 'snwdph', i, j, old_chgres, 0)
+    snoalb_in = read_NetCDF_surface_var(nc_file, 'snoalb', i, j, old_chgres, 0)
+    sheleg_in = read_NetCDF_surface_var(nc_file, 'sheleg', i, j, old_chgres, 0)
+    f10m_in = read_NetCDF_surface_var(nc_file, 'f10m', i, j, old_chgres, 0)
+    t2m_in = read_NetCDF_surface_var(nc_file, 't2m', i, j, old_chgres, 0)
+    q2m_in = read_NetCDF_surface_var(nc_file, 'q2m', i, j, old_chgres, 0)
+    ffmm_in = read_NetCDF_surface_var(nc_file, 'ffmm', i, j, old_chgres, 0)
+    ffhh_in = read_NetCDF_surface_var(nc_file, 'ffhh', i, j, old_chgres, 0)
+    tprcp_in = read_NetCDF_surface_var(nc_file, 'tprcp', i, j, old_chgres, 0)
+    srflag_in = read_NetCDF_surface_var(nc_file, 'srflag', i, j, old_chgres, 0)
+    sncovr_in = read_NetCDF_surface_var(nc_file, 'sncovr', i, j, old_chgres, 0)
+    tsfcl_in = read_NetCDF_surface_var(nc_file, 'tsfcl', i, j, old_chgres, 0)
+    zorll_in = read_NetCDF_surface_var(nc_file, 'zorll', i, j, old_chgres, 0)
+    zorli_in = read_NetCDF_surface_var(nc_file, 'zorli', i, j, old_chgres, 0)
+    
+    #present when cplwav = T
+    zorlw_in = read_NetCDF_surface_var(nc_file, 'zorlw', i, j, old_chgres, 0)
+    
+    #NSST variables that may be in the surface file
+    tref_in = read_NetCDF_surface_var(nc_file, 'tref', i, j, old_chgres, 0)
+    z_c_in = read_NetCDF_surface_var(nc_file, 'z_c', i, j, old_chgres, 0)
+    c_0_in = read_NetCDF_surface_var(nc_file, 'c_0', i, j, old_chgres, 0)
+    c_d_in = read_NetCDF_surface_var(nc_file, 'c_d', i, j, old_chgres, 0)
+    w_0_in = read_NetCDF_surface_var(nc_file, 'w_0', i, j, old_chgres, 0)
+    w_d_in = read_NetCDF_surface_var(nc_file, 'w_d', i, j, old_chgres, 0)
+    xt_in = read_NetCDF_surface_var(nc_file, 'xt', i, j, old_chgres, 0)
+    xs_in = read_NetCDF_surface_var(nc_file, 'xs', i, j, old_chgres, 0)
+    xu_in = read_NetCDF_surface_var(nc_file, 'xu', i, j, old_chgres, 0)
+    xv_in = read_NetCDF_surface_var(nc_file, 'xv', i, j, old_chgres, 0)
+    xz_in = read_NetCDF_surface_var(nc_file, 'xz', i, j, old_chgres, 0)
+    zm_in = read_NetCDF_surface_var(nc_file, 'zm', i, j, old_chgres, 0)
+    xtts_in = read_NetCDF_surface_var(nc_file, 'xtts', i, j, old_chgres, 0)
+    xzts_in = read_NetCDF_surface_var(nc_file, 'xzts', i, j, old_chgres, 0)
+    d_conv_in = read_NetCDF_surface_var(nc_file, 'd_conv', i, j, old_chgres, 0)
+    ifd_in = read_NetCDF_surface_var(nc_file, 'ifd', i, j, old_chgres, 0)
+    dt_cool_in = read_NetCDF_surface_var(nc_file, 'dt_cool', i, j, old_chgres, 0)
+    qrain_in = read_NetCDF_surface_var(nc_file, 'qrain', i, j, old_chgres, 0)
 
-        # land state
-        stc_in=nc_file['stc'][:,j,i]
-        smc_in=nc_file['smc'][:,j,i]
-        slc_in=nc_file['slc'][:,j,i]
-        tg3_in=nc_file['tg3'][j,i]
+    #NoahMP variables that may be in the surface file
+    snowxy_in = read_NetCDF_surface_var(nc_file, 'snowxy', i, j, old_chgres, 0)
+    tvxy_in = read_NetCDF_surface_var(nc_file, 'tvxy', i, j, old_chgres, 0)
+    tgxy_in = read_NetCDF_surface_var(nc_file, 'tgxy', i, j, old_chgres, 0)
+    canicexy_in = read_NetCDF_surface_var(nc_file, 'canicexy', i, j, old_chgres, 0)
+    canliqxy_in = read_NetCDF_surface_var(nc_file, 'canliqxy', i, j, old_chgres, 0)
+    eahxy_in = read_NetCDF_surface_var(nc_file, 'eahxy', i, j, old_chgres, 0)
+    tahxy_in = read_NetCDF_surface_var(nc_file, 'tahxy', i, j, old_chgres, 0)
+    cmxy_in = read_NetCDF_surface_var(nc_file, 'cmxy', i, j, old_chgres, 0)
+    chxy_in = read_NetCDF_surface_var(nc_file, 'chxy', i, j, old_chgres, 0)
+    fwetxy_in = read_NetCDF_surface_var(nc_file, 'fwetxy', i, j, old_chgres, 0)
+    sneqvoxy_in = read_NetCDF_surface_var(nc_file, 'sneqvoxy', i, j, old_chgres, 0)
+    alboldxy_in = read_NetCDF_surface_var(nc_file, 'alboldxy', i, j, old_chgres, 0)
+    qsnowxy_in = read_NetCDF_surface_var(nc_file, 'qsnowxy', i, j, old_chgres, 0)
+    wslakexy_in = read_NetCDF_surface_var(nc_file, 'wslakexy', i, j, old_chgres, 0)
+    zwtxy_in = read_NetCDF_surface_var(nc_file, 'zwtxy', i, j, old_chgres, 0)
+    waxy_in = read_NetCDF_surface_var(nc_file, 'waxy', i, j, old_chgres, 0)
+    wtxy_in = read_NetCDF_surface_var(nc_file, 'wtxy', i, j, old_chgres, 0)
+    lfmassxy_in = read_NetCDF_surface_var(nc_file, 'lfmassxy', i, j, old_chgres, 0)
+    rtmassxy_in = read_NetCDF_surface_var(nc_file, 'rtmassxy', i, j, old_chgres, 0)
+    stmassxy_in = read_NetCDF_surface_var(nc_file, 'stmassxy', i, j, old_chgres, 0)
+    woodxy_in = read_NetCDF_surface_var(nc_file, 'woodxy', i, j, old_chgres, 0)
+    stblcpxy_in = read_NetCDF_surface_var(nc_file, 'stblcpxy', i, j, old_chgres, 0)
+    fastcpxy_in = read_NetCDF_surface_var(nc_file, 'fastcpxy', i, j, old_chgres, 0)
+    xsaixy_in = read_NetCDF_surface_var(nc_file, 'xsaixy', i, j, old_chgres, 0)
+    xlaixy_in = read_NetCDF_surface_var(nc_file, 'xlaixy', i, j, old_chgres, 0)
+    taussxy_in = read_NetCDF_surface_var(nc_file, 'taussxy', i, j, old_chgres, 0)
+    smcwtdxy_in = read_NetCDF_surface_var(nc_file, 'smcwtdxy', i, j, old_chgres, 0)
+    deeprechxy_in = read_NetCDF_surface_var(nc_file, 'deeprechxy', i, j, old_chgres, 0)
+    rechxy_in = read_NetCDF_surface_var(nc_file, 'rechxy', i, j, old_chgres, 0)
+    
+    #RUC LSM variables that may be in the surface file
+    wetness_in = read_NetCDF_surface_var(nc_file, 'wetness', i, j, old_chgres, 0)
+    clw_surf_in = read_NetCDF_surface_var(nc_file, 'clw_surf', i, j, old_chgres, 0)
+    qwv_surf_in = read_NetCDF_surface_var(nc_file, 'qwv_surf', i, j, old_chgres, 0)
+    tsnow_in = read_NetCDF_surface_var(nc_file, 'tsnow', i, j, old_chgres, 0)
+    snowfall_acc_in = read_NetCDF_surface_var(nc_file, 'snowfall_acc', i, j, old_chgres, 0)
+    swe_snowfall_acc_in = read_NetCDF_surface_var(nc_file, 'swe_snowfall_acc', i, j, old_chgres, 0)
+    lai_in = read_NetCDF_surface_var(nc_file, 'lai', i, j, old_chgres, 0)
+    
+    #read in profiles (would be 3D variables in a 3D model)
+    
+    #land_state
+    stc_in = read_NetCDF_surface_var(nc_file, 'stc', i, j, old_chgres, missing_variable_soil_layers)
+    smc_in = read_NetCDF_surface_var(nc_file, 'smc', i, j, old_chgres, missing_variable_soil_layers)
+    slc_in = read_NetCDF_surface_var(nc_file, 'slc', i, j, old_chgres, missing_variable_soil_layers)
+    
+    #NoahMP 3D variables
+    snicexy_in = read_NetCDF_surface_var(nc_file, 'snicexy', i, j, old_chgres, missing_variable_snow_layers)
+    snliqxy_in = read_NetCDF_surface_var(nc_file, 'snliqxy', i, j, old_chgres, missing_variable_snow_layers)
+    tsnoxy_in = read_NetCDF_surface_var(nc_file, 'tsnoxy', i, j, old_chgres, missing_variable_snow_layers)
+    smoiseq_in = read_NetCDF_surface_var(nc_file, 'smoiseq', i, j, old_chgres, missing_variable_soil_layers)
+    zsnsoxy_in = read_NetCDF_surface_var(nc_file, 'zsnsoxy', i, j, old_chgres, missing_variable_soil_layers + missing_variable_snow_layers)
+     
+    #RUC LSM 3D variables
+    tslb_in = read_NetCDF_surface_var(nc_file, 'tslb', i, j, old_chgres, missing_variable_soil_layers)
+    smois_in = read_NetCDF_surface_var(nc_file, 'smois', i, j, old_chgres, missing_variable_soil_layers)
+    sh2o_in = read_NetCDF_surface_var(nc_file, 'sh2o', i, j, old_chgres, missing_variable_soil_layers)
+    smfr_in = read_NetCDF_surface_var(nc_file, 'smfr', i, j, old_chgres, missing_variable_soil_layers)
+    flfr_in = read_NetCDF_surface_var(nc_file, 'flfr', i, j, old_chgres, missing_variable_soil_layers)
+    
+    #fractional grid 3D variables
+    tiice_in = read_NetCDF_surface_var(nc_file, 'tiice', i, j, old_chgres, missing_variable_ice_layers)
 
-        # surface properties
-        uustar_in=nc_file['uustar'][j,i]
-        alvsf_in=nc_file['alvsf'][j,i]
-        alvwf_in=nc_file['alvwf'][j,i]
-        alnsf_in=nc_file['alnsf'][j,i]
-        alnwf_in=nc_file['alnwf'][j,i]
-        facsf_in=nc_file['facsf'][j,i]
-        facwf_in=nc_file['facwf'][j,i]
-        styp_in=nc_file['stype'][j,i]
-        slope_in=nc_file['slope'][j,i]
-        vtyp_in=nc_file['vtype'][j,i]
-        vfrac_in=nc_file['vfrac'][j,i]
-        shdmin_in=nc_file['shdmin'][j,i]
-        shdmax_in=nc_file['shdmax'][j,i]
-        zorl_in=nc_file['zorl'][j,i]
-        slmsk_in=nc_file['slmsk'][j,i]
-        canopy_in=nc_file['canopy'][j,i]
-        hice_in=nc_file['hice'][j,i]
-        fice_in=nc_file['fice'][j,i]
-        tisfc_in=nc_file['tisfc'][j,i]
-        snwdph_in=nc_file['snwdph'][j,i]
-        snoalb_in=nc_file['snoalb'][j,i]
-        sheleg_in=nc_file['sheleg'][j,i]
-    else:
-        #the sfc_data.tileX.nc files created from chgres_cube have an extra time dimension in front compared to those created from global_chgres
-        ts_in=nc_file['tsea'][0,j,i]
-        
-        # land state
-        stc_in=nc_file['stc'][0,:,j,i]
-        smc_in=nc_file['smc'][0,:,j,i]
-        slc_in=nc_file['slc'][0,:,j,i]
-        tg3_in=nc_file['tg3'][0,j,i]
-        
-        # surface properties
-        uustar_in=nc_file['uustar'][0,j,i]
-        alvsf_in=nc_file['alvsf'][0,j,i]
-        alvwf_in=nc_file['alvwf'][0,j,i]
-        alnsf_in=nc_file['alnsf'][0,j,i]
-        alnwf_in=nc_file['alnwf'][0,j,i]
-        facsf_in=nc_file['facsf'][0,j,i]
-        facwf_in=nc_file['facwf'][0,j,i]
-        styp_in=nc_file['stype'][0,j,i]
-        slope_in=nc_file['slope'][0,j,i]
-        vtyp_in=nc_file['vtype'][0,j,i]
-        vfrac_in=nc_file['vfrac'][0,j,i]
-        shdmin_in=nc_file['shdmin'][0,j,i]
-        shdmax_in=nc_file['shdmax'][0,j,i]
-        zorl_in=nc_file['zorl'][0,j,i]
-        slmsk_in=nc_file['slmsk'][0,j,i]
-        canopy_in=nc_file['canopy'][0,j,i]
-        hice_in=nc_file['hice'][0,j,i]
-        fice_in=nc_file['fice'][0,j,i]
-        tisfc_in=nc_file['tisfc'][0,j,i]
-        snwdph_in=nc_file['snwdph'][0,j,i]
-        snoalb_in=nc_file['snoalb'][0,j,i]
-        sheleg_in=nc_file['sheleg'][0,j,i]
+    #print("zorlw_in = {}".format(zorlw_in))
     
     nc_file.close()
     
     #put data in a dictionary
     surface = {
-        "T_surf": ts_in,
-        "stc": stc_in,
-        "smc": smc_in,
-        "slc": slc_in,
+        #Noah LSM
+        "tsfco": tsfco_in,  
         "tg3": tg3_in,
         "uustar": uustar_in,
         "alvsf": alvsf_in,
@@ -467,7 +576,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
         "vfrac": vfrac_in,
         "shdmin": shdmin_in,
         "shdmax": shdmax_in,
-        "zorl": zorl_in,
+        "zorlo": zorlo_in,
         "slmsk": slmsk_in,
         "canopy": canopy_in,
         "hice": hice_in,
@@ -475,7 +584,95 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
         "tisfc": tisfc_in,
         "snwdph": snwdph_in,
         "snoalb": snoalb_in,
-        "sheleg": sheleg_in
+        "sheleg": sheleg_in,
+        "f10m": f10m_in,
+        "t2m": t2m_in,
+        "q2m": q2m_in,
+        "ffmm": ffmm_in,
+        "ffhh": ffhh_in,
+        "tprcp": tprcp_in,
+        "srflag": srflag_in,
+        "sncovr": sncovr_in,
+        "tsfcl": tsfcl_in,
+        "zorll": zorll_in,
+        "zorli": zorli_in,
+        #cplwav
+        "zorlw": zorlw_in,
+        #NSST
+        "tref": tref_in,
+        "z_c": z_c_in,
+        "c_0": c_0_in,
+        "c_d": c_d_in,
+        "w_0": w_0_in,
+        "w_d": w_d_in,
+        "xt": xt_in,
+        "xs": xs_in,
+        "xu": xu_in,
+        "xv": xv_in,
+        "xz": xz_in,
+        "zm": zm_in,
+        "xtts": xtts_in,
+        "xzts": xzts_in,
+        "d_conv": d_conv_in,
+        "ifd": ifd_in,
+        "dt_cool": dt_cool_in,
+        "qrain": qrain_in,
+        #NoahMP
+        "snowxy": snowxy_in,
+        "tvxy": tvxy_in,
+        "tgxy": tgxy_in,
+        "canicexy": canicexy_in,
+        "canliqxy": canliqxy_in,
+        "eahxy": eahxy_in,
+        "tahxy": tahxy_in,
+        "cmxy": cmxy_in,
+        "chxy": chxy_in,
+        "fwetxy": fwetxy_in,
+        "sneqvoxy": sneqvoxy_in,
+        "alboldxy": alboldxy_in,
+        "qsnowxy": qsnowxy_in,
+        "wslakexy": wslakexy_in,
+        "zwtxy": zwtxy_in,
+        "waxy": waxy_in,
+        "wtxy": wtxy_in,
+        "lfmassxy": lfmassxy_in,
+        "rtmassxy": rtmassxy_in,
+        "stmassxy": stmassxy_in,
+        "woodxy": woodxy_in,
+        "stblcpxy": stblcpxy_in,
+        "fastcpxy": fastcpxy_in,
+        "xsaixy": xsaixy_in,
+        "xlaixy": xlaixy_in,
+        "taussxy": taussxy_in,
+        "smcwtdxy": smcwtdxy_in,
+        "deeprechxy": deeprechxy_in,
+        "rechxy": rechxy_in,
+        #RUC LSM
+        "wetness": wetness_in,
+        "clw_surf": clw_surf_in,
+        "qwv_surf": qwv_surf_in,
+        "tsnow": tsnow_in,
+        "snowfall_acc": snowfall_acc_in,
+        "swe_snowfall_acc": swe_snowfall_acc_in,
+        "lai": lai_in,
+        #Noah LSM 3D
+        "stc": stc_in,
+        "smc": smc_in,
+        "slc": slc_in,
+        #NoahMP LSM 3D
+        "snicexy": snicexy_in,
+        "snliqxy": snliqxy_in,
+        "tsnoxy": tsnoxy_in,
+        "smoiseq": smoiseq_in,
+        "zsnsoxy": zsnsoxy_in,         
+        #RUC LSM 3D variables
+        "tslb": tslb_in,
+        "smois": smois_in,
+        "sh2o": sh2o_in,
+        "smfr": smfr_in,
+        "flfr": flfr_in,        
+        #fractional grid 3D variables
+        "tiice": tiice_in,
     }
     return surface
 
@@ -490,20 +687,27 @@ def get_UFS_oro_data(dir, tile, i, j):
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
     # orographyic properties
-    stddev_in=nc_file['stddev'][j,i]
-    convexity_in=nc_file['convexity'][j,i]
-    oa1_in=nc_file['oa1'][j,i]
-    oa2_in=nc_file['oa2'][j,i]
-    oa3_in=nc_file['oa3'][j,i]
-    oa4_in=nc_file['oa4'][j,i]
-    ol1_in=nc_file['ol1'][j,i]
-    ol2_in=nc_file['ol2'][j,i]
-    ol3_in=nc_file['ol3'][j,i]
-    ol4_in=nc_file['ol4'][j,i]
-    theta_in=nc_file['theta'][j,i]
-    gamma_in=nc_file['gamma'][j,i]
-    sigma_in=nc_file['sigma'][j,i]
-    elvmax_in=nc_file['elvmax'][j,i]
+    stddev_in = read_NetCDF_var(nc_file, "stddev", i, j)
+    convexity_in = read_NetCDF_var(nc_file, "convexity", i, j)
+    oa1_in = read_NetCDF_var(nc_file, "oa1", i, j)
+    oa2_in = read_NetCDF_var(nc_file, "oa2", i, j)
+    oa3_in = read_NetCDF_var(nc_file, "oa3", i, j)
+    oa4_in = read_NetCDF_var(nc_file, "oa4", i, j)
+    ol1_in = read_NetCDF_var(nc_file, "ol1", i, j)
+    ol2_in = read_NetCDF_var(nc_file, "ol2", i, j)
+    ol3_in = read_NetCDF_var(nc_file, "ol3", i, j)
+    ol4_in = read_NetCDF_var(nc_file, "ol4", i, j)
+    theta_in = read_NetCDF_var(nc_file, "theta", i, j)
+    gamma_in = read_NetCDF_var(nc_file, "gamma", i, j)
+    sigma_in = read_NetCDF_var(nc_file, "sigma", i, j)
+    elvmax_in = read_NetCDF_var(nc_file, "elvmax", i, j)
+    orog_filt_in = read_NetCDF_var(nc_file, "orog_filt", i, j)
+    orog_raw_in = read_NetCDF_var(nc_file, "orog_raw", i, j)
+    #fractional landmask variables
+    land_frac_in = read_NetCDF_var(nc_file, "land_frac", i, j)
+    #lake variables
+    lake_frac_in = read_NetCDF_var(nc_file, "lake_frac", i, j)
+    lake_depth_in = read_NetCDF_var(nc_file, "lake_depth", i, j)
     
     nc_file.close()
     
@@ -522,7 +726,12 @@ def get_UFS_oro_data(dir, tile, i, j):
         "theta": theta_in,
         "gamma": gamma_in,
         "sigma": sigma_in,
-        "elvmax": elvmax_in
+        "elvmax": elvmax_in,
+        "orog_filt": orog_filt_in,
+        "orog_raw": orog_raw_in,
+        "land_frac": land_frac_in,
+        "lake_frac": lake_frac_in,
+        "lake_depth": lake_depth_in
     }
     return oro
 
@@ -673,11 +882,11 @@ def add_noahmp_coldstart(surface, date):
     surface["zsnsoxy"]  = np.ones(n_snow_layers + n_soil_layers)*missing_value
     
     if surface["slmsk"] > 0.01:
-        surface["tvxy"] = surface["T_surf"]
-        surface["tgxy"] = surface["T_surf"]
-        surface["tahxy"] = surface["T_surf"]
+        surface["tvxy"] = surface["tsfco"]
+        surface["tgxy"] = surface["tsfco"]
+        surface["tahxy"] = surface["tsfco"]
         
-        if (surface["snwdph"] > 0.01 and surface["T_surf"] > 273.15 ):
+        if (surface["snwdph"] > 0.01 and surface["tsfco"] > 273.15 ):
             surface["tvxy"] = 273.15
             surface["tgxy"] = 273.15
             surface["tahxy"]= 273.15
@@ -931,15 +1140,12 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     
     nlevs = state["nlevs"]
     nsoil = len(surface["stc"])
-    
-    #find out if noahmp ICs have been generated
-    noahmp = False
-    if "snicexy" in surface.keys():
-        noahmp = True
-        nsnow = len(surface["snicexy"])
+    nsnow = len(surface["snicexy"])
+    nice = len(surface["tiice"])
     
     nc_file = Dataset(os.path.join(PROCESSED_CASE_DIR, case + '.nc'), 'w', format='NETCDF4')
     nc_file.description = "FV3GFS model profile input (no forcing)"
+    nc_file.missing_value = missing_value
     
     #create groups for scalars, intitialization, and forcing
 
@@ -967,9 +1173,9 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     soil_depth_var.units = 'm'
     soil_depth_var.description = 'depth of bottom of soil layers'
     
-    if noahmp:
-        snow_dim = nc_file.createDimension('nsnow',None)
-        soil_plus_snow_dim = nc_file.createDimension('nsoil_plus_nsnow',None)
+    snow_dim = nc_file.createDimension('nsnow',None)
+    soil_plus_snow_dim = nc_file.createDimension('nsoil_plus_nsnow',None)
+    ice_dim = nc_file.createDimension('nice',None)
         
     #initial group
 
@@ -1014,45 +1220,74 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     ozone_var.description = 'initial profile of ozone mass mixing ratio'
     
     stc_var = initial_grp.createVariable('stc',real_type,('nsoil',))
-    stc_var[:] = surface['stc'][0:nsoil]
+    stc_var[:] = surface["stc"][0:nsoil]
     stc_var.units = "K"
     stc_var.description = "initial profile of soil temperature"
     
     smc_var = initial_grp.createVariable('smc',real_type,('nsoil',))
-    smc_var[:] = surface['smc'][0:nsoil]
+    smc_var[:] = surface["smc"][0:nsoil]
     smc_var.units = "kg"
     smc_var.description = "initial profile of soil moisture"
     
     slc_var = initial_grp.createVariable('slc',real_type,('nsoil',))
-    slc_var[:] = surface['slc'][0:nsoil]
+    slc_var[:] = surface["slc"][0:nsoil]
     slc_var.units = "kg"
     slc_var.description = "initial profile of soil liquid moisture"
     
-    if noahmp:
-        snicexy_var = initial_grp.createVariable('snicexy',real_type,('nsnow',))
-        snicexy_var[:] = surface['snicexy'][0:nsnow]
-        snicexy_var.units = "mm"
-        snicexy_var.description = "initial profile of snow layer ice"
+    snicexy_var = initial_grp.createVariable('snicexy',real_type,('nsnow',))
+    snicexy_var[:] = surface["snicexy"][0:nsnow]
+    snicexy_var.units = "mm"
+    snicexy_var.description = "initial profile of snow layer ice"
         
-        snliqxy_var = initial_grp.createVariable('snliqxy',real_type,('nsnow',))
-        snliqxy_var[:] = surface['snliqxy'][0:nsnow]
-        snliqxy_var.units = "mm"
-        snliqxy_var.description = "initial profile of snow layer ice"
+    snliqxy_var = initial_grp.createVariable('snliqxy',real_type,('nsnow',))
+    snliqxy_var[:] = surface["snliqxy"][0:nsnow]
+    snliqxy_var.units = "mm"
+    snliqxy_var.description = "initial profile of snow layer liquid"
         
-        tsnoxy_var = initial_grp.createVariable('tsnoxy',real_type,('nsnow',))
-        tsnoxy_var[:] = surface['tsnoxy'][0:nsnow]
-        tsnoxy_var.units = "K"
-        tsnoxy_var.description = "initial profile of snow layer temperature"
+    tsnoxy_var = initial_grp.createVariable('tsnoxy',real_type,('nsnow',))
+    tsnoxy_var[:] = surface["tsnoxy"][0:nsnow]
+    tsnoxy_var.units = "K"
+    tsnoxy_var.description = "initial profile of snow layer temperature"
         
-        smoiseq_var = initial_grp.createVariable('smoiseq',real_type,('nsoil',))
-        smoiseq_var[:] = surface['smoiseq'][0:nsoil]
-        smoiseq_var.units = "m3 m-3"
-        smoiseq_var.description = "initial profile of equilibrium soil water content"
+    smoiseq_var = initial_grp.createVariable('smoiseq',real_type,('nsoil',))
+    smoiseq_var[:] = surface["smoiseq"][0:nsoil]
+    smoiseq_var.units = "m3 m-3"
+    smoiseq_var.description = "initial profile of equilibrium soil water content"
         
-        zsnsoxy_var = initial_grp.createVariable('zsnsoxy',real_type,('nsoil_plus_nsnow',))
-        zsnsoxy_var[:] = surface['zsnsoxy'][0:nsoil + nsnow]
-        zsnsoxy_var.units = "m"
-        zsnsoxy_var.description = "layer bottom depth from snow surface"
+    zsnsoxy_var = initial_grp.createVariable('zsnsoxy',real_type,('nsoil_plus_nsnow',))
+    zsnsoxy_var[:] = surface["zsnsoxy"][0:nsoil + nsnow]
+    zsnsoxy_var.units = "m"
+    zsnsoxy_var.description = "layer bottom depth from snow surface"
+    
+    tiice_var = initial_grp.createVariable('tiice',real_type,('nice',))
+    tiice_var[:] = surface["tiice"][0:nice]
+    tiice_var.units = "K"
+    tiice_var.description = "sea ice internal temperature"
+    
+    tslb_var = initial_grp.createVariable('tslb',real_type,('nsoil',))
+    tslb_var[:] = surface["tslb"][0:nsoil]
+    tslb_var.units = "K"
+    tslb_var.description = "soil temperature for RUC LSM"
+    
+    smois_var = initial_grp.createVariable('smois',real_type,('nsoil',))
+    smois_var[:] = surface["smois"][0:nsoil]
+    smois_var.units = "None"
+    smois_var.description = "volume fraction of soil moisture for RUC LSM"
+    
+    sh2o_var = initial_grp.createVariable('sh2o',real_type,('nsoil',))
+    sh2o_var[:] = surface["sh2o"][0:nsoil]
+    sh2o_var.units = "None"
+    sh2o_var.description = "volume fraction of unfrozen soil moisture for RUC LSM"
+    
+    smfr_var = initial_grp.createVariable('smfr',real_type,('nsoil',))
+    smfr_var[:] = surface["smfr"][0:nsoil]
+    smfr_var.units = "None"
+    smfr_var.description = "volume fraction of frozen soil moisture for RUC LSM"
+    
+    flfr_var = initial_grp.createVariable('flfr',real_type,('nsoil',))
+    flfr_var[:] = surface["flfr"][0:nsoil]
+    flfr_var.units = "None"
+    flfr_var.description = "flag for frozen soil physics for RUC LSM"
     
     #forcing group
 
@@ -1062,9 +1297,9 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     p_surf_var.description = 'surface pressure'
 
     T_surf_var = forcing_grp.createVariable('T_surf', real_type, ('time',))
-    T_surf_var[:] = surface["T_surf"]
+    T_surf_var[:] = missing_value
     T_surf_var.units = 'K'
-    T_surf_var.description = 'surface absolute temperature'
+    T_surf_var.description = 'surface absolute temperature forcing'
 
     w_ls_var = forcing_grp.createVariable('w_ls', real_type, ('levels','time',))
     w_ls_var[:] = forcing["w_ls"]
@@ -1184,6 +1419,11 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     
     #Noah initial parameters
     
+    tsfco = scalar_grp.createVariable('tsfco',real_type)
+    tsfco[:] = surface["tsfco"]
+    tsfco.units = "K"  
+    tsfco.description = "sea surface temperature OR surface skin temperature over land OR sea ice surface skin temperature (depends on value of slmsk)"
+    
     vegsrc  = scalar_grp.createVariable('vegsrc',int_type)
     vegsrc[:] = 1 #when would this be 2?
     vegsrc.description = "vegetation soure (1-2)"
@@ -1212,10 +1452,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     shdmax[:] = surface["shdmax"]
     shdmax.description = "maximum vegetation fraction"
     
-    zorl = scalar_grp.createVariable('zorl',real_type)
-    zorl[:] = surface["zorl"]
-    zorl.units = "cm"
-    zorl.description = "surface roughness length"
+    zorlo = scalar_grp.createVariable('zorlo',real_type)
+    zorlo[:] = surface["zorlo"]
+    zorlo.units = "cm"
+    zorlo.description = "surface roughness length over ocean"
     
     islmsk = scalar_grp.createVariable('slmsk',real_type)
     islmsk[:] = surface["slmsk"]
@@ -1248,10 +1488,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     snoalb = scalar_grp.createVariable('snoalb',real_type)
     snoalb[:] = surface["snoalb"]
     snoalb.description = "maximum snow albedo"
-    
-    sncovr = scalar_grp.createVariable('sncovr',real_type)
-    sncovr[:] = 0.0
-    sncovr.description = "snow area fraction"
         
     tg3 = scalar_grp.createVariable('tg3',real_type)
     tg3[:] = surface["tg3"]
@@ -1292,6 +1528,71 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     facwf[:] = surface["facwf"]
     facwf.units = "None" 
     facwf.description = "fractional coverage with weak cosz dependency"
+    
+    weasd = scalar_grp.createVariable('weasd',real_type)
+    weasd[:] = surface["sheleg"]
+    weasd.units = "mm" 
+    weasd.description = "water equivalent accumulated snow depth"
+    
+    f10m = scalar_grp.createVariable('f10m',real_type)
+    f10m[:] = surface["f10m"]
+    f10m.units = "None" 
+    f10m.description = "ratio of sigma level 1 wind and 10m wind"
+    
+    t2m = scalar_grp.createVariable('t2m',real_type)
+    t2m[:] = surface["t2m"]
+    t2m.units = "K" 
+    t2m.description = "2-meter absolute temperature"
+    
+    q2m = scalar_grp.createVariable('q2m',real_type)
+    q2m[:] = surface["q2m"]
+    q2m.units = "kg kg-1" 
+    q2m.description = "2-meter specific humidity"
+    
+    ffmm = scalar_grp.createVariable('ffmm',real_type)
+    ffmm[:] = surface["ffmm"]
+    ffmm.units = "None" 
+    ffmm.description = "Monin-Obukhov similarity function for momentum"
+    
+    ffhh = scalar_grp.createVariable('ffhh',real_type)
+    ffhh[:] = surface["ffhh"]
+    ffhh.units = "None" 
+    ffhh.description = "Monin-Obukhov similarity function for heat"
+    
+    tprcp = scalar_grp.createVariable('tprcp',real_type)
+    tprcp[:] = surface["tprcp"]
+    tprcp.units = "m" 
+    tprcp.description = "instantaneous total precipitation amount"
+    
+    srflag = scalar_grp.createVariable('srflag',real_type)
+    srflag[:] = surface["srflag"]
+    srflag.units = "None" 
+    srflag.description = "snow/rain flag for precipitation"
+    
+    sncovr = scalar_grp.createVariable('sncovr',real_type)
+    sncovr[:] = surface["sncovr"]
+    sncovr.units = "None" 
+    sncovr.description = "surface snow area fraction"
+    
+    tsfcl = scalar_grp.createVariable('tsfcl',real_type)
+    tsfcl[:] = surface["tsfcl"]
+    tsfcl.units = "K" 
+    tsfcl.description = "surface skin temperature over land"
+    
+    zorll = scalar_grp.createVariable('zorll',real_type)
+    zorll[:] = surface["zorll"]
+    zorll.units = "cm" 
+    zorll.description = "surface roughness length over land"
+    
+    zorli = scalar_grp.createVariable('zorli',real_type)
+    zorli[:] = surface["zorli"]
+    zorli.units = "cm" 
+    zorli.description = "surface roughness length over ice"
+    
+    zorlw = scalar_grp.createVariable('zorlw',real_type)
+    zorlw[:] = surface["zorlw"]
+    zorlw.units = "cm" 
+    zorlw.description = "surface roughness length from wave model"
     
     #Orography initial parameters
     
@@ -1365,152 +1666,303 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     elvmax.units = "m"
     elvmax.description = "maximum of subgrid orography"
     
+    orog_filt = scalar_grp.createVariable('oro',real_type)
+    orog_filt[:] = oro["orog_filt"]
+    orog_filt.units = "m"
+    orog_filt.description = "orography"
+    
+    orog_raw = scalar_grp.createVariable('oro_uf',real_type)
+    orog_raw[:] = oro["orog_raw"]
+    orog_raw.units = "m"
+    orog_raw.description = "unfiltered orography"
+    
+    land_frac = scalar_grp.createVariable('landfrac',real_type)
+    land_frac[:] = oro["land_frac"]
+    land_frac.units = "None"
+    land_frac.description = "fraction of horizontal grid area occupied by land"
+    
+    lake_frac = scalar_grp.createVariable('lakefrac',real_type)
+    lake_frac[:] = oro["lake_frac"]
+    lake_frac.units = "None"
+    lake_frac.description = "fraction of horizontal grid area occupied by lake"
+    
+    lake_depth = scalar_grp.createVariable('lakedepth',real_type)
+    lake_depth[:] = oro["lake_depth"]
+    lake_depth.units = "m"
+    lake_depth.description = "lake depth"
+    
     #NoahMP initial scalar parameters
-    if noahmp:
-        tvxy = scalar_grp.createVariable('tvxy',real_type)
-        tvxy[:] = surface["tvxy"]
-        tvxy.units = "K"
-        tvxy.description = "vegetation temperature"
-        
-        tgxy = scalar_grp.createVariable('tgxy',real_type)
-        tgxy[:] = surface["tgxy"]
-        tgxy.units = "K"
-        tgxy.description = "ground temperature for NoahMP"
-        
-        tahxy = scalar_grp.createVariable('tahxy',real_type)
-        tahxy[:] = surface["tahxy"]
-        tahxy.units = "K"
-        tahxy.description = "canopy air temperature"
-        
-        canicexy = scalar_grp.createVariable('canicexy',real_type)
-        canicexy[:] = surface["canicexy"]
-        canicexy.units = "mm"
-        canicexy.description = "canopy intercepted ice mass"
-        
-        canliqxy = scalar_grp.createVariable('canliqxy',real_type)
-        canliqxy[:] = surface["canliqxy"]
-        canliqxy.units = "mm"
-        canliqxy.description = "canopy intercepted liquid water"
-        
-        eahxy = scalar_grp.createVariable('eahxy',real_type)
-        eahxy[:] = surface["eahxy"]
-        eahxy.units = "Pa"
-        eahxy.description = "canopy air vapor pressure"
-        
-        cmxy = scalar_grp.createVariable('cmxy',real_type)
-        cmxy[:] = surface["cmxy"]
-        cmxy.units = ""
-        cmxy.description = "surface drag coefficient for momentum for NoahMP"        
-        
-        chxy = scalar_grp.createVariable('chxy',real_type)
-        chxy[:] = surface["chxy"]
-        chxy.units = ""
-        chxy.description = "surface exchange coeff heat & moisture for NoahMP"
+    tvxy = scalar_grp.createVariable('tvxy',real_type)
+    tvxy[:] = surface["tvxy"]
+    tvxy.units = "K"
+    tvxy.description = "vegetation temperature"
     
-        fwetxy = scalar_grp.createVariable('fwetxy',real_type)
-        fwetxy[:] = surface["fwetxy"]
-        fwetxy.units = ""
-        fwetxy.description = "area fraction of canopy that is wetted/snowed"
-        
-        sneqvoxy = scalar_grp.createVariable('sneqvoxy',real_type)
-        sneqvoxy[:] = surface["sneqvoxy"]
-        sneqvoxy.units = "mm"
-        sneqvoxy.description = "snow mass at previous time step"
-        
-        alboldxy = scalar_grp.createVariable('alboldxy',real_type)
-        alboldxy[:] = surface["alboldxy"]
-        alboldxy.units = ""
-        alboldxy.description = "snow albedo at previous time step"
-        
-        qsnowxy = scalar_grp.createVariable('qsnowxy',real_type)
-        qsnowxy[:] = surface["qsnowxy"]
-        qsnowxy.units = "mm s-1"
-        qsnowxy.description = "snow precipitation rate at surface"
-        
-        wslakexy = scalar_grp.createVariable('wslakexy',real_type)
-        wslakexy[:] = surface["wslakexy"]
-        wslakexy.units = "mm"
-        wslakexy.description = "lake water storage"
-        
-        taussxy = scalar_grp.createVariable('taussxy',real_type)
-        taussxy[:] = surface["taussxy"]
-        taussxy.units = ""
-        taussxy.description = "non-dimensional snow age"
-        
-        waxy = scalar_grp.createVariable('waxy',real_type)
-        waxy[:] = surface["waxy"]
-        waxy.units = "mm"
-        waxy.description = "water storage in aquifer"
-        
-        wtxy = scalar_grp.createVariable('wtxy',real_type)
-        wtxy[:] = surface["wtxy"]
-        wtxy.units = "mm"
-        wtxy.description = "water storage in aquifer and saturated soil"
+    tgxy = scalar_grp.createVariable('tgxy',real_type)
+    tgxy[:] = surface["tgxy"]
+    tgxy.units = "K"
+    tgxy.description = "ground temperature for NoahMP"
     
-        zwtxy = scalar_grp.createVariable('zwtxy',real_type)
-        zwtxy[:] = surface["zwtxy"]
-        zwtxy.units = "m"
-        zwtxy.description = "water table depth"
-        
-        xlaixy = scalar_grp.createVariable('xlaixy',real_type)
-        xlaixy[:] = surface["xlaixy"]
-        xlaixy.units = ""
-        xlaixy.description = "leaf area index"
-        
-        xsaixy = scalar_grp.createVariable('xsaixy',real_type)
-        xsaixy[:] = surface["xsaixy"]
-        xsaixy.units = ""
-        xsaixy.description = "stem area index"
+    tahxy = scalar_grp.createVariable('tahxy',real_type)
+    tahxy[:] = surface["tahxy"]
+    tahxy.units = "K"
+    tahxy.description = "canopy air temperature"
+    
+    canicexy = scalar_grp.createVariable('canicexy',real_type)
+    canicexy[:] = surface["canicexy"]
+    canicexy.units = "mm"
+    canicexy.description = "canopy intercepted ice mass"
+    
+    canliqxy = scalar_grp.createVariable('canliqxy',real_type)
+    canliqxy[:] = surface["canliqxy"]
+    canliqxy.units = "mm"
+    canliqxy.description = "canopy intercepted liquid water"
+    
+    eahxy = scalar_grp.createVariable('eahxy',real_type)
+    eahxy[:] = surface["eahxy"]
+    eahxy.units = "Pa"
+    eahxy.description = "canopy air vapor pressure"
+    
+    cmxy = scalar_grp.createVariable('cmxy',real_type)
+    cmxy[:] = surface["cmxy"]
+    cmxy.units = ""
+    cmxy.description = "surface drag coefficient for momentum for NoahMP"        
+    
+    chxy = scalar_grp.createVariable('chxy',real_type)
+    chxy[:] = surface["chxy"]
+    chxy.units = ""
+    chxy.description = "surface exchange coeff heat & moisture for NoahMP"
+    
+    fwetxy = scalar_grp.createVariable('fwetxy',real_type)
+    fwetxy[:] = surface["fwetxy"]
+    fwetxy.units = ""
+    fwetxy.description = "area fraction of canopy that is wetted/snowed"
+    
+    sneqvoxy = scalar_grp.createVariable('sneqvoxy',real_type)
+    sneqvoxy[:] = surface["sneqvoxy"]
+    sneqvoxy.units = "mm"
+    sneqvoxy.description = "snow mass at previous time step"
+    
+    alboldxy = scalar_grp.createVariable('alboldxy',real_type)
+    alboldxy[:] = surface["alboldxy"]
+    alboldxy.units = ""
+    alboldxy.description = "snow albedo at previous time step"
+    
+    qsnowxy = scalar_grp.createVariable('qsnowxy',real_type)
+    qsnowxy[:] = surface["qsnowxy"]
+    qsnowxy.units = "mm s-1"
+    qsnowxy.description = "snow precipitation rate at surface"
+    
+    wslakexy = scalar_grp.createVariable('wslakexy',real_type)
+    wslakexy[:] = surface["wslakexy"]
+    wslakexy.units = "mm"
+    wslakexy.description = "lake water storage"
+    
+    taussxy = scalar_grp.createVariable('taussxy',real_type)
+    taussxy[:] = surface["taussxy"]
+    taussxy.units = ""
+    taussxy.description = "non-dimensional snow age"
+    
+    waxy = scalar_grp.createVariable('waxy',real_type)
+    waxy[:] = surface["waxy"]
+    waxy.units = "mm"
+    waxy.description = "water storage in aquifer"
+    
+    wtxy = scalar_grp.createVariable('wtxy',real_type)
+    wtxy[:] = surface["wtxy"]
+    wtxy.units = "mm"
+    wtxy.description = "water storage in aquifer and saturated soil"
+    
+    zwtxy = scalar_grp.createVariable('zwtxy',real_type)
+    zwtxy[:] = surface["zwtxy"]
+    zwtxy.units = "m"
+    zwtxy.description = "water table depth"
+    
+    xlaixy = scalar_grp.createVariable('xlaixy',real_type)
+    xlaixy[:] = surface["xlaixy"]
+    xlaixy.units = ""
+    xlaixy.description = "leaf area index"
+    
+    xsaixy = scalar_grp.createVariable('xsaixy',real_type)
+    xsaixy[:] = surface["xsaixy"]
+    xsaixy.units = ""
+    xsaixy.description = "stem area index"
 
-        lfmassxy = scalar_grp.createVariable('lfmassxy',real_type)
-        lfmassxy[:] = surface["lfmassxy"]
-        lfmassxy.units = "g m-2"
-        lfmassxy.description = "leaf mass"
-        
-        stmassxy = scalar_grp.createVariable('stmassxy',real_type)
-        stmassxy[:] = surface["stmassxy"]
-        stmassxy.units = "g m-2"
-        stmassxy.description = "stem mass"
-        
-        rtmassxy = scalar_grp.createVariable('rtmassxy',real_type)
-        rtmassxy[:] = surface["rtmassxy"]
-        rtmassxy.units = "g m-2"
-        rtmassxy.description = "fine root mass"
-        
-        woodxy = scalar_grp.createVariable('woodxy',real_type)
-        woodxy[:] = surface["woodxy"]
-        woodxy.units = "g m-2"
-        woodxy.description = "wood mass including woody roots"
-        
-        stblcpxy = scalar_grp.createVariable('stblcpxy',real_type)
-        stblcpxy[:] = surface["stblcpxy"]
-        stblcpxy.units = "g m-2"
-        stblcpxy.description = "stable carbon in deep soil"
-        
-        fastcpxy = scalar_grp.createVariable('fastcpxy',real_type)
-        fastcpxy[:] = surface["fastcpxy"]
-        fastcpxy.units = "g m-2"
-        fastcpxy.description = "short-lived carbon in shallow soil"
+    lfmassxy = scalar_grp.createVariable('lfmassxy',real_type)
+    lfmassxy[:] = surface["lfmassxy"]
+    lfmassxy.units = "g m-2"
+    lfmassxy.description = "leaf mass"
     
-        smcwtdxy = scalar_grp.createVariable('smcwtdxy',real_type)
-        smcwtdxy[:] = surface["smcwtdxy"]
-        smcwtdxy.units = "m3 m-3"
-        smcwtdxy.description = "soil water content between the bottom of the soil and the water table"
-        
-        deeprechxy = scalar_grp.createVariable('deeprechxy',real_type)
-        deeprechxy[:] = surface["deeprechxy"]
-        deeprechxy.units = "m"
-        deeprechxy.description = "recharge to or from the water table when deep"
-        
-        rechxy = scalar_grp.createVariable('rechxy',real_type)
-        rechxy[:] = surface["rechxy"]
-        rechxy.units = "m"
-        rechxy.description = "recharge to or from the water table when shallow"
-        
-        snowxy = scalar_grp.createVariable('snowxy',real_type)
-        snowxy[:] = surface["snowxy"]
-        snowxy.units = ""
-        snowxy.description = "number of snow layers"
+    stmassxy = scalar_grp.createVariable('stmassxy',real_type)
+    stmassxy[:] = surface["stmassxy"]
+    stmassxy.units = "g m-2"
+    stmassxy.description = "stem mass"
+    
+    rtmassxy = scalar_grp.createVariable('rtmassxy',real_type)
+    rtmassxy[:] = surface["rtmassxy"]
+    rtmassxy.units = "g m-2"
+    rtmassxy.description = "fine root mass"
+    
+    woodxy = scalar_grp.createVariable('woodxy',real_type)
+    woodxy[:] = surface["woodxy"]
+    woodxy.units = "g m-2"
+    woodxy.description = "wood mass including woody roots"
+    
+    stblcpxy = scalar_grp.createVariable('stblcpxy',real_type)
+    stblcpxy[:] = surface["stblcpxy"]
+    stblcpxy.units = "g m-2"
+    stblcpxy.description = "stable carbon in deep soil"
+    
+    fastcpxy = scalar_grp.createVariable('fastcpxy',real_type)
+    fastcpxy[:] = surface["fastcpxy"]
+    fastcpxy.units = "g m-2"
+    fastcpxy.description = "short-lived carbon in shallow soil"
+    
+    smcwtdxy = scalar_grp.createVariable('smcwtdxy',real_type)
+    smcwtdxy[:] = surface["smcwtdxy"]
+    smcwtdxy.units = "m3 m-3"
+    smcwtdxy.description = "soil water content between the bottom of the soil and the water table"
+    
+    deeprechxy = scalar_grp.createVariable('deeprechxy',real_type)
+    deeprechxy[:] = surface["deeprechxy"]
+    deeprechxy.units = "m"
+    deeprechxy.description = "recharge to or from the water table when deep"
+    
+    rechxy = scalar_grp.createVariable('rechxy',real_type)
+    rechxy[:] = surface["rechxy"]
+    rechxy.units = "m"
+    rechxy.description = "recharge to or from the water table when shallow"
+    
+    snowxy = scalar_grp.createVariable('snowxy',real_type)
+    snowxy[:] = surface["snowxy"]
+    snowxy.units = ""
+    snowxy.description = "number of snow layers"
+    
+    #NSST initial scalar parameters
+    tref = scalar_grp.createVariable('tref',real_type)
+    tref[:] = surface["tref"]
+    tref.units = "K"
+    tref.description = "sea surface reference temperature for NSST"
+    
+    z_c = scalar_grp.createVariable('z_c',real_type)
+    z_c[:] = surface["z_c"]
+    z_c.units = "m"
+    z_c.description = "sub-layer cooling thickness for NSST"
+    
+    c_0 = scalar_grp.createVariable('c_0',real_type)
+    c_0[:] = surface["c_0"]
+    c_0.units = ""
+    c_0.description = "coefficient 1 to calculate d(Tz)/d(Ts) for NSST"
+    
+    c_d = scalar_grp.createVariable('c_d',real_type)
+    c_d[:] = surface["c_d"]
+    c_d.units = ""
+    c_d.description = "coefficient 2 to calculate d(Tz)/d(Ts) for NSST"
+    
+    w_0 = scalar_grp.createVariable('w_0',real_type)
+    w_0[:] = surface["w_0"]
+    w_0.units = ""
+    w_0.description = "coefficient 3 to calculate d(Tz)/d(Ts) for NSST"
+    
+    w_d = scalar_grp.createVariable('w_d',real_type)
+    w_d[:] = surface["w_d"]
+    w_d.units = ""
+    w_d.description = "coefficient 4 to calculate d(Tz)/d(Ts) for NSST"
+    
+    xt = scalar_grp.createVariable('xt',real_type)
+    xt[:] = surface["xt"]
+    xt.units = "K m"
+    xt.description = "heat content in diurnal thermocline layer for NSST"
+    
+    xs = scalar_grp.createVariable('xs',real_type)
+    xs[:] = surface["xs"]
+    xs.units = "ppt m"
+    xs.description = "salinity content in diurnal thermocline layer for NSST"
+    
+    xu = scalar_grp.createVariable('xu',real_type)
+    xu[:] = surface["xu"]
+    xu.units = "m2 s-1"
+    xu.description = "u-current in diurnal thermocline layer for NSST"
+    
+    xv = scalar_grp.createVariable('xv',real_type)
+    xv[:] = surface["xv"]
+    xv.units = "m2 s-1"
+    xv.description = "v-current in diurnal thermocline layer for NSST"
+    
+    xz = scalar_grp.createVariable('xz',real_type)
+    xz[:] = surface["xz"]
+    xz.units = "m"
+    xz.description = "thickness of diurnal thermocline layer for NSST"
+    
+    zm = scalar_grp.createVariable('zm',real_type)
+    zm[:] = surface["zm"]
+    zm.units = "m"
+    zm.description = "thickness of ocean mixed layer for NSST"
+    
+    xtts = scalar_grp.createVariable('xtts',real_type)
+    xtts[:] = surface["xtts"]
+    xtts.units = "m"
+    xtts.description = "sensitivity of diurnal thermocline layer heat content to surface temperature [d(xt)/d(ts)] for NSST"
+    
+    xzts = scalar_grp.createVariable('xzts',real_type)
+    xzts[:] = surface["xzts"]
+    xzts.units = "m K-1"
+    xzts.description = "sensitivity of diurnal thermocline layer thickness to surface temperature [d(xz)/d(ts)] for NSST"
+    
+    d_conv = scalar_grp.createVariable('d_conv',real_type)
+    d_conv[:] = surface["d_conv"]
+    d_conv.units = "m"
+    d_conv.description = "thickness of free convection layer for NSST"
+    
+    ifd = scalar_grp.createVariable('ifd',real_type)
+    ifd[:] = surface["ifd"]
+    ifd.units = ""
+    ifd.description = "index to start DTM run for NSST"
+    
+    dt_cool = scalar_grp.createVariable('dt_cool',real_type)
+    dt_cool[:] = surface["dt_cool"]
+    dt_cool.units = "K"
+    dt_cool.description = "sub-layer cooling amount for NSST"
+    
+    qrain = scalar_grp.createVariable('qrain',real_type)
+    qrain[:] = surface["qrain"]
+    qrain.units = "W"
+    qrain.description = "sensible heat due to rainfall for NSST"
+    
+    #RUC LSM
+    wetness = scalar_grp.createVariable('wetness',real_type)
+    wetness[:] = surface["wetness"]
+    wetness.units = ""
+    wetness.description = "normalized soil wetness for RUC LSM"
+    
+    clw_surf = scalar_grp.createVariable('clw_surf',real_type)
+    clw_surf[:] = surface["clw_surf"]
+    clw_surf.units = "kg kg-1"
+    clw_surf.description = "cloud condensed water mixing ratio at surface for RUC LSM"
+    
+    qwv_surf = scalar_grp.createVariable('qwv_surf',real_type)
+    qwv_surf[:] = surface["qwv_surf"]
+    qwv_surf.units = "kg kg-1"
+    qwv_surf.description = "water vapor mixing ratio at surface for RUC LSM"
+    
+    tsnow = scalar_grp.createVariable('tsnow',real_type)
+    tsnow[:] = surface["tsnow"]
+    tsnow.units = "K"
+    tsnow.description = "snow temperature at the bottom of the first snow layer for RUC LSM"
+    
+    snowfall_acc = scalar_grp.createVariable('snowfall_acc',real_type)
+    snowfall_acc[:] = surface["snowfall_acc"]
+    snowfall_acc.units = "kg m-2"
+    snowfall_acc.description = "run-total snow accumulation on the ground for RUC LSM"
+    
+    swe_snowfall_acc = scalar_grp.createVariable('swe_snowfall_acc',real_type)
+    swe_snowfall_acc[:] = surface["swe_snowfall_acc"]
+    swe_snowfall_acc.units = "kg m-2"
+    swe_snowfall_acc.description = "snow water equivalent of run-total frozen precip for RUC LSM"
+    
+    lai = scalar_grp.createVariable('lai',real_type)
+    lai[:] = surface["lai"]
+    lai.units = ""
+    lai.description = "leaf area index for RUC LSM"
     
     nc_file.close()
 
@@ -1531,7 +1983,7 @@ def main():
     
     #find index of closest point in the tile if indices are not specified
     if not indices:
-        (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, in_dir, tile)
+        (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile)
         print 'The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j)
         print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
         print 'This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1])
@@ -1539,12 +1991,12 @@ def main():
         tile_i = indices[0]
         tile_j = indices[1]
         #still need to grab the lon/lat if the tile and indices are supplied
-        (point_lon, point_lat) = find_lon_lat_of_indices(indices, in_dir, tile)
+        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile)
         
         print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
     
     #get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement different file reads)
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, tile, tile_i, tile_j, old_chgres)
+    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i, tile_j, old_chgres)
     
     #cold start NoahMP variables
     if (noahmp):

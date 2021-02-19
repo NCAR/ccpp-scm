@@ -11,7 +11,8 @@ HOST_MODEL_IDENTIFIER = "SCM"
 
 # Add all files with metadata tables on the host model side and in CCPP,
 # relative to basedir = top-level directory of host model. This includes
-# kind and type definitions used in CCPP physics.
+# kind and type definitions used in CCPP physics. Also add any internal
+# dependencies of these files to the list.
 VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/machine.F',
     'ccpp/physics/physics/radsw_param.f',
@@ -20,6 +21,7 @@ VARIABLE_DEFINITION_FILES = [
     'scm/src/gmtb_scm_kinds.F90',
     'scm/src/gmtb_scm_type_defs.F90',
     'scm/src/gmtb_scm_physical_constants.F90',
+    'scm/src/gmtb_scm_utils.F90', #no definitions, but gmtb_scm_type_defs.F90 uses a module from this file
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
@@ -210,6 +212,7 @@ SCHEME_FILES_DEPENDENCIES = [
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
     'scm/src/gmtb_scm_physical_constants.F90',
+    'scm/src/gmtb_scm_utils.F90',
     'scm/src/gmtb_scm_type_defs.F90',
 ]
 
