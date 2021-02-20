@@ -69,7 +69,12 @@ def subprocess_work(command):
         message = '####### The subprocess started using the command ({0}) exited with code {1}. #######\n'\
                   'Run the command ({0}) by itself again or use the -v or -vv options for more details.'.format(command, exit_code)
         logging.critical(message)
-        #raise Exception(message)
+    elif 'SystemExit' in str(output):
+        exit_code = str(output).split("SystemExit: ")[-1].split("\\n")[0].strip()
+        message = '####### The subprocess started using the command ({0}) exited with a normal exit code, but\n'\
+        'the terminal output indicated that an error occurred ({1}). #######\n'\
+        'Run the command ({0}) by itself again or use the -v or -vv options for more details.'.format(command, exit_code)
+        logging.critical(message)
     RESULTS.append([command, exit_code])
 
 def main():

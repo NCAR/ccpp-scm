@@ -397,7 +397,9 @@ def launch_executable(use_gdb, gdb):
         cmd = '{executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(2)
-    sys.exit(os.system(cmd))
+    return_code = os.system(cmd)
+    if return_code != 0:
+        sys.exit(return_code)
     
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""

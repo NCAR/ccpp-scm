@@ -147,7 +147,7 @@ subroutine gmtb_scm_main_sub()
   write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop
+      stop 1
   end if
   
   physics%Model%first_time_step = .true.
@@ -214,7 +214,7 @@ subroutine gmtb_scm_main_sub()
     call ccpp_physics_run(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop
+        stop 1
     end if
 
     !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
@@ -311,7 +311,7 @@ subroutine gmtb_scm_main_sub()
 
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop
+      stop 1
   end if
 
 end subroutine gmtb_scm_main_sub
