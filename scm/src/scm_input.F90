@@ -1,12 +1,12 @@
-!> \file gmtb_scm_input.f90
+!> \file scm_input.f90
 !!  Contains input-related subroutines -- reading in model configuration from file or the command line and reading in the case
 !!  initial conditions and forcing; also contains reference profile input (temporarily hard-coded).
 
-module gmtb_scm_input
+module scm_input
 
-use gmtb_scm_kinds, only : sp, dp, qp
+use scm_kinds, only : sp, dp, qp
 use netcdf
-use gmtb_scm_type_defs, only: character_length
+use scm_type_defs, only: character_length
 
 implicit none
 
@@ -18,7 +18,7 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup input gmtb_scm_input
+!! \defgroup input scm_input
 !! @{
 !! Contains input-related subroutines -- reading in model configuration from file or the command line and reading in the case
 !! initial conditions and forcing; also contains reference profile input (temporarily hard-coded).
@@ -29,7 +29,7 @@ contains
 !! a namelist file placed in the output directory. Note: This routine uses GET_COMMAND which is an intrinsic routine in the Fortran 2003 standard. This
 !! requires that the compiler supports this standard.
 subroutine get_config_nml(scm_state)
-  use gmtb_scm_type_defs, only : scm_state_type
+  use scm_type_defs, only : scm_state_type
 
   type(scm_state_type), target, intent(inout) :: scm_state
 
@@ -190,7 +190,7 @@ end subroutine get_config_nml
 !> Subroutine to read the netCDF file containing case initialization and forcing. The forcing files (netCDF4) should be located in the
 !! "processed_case_input" directory.
 subroutine get_case_init(scm_state, scm_input)
-  use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
+  use scm_type_defs, only : scm_state_type, scm_input_type
   use NetCDF_read, only: NetCDF_read_var, check, missing_value
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
@@ -827,7 +827,7 @@ end subroutine get_case_init
 
 !> Subroutine to get reference profile to use above the case data (temporarily hard-coded profile)
 subroutine get_reference_profile(scm_state, scm_reference)
-  use gmtb_scm_type_defs, only : scm_state_type, scm_reference_type
+  use scm_type_defs, only : scm_state_type, scm_reference_type
   use NetCDF_read, only: check
   
   type(scm_state_type), target, intent(in) :: scm_state
@@ -969,4 +969,4 @@ end subroutine get_tracers
 
 !> @}
 !> @}
-end module gmtb_scm_input
+end module scm_input

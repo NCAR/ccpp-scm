@@ -297,37 +297,37 @@ ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
 ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccppphys ccpp)
 
-SET(scm_source_files gmtb_scm.F90
-            gmtb_scm_input.F90
-            gmtb_scm_utils.F90
-            gmtb_scm_vgrid.F90
-            gmtb_scm_setup.F90
-            gmtb_scm_forcing.F90
-            gmtb_scm_time_integration.F90
-            gmtb_scm_output.F90
+SET(scm_source_files scm.F90
+            scm_input.F90
+            scm_utils.F90
+            scm_vgrid.F90
+            scm_setup.F90
+            scm_forcing.F90
+            scm_time_integration.F90
+            scm_output.F90
 )
 
 
-ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
+ADD_EXECUTABLE(scm ${scm_source_files} ccpp_static_api.F90)
 if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
   #the FindNetCDF.cmake module suggests to use NetCDF::NetCDF_[Fortran,C,CXX] rather than set compiler flags; you actually need both Fortan and C components to compile successfully
-  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+  TARGET_LINK_LIBRARIES(scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
 else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
-  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+  TARGET_LINK_LIBRARIES(scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
 endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
 
-set_target_properties(gmtb_scm PROPERTIES
+set_target_properties(scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
 
 add_custom_command(
-        TARGET gmtb_scm POST_BUILD
+        TARGET scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/run_gmtb_scm.py
-                ${CMAKE_CURRENT_BINARY_DIR}/run_gmtb_scm.py)
+                ${CMAKE_SOURCE_DIR}/run_scm.py
+                ${CMAKE_CURRENT_BINARY_DIR}/run_scm.py)
 
 add_custom_command(
-        TARGET gmtb_scm POST_BUILD
+        TARGET scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/multi_run_gmtb_scm.py
-                ${CMAKE_CURRENT_BINARY_DIR}/multi_run_gmtb_scm.py)
+                ${CMAKE_SOURCE_DIR}/multi_run_scm.py
+                ${CMAKE_CURRENT_BINARY_DIR}/multi_run_scm.py)

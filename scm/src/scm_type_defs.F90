@@ -1,13 +1,13 @@
-!> \file gmtb_scm_type_defs.f90
+!> \file scm_type_defs.f90
 !!  Contains type definitions for SCM-related variables and physics-related variables
 
-module gmtb_scm_type_defs
+module scm_type_defs
 
-!> \section arg_table_gmtb_scm_type_defs
-!! \htmlinclude gmtb_scm_type_defs.html
+!> \section arg_table_scm_type_defs
+!! \htmlinclude scm_type_defs.html
 !!
 
-  use gmtb_scm_kinds, only: sp, dp, qp
+  use scm_kinds, only: sp, dp, qp
   use GFS_typedefs,   only: GFS_control_type,      &
                             GFS_statein_type,      &
                             GFS_stateout_type,     &
@@ -823,7 +823,7 @@ module gmtb_scm_type_defs
     !used for initializing variables in the physics DDT (but not pointer association); 
     !this should be utilized for variables that cannot be modified or "forced" by the SCM;
     !most of this routine follows what is in FV3/io/FV3GFS_io.F90/sfc_prop_restart_read
-    use gmtb_scm_physical_constants, only: con_tice
+    use scm_physical_constants, only: con_tice
     use data_qc, only: conditionally_set_var
     use NetCDF_read, only: missing_value
     use noahmp_tables,      only: laim_table,saim_table,sla_table,      &
@@ -883,7 +883,7 @@ module gmtb_scm_type_defs
         n = 19
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
             if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
           end do
@@ -954,7 +954,7 @@ module gmtb_scm_type_defs
         n = 36
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
             if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
           end do
@@ -1099,7 +1099,7 @@ module gmtb_scm_type_defs
         n = 7
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
             if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
           end do
@@ -1143,7 +1143,7 @@ module gmtb_scm_type_defs
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           cold_start_noahmp = .true.
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
-          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
             if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
           end do
@@ -1189,7 +1189,7 @@ module gmtb_scm_type_defs
           if ( i==1 .and. ANY( missing_var(1:n) ) ) then
             cold_start_noahmp = .true.
             write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
-            write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+            write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
             do j=1, n
               if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
             end do
@@ -1216,7 +1216,7 @@ module gmtb_scm_type_defs
         n = 5
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
             if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
           end do
@@ -1449,7 +1449,7 @@ module gmtb_scm_type_defs
             dzsno(-1)                   = 0.20
             dzsno(0)                    = snd - 0.05 - 0.20
           else
-            write(0,'(a)') 'problem with the logic assigning snow layers in gmtb_scm_type_defs.F90/physics_set'
+            write(0,'(a)') 'problem with the logic assigning snow layers in scm_type_defs.F90/physics_set'
             STOP 
           endif
 
@@ -1578,4 +1578,4 @@ module gmtb_scm_type_defs
     return
   end function get_tracer_index
 
-end module gmtb_scm_type_defs
+end module scm_type_defs

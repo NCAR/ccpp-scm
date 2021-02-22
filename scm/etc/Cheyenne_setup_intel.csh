@@ -1,8 +1,8 @@
 #!/bin/tcsh
 
-echo "Setting environment variables for SCM-CCPP on Cheyenne with icc/ifort"
+echo "Setting environment variables for CCPP-SCM on Cheyenne with icc/ifort"
 
-#load the modules in order to compile the GMTB SCM
+#load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
 module purge
 module load ncarenv/1.3
@@ -30,13 +30,13 @@ setenv CMAKE_Platform cheyenne.intel
 echo "Setting up python environment for plotting. A NCAR Package Library for python will be cloned into /glade/work/$USER."
 module load python/3.7.5
 ncar_pylib
-if (-d "/glade/work/$USER/gmtb_scm_python3_clone") then
-    echo "gmtb_scm_python3_clone NPL exists. Loading..."
-    ncar_pylib gmtb_scm_python3_clone 
+if (-d "/glade/work/$USER/ccpp_scm_python3_clone") then
+    echo "ccpp_scm_python3_clone NPL exists. Loading..."
+    ncar_pylib ccpp_scm_python3_clone 
 else
-    echo "gmtb_scm_python3_clone does not exist yet. Creating..."
-    ncar_pylib -c 20200417 /glade/work/$USER/gmtb_scm_python3_clone
-    ncar_pylib gmtb_scm_python3_clone
+    echo "ccpp_scm_python3_clone does not exist yet. Creating..."
+    ncar_pylib -c 20200417 /glade/work/$USER/ccpp_scm_python3_clone
+    ncar_pylib ccpp_scm_python3_clone
 endif
 
 #check to see if f90nml is installed locally

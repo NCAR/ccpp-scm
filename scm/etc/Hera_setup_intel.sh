@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "Setting environment variables for SCM-CCPP on Hera with icc/ifort"
+echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
-#load the modules in order to compile the GMTB SCM
+#load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
 module purge
 module load intel/18.0.5.274

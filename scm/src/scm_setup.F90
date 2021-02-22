@@ -1,12 +1,12 @@
-!> \file gmtb_scm_setup.f90
+!> \file scm_setup.f90
 !!  Contains subroutines to initialize the SCM, including setting the atmospheric state, interpolating initial conditions to the
 !!  model grid, and patching in a reference sounding above the provided initial conditions.
 
-module gmtb_scm_setup
+module scm_setup
 
-use gmtb_scm_kinds, only: sp, dp, qp
-use gmtb_scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_pi
-use gmtb_scm_utils, only: interpolate_to_grid_centers
+use scm_kinds, only: sp, dp, qp
+use scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_pi
+use scm_utils, only: interpolate_to_grid_centers
 
 implicit none
 
@@ -14,14 +14,14 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup setup gmtb_scm_setup
+!! \defgroup setup scm_setup
 !! @{
 !! Contains subroutines to initialize the SCM, including setting the atmospheric state, interpolating initial conditions to the
 !!  model grid, and patching in a reference sounding above the provided initial conditions.
 
 !> Subroutine to interpolate the initial conditions to the model grid and set the state variables.
 subroutine set_state(scm_input, scm_reference, scm_state)
-  use gmtb_scm_type_defs, only : scm_input_type, scm_reference_type, scm_state_type
+  use scm_type_defs, only : scm_input_type, scm_reference_type, scm_state_type
 
   type(scm_input_type), intent(in) :: scm_input
   type(scm_reference_type), intent(in) :: scm_reference
@@ -395,4 +395,4 @@ subroutine GFS_grid_populate (Grid, xlon, xlat, area)
 
 end subroutine GFS_grid_populate
 
-end module gmtb_scm_setup
+end module scm_setup

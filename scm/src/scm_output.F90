@@ -1,11 +1,11 @@
-!> \file gmtb_scm_output.f90
+!> \file scm_output.f90
 !!  Contains output-related subroutines
 
-module gmtb_scm_output
+module scm_output
 
 use netcdf
 use NetCDF_read, only: check
-use gmtb_scm_kinds, only: sp, dp, qp
+use scm_kinds, only: sp, dp, qp
 
 implicit none
 
@@ -13,13 +13,13 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup output gmtb_scm_output
+!! \defgroup output scm_output
 !! @{
 !! Contains output-related subroutines
 
 !> This subroutine initializes the output netCDF file, "output.nc", placed in the directory specified by the case_config file used.
 subroutine output_init(scm_state, physics)
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type),   intent(in) :: physics
@@ -461,7 +461,7 @@ end subroutine output_init
 !> This subroutine appends data to the "output.nc" file.
 subroutine output_append(scm_state, physics)
 
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type), intent(in) :: physics
@@ -936,4 +936,4 @@ end subroutine output_append
 
 !> @}
 !> @}
-end module gmtb_scm_output
+end module scm_output

@@ -1,12 +1,12 @@
-!> \file gmtb_scm_forcing.f90
+!> \file scm_forcing.f90
 !!  Contains subroutines to handle the SCM forcing -- interpolating in space and time, etc.
 
-module gmtb_scm_forcing
+module scm_forcing
 
-use gmtb_scm_kinds, only: sp, dp, qp
-use gmtb_scm_utils, only: interpolate_to_grid_centers
+use scm_kinds, only: sp, dp, qp
+use scm_utils, only: interpolate_to_grid_centers
 
-use gmtb_scm_physical_constants, only: con_pi, con_omega, con_g, con_cp, con_rd
+use scm_physical_constants, only: con_pi, con_omega, con_g, con_cp, con_rd
 
 implicit none
 
@@ -14,14 +14,14 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup forcing gmtb_scm_forcing
+!! \defgroup forcing scm_forcing
 !! @{
 !! Contains subroutines to handle the SCM forcing -- interpolating in space and time, etc.
 
 !> This subroutine interpolates the model forcing, column position, and surface properties to the current model time and to the model grid.
 !! \note The input forcing file contains forcing for one column, yet the SCM code can accommodate more than one column. Right now, all columns are assumed to have the same forcing.
 subroutine interpolate_forcing(scm_input, scm_state)
-  use gmtb_scm_type_defs, only: scm_input_type, scm_state_type
+  use scm_type_defs, only: scm_input_type, scm_state_type
 
   type(scm_input_type), intent(in) :: scm_input
   type(scm_state_type), intent(inout) :: scm_state
@@ -270,7 +270,7 @@ end subroutine interpolate_forcing
 !! It overwrites the state variable arrays where the filtered values from the previous time step are kept. These parts of the state
 !! variable arrays are pointed to by the state_fields_in DDT and are later updated by calling nuopc_phys_run.
 subroutine apply_forcing_leapfrog(scm_state)
-  use gmtb_scm_type_defs, only: scm_state_type
+  use scm_type_defs, only: scm_state_type
 
   type(scm_state_type), intent(inout) :: scm_state
 
@@ -451,7 +451,7 @@ subroutine apply_forcing_leapfrog(scm_state)
 end subroutine apply_forcing_leapfrog
 
 subroutine apply_forcing_forward_Euler(scm_state)
-  use gmtb_scm_type_defs, only: scm_state_type
+  use scm_type_defs, only: scm_state_type
 
   type(scm_state_type), intent(inout) :: scm_state
 
@@ -626,4 +626,4 @@ end subroutine apply_forcing_forward_Euler
 
 !> @}
 !> @}
-end module gmtb_scm_forcing
+end module scm_forcing

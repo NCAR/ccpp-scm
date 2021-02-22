@@ -1,10 +1,10 @@
 /**
-\mainpage GMTB Single Column Model
+\mainpage CCPP Single Column Model
 
 \author Grant J. Firl
 \date March-Nov 2016
 
-The GMTB SCM is designed to be a generalized model, capable of using any combination of physics parameterizations through the
+The CCPP SCM is designed to be a generalized model, capable of using any combination of physics parameterizations through the
 use of the interoperable physics driver (initially the NUOPC driver from Patrick Tripp). Initially, the SCM model uses the GFS
 time-stepping and vertical grid, although it is understood that the SCM will be updated to use other "host" models' time-stepping
 and vertical coordinates at some point so as not to be exclusively tied to the GFS. As of Nov 2016, the model is set up to run

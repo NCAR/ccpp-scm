@@ -1,10 +1,10 @@
-!> \file gmtb_scm_time_integration.f90
+!> \file scm_time_integration.f90
 !!  Contains subroutines to handle the SCM time stepping
 
-module gmtb_scm_time_integration
+module scm_time_integration
 
-use gmtb_scm_kinds, only: sp, dp, qp
-use gmtb_scm_forcing
+use scm_kinds, only: sp, dp, qp
+use scm_forcing
 
 use ccpp_api,        only: ccpp_t
 use ccpp_static_api, only: ccpp_physics_run
@@ -15,13 +15,13 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup time_integration gmtb_scm_time_integration
+!! \defgroup time_integration scm_time_integration
 !! @{
 !! Contains subroutines to handle the SCM time stepping.
 
 !> This subroutine performs the Robert-Asselin time filtering of the state variables.
 subroutine filter(scm_state)
-  use gmtb_scm_type_defs, only: scm_state_type
+  use scm_type_defs, only: scm_state_type
 
   type(scm_state_type), intent(inout)          :: scm_state
 
@@ -50,7 +50,7 @@ end subroutine
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
 subroutine do_time_step(scm_state, physics, cdata)
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout)          :: scm_state
   type(physics_type), intent(inout)            :: physics
@@ -116,4 +116,4 @@ end subroutine
 
 !> @}
 !> @}
-end module gmtb_scm_time_integration
+end module scm_time_integration

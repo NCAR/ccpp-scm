@@ -1,10 +1,10 @@
-!> \file gmtb_scm_utils.f90
+!> \file scm_utils.f90
 !!  Contains miscellaneous helper subroutines.
 
-module gmtb_scm_utils
+module scm_utils
 
-use gmtb_scm_kinds, only: sp, dp, qp
-use gmtb_scm_physical_constants, only: con_rd, con_g
+use scm_kinds, only: sp, dp, qp
+use scm_physical_constants, only: con_rd, con_g
 
 implicit none
 
@@ -12,7 +12,7 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup utils gmtb_scm_utils
+!! \defgroup utils scm_utils
 !! @{
 !! Contains miscellaneous helper subroutines.
 
@@ -94,10 +94,10 @@ subroutine w_to_omega(n_col, n_lev, w, p, T, omega)
 end subroutine w_to_omega
 !> @}
 !> @}
-end module gmtb_scm_utils
+end module scm_utils
 
 module NetCDF_read
-  use gmtb_scm_kinds, only : sp, dp, qp
+  use scm_kinds, only : sp, dp, qp
   use netcdf
   
   implicit none
@@ -218,7 +218,7 @@ module NetCDF_read
 end module NetCDF_read  
   
 module data_qc
-  use gmtb_scm_kinds, only : sp, dp, qp
+  use scm_kinds, only : sp, dp, qp
   use NetCDF_read, only: missing_value
   
   implicit none

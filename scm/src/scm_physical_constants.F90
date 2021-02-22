@@ -1,13 +1,13 @@
-module gmtb_scm_physical_constants
+module scm_physical_constants
 
-use gmtb_scm_kinds, only: dp
+use scm_kinds, only: dp
 
 implicit none
 
 public
 
-!> \section arg_table_gmtb_scm_physical_constants
-!! \htmlinclude gmtb_scm_physical_constants.html
+!> \section arg_table_scm_physical_constants
+!! \htmlinclude scm_physical_constants.html
 !!
   real(kind=dp),parameter:: con_pi     =3.1415926535897931
 
@@ -45,4 +45,4 @@ public
   
   real(kind=dp),parameter:: rhowater   =1000._dp
 
-end module gmtb_scm_physical_constants
+end module scm_physical_constants

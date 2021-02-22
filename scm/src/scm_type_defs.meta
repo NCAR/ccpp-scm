@@ -75,12 +75,12 @@
 
 ########################################################################
 [ccpp-table-properties]
-  name = gmtb_scm_type_defs
+  name = scm_type_defs
   type = module
-  dependencies = gmtb_scm_kinds.F90,GFS_typedefs.F90,../../ccpp/physics/physics/machine.F,../../ccpp/framework/src/ccpp_api.F90
+  dependencies = scm_kinds.F90,GFS_typedefs.F90,../../ccpp/physics/physics/machine.F,../../ccpp/framework/src/ccpp_api.F90
 
 [ccpp-arg-table]
-  name = gmtb_scm_type_defs
+  name = scm_type_defs
   type = module
 [physics_type]
   standard_name = physics_type
