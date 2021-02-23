@@ -22,7 +22,7 @@ NCEPLIBS_SRC=$NCEPLIBS_DIR/src
 mkdir -p $NCEPLIBS_SRC
 
 cd $NCEPLIBS_SRC
-git clone -b release/public-v1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-bacio
+git clone -b v2.4.1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-bacio
 cd NCEPLIBS-bacio
 BACIO_VERSION=`cat VERSION`
 mkdir build
@@ -32,7 +32,7 @@ make VERBOSE=1
 make install
 
 cd $NCEPLIBS_SRC
-git clone -b release/public-v1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-sp
+git clone -b v2.3.3 --recursive https://github.com/NOAA-EMC/NCEPLIBS-sp
 cd NCEPLIBS-sp
 SP_VERSION=`cat VERSION`
 mkdir build
@@ -42,7 +42,7 @@ make VERBOSE=1
 make install
 
 cd $NCEPLIBS_SRC
-git clone -b release/public-v1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-w3nco
+git clone -b v2.4.1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-w3nco
 cd NCEPLIBS-w3nco
 W3NCO_VERSION=`cat VERSION`
 mkdir build
