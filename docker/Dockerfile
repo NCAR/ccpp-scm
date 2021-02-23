@@ -1,4 +1,5 @@
-FROM dtcenter/common-community-container:latest
+#FROM dtcenter/common-community-container:latest
+FROM common-community-container-gnu9
 MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 #
@@ -11,7 +12,7 @@ MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b v5.0.0-alpha https://github.com/NCAR/ccpp-scm
+  && git clone --recursive -b release/public-v5 https://github.com/NCAR/ccpp-scm
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
 RUN cd /comsoftware/ccpp-scm/ \
