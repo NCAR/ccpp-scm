@@ -26,9 +26,9 @@ RUN cd /comsoftware/ccpp-scm/ \
 RUN cd /comsoftware/ccpp-scm/scm/ \
   && . etc/CENTOS_docker_setup.sh
 
-ENV BACIO_LIB4 /comsoftware/ccpp-scm/nceplibs/lib/libbacio_v2.4.1_4.a
-ENV SP_LIBd /comsoftware/ccpp-scm/nceplibs/lib/libsp_v2.3.3_d.a
-ENV W3NCO_LIBd /comsoftware/ccpp-scm/nceplibs/lib/libw3nco_v2.4.1_d.a
+ENV BACIO_LIB4 /comsoftware/ccpp-scm/nceplibs/lib/libbacio_4.a
+ENV SP_LIBd /comsoftware/ccpp-scm/nceplibs/lib/libsp_d.a
+ENV W3NCO_LIBd /comsoftware/ccpp-scm/nceplibs/lib/libw3nco_d.a
 
 # Create your own link from python -> python3 
 # This works without setting the system PATH env var
