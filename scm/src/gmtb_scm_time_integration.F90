@@ -126,18 +126,18 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   
   !--- determine if radiation diagnostics buckets need to be cleared
   if (nint(physics%Model%fhzero*3600) >= nint(max(physics%Model%fhswr,physics%Model%fhlwr))) then
-    if (mod(physics%Model%kdt,physics%Model%nszero) == 0) then
+    if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
       call physics%Diag%rad_zero  (physics%Model)
     endif
   else
     kdt_rad = nint(min(physics%Model%fhswr,physics%Model%fhlwr)/physics%Model%dtp)
-    if (mod(physics%Model%kdt,kdt_rad) == 0) then
+    if (mod(physics%Model%kdt,kdt_rad) == 1) then
       call physics%Diag%rad_zero  (physics%Model)
     endif
   endif
   
   !--- determine if physics diagnostics buckets need to be cleared
-  if (mod(physics%Model%kdt,physics%Model%nszero) == 0) then
+  if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
     call physics%Diag%phys_zero (physics%Model)
   endif
   
