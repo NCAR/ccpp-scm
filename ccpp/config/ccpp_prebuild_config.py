@@ -212,32 +212,22 @@ SCHEME_FILES = [
 DEFAULT_BUILD_DIR = 'scm/bin'
 
 # Auto-generated makefile/cmakefile snippets that contain all type definitions
-TYPEDEFS_MAKEFILE   = 'ccpp/physics/CCPP_TYPEDEFS.mk'
-TYPEDEFS_CMAKEFILE  = 'ccpp/physics/CCPP_TYPEDEFS.cmake'
-TYPEDEFS_SOURCEFILE = 'ccpp/physics/CCPP_TYPEDEFS.sh'
-#TYPEDEFS_MAKEFILE   = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.mk'
-#TYPEDEFS_CMAKEFILE  = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.cmake'
-#TYPEDEFS_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.sh'
+TYPEDEFS_MAKEFILE   = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.mk'
+TYPEDEFS_CMAKEFILE  = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.cmake'
+TYPEDEFS_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.sh'
 
 # Auto-generated makefile/cmakefile snippets that contain all schemes
-SCHEMES_MAKEFILE = 'ccpp/physics/CCPP_SCHEMES.mk'
-SCHEMES_CMAKEFILE = 'ccpp/physics/CCPP_SCHEMES.cmake'
-SCHEMES_SOURCEFILE = 'ccpp/physics/CCPP_SCHEMES.sh'
-#SCHEMES_MAKEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.mk'
-#SCHEMES_CMAKEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.cmake'
-#SCHEMES_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.sh'
+SCHEMES_MAKEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.mk'
+SCHEMES_CMAKEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.cmake'
+SCHEMES_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.sh'
 
 # Auto-generated makefile/cmakefile snippets that contain all caps
-CAPS_MAKEFILE = 'ccpp/physics/CCPP_CAPS.mk'
-CAPS_CMAKEFILE = 'ccpp/physics/CCPP_CAPS.cmake'
-CAPS_SOURCEFILE = 'ccpp/physics/CCPP_CAPS.sh'
-#CAPS_MAKEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.mk'
-#CAPS_CMAKEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.cmake'
-#CAPS_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.sh'
+CAPS_MAKEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.mk'
+CAPS_CMAKEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.cmake'
+CAPS_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.sh'
 
 # Directory where to put all auto-generated physics caps
-CAPS_DIR = 'ccpp/physics/physics'
-#CAPS_DIR = '{build_dir}/ccpp/physics/physics'
+CAPS_DIR = '{build_dir}/ccpp/physics/physics'
 
 # Directory where the suite definition files are stored
 SUITES_DIR = 'ccpp/suites'
