@@ -339,3 +339,46 @@ def read_gabls3_obs(obs_file, time_slices, date):
         'ustar':obs_ustar,'u10m':obs_u10m, 'v10m':obs_v10m, 'hpbl':obs_hpbl, 'tsfc':obs_tsk}
     
     return return_dict
+
+def read_UFS_comp_data(obs_file, time_slices, date):
+
+  obs_fid = Dataset(obs_file, 'r')
+  
+  obs_init_year = obs_fid.variables['init_year'][:]
+  obs_init_month = obs_fid.variables['init_month'][:]
+  obs_init_day = obs_fid.variables['init_day'][:]
+  obs_init_hour = obs_fid.variables['init_hour'][:]
+  obs_init_minute = obs_fid.variables['init_minute'][:]
+  obs_init_second = obs_fid.variables['init_second'][:]
+  
+  obs_time = obs_fid.variables['time'][:]
+  obs_pres = obs_fid.variables['lev'][:]
+  obs_T = obs_fid.variables['temp'][:]
+  obs_qv = obs_fid.variables['qv'][:]
+  obs_u = obs_fid.variables['u'][:]
+  obs_v = obs_fid.variables['v'][:]
+  obs_dq3dt_deepcnv = obs_fid.variables['dq3dt_deepcnv'][:]
+  obs_dq3dt_pbl = obs_fid.variables['dq3dt_pbl'][:]
+  obs_dt3dt_pbl = obs_fid.variables['dt3dt_pbl'][:]
+  
+  obs_fid.close()
+  
+  obs_date = []
+  obs_init_datetime = datetime.datetime(obs_init_year, obs_init_month, obs_init_day, obs_init_hour, obs_init_minute, obs_init_second)
+  for i in range(obs_time.size):
+      obs_date.append(obs_init_datetime + datetime.timedelta(seconds = obs_time[i]))
+  obs_date = np.array(obs_date)
+  
+  obs_time_slice_indices = []
+  for time_slice in time_slices:
+    start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+    end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
+    start_date_index = np.where(obs_date >= start_date)[0][0]
+    end_date_index = np.where(obs_date <= end_date)[0][-1]
+    obs_time_slice_indices.append([start_date_index, end_date_index])
+  
+  return_dict = {'time': obs_time, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices, 'pres_l': obs_pres, 'T': obs_T,
+                'qv': obs_qv, 'u': obs_u, 'v': obs_v, 'dq_dt_deepconv': obs_dq3dt_deepcnv, 'dq_dt_pbl': obs_dq3dt_pbl, 'dT_dt_pbl': obs_dt3dt_pbl
+                }
+  
+  return return_dict
