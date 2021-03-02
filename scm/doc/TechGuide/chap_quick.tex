@@ -80,17 +80,17 @@ The basic requirements for building and running the CCPP and SCM bundle are list
     	\begin{itemize}
 	\item icc 18.0.5.274, 19.0.2 and 19.0.5
 	\item gcc 6.2, 8.3, 9.1, 9.2 and 10.1
-	\item Apple clang 11.0.0.11000033, LLVM clang 9.0.0
+	\item Apple clang 11.0.0.11000033, LLVM clang 9.0.0 and 10.0.0
 	\end{itemize}
     \item cmake 2.8.12.1, 2.8.12.2, 3.6.2, 3.16.3, 3.16.4
     	\begin{itemize}
 	\item NOTE: Version 3.15+ is required if installing NCEPLIBS
 	\end{itemize}
-   	 \item NetCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3 (not 3.x) with HDF5 and ZLIB
+   	 \item NetCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3. 4.7.4 (not 3.x) with HDF5 and ZLIB
     \item Python 2.7.5, 2.7.9, 2.7.13, 2.7.16, 3.6.1, 3.7.5, and 3.8.5 with f90nml module (and Shapely if using the \execout{UFS\_IC\_generator.py} script)
 \end{itemize}
 
-Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) Short-Range Weather Application release v1.0.0 of Feburary 2021 provides software packages and detailed instructions to install these prerequisites and the NCEPLIBS on supported platforms (see section~\ref{section: setup_supported_platforms}).
+Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) Short-Range Weather Application release v1.0.0 of March 2021 provides software packages and detailed instructions to install these prerequisites and the NCEPLIBS on supported platforms (see section~\ref{section: setup_supported_platforms}).
 
 Further, there are several utility libraries as part of the NCEPLIBS package that must be installed with environment variables pointing to their locations prior to building the SCM.
 \begin{itemize}
@@ -125,14 +125,9 @@ For bourne/bash shells,
 
 
 \subsection{Installing Libraries on Non-preconfigured Platforms}\label{section: setup_supported_platforms}
-For users on supported platforms such as generic Linux or macOS systems that have not been preconfigured, the UFS Short-Range Weather Application v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/release/public-v2} and \url{https://github.com/NOAA-EMC/NCEPLIBS/tree/release/public-v2}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in the relevant \execout{README\_*.txt} file in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/release/public-v2/doc} and source the shell script that is created by the \execout{NCEPLIBS} install process to set the required environment variables for compiling the SCM.
+For users on supported platforms such as generic Linux or macOS systems that have not been preconfigured, the UFS Short-Range Weather Application v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/releases/tag/ufs-v2.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in the relevant \execout{README\_*.txt} file in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0/doc} and source the shell script that is created by the \execout{NCEPLIBS} install process to set the required environment variables for compiling the SCM.
 
-The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can follow the machine setup instructions in the relevant \execout{README*.txt} files in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/release/public-v2/doc} and, instead of installing \execout{NCEPLIBS-external} and \execout{NCEPLIBS}, install only NetCDF/NetCDF-Fortran manually or using the software package manager (\execout{apt}, \execout{yum}, \execout{brew}).
-
-\textbf{Note.} On macOS systems, it may be necessary to add the (future) location of the NetCDF libraries \execout{libnetcdf.dylib} and \execout{libnetcdff.dylib} to the \execout{rpath} linker flags before compiling the NetCDF/NetCDF-Fortran libraries. Execute the following command before running \execout{configure} and \execout{make} for \execout{netcdf-c} and \execout{netcdf-fortran}:
-\begin{lstlisting}[language=bash]
-export LDFLAGS="-L/dir/where/libnetcdf/and/libnetcdff/live -Wl,-rpath,/dir/where/libnetcdf/and/libnetcdff/live"
-\end{lstlisting}
+The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can follow the machine setup instructions in the relevant \execout{README*.txt} files in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0/doc} and, instead of installing \execout{NCEPLIBS-external} and \execout{NCEPLIBS}, install only NetCDF/NetCDF-Fortran manually or using the software package manager (\execout{apt}, \execout{yum}, \execout{brew}).
 
 Users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (instead of the \execout{NCEPLIBS} umbrella build referred to in the \execout{NCEPLIBS-external} instructions) and the SCM.
 
@@ -143,18 +138,18 @@ Installing the NCEP libraries: The SCM repository contains a bash installation s
 
 Following successful execution of this script, the commands to set the proper environment variables mentioned above will be written to the terminal as output. One must execute the correct set for the active shell to finish the installation, e.g., for bash
 \begin{lstlisting}
-export BACIO_LIB4=/path/to/nceplibs/lib/libbacio_4.a
-export SP_LIBd=/path/to/nceplibs/lib/libsp_d.a
-export W3NCO_LIBd=/path/to/nceplibs/lib/libw3nco_d.a
+export bacio_ROOT=/path/to/nceplibs/lib/libbacio_4.a
+export sp_ROOT=/path/to/nceplibs/lib/libsp_d.a
+export w3nco_ROOT=/path/to/nceplibs/lib/libw3nco_d.a
 \end{lstlisting}
 and for t/csh
 \begin{lstlisting}
-setenv BACIO_LIB4 /path/to/nceplibs/lib/libbacio_4.a
-setenv SP_LIBd /path/to/nceplibs/lib/libsp_d.a
-setenv W3NCO_LIBd /path/to/nceplibs/lib/libw3nco_d.a
+setenv bacio_ROOT /path/to/nceplibs/lib/libbacio_4.a
+setenv sp_ROOT /path/to/nceplibs/lib/libsp_d.a
+setenv w3nco_ROOT /path/to/nceplibs/lib/libw3nco_d.a
 \end{lstlisting}
 
-The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS Short-Range Weather Application release (\url{https://github.com/NOAA-EMC/NCEPLIBS-external/tree/release/public-v2}). Prepend this installation directory of \execout{cmake} to your path environment variable to use it for building the NCEPLIBS.
+The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS Short-Range Weather Application release (\url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0}). Prepend this installation directory of \execout{cmake} to your path environment variable to use it for building the NCEPLIBS.
 
 The Python environment must provide the \execout{f90nml} module for the SCM scripts to function. Users can test if f90nml is installed using this command in the shell:
 \begin{lstlisting}
@@ -226,7 +221,12 @@ cmake ../src
 -DCMAKE_BUILD_TYPE=Debug
 \end{lstlisting}
 \end{itemize}
+\item One can also save the output of this step to a log file:
+\begin{lstlisting}[language=bash]
+cmake [-DCMAKE_BUILD_TYPE ...] ../src 2>&1 | tee log.cmake
+\end{lstlisting}
 \end{itemize}
+
 
 CMake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. It generates software caps for each physics group defined in the supplied Suite Definition Files (SDFs) and generates a static library that becomes part of the SCM executable. Appropriate software caps \textbf{will be generated for all suites defined in the \execout{ccpp-scm/ccpp/suites} directory automatically.}
 
@@ -240,9 +240,15 @@ where the argument supplied via the \execout{-{}-suites} variable is a comma-sep
 \begin{lstlisting}[language=bash]
 make
 \end{lstlisting}
+\begin{itemize}
+\item One may also use more threads for compilation and/or save the output of the compilation to a log file:
+\begin{lstlisting}[language=bash]
+make -j4 2>&1 | tee log.make
+\end{lstlisting}
+\end{itemize}
 \end{enumerate}
 
-The resulting executable may be found at \execout{./ccpp-scm} (Full path of \execout{ccpp-scm/scm/bin/scm}).
+The resulting executable may be found at \execout{./scm} (Full path of \execout{ccpp-scm/scm/bin/scm}).
 
 Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build/run directory is (from the \execout{bin} directory)
 \begin{lstlisting}[language=bash]
@@ -425,9 +431,6 @@ NOTE: If you are using a prebuilt image from Dockerhub, substitute the name of t
 \begin{lstlisting}[language=bash]
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm /bin/bash
 \end{lstlisting}
-You will be placed within the container space and within the \execout{bin} directory of the SCM with a pre-compiled executable. At this point, one could use the run scripts as described in previous sections (remembering to include the \execout{-d} option on run scripts if output is to be shared with the host machine). To create plots, from within the \execout{bin} directory of the SCM in container space, issue the following command, with an appropriately configured \execout{*.ini} file, .i.e.
-\begin{lstlisting}[language=bash]
-./scm_analysis.py twpice_all_suites.ini -d
-\end{lstlisting}
+You will be placed within the container space and within the \execout{bin} directory of the SCM with a pre-compiled executable. At this point, one could use the run scripts as described in previous sections (remembering to include the \execout{-d} option on run scripts if output is to be shared with the host machine).
 NOTE: If developing, since the container is ephemeral, one should push their changes to a remote git repository to save them (i.e. a fork on GitHub.com).
 \end{enumerate}
