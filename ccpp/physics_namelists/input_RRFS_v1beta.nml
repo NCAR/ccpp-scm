@@ -17,6 +17,8 @@
     bl_mynn_edmf = 1
     bl_mynn_edmf_mom = 1
     bl_mynn_tkeadvect = .true.
+    bl_mynn_tkebudget = 1
+    bl_mynn_output    = 1
     cal_pre = .false.
     cdmbgwd = 3.5,0.25
     cnvcld = .true.
