@@ -82,7 +82,7 @@ The basic requirements for building and running the CCPP and SCM bundle are list
 	\item gcc 6.2, 8.3, 9.1, 9.2 and 10.1
 	\item Apple clang 11.0.0.11000033, LLVM clang 9.0.0 and 10.0.0
 	\end{itemize}
-    \item cmake 2.8.12.1, 2.8.12.2, 3.6.2, 3.16.3, 3.16.4
+    \item cmake 3.14+
     	\begin{itemize}
 	\item NOTE: Version 3.15+ is required if installing NCEPLIBS
 	\end{itemize}
@@ -138,15 +138,15 @@ Installing the NCEP libraries: The SCM repository contains a bash installation s
 
 Following successful execution of this script, the commands to set the proper environment variables mentioned above will be written to the terminal as output. One must execute the correct set for the active shell to finish the installation, e.g., for bash
 \begin{lstlisting}
-export bacio_ROOT=/path/to/nceplibs/lib/libbacio_4.a
-export sp_ROOT=/path/to/nceplibs/lib/libsp_d.a
-export w3nco_ROOT=/path/to/nceplibs/lib/libw3nco_d.a
+export bacio_ROOT=/path/to/nceplibs/
+export sp_ROOT=/path/to/nceplibs/
+export w3nco_ROOT=/path/to/nceplibs/
 \end{lstlisting}
 and for t/csh
 \begin{lstlisting}
-setenv bacio_ROOT /path/to/nceplibs/lib/libbacio_4.a
-setenv sp_ROOT /path/to/nceplibs/lib/libsp_d.a
-setenv w3nco_ROOT /path/to/nceplibs/lib/libw3nco_d.a
+setenv bacio_ROOT /path/to/nceplibs/
+setenv sp_ROOT /path/to/nceplibs/
+setenv w3nco_ROOT /path/to/nceplibs/
 \end{lstlisting}
 
 The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS Short-Range Weather Application release (\url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0}). Prepend this installation directory of \execout{cmake} to your path environment variable to use it for building the NCEPLIBS.
