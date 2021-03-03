@@ -1,5 +1,5 @@
-#FROM dtcenter/common-community-container:latest
-FROM common-community-container-gnu9
+FROM dtcenter/common-community-container:gnu9
+
 MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 #
@@ -12,7 +12,7 @@ MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b release/public-v5 https://github.com/NCAR/ccpp-scm
+  && git clone --recursive -b v5.0.0 https://github.com/NCAR/ccpp-scm
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
 RUN cd /comsoftware/ccpp-scm/ \
@@ -26,9 +26,9 @@ RUN cd /comsoftware/ccpp-scm/ \
 RUN cd /comsoftware/ccpp-scm/scm/ \
   && . etc/CENTOS_docker_setup.sh
 
-ENV BACIO_LIB4 /comsoftware/ccpp-scm/nceplibs/lib/libbacio_4.a
-ENV SP_LIBd /comsoftware/ccpp-scm/nceplibs/lib/libsp_d.a
-ENV W3NCO_LIBd /comsoftware/ccpp-scm/nceplibs/lib/libw3nco_d.a
+ENV bacio_ROOT /comsoftware/ccpp-scm/nceplibs
+ENV sp_ROOT /comsoftware/ccpp-scm/nceplibs
+ENV w3nco_ROOT /comsoftware/ccpp-scm/nceplibs
 
 # Create your own link from python -> python3 
 # This works without setting the system PATH env var
@@ -42,7 +42,7 @@ RUN cd /comsoftware/ccpp-scm/scm \
   && mkdir bin \
   && cd bin \
   && cmake ../src \
-  && make
+  && make -j4
 
 # The analysis scripts have options for using LaTeX when making figure labels.
 # If you would like to install LaTeK, uncomment the section below. 
