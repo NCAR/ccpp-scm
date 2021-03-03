@@ -30,7 +30,7 @@ cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR ..
 make VERBOSE=1
 make install
 
-cd $NCEPLIBS_SRC
+cd ../..
 git clone -b v2.3.3 --recursive https://github.com/NOAA-EMC/NCEPLIBS-sp
 cd NCEPLIBS-sp
 mkdir build
@@ -39,7 +39,7 @@ cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR ..
 make VERBOSE=1
 make install
 
-cd $NCEPLIBS_SRC
+cd ../..
 git clone -b v2.4.1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-w3nco
 cd NCEPLIBS-w3nco
 mkdir build
