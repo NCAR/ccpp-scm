@@ -7,7 +7,11 @@ use gmtb_scm_kinds, only: sp, dp, qp
 use gmtb_scm_forcing
 
 use ccpp_api,        only: ccpp_t
-use ccpp_static_api, only: ccpp_physics_run
+use :: ccpp_static_api,                      &
+       only: ccpp_physics_timestep_init,     &
+             ccpp_physics_run,               &
+             ccpp_physics_timestep_finalize
+             
 
 implicit none
 
@@ -57,7 +61,7 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   type(ccpp_t), intent(inout)                  :: cdata
   logical, intent(in)                          :: in_spinup
 
-  integer :: i, ierr
+  integer :: i, ierr, kdt_rad
 
   !> \section do_time_step_alg Algorithm
   !! @{
@@ -113,10 +117,39 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
       endif
     endif
   end do
-
+  
+  call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
+      stop
+  end if
+  
+  !--- determine if radiation diagnostics buckets need to be cleared
+  if (nint(physics%Model%fhzero*3600) >= nint(max(physics%Model%fhswr,physics%Model%fhlwr))) then
+    if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
+      call physics%Diag%rad_zero  (physics%Model)
+    endif
+  else
+    kdt_rad = nint(min(physics%Model%fhswr,physics%Model%fhlwr)/physics%Model%dtp)
+    if (mod(physics%Model%kdt,kdt_rad) == 1) then
+      call physics%Diag%rad_zero  (physics%Model)
+    endif
+  endif
+  
+  !--- determine if physics diagnostics buckets need to be cleared
+  if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
+    call physics%Diag%phys_zero (physics%Model)
+  endif
+  
   call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
+      stop
+  end if
+
+  call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
       stop
   end if
 

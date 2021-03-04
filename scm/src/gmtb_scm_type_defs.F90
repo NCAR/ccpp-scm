@@ -1205,28 +1205,28 @@ module gmtb_scm_type_defs
       
       if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then !.and. warm_start (not implemented here -- assuming that RUC LSM has warm start data from file)
         !--- Extra RUC LSM variables
-        write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
-        call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .false., missing_var(1))
-        call conditionally_set_var(scm_input%input_clw_surf, physics%Sfcprop%clw_surf(i), "clw_surf", .false., missing_var(2))
-        call conditionally_set_var(scm_input%input_qwv_surf, physics%Sfcprop%qwv_surf(i), "qwv_surf", .false., missing_var(3))
-        call conditionally_set_var(scm_input%input_tsnow, physics%Sfcprop%tsnow(i), "tsnow", .false., missing_var(4))
-        call conditionally_set_var(scm_input%input_snowfallac, physics%Sfcprop%snowfallac(i), "snowfallac", .false., missing_var(5))
-        call conditionally_set_var(scm_input%input_acsnow, physics%Sfcprop%acsnow(i), "acsnow", .false., missing_var(6))
-        if (physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%rdlai) then
-          !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
-          call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(7))
-        end if
-        
-        !write out warning if missing data for non-required variables
-        n = 7
-        if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-          do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-          end do
-        end if
-        missing_var = .false.
+        ! write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
+        ! call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .false., missing_var(1))
+        ! call conditionally_set_var(scm_input%input_clw_surf, physics%Sfcprop%clw_surf(i), "clw_surf", .false., missing_var(2))
+        ! call conditionally_set_var(scm_input%input_qwv_surf, physics%Sfcprop%qwv_surf(i), "qwv_surf", .false., missing_var(3))
+        ! call conditionally_set_var(scm_input%input_tsnow, physics%Sfcprop%tsnow(i), "tsnow", .false., missing_var(4))
+        ! call conditionally_set_var(scm_input%input_snowfallac, physics%Sfcprop%snowfallac(i), "snowfallac", .false., missing_var(5))
+        ! call conditionally_set_var(scm_input%input_acsnow, physics%Sfcprop%acsnow(i), "acsnow", .false., missing_var(6))
+        ! if (physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%rdlai) then
+        !   !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
+        !   call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(7))
+        ! end if
+        ! 
+        ! !write out warning if missing data for non-required variables
+        ! n = 7
+        ! if ( i==1 .and. ANY( missing_var(1:n) ) ) then
+        !   write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
+        !   write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+        !   do j=1, n
+        !     if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+        !   end do
+        ! end if
+        ! missing_var = .false.
       elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_noahmp) then
         write(0,'(a)') "Setting internal physics variables from the NoahMP section of the case input file (scalars)..."
         !all of these can be missing, since a method exists to "cold start" these variables

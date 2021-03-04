@@ -17,6 +17,8 @@ VARIABLE_DEFINITION_FILES = [
     # actual variable definition files
     'ccpp/physics/physics/machine.F',
     'ccpp/physics/physics/radsw_param.f',
+    'ccpp/physics/physics/h2o_def.f',
+    'ccpp/physics/physics/ozne_def.f',
     'ccpp/physics/physics/radlw_param.f',
     'scm/src/GFS_typedefs.F90',
     'scm/src/gmtb_scm_kinds.F90',
@@ -113,6 +115,8 @@ SCHEME_FILES = [
     'ccpp/physics/physics/cires_ugwp_post.F90'              ,
     'ccpp/physics/physics/unified_ugwp.F90'                 ,
     'ccpp/physics/physics/unified_ugwp_post.F90'            ,
+    'ccpp/physics/physics/ugwpv1_gsldrag.F90'               ,
+    'ccpp/physics/physics/ugwpv1_gsldrag_post.F90'          ,
     'ccpp/physics/physics/cnvc90.f'                         ,
     'ccpp/physics/physics/cs_conv.F90'                      ,
     'ccpp/physics/physics/cs_conv_aw_adj.F90'               ,
@@ -158,7 +162,6 @@ SCHEME_FILES = [
     'ccpp/physics/physics/ozphys_2015.f'                    ,
     'ccpp/physics/physics/precpd.f'                         ,
     'ccpp/physics/physics/phys_tend.F90'                    ,
-    'ccpp/physics/physics/tracer_sanitizer.F90'             ,
     'ccpp/physics/physics/radlw_main.F90'                   ,
     'ccpp/physics/physics/radsw_main.F90'                   ,
     'ccpp/physics/physics/rascnv.F90'                       ,
@@ -170,13 +173,12 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_diag.f'                       ,
     'ccpp/physics/physics/sfc_diag_post.F90'                ,
     'ccpp/physics/physics/sfc_drv_ruc.F90'                  ,
-    'ccpp/physics/physics/lsm_ruc_sfc_sice_interstitial.F90',
     'ccpp/physics/physics/sfc_cice.f'                       ,
     'ccpp/physics/physics/sfc_diff.f'                       ,
     'ccpp/physics/physics/sfc_drv.f'                        ,
     'ccpp/physics/physics/sfc_noah_wrfv4_interstitial.F90'  ,
     'ccpp/physics/physics/sfc_noah_wrfv4.F90'               ,
-    'ccpp/physics/physics/sfc_noahmp_drv.f'                 ,
+    'ccpp/physics/physics/sfc_noahmp_drv.F90'               ,
     'ccpp/physics/physics/flake_driver.F90'                 ,
     'ccpp/physics/physics/sfc_nst.f'                        ,
     'ccpp/physics/physics/sfc_ocean.F'                      ,
@@ -212,22 +214,22 @@ SCHEME_FILES = [
 DEFAULT_BUILD_DIR = 'scm/bin'
 
 # Auto-generated makefile/cmakefile snippets that contain all type definitions
-TYPEDEFS_MAKEFILE   = 'ccpp/physics/CCPP_TYPEDEFS.mk'
-TYPEDEFS_CMAKEFILE  = 'ccpp/physics/CCPP_TYPEDEFS.cmake'
-TYPEDEFS_SOURCEFILE = 'ccpp/physics/CCPP_TYPEDEFS.sh'
+TYPEDEFS_MAKEFILE   = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.mk'
+TYPEDEFS_CMAKEFILE  = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.cmake'
+TYPEDEFS_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_TYPEDEFS.sh'
 
 # Auto-generated makefile/cmakefile snippets that contain all schemes
-SCHEMES_MAKEFILE = 'ccpp/physics/CCPP_SCHEMES.mk'
-SCHEMES_CMAKEFILE = 'ccpp/physics/CCPP_SCHEMES.cmake'
-SCHEMES_SOURCEFILE = 'ccpp/physics/CCPP_SCHEMES.sh'
+SCHEMES_MAKEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.mk'
+SCHEMES_CMAKEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.cmake'
+SCHEMES_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_SCHEMES.sh'
 
 # Auto-generated makefile/cmakefile snippets that contain all caps
-CAPS_MAKEFILE = 'ccpp/physics/CCPP_CAPS.mk'
-CAPS_CMAKEFILE = 'ccpp/physics/CCPP_CAPS.cmake'
-CAPS_SOURCEFILE = 'ccpp/physics/CCPP_CAPS.sh'
+CAPS_MAKEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.mk'
+CAPS_CMAKEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.cmake'
+CAPS_SOURCEFILE = '{build_dir}/ccpp/physics/CCPP_CAPS.sh'
 
 # Directory where to put all auto-generated physics caps
-CAPS_DIR = 'ccpp/physics/physics'
+CAPS_DIR = '{build_dir}/ccpp/physics/physics'
 
 # Directory where the suite definition files are stored
 SUITES_DIR = 'ccpp/suites'
@@ -297,7 +299,7 @@ OPTIONAL_ARGUMENTS = {
          'rrtmgp_sw_rte_run' : [
              'components_of_surface_downward_shortwave_fluxes',
              ],
-         },        
+         },
     'GFS_rrtmgp_sw_post' : {
          'GFS_rrtmgp_sw_post_run' : [
              'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step',
