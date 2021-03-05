@@ -1,10 +1,10 @@
 [ccpp-table-properties]
-  name = gmtb_scm_kinds
+  name = scm_kinds
   type = module
   dependencies =
 
 [ccpp-arg-table]
-  name = gmtb_scm_kinds
+  name = scm_kinds
   type = module
 [kind_sp]
   standard_name = kind_sp

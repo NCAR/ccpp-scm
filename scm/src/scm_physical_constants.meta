@@ -1,10 +1,10 @@
 [ccpp-table-properties]
-  name = gmtb_scm_physical_constants
+  name = scm_physical_constants
   type = module
-  dependencies = gmtb_scm_kinds.F90
+  dependencies = scm_kinds.F90
 
 [ccpp-arg-table]
-  name = gmtb_scm_physical_constants
+  name = scm_physical_constants
   type = module
 [con_cliq]
   standard_name = specific_heat_of_liquid_water_at_constant_pressure

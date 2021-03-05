@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "Setting environment variables for SCM-CCPP on Hera with icc/ifort"
+echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
-#load the modules in order to compile the GMTB SCM
+#load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
 module purge
 module load intel/18.0.5.274
@@ -15,8 +15,8 @@ export CXX=icpc
 export FC=ifort
 
 echo "Setting NCEPLIBS environment variables"
-module use -a /scratch1/BMC/gmtb/software/modulefiles/intel-18.0.5.274/impi-2018.0.4
-module load NCEPlibs/1.1.0
+module use /scratch1/BMC/gmtb/software/NCEPLIBS-ufs-v2.0.0/intel-18.0.5.274/impi-2018.0.4/modules
+module load NCEPLIBS/2.0.0
 
 echo "Loading cmake"
 module load cmake/3.16.1

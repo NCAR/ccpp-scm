@@ -237,7 +237,7 @@ fo = addfile(fout,"c")                                 ; Create the netcdf file
 
 setfileoption(fo,"DefineMode",True)                    ; Enter define mode
 fAtt = True                                            ; Set file attributes to True
-fAtt@title = "GMTB SCM forcing file for BOMEX case"    ; Set the title of the file
+fAtt@title = "CCPP SCM forcing file for BOMEX case"    ; Set the title of the file
 fileattdef(fo,fAtt)                                    ; Add the attributes to the output file
 
 ; Output file dimensions

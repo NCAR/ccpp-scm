@@ -11,14 +11,13 @@ import sys
 import time
 from default_namelists import default_physics_namelists
 from default_tracers import default_tracers
-from netCDF4 import Dataset
 
 ###############################################################################
 # Global settings                                                             #
 ###############################################################################
 
 # Name of the Fortran executable to run, including path (relative to run dir)
-EXECUTABLE = './gmtb_scm'
+EXECUTABLE = './scm'
 
 # Path to the directory containing experiment namelists (relative to run dir)
 CASE_NAMELIST_DIR = '../etc/case_config'
@@ -27,7 +26,7 @@ CASE_NAMELIST_DIR = '../etc/case_config'
 TRACERS_DIR = '../etc/tracer_config'
 TRACERS_LINK = 'tracers.txt'
 
-# Standard name of experiment namelist in run directory, must match value in gmtb_scm_input.f90
+# Standard name of experiment namelist in run directory, must match value in scm_input.f90
 STANDARD_EXPERIMENT_NAMELIST = 'input_experiment.nml'
 
 # Path to the directory containing physics namelists (relative to run dir)
@@ -66,7 +65,7 @@ LOGLEVEL = logging.INFO
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--case',       help='name of case to run', required=True)
-parser.add_argument('-g', '--gdb',        help='invoke gmtb_scm through gdb', action='store_true', default=False)
+parser.add_argument('-g', '--gdb',        help='invoke scm through gdb', action='store_true', default=False)
 parser.add_argument('-s', '--suite',      help='name of suite to use', default=DEFAULT_SUITE)
 parser.add_argument('-n', '--namelist',   help='physics namelist to use')
 parser.add_argument('-t', '--tracers',    help='tracer configuration to use')
@@ -249,25 +248,12 @@ class Experiment(object):
                 output_dir = 'output_' + self._case + '_' + self._suite + '_' + os.path.splitext(self._physics_namelist)[0]
             output_dir_patch_nml = {'case_config':{'output_dir':output_dir}}
             custom_output_dir = False
-        
-        #if using the DEPHY format, need to also check the case data file for the surfaceForcing global attribute for 'Flux' or 'surfaceFlux', which denotes prescribed surface fluxes
+        # check to see if surface fluxes are specified in the case configuration file (default is False)
         try:
-            input_type = case_nml['case_config']['input_type']
-            if input_type == 1:
-                #open the case data file and read the surfaceForcing global attribute
-                case_data_dir = case_nml['case_config']['case_data_dir']
-                nc_fid = Dataset(case_data_dir + '/' + self._case + '_SCM_driver.nc' , 'r')
-                surfaceForcing = nc_fid.getncattr('surfaceForcing')
-                nc_fid.close()
-                if (surfaceForcing.lower() == 'flux' or surfaceForcing.lower() == 'surfaceflux'):
-                    surface_flux_spec = True
+            surface_flux_spec = case_nml['case_config']['sfc_flux_spec']
         except KeyError:
-            # if not using DEPHY format, check to see if surface fluxes are specified in the case configuration file (default is False)
-            try:
-                surface_flux_spec = case_nml['case_config']['sfc_flux_spec']
-            except KeyError:
-                surface_flux_spec = False
-        
+            surface_flux_spec = False
+            
         # If surface fluxes are specified for this case, use the SDF modified to use them
         if surface_flux_spec:
             logging.info('Specified surface fluxes are used for case {0}. Switching to SDF {1} from {2}'.format(self._case,'suite_' + self._suite + '_ps' + '.xml','suite_' + self._suite + '.xml'))
@@ -373,7 +359,7 @@ class Experiment(object):
         
         # Link scripts needed to run SCM analysis
         logging.info('Linking analysis scripts from {0} into run directory'.format(SCM_ANALYSIS_SCRIPT_DIR))
-        analysis_script_files = ['gmtb_scm_analysis.py','configspec.ini']
+        analysis_script_files = ['scm_analysis.py','configspec.ini']
         for entry in analysis_script_files:
             if os.path.isfile(os.path.join(SCM_ANALYSIS_SCRIPT_DIR, entry)):
                 if not os.path.exists(entry):
@@ -411,7 +397,9 @@ def launch_executable(use_gdb, gdb):
         cmd = '{executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(2)
-    sys.exit(os.system(cmd))
+    return_code = os.system(cmd)
+    if return_code != 0:
+        sys.exit(return_code)
     
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""

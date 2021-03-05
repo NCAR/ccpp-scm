@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_GFS_v16_RRTMGP_ps" version="1">
+<suite name="SCM_GFS_v16_RRTMGP_ps" version="5">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>
@@ -40,7 +40,7 @@
       <scheme>GFS_surface_generic_pre</scheme>
       <scheme>dcyc2t3</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
-      <scheme>gmtb_scm_sfc_flux_spec</scheme>
+      <scheme>scm_sfc_flux_spec</scheme>
       <scheme>GFS_PBL_generic_pre</scheme>
       <scheme>satmedmfvdifq</scheme>
       <scheme>GFS_PBL_generic_post</scheme>

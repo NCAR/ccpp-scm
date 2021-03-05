@@ -1,11 +1,11 @@
-!> \file gmtb_scm_output.f90
+!> \file scm_output.f90
 !!  Contains output-related subroutines
 
-module gmtb_scm_output
+module scm_output
 
 use netcdf
 use NetCDF_read, only: check
-use gmtb_scm_kinds, only: sp, dp, qp
+use scm_kinds, only: sp, dp, qp
 
 implicit none
 
@@ -13,13 +13,13 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup output gmtb_scm_output
+!! \defgroup output scm_output
 !! @{
 !! Contains output-related subroutines
 
 !> This subroutine initializes the output netCDF file, "output.nc", placed in the directory specified by the case_config file used.
 subroutine output_init(scm_state, physics)
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
   use NetCDF_def, only: NetCDF_def_var
   use NetCDF_put, only: NetCDF_put_var
   use NetCDF_read, only: missing_value
@@ -178,7 +178,7 @@ subroutine output_init_forcing(ncid, time_inst_id, hor_dim_id, vert_dim_id)
 end subroutine output_init_forcing
 
 subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id, scm_state, physics)
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
   use NetCDF_def, only : NetCDF_def_var
   
   integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_soil_id
@@ -260,7 +260,7 @@ subroutine output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, v
 end subroutine output_init_radtend
 
 subroutine output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id, physics)
-  use gmtb_scm_type_defs, only: physics_type
+  use scm_type_defs, only: physics_type
   use NetCDF_def, only : NetCDF_def_var
   
   integer, intent(in) :: ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id
@@ -353,7 +353,7 @@ end subroutine output_init_diag
 !> This subroutine appends data to the "output.nc" file.
 subroutine output_append(scm_state, physics)
 
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout) :: scm_state
   type(physics_type), intent(in) :: physics
@@ -408,7 +408,7 @@ subroutine output_append(scm_state, physics)
 end subroutine output_append
 
 subroutine output_append_state(ncid, scm_state, physics)
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
   use NetCDF_put, only: NetCDF_put_var
   
   integer, intent(in) :: ncid
@@ -440,7 +440,7 @@ subroutine output_append_state(ncid, scm_state, physics)
 end subroutine output_append_state
 
 subroutine output_append_forcing(ncid, scm_state)
-    use gmtb_scm_type_defs, only: scm_state_type
+    use scm_type_defs, only: scm_state_type
     use NetCDF_put, only: NetCDF_put_var
     
     integer, intent(in) :: ncid
@@ -463,9 +463,9 @@ subroutine output_append_forcing(ncid, scm_state)
 end subroutine output_append_forcing
 
 subroutine output_append_sfcprop(ncid, scm_state, physics)
-  use gmtb_scm_type_defs, only: scm_state_type, physics_type
+  use scm_type_defs, only: scm_state_type, physics_type
   use NetCDF_put, only: NetCDF_put_var
-  use gmtb_scm_physical_constants, only: con_rd, con_fvirt, con_cp, con_hvap
+  use scm_physical_constants, only: con_rd, con_fvirt, con_cp, con_hvap
   
   integer, intent(in) :: ncid
   type(scm_state_type), intent(in) :: scm_state
@@ -500,7 +500,7 @@ subroutine output_append_sfcprop(ncid, scm_state, physics)
 end subroutine output_append_sfcprop
 
 subroutine output_append_interstitial(ncid, scm_state, physics)
-    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use scm_type_defs, only: scm_state_type, physics_type
     use NetCDF_put, only: NetCDF_put_var
     
     integer, intent(in) :: ncid
@@ -542,7 +542,7 @@ subroutine output_append_interstitial(ncid, scm_state, physics)
 end subroutine output_append_interstitial
 
 subroutine output_append_radtend(ncid, scm_state, physics)
-    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use scm_type_defs, only: scm_state_type, physics_type
     use NetCDF_put, only: NetCDF_put_var
     
     integer, intent(in) :: ncid
@@ -573,7 +573,7 @@ subroutine output_append_radtend(ncid, scm_state, physics)
 end subroutine output_append_radtend
 
 subroutine output_append_diag_inst(ncid, scm_state, physics)
-    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use scm_type_defs, only: scm_state_type, physics_type
     use NetCDF_put, only: NetCDF_put_var
     
     integer, intent(in) :: ncid
@@ -621,7 +621,7 @@ subroutine output_append_diag_inst(ncid, scm_state, physics)
 end subroutine output_append_diag_inst
 
 subroutine output_append_diag_avg(ncid, scm_state, physics)
-    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use scm_type_defs, only: scm_state_type, physics_type
     use NetCDF_put, only: NetCDF_put_var
     
     integer, intent(in) :: ncid
@@ -689,4 +689,4 @@ end subroutine output_append_diag_avg
 
 !> @}
 !> @}
-end module gmtb_scm_output
+end module scm_output
