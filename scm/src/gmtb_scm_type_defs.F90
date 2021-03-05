@@ -946,33 +946,14 @@ module gmtb_scm_type_defs
     use gmtb_scm_physical_constants, only: con_tice
     use data_qc, only: conditionally_set_var
     use NetCDF_read, only: missing_value
-    use noahmp_tables,      only: laim_table,saim_table,sla_table,      &
-                                  bexp_table,smcmax_table,smcwlt_table, &
-                                  dwsat_table,dksat_table,psisat_table, &
-                                  isurban_table,isbarren_table,         &
-                                  isice_table,iswater_table
     
     class(physics_type) :: physics
     type(scm_input_type), intent(in) :: scm_input
     type(scm_state_type), intent(in) :: scm_state
     
-    integer :: i,j,n,vegtyp,imn,lsoil,isnow,ns,soiltyp,iter
-    real(kind=dp) :: tem1, tem, masslai, masssai, snd
+    integer :: i,j,n
+    real(kind=dp) :: tem1, tem
     logical :: missing_var(100)
-    logical :: cold_start_noahmp
-    real(kind=dp), parameter:: drythresh = 1.e-4
-    
-    real(kind=kind_phys) :: ddz,expon,aa,bb,smc,func,dfunc,dx
-    real(kind=kind_phys) :: bexp, smcmax, smcwlt,dwsat,dksat,psisat
-
-    real(kind=kind_phys), dimension(-2:0) :: dzsno
-    real(kind=kind_phys), dimension(-2:4) :: dzsnso
-
-    real(kind=kind_phys), dimension(4), save :: zsoil,dzs
-    data dzs   / 0.1_dp, 0.3_dp, 0.6_dp, 1.0_dp/
-    data zsoil /-0.1_dp,-0.4_dp,-1.0_dp,-2.0_dp/
-    
-    cold_start_noahmp = .false.
     
     !double check under what circumstances these should actually be set from input!!! (these overwrite the initialzation in GFS_typedefs)
     missing_var = .false.
@@ -1056,22 +1037,8 @@ module gmtb_scm_type_defs
           physics%Sfcprop%zorlw(i)  = physics%Sfcprop%zorlo(i)
         end if
         
-        !GJF: computing sncovr if model_ics and sncovr is missing: (this requires data from namelist_soilveg module, which is not set until after the CCPP physics_init stage)
-        !this should happen inside of the init stage of a CCPP scheme (after the LSM is initialized -- or at least after set_soilveg is called)
-        !For now, just set sncovr = 0 if missing
         if (missing_var(32)) physics%Sfcprop%sncovr(i) = real_zero
-        ! physics%Sfcprop%sncovr(i) = zero
-        ! if (physics%Sfcprop%landfrac(i) >= drythresh .or. physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
-        !   vegtyp = physics%Sfcprop%vtype(i)
-        !   if (vegtyp == 0) vegtyp = 7
-        !   rsnow  = 0.001_dp*physics%Sfcprop%weasd(i)/snupx(vegtyp)
-        !   if (0.001_dp*physics%Sfcprop%weasd(i) < snupx(vegtyp)) then
-        !     physics%Sfcprop%sncovr(i) = real_one - (exp(-salp_data*rsnow) - rsnow*exp(-salp_data))
-        !   else
-        !     physics%Sfcprop%sncovr(i) = real_one
-        !   endif
-        ! endif
-        
+                
         !write out warning if missing data for non-required variables
         n = 36
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
@@ -1263,7 +1230,6 @@ module gmtb_scm_type_defs
         !write out warning if missing data for non-required variables
         n = 29
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          cold_start_noahmp = .true.
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
           write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
@@ -1309,7 +1275,6 @@ module gmtb_scm_type_defs
           !write out warning if missing data for non-required variables
           n = 8
           if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-            cold_start_noahmp = .true.
             write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
             write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
             do j=1, n
@@ -1408,265 +1373,6 @@ module gmtb_scm_type_defs
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if
-      
-      if (cold_start_noahmp) then
-        !NoahMP cold start algorithm from FV3/io/FV3GFS_io
-        physics%Sfcprop%tvxy(i)     = missing_value
-        physics%Sfcprop%tgxy(i)     = missing_value
-        physics%Sfcprop%tahxy(i)    = missing_value
-        physics%Sfcprop%canicexy(i) = missing_value
-        physics%Sfcprop%canliqxy(i) = missing_value
-        physics%Sfcprop%eahxy(i)    = missing_value
-        physics%Sfcprop%cmxy(i)     = missing_value
-        physics%Sfcprop%chxy(i)     = missing_value
-        physics%Sfcprop%fwetxy(i)   = missing_value
-        physics%Sfcprop%sneqvoxy(i) = missing_value
-        physics%Sfcprop%alboldxy(i) = missing_value
-        physics%Sfcprop%qsnowxy(i)  = missing_value
-        physics%Sfcprop%wslakexy     = missing_value
-        physics%Sfcprop%taussxy      = missing_value
-        physics%Sfcprop%waxy(i)     = missing_value
-        physics%Sfcprop%wtxy(i)     = missing_value
-        physics%Sfcprop%zwtxy(i)    = missing_value
-        physics%Sfcprop%xlaixy(i)   = missing_value
-        physics%Sfcprop%xsaixy(i)   = missing_value
-
-        physics%Sfcprop%lfmassxy(i) = missing_value
-        physics%Sfcprop%stmassxy(i) = missing_value
-        physics%Sfcprop%rtmassxy(i) = missing_value
-        physics%Sfcprop%woodxy(i)   = missing_value
-        physics%Sfcprop%stblcpxy(i) = missing_value
-        physics%Sfcprop%fastcpxy(i) = missing_value
-        physics%Sfcprop%smcwtdxy(i) = missing_value
-        physics%Sfcprop%deeprechxy(i) = missing_value
-        physics%Sfcprop%rechxy(i)     = missing_value
-
-        physics%Sfcprop%snowxy (i)   = missing_value
-        physics%Sfcprop%snicexy(i, physics%Model%lsnow_lsm_lbound:0) = missing_value
-        physics%Sfcprop%snliqxy(i, physics%Model%lsnow_lsm_lbound:0) = missing_value
-        physics%Sfcprop%tsnoxy (i, physics%Model%lsnow_lsm_lbound:0) = missing_value
-        physics%Sfcprop%smoiseq(i, 1:physics%Model%lsoil_lsm) = missing_value
-        physics%Sfcprop%zsnsoxy(i, physics%Model%lsnow_lsm_lbound:physics%Model%lsoil_lsm) = missing_value
-        
-        if (physics%Sfcprop%landfrac(i) >= drythresh) then
-
-          physics%Sfcprop%tvxy(i)     = physics%Sfcprop%tsfcl(i)
-          physics%Sfcprop%tgxy(i)     = physics%Sfcprop%tsfcl(i)
-          physics%Sfcprop%tahxy(i)    = physics%Sfcprop%tsfcl(i)
-
-          if (physics%Sfcprop%snowd(i) > 0.01 .and. physics%Sfcprop%tsfcl(i) > 273.15 ) then
-            physics%Sfcprop%tvxy(i)  = 273.15
-            physics%Sfcprop%tgxy(i)  = 273.15
-            physics%Sfcprop%tahxy(i) = 273.15
-          end if
-
-          physics%Sfcprop%canicexy(i) = 0.0
-          physics%Sfcprop%canliqxy(i) = physics%Sfcprop%canopy(i)
-
-          physics%Sfcprop%eahxy(i)    = 2000.0
-
-!      eahxy = psfc*qv/(0.622+qv); qv is mixing ratio, converted from sepcific
-!      humidity specific humidity /(1.0 - specific humidity)
-
-          physics%Sfcprop%cmxy(i)     = 0.0
-          physics%Sfcprop%chxy(i)     = 0.0
-          physics%Sfcprop%fwetxy(i)   = 0.0
-          physics%Sfcprop%sneqvoxy(i) = physics%Sfcprop%weasd(i)     ! mm
-          physics%Sfcprop%alboldxy(i) = 0.65
-          physics%Sfcprop%qsnowxy(i)  = 0.0
-
-!           if (Sfcprop(nb)%srflag(ix) > 0.001) Sfcprop(nb)%qsnowxy(ix) = Sfcprop(nb)%tprcp(ix)/Model%dtp
-! already set to 0.0
-          physics%Sfcprop%wslakexy(i)     = 0.0
-          physics%Sfcprop%taussxy(i)      = 0.0
-
-
-          physics%Sfcprop%waxy(i)     = 4900.0
-          physics%Sfcprop%wtxy(i)     = physics%Sfcprop%waxy(i)
-          physics%Sfcprop%zwtxy(i)    = (25.0 + 2.0) - physics%Sfcprop%waxy(i) / 1000.0 /0.2
-!
-          vegtyp                   = physics%Sfcprop%vtype(i)
-          if (vegtyp == 0) vegtyp = 7
-          imn                      = physics%Model%idate(2)
-
-          if ((vegtyp == isbarren_table) .or. (vegtyp == isice_table) .or.  (vegtyp == isurban_table) .or. (vegtyp == iswater_table)) then
-
-            physics%Sfcprop%xlaixy(i)   = 0.0
-            physics%Sfcprop%xsaixy(i)   = 0.0
-
-            physics%Sfcprop%lfmassxy(i) = 0.0
-            physics%Sfcprop%stmassxy(i) = 0.0
-            physics%Sfcprop%rtmassxy(i) = 0.0
-
-            physics%Sfcprop%woodxy   (i) = 0.0       
-            physics%Sfcprop%stblcpxy (i) = 0.0      
-            physics%Sfcprop%fastcpxy (i) = 0.0     
-
-          else
-
-!             print *, 'vegtyp', vegtyp
-!             print *, 'imn', imn
-!             print *, 'xlaixy', Sfcprop(nb)%xlaixy(ix) 
-
-            physics%Sfcprop%xlaixy(i)   = max(laim_table(vegtyp, imn),0.05)
-!             Sfcprop(nb)%xsaixy(ix)   = max(saim_table(vegtyp, imn),0.05)
-            physics%Sfcprop%xsaixy(i)   = max(physics%Sfcprop%xlaixy(i)*0.1,0.05)
-
-            masslai                  = 1000.0 / max(sla_table(vegtyp),1.0)
-            physics%Sfcprop%lfmassxy(i) = physics%Sfcprop%xlaixy(i)*masslai
-            masssai                  = 1000.0 / 3.0
-            physics%Sfcprop%stmassxy(i) = physics%Sfcprop%xsaixy(i)* masssai
-
-            physics%Sfcprop%rtmassxy(i) = 500.0      
-
-            physics%Sfcprop%woodxy  (i) = 500.0       
-            physics%Sfcprop%stblcpxy(i) = 1000.0      
-            physics%Sfcprop%fastcpxy(i) = 1000.0     
-
-          endif  ! non urban ...
-
-          if ( vegtyp == isice_table )  then
-            do lsoil = 1,physics%Model%lsoil
-              physics%Sfcprop%stc(i,lsoil) = min(physics%Sfcprop%stc(i,lsoil),min(physics%Sfcprop%tg3(i),263.15))
-              physics%Sfcprop%smc(i,lsoil) = 1
-              physics%Sfcprop%slc(i,lsoil) = 0
-            enddo
-          endif
-
-          snd   = physics%Sfcprop%snowd(i)/1000.0  ! go to m from snwdph
-
-          if (physics%Sfcprop%weasd(i) /= 0.0 .and. snd == 0.0 ) then
-            snd = physics%Sfcprop%weasd(i)/1000.0
-          endif
-
-          if (vegtyp == 15) then                      ! land ice in MODIS/IGBP
-            if ( physics%Sfcprop%weasd(i) < 0.1) then
-              physics%Sfcprop%weasd(i) = 0.1
-              snd                   = 0.01
-            endif
-          endif
-
-          if (snd < 0.025 ) then
-            physics%Sfcprop%snowxy(i)   = 0.0
-            dzsno(-2:0)                 = 0.0
-          elseif (snd >= 0.025 .and. snd <= 0.05 ) then
-            physics%Sfcprop%snowxy(i)   = -1.0
-            dzsno(0)                    = snd
-          elseif (snd > 0.05 .and. snd <= 0.10 ) then
-            physics%Sfcprop%snowxy(i)   = -2.0
-            dzsno(-1)                   = 0.5*snd
-            dzsno(0)                    = 0.5*snd
-          elseif (snd > 0.10 .and. snd <= 0.25 ) then
-            physics%Sfcprop%snowxy(i)   = -2.0
-            dzsno(-1)                   = 0.05
-            dzsno(0)                    = snd - 0.05
-          elseif (snd > 0.25 .and. snd <= 0.45 ) then
-            physics%Sfcprop%snowxy(i)   = -3.0
-            dzsno(-2)                   = 0.05
-            dzsno(-1)                   = 0.5*(snd-0.05)
-            dzsno(0)                    = 0.5*(snd-0.05)
-          elseif (snd > 0.45) then 
-            physics%Sfcprop%snowxy(i)   = -3.0
-            dzsno(-2)                   = 0.05
-            dzsno(-1)                   = 0.20
-            dzsno(0)                    = snd - 0.05 - 0.20
-          else
-            write(0,'(a)') 'problem with the logic assigning snow layers in gmtb_scm_type_defs.F90/physics_set'
-            STOP 
-          endif
-
-! Now we have the snowxy field
-! snice + snliq + tsno allocation and compute them from what we have
-         
-!
-          physics%Sfcprop%tsnoxy(i,physics%Model%lsnow_lsm_lbound:0)  = 0.0
-          physics%Sfcprop%snicexy(i,physics%Model%lsnow_lsm_lbound:0) = 0.0
-          physics%Sfcprop%snliqxy(i,physics%Model%lsnow_lsm_lbound:0) = 0.0
-          physics%Sfcprop%zsnsoxy(i,physics%Model%lsnow_lsm_lbound:physics%Model%lsoil_lsm) = 0.0
-
-          isnow = nint(physics%Sfcprop%snowxy(i))+1    ! snowxy <=0.0, dzsno >= 0.0
-
-          do ns = isnow , 0
-            physics%Sfcprop%tsnoxy(i,ns)  = physics%Sfcprop%tgxy(i)
-            physics%Sfcprop%snliqxy(i,ns) = 0.0
-            physics%Sfcprop%snicexy(i,ns) = 1.00 * dzsno(ns) * physics%Sfcprop%weasd(i)/snd
-          enddo
-!
-!zsnsoxy, all negative ?
-!
-          do ns = isnow, 0
-            dzsnso(ns) = -dzsno(ns)
-          enddo
-
-          do ns = 1 , physics%Model%lsoil_lsm
-            dzsnso(ns) = -dzs(ns)
-          enddo
-!
-! Assign to zsnsoxy
-!
-          physics%Sfcprop%zsnsoxy(i,isnow) = dzsnso(isnow)
-          do ns = isnow+1,physics%Model%lsoil_lsm
-            physics%Sfcprop%zsnsoxy(i,ns) = physics%Sfcprop%zsnsoxy(i,ns-1) + dzsnso(ns)
-          enddo
-
-!
-! smoiseq
-! Init water table related quantities here
-!
-          soiltyp  = physics%Sfcprop%stype(i)
-
-          if (soiltyp /= 0) then
-            bexp   = bexp_table(soiltyp)
-            smcmax = smcmax_table(soiltyp)
-            smcwlt = smcwlt_table(soiltyp)
-            dwsat  = dwsat_table(soiltyp)
-            dksat  = dksat_table(soiltyp)
-            psisat = -psisat_table(soiltyp)
-          endif
-
-          if (vegtyp == isurban_table) then
-            smcmax = 0.45
-            smcwlt = 0.40
-          endif
-
-          if ((bexp > 0.0) .and. (smcmax > 0.0) .and. (-psisat > 0.0 )) then
-            do ns = 1, physics%Model%lsoil          
-              if ( ns == 1 )then
-                ddz = -zsoil(ns+1) * 0.5
-              elseif ( ns < physics%Model%lsoil ) then
-                ddz = ( zsoil(ns-1) - zsoil(ns+1) ) * 0.5
-              else
-                ddz = zsoil(ns-1) - zsoil(ns)
-              endif
-!
-! Use newton-raphson method to find eq soil moisture
-!
-              expon = bexp + 1.
-              aa    = dwsat / ddz
-              bb    = dksat / smcmax ** expon
-
-              smc = 0.5 * smcmax
-
-              do iter = 1, 100
-                func  = (smc - smcmax) * aa +  bb * smc ** expon
-                dfunc = aa + bb * expon * smc ** bexp
-                dx    = func / dfunc
-                smc   = smc - dx
-                if ( abs (dx) < 1.e-6) exit
-              enddo                               ! iteration
-              physics%Sfcprop%smoiseq(i,ns) = min(max(smc,1.e-4),smcmax*0.99)
-            enddo                                 ! ddz soil layer
-          else                                    ! bexp <= 0.0 
-            physics%Sfcprop%smoiseq(i,1:physics%Model%lsoil) = smcmax
-          endif                                   ! end the bexp condition
-!
-          physics%Sfcprop%smcwtdxy(i)   = smcmax
-          physics%Sfcprop%deeprechxy(i) = 0.0
-          physics%Sfcprop%rechxy(i)     = 0.0
-
-        endif !end if slmsk>0.01 (land only)
-
-      end if !noahmp_cold_start
       
     end do
     
