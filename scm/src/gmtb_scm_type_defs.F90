@@ -261,6 +261,11 @@ module gmtb_scm_type_defs
     real(kind=dp)                     :: input_deeprechxy !< recharge to or from the water table when deep (m)
     real(kind=dp)                     :: input_rechxy !< recharge to or from the water table when shallow (m)
     real(kind=dp)                     :: input_snowxy !< number of snow layers
+    real(kind=dp)                     :: input_albdvis !<
+    real(kind=dp)                     :: input_albdnir !<
+    real(kind=dp)                     :: input_albivis !<
+    real(kind=dp)                     :: input_albinir !<
+    real(kind=dp)                     :: input_emiss   !<
     
     real(kind=dp)                     :: input_tref !< sea surface reference temperature for NSST (K)
     real(kind=dp)                     :: input_z_c !< sub-layer cooling thickness for NSST (m)
@@ -282,11 +287,15 @@ module gmtb_scm_type_defs
     real(kind=dp)                     :: input_qrain !< sensible heat due to rainfall for NSST (W)
     
     real(kind=dp)                     :: input_wetness !< normalized soil wetness for RUC LSM
-    real(kind=dp)                     :: input_clw_surf !< cloud condensed water mixing ratio at surface for RUC LSM (kg kg-1)
-    real(kind=dp)                     :: input_qwv_surf !< water vapor mixing ratio at surface for RUC LSM (kg kg-1)
-    real(kind=dp)                     :: input_tsnow !< snow temperature at the bottom of the first snow layer for RUC LSM (K)
-    real(kind=dp)                     :: input_snowfallac !< run-total snow accumulation on the ground for RUC LSM (kg m-2)
-    real(kind=dp)                     :: input_acsnow !< snow water equivalent of run-total frozen precip for RUC LSM (kg m-2)
+    real(kind=dp)                     :: input_clw_surf_land !< cloud condensed water mixing ratio at surface over land for RUC LSM (kg kg-1)
+    real(kind=dp)                     :: input_clw_surf_ice !< cloud condensed water mixing ratio at surface over ice for RUC LSM (kg kg-1)
+    real(kind=dp)                     :: input_qwv_surf_land !< water vapor mixing ratio at surface over land for RUC LSM (kg kg-1)
+    real(kind=dp)                     :: input_qwv_surf_ice !< water vapor mixing ratio at surface over ice for RUC LSM (kg kg-1)
+    real(kind=dp)                     :: input_tsnow_land !< snow temperature at the bottom of the first snow layer over land for RUC LSM (K)
+    real(kind=dp)                     :: input_tsnow_ice !< snow temperature at the bottom of the first snow layer over ice for RUC LSM (K)
+    real(kind=dp)                     :: input_snowfallac_land !< run-total snow accumulation on the ground over land for RUC LSM (kg m-2)
+    real(kind=dp)                     :: input_snowfallac_ice !< run-total snow accumulation on the ground over ice for RUC LSM (kg m-2)
+    real(kind=dp)                     :: input_sncovr_ice !< 
     real(kind=dp)                     :: input_lai !< leaf area index for RUC LSM
     
     real(kind=dp), allocatable        :: input_pres_i(:) !< pressure (Pa) of input interface
@@ -763,6 +772,11 @@ module gmtb_scm_type_defs
     scm_input%input_deeprechxy = real_zero
     scm_input%input_rechxy = real_zero
     scm_input%input_snowxy = real_zero
+    scm_input%input_albdvis = real_zero
+    scm_input%input_albdnir = real_zero
+    scm_input%input_albivis = real_zero
+    scm_input%input_albinir = real_zero
+    scm_input%input_emiss = real_zero
     
     scm_input%input_tref       = real_zero  !< sea surface reference temperature for NSST (K)
     scm_input%input_z_c        = real_zero  !< sub-layer cooling thickness for NSST (m)
@@ -783,13 +797,17 @@ module gmtb_scm_type_defs
     scm_input%input_dt_cool    = real_zero  !< sub-layer cooling amount for NSST (K)
     scm_input%input_qrain      = real_zero  !< sensible heat due to rainfall for NSST (W)
     
-    scm_input%input_wetness    = real_zero  !< normalized soil wetness for RUC LSM
-    scm_input%input_clw_surf   = real_zero  !< cloud condensed water mixing ratio at surface for RUC LSM (kg kg-1)
-    scm_input%input_qwv_surf   = real_zero  !< water vapor mixing ratio at surface for RUC LSM (kg kg-1)
-    scm_input%input_tsnow      = real_zero  !< snow temperature at the bottom of the first snow layer for RUC LSM (K)
-    scm_input%input_snowfallac = real_zero  !< run-total snow accumulation on the ground for RUC LSM (kg m-2)
-    scm_input%input_acsnow     = real_zero  !< snow water equivalent of run-total frozen precip for RUC LSM (kg m-2)
-    scm_input%input_lai        = real_zero  !< leaf area index for RUC LSM
+    scm_input%input_wetness         = real_zero  !< normalized soil wetness for RUC LSM
+    scm_input%input_clw_surf_land   = real_zero  !< cloud condensed water mixing ratio at surface over land for RUC LSM (kg kg-1)
+    scm_input%input_clw_surf_ice    = real_zero  !< cloud condensed water mixing ratio at surface over ice for RUC LSM (kg kg-1)
+    scm_input%input_qwv_surf_land   = real_zero  !< water vapor mixing ratio at surface over land for RUC LSM (kg kg-1)
+    scm_input%input_qwv_surf_ice    = real_zero  !< water vapor mixing ratio at surface over ice for RUC LSM (kg kg-1)
+    scm_input%input_tsnow_land      = real_zero  !< snow temperature at the bottom of the first snow layer over land for RUC LSM (K)
+    scm_input%input_tsnow_ice       = real_zero  !< snow temperature at the bottom of the first snow layer over ice for RUC LSM (K)
+    scm_input%input_snowfallac_land = real_zero  !< run-total snow accumulation on the ground over land for RUC LSM (kg m-2)
+    scm_input%input_snowfallac_ice  = real_zero  !< run-total snow accumulation on the ground over ice for RUC LSM (kg m-2)
+    scm_input%input_sncovr_ice      = real_zero  !< 
+    scm_input%input_lai             = real_zero  !< leaf area index for RUC LSM
     
     scm_input%input_sh_flux_sfc_kin = real_zero
     scm_input%input_lh_flux_sfc_kin = real_zero
@@ -1172,28 +1190,37 @@ module gmtb_scm_type_defs
       
       if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then !.and. warm_start (not implemented here -- assuming that RUC LSM has warm start data from file)
         !--- Extra RUC LSM variables
-        ! write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
-        ! call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .false., missing_var(1))
-        ! call conditionally_set_var(scm_input%input_clw_surf, physics%Sfcprop%clw_surf(i), "clw_surf", .false., missing_var(2))
-        ! call conditionally_set_var(scm_input%input_qwv_surf, physics%Sfcprop%qwv_surf(i), "qwv_surf", .false., missing_var(3))
-        ! call conditionally_set_var(scm_input%input_tsnow, physics%Sfcprop%tsnow(i), "tsnow", .false., missing_var(4))
-        ! call conditionally_set_var(scm_input%input_snowfallac, physics%Sfcprop%snowfallac(i), "snowfallac", .false., missing_var(5))
-        ! call conditionally_set_var(scm_input%input_acsnow, physics%Sfcprop%acsnow(i), "acsnow", .false., missing_var(6))
-        ! if (physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%rdlai) then
-        !   !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
-        !   call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(7))
-        ! end if
-        ! 
-        ! !write out warning if missing data for non-required variables
-        ! n = 7
-        ! if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-        !   write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
-        !   write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-        !   do j=1, n
-        !     if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-        !   end do
-        ! end if
-        ! missing_var = .false.
+        write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
+        call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .false., missing_var(1))
+        call conditionally_set_var(scm_input%input_clw_surf_land, physics%Sfcprop%clw_surf_land(i), "clw_surf_land", .false., missing_var(2))
+        call conditionally_set_var(scm_input%input_clw_surf_ice, physics%Sfcprop%clw_surf_ice(i), "clw_surf_ice", .false., missing_var(3))
+        call conditionally_set_var(scm_input%input_qwv_surf_land, physics%Sfcprop%qwv_surf_land(i), "qwv_surf_land", .false., missing_var(4))
+        call conditionally_set_var(scm_input%input_qwv_surf_ice, physics%Sfcprop%qwv_surf_ice(i), "qwv_surf_ice", .false., missing_var(5))
+        call conditionally_set_var(scm_input%input_tsnow_land, physics%Sfcprop%tsnow_land(i), "tsnow_land", .false., missing_var(6))
+        call conditionally_set_var(scm_input%input_tsnow_ice, physics%Sfcprop%tsnow_ice(i), "tsnow_ice", .false., missing_var(7))
+        call conditionally_set_var(scm_input%input_snowfallac_land, physics%Sfcprop%snowfallac_land(i), "snowfallac_land", .false., missing_var(8))
+        call conditionally_set_var(scm_input%input_snowfallac_ice, physics%Sfcprop%snowfallac_ice(i), "snowfallac_ice", .false., missing_var(9))
+        call conditionally_set_var(scm_input%input_sncovr_ice, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .false., missing_var(10))
+        if (physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%rdlai) then
+           !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
+           call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(11))
+        end if
+        
+        !if sncovr_ice is missing, set to the land value
+        if(missing_var(10)) then
+          scm_input%input_sncovr_ice = scm_input%input_sncovr
+        end if
+         
+         !write out warning if missing data for non-required variables
+        n = 11
+        if ( i==1 .and. ANY( missing_var(1:n) ) ) then
+          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
+          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          do j=1, n
+            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+          end do
+        end if
+        missing_var = .false.
       elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_noahmp) then
         write(0,'(a)') "Setting internal physics variables from the NoahMP section of the case input file (scalars)..."
         !all of these can be missing, since a method exists to "cold start" these variables
@@ -1226,9 +1253,14 @@ module gmtb_scm_type_defs
         call conditionally_set_var(scm_input%input_smcwtdxy, physics%Sfcprop%smcwtdxy(i), "smcwtdxy", .false., missing_var(27))
         call conditionally_set_var(scm_input%input_deeprechxy, physics%Sfcprop%deeprechxy(i), "deeprechxy", .false., missing_var(28))
         call conditionally_set_var(scm_input%input_rechxy, physics%Sfcprop%rechxy(i), "rechxy", .false., missing_var(29))
+        call conditionally_set_var(scm_input%input_albdvis, physics%Sfcprop%albdvis(i), "albdvis", .false., missing_var(30))
+        call conditionally_set_var(scm_input%input_albdnir, physics%Sfcprop%albdnir(i), "albdnir", .false., missing_var(31))
+        call conditionally_set_var(scm_input%input_albivis, physics%Sfcprop%albivis(i), "albivis", .false., missing_var(32))
+        call conditionally_set_var(scm_input%input_albinir, physics%Sfcprop%albinir(i), "albinir", .false., missing_var(33))
+        call conditionally_set_var(scm_input%input_emiss, physics%Sfcprop%emiss(i), "emiss", .false., missing_var(34))
         
         !write out warning if missing data for non-required variables
-        n = 29
+        n = 34
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
           write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
