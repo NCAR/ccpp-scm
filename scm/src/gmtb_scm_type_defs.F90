@@ -1208,7 +1208,7 @@ module gmtb_scm_type_defs
         
         !if sncovr_ice is missing, set to the land value
         if(missing_var(10)) then
-          scm_input%input_sncovr_ice = scm_input%input_sncovr
+          call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .false., missing_var(10))
         end if
          
          !write out warning if missing data for non-required variables

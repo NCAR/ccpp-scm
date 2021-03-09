@@ -209,3 +209,10 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_rerth]
+  standard_name = radius_of_earth
+  long_name = radius of earth
+  units = m
+  dimensions = ()
+  type = real
+  kind = kind_phys
