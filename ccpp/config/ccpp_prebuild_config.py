@@ -273,6 +273,8 @@ SCHEME_FILES = [
     'ccpp/physics/physics/ysuvdif.F90'                      ,
     'ccpp/physics/physics/module_MYNNPBL_wrapper.F90'       ,
     'ccpp/physics/physics/module_MYNNSFC_wrapper.F90'       ,
+    'ccpp/physics/physics/fix_sys_bias_sfc.F90'             ,
+    'ccpp/physics/physics/fix_sys_bias_sfc_time.F90'        ,
     'ccpp/physics/physics/module_SGSCloud_RadPre.F90'       ,
     'ccpp/physics/physics/module_SGSCloud_RadPost.F90'      ,
     'ccpp/physics/physics/module_MYJSFC_wrapper.F90'        ,
