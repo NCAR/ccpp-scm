@@ -92,7 +92,7 @@ subroutine output_init(scm_state, physics)
   !> - Define all diagnostic/physics variables
   CALL output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id, scm_state, physics)
   CALL output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
-  CALL output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
+  CALL output_init_radtend(ncid, time_inst_id, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
   CALL output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id, physics)
   
   call NetCDF_def_var(ncid, 'init_year',   NF90_FLOAT, "model initialization year",   "year",   year_id)
@@ -247,15 +247,17 @@ subroutine output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id,
   
 end subroutine output_init_interstitial
 
-subroutine output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
+subroutine output_init_radtend(ncid, time_inst_id, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
   use NetCDF_def, only : NetCDF_def_var
   
-  integer, intent(in) :: ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id
+  integer, intent(in) :: ncid, time_inst_id, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id
   
   integer :: dummy_id
   
   call NetCDF_def_var(ncid, 'sw_rad_heating_rate', NF90_FLOAT, "total sky shortwave radiative heating rate (radiation timesteps only)", "K s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_swrad_id /))
   call NetCDF_def_var(ncid, 'lw_rad_heating_rate', NF90_FLOAT, "total sky longwave radiative heating rate (radiation timesteps only)",  "K s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_lwrad_id /))
+  
+  call NetCDF_def_var(ncid, 'lw_rad_heating_rate_adj', NF90_FLOAT, "time-adjusted longwave radiative heating rate",     "K s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
   
 end subroutine output_init_radtend
 
@@ -380,6 +382,7 @@ subroutine output_append(scm_state, physics)
   
   call output_append_sfcprop(ncid, scm_state, physics)
   call output_append_interstitial(ncid, scm_state, physics)
+  call output_append_radtend_inst(ncid, scm_state, physics)
   if(physics%Model%lslwr .or. physics%Model%lsswr) then
     if (physics%Model%lsswr) then
       scm_state%itt_swrad = scm_state%itt_swrad + 1
@@ -391,7 +394,7 @@ subroutine output_append(scm_state, physics)
       CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_lwrad",VARID=var_id))
       CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_lwrad /)))
     end if
-    call output_append_radtend(ncid, scm_state, physics)
+    call output_append_radtend_rad_only(ncid, scm_state, physics)
   end if
   call output_append_diag_inst(ncid, scm_state, physics)
   if(mod(scm_state%itt,physics%Model%nszero) == 0) then
@@ -541,7 +544,19 @@ subroutine output_append_interstitial(ncid, scm_state, physics)
 
 end subroutine output_append_interstitial
 
-subroutine output_append_radtend(ncid, scm_state, physics)
+subroutine output_append_radtend_inst(ncid, scm_state, physics)
+    use gmtb_scm_type_defs, only: scm_state_type, physics_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    type(physics_type), intent(in) :: physics
+    
+    call NetCDF_put_var(ncid, "lw_rad_heating_rate_adj",  physics%Radtend%htrlw_adj(:,:), scm_state%itt_out)
+    
+end subroutine output_append_radtend_inst
+
+subroutine output_append_radtend_rad_only(ncid, scm_state, physics)
     use gmtb_scm_type_defs, only: scm_state_type, physics_type
     use NetCDF_put, only: NetCDF_put_var
     
@@ -570,7 +585,7 @@ subroutine output_append_radtend(ncid, scm_state, physics)
     !physics%Radtend%sfcflw(i)%upfx0 !lw_up_sfc_clr
     !physics%Radtend%sfcflw(i)%dnfx0 !lw_dn_sfc_clr 
     
-end subroutine output_append_radtend
+end subroutine output_append_radtend_rad_only
 
 subroutine output_append_diag_inst(ncid, scm_state, physics)
     use gmtb_scm_type_defs, only: scm_state_type, physics_type
