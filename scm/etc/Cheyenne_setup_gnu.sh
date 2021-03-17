@@ -6,7 +6,7 @@ echo "Setting environment variables for SCM-CCPP on Cheyenne with gcc/gfortran"
 echo "Loading gnu and netcdf modules..."
 module purge
 module load ncarenv/1.3
-module load gnu/8.3.0
+module load gnu/9.1.0
 module load mpt/2.19
 module load ncarcompilers/0.5.0
 module load netcdf/4.7.3
@@ -17,8 +17,8 @@ export CXX=g++
 export FC=gfortran
 
 echo "Setting NCEPLIBS environment variables"
-module use /glade/p/ral/jntp/GMTB/tools/modulefiles/gnu-8.3.0/mpt-2.19
-module load  NCEPlibs/1.1.0
+module use /glade/p/ral/jntp/GMTB/tools/modulefiles/gnu-9.1.0/mpt-2.19
+module load  NCEPlibs/9.9.9
 
 echo "Loading cmake"
 module load cmake/3.16.4
