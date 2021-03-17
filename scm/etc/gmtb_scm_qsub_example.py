@@ -27,8 +27,8 @@ PROC = Popen('qsub', shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds
 JOB_NAME = "test_job"
 ACCOUNT = "p48503002"
 WALLTIME = "walltime=00:20:00"
-PROCESSORS = "select=1:mpiprocs=24:ncpus=24"
-QUEUE = "regular"
+PROCESSORS = "select=1:ncpus=1"
+QUEUE = "share"
 COMMAND = "./run_gmtb_scm.py -c twpice"
 EMAIL_ADDR = MY_EMAIL
 SERIAL_MEM = "512M"
