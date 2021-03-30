@@ -1357,19 +1357,19 @@ module gmtb_scm_type_defs
         end if
       end if
       
-      if (scm_input%input_tsfcl < real_zero) then
+      if (scm_input%input_tsfcl <= real_zero) then
         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i) !--- compute tsfcl from existing variables
       end if
       
-      if (scm_input%input_zorll < real_zero) then
+      if (scm_input%input_zorll <= real_zero) then
         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlo(i) !--- compute zorll from existing variables
       end if
       
-      if (scm_input%input_zorli < real_zero) then
+      if (scm_input%input_zorli <= real_zero) then
         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlo(i) !--- compute zorli from existing variables
       end if
       
-      if (scm_input%input_zorlw < real_zero) then
+      if (scm_input%input_zorlw <= real_zero) then
         physics%Sfcprop%zorlw(i) = physics%Sfcprop%zorlo(i) !--- compute zorlw from existing variables
       end if
       
