@@ -1,26 +1,26 @@
-!> \file fix_sys_bias_sfc_time.F90
+!> \file fix_sys_bias_sfc.F90
 !!  Modifies surface fluxes used in GFS-based PBL schemes.
 
-!> This module contains the CCPP-compliant "fix_sys_bias_sfc_time" scheme.
-    module fix_sys_bias_sfc_time
+!> This module contains the CCPP-compliant "fix_sys_bias_sfc" scheme.
+    module fix_sys_bias_sfc
       
       use machine , only : kind_phys
       
       contains
 
-      subroutine fix_sys_bias_sfc_time_init()
-      end subroutine fix_sys_bias_sfc_time_init
+      subroutine fix_sys_bias_sfc_init()
+      end subroutine fix_sys_bias_sfc_init
       
-      subroutine fix_sys_bias_sfc_time_finalize()
-      end subroutine fix_sys_bias_sfc_time_finalize
+      subroutine fix_sys_bias_sfc_finalize()
+      end subroutine fix_sys_bias_sfc_finalize
       
 !>  \brief  This subroutine contains all of the logic for the
-!! fix_sys_bias_sfc_time scheme used in the CCPP-SCM online tutorial.
+!! fix_sys_bias_sfc scheme used in the CCPP-SCM online tutorial.
 !!
-!> \section arg_table_fix_sys_bias_sfc_time_run Argument Table
-!! \htmlinclude fix_sys_bias_sfc_time_run.html
+!> \section arg_table_fix_sys_bias_sfc_run Argument Table
+!! \htmlinclude fix_sys_bias_sfc_run.html
 !!
-      subroutine fix_sys_bias_sfc_time_run (im, con_cp, con_rd, con_hvap, p1, t1, solhr, hflx_r, qflx_r, errmsg, errflg)
+      subroutine fix_sys_bias_sfc_run (im, con_cp, con_rd, con_hvap, p1, t1, solhr, hflx_r, qflx_r, errmsg, errflg)
 
       implicit none
 
@@ -58,6 +58,6 @@
         qflx_r(i) = MAX(lat_mod_factor/(rho*con_hvap) + qflx_r(i), 0.0)
       end do
 
-    end subroutine fix_sys_bias_sfc_time_run
+    end subroutine fix_sys_bias_sfc_run
 
-  end module fix_sys_bias_sfc_time
+  end module fix_sys_bias_sfc

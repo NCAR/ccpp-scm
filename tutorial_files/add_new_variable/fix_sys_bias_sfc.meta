@@ -1,5 +1,5 @@
 [ccpp-arg-table]
-  name = fix_sys_bias_sfc_time_run
+  name = fix_sys_bias_sfc_run
   type = scheme
 [im]
   standard_name = horizontal_loop_extent
