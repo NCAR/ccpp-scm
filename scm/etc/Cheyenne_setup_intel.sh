@@ -4,9 +4,10 @@ echo "Setting environment variables for SCM-CCPP on Cheyenne with icc/ifort"
 
 #load the modules in order to compile the GMTB SCM
 echo "Loading intel and netcdf modules..."
+deactivate
 module purge
 module load ncarenv/1.3
-module load intel/18.0.5
+module load intel/19.1.1
 module load mpt/2.19
 module load ncarcompilers/0.5.0
 module load netcdf/4.7.3
@@ -17,8 +18,8 @@ export CXX=icpc
 export FC=ifort
 
 echo "Setting NCEPLIBS environment variables"
-module use /glade/p/ral/jntp/GMTB/tools/modulefiles/intel-18.0.5/mpt-2.19
-module load  NCEPlibs/1.1.0
+module use /glade/p/ral/jntp/GMTB/tools/NCEPLIBS-ufs-v2.0.0/intel-19.1.1/mpt-2.19/modules
+module load  NCEPLIBS/2.0.0
 
 echo "Loading cmake"
 module load cmake/3.16.4
