@@ -20,7 +20,7 @@
 !> \section arg_table_fix_sys_bias_sfc_run Argument Table
 !! \htmlinclude fix_sys_bias_sfc_run.html
 !!
-      subroutine fix_sys_bias_sfc_run (im, con_cp, con_rd, con_hvap, p1, t1, hflx_r, qflx_r, errmsg, errflg)
+      subroutine fix_sys_bias_sfc_run (im, con_cp, con_rd, con_hvap, p1, t1, errmsg, errflg)
 
       implicit none
 
@@ -30,7 +30,6 @@
       
       real(kind=kind_phys), intent(in) :: con_cp, con_rd, con_hvap
       real(kind=kind_phys), intent(in) :: p1(:), t1(:)
-      real(kind=kind_phys), intent(inout) :: hflx_r(:), qflx_r(:)
 
       character(len=*), intent(out) :: errmsg
       integer,          intent(out) :: errflg
@@ -45,12 +44,9 @@
 !     Initialize CCPP error handling variables
       errmsg = ''
       errflg = 0
-
+      
       do i=1, im
         rho = p1(i)/(con_rd*t1(i))
-        !convert mod_factor to kinematic units and add
-        hflx_r(i) = MAX(sens_mod_factor/(rho*con_cp) + hflx_r(i), 0.0)
-        qflx_r(i) = MAX(lat_mod_factor/(rho*con_hvap) + qflx_r(i), 0.0)
       end do
 
     end subroutine fix_sys_bias_sfc_run
