@@ -56,6 +56,11 @@ OZ_PHYS_TARGET       = 'global_o3prdlos_orig.f77'
 OZ_PHYS_2015_TARGET  = 'ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77'
 OZ_PHYS_LINK         = 'global_o3prdlos.f77'
 
+#Default filename/targets for UGWPv1
+DEFAULT_DO_UGWP_V1   = False
+TAU_TARGET           = 'ugwp_c384_tau.nc'
+TAU_LINK             = 'ugwp_limb_tau.nc'
+
 # For developers: set logging level to DEBUG for additional output
 #LOGLEVEL = logging.DEBUG
 LOGLEVEL = logging.INFO
@@ -369,6 +374,20 @@ class Experiment(object):
         elif oz_phys_2015:
             logging.info('Linking input data for oz_phys_2015')
             cmd = 'ln -sf {0} {1}'.format(OZ_PHYS_2015_TARGET, OZ_PHYS_LINK)
+            execute(cmd)
+        
+        # Look for do_ugwp_v1
+        try:
+            do_ugwp_v1 = nml['gfs_physics_nml']['do_ugwp_v1']
+        except KeyError:
+            do_ugwp_v1 = DEFAULT_DO_UGWP_V1
+        
+        # Link the tau file if do_ugwp_v1
+        if do_ugwp_v1:
+            if os.path.exists(TAU_LINK):
+                os.remove(TAU_LINK)
+            logging.info('Linking input data for UGWP_v1')
+            cmd = 'ln -sf {0} {1}'.format(TAU_TARGET, TAU_LINK)
             execute(cmd)
         
         # Link scripts needed to run SCM analysis

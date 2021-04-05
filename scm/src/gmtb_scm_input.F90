@@ -347,7 +347,12 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_deeprechxy !< recharge to or from the water table when deep (m)
   real(kind=dp)               :: input_rechxy !< recharge to or from the water table when shallow (m)
   real(kind=dp)               :: input_snowxy !< number of snow layers
-
+  real(kind=dp)               :: input_albdvis !<
+  real(kind=dp)               :: input_albdnir !<
+  real(kind=dp)               :: input_albivis !<
+  real(kind=dp)               :: input_albinir !<
+  real(kind=dp)               :: input_emiss   !<
+  
   real(kind=dp)               :: input_tref !< sea surface reference temperature for NSST (K)
   real(kind=dp)               :: input_z_c !< sub-layer cooling thickness for NSST (m)
   real(kind=dp)               :: input_c_0 !< coefficient 1 to calculate d(Tz)/d(Ts) for NSST
@@ -368,11 +373,15 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_qrain !< sensible heat due to rainfall for NSST (W)
   
   real(kind=dp)               :: input_wetness !< normalized soil wetness for RUC LSM
-  real(kind=dp)               :: input_clw_surf !< cloud condensed water mixing ratio at surface for RUC LSM (kg kg-1)
-  real(kind=dp)               :: input_qwv_surf !< water vapor mixing ratio at surface for RUC LSM (kg kg-1)
-  real(kind=dp)               :: input_tsnow !< snow temperature at the bottom of the first snow layer for RUC LSM (K)
-  real(kind=dp)               :: input_snowfallac !< run-total snow accumulation on the ground for RUC LSM (kg m-2)
-  real(kind=dp)               :: input_acsnow !< snow water equivalent of run-total frozen precip for RUC LSM (kg m-2)
+  real(kind=dp)               :: input_clw_surf_land !< cloud condensed water mixing ratio at surface over land for RUC LSM (kg kg-1)
+  real(kind=dp)               :: input_clw_surf_ice !< cloud condensed water mixing ratio at surface over ice for RUC LSM (kg kg-1)
+  real(kind=dp)               :: input_qwv_surf_land !< water vapor mixing ratio at surface over land for RUC LSM (kg kg-1)
+  real(kind=dp)               :: input_qwv_surf_ice !< water vapor mixing ratio at surface over ice for RUC LSM (kg kg-1)
+  real(kind=dp)               :: input_tsnow_land !< snow temperature at the bottom of the first snow layer over land for RUC LSM (K)
+  real(kind=dp)               :: input_tsnow_ice !< snow temperature at the bottom of the first snow layer over ice for RUC LSM (K)
+  real(kind=dp)               :: input_snowfallac_land !< run-total snow accumulation on the ground over land for RUC LSM (kg m-2)
+  real(kind=dp)               :: input_snowfallac_ice !< run-total snow accumulation on the ground over ice for RUC LSM (kg m-2)
+  real(kind=dp)               :: input_sncovr_ice !<
   real(kind=dp)               :: input_lai !< leaf area index for RUC LSM
   
   !surface time-series variables
@@ -604,6 +613,11 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "deeprechxy",.False., input_deeprechxy)
   call NetCDF_read_var(grp_ncid, "rechxy",    .False., input_rechxy)
   call NetCDF_read_var(grp_ncid, "snowxy",    .False., input_snowxy)
+  call NetCDF_read_var(grp_ncid, "albdvis",   .False., input_albdvis)
+  call NetCDF_read_var(grp_ncid, "albdnir",   .False., input_albdnir)
+  call NetCDF_read_var(grp_ncid, "albivis",   .False., input_albivis)
+  call NetCDF_read_var(grp_ncid, "albinir",   .False., input_albinir)
+  call NetCDF_read_var(grp_ncid, "emiss",     .False., input_emiss)
   
   !NSST variables
   call NetCDF_read_var(grp_ncid, "tref",    .False., input_tref)
@@ -627,11 +641,15 @@ subroutine get_case_init(scm_state, scm_input)
   
   !RUC LSM variables
   call NetCDF_read_var(grp_ncid, "wetness",          .False., input_wetness)
-  call NetCDF_read_var(grp_ncid, "clw_surf",         .False., input_clw_surf)
-  call NetCDF_read_var(grp_ncid, "qwv_surf",         .False., input_qwv_surf)
-  call NetCDF_read_var(grp_ncid, "tsnow",            .False., input_tsnow)
-  call NetCDF_read_var(grp_ncid, "snowfall_acc",     .False., input_snowfallac)
-  call NetCDF_read_var(grp_ncid, "swe_snowfall_acc", .False., input_acsnow)
+  call NetCDF_read_var(grp_ncid, "clw_surf_land",    .False., input_clw_surf_land)
+  call NetCDF_read_var(grp_ncid, "clw_surf_ice",     .False., input_clw_surf_ice)
+  call NetCDF_read_var(grp_ncid, "qwv_surf_land",    .False., input_qwv_surf_land)
+  call NetCDF_read_var(grp_ncid, "qwv_surf_ice",     .False., input_qwv_surf_ice)
+  call NetCDF_read_var(grp_ncid, "tsnow_land",       .False., input_tsnow_land)
+  call NetCDF_read_var(grp_ncid, "tsnow_ice",        .False., input_tsnow_ice)
+  call NetCDF_read_var(grp_ncid, "snowfall_acc_land",.False., input_snowfallac_land)
+  call NetCDF_read_var(grp_ncid, "snowfall_acc_ice", .False., input_snowfallac_ice)
+  call NetCDF_read_var(grp_ncid, "sncovr_ice",       .False., input_sncovr_ice)
   call NetCDF_read_var(grp_ncid, "lai",              .False., input_lai)
     
   !> - Read in the forcing data.
@@ -817,6 +835,11 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_deeprechxy = input_deeprechxy
   scm_input%input_rechxy = input_rechxy
   scm_input%input_snowxy = input_snowxy
+  scm_input%input_albdvis = input_albdvis
+  scm_input%input_albdnir = input_albdnir
+  scm_input%input_albivis = input_albivis
+  scm_input%input_albinir = input_albinir
+  scm_input%input_emiss = input_emiss
   
   scm_input%input_tref    = input_tref
   scm_input%input_z_c     = input_z_c
@@ -837,13 +860,17 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_dt_cool = input_dt_cool
   scm_input%input_qrain   = input_qrain
   
-  scm_input%input_wetness    = input_wetness
-  scm_input%input_clw_surf   = input_clw_surf
-  scm_input%input_qwv_surf   = input_qwv_surf
-  scm_input%input_tsnow      = input_tsnow
-  scm_input%input_snowfallac = input_snowfallac
-  scm_input%input_acsnow     = input_acsnow
-  scm_input%input_lai        = input_lai
+  scm_input%input_wetness         = input_wetness
+  scm_input%input_clw_surf_land   = input_clw_surf_land
+  scm_input%input_clw_surf_ice    = input_clw_surf_ice
+  scm_input%input_qwv_surf_land   = input_qwv_surf_land
+  scm_input%input_qwv_surf_ice    = input_qwv_surf_ice
+  scm_input%input_tsnow_land      = input_tsnow_land
+  scm_input%input_tsnow_ice       = input_tsnow_ice
+  scm_input%input_snowfallac_land = input_snowfallac_land
+  scm_input%input_snowfallac_ice  = input_snowfallac_ice
+  scm_input%input_sncovr_ice      = input_sncovr_ice
+  scm_input%input_lai             = input_lai
   
 !> @}
 end subroutine get_case_init
