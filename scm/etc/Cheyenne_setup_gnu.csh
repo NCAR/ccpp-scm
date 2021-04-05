@@ -2,10 +2,14 @@
 
 echo "Setting environment variables for SCM-CCPP on Cheyenne with gcc/gfortran"
 
-#load the modules in order to compile the GMTB SCM
-echo "Loading gnu and netcdf modules..."
+#start with a "clean" environment; activate and deactivate ncar_pylib in order to successfully deactivate previously activated environment without errors
+module load ncarenv/1.3
+ncar_pylib
 deactivate
 module purge
+
+#load the modules in order to compile the GMTB SCM
+echo "Loading gnu and netcdf modules..."
 module load ncarenv/1.3
 module load gnu/10.1.0
 module load mpt/2.19
