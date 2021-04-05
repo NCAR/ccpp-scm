@@ -2264,6 +2264,13 @@
   units = none
   dimensions = ()
   type = integer
+[fhzero]
+  standard_name = hours_between_clearing_of_diagnostic_buckets
+  long_name = hours between clearing of diagnostic buckets
+  units = h
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [fn_nml]
   standard_name = namelist_filename
   long_name = namelist filename
@@ -2290,13 +2297,6 @@
   units = none
   dimensions = ()
   type = integer
-[fhzero]
-  standard_name = frequency_for_diagnostic_clearing
-  long_name = frequency for clearing diagnostic fields
-  units = h
-  dimensions = ()
-  type = real
-  kind = kind_phys
 [ldiag3d]
   standard_name = flag_diagnostics_3D
   long_name = flag for 3d diagnostic fields
