@@ -1,14 +1,14 @@
 #!/bin/bash
 #=======================================================================
 # Description:  This script builds and runs the CCPP SCM
-#               The executable gmtb_scm is built for each compiler on the
-#               platform (machine name).
+#               The executable gmtb_scm is built for each compiler and
+#               build type on the platform (machine name).
 #
 # Assumptions:
 #
 # Command line arguments: machine name (hera or cheyenne)
 #
-# Usage: ./rt.sh $machine         # Run the regression tests
+# Usage: ./rt.sh $machine >& test.out &      # Run the regression tests
 set -eux    # Uncomment for debugging
 #=======================================================================
 
@@ -35,6 +35,8 @@ export machine=${1}
 machine=`echo "${machine}" | tr '[A-Z]' '[a-z]'`  # Make machine name all lower case
 machine=`echo "${machine^}"`                      # Capitalize first letter for setup script name
 build_it=0                                        # Set to 1 to skip build (for testing pass/fail criteria)
+
+build_types=( Release Debug )                     # Set all instances of CMAKE_BUILD_TYPE
 
 if [ "${machine}" == "Cheyenne" ] ; then
   compilers=( intel gnu )
@@ -81,55 +83,64 @@ fi
 # Set up the build environment and run the build script.
 #-----------------------------------------------------------------------
 for compiler in "${compilers[@]}"; do
+  for build_type in "${build_types[@]}"; do
 
-  BIN_DIR=$TOP_DIR/scm/bin_${compiler}     # Assign a bin and run dir
-  RUN_DIR=$TOP_DIR/scm/run_${compiler}     # for each build/run in test
-  BUILD_OUTPUT=${BIN_DIR}/build.out
-  test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py"
-  walltime="walltime=00:40:00"
+    echo "Starting ${compiler} ${build_type} build"
 
-  . ${ETC_DIR}/${machine}_setup_${compiler}.sh
+    build_type_lc=`echo "${build_type}" | tr '[A-Z]' '[a-z]'`  # Make build_type all lower case
+    BIN_DIR=$TOP_DIR/scm/bin_${compiler}_${build_type_lc}      # Assign a bin and run dir
+    RUN_DIR=$TOP_DIR/scm/run_${compiler}_${build_type_lc}      # for each build/run in test
+    BUILD_OUTPUT=${BIN_DIR}/build.out
+    test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py"
+    walltime="walltime=00:40:00"
 
-  if [ $build_it -eq 0 ] ; then
+    . ${ETC_DIR}/${machine}_setup_${compiler}.sh
+
+    if [ $build_it -eq 0 ] ; then
 #-----------------------------------------------------------------------
 # Build the SCM
 #-----------------------------------------------------------------------
-    if [ -d "${BIN_DIR}" ] ; then rm -rf ${BIN_DIR}; fi
-    mkdir ${BIN_DIR}
-    cd ${BIN_DIR}
-    cmake ../src
-    make -j4 >& ${BUILD_OUTPUT} || fail "Build ${machine} ${compiler} FAILED"
-  fi    # End of skip build for testing
+      if [ -d "${BIN_DIR}" ] ; then rm -rf ${BIN_DIR}; fi
+      mkdir ${BIN_DIR}
+      cd ${BIN_DIR}
+      cmake -DCMAKE_BUILD_TYPE=${build_type} ../src >& log.cmake
+      if [ "${build_type_lc}" == "release" ] ; then
+        make -j4 >& ${BUILD_OUTPUT} || fail "Build ${machine} ${compiler} FAILED"
+      else   # Intel debug fails with -j4
+        make >& ${BUILD_OUTPUT} || fail "Build ${machine} ${compiler} FAILED"
+      fi
+    fi    # End of skip build for testing
 
-  exec_file=${BIN_DIR}/${executable_name}
-  if [ -f "${exec_file}" ]; then
-    echo "SUCCEED: ${machine} ${compiler} executable file ${exec_file} exists" >> ${TEST_OUTPUT}
-  else
-    echo "FAIL: ${machine} ${compiler} executable file ${exec_file} does NOT exist" >> ${TEST_OUTPUT}
-  fi
+    exec_file=${BIN_DIR}/${executable_name}
+    if [ -f "${exec_file}" ]; then
+      echo "SUCCEED: ${machine} ${compiler} executable file ${exec_file} exists" >> ${TEST_OUTPUT}
+    else
+      echo "FAIL: ${machine} ${compiler} executable file ${exec_file} does NOT exist" >> ${TEST_OUTPUT}
+    fi
 
 #-----------------------------------------------------------------------
 # Set up the run directory for the build
 #-----------------------------------------------------------------------
-  if [ -d "${RUN_DIR}" ] ; then rm -rf ${RUN_DIR}; fi
-  mkdir ${RUN_DIR}
-  cd ${RUN_DIR}
-  ln -s ${BIN_DIR}/${executable_name} ${executable_name}
-  ln -s ${SRC_DIR}/multi_run_gmtb_scm.py multi_run_gmtb_scm.py
-  ln -s ${SRC_DIR}/run_gmtb_scm.py run_gmtb_scm.py
-  cp ${ETC_DIR}/${job_submission_script} ${job_submission_script}.tmp
+    if [ -d "${RUN_DIR}" ] ; then rm -rf ${RUN_DIR}; fi
+    mkdir ${RUN_DIR}
+    cd ${RUN_DIR}
+    ln -s ${BIN_DIR}/${executable_name} ${executable_name}
+    ln -s ${SRC_DIR}/multi_run_gmtb_scm.py multi_run_gmtb_scm.py
+    ln -s ${SRC_DIR}/run_gmtb_scm.py run_gmtb_scm.py
+    cp ${ETC_DIR}/${job_submission_script} ${job_submission_script}.tmp
 #-----------------------------------------------------------------------
 # Substitute COMMAND in job_submission script to use multi_run
 #-----------------------------------------------------------------------
-  sed "s,^.*COMMAND \= .*,COMMAND \= \"${test_run_cmd}\"," ${job_submission_script}.tmp > ${job_submission_script}.tmp2
-  sed "s,^.*WALLTIME \= .*,WALLTIME \= \"${walltime}\"," ${job_submission_script}.tmp2 > ${job_submission_script}
-  chmod +x ${job_submission_script}
-  rm -rf ${job_submission_script}.tmp
-  rm -rf ${job_submission_script}.tmp2
+    sed "s,^.*COMMAND \= .*,COMMAND \= \"${test_run_cmd}\"," ${job_submission_script}.tmp > ${job_submission_script}.tmp2
+    sed "s,^.*WALLTIME \= .*,WALLTIME \= \"${walltime}\"," ${job_submission_script}.tmp2 > ${job_submission_script}
+    chmod +x ${job_submission_script}
+    rm -rf ${job_submission_script}.tmp
+    rm -rf ${job_submission_script}.tmp2
 
 #-----------------------------------------------------------------------
 # Submit job_submission to queue
 #-----------------------------------------------------------------------
-  ./${job_submission_script}
+    ./${job_submission_script}
 
-done #End compiler loop
+  done #End build type loop
+done   #End compiler loop
