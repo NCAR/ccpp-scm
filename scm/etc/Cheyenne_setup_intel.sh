@@ -2,9 +2,14 @@
 
 echo "Setting environment variables for CCPP-SCM on Cheyenne with icc/ifort"
 
+#start with a "clean" environment; activate and deactivate ncar_pylib in order to successfully deactivate previously activated environment without errors
+module load ncarenv/1.3
+ncar_pylib
+deactivate
+module purge
+
 #load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
-module purge
 module load ncarenv/1.3
 module load intel/19.1.1
 module load mpt/2.19
@@ -18,7 +23,7 @@ export FC=ifort
 
 echo "Setting NCEPLIBS environment variables"
 module use /glade/p/ral/jntp/GMTB/tools/NCEPLIBS-ufs-v2.0.0/intel-19.1.1/mpt-2.19/modules
-module load NCEPLIBS/2.0.0
+module load  NCEPLIBS/2.0.0
 
 echo "Loading cmake"
 module load cmake/3.16.4

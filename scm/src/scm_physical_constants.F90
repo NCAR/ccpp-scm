@@ -10,7 +10,8 @@ public
 !! \htmlinclude scm_physical_constants.html
 !!
   real(kind=dp),parameter:: con_pi     =3.1415926535897931
-
+  
+  real(kind=dp),parameter:: con_rerth  =6.3712e+6
   real(kind=dp),parameter:: con_g      =9.80665e+0
   real(kind=dp),parameter:: con_omega  =7.2921e-5
   real(kind=dp),parameter:: con_p0     =1.01325e+5

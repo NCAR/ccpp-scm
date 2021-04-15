@@ -12,6 +12,6 @@ BASEDIR=$MYDIR/..
 
 # Change to directory containing the physics input data, download and extract archive
 cd $BASEDIR/scm/data/physics_input_data/
-wget https://github.com/NCAR/gmtb-scm/releases/download/v4.0.0/thompson_tables.tar
-tar -xvf thompson_tables.tar
-rm -f thompson_tables.tar
+wget https://github.com/NCAR/ccpp-scm/releases/download/v5.0.0/thompson_tables2.tar
+tar -xvf thompson_tables2.tar
+rm -f thompson_tables2.tar
