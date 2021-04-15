@@ -30,8 +30,10 @@ endif("${SUITES}" STREQUAL "")
 string(REGEX REPLACE "(.+),$" "\\1" SUITES ${SUITES})
 # Run CCPP prebuild.py
 message (STATUS "Running ccpp_prebuild.py for CCPP")
+# Make the directories where the ccpp_prebuild.py script wants to write caps and make snippets
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
 execute_process(
-  COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR}/..
+  COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR}
   OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
   ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..

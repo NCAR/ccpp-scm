@@ -238,7 +238,7 @@ subroutine scm_main_sub()
     scm_state%temp_u(:,:,1) = scm_state%state_u(:,:,1)
     scm_state%temp_v(:,:,1) = scm_state%state_v(:,:,1)
 
-    call interpolate_forcing(scm_input_instance, scm_state)
+    call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
     call calc_pres_exner_geopotential(1, scm_state)
 
