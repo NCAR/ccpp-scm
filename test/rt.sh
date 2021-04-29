@@ -42,7 +42,7 @@ function wait_for_criteria() {
   while [ ${criteria} -eq 0 ] ; do
     while [ ${counter} -le ${max_iterations} ] ; do
       criteria=$(eval $cmd)
-      if [ ${criteria} -eq 1 ] ; then break ; fi    # criteria met
+      if [ "${criteria}" -eq 1 ] ; then break ; fi    # criteria met
       echo "criteria = ${criteria}, counter = ${counter}, sleeping..." >> ${TEST_OUTPUT}
       sleep ${n_sleep_sec}
       let counter=counter+1
@@ -58,7 +58,6 @@ function wait_for_criteria() {
 }
 
 machines=( hera cheyenne )
-users=( schramm@ucar.edu )
 executable_name=gmtb_scm
 
 [[ $# -eq 0 ]] && usage
@@ -69,18 +68,26 @@ machine=$(echo "${machine}" | tr '[A-Z]' '[a-z]')  # Make machine name all lower
 machine=$(echo "${machine^}")                      # Capitalize first letter for setup script name
 build_it=0                                         # Set to 1 to skip build (for testing run, pass/fail criteria)
 run_it=0                                           # Set to 1 to skip run (for testing pass/fail criteria)
-max_iterations=240                                 # Max # of iterations to wait for batch output file to
-                                                   # be created and to job to complete
-n_sleep_sec=30                                     # Interval in seconds between interation
 
-build_types=( Release Debug )                     # Set all instances of CMAKE_BUILD_TYPE
+build_types=( Release Debug )                      # Set all instances of CMAKE_BUILD_TYPE
 
 if [ "${machine}" == "Cheyenne" ] ; then
+  users=( $USER@ucar.edu )
   compilers=( intel gnu )
   job_submission_script=gmtb_scm_qsub_example.py
+  memory="512M"
+  walltime="walltime=00:40:00"
+  max_iterations=240                                 # Max # of iterations to wait for batch output file to
+                                                     # be created and to job to complete
+  n_sleep_sec=30                                     # Interval in seconds between interation
 else
+  users=( $USER@noaa.gov )
   compilers=( intel )
   job_submission_script=gmtb_scm_slurm_example.py
+  memory="1G"
+  walltime="40"
+  max_iterations=120
+  n_sleep_sec=30
 fi
 
 #-----------------------------------------------------------------------
@@ -138,7 +145,6 @@ for compiler in "${compilers[@]}"; do
     else
       test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v"
     fi
-    walltime="walltime=00:40:00"
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh
 
@@ -175,10 +181,12 @@ for compiler in "${compilers[@]}"; do
 # Substitute COMMAND in job_submission script to use multi_run
 #-----------------------------------------------------------------------
       sed "s,^.*COMMAND \= .*,COMMAND \= \"${test_run_cmd}\"," ${job_submission_script}.tmp > ${job_submission_script}.tmp2
-      sed "s,^.*WALLTIME \= .*,WALLTIME \= \"${walltime}\"," ${job_submission_script}.tmp2 > ${job_submission_script}
+      sed "s,^.*WALLTIME \= .*,WALLTIME \= \"${walltime}\"," ${job_submission_script}.tmp2 > ${job_submission_script}.tmp3
+      sed "s,^.*SERIAL_MEM \= .*,SERIAL_MEM \= \"${memory}\"," ${job_submission_script}.tmp3 > ${job_submission_script}
       chmod +x ${job_submission_script}
       rm -rf ${job_submission_script}.tmp
       rm -rf ${job_submission_script}.tmp2
+      rm -rf ${job_submission_script}.tmp3
 
 #-----------------------------------------------------------------------
 # Submit job_submission to queue
