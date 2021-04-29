@@ -267,7 +267,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_vegfrac  !< vegetation fraction
   real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
   real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
-  real(kind=dp)               :: input_zorlo    !< surfce roughness length over ocean [cm]
+  real(kind=dp)               :: input_zorlw    !< surfce roughness length over water [cm]
   real(kind=dp)               :: input_slmsk   !< sea land ice mask [0,1,2]
   real(kind=dp)               :: input_canopy  !< amount of water stored in canopy (kg m-2)
   real(kind=dp)               :: input_hice    !< sea ice thickness (m)
@@ -296,7 +296,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_tsfcl   !< surface skin temperature over land (K)
   real(kind=dp)               :: input_zorll   !< surface roughness length over land (cm)
   real(kind=dp)               :: input_zorli   !< surface roughness length over ice (cm)
-  real(kind=dp)               :: input_zorlw   !< surface roughness length from wave model (cm)
+  real(kind=dp)               :: input_zorlwav   !< surface roughness length from wave model (cm)
   
   real(kind=dp)               :: input_stddev !< standard deviation of subgrid orography (m)
   real(kind=dp)               :: input_convexity !< convexity of subgrid orography 
@@ -532,7 +532,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "vegfrac", .False., input_vegfrac)
   call NetCDF_read_var(grp_ncid, "shdmin",  .False., input_shdmin)
   call NetCDF_read_var(grp_ncid, "shdmax",  .False., input_shdmax)
-  call NetCDF_read_var(grp_ncid, "zorlo",   .False., input_zorlo)
+  call NetCDF_read_var(grp_ncid, "zorlw",   .False., input_zorlw)
   call NetCDF_read_var(grp_ncid, "slmsk",   .False., input_slmsk)
   call NetCDF_read_var(grp_ncid, "canopy",  .False., input_canopy)
   call NetCDF_read_var(grp_ncid, "hice",    .False., input_hice)
@@ -560,7 +560,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "tsfcl",   .False., input_tsfcl)
   call NetCDF_read_var(grp_ncid, "zorll",   .False., input_zorll)
   call NetCDF_read_var(grp_ncid, "zorli",   .False., input_zorli)
-  call NetCDF_read_var(grp_ncid, "zorlw",   .False., input_zorlw)
+  call NetCDF_read_var(grp_ncid, "zorlwav", .False., input_zorlwav)
   
   !orographic parameters
   call NetCDF_read_var(grp_ncid, "stddev",    .False., input_stddev)
@@ -755,7 +755,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_vegfrac  = input_vegfrac
   scm_input%input_shdmin   = input_shdmin
   scm_input%input_shdmax   = input_shdmax
-  scm_input%input_zorlo    = input_zorlo
+  scm_input%input_zorlw    = input_zorlw
   scm_input%input_slmsk    = input_slmsk
   scm_input%input_canopy   = input_canopy
   scm_input%input_hice     = input_hice
@@ -784,7 +784,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_tsfcl    = input_tsfcl
   scm_input%input_zorll    = input_zorll
   scm_input%input_zorli    = input_zorli
-  scm_input%input_zorlw    = input_zorlw
+  scm_input%input_zorlwav  = input_zorlwav
   
   scm_input%input_stddev   = input_stddev
   scm_input%input_convexity= input_convexity

@@ -221,7 +221,7 @@ subroutine output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id,
   
   call NetCDF_def_var(ncid, 'sfc_up_lw_land',     NF90_FLOAT, "surface upwelling longwave flux over land fraction (valid all timesteps)",                 "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_up_lw_ice',      NF90_FLOAT, "surface upwelling longwave flux over ice fraction (valid all timesteps)",                  "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'sfc_up_lw_ocean',    NF90_FLOAT, "surface upwelling longwave flux over ocean fraction (valid all timesteps)",                "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'sfc_up_lw_water',    NF90_FLOAT, "surface upwelling longwave flux over water fraction (valid all timesteps)",                "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_up_sw_dir_nir',  NF90_FLOAT, "surface upwelling shortwave direct near-infrared flux (valid all timesteps)",              "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_up_sw_dif_nir',  NF90_FLOAT, "surface upwelling shortwave diffuse near-infrared flux (valid all timesteps)",             "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_up_sw_dir_vis',  NF90_FLOAT, "surface upwelling shortwave direct visible and ultraviolet flux (valid all timesteps)",    "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
@@ -515,7 +515,7 @@ subroutine output_append_interstitial(ncid, scm_state, physics)
     
     call NetCDF_put_var(ncid, "sfc_up_lw_land",     physics%Interstitial%adjsfculw_land(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "sfc_up_lw_ice",      physics%Interstitial%adjsfculw_ice(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_up_lw_ocean",    physics%Interstitial%adjsfculw_ocean(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_lw_water",    physics%Interstitial%adjsfculw_water(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "sfc_up_sw_dir_nir",  physics%Interstitial%adjnirbmu(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "sfc_up_sw_dif_nir",  physics%Interstitial%adjnirdfu(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "sfc_up_sw_dir_vis",  physics%Interstitial%adjvisbmu(:), scm_state%itt_out)

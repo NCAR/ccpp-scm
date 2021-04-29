@@ -181,7 +181,7 @@ module scm_type_defs
     real(kind=dp)                     :: input_vegfrac  !< vegetation area fraction
     real(kind=dp)                     :: input_shdmin   !< minimun vegetation fraction
     real(kind=dp)                     :: input_shdmax   !< maximun vegetation fraction
-    real(kind=dp)                     :: input_zorlo    !< surfce roughness length over ocean [cm]
+    real(kind=dp)                     :: input_zorlw    !< surfce roughness length over water [cm]
     real(kind=dp)                     :: input_slmsk   !< sea land ice mask [0,1,2]
     real(kind=dp)                     :: input_canopy  !< amount of water stored in canopy (kg m-2)
     real(kind=dp)                     :: input_hice    !< sea ice thickness (m)
@@ -210,7 +210,7 @@ module scm_type_defs
     real(kind=dp)                     :: input_tsfcl   !< surface skin temperature over land (K)
     real(kind=dp)                     :: input_zorll   !< surface roughness length over land (cm)
     real(kind=dp)                     :: input_zorli   !< surface roughness length over ice (cm)
-    real(kind=dp)                     :: input_zorlw   !< surface roughness length from wave model (cm)
+    real(kind=dp)                     :: input_zorlwav !< surface roughness length from wave model (cm)
     
     real(kind=dp)                     :: input_stddev !< standard deviation of subgrid orography (m)
     real(kind=dp)                     :: input_convexity !< convexity of subgrid orography 
@@ -692,7 +692,7 @@ module scm_type_defs
     scm_input%input_vegfrac = real_zero
     scm_input%input_shdmin = real_zero
     scm_input%input_shdmax = real_zero
-    scm_input%input_zorlo = real_zero
+    scm_input%input_zorlw = real_zero
     scm_input%input_slmsk = real_zero
     scm_input%input_canopy = real_zero
     scm_input%input_hice = real_zero
@@ -721,7 +721,7 @@ module scm_type_defs
     scm_input%input_tsfcl         = real_zero
     scm_input%input_zorll         = real_zero
     scm_input%input_zorli         = real_zero
-    scm_input%input_zorlw         = real_zero
+    scm_input%input_zorlwav       = real_zero
     
     scm_input%input_stddev       = real_zero
     scm_input%input_convexity    = real_zero
@@ -1016,7 +1016,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_tsfco, physics%Sfcprop%tsfco(i), "tsfco", .true., missing_var(2))
         call conditionally_set_var(scm_input%input_weasd, physics%Sfcprop%weasd(i), "weasd", .false., missing_var(3))
         call conditionally_set_var(scm_input%input_tg3,   physics%Sfcprop%tg3(i), "tg3", .true., missing_var(4))
-        call conditionally_set_var(scm_input%input_zorlo, physics%Sfcprop%zorlo(i), "zorlo", .true., missing_var(5))
+        call conditionally_set_var(scm_input%input_zorlw, physics%Sfcprop%zorlw(i), "zorlw", .true., missing_var(5))
         call conditionally_set_var(scm_input%input_alvsf, physics%Sfcprop%alvsf(i), "alvsf", .true., missing_var(6))
         call conditionally_set_var(scm_input%input_alnsf, physics%Sfcprop%alnsf(i), "alnsf", .true., missing_var(7))
         call conditionally_set_var(scm_input%input_alvwf, physics%Sfcprop%alvwf(i), "alvwf", .true., missing_var(8))
@@ -1050,9 +1050,9 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_zorll, physics%Sfcprop%zorll(i), "zorll", .false., missing_var(34))
         call conditionally_set_var(scm_input%input_zorli, physics%Sfcprop%zorli(i), "zorli", .false., missing_var(35))
         if (physics%Model%cplwav) then
-          call conditionally_set_var(scm_input%input_zorlw, physics%Sfcprop%zorlw(i), "zorlw", .true., missing_var(36))
+          call conditionally_set_var(scm_input%input_zorlwav, physics%Sfcprop%zorlwav(i), "zorlwav", .true., missing_var(36))
         else
-          physics%Sfcprop%zorlw(i)  = physics%Sfcprop%zorlo(i)
+          physics%Sfcprop%zorlwav(i)  = physics%Sfcprop%zorlw(i)
         end if
         
         if (missing_var(32)) physics%Sfcprop%sncovr(i) = real_zero
@@ -1071,7 +1071,7 @@ module scm_type_defs
         physics%Sfcprop%slmsk(i) = scm_state%sfc_type(i)
         ! tsfco is already pointing to T_surf forcing in physics_associate
         ! physics%Sfcprop%tsfco(i) => scm_state%T_surf
-        physics%Sfcprop%zorlo(i) = scm_state%sfc_roughness_length_cm(i)
+        physics%Sfcprop%zorlw(i) = scm_state%sfc_roughness_length_cm(i)
         ! tisfc is already pointing to T_surf forcing in physics_associate
         ! physics%Sfcprop%tisfc(i) => scm_state%T_surf
         ! tsfcl is already pointing to T_surf forcing in physics_associate
@@ -1359,15 +1359,15 @@ module scm_type_defs
       end if
       
       if (scm_input%input_zorll <= real_zero) then
-        physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlo(i) !--- compute zorll from existing variables
+        physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlw(i) !--- compute zorll from existing variables
       end if
       
       if (scm_input%input_zorli <= real_zero) then
-        physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlo(i) !--- compute zorli from existing variables
+        physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlw(i) !--- compute zorli from existing variables
       end if
       
-      if (scm_input%input_zorlw <= real_zero) then
-        physics%Sfcprop%zorlw(i) = physics%Sfcprop%zorlo(i) !--- compute zorlw from existing variables
+      if (scm_input%input_zorlwav <= real_zero) then
+        physics%Sfcprop%zorlwav(i) = physics%Sfcprop%zorlw(i) !--- compute zorlwav from existing variables
       end if
       
       if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics)) then ! 3-way composite
@@ -1376,17 +1376,17 @@ module scm_type_defs
             tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
             physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
                                  + physics%Sfcprop%zorli(i) * tem                      &
-                                 + physics%Sfcprop%zorlo(i) * (tem1-tem)
+                                 + physics%Sfcprop%zorlw(i) * (tem1-tem)
 
             physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
                                  + physics%Sfcprop%tisfc(i) * tem                      &
                                  + physics%Sfcprop%tsfco(i) * (tem1-tem)
       else
-          !--- specify tsfcl/zorll/zorli from existing variable tsfco/zorlo
+          !--- specify tsfcl/zorll/zorli from existing variable tsfco/zorlw
   !         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i)
-  !         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlo(i)
-  !         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlo(i)
-  !         physics%Sfcprop%zorl(i)  = physics%Sfcprop%zorlo(i)
+  !         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlw(i)
+  !         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlw(i)
+  !         physics%Sfcprop%zorl(i)  = physics%Sfcprop%zorlw(i)
   !         physics%Sfcprop%tsfc(i)  = physics%Sfcprop%tsfco(i)
             if (physics%Sfcprop%slmsk(i) == 1) then
               physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) 
@@ -1394,7 +1394,7 @@ module scm_type_defs
             else
               tem = real_one - physics%Sfcprop%fice(i)
               physics%Sfcprop%zorl(i) = physics%Sfcprop%zorli(i) * physics%Sfcprop%fice(i) &
-                                   + physics%Sfcprop%zorlo(i) * tem
+                                   + physics%Sfcprop%zorlw(i) * tem
 
               physics%Sfcprop%tsfc(i) = physics%Sfcprop%tisfc(i) * physics%Sfcprop%fice(i) &
                                    + physics%Sfcprop%tsfco(i) * tem

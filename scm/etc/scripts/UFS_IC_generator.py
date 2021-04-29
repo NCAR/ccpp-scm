@@ -446,7 +446,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     vfrac_in = read_NetCDF_surface_var(nc_file, 'vfrac', i, j, old_chgres, 0)
     shdmin_in = read_NetCDF_surface_var(nc_file, 'shdmin', i, j, old_chgres, 0)
     shdmax_in = read_NetCDF_surface_var(nc_file, 'shdmax', i, j, old_chgres, 0)
-    zorlo_in = read_NetCDF_surface_var(nc_file, 'zorl', i, j, old_chgres, 0)
+    zorlw_in = read_NetCDF_surface_var(nc_file, 'zorl', i, j, old_chgres, 0)
     slmsk_in = read_NetCDF_surface_var(nc_file, 'slmsk', i, j, old_chgres, 0)
     canopy_in = read_NetCDF_surface_var(nc_file, 'canopy', i, j, old_chgres, 0)
     hice_in = read_NetCDF_surface_var(nc_file, 'hice', i, j, old_chgres, 0)
@@ -468,7 +468,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     zorli_in = read_NetCDF_surface_var(nc_file, 'zorli', i, j, old_chgres, 0)
     
     #present when cplwav = T
-    zorlw_in = read_NetCDF_surface_var(nc_file, 'zorlw', i, j, old_chgres, 0)
+    zorlwav_in = read_NetCDF_surface_var(nc_file, 'zorlwav', i, j, old_chgres, 0)
     
     #NSST variables that may be in the surface file
     tref_in = read_NetCDF_surface_var(nc_file, 'tref', i, j, old_chgres, 0)
@@ -563,7 +563,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
     #fractional grid 3D variables
     tiice_in = read_NetCDF_surface_var(nc_file, 'tiice', i, j, old_chgres, missing_variable_ice_layers)
 
-    #print("zorlw_in = {}".format(zorlw_in))
+    #print("zorlwav_in = {}".format(zorlwav_in))
     
     nc_file.close()
     
@@ -585,7 +585,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
         "vfrac": vfrac_in,
         "shdmin": shdmin_in,
         "shdmax": shdmax_in,
-        "zorlo": zorlo_in,
+        "zorlw": zorlw_in,
         "slmsk": slmsk_in,
         "canopy": canopy_in,
         "hice": hice_in,
@@ -606,7 +606,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres):
         "zorll": zorll_in,
         "zorli": zorli_in,
         #cplwav
-        "zorlw": zorlw_in,
+        "zorlwav": zorlwav_in,
         #NSST
         "tref": tref_in,
         "z_c": z_c_in,
@@ -1470,10 +1470,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     shdmax[:] = surface["shdmax"]
     shdmax.description = "maximum vegetation fraction"
     
-    zorlo = scalar_grp.createVariable('zorlo',real_type)
-    zorlo[:] = surface["zorlo"]
-    zorlo.units = "cm"
-    zorlo.description = "surface roughness length over ocean"
+    zorlw = scalar_grp.createVariable('zorlw',real_type)
+    zorlw[:] = surface["zorlw"]
+    zorlw.units = "cm"
+    zorlw.description = "surface roughness length over ocean"
     
     islmsk = scalar_grp.createVariable('slmsk',real_type)
     islmsk[:] = surface["slmsk"]
@@ -1607,10 +1607,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     zorli.units = "cm" 
     zorli.description = "surface roughness length over ice"
     
-    zorlw = scalar_grp.createVariable('zorlw',real_type)
-    zorlw[:] = surface["zorlw"]
-    zorlw.units = "cm" 
-    zorlw.description = "surface roughness length from wave model"
+    zorlwav = scalar_grp.createVariable('zorlwav',real_type)
+    zorlwav[:] = surface["zorlwav"]
+    zorlwav.units = "cm" 
+    zorlwav.description = "surface roughness length from wave model"
     
     #Orography initial parameters
     
