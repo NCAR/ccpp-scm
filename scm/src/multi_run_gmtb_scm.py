@@ -25,7 +25,7 @@ parser.add_argument('-v', '--verbose',   help='once: set logging level to debug;
                                               'and write log to file', action='count', default=0)
 parser.add_argument('-t', '--timer',     help='set to time each subprocess', action='store_true', default=False)
 parser.add_argument('-d', '--docker',    help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
-parser.add_argument('-r', '--regtest',   help='include if scm regression test is being run', action='store_true', default=False)
+parser.add_argument('--runtime',         help='set the runtime in the namelists', action='store', required=False)
 
 # Results are recorded in this global list (to avoid complications with getting return values from the partial functions used below)
 RESULTS = []
@@ -85,9 +85,9 @@ def main():
             command = RUN_SCRIPT + ' -c ' + args.case + ' -s ' + suite
             if args.docker:
                 command = command + ' -d'
-            # If running the regression test, pass the -r argument to the RUN_SCRIPT
-            if args.regtest:
-                command = command + ' -r'
+            # If modifying the runtime, pass the -runtime argument to the RUN_SCRIPT
+            if args.runtime:
+                command = command + ' --runtime ' + args.runtime
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(suites), command))
             spawn_subprocess(command, args.timer)
 
@@ -98,8 +98,8 @@ def main():
             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + args.suite
             if args.docker:
                 command = command + ' -d'
-            if args.regtest:
-                command = command + ' -r'
+            if args.runtime:
+                command = command + ' --runtime ' + args.runtime
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(cases), command))
             spawn_subprocess(command, args.timer)
 
@@ -143,8 +143,8 @@ def main():
                 command = RUN_SCRIPT + ' -c ' + case
                 if args.docker:
                     command = command + ' -d'
-                if args.regtest:
-                    command = command + ' -r'
+                if args.runtime:
+                    command = command + ' --runtime ' + args.runtime
                 logging.info('Executing process {0} of {1} ({2})'.format(i, len(scm_runs.cases), command))
                 spawn_subprocess(command, args.timer)
 
@@ -158,8 +158,8 @@ def main():
                             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + scm_runs.suites[0] + ' -n ' + namelist
                             if args.docker:
                                 command = command + ' -d'
-                            if args.regtest:
-                                command = command + ' -r'
+                            if args.runtime:
+                                command = command + ' --runtime ' + args.runtime
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                             spawn_subprocess(command, args.timer)
@@ -171,8 +171,8 @@ def main():
                             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite + ' -n ' + scm_runs.namelists[j-1]
                             if args.docker:
                                 command = command + ' -d'
-                            if args.regtest:
-                                command = command + ' -r'
+                            if args.runtime:
+                                command = command + ' --runtime ' + args.runtime
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                             spawn_subprocess(command, args.timer)
@@ -190,8 +190,8 @@ def main():
                         command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
                         if args.docker:
                             command = command + ' -d'
-                        if args.regtest:
-                            command = command + ' -r'
+                        if args.runtime:
+                            command = command + ' --runtime ' + args.runtime
                         logging.info('Executing process {0} of {1} ({2})'.format(
                             len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                         spawn_subprocess(command, args.timer)
@@ -204,8 +204,8 @@ def main():
                     command = RUN_SCRIPT + ' -c ' + case + ' -n ' + namelist
                     if args.docker:
                         command = command + ' -d'
-                    if args.regtest:
-                        command = command + ' -r'
+                    if args.runtime:
+                        command = command + ' --runtime ' + args.runtime
                     logging.info('Executing process {0} of {1} ({2})'.format(
                         len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                     spawn_subprocess(command, args.timer)
@@ -219,8 +219,8 @@ def main():
                 command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
                 if args.docker:
                     command = command + ' -d'
-                if args.regtest:
-                    command = command + ' -r'
+                if args.runtime:
+                    command = command + ' --runtime ' + args.runtime
                 logging.info('Executing process {0} of {1} ({2})'.format(
                     len(suites)*i+j, len(cases)*len(suites), command))
                 spawn_subprocess(command, args.timer)

@@ -140,8 +140,8 @@ for compiler in "${compilers[@]}"; do
     RUN_DIR=$TOP_DIR/scm/run_${compiler}_${build_type_lc}       # for each build/run in test
     BUILD_OUTPUT=${BIN_DIR}/build.out
     if [ "${build_type}" == "Debug" ] ; then
-      # Add -r to multi_run_gmtb_scm.py to reduce runtime for tests
-      test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v -r"
+      # Add --runtime ${runtime} to multi_run_gmtb_scm.py to reduce runtime for tests
+      test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 86400" # 1 day
     else
       test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v"
     fi
