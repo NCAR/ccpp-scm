@@ -431,9 +431,9 @@ begin
   tg3@units = "K"
   tg3@long_name = "deep soil temperature"
   
-  zorlo = 15.0 ;(cm) from case specs
-  zorlo@long_name = "surface roughness length over ocean"
-  zorlo@units = "cm"
+  zorlw = 15.0 ;(cm) from case specs
+  zorlw@long_name = "surface roughness length over ocean"
+  zorlw@units = "cm"
   
   alvsf = 0.23 ;corresponds to case specs
   alvsf@long_name = "60 degree vis albedo with strong cosz dependency"
@@ -482,7 +482,7 @@ begin
   
   ;derive friction velocity from known values
   wind1 = sqrt(u_specified(1)^2 + v_specified(1)^2)
-  uustar = von_K*wind1/log(u_h(1)/(0.01*zorlo))
+  uustar = von_K*wind1/log(u_h(1)/(0.01*zorlw))
   uustar@units = "m s-1"
   uustar@long_name = "friction velocity"
   
@@ -533,11 +533,11 @@ begin
   tsfcl@long_name = "surface skin temperature over land"
   tsfcl@units     = "K"
   
-  zorll = zorlo ;(cm) from case specs
+  zorll = zorlw ;(cm) from case specs
   zorll@long_name = "surface roughness length over land"
   zorll@units = "cm"
   
-  zorli = zorlo ;(cm) from case specs
+  zorli = zorlw ;(cm) from case specs
   zorli@long_name = "surface roughness length over ice"
   zorli@units = "cm"
   
@@ -636,9 +636,9 @@ begin
   filevarattdef(g1,"tg3",tg3)
   g1->tg3 = tg3
   
-  filevardef(g1,"zorlo",typeof(zorlo),"ncl_scalar")
-  filevarattdef(g1,"zorlo",zorlo)
-  g1->zorlo = zorlo
+  filevardef(g1,"zorlw",typeof(zorlw),"ncl_scalar")
+  filevarattdef(g1,"zorlw",zorlw)
+  g1->zorlw = zorlw
   
   filevardef(g1,"alvsf",typeof(alvsf),"ncl_scalar")
   filevarattdef(g1,"alvsf",alvsf)
