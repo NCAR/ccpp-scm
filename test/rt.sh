@@ -103,7 +103,7 @@ SRC_DIR=$TOP_DIR/scm/src
 PHYS_DATA_DIR=$TOP_DIR/scm/data/physics_input_data
 #TODO:  Add script that gets cam5_4_143_NAAI_monclimo2.nc and cam5_4_143_NPCCN_monclimo2.nc files
 phys_data_files=( CCN_ACTIVATE.BIN freezeH2O.dat qr_acr_qgV2.dat qr_acr_qsV2.dat )
-batch_out=test_job.o*           # Without PID extension
+job_prefix=test_job             # Batch job and std out file prefix
 
 #-----------------------------------------------------------------------
 # Check if lookup tables and other large datasets have been downloaded
@@ -143,7 +143,7 @@ for compiler in "${compilers[@]}"; do
       # Add --runtime ${runtime} to multi_run_gmtb_scm.py to reduce runtime for tests
       test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 86400" # 1 day
     else
-      test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v"
+      test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 259200" # 3 days
     fi
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh
@@ -177,16 +177,19 @@ for compiler in "${compilers[@]}"; do
       ln -s ${SRC_DIR}/multi_run_gmtb_scm.py multi_run_gmtb_scm.py
       ln -s ${SRC_DIR}/run_gmtb_scm.py run_gmtb_scm.py
       cp ${ETC_DIR}/${job_submission_script} ${job_submission_script}.tmp
+      job_name=${job_prefix}_${compiler}_${build_type_lc}
 #-----------------------------------------------------------------------
 # Substitute COMMAND in job_submission script to use multi_run
 #-----------------------------------------------------------------------
       sed "s,^.*COMMAND \= .*,COMMAND \= \"${test_run_cmd}\"," ${job_submission_script}.tmp > ${job_submission_script}.tmp2
       sed "s,^.*WALLTIME \= .*,WALLTIME \= \"${walltime}\"," ${job_submission_script}.tmp2 > ${job_submission_script}.tmp3
-      sed "s,^.*SERIAL_MEM \= .*,SERIAL_MEM \= \"${memory}\"," ${job_submission_script}.tmp3 > ${job_submission_script}
+      sed "s,^.*SERIAL_MEM \= .*,SERIAL_MEM \= \"${memory}\"," ${job_submission_script}.tmp3 > ${job_submission_script}.tmp4
+      sed "s,^.*JOB_NAME \= .*,JOB_NAME \= \"${job_name}\"," ${job_submission_script}.tmp4 > ${job_submission_script}
       chmod +x ${job_submission_script}
       rm -rf ${job_submission_script}.tmp
       rm -rf ${job_submission_script}.tmp2
       rm -rf ${job_submission_script}.tmp3
+      rm -rf ${job_submission_script}.tmp4
 
 #-----------------------------------------------------------------------
 # Submit job_submission to queue
@@ -211,6 +214,7 @@ for compiler in "${compilers[@]}"; do
 
     build_type_lc=$(echo "${build_type}" | tr '[A-Z]' '[a-z]')  # Make build_type all lower case
     RUN_DIR=$TOP_DIR/scm/run_${compiler}_${build_type_lc}      
+    batch_out=${job_prefix}_${compiler}_${build_type_lc}.o*           # Without PID extension
 
 #-----------------------------------------------------------------------
 # Wait until the batch output file exists
