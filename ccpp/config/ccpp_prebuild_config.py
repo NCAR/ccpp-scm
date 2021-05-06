@@ -288,13 +288,6 @@ OPTIONAL_ARGUMENTS = {
             'tendency_of_ice_friendly_aerosols_at_surface',
             ],
         },
-    'mp_fer_hires' : {
-        'mp_fer_hires_init' : [
-            'fraction_of_ice_water_cloud',
-            'fraction_of_rain_water_cloud',
-            'rime_factor',
-            ],
-        },
     'rrtmgp_sw_rte' : {
          'rrtmgp_sw_rte_run' : [
              'components_of_surface_downward_shortwave_fluxes',
