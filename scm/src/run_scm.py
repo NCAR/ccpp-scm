@@ -309,6 +309,12 @@ class Experiment(object):
             logging.critical(message)
             raise Exception(message)
         cmd = "ln -sf {0} {1}".format(os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist), self._physics_namelist)
+        if surface_flux_spec:
+            #check for optional prescribed-surface-specific physics namelist and link it instead (if present)
+            opt_ps_nml_filename = os.path.splitext(os.path.join(PHYSICS_NAMELIST_DIR,self._physics_namelist))[0] + '_ps.nml'
+            if os.path.isfile(opt_ps_nml_filename):
+                logging.info('Found optional prescribed surface physics namelist {0}; linking it to run directory'.format(opt_ps_nml_filename))
+                cmd = "ln -sf {0} {1}".format(opt_ps_nml_filename, self._physics_namelist)
         execute(cmd)
         
         # Link tracer configuration to run directory with its original name
