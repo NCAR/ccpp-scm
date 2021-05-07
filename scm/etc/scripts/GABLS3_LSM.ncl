@@ -138,73 +138,73 @@ begin
 ; Use GLDAS to derive the sensible and latent heat flux for the Cabauw 
 ; location, then you can compare the GLDAS H/Le to the given intial Bowen 
 ; ratio. Begin by reading in the data from each file.
-  gl_dir = "/glade/scratch/damico/GLDAS_GABLS3/"
-  gl_00  = addfile(gl_dir+"GLDAS_NOAH025_3H.A20060701.0000.021.nc4.SUB.nc4", \
-                   "r")
+;  gl_dir = "/glade/scratch/damico/GLDAS_GABLS3/"
+;  gl_00  = addfile(gl_dir+"GLDAS_NOAH025_3H.A20060701.0000.021.nc4.SUB.nc4", \
+;                   "r")
 
-  gl_lat = gl_00->lat
-  gl_lon = gl_00->lon
+;  gl_lat = gl_00->lat
+;  gl_lon = gl_00->lon
 
-  glny = dimsizes(gl_lat)
-  glnx = dimsizes(gl_lon)
+;  glny = dimsizes(gl_lat)
+;  glnx = dimsizes(gl_lon)
 
-  delete(gl_00)
+;  delete(gl_00)
 
-  start_date = 0.
-  end_date   = 0.
+;  start_date = 0.
+;  end_date   = 0.
 
-  start_date@units = "hours since 2006-07-01 12:00:00"
-  end_date@units   = "hours since 2006-07-02 12:00:00"
-  gldt             = 3
+;  start_date@units = "hours since 2006-07-01 12:00:00"
+;  end_date@units   = "hours since 2006-07-02 12:00:00"
+;  gldt             = 3
 
-  end_date_on_start = cd_convert(end_date,start_date@units)
+;  end_date_on_start = cd_convert(end_date,start_date@units)
 
-  gl_time_hr       = ispan(0,toint(end_date_on_start),gldt)
-  gl_time_hr@units = start_date@units
+;  gl_time_hr       = ispan(0,toint(end_date_on_start),gldt)
+;  gl_time_hr@units = start_date@units
 
-  gl_time       = tofloat(gl_time_hr) * 60 * 60
-  gl_time@units = "seconds since 2006-07-01 12:00:00"
+;  gl_time       = tofloat(gl_time_hr) * 60 * 60
+;  gl_time@units = "seconds since 2006-07-01 12:00:00"
 
-  time_yyyymmddhh = toint(cd_calendar(gl_time,0))
+;  time_yyyymmddhh = toint(cd_calendar(gl_time,0))
 
-  glnt = dimsizes(gl_time_hr)
+;  glnt = dimsizes(gl_time_hr)
 
-  gl_shf = new((/ glnt,glny,glnx /),float)
-  gl_lhf = new((/ glnt,glny,glnx /),float)
-  do i=0,glnt-1,1
-    fname = gl_dir + "GLDAS_NOAH025_3H.A" + \
-            sprinti("%0.4i",time_yyyymmddhh(i,0)) + \
-            sprinti("%0.2i",time_yyyymmddhh(i,1)) + \
-            sprinti("%0.2i",time_yyyymmddhh(i,2)) +"."+ \
-            sprinti("%0.2i",time_yyyymmddhh(i,3))+ \
-            sprinti("%0.2i",time_yyyymmddhh(i,4))+ \
-            ".021.nc4.SUB.nc4"
-    if (isfilepresent(fname)) then
-      gl_ff         = addfile(fname,"r")
-      gl_shf(i,:,:) = gl_ff->Qh_tavg(0,:,:)
-      gl_lhf(i,:,:) = gl_ff->Qle_tavg(0,:,:)
-      print("Read->"+fname)
-    else
-      print(fname+" MISSING")
-    end if
-  end do
+;  gl_shf = new((/ glnt,glny,glnx /),float)
+;  gl_lhf = new((/ glnt,glny,glnx /),float)
+;  do i=0,glnt-1,1
+;    fname = gl_dir + "GLDAS_NOAH025_3H.A" + \
+;            sprinti("%0.4i",time_yyyymmddhh(i,0)) + \
+;            sprinti("%0.2i",time_yyyymmddhh(i,1)) + \
+;            sprinti("%0.2i",time_yyyymmddhh(i,2)) +"."+ \
+;            sprinti("%0.2i",time_yyyymmddhh(i,3))+ \
+;            sprinti("%0.2i",time_yyyymmddhh(i,4))+ \
+;            ".021.nc4.SUB.nc4"
+;    if (isfilepresent(fname)) then
+;      gl_ff         = addfile(fname,"r")
+;      gl_shf(i,:,:) = gl_ff->Qh_tavg(0,:,:)
+;      gl_lhf(i,:,:) = gl_ff->Qle_tavg(0,:,:)
+;      print("Read->"+fname)
+;    else
+;      print(fname+" MISSING")
+;    end if
+;  end do
 
 ; Interpolate GLDAS shf and lhf to the single Cabauw point.
-  shf_pt = linint2_points_Wrap(gl_lon,gl_lat,gl_shf,False,lon,lat,0)
-  lhf_pt = linint2_points_Wrap(gl_lon,gl_lat,gl_lhf,False,lon,lat,0)
+;  shf_pt = linint2_points_Wrap(gl_lon,gl_lat,gl_shf,False,lon,lat,0)
+;  lhf_pt = linint2_points_Wrap(gl_lon,gl_lat,gl_lhf,False,lon,lat,0)
 
 ; Interpolate with time
-  shf = linint1(gl_time,shf_pt(:,0),False,time,0)
-  lhf = linint1(gl_time,lhf_pt(:,0),False,time,0)
+;  shf = linint1(gl_time,shf_pt(:,0),False,time,0)
+;  lhf = linint1(gl_time,lhf_pt(:,0),False,time,0)
 
 ; Convert from W m^-2 to K m s^-1 and kg kg^-1 m s^-1
-  sh_flux_sfc = shf * R_dry * T_surf / (c_p * p_surf)
-  lh_flux_sfc = lhf * R_dry * T_surf / (l_v * p_surf)
+;  sh_flux_sfc = shf * R_dry * T_surf / (c_p * p_surf)
+;  lh_flux_sfc = lhf * R_dry * T_surf / (l_v * p_surf)
 
-  sh_flux_sfc@long_name = "surface sensible heat flux"
-  sh_flux_sfc@units     = "K m s^-1"
-  lh_flux_sfc@long_name = "surface latent heat flux"
-  lh_flux_sfc@units     = "kg kg^-1 m s^-1"
+;  sh_flux_sfc@long_name = "surface sensible heat flux"
+;  sh_flux_sfc@units     = "K m s^-1"
+;  lh_flux_sfc@long_name = "surface latent heat flux"
+;  lh_flux_sfc@units     = "kg kg^-1 m s^-1"
 
 ; Calculate vertical motion, needed in both w and omega, given in omega. Omega
 ; begins at 0.12 Pa s^-1 at 1500 m at the beginning of the study period. After
@@ -431,9 +431,9 @@ begin
   tg3@units = "K"
   tg3@long_name = "deep soil temperature"
   
-  zorlo = 15.0 ;(cm) from case specs
-  zorlo@long_name = "surface roughness length over ocean"
-  zorlo@units = "cm"
+  zorlw = 15.0 ;(cm) from case specs
+  zorlw@long_name = "surface roughness length over ocean"
+  zorlw@units = "cm"
   
   alvsf = 0.23 ;corresponds to case specs
   alvsf@long_name = "60 degree vis albedo with strong cosz dependency"
@@ -482,7 +482,7 @@ begin
   
   ;derive friction velocity from known values
   wind1 = sqrt(u_specified(1)^2 + v_specified(1)^2)
-  uustar = von_K*wind1/log(u_h(1)/(0.01*zorlo))
+  uustar = von_K*wind1/log(u_h(1)/(0.01*zorlw))
   uustar@units = "m s-1"
   uustar@long_name = "friction velocity"
   
@@ -533,11 +533,11 @@ begin
   tsfcl@long_name = "surface skin temperature over land"
   tsfcl@units     = "K"
   
-  zorll = zorlo ;(cm) from case specs
+  zorll = zorlw ;(cm) from case specs
   zorll@long_name = "surface roughness length over land"
   zorll@units = "cm"
   
-  zorli = zorlo ;(cm) from case specs
+  zorli = zorlw ;(cm) from case specs
   zorli@long_name = "surface roughness length over ice"
   zorli@units = "cm"
   
@@ -636,9 +636,9 @@ begin
   filevarattdef(g1,"tg3",tg3)
   g1->tg3 = tg3
   
-  filevardef(g1,"zorlo",typeof(zorlo),"ncl_scalar")
-  filevarattdef(g1,"zorlo",zorlo)
-  g1->zorlo = zorlo
+  filevardef(g1,"zorlw",typeof(zorlw),"ncl_scalar")
+  filevarattdef(g1,"zorlw",zorlw)
+  g1->zorlw = zorlw
   
   filevardef(g1,"alvsf",typeof(alvsf),"ncl_scalar")
   filevarattdef(g1,"alvsf",alvsf)
@@ -818,13 +818,13 @@ begin
   filevarattdef(g3,"T_surf",T_surf)
   g3->T_surf = (/ T_surf /)
 
-  filevardef(g3,"sh_flux_sfc",typeof(sh_flux_sfc),"time")
-  filevarattdef(g3,"sh_flux_sfc",sh_flux_sfc)
-  g3->sh_flux_sfc = (/ sh_flux_sfc /)
+;  filevardef(g3,"sh_flux_sfc",typeof(sh_flux_sfc),"time")
+;  filevarattdef(g3,"sh_flux_sfc",sh_flux_sfc)
+;  g3->sh_flux_sfc = (/ sh_flux_sfc /)
 
-  filevardef(g3,"lh_flux_sfc",typeof(lh_flux_sfc),"time")
-  filevarattdef(g3,"lh_flux_sfc",lh_flux_sfc)
-  g3->lh_flux_sfc = (/ lh_flux_sfc /)
+;  filevardef(g3,"lh_flux_sfc",typeof(lh_flux_sfc),"time")
+;  filevarattdef(g3,"lh_flux_sfc",lh_flux_sfc)
+;  g3->lh_flux_sfc = (/ lh_flux_sfc /)
 
   filevardef(g3,"w_ls",typeof(w_ls),(/"levels","time"/))
   filevarattdef(g3,"w_ls",w_ls)

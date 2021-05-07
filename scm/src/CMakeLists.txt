@@ -1,5 +1,8 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(scm)
+cmake_minimum_required(VERSION 3.14)
+
+project(scm
+        VERSION 5.0.0
+        LANGUAGES C CXX Fortran)
 set(PROJECT "CCPP-SCM")
 
 ####################################################################
@@ -53,43 +56,58 @@ include(CMakeForceCompiler)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
-#If using Hera, use the FindNetCDF.cmake module to find the NetCDF installed with NCEPLIBS; 
-#otherwise, rely on the NETCDF environment variable to point to the desired NetCDF installation
-if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+# First, need to figure out if using the new NCEPLIBS-external/NCEPLIBS packages
+# or the legacy/contrib netCDF and NCEPLIBS installations
+IF(DEFINED ENV{bacio_ROOT})
+  message(STATUS "Configuring SCM build for new NCEPLIBS-external/NCEPLIBS software packages")
+  set(NEW_NCEPLIBS ON)
+ELSE()
+  message(STATUS "Configuring SCM build for legacy/contrib netCDF/NCEPLIBS software packages")
+  set(NEW_NCEPLIBS OFF)
+ENDIF()
+
+IF(NEW_NCEPLIBS)
   MESSAGE(STATUS "Using FindNetCDF.cmake module for $ENV{CMAKE_Platform}")
-  FIND_PACKAGE(NetCDF REQUIRED COMPONENTS C CXX Fortran)
-else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  FIND_PACKAGE(NetCDF REQUIRED COMPONENTS C Fortran)
+else()
   IF(DEFINED ENV{NETCDF})
     MESSAGE(STATUS "The NETCDF environment variable is $ENV{NETCDF}")
     SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
   ELSE(DEFINED ENV{NETCDF})
     MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
   ENDIF(DEFINED ENV{NETCDF})
-endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+ENDIF()
 
-IF(DEFINED ENV{BACIO_LIB4})
-  MESSAGE(STATUS "The BACIO_LIB4 environment variable is $ENV{BACIO_LIB4}")
-  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{BACIO_LIB4})
-  SET(BACIO_LIB4 $ENV{BACIO_LIB4})
-ELSE(DEFINED ENV{BACIO_LIB4})
-  MESSAGE(FATAL_ERROR "The BACIO_LIB4 environment variable must be set to point to your BACIO installation (part of NCEPLIBS) before building. Stopping...")
-ENDIF(DEFINED ENV{BACIO_LIB4})
-
-IF(DEFINED ENV{SP_LIBd})
-  MESSAGE(STATUS "The SP_LIBd environment variable is $ENV{SP_LIBd}")
-  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{SP_LIBd})
-  SET(SP_LIBd $ENV{SP_LIBd})
-ELSE(DEFINED ENV{SP_LIBd})
-  MESSAGE(FATAL_ERROR "The SP_LIBd environment variable must be set to point to your SP installation (part of NCEPLIBS) before building. Stopping...")
-ENDIF(DEFINED ENV{SP_LIBd})
-
-IF(DEFINED ENV{W3NCO_LIBd})
-  MESSAGE(STATUS "The W3NCO_LIBd environment variable is $ENV{W3NCO_LIBd}")
-  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{W3NCO_LIBd})
-  SET(W3NCO_LIBd $ENV{W3NCO_LIBd})
-ELSE(DEFINED ENV{W3NCO_LIBd})
-  MESSAGE(FATAL_ERROR "The W3NCO_LIBd environment variable must be set to point to your W3NCO installation (part of NCEPLIBS) before building. Stopping...")
-ENDIF(DEFINED ENV{W3NCO_LIBd})
+IF(NEW_NCEPLIBS)
+  find_package(bacio REQUIRED)
+  find_package(sp    REQUIRED)
+  find_package(w3nco REQUIRED)
+ELSE()
+  # Find bacio
+  IF(DEFINED ENV{BACIO_LIB4})
+    MESSAGE(STATUS "The BACIO_LIB4 environment variable is $ENV{BACIO_LIB4}")
+    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{BACIO_LIB4})
+    SET(BACIO_LIB4 $ENV{BACIO_LIB4})
+  ELSE()
+    MESSAGE(FATAL_ERROR "The BACIO_LIB4 environment variable must be set to point to your BACIO installation (part of NCEPLIBS) before building. Stopping...")
+  ENDIF()
+  # Find sp
+  IF(DEFINED ENV{SP_LIBd})
+    MESSAGE(STATUS "The SP_LIBd environment variable is $ENV{SP_LIBd}")
+    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{SP_LIBd})
+    SET(SP_LIBd $ENV{SP_LIBd})
+  ELSE(DEFINED ENV{SP_LIBd})
+    MESSAGE(FATAL_ERROR "The SP_LIBd environment variable must be set to point to your SP installation (part of NCEPLIBS) before building. Stopping...")
+  ENDIF(DEFINED ENV{SP_LIBd})
+  # Find w3nco
+  IF(DEFINED ENV{W3NCO_LIBd})
+    MESSAGE(STATUS "The W3NCO_LIBd environment variable is $ENV{W3NCO_LIBd}")
+    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{W3NCO_LIBd})
+    SET(W3NCO_LIBd $ENV{W3NCO_LIBd})
+  ELSE(DEFINED ENV{W3NCO_LIBd})
+    MESSAGE(FATAL_ERROR "The W3NCO_LIBd environment variable must be set to point to your W3NCO installation (part of NCEPLIBS) before building. Stopping...")
+  ENDIF(DEFINED ENV{W3NCO_LIBd})
+ENDIF()
 
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -165,7 +183,7 @@ if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
     set (CMAKE_C_FLAGS       "${CMAKE_C_FLAGS} -ggdb")
     set (CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -ggdb")
-    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fcheck=all -fbacktrace -ffpe-trap=zero -finit-real=nan -ggdb -ffree-line-length-none -cpp -fdefault-real-8")
+    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fcheck=all -fbacktrace -ffpe-trap=zero -finit-real=nan -ggdb -ffree-line-length-none -cpp -fdefault-real-8 -fno-range-check")
     if(${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -fallow-invalid-boz")
     endif()
@@ -199,7 +217,7 @@ elseif (${CMAKE_BUILD_TYPE} MATCHES "Release")
   endif (DEFINED ENV{FFLAGS})
   # Compiler-dependent settings
   if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-    set (CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -cpp -fdefault-real-8")
+    set (CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -cpp -fdefault-real-8 -fno-range-check")
     if(${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -fallow-invalid-boz")
     endif()
@@ -214,7 +232,7 @@ endif (${CMAKE_BUILD_TYPE} MATCHES "Debug")
 
 #------------------------------------------------------------------------------
 # Set netCDF flags for preprocessor, compiler and linker (if defined)
-if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+if(NEW_NCEPLIBS)
   #If using hera.intel, we use the target_link_libraries(NetCDF::NetCDF_[Fortran,C,CXX]), but ccpp-phyics inherits ${CMAKE_Fortran_FLAGS} for compiling physics, so we still need to set these
   ADD_DEFINITIONS(-DNETCDF)
   message (STATUS "Enable netCDF support")
@@ -223,7 +241,7 @@ if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
   set (NETCDF_INC "-I${NetCDF_Fortran_INCLUDE_DIRS}")
   set (NETCDF_LIB ${NetCDF_Fortran_LIBRARIES})
   set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${NETCDF_INC} ${NETCDF_LIB}")
-else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+else()
   set(NETCDF_DIR $ENV{NETCDF})
   if(NETCDF_DIR)
     set (NETCDF_INC "-I${NETCDF_DIR}/include")
@@ -234,7 +252,7 @@ else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
   else(NETCDF_DIR)
     message (STATUS "Disable netCDF support")
   endif(NETCDF_DIR)
-endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+endif()
 
 #------------------------------------------------------------------------------
 # Set SIONlib flags for preprocessor, compiler and linker (if defined)
@@ -305,37 +323,37 @@ ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
 ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccppphys ccpp)
 
-SET(scm_source_files gmtb_scm.F90
-            gmtb_scm_input.F90
-            gmtb_scm_utils.F90
-            gmtb_scm_vgrid.F90
-            gmtb_scm_setup.F90
-            gmtb_scm_forcing.F90
-            gmtb_scm_time_integration.F90
-            gmtb_scm_output.F90
+SET(scm_source_files scm.F90
+            scm_input.F90
+            scm_utils.F90
+            scm_vgrid.F90
+            scm_setup.F90
+            scm_forcing.F90
+            scm_time_integration.F90
+            scm_output.F90
 )
 
 
-ADD_EXECUTABLE(gmtb_scm ${scm_source_files} ccpp_static_api.F90)
-if("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+ADD_EXECUTABLE(scm ${scm_source_files} ccpp_static_api.F90)
+if(NEW_NCEPLIBS)
   #the FindNetCDF.cmake module suggests to use NetCDF::NetCDF_[Fortran,C,CXX] rather than set compiler flags; you actually need both Fortan and C components to compile successfully
-  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
-else("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
-  TARGET_LINK_LIBRARIES(gmtb_scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
-endif("$ENV{CMAKE_Platform}" STREQUAL "hera.intel")
+  TARGET_LINK_LIBRARIES(scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C bacio::bacio_4 sp::sp_d w3nco::w3nco_d)
+else()
+  TARGET_LINK_LIBRARIES(scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+endif()
 
-set_target_properties(gmtb_scm PROPERTIES
+set_target_properties(scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
 
 add_custom_command(
-        TARGET gmtb_scm POST_BUILD
+        TARGET scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/run_gmtb_scm.py
-                ${CMAKE_CURRENT_BINARY_DIR}/run_gmtb_scm.py)
+                ${CMAKE_SOURCE_DIR}/run_scm.py
+                ${CMAKE_CURRENT_BINARY_DIR}/run_scm.py)
 
 add_custom_command(
-        TARGET gmtb_scm POST_BUILD
+        TARGET scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/multi_run_gmtb_scm.py
-                ${CMAKE_CURRENT_BINARY_DIR}/multi_run_gmtb_scm.py)
+                ${CMAKE_SOURCE_DIR}/multi_run_scm.py
+                ${CMAKE_CURRENT_BINARY_DIR}/multi_run_scm.py)

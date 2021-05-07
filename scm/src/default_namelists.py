@@ -14,5 +14,5 @@ default_physics_namelists = {"SCM_csawmg":"input_csawmg.nml",
                             "SCM_GFS_v15p2_ACM":"input_GFS_v15p2_ACM.nml",
                             "HAFS_v0_hwrf":"input_HAFS_v0_hwrf.nml",
                             "HAFS_v0_hwrf_thompson":"input_HAFS_v0_hwrf_thompson.nml",
-                            "SCM_RRFS_v1beta":"input_RRFS_v1beta.nml"
+                            "SCM_RRFS_v1alpha":"input_RRFS_v1alpha.nml"
                             }

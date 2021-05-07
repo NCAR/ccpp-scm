@@ -18,7 +18,7 @@ from netCDF4 import Dataset
 ###############################################################################
 
 # Name of the Fortran executable to run, including path (relative to run dir)
-EXECUTABLE = './gmtb_scm'
+EXECUTABLE = './scm'
 
 # Path to the directory containing experiment namelists (relative to run dir)
 CASE_NAMELIST_DIR = '../etc/case_config'
@@ -27,7 +27,7 @@ CASE_NAMELIST_DIR = '../etc/case_config'
 TRACERS_DIR = '../etc/tracer_config'
 TRACERS_LINK = 'tracers.txt'
 
-# Standard name of experiment namelist in run directory, must match value in gmtb_scm_input.f90
+# Standard name of experiment namelist in run directory, must match value in scm_input.f90
 STANDARD_EXPERIMENT_NAMELIST = 'input_experiment.nml'
 
 # Path to the directory containing physics namelists (relative to run dir)
@@ -71,7 +71,7 @@ LOGLEVEL = logging.INFO
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--case',       help='name of case to run', required=True)
-parser.add_argument('-g', '--gdb',        help='invoke gmtb_scm through gdb', action='store_true', default=False)
+parser.add_argument('-g', '--gdb',        help='invoke scm through gdb', action='store_true', default=False)
 parser.add_argument('-s', '--suite',      help='name of suite to use', default=DEFAULT_SUITE)
 parser.add_argument('-n', '--namelist',   help='physics namelist to use')
 parser.add_argument('-t', '--tracers',    help='tracer configuration to use')
@@ -309,6 +309,12 @@ class Experiment(object):
             logging.critical(message)
             raise Exception(message)
         cmd = "ln -sf {0} {1}".format(os.path.join(PHYSICS_NAMELIST_DIR, self._physics_namelist), self._physics_namelist)
+        if surface_flux_spec:
+            #check for optional prescribed-surface-specific physics namelist and link it instead (if present)
+            opt_ps_nml_filename = os.path.splitext(os.path.join(PHYSICS_NAMELIST_DIR,self._physics_namelist))[0] + '_ps.nml'
+            if os.path.isfile(opt_ps_nml_filename):
+                logging.info('Found optional prescribed surface physics namelist {0}; linking it to run directory'.format(opt_ps_nml_filename))
+                cmd = "ln -sf {0} {1}".format(opt_ps_nml_filename, self._physics_namelist)
         execute(cmd)
         
         # Link tracer configuration to run directory with its original name
@@ -392,7 +398,7 @@ class Experiment(object):
         
         # Link scripts needed to run SCM analysis
         logging.info('Linking analysis scripts from {0} into run directory'.format(SCM_ANALYSIS_SCRIPT_DIR))
-        analysis_script_files = ['gmtb_scm_analysis.py','configspec.ini']
+        analysis_script_files = ['scm_analysis.py','configspec.ini']
         for entry in analysis_script_files:
             if os.path.isfile(os.path.join(SCM_ANALYSIS_SCRIPT_DIR, entry)):
                 if not os.path.exists(entry):
@@ -430,7 +436,9 @@ def launch_executable(use_gdb, gdb):
         cmd = '{executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(2)
-    sys.exit(os.system(cmd))
+    return_code = os.system(cmd)
+    if return_code != 0:
+        sys.exit(return_code)
     
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""
