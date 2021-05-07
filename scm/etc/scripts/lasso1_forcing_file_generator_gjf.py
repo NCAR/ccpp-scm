@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 import numpy as np
 import forcing_file_common as ffc
 import scipy.interpolate
-import gmtb_scm_plotting_routines as gspr
+import scm_plotting_routines as spr
 import datetime
 import sys
 
@@ -30,7 +30,7 @@ day=format(data_date[0].day,'02d')
 hour=format(data_date[0].hour,'02d')
 
 file_out="../../data/processed_case_input/LASSO_"+year+mon+day+hour+".nc"
-description="GMTB SCM forcing file for the LASSO case for "+mon+"/"+day+"/"+year+" "+hour+"Z"
+description="CCPP SCM forcing file for the LASSO case for "+mon+"/"+day+"/"+year+" "+hour+"Z"
 
 #height in LS forcing file
 z_ls = nc_fid_ls.variables['Z_LS']
@@ -147,7 +147,7 @@ for t in range(w_ls_force_grid.shape[0]):
 #writefile_fid = Dataset('../processed_case_input/LASSO_2016051812.nc', 'w', format='NETCDF4')
 #writefile_fid = Dataset('LASSO_2016061012.nc', 'w', format='NETCDF4')
 writefile_fid = Dataset(file_out, 'w', format='NETCDF4')
-writefile_fid.description = description #"GMTB SCM forcing file for the LASSO case for 06/10/2016 12Z"
+writefile_fid.description = description #"CCPP SCM forcing file for the LASSO case for 06/10/2016 12Z"
 
 #create groups for scalars, intitialization, and forcing
 

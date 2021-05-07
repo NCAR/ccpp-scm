@@ -222,10 +222,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: tiice(:,:)   => null()  !< internal ice temperature
     real (kind=kind_phys), pointer :: snowd  (:)   => null()  !< snow depth water equivalent in mm ; same as snwdph
     real (kind=kind_phys), pointer :: zorl   (:)   => null()  !< composite surface roughness in cm
-    real (kind=kind_phys), pointer :: zorlo  (:)   => null()  !< ocean surface roughness in cm
+    real (kind=kind_phys), pointer :: zorlw  (:)   => null()  !< water surface roughness in cm
     real (kind=kind_phys), pointer :: zorll  (:)   => null()  !< land surface roughness in cm
     real (kind=kind_phys), pointer :: zorli  (:)   => null()  !< ice  surface roughness in cm
-    real (kind=kind_phys), pointer :: zorlw  (:)   => null()  !< wave surface roughness in cm
+    real (kind=kind_phys), pointer :: zorlwav(:)   => null()  !< wave surface roughness in cm
     real (kind=kind_phys), pointer :: fice   (:)   => null()  !< ice fraction over open water grid
 !   real (kind=kind_phys), pointer :: hprim  (:)   => null()  !< topographic standard deviation in m
     real (kind=kind_phys), pointer :: hprime (:,:) => null()  !< orographic metrics
@@ -420,7 +420,10 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: sfcdlw(:)      => null()   !< total sky sfc downward lw flux ( w/m**2 )
                                                                  !< GFS_radtend_type%sfclsw%dnfxc
     real (kind=kind_phys), pointer :: sfculw(:)      => null()   !< total sky sfc upward lw flux ( w/m**2 )
-    real (kind=kind_phys), pointer :: sfculw_jac(:)  => null()   !< Jacobian of total sky sfc upward lw flux ( w/m**2/K )
+    real (kind=kind_phys), pointer :: fluxlwUP_jac(:,:)      => null()  !< GP Jacobian up   LW total sky flux profile ( w/m**2/K )
+    real (kind=kind_phys), pointer :: fluxlwUP_allsky(:,:)   => null()  !< GP          up   LW total sky flux profile ( w/m**2/K )
+    real (kind=kind_phys), pointer :: fluxlwDOWN_allsky(:,:) => null()  !< GP          down LW total sky flux profile ( w/m**2/K )
+    real (kind=kind_phys), pointer :: htrlw(:,:)             => null()  !< GP updated LW heating rate
 !--- incoming quantities
     real (kind=kind_phys), pointer :: dusfcin_cpl(:) => null()   !< aoi_fld%dusfcin(item,lan)
     real (kind=kind_phys), pointer :: dvsfcin_cpl(:) => null()   !< aoi_fld%dvsfcin(item,lan)
@@ -681,6 +684,8 @@ module GFS_typedefs
     character(len=128)   :: active_gases_array(100) !< character array for each trace gas name
     logical              :: use_LW_jacobian         !< If true, use Jacobian of LW to update radiation tendency.
     logical              :: doGP_lwscat             !< If true, include scattering in longwave cloud-optics, only compatible w/ GP cloud-optics
+    real(kind_phys)      :: minGPpres               !< Minimum pressure allowed in RRTMGP.
+    real(kind_phys)      :: minGPtemp               !< Minimum temperature allowed in RRTMGP.
 
 !--- microphysical switch
     integer              :: ncld                           !< choice of cloud scheme
@@ -1555,6 +1560,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: cldfra (:,:)   => null()  !< instantaneous 3D cloud fraction
     !--- MP quantities for 3D diagnositics
     real (kind=kind_phys), pointer :: refl_10cm(:,:) => null()  !< instantaneous refl_10cm
+
+    !--- Extra PBL diagnostics
+    real (kind=kind_phys), pointer :: dkt(:,:)       => null()  !< Eddy diffusitivity for heat
+    real (kind=kind_phys), pointer :: dku(:,:)       => null()  !< Eddy diffusitivity for momentum
+
 !
 !---vay-2018 UGWP-diagnostics instantaneous
 !
@@ -1693,7 +1703,7 @@ module GFS_typedefs
 
     real (kind=kind_phys), pointer      :: adjsfculw_land(:)  => null()  !<
     real (kind=kind_phys), pointer      :: adjsfculw_ice(:)   => null()  !<
-    real (kind=kind_phys), pointer      :: adjsfculw_ocean(:) => null()  !<
+    real (kind=kind_phys), pointer      :: adjsfculw_water(:) => null()  !<
     real (kind=kind_phys), pointer      :: adjnirbmd(:)       => null()  !<
     real (kind=kind_phys), pointer      :: adjnirbmu(:)       => null()  !<
     real (kind=kind_phys), pointer      :: adjnirdfd(:)       => null()  !<
@@ -1710,15 +1720,15 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: cd(:)              => null()  !<
     real (kind=kind_phys), pointer      :: cd_ice(:)          => null()  !<
     real (kind=kind_phys), pointer      :: cd_land(:)         => null()  !<
-    real (kind=kind_phys), pointer      :: cd_ocean(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: cd_water(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cdq(:)             => null()  !<
     real (kind=kind_phys), pointer      :: cdq_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: cdq_land(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: cdq_ocean(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: cdq_water(:)       => null()  !<
     real (kind=kind_phys), pointer      :: cf_upi(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: chh_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: chh_land(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: chh_ocean(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: chh_water(:)       => null()  !<
     real (kind=kind_phys), pointer      :: chk_land(:)        => null()  !<
     real (kind=kind_phys), pointer      :: clcn(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: cldf(:)            => null()  !<
@@ -1733,7 +1743,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: cmc(:)             => null()  !<
     real (kind=kind_phys), pointer      :: cmm_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: cmm_land(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: cmm_ocean(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: cmm_water(:)       => null()  !<
     real (kind=kind_phys), pointer      :: cndm_surf(:)       => null()  !<
     real (kind=kind_phys), pointer      :: cnv_dqldt(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: cnv_fice(:,:)      => null()  !<
@@ -1750,7 +1760,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: del(:,:)           => null()  !<
     real (kind=kind_phys), pointer      :: del_gz(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: delr(:,:)          => null()  !<
-    real (kind=kind_phys), pointer      :: dkt(:,:)           => null()  !<
     real (kind=kind_phys), pointer      :: dlength(:)         => null()  !<
     real (kind=kind_phys), pointer      :: dqdt(:,:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dqsdt2(:)          => null()  !<
@@ -1773,22 +1782,22 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: ep1d(:)            => null()  !<
     real (kind=kind_phys), pointer      :: ep1d_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: ep1d_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: ep1d_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: ep1d_water(:)      => null()  !<
     real (kind=kind_phys), pointer      :: evapq(:)           => null()  !<
     real (kind=kind_phys), pointer      :: evap_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: evap_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: evap_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: evap_water(:)      => null()  !<
     real (kind=kind_phys), pointer      :: evbs(:)            => null()  !<
     real (kind=kind_phys), pointer      :: evcw(:)            => null()  !<
     real (kind=kind_phys), pointer      :: faerlw(:,:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: faersw(:,:,:,:)    => null()  !<
     real (kind=kind_phys), pointer      :: ffhh_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: ffhh_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: ffhh_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: ffhh_water(:)      => null()  !<
     real (kind=kind_phys), pointer      :: fh2(:)             => null()  !<
     real (kind=kind_phys), pointer      :: fh2_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: fh2_land(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: fh2_ocean(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: fh2_water(:)       => null()  !<
     logical,               pointer      :: flag_cice(:)       => null()  !<
     logical,               pointer      :: flag_guess(:)      => null()  !<
     logical,               pointer      :: flag_iter(:)       => null()  !<
@@ -1796,11 +1805,11 @@ module GFS_typedefs
     logical,               pointer      :: flag_lsm_glacier(:)=> null()  !<
     real (kind=kind_phys), pointer      :: ffmm_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: ffmm_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: ffmm_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: ffmm_water(:)      => null()  !<
     real (kind=kind_phys), pointer      :: fm10(:)            => null()  !<
     real (kind=kind_phys), pointer      :: fm10_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: fm10_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: fm10_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: fm10_water(:)      => null()  !<
     real (kind=kind_phys)               :: frain                         !<
     real (kind=kind_phys), pointer      :: frland(:)          => null()  !<
     real (kind=kind_phys), pointer      :: fscav(:)           => null()  !<
@@ -1808,7 +1817,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: gabsbdlw(:)        => null()  !<
     real (kind=kind_phys), pointer      :: gabsbdlw_ice(:)    => null()  !<
     real (kind=kind_phys), pointer      :: gabsbdlw_land(:)   => null()  !<
-    real (kind=kind_phys), pointer      :: gabsbdlw_ocean(:)  => null()  !<
+    real (kind=kind_phys), pointer      :: gabsbdlw_water(:)  => null()  !<
     real (kind=kind_phys), pointer      :: gamma(:)           => null()  !<
     real (kind=kind_phys), pointer      :: gamq(:)            => null()  !<
     real (kind=kind_phys), pointer      :: gamt(:)            => null()  !<
@@ -1816,7 +1825,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: gflx(:)            => null()  !<
     real (kind=kind_phys), pointer      :: gflx_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: gflx_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: gflx_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: gflx_water(:)      => null()  !<
     real (kind=kind_phys), pointer      :: graupelmp(:)       => null()  !<
     real (kind=kind_phys), pointer      :: gwdcu(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: gwdcv(:,:)         => null()  !<
@@ -1825,7 +1834,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: hflxq(:)           => null()  !<
     real (kind=kind_phys), pointer      :: hflx_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: hflx_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: hflx_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: hflx_water(:)      => null()  !<
     !--- radiation variables that need to be carried over from radiation to physics
     real (kind=kind_phys), pointer      :: htlwc(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: htlw0(:,:)         => null()  !<
@@ -1900,7 +1909,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: qsnw(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: qss_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: qss_land(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: qss_ocean(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: qss_water(:)       => null()  !<
     real (kind=kind_phys), pointer      :: qs1(:)             => null()  !<
     real (kind=kind_phys), pointer      :: qv1(:)             => null()  !<
     logical                             :: radar_reset                   !<
@@ -1913,7 +1922,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: rb(:)              => null()  !<
     real (kind=kind_phys), pointer      :: rb_ice(:)          => null()  !<
     real (kind=kind_phys), pointer      :: rb_land(:)         => null()  !<
-    real (kind=kind_phys), pointer      :: rb_ocean(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: rb_water(:)        => null()  !<
     logical                             :: reset                         !<
     real (kind=kind_phys), pointer      :: rhc(:,:)           => null()  !<
     real (kind=kind_phys), pointer      :: rho1(:)            => null()  !<
@@ -1928,7 +1937,7 @@ module GFS_typedefs
     type (cmpfsw_type),    pointer      :: scmpsw(:)          => null()  !<
     real (kind=kind_phys), pointer      :: semis_ice(:)       => null()  !<
     real (kind=kind_phys), pointer      :: semis_land(:)      => null()  !<
-    real (kind=kind_phys), pointer      :: semis_ocean(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: semis_water(:)     => null()  !<
     real (kind=kind_phys), pointer      :: sfcalb(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: sigma(:)           => null()  !<
     real (kind=kind_phys), pointer      :: sigmaf(:)          => null()  !<
@@ -1943,7 +1952,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: snowd_ice(:)       => null()  !<
     real (kind=kind_phys), pointer      :: snowd_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: snowd_land_save(:) => null()  !<
-    real (kind=kind_phys), pointer      :: snowd_ocean(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: snowd_water(:)     => null()  !<
     real (kind=kind_phys), pointer      :: snow_depth(:)      => null()  !<
     real (kind=kind_phys), pointer      :: snohf(:)           => null()  !<
     real (kind=kind_phys), pointer      :: snohf_snow(:)      => null()  !<
@@ -1957,7 +1966,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: stress(:)          => null()  !<
     real (kind=kind_phys), pointer      :: stress_ice(:)      => null()  !<
     real (kind=kind_phys), pointer      :: stress_land(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: stress_ocean(:)    => null()  !<
+    real (kind=kind_phys), pointer      :: stress_water(:)    => null()  !<
     real (kind=kind_phys), pointer      :: t2mmp(:)           => null()  !<
     real (kind=kind_phys), pointer      :: theta(:)           => null()  !<
     real (kind=kind_phys), pointer      :: th1(:)             => null()  !<
@@ -1966,7 +1975,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tlyr(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tprcp_ice(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tprcp_land(:)      => null()  !<
-    real (kind=kind_phys), pointer      :: tprcp_ocean(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: tprcp_water(:)     => null()  !<
     real (kind=kind_phys), pointer      :: tprcp_rate_land(:) => null()  !<
     integer                             :: tracers_start_index           !<
     integer                             :: tracers_total                 !<
@@ -1978,17 +1987,17 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tsfc_ice(:)        => null()  !<
     real (kind=kind_phys), pointer      :: tsfc_land(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tsfc_land_save(:)  => null()  !<
-    real (kind=kind_phys), pointer      :: tsfc_ocean(:)      => null()  !<
+    real (kind=kind_phys), pointer      :: tsfc_water(:)      => null()  !<
     real (kind=kind_phys), pointer      :: tsfg(:)            => null()  !<
     real (kind=kind_phys), pointer      :: tsnow(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_ice(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_land(:)      => null()  !<
-    real (kind=kind_phys), pointer      :: tsurf_ocean(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: tsurf_water(:)     => null()  !<
     real (kind=kind_phys), pointer      :: ud_mf(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: uustar_ice(:)      => null()  !<
     real (kind=kind_phys), pointer      :: uustar_land(:)     => null()  !<
-    real (kind=kind_phys), pointer      :: uustar_ocean(:)    => null()  !<
+    real (kind=kind_phys), pointer      :: uustar_water(:)    => null()  !<
     real (kind=kind_phys), pointer      :: vdftra(:,:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: vegf1d(:)          => null()  !<
     real (kind=kind_phys)               :: lndp_vgf                      !<
@@ -1996,7 +2005,7 @@ module GFS_typedefs
     integer, pointer                    :: vegtype(:)         => null()  !<
     real (kind=kind_phys), pointer      :: w_upi(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: wcbmax(:)          => null()  !<
-    real (kind=kind_phys), pointer      :: weasd_ocean(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: weasd_water(:)     => null()  !<
     real (kind=kind_phys), pointer      :: weasd_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: weasd_land_save(:) => null()  !<
     real (kind=kind_phys), pointer      :: weasd_ice(:)       => null()  !<
@@ -2008,9 +2017,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: xlai1d(:)          => null()  !<
     real (kind=kind_phys), pointer      :: xmu(:)             => null()  !<
     real (kind=kind_phys), pointer      :: z01d(:)            => null()  !<
-    real (kind=kind_phys), pointer      :: zorl_ice(:)        => null()  !<
-    real (kind=kind_phys), pointer      :: zorl_land(:)       => null()  !<
-    real (kind=kind_phys), pointer      :: zorl_ocean(:)      => null()  !<
     real (kind=kind_phys), pointer      :: zt1d(:)            => null()  !<
 !==================================================================================================
 ! UGWP - five mechnanisms of momentum deposition due to various types of GWs
@@ -2037,8 +2043,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: dudt_tms(:,:)      => null()  !< daily aver u-wind tend due to TMS
 
     ! RRTMGP
-    real (kind=kind_phys)               :: minGPpres                            !< Minimum pressure allowed by RRTMGP.
-    real (kind=kind_phys)               :: minGPtemp                            !< Minimum temperature allowed by RRTMGP. 
     integer                             :: ipsdlw0                              !<
     integer                             :: ipsdsw0                              !<
     real (kind=kind_phys), pointer      :: p_lay(:,:)                => null()  !<
@@ -2065,16 +2069,12 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: cld_rwp(:,:)              => null()  !< Cloud rain water path
     real (kind=kind_phys), pointer      :: cld_rerain(:,:)           => null()  !< Cloud rain effective radius
     real (kind=kind_phys), pointer      :: precip_frac(:,:)          => null()  !< Precipitation fraction
-    real (kind=kind_phys), pointer      :: fluxlwUP_allsky(:,:)      => null()  !< RRTMGP upward   longwave  all-sky flux profile
-    real (kind=kind_phys), pointer      :: fluxlwDOWN_allsky(:,:)    => null()  !< RRTMGP downward longwave  all-sky flux profile
     real (kind=kind_phys), pointer      :: fluxlwUP_clrsky(:,:)      => null()  !< RRTMGP upward   longwave  clr-sky flux profile
     real (kind=kind_phys), pointer      :: fluxlwDOWN_clrsky(:,:)    => null()  !< RRTMGP downward longwave  clr-sky flux profile
     real (kind=kind_phys), pointer      :: fluxswUP_allsky(:,:)      => null()  !< RRTMGP upward   shortwave all-sky flux profile
     real (kind=kind_phys), pointer      :: fluxswDOWN_allsky(:,:)    => null()  !< RRTMGP downward shortwave all-sky flux profile
     real (kind=kind_phys), pointer      :: fluxswUP_clrsky(:,:)      => null()  !< RRTMGP upward   shortwave clr-sky flux profile
     real (kind=kind_phys), pointer      :: fluxswDOWN_clrsky(:,:)    => null()  !< RRTMGP downward shortwave clr-sky flux profile
-    real (kind=kind_phys), pointer      :: fluxlwUP_jac(:,:)         => null()  !< RRTMGP upward Jacobian of longwave flux
-    real (kind=kind_phys), pointer      :: fluxlwDOWN_jac(:,:)       => null()  !< RRTMGP downward Jacobian of longwave flux
     real (kind=kind_phys), pointer      :: sfc_emiss_byband(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: sec_diff_byband(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: sfc_alb_nir_dir(:,:)      => null()  !<
@@ -2253,10 +2253,10 @@ module GFS_typedefs
     allocate (Sfcprop%tiice    (IM,Model%kice))
     allocate (Sfcprop%snowd    (IM))
     allocate (Sfcprop%zorl     (IM))
-    allocate (Sfcprop%zorlo    (IM))
+    allocate (Sfcprop%zorlw    (IM))
     allocate (Sfcprop%zorll    (IM))
     allocate (Sfcprop%zorli    (IM))
-    allocate (Sfcprop%zorlw    (IM))
+    allocate (Sfcprop%zorlwav  (IM))
     allocate (Sfcprop%fice     (IM))
 !   allocate (Sfcprop%hprim    (IM))
     allocate (Sfcprop%hprime   (IM,Model%nmtvr))
@@ -2273,10 +2273,10 @@ module GFS_typedefs
     Sfcprop%tiice     = clear_val
     Sfcprop%snowd     = clear_val
     Sfcprop%zorl      = clear_val
-    Sfcprop%zorlo     = clear_val
+    Sfcprop%zorlw     = clear_val
     Sfcprop%zorll     = clear_val
     Sfcprop%zorli     = clear_val
-    Sfcprop%zorlw     = clear_val
+    Sfcprop%zorlwav   = clear_val
     Sfcprop%fice      = clear_val
 !   Sfcprop%hprim     = clear_val
     Sfcprop%hprime    = clear_val
@@ -2651,13 +2651,23 @@ module GFS_typedefs
     allocate (Coupling%sfcnsw (IM))
     allocate (Coupling%sfcdlw (IM))
     allocate (Coupling%sfculw (IM))
-    allocate (Coupling%sfculw_jac (IM))
 
     Coupling%sfcdsw = clear_val
     Coupling%sfcnsw = clear_val
     Coupling%sfcdlw = clear_val
     Coupling%sfculw = clear_val
-    Coupling%sfculw_jac = clear_val
+
+    ! Coupling to RRTMGP, used for time step LW rad adjustment.
+    if (Model%do_RRTMGP) then
+       allocate (Coupling%fluxlwUP_jac      (IM,Model%levs+1))
+       allocate (Coupling%fluxlwUP_allsky   (IM,Model%levs+1))
+       allocate (Coupling%fluxlwDOWN_allsky (IM,Model%levs+1))
+       allocate (Coupling%htrlw             (IM,Model%levs))
+       Coupling%fluxlwUP_jac      = clear_val
+       Coupling%fluxlwUP_allsky   = clear_val
+       Coupling%fluxlwDOWN_allsky = clear_val
+       Coupling%htrlw             = clear_val
+    endif
 
     if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global) then
       allocate (Coupling%rain_cpl (IM))
@@ -3012,16 +3022,16 @@ module GFS_typedefs
     character(len=128)   :: rrtmgp_root         = ''         !< Directory of rte+rrtmgp source code
     character(len=128)   :: lw_file_gas         = ''         !< RRTMGP K-distribution file, coefficients to compute optics for gaseous atmosphere
     character(len=128)   :: lw_file_clouds      = ''         !< RRTMGP file containing coefficients used to compute clouds optical properties
-    integer              :: rrtmgp_nBandsLW     = 16         !< Number of RRTMGP LW bands.
-    integer              :: rrtmgp_nGptsLW      = 256        !< Number of RRTMGP LW spectral points.
     character(len=128)   :: sw_file_gas         = ''         !< RRTMGP K-distribution file, coefficients to compute optics for gaseous atmosphere
     character(len=128)   :: sw_file_clouds      = ''         !< RRTMGP file containing coefficients used to compute clouds optical properties
-    integer              :: rrtmgp_nBandsSW     = 14         !< Number of RRTMGP SW bands.
-    integer              :: rrtmgp_nGptsSW      = 224        !< Number of RRTMGP SW spectral points.
+    integer              :: rrtmgp_nBandsSW     = -999       !< Number of RRTMGP SW bands.             # *NOTE*
+    integer              :: rrtmgp_nGptsSW      = -999       !< Number of RRTMGP SW spectral points.   # The RRTMGP spectral dimensions in the files 
+    integer              :: rrtmgp_nBandsLW     = -999       !< Number of RRTMGP LW bands.             # need to be provided via namelsit.
+    integer              :: rrtmgp_nGptsLW      = -999       !< Number of RRTMGP LW spectral points.   #
     logical              :: doG_cldoptics       = .false.    !< Use legacy RRTMG cloud-optics?
     logical              :: doGP_cldoptics_PADE = .false.    !< Use RRTMGP cloud-optics: PADE approximation?
     logical              :: doGP_cldoptics_LUT  = .false.    !< Use RRTMGP cloud-optics: LUTs?
-    integer              :: rrtmgp_nrghice      = 0          !< Number of ice-roughness categories
+    integer              :: rrtmgp_nrghice      = 3          !< Number of ice-roughness categories
     integer              :: rrtmgp_nGauss_ang   = 1          !< Number of angles used in Gaussian quadrature
     logical              :: do_GPsw_Glw         = .false.
     logical              :: use_LW_jacobian     = .false.    !< Use Jacobian of LW to update LW radiation tendencies.
@@ -3761,36 +3771,47 @@ module GFS_typedefs
     Model%swhtr            = swhtr
 
     ! RRTMGP
-    Model%do_RRTMGP         = do_RRTMGP
-    Model%rrtmgp_nrghice    = rrtmgp_nrghice
-    Model%rrtmgp_nGauss_ang = rrtmgp_nGauss_ang
-    Model%do_GPsw_Glw       = do_GPsw_Glw
-    Model%active_gases      = active_gases
-    Model%ngases            = nGases
-    Model%rrtmgp_root       = rrtmgp_root
-    Model%lw_file_gas       = lw_file_gas
-    Model%lw_file_clouds    = lw_file_clouds
-    Model%rrtmgp_nBandsLW   = rrtmgp_nBandsLW
-    Model%rrtmgp_nGptsLW    = rrtmgp_nGptsLW
-    Model%sw_file_gas       = sw_file_gas
-    Model%sw_file_clouds    = sw_file_clouds
-    Model%rrtmgp_nBandsSW   = rrtmgp_nBandsSW
-    Model%rrtmgp_nGptsSW    = rrtmgp_nGptsSW
+    Model%do_RRTMGP           = do_RRTMGP
+    Model%rrtmgp_nrghice      = rrtmgp_nrghice
+    Model%rrtmgp_nGauss_ang   = rrtmgp_nGauss_ang
+    Model%do_GPsw_Glw         = do_GPsw_Glw
+    Model%active_gases        = active_gases
+    Model%ngases              = nGases
+    Model%rrtmgp_root         = rrtmgp_root
+    Model%lw_file_gas         = lw_file_gas
+    Model%lw_file_clouds      = lw_file_clouds
+    Model%rrtmgp_nBandsLW     = rrtmgp_nBandsLW
+    Model%rrtmgp_nGptsLW      = rrtmgp_nGptsLW
+    Model%sw_file_gas         = sw_file_gas
+    Model%sw_file_clouds      = sw_file_clouds
+    Model%rrtmgp_nBandsSW     = rrtmgp_nBandsSW
+    Model%rrtmgp_nGptsSW      = rrtmgp_nGptsSW
     Model%doG_cldoptics       = doG_cldoptics
     Model%doGP_cldoptics_PADE = doGP_cldoptics_PADE
     Model%doGP_cldoptics_LUT  = doGP_cldoptics_LUT
     Model%use_LW_jacobian     = use_LW_jacobian
     Model%doGP_lwscat         = doGP_lwscat
-    ! RRTMGP incompatible with levr /= levs
-    if (Model%do_RRTMGP .and. Model%levr /= Model%levs) then
-      write(0,*) "Logic error, RRTMGP only works with levr = levs"
-      stop
-    end if
-    ! RRTMGP LW scattering calculation not supported w/ RRTMG cloud-optics
-    if (Model%doGP_lwscat .and. Model%doG_cldoptics) then
-      write(0,*) "Logic error, RRTMGP Longwave cloud-scattering not supported with RRTMG cloud-optics."
-      stop
-    end if
+    if (Model%do_RRTMGP) then
+       ! RRTMGP incompatible with levr /= levs
+       if (Model%levr /= Model%levs) then
+          write(0,*) "Logic error, RRTMGP only works with levr = levs"
+          stop
+       end if
+       ! RRTMGP LW scattering calculation not supported w/ RRTMG cloud-optics
+       if (Model%doGP_lwscat .and. Model%doG_cldoptics) then
+          write(0,*) "Logic error, RRTMGP Longwave cloud-scattering not supported with RRTMG cloud-optics."
+          stop
+       end if
+       if (Model%doGP_cldoptics_PADE .and. Model%doGP_cldoptics_LUT) then
+          write(0,*) "Logic error, Both RRTMGP cloud-optics options cannot be selected. "
+          stop
+       end if
+       if (Model%rrtmgp_nGptsSW  .lt. 0 .or. Model%rrtmgp_nGptsLW  .lt. 0 .or. &
+           Model%rrtmgp_nBandsSW .lt. 0 .or. Model%rrtmgp_nBandsLW .lt. 0) then
+          write(0,*) "Logic error, RRTMGP spectral dimensions (bands/gpts) need to be provided."
+          stop
+       endif
+    endif
 
     ! The CCPP versions of the RRTMG lw/sw schemes are configured
     ! such that lw and sw heating rate are output, i.e. they rely
@@ -4940,7 +4961,6 @@ module GFS_typedefs
       print *, ' swhtr             : ', Model%swhtr
       if (Model%do_RRTMGP) then
         print *, ' rrtmgp_nrghice     : ', Model%rrtmgp_nrghice
-        print *, ' rrtmgp_nrghice     : ', Model%rrtmgp_nrghice
         print *, ' do_GPsw_Glw        : ', Model%do_GPsw_Glw
         print *, ' active_gases       : ', Model%active_gases
         print *, ' nGases             : ', Model%ngases
@@ -5780,8 +5800,7 @@ module GFS_typedefs
       allocate (Diag%tav_ugwp  (IM,Model%levs) )
     endif
 
-    if (Model%do_ugwp_v1 .or. Model%gwd_opt==33 .or. Model%gwd_opt==22 &
-                         .or. Model%gwd_opt==3  .or. Model%gwd_opt==2) then
+    if (Model%do_ugwp_v1 .or. Model%gwd_opt==33 .or. Model%gwd_opt==22) then
       allocate (Diag%dudt_ogw  (IM,Model%levs))
       allocate (Diag%dvdt_ogw  (IM,Model%levs))
       allocate (Diag%dudt_obl  (IM,Model%levs))
@@ -5804,6 +5823,10 @@ module GFS_typedefs
 
     !--- 3D diagnostics for Thompson MP / GFDL MP
     allocate (Diag%refl_10cm(IM,Model%levs))
+
+    !--- New PBL Diagnostics
+    allocate (Diag%dkt(IM,Model%levs))
+    allocate (Diag%dku(IM,Model%levs))
 
     !--  New max hourly diag.
     allocate (Diag%refdmax(IM))
@@ -6048,8 +6071,7 @@ module GFS_typedefs
     Diag%dtdt_gw     = zero
     Diag%kdis_gw     = zero
 
-    if (Model%do_ugwp_v1 .or. Model%gwd_opt==33 .or. Model%gwd_opt==22 &
-                         .or. Model%gwd_opt==3  .or. Model%gwd_opt==2) then
+    if (Model%do_ugwp_v1 .or. Model%gwd_opt==33 .or. Model%gwd_opt==22) then
       Diag%dudt_ogw    = zero
       Diag%dvdt_ogw    = zero
       Diag%dudt_obl    = zero
@@ -6100,6 +6122,10 @@ module GFS_typedefs
 
 !
 !-----------------------------
+
+! Extra PBL diagnostics
+    Diag%dkt = zero
+    Diag%dku = zero
 
 ! max hourly diagnostics
     Diag%refl_10cm   = zero
@@ -6238,7 +6264,7 @@ module GFS_typedefs
     ! Allocate arrays
     allocate (Interstitial%adjsfculw_land  (IM))
     allocate (Interstitial%adjsfculw_ice   (IM))
-    allocate (Interstitial%adjsfculw_ocean (IM))
+    allocate (Interstitial%adjsfculw_water (IM))
     allocate (Interstitial%adjnirbmd       (IM))
     allocate (Interstitial%adjnirbmu       (IM))
     allocate (Interstitial%adjnirdfd       (IM))
@@ -6257,14 +6283,14 @@ module GFS_typedefs
     allocate (Interstitial%cd              (IM))
     allocate (Interstitial%cd_ice          (IM))
     allocate (Interstitial%cd_land         (IM))
-    allocate (Interstitial%cd_ocean        (IM))
+    allocate (Interstitial%cd_water        (IM))
     allocate (Interstitial%cdq             (IM))
     allocate (Interstitial%cdq_ice         (IM))
     allocate (Interstitial%cdq_land        (IM))
-    allocate (Interstitial%cdq_ocean       (IM))
+    allocate (Interstitial%cdq_water       (IM))
     allocate (Interstitial%chh_ice         (IM))
     allocate (Interstitial%chh_land        (IM))
-    allocate (Interstitial%chh_ocean       (IM))
+    allocate (Interstitial%chh_water       (IM))
     allocate (Interstitial%cldf            (IM))
     allocate (Interstitial%cldsa           (IM,5))
     allocate (Interstitial%cldtaulw        (IM,Model%levr+LTP))
@@ -6275,7 +6301,7 @@ module GFS_typedefs
     allocate (Interstitial%clx             (IM,4))
     allocate (Interstitial%cmm_ice         (IM))
     allocate (Interstitial%cmm_land        (IM))
-    allocate (Interstitial%cmm_ocean       (IM))
+    allocate (Interstitial%cmm_water       (IM))
     allocate (Interstitial%cnvc            (IM,Model%levs))
     allocate (Interstitial%cnvw            (IM,Model%levs))
     allocate (Interstitial%ctei_r          (IM))
@@ -6286,7 +6312,6 @@ module GFS_typedefs
     allocate (Interstitial%del             (IM,Model%levs))
     allocate (Interstitial%del_gz          (IM,Model%levs+1))
     allocate (Interstitial%delr            (IM,Model%levr+LTP))
-    allocate (Interstitial%dkt             (IM,Model%levs-1))
     allocate (Interstitial%dlength         (IM))
     allocate (Interstitial%dqdt            (IM,Model%levs,Model%ntrac))
     allocate (Interstitial%dqsfc1          (IM))
@@ -6307,39 +6332,39 @@ module GFS_typedefs
     allocate (Interstitial%ep1d            (IM))
     allocate (Interstitial%ep1d_ice        (IM))
     allocate (Interstitial%ep1d_land       (IM))
-    allocate (Interstitial%ep1d_ocean      (IM))
+    allocate (Interstitial%ep1d_water      (IM))
     allocate (Interstitial%evapq           (IM))
     allocate (Interstitial%evap_ice        (IM))
     allocate (Interstitial%evap_land       (IM))
-    allocate (Interstitial%evap_ocean      (IM))
+    allocate (Interstitial%evap_water      (IM))
     allocate (Interstitial%evbs            (IM))
     allocate (Interstitial%evcw            (IM))
     allocate (Interstitial%faerlw          (IM,Model%levr+LTP,NBDLW,NF_AELW))
     allocate (Interstitial%faersw          (IM,Model%levr+LTP,NBDSW,NF_AESW))
     allocate (Interstitial%ffhh_ice        (IM))
     allocate (Interstitial%ffhh_land       (IM))
-    allocate (Interstitial%ffhh_ocean      (IM))
+    allocate (Interstitial%ffhh_water      (IM))
     allocate (Interstitial%fh2             (IM))
     allocate (Interstitial%fh2_ice         (IM))
     allocate (Interstitial%fh2_land        (IM))
-    allocate (Interstitial%fh2_ocean       (IM))
+    allocate (Interstitial%fh2_water       (IM))
     allocate (Interstitial%flag_cice       (IM))
     allocate (Interstitial%flag_guess      (IM))
     allocate (Interstitial%flag_iter       (IM))
     allocate (Interstitial%ffmm_ice        (IM))
     allocate (Interstitial%ffmm_land       (IM))
-    allocate (Interstitial%ffmm_ocean      (IM))
+    allocate (Interstitial%ffmm_water      (IM))
     allocate (Interstitial%fm10            (IM))
     allocate (Interstitial%fm10_ice        (IM))
     allocate (Interstitial%fm10_land       (IM))
-    allocate (Interstitial%fm10_ocean      (IM))
+    allocate (Interstitial%fm10_water      (IM))
     allocate (Interstitial%frland          (IM))
     allocate (Interstitial%fscav           (Interstitial%nscav))
     allocate (Interstitial%fswtr           (Interstitial%nscav))
     allocate (Interstitial%gabsbdlw        (IM))
     allocate (Interstitial%gabsbdlw_ice    (IM))
     allocate (Interstitial%gabsbdlw_land   (IM))
-    allocate (Interstitial%gabsbdlw_ocean  (IM))
+    allocate (Interstitial%gabsbdlw_water  (IM))
     allocate (Interstitial%gamma           (IM))
     allocate (Interstitial%gamq            (IM))
     allocate (Interstitial%gamt            (IM))
@@ -6347,7 +6372,7 @@ module GFS_typedefs
     allocate (Interstitial%gflx            (IM))
     allocate (Interstitial%gflx_ice        (IM))
     allocate (Interstitial%gflx_land       (IM))
-    allocate (Interstitial%gflx_ocean      (IM))
+    allocate (Interstitial%gflx_water      (IM))
     allocate (Interstitial%gwdcu           (IM,Model%levs))
     allocate (Interstitial%gwdcv           (IM,Model%levs))
     allocate (Interstitial%hefac           (IM))
@@ -6355,7 +6380,7 @@ module GFS_typedefs
     allocate (Interstitial%hflxq           (IM))
     allocate (Interstitial%hflx_ice        (IM))
     allocate (Interstitial%hflx_land       (IM))
-    allocate (Interstitial%hflx_ocean      (IM))
+    allocate (Interstitial%hflx_water      (IM))
     allocate (Interstitial%htlwc           (IM,Model%levr+LTP))
     allocate (Interstitial%htlw0           (IM,Model%levr+LTP))
     allocate (Interstitial%htswc           (IM,Model%levr+LTP))
@@ -6385,7 +6410,7 @@ module GFS_typedefs
     allocate (Interstitial%prcpmp          (IM))
     allocate (Interstitial%qss_ice         (IM))
     allocate (Interstitial%qss_land        (IM))
-    allocate (Interstitial%qss_ocean       (IM))
+    allocate (Interstitial%qss_water       (IM))
     allocate (Interstitial%raincd          (IM))
     allocate (Interstitial%raincs          (IM))
     allocate (Interstitial%rainmcadj       (IM))
@@ -6393,7 +6418,7 @@ module GFS_typedefs
     allocate (Interstitial%rb              (IM))
     allocate (Interstitial%rb_ice          (IM))
     allocate (Interstitial%rb_land         (IM))
-    allocate (Interstitial%rb_ocean        (IM))
+    allocate (Interstitial%rb_water        (IM))
     allocate (Interstitial%rhc             (IM,Model%levs))
     allocate (Interstitial%runoff          (IM))
     allocate (Interstitial%save_q          (IM,Model%levs,Model%ntrac))
@@ -6405,7 +6430,7 @@ module GFS_typedefs
     allocate (Interstitial%scmpsw          (IM))
     allocate (Interstitial%semis_ice       (IM))
     allocate (Interstitial%semis_land      (IM))
-    allocate (Interstitial%semis_ocean     (IM))
+    allocate (Interstitial%semis_water     (IM))
     allocate (Interstitial%sfcalb          (IM,NF_ALBD))
     allocate (Interstitial%sigma           (IM))
     allocate (Interstitial%sigmaf          (IM))
@@ -6415,43 +6440,43 @@ module GFS_typedefs
     allocate (Interstitial%snowc           (IM))
     allocate (Interstitial%snowd_ice       (IM))
     allocate (Interstitial%snowd_land      (IM))
-    allocate (Interstitial%snowd_ocean     (IM))
+    allocate (Interstitial%snowd_water     (IM))
     allocate (Interstitial%snohf           (IM))
     allocate (Interstitial%snowmt          (IM))
     allocate (Interstitial%soiltype        (IM))
     allocate (Interstitial%stress          (IM))
     allocate (Interstitial%stress_ice      (IM))
     allocate (Interstitial%stress_land     (IM))
-    allocate (Interstitial%stress_ocean    (IM))
+    allocate (Interstitial%stress_water    (IM))
     allocate (Interstitial%theta           (IM))
     allocate (Interstitial%tice            (IM))
     allocate (Interstitial%tlvl            (IM,Model%levr+1+LTP))
     allocate (Interstitial%tlyr            (IM,Model%levr+LTP))
     allocate (Interstitial%tprcp_ice       (IM))
     allocate (Interstitial%tprcp_land      (IM))
-    allocate (Interstitial%tprcp_ocean     (IM))
+    allocate (Interstitial%tprcp_water     (IM))
     allocate (Interstitial%trans           (IM))
     allocate (Interstitial%tseal           (IM))
     allocate (Interstitial%tsfa            (IM))
     allocate (Interstitial%tsfc_ice        (IM))
     allocate (Interstitial%tsfc_land       (IM))
-    allocate (Interstitial%tsfc_ocean      (IM))
+    allocate (Interstitial%tsfc_water      (IM))
     allocate (Interstitial%tsfg            (IM))
     allocate (Interstitial%tsurf           (IM))
     allocate (Interstitial%tsurf_ice       (IM))
     allocate (Interstitial%tsurf_land      (IM))
-    allocate (Interstitial%tsurf_ocean     (IM))
+    allocate (Interstitial%tsurf_water     (IM))
     allocate (Interstitial%ud_mf           (IM,Model%levs))
     allocate (Interstitial%uustar_ice      (IM))
     allocate (Interstitial%uustar_land     (IM))
-    allocate (Interstitial%uustar_ocean    (IM))
+    allocate (Interstitial%uustar_water    (IM))
     allocate (Interstitial%vdftra          (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d          (IM))
     allocate (Interstitial%vegtype         (IM))
     allocate (Interstitial%wcbmax          (IM))
     allocate (Interstitial%weasd_ice       (IM))
     allocate (Interstitial%weasd_land      (IM))
-    allocate (Interstitial%weasd_ocean     (IM))
+    allocate (Interstitial%weasd_water     (IM))
     allocate (Interstitial%wind            (IM))
     allocate (Interstitial%work1           (IM))
     allocate (Interstitial%work2           (IM))
@@ -6460,9 +6485,6 @@ module GFS_typedefs
     allocate (Interstitial%xlai1d          (IM))
     allocate (Interstitial%xmu             (IM))
     allocate (Interstitial%z01d            (IM))
-    allocate (Interstitial%zorl_ice        (IM))
-    allocate (Interstitial%zorl_land       (IM))
-    allocate (Interstitial%zorl_ocean      (IM))
     allocate (Interstitial%zt1d            (IM))
 
     ! RRTMGP
@@ -6479,9 +6501,7 @@ module GFS_typedefs
        allocate (Interstitial%t_lay                (IM, Model%levs))
        allocate (Interstitial%cloud_overlap_param  (IM, Model%levs))
        allocate (Interstitial%precip_overlap_param (IM, Model%levs))
-       allocate (Interstitial%fluxlwDOWN_allsky    (IM, Model%levs+1))
        allocate (Interstitial%fluxlwUP_clrsky      (IM, Model%levs+1))
-       allocate (Interstitial%fluxlwUP_allsky      (IM, Model%levs+1))
        allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
        allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
        allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
@@ -6512,7 +6532,9 @@ module GFS_typedefs
        allocate (Interstitial%toa_src_sw           (IM,Model%rrtmgp_nGptsSW))
        allocate (Interstitial%toa_src_lw           (IM,Model%rrtmgp_nGptsLW))
        allocate (Interstitial%active_gases_array   (Model%nGases))
-       ! ty_gas_concs
+       !
+       !  gas_concentrations (ty_gas_concs)
+       !
        Interstitial%gas_concentrations%ncol = IM
        Interstitial%gas_concentrations%nlay = Model%levs
        allocate(Interstitial%gas_concentrations%gas_name(Model%nGases))
@@ -6520,6 +6542,67 @@ module GFS_typedefs
        do iGas=1,Model%nGases
           allocate(Interstitial%gas_concentrations%concs(iGas)%conc(IM, Model%levs))
        enddo
+       !
+       ! lw_optical_props_clrsky (ty_optical_props_1scl) 
+       !
+       allocate(Interstitial%lw_optical_props_clrsky%tau(      IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%lw_optical_props_clrsky%band2gpt     (2,          Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_clrsky%band_lims_wvn(2,          Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_clrsky%gpt2band(                 Model%rrtmgp_nGptsLW  )) 
+       !
+       ! lw_optical_props_aerosol (ty_optical_props_1scl)
+       !
+       allocate(Interstitial%lw_optical_props_aerosol%tau(     IM, Model%levs, Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_aerosol%band2gpt     (2,         Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_aerosol%band_lims_wvn(2,         Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_aerosol%gpt2band(                Model%rrtmgp_nBandsLW ))
+       !
+       ! lw_optical_props_cloudsByBand (ty_optical_props_2str)    
+       !
+       allocate(Interstitial%lw_optical_props_cloudsByBand%tau(IM, Model%levs, Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_cloudsByBand%ssa(IM, Model%levs, Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_cloudsByBand%g(  IM, Model%levs, Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_cloudsByBand%band2gpt     (2,    Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_cloudsByBand%band_lims_wvn(2,    Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_cloudsByBand%gpt2band(           Model%rrtmgp_nBandsLW ))
+       !
+       ! lw_optical_props_precipByBand (ty_optical_props_2str)
+       !
+       allocate(Interstitial%lw_optical_props_precipByBand%tau(IM, Model%levs, Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_precipByBand%ssa(IM, Model%levs, Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_precipByBand%g(  IM, Model%levs, Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_precipByBand%band2gpt     (2,    Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_precipByBand%band_lims_wvn(2,    Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_precipByBand%gpt2band(           Model%rrtmgp_nBandsLW ))
+       !
+       ! lw_optical_props_clouds (ty_optical_props_2str)
+       !
+       allocate(Interstitial%lw_optical_props_clouds%tau(      IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%lw_optical_props_clouds%ssa(      IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%lw_optical_props_clouds%g(        IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%lw_optical_props_clouds%band2gpt     (2,          Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_clouds%band_lims_wvn(2,          Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_clouds%gpt2band(                 Model%rrtmgp_nGptsLW  ))
+       !
+       ! lw_optical_props_precip (ty_optical_props_2str)
+       !
+       allocate(Interstitial%lw_optical_props_precip%tau(      IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%lw_optical_props_precip%ssa(      IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%lw_optical_props_precip%g(        IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%lw_optical_props_precip%band2gpt     (2,          Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_precip%band_lims_wvn(2,          Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%lw_optical_props_precip%gpt2band(                 Model%rrtmgp_nGptsLW  ))
+       !
+       ! sources (ty_source_func_lw)
+       !
+       allocate(Interstitial%sources%sfc_source(               IM,             Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%sources%lay_source(               IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%sources%lev_source_inc(           IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%sources%lev_source_dec(           IM, Model%levs, Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%sources%sfc_source_Jac(           IM,             Model%rrtmgp_nGptsLW  ))
+       allocate(Interstitial%sources%band2gpt      (           2,              Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%sources%band_lims_wvn (           2,              Model%rrtmgp_nBandsLW ))
+       allocate(Interstitial%sources%gpt2band(                                 Model%rrtmgp_nGptsLW  ))
     end if
 
 ! UGWP common
@@ -6536,8 +6619,7 @@ module GFS_typedefs
     allocate (Interstitial%zngw            (IM)           )
 
 ! CIRES UGWP v1
-    if (Model%do_ugwp_v1 .or. Model%gwd_opt==33 .or. Model%gwd_opt==22 &
-                         .or. Model%gwd_opt==3  .or. Model%gwd_opt==2) then
+    if (Model%do_ugwp_v1) then
       allocate (Interstitial%dudt_ngw        (IM,Model%levs))
       allocate (Interstitial%dvdt_ngw        (IM,Model%levs))
       allocate (Interstitial%dtdt_ngw        (IM,Model%levs))
@@ -6912,7 +6994,6 @@ module GFS_typedefs
     end if
 
     if (Model%do_RRTMGP) then
-      Interstitial%fluxlwUP_allsky      = clear_val
       Interstitial%tracer               = clear_val
       Interstitial%tv_lay               = clear_val
       Interstitial%relhum               = clear_val
@@ -6925,7 +7006,6 @@ module GFS_typedefs
       Interstitial%t_lay                = clear_val
       Interstitial%cloud_overlap_param  = clear_val
       Interstitial%precip_overlap_param = clear_val
-      Interstitial%fluxlwDOWN_allsky    = clear_val
       Interstitial%fluxlwUP_clrsky      = clear_val
       Interstitial%fluxlwDOWN_clrsky    = clear_val
       Interstitial%fluxswUP_allsky      = clear_val
@@ -6957,6 +7037,21 @@ module GFS_typedefs
       do iGas=1,Model%nGases
         Interstitial%gas_concentrations%concs(iGas)%conc = clear_val
       end do
+      Interstitial%lw_optical_props_clrsky%tau       = clear_val
+      Interstitial%lw_optical_props_aerosol%tau      = clear_val
+      Interstitial%lw_optical_props_clouds%tau       = clear_val
+      Interstitial%lw_optical_props_clouds%ssa       = clear_val
+      Interstitial%lw_optical_props_clouds%g         = clear_val
+      Interstitial%lw_optical_props_precip%tau       = clear_val
+      Interstitial%lw_optical_props_precip%ssa       = clear_val
+      Interstitial%lw_optical_props_precip%g         = clear_val
+      Interstitial%lw_optical_props_clrsky%tau       = clear_val
+      Interstitial%lw_optical_props_cloudsByBand%tau = clear_val
+      Interstitial%lw_optical_props_cloudsByBand%ssa = clear_val
+      Interstitial%lw_optical_props_cloudsByBand%g   = clear_val
+      Interstitial%lw_optical_props_precipByBand%tau = clear_val
+      Interstitial%lw_optical_props_precipByBand%ssa = clear_val
+      Interstitial%lw_optical_props_precipByBand%g   = clear_val
     end if
     !
   end subroutine interstitial_rad_reset
@@ -6970,7 +7065,7 @@ module GFS_typedefs
     !
     Interstitial%adjsfculw_land  = clear_val
     Interstitial%adjsfculw_ice   = clear_val
-    Interstitial%adjsfculw_ocean = clear_val
+    Interstitial%adjsfculw_water = clear_val
     Interstitial%adjnirbmd       = clear_val
     Interstitial%adjnirbmu       = clear_val
     Interstitial%adjnirdfd       = clear_val
@@ -6983,14 +7078,14 @@ module GFS_typedefs
     Interstitial%cd              = clear_val
     Interstitial%cd_ice          = huge
     Interstitial%cd_land         = huge
-    Interstitial%cd_ocean        = huge
+    Interstitial%cd_water        = huge
     Interstitial%cdq             = clear_val
     Interstitial%cdq_ice         = huge
     Interstitial%cdq_land        = huge
-    Interstitial%cdq_ocean       = huge
+    Interstitial%cdq_water       = huge
     Interstitial%chh_ice         = huge
     Interstitial%chh_land        = huge
-    Interstitial%chh_ocean       = huge
+    Interstitial%chh_water       = huge
     Interstitial%cld1d           = clear_val
     Interstitial%cldf            = clear_val
     Interstitial%clw             = clear_val
@@ -6998,7 +7093,7 @@ module GFS_typedefs
     Interstitial%clx             = clear_val
     Interstitial%cmm_ice         = huge
     Interstitial%cmm_land        = huge
-    Interstitial%cmm_ocean       = huge
+    Interstitial%cmm_water       = huge
     Interstitial%cnvc            = clear_val
     Interstitial%cnvw            = clear_val
     Interstitial%ctei_r          = clear_val
@@ -7007,7 +7102,6 @@ module GFS_typedefs
     Interstitial%dd_mf           = clear_val
     Interstitial%del             = clear_val
     Interstitial%del_gz          = clear_val
-    Interstitial%dkt             = clear_val
     Interstitial%dlength         = clear_val
     Interstitial%dqdt            = clear_val
     Interstitial%dqsfc1          = clear_val
@@ -7027,44 +7121,44 @@ module GFS_typedefs
     Interstitial%ep1d            = clear_val
     Interstitial%ep1d_ice        = huge
     Interstitial%ep1d_land       = huge
-    Interstitial%ep1d_ocean      = huge
+    Interstitial%ep1d_water      = huge
     Interstitial%evapq           = clear_val
     Interstitial%evap_ice        = huge
     Interstitial%evap_land       = huge
-    Interstitial%evap_ocean      = huge
+    Interstitial%evap_water      = huge
     Interstitial%evbs            = clear_val
     Interstitial%evcw            = clear_val
     Interstitial%ffhh_ice        = huge
     Interstitial%ffhh_land       = huge
-    Interstitial%ffhh_ocean      = huge
+    Interstitial%ffhh_water      = huge
     Interstitial%fh2             = clear_val
     Interstitial%fh2_ice         = huge
     Interstitial%fh2_land        = huge
-    Interstitial%fh2_ocean       = huge
+    Interstitial%fh2_water       = huge
     Interstitial%flag_cice       = .false.
     Interstitial%flag_guess      = .false.
     Interstitial%flag_iter       = .true.
     Interstitial%ffmm_ice        = huge
     Interstitial%ffmm_land       = huge
-    Interstitial%ffmm_ocean      = huge
+    Interstitial%ffmm_water      = huge
     Interstitial%fm10            = clear_val
     Interstitial%fm10_ice        = huge
     Interstitial%fm10_land       = huge
-    Interstitial%fm10_ocean      = huge
+    Interstitial%fm10_water      = huge
     Interstitial%frland          = clear_val
     Interstitial%fscav           = clear_val
     Interstitial%fswtr           = clear_val
     Interstitial%gabsbdlw        = clear_val
     Interstitial%gabsbdlw_ice    = clear_val
     Interstitial%gabsbdlw_land   = clear_val
-    Interstitial%gabsbdlw_ocean  = clear_val
+    Interstitial%gabsbdlw_water  = clear_val
     Interstitial%gamma           = clear_val
     Interstitial%gamq            = clear_val
     Interstitial%gamt            = clear_val
     Interstitial%gflx            = clear_val
     Interstitial%gflx_ice        = clear_val
     Interstitial%gflx_land       = clear_val
-    Interstitial%gflx_ocean      = clear_val
+    Interstitial%gflx_water      = clear_val
     Interstitial%gwdcu           = clear_val
     Interstitial%gwdcv           = clear_val
     Interstitial%hefac           = clear_val
@@ -7072,7 +7166,7 @@ module GFS_typedefs
     Interstitial%hflxq           = clear_val
     Interstitial%hflx_ice        = huge
     Interstitial%hflx_land       = huge
-    Interstitial%hflx_ocean      = huge
+    Interstitial%hflx_water      = huge
     Interstitial%dry             = .false.
     Interstitial%icy             = .false.
     Interstitial%lake            = .false.
@@ -7091,7 +7185,7 @@ module GFS_typedefs
     Interstitial%prnum           = clear_val
     Interstitial%qss_ice         = huge
     Interstitial%qss_land        = huge
-    Interstitial%qss_ocean       = huge
+    Interstitial%qss_water       = huge
     Interstitial%raincd          = clear_val
     Interstitial%raincs          = clear_val
     Interstitial%rainmcadj       = clear_val
@@ -7099,7 +7193,7 @@ module GFS_typedefs
     Interstitial%rb              = clear_val
     Interstitial%rb_ice          = huge
     Interstitial%rb_land         = huge
-    Interstitial%rb_ocean        = huge
+    Interstitial%rb_water        = huge
     Interstitial%rhc             = clear_val
     Interstitial%runoff          = clear_val
     Interstitial%save_q          = clear_val
@@ -7110,7 +7204,7 @@ module GFS_typedefs
     Interstitial%sbsno           = clear_val
     Interstitial%semis_ice       = clear_val
     Interstitial%semis_land      = clear_val
-    Interstitial%semis_ocean     = clear_val
+    Interstitial%semis_water     = clear_val
     Interstitial%sigma           = clear_val
     Interstitial%sigmaf          = clear_val
     Interstitial%sigmafrac       = clear_val
@@ -7119,32 +7213,32 @@ module GFS_typedefs
     Interstitial%snowc           = clear_val
     Interstitial%snowd_ice       = huge
     Interstitial%snowd_land      = huge
-    Interstitial%snowd_ocean     = huge
+    Interstitial%snowd_water     = huge
     Interstitial%snohf           = clear_val
     Interstitial%snowmt          = clear_val
     Interstitial%soiltype        = 0
     Interstitial%stress          = clear_val
     Interstitial%stress_ice      = huge
     Interstitial%stress_land     = huge
-    Interstitial%stress_ocean    = huge
+    Interstitial%stress_water    = huge
     Interstitial%theta           = clear_val
     Interstitial%tice            = clear_val
     Interstitial%tprcp_ice       = huge
     Interstitial%tprcp_land      = huge
-    Interstitial%tprcp_ocean     = huge
+    Interstitial%tprcp_water     = huge
     Interstitial%trans           = clear_val
     Interstitial%tseal           = clear_val
     Interstitial%tsfc_ice        = huge
     Interstitial%tsfc_land       = huge
-    Interstitial%tsfc_ocean      = huge
+    Interstitial%tsfc_water      = huge
     Interstitial%tsurf           = clear_val
     Interstitial%tsurf_ice       = huge
     Interstitial%tsurf_land      = huge
-    Interstitial%tsurf_ocean     = huge
+    Interstitial%tsurf_water     = huge
     Interstitial%ud_mf           = clear_val
     Interstitial%uustar_ice      = huge
     Interstitial%uustar_land     = huge
-    Interstitial%uustar_ocean    = huge
+    Interstitial%uustar_water    = huge
     Interstitial%vdftra          = clear_val
     Interstitial%vegf1d          = clear_val
     Interstitial%lndp_vgf        = clear_val
@@ -7152,7 +7246,7 @@ module GFS_typedefs
     Interstitial%wcbmax          = clear_val
     Interstitial%weasd_ice       = huge
     Interstitial%weasd_land      = huge
-    Interstitial%weasd_ocean     = huge
+    Interstitial%weasd_water     = huge
     Interstitial%wind            = huge
     Interstitial%work1           = clear_val
     Interstitial%work2           = clear_val
@@ -7161,9 +7255,6 @@ module GFS_typedefs
     Interstitial%xlai1d          = clear_val
     Interstitial%xmu             = clear_val
     Interstitial%z01d            = clear_val
-    Interstitial%zorl_ice        = huge
-    Interstitial%zorl_land       = huge
-    Interstitial%zorl_ocean      = huge
     Interstitial%zt1d            = clear_val
 
 ! UGWP common
@@ -7178,8 +7269,7 @@ module GFS_typedefs
     Interstitial%zngw            = clear_val
 
 ! CIRES UGWP v1
-    if (Model%do_ugwp_v1 .or. Model%gwd_opt==33 .or. Model%gwd_opt==22 &
-                         .or. Model%gwd_opt==3  .or. Model%gwd_opt==2) then
+    if (Model%do_ugwp_v1) then
       Interstitial%dudt_ngw        = clear_val
       Interstitial%dvdt_ngw        = clear_val
       Interstitial%dtdt_ngw        = clear_val
@@ -7313,7 +7403,7 @@ module GFS_typedefs
     write (0,*) 'Interstitial_print: values that change'
     write (0,*) 'sum(Interstitial%adjsfculw_land  ) = ', sum(Interstitial%adjsfculw_land  )
     write (0,*) 'sum(Interstitial%adjsfculw_ice   ) = ', sum(Interstitial%adjsfculw_ice   )
-    write (0,*) 'sum(Interstitial%adjsfculw_ocean ) = ', sum(Interstitial%adjsfculw_ocean )
+    write (0,*) 'sum(Interstitial%adjsfculw_water ) = ', sum(Interstitial%adjsfculw_water )
     write (0,*) 'sum(Interstitial%adjnirbmd       ) = ', sum(Interstitial%adjnirbmd       )
     write (0,*) 'sum(Interstitial%adjnirbmu       ) = ', sum(Interstitial%adjnirbmu       )
     write (0,*) 'sum(Interstitial%adjnirdfd       ) = ', sum(Interstitial%adjnirdfd       )
@@ -7331,14 +7421,14 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%cd              ) = ', sum(Interstitial%cd              )
     write (0,*) 'sum(Interstitial%cd_ice          ) = ', sum(Interstitial%cd_ice          )
     write (0,*) 'sum(Interstitial%cd_land         ) = ', sum(Interstitial%cd_land         )
-    write (0,*) 'sum(Interstitial%cd_ocean        ) = ', sum(Interstitial%cd_ocean        )
+    write (0,*) 'sum(Interstitial%cd_water        ) = ', sum(Interstitial%cd_water        )
     write (0,*) 'sum(Interstitial%cdq             ) = ', sum(Interstitial%cdq             )
     write (0,*) 'sum(Interstitial%cdq_ice         ) = ', sum(Interstitial%cdq_ice         )
     write (0,*) 'sum(Interstitial%cdq_land        ) = ', sum(Interstitial%cdq_land        )
-    write (0,*) 'sum(Interstitial%cdq_ocean       ) = ', sum(Interstitial%cdq_ocean       )
+    write (0,*) 'sum(Interstitial%cdq_water       ) = ', sum(Interstitial%cdq_water       )
     write (0,*) 'sum(Interstitial%chh_ice         ) = ', sum(Interstitial%chh_ice         )
     write (0,*) 'sum(Interstitial%chh_land        ) = ', sum(Interstitial%chh_land        )
-    write (0,*) 'sum(Interstitial%chh_ocean       ) = ', sum(Interstitial%chh_ocean       )
+    write (0,*) 'sum(Interstitial%chh_water       ) = ', sum(Interstitial%chh_water       )
     write (0,*) 'sum(Interstitial%cldf            ) = ', sum(Interstitial%cldf            )
     write (0,*) 'sum(Interstitial%cldsa           ) = ', sum(Interstitial%cldsa           )
     write (0,*) 'sum(Interstitial%cldtaulw        ) = ', sum(Interstitial%cldtaulw        )
@@ -7349,7 +7439,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%clouds          ) = ', sum(Interstitial%clouds          )
     write (0,*) 'sum(Interstitial%cmm_ice         ) = ', sum(Interstitial%cmm_ice         )
     write (0,*) 'sum(Interstitial%cmm_land        ) = ', sum(Interstitial%cmm_land        )
-    write (0,*) 'sum(Interstitial%cmm_ocean       ) = ', sum(Interstitial%cmm_ocean       )
+    write (0,*) 'sum(Interstitial%cmm_water       ) = ', sum(Interstitial%cmm_water       )
     write (0,*) 'sum(Interstitial%cnvc            ) = ', sum(Interstitial%cnvc            )
     write (0,*) 'sum(Interstitial%cnvw            ) = ', sum(Interstitial%cnvw            )
     write (0,*) 'sum(Interstitial%ctei_r          ) = ', sum(Interstitial%ctei_r          )
@@ -7360,7 +7450,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%del             ) = ', sum(Interstitial%del             )
     write (0,*) 'sum(Interstitial%del_gz          ) = ', sum(Interstitial%del_gz          )
     write (0,*) 'sum(Interstitial%delr            ) = ', sum(Interstitial%delr            )
-    write (0,*) 'sum(Interstitial%dkt             ) = ', sum(Interstitial%dkt             )
     write (0,*) 'sum(Interstitial%dlength         ) = ', sum(Interstitial%dlength         )
     write (0,*) 'sum(Interstitial%dqdt            ) = ', sum(Interstitial%dqdt            )
     write (0,*) 'sum(Interstitial%dqsfc1          ) = ', sum(Interstitial%dqsfc1          )
@@ -7381,32 +7470,32 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%ep1d            ) = ', sum(Interstitial%ep1d            )
     write (0,*) 'sum(Interstitial%ep1d_ice        ) = ', sum(Interstitial%ep1d_ice        )
     write (0,*) 'sum(Interstitial%ep1d_land       ) = ', sum(Interstitial%ep1d_land       )
-    write (0,*) 'sum(Interstitial%ep1d_ocean      ) = ', sum(Interstitial%ep1d_ocean      )
+    write (0,*) 'sum(Interstitial%ep1d_water      ) = ', sum(Interstitial%ep1d_water      )
     write (0,*) 'sum(Interstitial%evapq           ) = ', sum(Interstitial%evapq           )
     write (0,*) 'sum(Interstitial%evap_ice        ) = ', sum(Interstitial%evap_ice        )
     write (0,*) 'sum(Interstitial%evap_land       ) = ', sum(Interstitial%evap_land       )
-    write (0,*) 'sum(Interstitial%evap_ocean      ) = ', sum(Interstitial%evap_ocean      )
+    write (0,*) 'sum(Interstitial%evap_water      ) = ', sum(Interstitial%evap_water      )
     write (0,*) 'sum(Interstitial%evbs            ) = ', sum(Interstitial%evbs            )
     write (0,*) 'sum(Interstitial%evcw            ) = ', sum(Interstitial%evcw            )
     write (0,*) 'sum(Interstitial%faerlw          ) = ', sum(Interstitial%faerlw          )
     write (0,*) 'sum(Interstitial%faersw          ) = ', sum(Interstitial%faersw          )
     write (0,*) 'sum(Interstitial%ffhh_ice        ) = ', sum(Interstitial%ffhh_ice        )
     write (0,*) 'sum(Interstitial%ffhh_land       ) = ', sum(Interstitial%ffhh_land       )
-    write (0,*) 'sum(Interstitial%ffhh_ocean      ) = ', sum(Interstitial%ffhh_ocean      )
+    write (0,*) 'sum(Interstitial%ffhh_water      ) = ', sum(Interstitial%ffhh_water      )
     write (0,*) 'sum(Interstitial%fh2             ) = ', sum(Interstitial%fh2             )
     write (0,*) 'sum(Interstitial%fh2_ice         ) = ', sum(Interstitial%fh2_ice         )
     write (0,*) 'sum(Interstitial%fh2_land        ) = ', sum(Interstitial%fh2_land        )
-    write (0,*) 'sum(Interstitial%fh2_ocean       ) = ', sum(Interstitial%fh2_ocean       )
+    write (0,*) 'sum(Interstitial%fh2_water       ) = ', sum(Interstitial%fh2_water       )
     write (0,*) 'Interstitial%flag_cice(1)          = ', Interstitial%flag_cice(1)
     write (0,*) 'Interstitial%flag_guess(1)         = ', Interstitial%flag_guess(1)
     write (0,*) 'Interstitial%flag_iter(1)          = ', Interstitial%flag_iter(1)
     write (0,*) 'sum(Interstitial%ffmm_ice        ) = ', sum(Interstitial%ffmm_ice        )
     write (0,*) 'sum(Interstitial%ffmm_land       ) = ', sum(Interstitial%ffmm_land       )
-    write (0,*) 'sum(Interstitial%ffmm_ocean      ) = ', sum(Interstitial%ffmm_ocean      )
+    write (0,*) 'sum(Interstitial%ffmm_water      ) = ', sum(Interstitial%ffmm_water      )
     write (0,*) 'sum(Interstitial%fm10            ) = ', sum(Interstitial%fm10            )
     write (0,*) 'sum(Interstitial%fm10_ice        ) = ', sum(Interstitial%fm10_ice        )
     write (0,*) 'sum(Interstitial%fm10_land       ) = ', sum(Interstitial%fm10_land       )
-    write (0,*) 'sum(Interstitial%fm10_ocean      ) = ', sum(Interstitial%fm10_ocean      )
+    write (0,*) 'sum(Interstitial%fm10_water      ) = ', sum(Interstitial%fm10_water      )
     write (0,*) 'Interstitial%frain                 = ', Interstitial%frain
     write (0,*) 'sum(Interstitial%frland          ) = ', sum(Interstitial%frland          )
     write (0,*) 'sum(Interstitial%fscav           ) = ', sum(Interstitial%fscav           )
@@ -7414,7 +7503,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%gabsbdlw        ) = ', sum(Interstitial%gabsbdlw        )
     write (0,*) 'sum(Interstitial%gabsbdlw_ice    ) = ', sum(Interstitial%gabsbdlw_ice    )
     write (0,*) 'sum(Interstitial%gabsbdlw_land   ) = ', sum(Interstitial%gabsbdlw_land   )
-    write (0,*) 'sum(Interstitial%gabsbdlw_ocean  ) = ', sum(Interstitial%gabsbdlw_ocean  )
+    write (0,*) 'sum(Interstitial%gabsbdlw_water  ) = ', sum(Interstitial%gabsbdlw_water  )
     write (0,*) 'sum(Interstitial%gamma           ) = ', sum(Interstitial%gamma           )
     write (0,*) 'sum(Interstitial%gamq            ) = ', sum(Interstitial%gamq            )
     write (0,*) 'sum(Interstitial%gamt            ) = ', sum(Interstitial%gamt            )
@@ -7422,7 +7511,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%gflx            ) = ', sum(Interstitial%gflx            )
     write (0,*) 'sum(Interstitial%gflx_ice        ) = ', sum(Interstitial%gflx_ice        )
     write (0,*) 'sum(Interstitial%gflx_land       ) = ', sum(Interstitial%gflx_land       )
-    write (0,*) 'sum(Interstitial%gflx_ocean      ) = ', sum(Interstitial%gflx_ocean      )
+    write (0,*) 'sum(Interstitial%gflx_water      ) = ', sum(Interstitial%gflx_water      )
     write (0,*) 'sum(Interstitial%gwdcu           ) = ', sum(Interstitial%gwdcu           )
     write (0,*) 'sum(Interstitial%gwdcv           ) = ', sum(Interstitial%gwdcv           )
     write (0,*) 'sum(Interstitial%hefac           ) = ', sum(Interstitial%hefac           )
@@ -7430,7 +7519,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%hflxq           ) = ', sum(Interstitial%hflxq           )
     write (0,*) 'sum(Interstitial%hflx_ice        ) = ', sum(Interstitial%hflx_ice        )
     write (0,*) 'sum(Interstitial%hflx_land       ) = ', sum(Interstitial%hflx_land       )
-    write (0,*) 'sum(Interstitial%hflx_ocean      ) = ', sum(Interstitial%hflx_ocean      )
+    write (0,*) 'sum(Interstitial%hflx_water      ) = ', sum(Interstitial%hflx_water      )
     write (0,*) 'sum(Interstitial%htlwc           ) = ', sum(Interstitial%htlwc           )
     write (0,*) 'sum(Interstitial%htlw0           ) = ', sum(Interstitial%htlw0           )
     write (0,*) 'sum(Interstitial%htswc           ) = ', sum(Interstitial%htswc           )
@@ -7464,7 +7553,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%qlyr            ) = ', sum(Interstitial%qlyr            )
     write (0,*) 'sum(Interstitial%qss_ice         ) = ', sum(Interstitial%qss_ice         )
     write (0,*) 'sum(Interstitial%qss_land        ) = ', sum(Interstitial%qss_land        )
-    write (0,*) 'sum(Interstitial%qss_ocean       ) = ', sum(Interstitial%qss_ocean       )
+    write (0,*) 'sum(Interstitial%qss_water       ) = ', sum(Interstitial%qss_water       )
     write (0,*) 'Interstitial%radar_reset           = ', Interstitial%radar_reset
     write (0,*) 'Interstitial%raddt                 = ', Interstitial%raddt
     write (0,*) 'sum(Interstitial%raincd          ) = ', sum(Interstitial%raincd          )
@@ -7474,7 +7563,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%rb              ) = ', sum(Interstitial%rb              )
     write (0,*) 'sum(Interstitial%rb_ice          ) = ', sum(Interstitial%rb_ice          )
     write (0,*) 'sum(Interstitial%rb_land         ) = ', sum(Interstitial%rb_land         )
-    write (0,*) 'sum(Interstitial%rb_ocean        ) = ', sum(Interstitial%rb_ocean        )
+    write (0,*) 'sum(Interstitial%rb_water        ) = ', sum(Interstitial%rb_water        )
     write (0,*) 'Interstitial%reset                 = ', Interstitial%reset
     write (0,*) 'sum(Interstitial%rhc             ) = ', sum(Interstitial%rhc             )
     write (0,*) 'sum(Interstitial%runoff          ) = ', sum(Interstitial%runoff          )
@@ -7492,7 +7581,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%scmpsw%visdf    ) = ', sum(Interstitial%scmpsw%visdf    )
     write (0,*) 'sum(Interstitial%semis_ice       ) = ', sum(Interstitial%semis_ice       )
     write (0,*) 'sum(Interstitial%semis_land      ) = ', sum(Interstitial%semis_land      )
-    write (0,*) 'sum(Interstitial%semis_ocean     ) = ', sum(Interstitial%semis_ocean     )
+    write (0,*) 'sum(Interstitial%semis_water     ) = ', sum(Interstitial%semis_water     )
     write (0,*) 'sum(Interstitial%sfcalb          ) = ', sum(Interstitial%sfcalb          )
     write (0,*) 'sum(Interstitial%sigma           ) = ', sum(Interstitial%sigma           )
     write (0,*) 'sum(Interstitial%sigmaf          ) = ', sum(Interstitial%sigmaf          )
@@ -7502,43 +7591,43 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%snowc           ) = ', sum(Interstitial%snowc           )
     write (0,*) 'sum(Interstitial%snowd_ice       ) = ', sum(Interstitial%snowd_ice       )
     write (0,*) 'sum(Interstitial%snowd_land      ) = ', sum(Interstitial%snowd_land      )
-    write (0,*) 'sum(Interstitial%snowd_ocean     ) = ', sum(Interstitial%snowd_ocean     )
+    write (0,*) 'sum(Interstitial%snowd_water     ) = ', sum(Interstitial%snowd_water     )
     write (0,*) 'sum(Interstitial%snohf           ) = ', sum(Interstitial%snohf           )
     write (0,*) 'sum(Interstitial%snowmt          ) = ', sum(Interstitial%snowmt          )
     write (0,*) 'sum(Interstitial%soiltype        ) = ', sum(Interstitial%soiltype        )
     write (0,*) 'sum(Interstitial%stress          ) = ', sum(Interstitial%stress          )
     write (0,*) 'sum(Interstitial%stress_ice      ) = ', sum(Interstitial%stress_ice      )
     write (0,*) 'sum(Interstitial%stress_land     ) = ', sum(Interstitial%stress_land     )
-    write (0,*) 'sum(Interstitial%stress_ocean    ) = ', sum(Interstitial%stress_ocean    )
+    write (0,*) 'sum(Interstitial%stress_water    ) = ', sum(Interstitial%stress_water    )
     write (0,*) 'sum(Interstitial%theta           ) = ', sum(Interstitial%theta           )
     write (0,*) 'sum(Interstitial%tice            ) = ', sum(Interstitial%tice            )
     write (0,*) 'sum(Interstitial%tlvl            ) = ', sum(Interstitial%tlvl            )
     write (0,*) 'sum(Interstitial%tlyr            ) = ', sum(Interstitial%tlyr            )
     write (0,*) 'sum(Interstitial%tprcp_ice       ) = ', sum(Interstitial%tprcp_ice       )
     write (0,*) 'sum(Interstitial%tprcp_land      ) = ', sum(Interstitial%tprcp_land      )
-    write (0,*) 'sum(Interstitial%tprcp_ocean     ) = ', sum(Interstitial%tprcp_ocean     )
+    write (0,*) 'sum(Interstitial%tprcp_water     ) = ', sum(Interstitial%tprcp_water     )
     write (0,*) 'sum(Interstitial%trans           ) = ', sum(Interstitial%trans           )
     write (0,*) 'sum(Interstitial%tseal           ) = ', sum(Interstitial%tseal           )
     write (0,*) 'sum(Interstitial%tsfa            ) = ', sum(Interstitial%tsfa            )
     write (0,*) 'sum(Interstitial%tsfc_ice        ) = ', sum(Interstitial%tsfc_ice        )
     write (0,*) 'sum(Interstitial%tsfc_land       ) = ', sum(Interstitial%tsfc_land       )
-    write (0,*) 'sum(Interstitial%tsfc_ocean      ) = ', sum(Interstitial%tsfc_ocean      )
+    write (0,*) 'sum(Interstitial%tsfc_water      ) = ', sum(Interstitial%tsfc_water      )
     write (0,*) 'sum(Interstitial%tsfg            ) = ', sum(Interstitial%tsfg            )
     write (0,*) 'sum(Interstitial%tsurf           ) = ', sum(Interstitial%tsurf           )
     write (0,*) 'sum(Interstitial%tsurf_ice       ) = ', sum(Interstitial%tsurf_ice       )
     write (0,*) 'sum(Interstitial%tsurf_land      ) = ', sum(Interstitial%tsurf_land      )
-    write (0,*) 'sum(Interstitial%tsurf_ocean     ) = ', sum(Interstitial%tsurf_ocean     )
+    write (0,*) 'sum(Interstitial%tsurf_water     ) = ', sum(Interstitial%tsurf_water     )
     write (0,*) 'sum(Interstitial%ud_mf           ) = ', sum(Interstitial%ud_mf           )
     write (0,*) 'sum(Interstitial%uustar_ice      ) = ', sum(Interstitial%uustar_ice      )
     write (0,*) 'sum(Interstitial%uustar_land     ) = ', sum(Interstitial%uustar_land     )
-    write (0,*) 'sum(Interstitial%uustar_ocean    ) = ', sum(Interstitial%uustar_ocean    )
+    write (0,*) 'sum(Interstitial%uustar_water    ) = ', sum(Interstitial%uustar_water    )
     write (0,*) 'sum(Interstitial%vdftra          ) = ', sum(Interstitial%vdftra          )
     write (0,*) 'sum(Interstitial%vegf1d          ) = ', sum(Interstitial%vegf1d          )
     write (0,*) 'sum(Interstitial%vegtype         ) = ', sum(Interstitial%vegtype         )
     write (0,*) 'sum(Interstitial%wcbmax          ) = ', sum(Interstitial%wcbmax          )
     write (0,*) 'sum(Interstitial%weasd_ice       ) = ', sum(Interstitial%weasd_ice       )
     write (0,*) 'sum(Interstitial%weasd_land      ) = ', sum(Interstitial%weasd_land      )
-    write (0,*) 'sum(Interstitial%weasd_ocean     ) = ', sum(Interstitial%weasd_ocean     )
+    write (0,*) 'sum(Interstitial%weasd_water     ) = ', sum(Interstitial%weasd_water     )
     write (0,*) 'sum(Interstitial%wind            ) = ', sum(Interstitial%wind            )
     write (0,*) 'sum(Interstitial%work1           ) = ', sum(Interstitial%work1           )
     write (0,*) 'sum(Interstitial%work2           ) = ', sum(Interstitial%work2           )
@@ -7547,9 +7636,6 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%xlai1d          ) = ', sum(Interstitial%xlai1d          )
     write (0,*) 'sum(Interstitial%xmu             ) = ', sum(Interstitial%xmu             )
     write (0,*) 'sum(Interstitial%z01d            ) = ', sum(Interstitial%z01d            )
-    write (0,*) 'sum(Interstitial%zorl_ice        ) = ', sum(Interstitial%zorl_ice        )
-    write (0,*) 'sum(Interstitial%zorl_land       ) = ', sum(Interstitial%zorl_land       )
-    write (0,*) 'sum(Interstitial%zorl_ocean      ) = ', sum(Interstitial%zorl_ocean      )
     write (0,*) 'sum(Interstitial%zt1d            ) = ', sum(Interstitial%zt1d            )
 
 ! UGWP common
@@ -7667,8 +7753,6 @@ module GFS_typedefs
        write (0,*) 'sum(Interstitial%precip_frac          ) = ', sum(Interstitial%precip_frac )
        write (0,*) 'sum(Interstitial%icseed_lw            ) = ', sum(Interstitial%icseed_lw   )
        write (0,*) 'sum(Interstitial%icseed_sw            ) = ', sum(Interstitial%icseed_sw   )
-       write (0,*) 'sum(Interstitial%fluxlwUP_allsky      ) = ', sum(Interstitial%fluxlwUP_allsky  )
-       write (0,*) 'sum(Interstitial%fluxlwDOWN_allsky    ) = ', sum(Interstitial%fluxlwDOWN_allsky)
        write (0,*) 'sum(Interstitial%fluxlwUP_clrsky      ) = ', sum(Interstitial%fluxlwUP_clrsky  )
        write (0,*) 'sum(Interstitial%fluxlwDOWN_clrsky    ) = ', sum(Interstitial%fluxlwDOWN_clrsky)
        write (0,*) 'sum(Interstitial%fluxswUP_allsky      ) = ', sum(Interstitial%fluxswUP_allsky  )

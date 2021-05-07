@@ -34,7 +34,7 @@
       <scheme>GFS_surface_generic_pre</scheme>
       <scheme>dcyc2t3</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
-      <scheme>gmtb_scm_sfc_flux_spec</scheme>
+      <scheme>scm_sfc_flux_spec</scheme>
       <scheme>mynnedmf_wrapper</scheme>
       <scheme>GFS_GWD_generic_pre</scheme>
       <scheme>cires_ugwp</scheme>

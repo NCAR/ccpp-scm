@@ -58,7 +58,7 @@ qt_nudge = np.zeros((levels.size,time.size),dtype=float)
 #open processed input file for writing
 
 writefile_fid = Dataset('../../data/processed_case_input/astex.nc', 'w', format='NETCDF4')
-writefile_fid.description = "GMTB SCM forcing file for ASTEX case"
+writefile_fid.description = "CCPP SCM forcing file for ASTEX case"
 
 #create groups for scalars, intitialization, and forcing
 

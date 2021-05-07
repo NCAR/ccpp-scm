@@ -1,20 +1,20 @@
-module gmtb_scm_main
+module scm_main
 
 implicit none
 
 contains
 
-subroutine gmtb_scm_main_sub()
+subroutine scm_main_sub()
 
-  use gmtb_scm_kinds, only: sp, dp, qp
-  use gmtb_scm_input
-  use gmtb_scm_utils
-  use gmtb_scm_vgrid
-  use gmtb_scm_setup
-  use gmtb_scm_forcing
-  use gmtb_scm_time_integration
-  use gmtb_scm_output
-  use gmtb_scm_type_defs
+  use scm_kinds, only: sp, dp, qp
+  use scm_input
+  use scm_utils
+  use scm_vgrid
+  use scm_setup
+  use scm_forcing
+  use scm_time_integration
+  use scm_output
+  use scm_type_defs
        
   use :: ccpp_static_api,                      &
          only: ccpp_physics_init,              &
@@ -27,7 +27,7 @@ subroutine gmtb_scm_main_sub()
   implicit none
 
   type(scm_state_type), target :: scm_state
-  type(scm_input_type), target :: scm_input
+  type(scm_input_type), target :: scm_input_instance
   type(scm_reference_type), target :: scm_reference
 
   integer      :: i, j, grid_error, kdt_rad
@@ -43,9 +43,9 @@ subroutine gmtb_scm_main_sub()
   
   select case(scm_state%input_type)
     case(0)
-      call get_case_init(scm_state, scm_input)
+      call get_case_init(scm_state, scm_input_instance)
     case(1)
-      call get_case_init_DEPHY(scm_state, scm_input)
+      call get_case_init_DEPHY(scm_state, scm_input_instance)
     case default
       write(*,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
       stop
@@ -56,7 +56,7 @@ subroutine gmtb_scm_main_sub()
   select case(trim(adjustl(scm_state%model_name)))
     case("GFS")
       !>  - Call get_GFS_grid in \ref vgrid to read in the necessary coefficients and calculate the pressure-related variables on the grid.
-      call get_GFS_vgrid(scm_input, scm_state, grid_error)
+      call get_GFS_vgrid(scm_input_instance, scm_state, grid_error)
       !>  - Exit if an unsupported number of levels is specified or the file with grid coefficients cannot be opened.
       if (grid_error == 1) then
         write(*,*) 'When using the GFS host model, only 28, 42, 60, 64, and 91 levels are currently supported. Exiting...'
@@ -67,7 +67,7 @@ subroutine gmtb_scm_main_sub()
         stop
       end if
     case("FV3")
-      call get_FV3_vgrid(scm_input, scm_state)
+      call get_FV3_vgrid(scm_input_instance, scm_state)
     case default
       write(*,*) 'Only the GFS (GSM) and FV3 vertical coordinates are currently supported. Exiting...'
       stop
@@ -75,7 +75,7 @@ subroutine gmtb_scm_main_sub()
 
   !allocate(cdata_cols(scm_state%n_cols))
 
-  call set_state(scm_input, scm_reference, scm_state)
+  call set_state(scm_input_instance, scm_reference, scm_state)
 
   call calc_geopotential(1, scm_state)
 
@@ -88,7 +88,7 @@ subroutine gmtb_scm_main_sub()
     call set_spinup_nudging(scm_state)
   end if
   
-  call interpolate_forcing(scm_input, scm_state, in_spinup)
+  call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
   call physics%create(scm_state%n_cols)
   
@@ -183,7 +183,7 @@ subroutine gmtb_scm_main_sub()
   cdata%thrd_no = 1
   
   call physics%associate(scm_state)
-  call physics%set(scm_input, scm_state)
+  call physics%set(scm_input_instance, scm_state)
   
   ! When asked to calculate 3-dim. tendencies, set Stateout variables to
   ! Statein variables here in order to capture the first call to dycore
@@ -201,7 +201,7 @@ subroutine gmtb_scm_main_sub()
   write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop
+      stop 1
   end if
   
   physics%Model%first_time_step = .true.
@@ -218,7 +218,7 @@ subroutine gmtb_scm_main_sub()
        scm_state%model_time = scm_state%dt_now
      end if
      
-     call interpolate_forcing(scm_input, scm_state, in_spinup)
+     call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
@@ -238,7 +238,7 @@ subroutine gmtb_scm_main_sub()
     scm_state%temp_u(:,:,1) = scm_state%state_u(:,:,1)
     scm_state%temp_v(:,:,1) = scm_state%state_v(:,:,1)
 
-    call interpolate_forcing(scm_input, scm_state, in_spinup)
+    call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
     call calc_pres_exner_geopotential(1, scm_state)
 
@@ -277,7 +277,7 @@ subroutine gmtb_scm_main_sub()
     call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop
+        stop 1
     end if
     
     !--- determine if radiation diagnostics buckets need to be cleared
@@ -300,13 +300,13 @@ subroutine gmtb_scm_main_sub()
     call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop
+        stop 1
     end if
     
     call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop
+        stop 1
     end if
 
     !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
@@ -319,7 +319,7 @@ subroutine gmtb_scm_main_sub()
     if (.not. in_spinup) then
       scm_state%model_time = scm_state%dt
     end if
-    call interpolate_forcing(scm_input, scm_state, in_spinup)
+    call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
     call calc_pres_exner_geopotential(1, scm_state)
 
@@ -382,7 +382,7 @@ subroutine gmtb_scm_main_sub()
       scm_state%temp_v = scm_state%state_v
     end if
 
-    call interpolate_forcing(scm_input, scm_state, in_spinup)
+    call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
     
     call calc_pres_exner_geopotential(1, scm_state)
 
@@ -425,18 +425,18 @@ subroutine gmtb_scm_main_sub()
 
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop
+      stop 1
   end if
 
-end subroutine gmtb_scm_main_sub
+end subroutine scm_main_sub
 
-end module gmtb_scm_main
+end module scm_main
 
 !> \brief Main SCM program that calls the main SCM subroutine
 !!
 !! The Doxygen documentation system cannot handle in-body comments in Fortran main programs, so the "main" program was put in the
-!! subroutine \ref gmtb_scm_main_sub above.
-program gmtb_scm
-  use gmtb_scm_main
-  call gmtb_scm_main_sub()
-end program gmtb_scm
+!! subroutine \ref scm_main_sub above.
+program scm
+  use scm_main
+  call scm_main_sub()
+end program scm

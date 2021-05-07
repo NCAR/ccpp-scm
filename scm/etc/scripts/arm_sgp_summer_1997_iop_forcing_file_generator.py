@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 import numpy as np
 import forcing_file_common as ffc
 import scipy.interpolate
-import gmtb_scm_plotting_routines as gspr
+import scm_plotting_routines as spr
 import datetime
 
 reload(ffc)
@@ -182,7 +182,7 @@ for i in range(len(case_period_labels)):
     #open processed input file for writing
 
     writefile_fid = Dataset('../../data/processed_case_input/arm_sgp_summer_1997_{}.nc'.format(case_period_labels[i]), 'w', format='NETCDF4')
-    writefile_fid.description = "GMTB SCM forcing file for the ARM SGP Summer of 1997 case (Period {})".format(case_period_labels[i])
+    writefile_fid.description = "CCPP SCM forcing file for the ARM SGP Summer of 1997 case (Period {})".format(case_period_labels[i])
 
     #create groups for scalars, intitialization, and forcing
 
@@ -390,9 +390,9 @@ nc_fid.close()
 # h_advec_T = h_advec_T*86400.0
 # v_advec_T = v_advec_T*86400.0
 # dT_dt = dT_dt*86400.0
-# gspr.contour_plot_firl(time, levels, h_advec_T, np.min(h_advec_T), np.max(h_advec_T), 'h advec T', 'time', 'pressure', 'h_advec_T.eps', y_inverted = True)
-# gspr.contour_plot_firl(time, levels, v_advec_T, np.min(v_advec_T), np.max(v_advec_T), 'v advec T', 'time', 'pressure', 'v_advec_T.eps', y_inverted = True)
-# gspr.contour_plot_firl(time, levels, dT_dt, np.min(dT_dt), np.max(dT_dt), 'total T tend', 'time', 'pressure', 'dT_dt.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, h_advec_T, np.min(h_advec_T), np.max(h_advec_T), 'h advec T', 'time', 'pressure', 'h_advec_T.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, v_advec_T, np.min(v_advec_T), np.max(v_advec_T), 'v advec T', 'time', 'pressure', 'v_advec_T.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, dT_dt, np.min(dT_dt), np.max(dT_dt), 'total T tend', 'time', 'pressure', 'dT_dt.eps', y_inverted = True)
 
 
 
@@ -402,10 +402,10 @@ nc_fid.close()
 # v_advec_qt = v_advec_qt*86400.0
 # dq_dt = dq_dt*86400.0
 # diff = dq_dt - (h_advec_qt + v_advec_qt)
-# gspr.contour_plot_firl(time, levels, h_advec_qt, np.min(h_advec_qt), np.max(h_advec_qt), 'h advec q', 'time', 'pressure', 'h_advec_q.eps', y_inverted = True)
-# gspr.contour_plot_firl(time, levels, v_advec_qt, np.min(v_advec_qt), np.max(v_advec_qt), 'v advec q', 'time', 'pressure', 'v_advec_q.eps', y_inverted = True)
-# gspr.contour_plot_firl(time, levels, dq_dt, np.min(dq_dt), np.max(dq_dt), 'total q tend', 'time', 'pressure', 'dq_dt.eps', y_inverted = True)
-# gspr.contour_plot_firl(time, levels, diff, np.min(diff), np.max(diff), 'total q tend diff', 'time', 'pressure', 'dq_dt_diff.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, h_advec_qt, np.min(h_advec_qt), np.max(h_advec_qt), 'h advec q', 'time', 'pressure', 'h_advec_q.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, v_advec_qt, np.min(v_advec_qt), np.max(v_advec_qt), 'v advec q', 'time', 'pressure', 'v_advec_q.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, dq_dt, np.min(dq_dt), np.max(dq_dt), 'total q tend', 'time', 'pressure', 'dq_dt.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, diff, np.min(diff), np.max(diff), 'total q tend diff', 'time', 'pressure', 'dq_dt_diff.eps', y_inverted = True)
 
 
 #z_sfc = nc_fid.variables['alt'][:]

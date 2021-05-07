@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# CCPP prebuild config for GMTB Single Column Model (SCM)
+# CCPP prebuild config for CCPP Single Column Model (SCM)
 
 
 ###############################################################################
@@ -21,10 +21,10 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/ozne_def.f',
     'ccpp/physics/physics/radlw_param.f',
     'scm/src/GFS_typedefs.F90',
-    'scm/src/gmtb_scm_kinds.F90',
-    'scm/src/gmtb_scm_type_defs.F90',
-    'scm/src/gmtb_scm_physical_constants.F90',
-    'scm/src/gmtb_scm_utils.F90', #no definitions, but gmtb_scm_type_defs.F90 uses a module from this file
+    'scm/src/scm_kinds.F90',
+    'scm/src/scm_type_defs.F90',
+    'scm/src/scm_physical_constants.F90',
+    'scm/src/scm_utils.F90', #no definitions, but scm_type_defs.F90 uses a module from this file
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
     'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
@@ -60,11 +60,11 @@ TYPEDEFS_NEW_METADATA = {
         'GFS_stateout_type' : 'physics%Stateout',
         'GFS_typedefs' : '',
         },
-    'gmtb_scm_physical_constants' : {
-        'gmtb_scm_physical_constants' : '',
+    'scm_physical_constants' : {
+        'scm_physical_constants' : '',
         },
-    'gmtb_scm_type_defs' : {
-        'gmtb_scm_type_defs' : '',
+    'scm_type_defs' : {
+        'scm_type_defs' : '',
         'physics_type' : 'physics',
         },
    'mo_gas_concentrations' : {
@@ -184,7 +184,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_ocean.F'                      ,
     'ccpp/physics/physics/sfc_sice.f'                       ,
     'ccpp/physics/physics/mp_fer_hires.F90'                 ,
-    'ccpp/physics/physics/gmtb_scm_sfc_flux_spec.F90'       ,
+    'ccpp/physics/physics/scm_sfc_flux_spec.F90'            ,
     # RRTMGP
     'ccpp/physics/physics/rrtmgp_lw_gas_optics.F90'         ,
     'ccpp/physics/physics/rrtmgp_lw_cloud_optics.F90'       ,
@@ -286,13 +286,6 @@ OPTIONAL_ARGUMENTS = {
             'ice_friendly_aerosol_number_concentration_updated_by_physics',
             'tendency_of_water_friendly_aerosols_at_surface',
             'tendency_of_ice_friendly_aerosols_at_surface',
-            ],
-        },
-    'mp_fer_hires' : {
-        'mp_fer_hires_init' : [
-            'fraction_of_ice_water_cloud',
-            'fraction_of_rain_water_cloud',
-            'rime_factor',
             ],
         },
     'rrtmgp_sw_rte' : {
