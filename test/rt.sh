@@ -1,7 +1,7 @@
 #!/bin/bash
 #=======================================================================
 # Description:  This script builds and runs the CCPP SCM
-#               The executable gmtb_scm is built for each compiler and
+#               The executable scm is built for each compiler and
 #               build type on the platform (machine name).
 #
 # Assumptions:
@@ -58,7 +58,7 @@ function wait_for_criteria() {
 }
 
 machines=( hera cheyenne )
-executable_name=gmtb_scm
+executable_name=scm
 
 [[ $# -eq 0 ]] && usage
 if [ "$1" = "-h" ] ; then usage ; fi
@@ -74,7 +74,7 @@ build_types=( Release Debug )                      # Set all instances of CMAKE_
 if [ "${machine}" == "Cheyenne" ] ; then
   users=( $USER@ucar.edu )
   compilers=( intel gnu )
-  job_submission_script=gmtb_scm_qsub_example.py
+  job_submission_script=scm_qsub_example.py
   memory="512M"
   walltime="walltime=00:40:00"
   max_iterations=240                                 # Max # of iterations to wait for batch output file to
@@ -83,7 +83,7 @@ if [ "${machine}" == "Cheyenne" ] ; then
 else
   users=( $USER@noaa.gov )
   compilers=( intel )
-  job_submission_script=gmtb_scm_slurm_example.py
+  job_submission_script=scm_slurm_example.py
   memory="1G"
   walltime="40"
   max_iterations=120
@@ -140,10 +140,10 @@ for compiler in "${compilers[@]}"; do
     RUN_DIR=$TOP_DIR/scm/run_${compiler}_${build_type_lc}       # for each build/run in test
     BUILD_OUTPUT=${BIN_DIR}/build.out
     if [ "${build_type}" == "Debug" ] ; then
-      # Add --runtime ${runtime} to multi_run_gmtb_scm.py to reduce runtime for tests
-      test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 86400" # 1 day
+      # Add --runtime ${runtime} to multi_run_scm.py to reduce runtime for tests
+      test_run_cmd="${RUN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 86400" # 1 day
     else
-      test_run_cmd="${RUN_DIR}/multi_run_gmtb_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 259200" # 3 days
+      test_run_cmd="${RUN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 259200" # 3 days
     fi
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh
@@ -174,8 +174,8 @@ for compiler in "${compilers[@]}"; do
       mkdir ${RUN_DIR}
       cd ${RUN_DIR}
       ln -s ${BIN_DIR}/${executable_name} ${executable_name}
-      ln -s ${SRC_DIR}/multi_run_gmtb_scm.py multi_run_gmtb_scm.py
-      ln -s ${SRC_DIR}/run_gmtb_scm.py run_gmtb_scm.py
+      ln -s ${SRC_DIR}/multi_run_scm.py multi_run_scm.py
+      ln -s ${SRC_DIR}/run_scm.py run_scm.py
       cp ${ETC_DIR}/${job_submission_script} ${job_submission_script}.tmp
       job_name=${job_prefix}_${compiler}_${build_type_lc}
 #-----------------------------------------------------------------------

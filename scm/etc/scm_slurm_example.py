@@ -10,7 +10,7 @@
 
  COMMAND line arguments: none
 
- Usage: ./gmtb_scm_slurm_example.py   # from the bin directory
+ Usage: ./scm_slurm_example.py   # from the bin directory
 -----------------------------------------------------------------------
 """
 
@@ -29,7 +29,7 @@ ACCOUNT = "gmtb"
 WALLTIME = "20"
 PROCESSORS = "1"
 QUEUE = "batch"
-COMMAND = "./run_gmtb_scm.py -c twpice"
+COMMAND = "./run_scm.py -c twpice"
 EMAIL_ADDR = MY_EMAIL
 EMAIL_OCCASION = "BEGIN,END,FAIL"
 SERIAL_MEM = "512M"
