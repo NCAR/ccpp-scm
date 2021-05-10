@@ -12,7 +12,7 @@ import sys
 import multiprocessing as mp
 
 def run_SCM(experiment_config_file):
-    cmd = './gmtb_scm ' + experiment_config_file
+    cmd = './scm ' + experiment_config_file
     args = shlex.split(cmd)
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -25,7 +25,7 @@ def safe_run(*args, **kwargs):
 def run(f):
     real = f[f.find('ens')+3:]
     print('Realization %s' % real)
-    cmd = './gmtb_scm ' + f
+    cmd = './scm ' + f
     args = shlex.split(cmd)
     with open(os.devnull, "w") as f:
         subprocess.check_call(args, stdout=f, stderr=f)
@@ -102,7 +102,7 @@ os.chdir('bin')
 #     main()
 
 for i in range(len(ens_experiment_configs)):
-    cmd = './gmtb_scm ' + ens_experiment_configs[i]
+    cmd = './scm ' + ens_experiment_configs[i]
     args = shlex.split(cmd)
     print(args)
     with open(os.devnull, "w") as f:

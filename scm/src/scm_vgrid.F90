@@ -1,10 +1,10 @@
-!> \file gmtb_scm_vgrid.f90
+!> \file scm_vgrid.f90
 !!  Contains the vertical grid setup routines.
 
-module gmtb_scm_vgrid
+module scm_vgrid
 
-use gmtb_scm_kinds, only: sp, dp, qp
-use gmtb_scm_physical_constants, only : con_cp, con_rocp, con_fvirt, con_g, con_rd
+use scm_kinds, only: sp, dp, qp
+use scm_physical_constants, only : con_cp, con_rocp, con_fvirt, con_g, con_rd
 
 implicit none
 
@@ -17,7 +17,7 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup vgrid gmtb_scm_vgrid
+!! \defgroup vgrid scm_vgrid
 !! @{
 !! Contains the vertical grid setup routines.
 
@@ -27,7 +27,7 @@ contains
 !! model level pressures, sigma values, and exner function (at interfaces and layer centers) are calculated and returned to the calling
 !! procedure.
 subroutine get_GFS_vgrid(scm_input, scm_state, error)
-  use gmtb_scm_type_defs, only: scm_input_type, scm_state_type
+  use scm_type_defs, only: scm_input_type, scm_state_type
 
   type(scm_input_type), intent(in) :: scm_input
   type(scm_state_type), intent(inout) :: scm_state
@@ -111,7 +111,7 @@ end subroutine get_GFS_vgrid
 
 !most of this was obtained from FV3/atmos_cubed_sphere/tools/fv_eta.F90 from FV3 v0 release
 subroutine get_FV3_vgrid(scm_input, scm_state)
-  use gmtb_scm_type_defs, only: scm_input_type, scm_state_type
+  use scm_type_defs, only: scm_input_type, scm_state_type
 
       type(scm_input_type), intent(in) :: scm_input
       type(scm_state_type), intent(inout) :: scm_state
@@ -1890,7 +1890,7 @@ subroutine var_dz(km, ak, bk, ptop, ks, pint, s_rate)
 !> This subroutine calculates the pressure and exner function at grid centers and interface levels given a surface pressure and interface-level GFS grid coefficients.
 !! This subroutine should be called to update the pressures of the model levels as the surface pressure of the column changes.
 subroutine calc_pres_exner_geopotential(time_level, scm_state)
-  use gmtb_scm_type_defs, only: scm_state_type
+  use scm_type_defs, only: scm_state_type
 
   integer, intent(in) :: time_level
   type(scm_state_type), intent(inout) :: scm_state
@@ -1937,7 +1937,7 @@ subroutine calc_pres_exner_geopotential(time_level, scm_state)
 end subroutine calc_pres_exner_geopotential
 
 subroutine calc_geopotential(time_level, scm_state)
-  use gmtb_scm_type_defs, only: scm_state_type
+  use scm_type_defs, only: scm_state_type
 
   integer, intent(in) :: time_level
   type(scm_state_type), intent(inout) :: scm_state
@@ -1963,4 +1963,4 @@ subroutine calc_geopotential(time_level, scm_state)
 end subroutine calc_geopotential
 !> @}
 !> @}
-end module gmtb_scm_vgrid
+end module scm_vgrid

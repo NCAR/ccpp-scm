@@ -1,10 +1,10 @@
-!> \file gmtb_scm_utils.f90
+!> \file scm_utils.f90
 !!  Contains miscellaneous helper subroutines.
 
-module gmtb_scm_utils
+module scm_utils
 
-use gmtb_scm_kinds, only: sp, dp, qp
-use gmtb_scm_physical_constants, only: con_rd, con_g
+use scm_kinds, only: sp, dp, qp
+use scm_physical_constants, only: con_rd, con_g
 
 implicit none
 
@@ -17,7 +17,7 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup utils gmtb_scm_utils
+!! \defgroup utils scm_utils
 !! @{
 !! Contains miscellaneous helper subroutines.
 
@@ -166,10 +166,10 @@ end function gcd
 
 !> @}
 !> @}
-end module gmtb_scm_utils
+end module scm_utils
 
 module NetCDF_read
-  use gmtb_scm_kinds, only : sp, dp, qp
+  use scm_kinds, only : sp, dp, qp
   use netcdf
   
   implicit none
@@ -674,7 +674,7 @@ end module NetCDF_def
 module NetCDF_put
   use NetCDF_read, only : check
   use netcdf
-  use gmtb_scm_kinds, only : sp, dp, qp
+  use scm_kinds, only : sp, dp, qp
   
   implicit none
   
@@ -742,7 +742,7 @@ module NetCDF_put
 end module NetCDF_put
 
 module data_qc
-  use gmtb_scm_kinds, only : sp, dp, qp
+  use scm_kinds, only : sp, dp, qp
   use NetCDF_read, only: missing_value
   
   implicit none

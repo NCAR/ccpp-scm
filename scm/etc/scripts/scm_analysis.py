@@ -17,10 +17,10 @@ from netCDF4 import Dataset
 import datetime
 import numpy as np
 import f90nml
-import gmtb_scm_plotting_routines as gspr
+import scm_plotting_routines as spr
 import pandas as pd
 import bisect
-import gmtb_scm_read_obs as gsro
+import scm_read_obs as sro
 
 Rd = 287.0
 Rv = 461.0
@@ -30,8 +30,8 @@ missing_soil_levels = 4
 
 plot_ext = '.pdf' #.pdf, .eps, .ps, .png (.png is fastest, but raster)
 
-reload(gspr)
-reload(gsro)
+reload(spr)
+reload(sro)
 
 try:
   pd.plotting.register_matplotlib_converters()
@@ -44,7 +44,7 @@ def print_progress(n_complete, n_total):
 
 #set up command line argument parser to read in name of config file to use
 parser = argparse.ArgumentParser()
-parser.add_argument('config', help='configuration file for GMTB SCM analysis', nargs=1)
+parser.add_argument('config', help='configuration file for CCPP SCM analysis', nargs=1)
 parser.add_argument('-d', '--docker', help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -61,12 +61,12 @@ if results != True:
             print('The "%s" key in the section "%s" failed validation' % (key, ', '.join(section_list)))
         else:
             print('The following section was missing:%s ' % ', '.join(section_list))
-    print('Since GMTB SCM analysis configuration file did not pass validation, the program will quit.')
+    print('Since CCPP SCM analysis configuration file did not pass validation, the program will quit.')
     quit()
 
 #get the config file variables
-gmtb_scm_datasets = config['gmtb_scm_datasets']
-gmtb_scm_datasets_labels = config['gmtb_scm_datasets_labels']
+scm_datasets = config['scm_datasets']
+scm_datasets_labels = config['scm_datasets_labels']
 obs_file = config['obs_file']
 obs_compare = config['obs_compare']
 plot_dir = config['plot_dir']
@@ -87,8 +87,8 @@ time_series_multi = plots['time_series_multi']
 num_base_plots = len(time_slices)*(len(profiles_mean['vars']) + len(profiles_mean_multi) + len(time_series['vars']) + len(time_series_multi) + len(contours['vars']))
 num_total_plots = 0
 if(plot_ind_datasets):
-    num_total_plots = len(gmtb_scm_datasets)*num_base_plots
-if(len(gmtb_scm_datasets) > 1):
+    num_total_plots = len(scm_datasets)*num_base_plots
+if(len(scm_datasets) > 1):
     num_total_plots += num_base_plots - len(time_slices)*len(contours['vars'])
 
 num_plots_completed = 0
@@ -103,22 +103,22 @@ for time_slice in time_slices:
             time_slices[time_slice]['end'].append(0)
 
 #perform any special checks on the config file data
-if len(gmtb_scm_datasets) != len(gmtb_scm_datasets_labels):
-    print('The number of gmtb_scm_datasets must match the number of gmtb_scm_datasets_labels. Quitting...')
-    print('gmtb_scm_datasets = ',gmtb_scm_datasets)
-    print('gmtb_scm_datasets_labels = ',gmtb_scm_datasets_labels)
+if len(scm_datasets) != len(scm_datasets_labels):
+    print('The number of scm_datasets must match the number of scm_datasets_labels. Quitting...')
+    print('scm_datasets = ',scm_datasets)
+    print('scm_datasets_labels = ',scm_datasets_labels)
     quit()
 
 #if running in a Docker container, the output is being copied to a different directory within the container 
 #and the plots should go into that same (home) directory in order for the volume to be correctly mounted and the host to see them.
 if args.docker:
     plot_dir = '/home/'+plot_dir
-    for f in gmtb_scm_datasets:
+    for f in scm_datasets:
         f = '/home/'+f
 
 #read in the case name from the case_config namelist (just use first dataset dir namelist)
-i = gmtb_scm_datasets[0].rfind('/')
-dir = gmtb_scm_datasets[0][:i]
+i = scm_datasets[0].rfind('/')
+dir = scm_datasets[0][:i]
 for filename in glob.glob(os.path.join(dir, '*.nml')):
     nml = f90nml.read(filename)
     if nml['case_config']:
@@ -189,7 +189,7 @@ dwn_mf = []
 det_mf = []
 sfc_up_lw_land     = []
 sfc_up_lw_ice      = []
-sfc_up_lw_ocean    = []
+sfc_up_lw_water    = []
 sfc_up_sw_dir_nir  = []
 sfc_up_sw_dif_nir  = []
 sfc_up_sw_dir_vis  = []
@@ -225,7 +225,7 @@ v10m = []
 hpbl = []
 sfc_rad_net_land   = []
 sfc_rad_net_ice    = []
-sfc_rad_net_ocean  = []
+sfc_rad_net_water  = []
 
 
 dT_dt_lwrad = []
@@ -311,8 +311,8 @@ time_slice_indices_swrad = []
 time_slice_indices_lwrad = []
 time_slice_labels = []
 
-for i in range(len(gmtb_scm_datasets)):
-    nc_fid = Dataset(gmtb_scm_datasets[i], 'r')
+for i in range(len(scm_datasets)):
+    nc_fid = Dataset(scm_datasets[i], 'r')
     nc_fid.set_auto_mask(False)
 
     #3D vars have dimensions (time, levels, horizontal)
@@ -414,7 +414,7 @@ for i in range(len(gmtb_scm_datasets)):
         soil_moisture.append(nc_fid.variables['soil_moisture'][:])
         soil_moisture_unfrozen.append(nc_fid.variables['soil_moisture_unfrozen'][:])
     except KeyError:
-        print('soil_T, soil_moisture, and/or soil_moisture_frozen are not in the output file {0}'.format(gmtb_scm_datasets[i]))
+        print('soil_T, soil_moisture, and/or soil_moisture_frozen are not in the output file {0}'.format(scm_datasets[i]))
         print('Missing variables are replaced with {0}'.format(missing_value))
         soil_T.append(missing_value*np.ones((len(time_inst[-1]),missing_soil_levels)))
         soil_moisture.append(missing_value*np.ones((len(time_inst[-1]),missing_soil_levels)))
@@ -466,8 +466,8 @@ for i in range(len(gmtb_scm_datasets)):
     sfc_up_lw_ice.append(nc_fid.variables['sfc_up_lw_ice'][:])
     inst_time_group.append('sfc_up_lw_ice')
     
-    sfc_up_lw_ocean.append(nc_fid.variables['sfc_up_lw_ocean'][:])
-    inst_time_group.append('sfc_up_lw_ocean')
+    sfc_up_lw_water.append(nc_fid.variables['sfc_up_lw_water'][:])
+    inst_time_group.append('sfc_up_lw_water')
     
     sfc_up_sw_dir_nir.append(nc_fid.variables['sfc_up_sw_dir_nir'][:])
     inst_time_group.append('sfc_up_sw_dir_nir')
@@ -730,8 +730,8 @@ for i in range(len(gmtb_scm_datasets)):
     sfc_rad_net_ice.append((sfc_dwn_sw[-1] - sfc_up_sw[-1]) + (sfc_dwn_lw[-1] - sfc_up_lw_ice[-1]))
     inst_time_group.append('sfc_rad_net_ice')
     
-    sfc_rad_net_ocean.append((sfc_dwn_sw[-1] - sfc_up_sw[-1]) + (sfc_dwn_lw[-1] - sfc_up_lw_ocean[-1]))
-    inst_time_group.append('sfc_rad_net_ocean')
+    sfc_rad_net_water.append((sfc_dwn_sw[-1] - sfc_up_sw[-1]) + (sfc_dwn_lw[-1] - sfc_up_lw_water[-1]))
+    inst_time_group.append('sfc_rad_net_water')
     
     # sw_up_TOA_tot.append(nc_fid.variables['sw_up_TOA_tot'][:])
     # sw_dn_TOA_tot.append(nc_fid.variables['sw_dn_TOA_tot'][:])
@@ -832,13 +832,13 @@ for time_slice in time_slices:
 #fill the obs_dict by calling the appropriate observation file read routine
 if(obs_compare and obs_file):
     if(case_name.strip() == 'twpice'):
-        obs_dict = gsro.read_twpice_obs(obs_file, time_slices, date_inst)
+        obs_dict = sro.read_twpice_obs(obs_file, time_slices, date_inst)
     elif(case_name.strip() == 'arm_sgp_summer_1997_A'):
-        obs_dict = gsro.read_arm_sgp_summer_1997_obs(obs_file, time_slices, date_inst)
+        obs_dict = sro.read_arm_sgp_summer_1997_obs(obs_file, time_slices, date_inst)
     elif('LASSO' in case_name.strip()):
-        obs_dict = gsro.read_LASSO_obs(obs_file, time_slices, date_inst)
+        obs_dict = sro.read_LASSO_obs(obs_file, time_slices, date_inst)
     elif('gabls3' in case_name.strip()):
-        obs_dict = gsro.read_gabls3_obs(obs_file, time_slices, date_inst)
+        obs_dict = sro.read_gabls3_obs(obs_file, time_slices, date_inst)
 
 try:
     os.makedirs(plot_dir)
@@ -865,10 +865,10 @@ if(contours['vert_axis'] in locals()):
 
 #make plots for each dataset individually (colors should stay the same for each dataset [using color_index keyword])
 if(plot_ind_datasets):
-    for i in range(len(gmtb_scm_datasets)):
+    for i in range(len(scm_datasets)):
         #loop through the time slices
         for j in range(len(time_slice_labels)):
-            ind_dir = plot_dir + gmtb_scm_datasets_labels[i] + '/' + time_slice_labels[j]
+            ind_dir = plot_dir + scm_datasets_labels[i] + '/' + time_slice_labels[j]
 
             #make the directory for the current dataset
             try:
@@ -929,17 +929,17 @@ if(plot_ind_datasets):
                         #mean profile is obtained by averaging over dimensions 0 and 2
                         mean_data = np.mean(data_time_slice, (0,2))
 
-                        #gspr.plot_profile(vert_axis, mean_data, label, vert_axis_label, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val, y_log=y_log_val, y_lim=y_lim_val)
+                        #spr.plot_profile(vert_axis, mean_data, label, vert_axis_label, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val, y_log=y_log_val, y_lim=y_lim_val)
                         if(obs_compare and profiles_mean['vars'][k] in obs_dict):
                             obs_data = np.array(obs_dict[profiles_mean['vars'][k]])
                             obs_data_time_slice = obs_data[obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1],:]
 
                             obs_mean_data = np.mean(obs_data_time_slice, (0))
 
-                            gspr.plot_profile_multi(vert_axis, [mean_data], [gmtb_scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color', color_index=i, conversion_factor=conversion_factor)
+                            spr.plot_profile_multi(vert_axis, [mean_data], [scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color', color_index=i, conversion_factor=conversion_factor)
 
                         else:
-                            gspr.plot_profile_multi(vert_axis, [mean_data], [gmtb_scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', color_index=i, conversion_factor=conversion_factor)
+                            spr.plot_profile_multi(vert_axis, [mean_data], [scm_datasets_labels[i]], label, vert_axis_label_pm, ind_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', color_index=i, conversion_factor=conversion_factor)
 
                     else:
                         print('The variable ' + profiles_mean['vars'][k] + ' found in ' + args.config[0] + ' in the profiles_mean section is invalid.')
@@ -983,7 +983,7 @@ if(plot_ind_datasets):
                                 exit()
                             data_list.append(np.mean(data_time_slice, (0,2)))
 
-                        gspr.plot_profile_multi(vert_axis, data_list, profiles_mean_multi[multiplot]['vars_labels'], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, ind_dir + '/profiles_mean_multi_' + multiplot + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style', color_index=i, conversion_factor=conversion_factor)
+                        spr.plot_profile_multi(vert_axis, data_list, profiles_mean_multi[multiplot]['vars_labels'], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, ind_dir + '/profiles_mean_multi_' + multiplot + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style', color_index=i, conversion_factor=conversion_factor)
 
                     num_plots_completed += 1
                     print_progress(num_plots_completed, num_total_plots)
@@ -1091,17 +1091,17 @@ if(plot_ind_datasets):
 
                                 #print obs_data_time_slice.shape, obs_date_range.shape, data_time_slice_series_rs.shape
 
-                                gspr.plot_time_series_multi(obs_date_range, [data_time_slice_series_rs], [gmtb_scm_datasets_labels[i]], 'date', label, ind_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color', color_index=i, conversion_factor=conversion_factor)
+                                spr.plot_time_series_multi(obs_date_range, [data_time_slice_series_rs], [scm_datasets_labels[i]], 'date', label, ind_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color', color_index=i, conversion_factor=conversion_factor)
                             elif(obs_delta_seconds < data_delta_seconds):
                                 print('The case where observations are more frequent than model output has not been implmented yet... ')
                             else:
                                 obs_time_time_slice = obs_time_h[obs_time_slice_indices[j][0]:obs_time_slice_indices[j][1]]
-                                gspr.plot_time_series_multi(time_h_slice, [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i, conversion_factor=conversion_factor)
+                                spr.plot_time_series_multi(time_h_slice, [data_time_slice], [scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i, conversion_factor=conversion_factor)
                         else:
                             obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                            gspr.plot_time_series_multi(time_h_slice, [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i, conversion_factor=conversion_factor)
+                            spr.plot_time_series_multi(time_h_slice, [data_time_slice], [scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color', color_index=i, conversion_factor=conversion_factor)
                     else:
-                        gspr.plot_time_series_multi(time_h_slice, [data_time_slice], [gmtb_scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + plot_name + plot_ext, line_type='color', color_index=i, conversion_factor=conversion_factor)
+                        spr.plot_time_series_multi(time_h_slice, [data_time_slice], [scm_datasets_labels[i]], 'time (h)', label, ind_dir + '/time_series_' + plot_name + plot_ext, line_type='color', color_index=i, conversion_factor=conversion_factor)
                 else:
                     print('The variable ' + time_series['vars'][k] + ' found in ' + args.config[0] + ' in the time_series section is invalid.')
                 num_plots_completed += 1
@@ -1213,17 +1213,17 @@ if(plot_ind_datasets):
                                     data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
                                     data_list_rs.append(data_time_slice_series_rs)
 
-                                gspr.plot_time_series_multi(obs_date_range, data_list_rs, time_series_multi[multiplot]['vars_labels'], 'date', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i, conversion_factor=conversion_factor)
+                                spr.plot_time_series_multi(obs_date_range, data_list_rs, time_series_multi[multiplot]['vars_labels'], 'date', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i, conversion_factor=conversion_factor)
                             elif(obs_delta_seconds < data_delta_seconds):
                                 print('The case where observations are more frequent than model output has not been implmented yet... ')
                             else:
                                 obs_time_time_slice = obs_time_h[obs_time_slice_indices[j][0]:obs_time_slice_indices[j][1]]
-                                gspr.plot_time_series_multi(time_h_slice, data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i, conversion_factor=conversion_factor)
+                                spr.plot_time_series_multi(time_h_slice, data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i, conversion_factor=conversion_factor)
                         else:
                             obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                            gspr.plot_time_series_multi(time_h_slice, data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i, conversion_factor=conversion_factor)
+                            spr.plot_time_series_multi(time_h_slice, data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], line_type='style', color_index=i, conversion_factor=conversion_factor)
                     else:
-                        gspr.plot_time_series_multi(time_h_slice, data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, line_type='style', color_index=i, conversion_factor=conversion_factor)
+                        spr.plot_time_series_multi(time_h_slice, data_list, time_series_multi[multiplot]['vars_labels'], 'time (h)', time_series_multi[multiplot]['y_label'], ind_dir + '/time_series_multi_' + multiplot + plot_ext, line_type='style', color_index=i, conversion_factor=conversion_factor)
 
                 num_plots_completed += 1
                 print_progress(num_plots_completed, num_total_plots)
@@ -1287,7 +1287,7 @@ if(plot_ind_datasets):
                         else:
                             conversion_factor = 1.0
                         
-                        gspr.contour_plot_firl(time_h_slice, vert_axis, np.transpose(data_time_slice[:,:,0]), np.amin(data_time_slice[:,0:vert_axis_top_index,0]), np.amax(data_time_slice[:,0:vert_axis_top_index,0]), label, 'time (h)', vert_axis_label_c, ind_dir + '/contour_' + contours['vars'][k] + plot_ext, xticks=x_ticks_val, yticks=y_ticks_val, y_inverted=y_inverted_val_c, y_log = y_log_val_c, y_lim = y_lim_val, conversion_factor=conversion_factor)
+                        spr.contour_plot_firl(time_h_slice, vert_axis, np.transpose(data_time_slice[:,:,0]), np.amin(data_time_slice[:,0:vert_axis_top_index,0]), np.amax(data_time_slice[:,0:vert_axis_top_index,0]), label, 'time (h)', vert_axis_label_c, ind_dir + '/contour_' + contours['vars'][k] + plot_ext, xticks=x_ticks_val, yticks=y_ticks_val, y_inverted=y_inverted_val_c, y_log = y_log_val_c, y_lim = y_lim_val, conversion_factor=conversion_factor)
                     else:
                         print('The variable ' + contours['vars'][k] + ' found in ' + args.config[0] + ' in the contours section is invalid.')
 
@@ -1298,7 +1298,7 @@ if(plot_ind_datasets):
 
 
 #make comparison plots
-if(len(gmtb_scm_datasets) > 1):
+if(len(scm_datasets) > 1):
     #loop through the time slices
     for j in range(len(time_slice_labels)):
         comp_dir = plot_dir + 'comp/' + time_slice_labels[j]
@@ -1357,7 +1357,7 @@ if(len(gmtb_scm_datasets) > 1):
                     
                     #mean profile is obtained by averaging over dimensions 0 and 2
                     mean_data = []
-                    for i in range(len(gmtb_scm_datasets)):
+                    for i in range(len(scm_datasets)):
                         mean_data.append(np.mean(data_time_slice[i,:,:,:], (0,2)))
 
                     if(obs_compare and profiles_mean['vars'][k] in obs_dict):
@@ -1366,17 +1366,17 @@ if(len(gmtb_scm_datasets) > 1):
 
                         obs_mean_data = np.mean(obs_data_time_slice, (0))
 
-                        gspr.plot_profile_multi(vert_axis, mean_data, gmtb_scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
+                        spr.plot_profile_multi(vert_axis, mean_data, scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, obs_z=obs_vert_axis, obs_values=obs_mean_data, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
 
                         if(bias_val):
                             bias_data = []
-                            for i in range(len(gmtb_scm_datasets)):
+                            for i in range(len(scm_datasets)):
                                 interp_values = np.flipud(np.interp(np.flipud(obs_vert_axis), np.flipud(vert_axis), np.flipud(mean_data[i])))
                                 bias_data.append(interp_values - obs_mean_data)
-                            gspr.plot_profile_multi(obs_vert_axis, bias_data, gmtb_scm_datasets_labels, label + ' bias', vert_axis_label_pm, comp_dir + '/profiles_bias_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', zero_line=True, conversion_factor=conversion_factor)
+                            spr.plot_profile_multi(obs_vert_axis, bias_data, scm_datasets_labels, label + ' bias', vert_axis_label_pm, comp_dir + '/profiles_bias_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color', zero_line=True, conversion_factor=conversion_factor)
 
                     else:
-                        gspr.plot_profile_multi(vert_axis, mean_data, gmtb_scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
+                        spr.plot_profile_multi(vert_axis, mean_data, scm_datasets_labels, label, vert_axis_label_pm, comp_dir + '/profiles_mean_' + profiles_mean['vars'][k] + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
                 else:
                     print('The variable ' + profiles_mean['vars'][k] + ' found in ' + args.config[0] + ' in the profiles_mean section is invalid.')
                 num_plots_completed += 1
@@ -1402,7 +1402,7 @@ if(len(gmtb_scm_datasets) > 1):
                     for l in range(len(profiles_mean_multi[multiplot]['vars'])):
                         data = np.array(locals()[profiles_mean_multi[multiplot]['vars'][l]])
                         data_list = []
-                        for i in range(len(gmtb_scm_datasets)):
+                        for i in range(len(scm_datasets)):
                             if (profiles_mean_multi[multiplot]['vars'][l] in inst_time_group):
                                 #print("{} in time group inst".format(profiles_mean_multi[multiplot]['vars'][l]))
                                 data_time_slice = data[i,time_slice_indices_inst[j][0]:time_slice_indices_inst[j][1],:,:]
@@ -1420,7 +1420,7 @@ if(len(gmtb_scm_datasets) > 1):
                                 exit()
                             data_list.append(np.mean(data_time_slice, (0,2)))
                         data_list_of_list.append(data_list)
-                    gspr.plot_profile_multi(vert_axis, data_list_of_list, [profiles_mean_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, comp_dir + '/profiles_mean_multi_' + multiplot + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style', conversion_factor=conversion_factor)
+                    spr.plot_profile_multi(vert_axis, data_list_of_list, [profiles_mean_multi[multiplot]['vars_labels'],scm_datasets_labels], profiles_mean_multi[multiplot]['x_label'], vert_axis_label_pm, comp_dir + '/profiles_mean_multi_' + multiplot + plot_ext, y_inverted=y_inverted_val_pm, y_log=y_log_val_pm, y_lim=y_lim_val, line_type='style', conversion_factor=conversion_factor)
 
                 num_plots_completed += 1
                 print_progress(num_plots_completed, num_total_plots)
@@ -1524,21 +1524,21 @@ if(len(gmtb_scm_datasets) > 1):
 
                             #build list of resampled model datasets for this time slice
                             data_time_slice_series_rs = []
-                            for i in range(len(gmtb_scm_datasets)):
+                            for i in range(len(scm_datasets)):
                                 data_time_slice_series = pd.Series(data_time_slice[i,:,0], index = data_date_range)
                                 data_time_slice_series_rs.append(data_time_slice_series.resample(resample_string).mean())
 
-                            gspr.plot_time_series_multi(obs_date_range, data_time_slice_series_rs, gmtb_scm_datasets_labels, 'date', label, comp_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
+                            spr.plot_time_series_multi(obs_date_range, data_time_slice_series_rs, scm_datasets_labels, 'date', label, comp_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
                         elif(obs_delta_seconds < data_delta_seconds):
                             print('The case where observations are more frequent than model output has not been implmented yet... ')
                         else:
                             obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                            gspr.plot_time_series_multi(time_h_slice, data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
+                            spr.plot_time_series_multi(time_h_slice, data_time_slice, scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
                     else:
                         obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                        gspr.plot_time_series_multi(time_h_slice, data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
+                        spr.plot_time_series_multi(time_h_slice, data_time_slice, scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
                 else:
-                    gspr.plot_time_series_multi(time_h_slice, data_time_slice, gmtb_scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + plot_name + plot_ext, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
+                    spr.plot_time_series_multi(time_h_slice, data_time_slice, scm_datasets_labels, 'time (h)', label, comp_dir + '/time_series_' + plot_name + plot_ext, line_type='color',skill_scores=skill_scores_val, conversion_factor=conversion_factor)
             else:
                 print('The variable ' + time_series['vars'][k] + ' found in ' + args.config[0] + ' in the time_series section is invalid.')
             num_plots_completed += 1
@@ -1575,7 +1575,7 @@ if(len(gmtb_scm_datasets) > 1):
                     else:
                         data = np.array(locals()[time_series_multi[multiplot]['vars'][l]])
                     data_list = []
-                    for i in range(len(gmtb_scm_datasets)):
+                    for i in range(len(scm_datasets)):
                         if (time_series_multi[multiplot]['vars'][l] in inst_time_group):
                             data_time_slice = data[i,time_slice_indices_inst[j][0]:time_slice_indices_inst[j][1]]
                             time_h_slice = time_h_inst[0][time_slice_indices_inst[j][0]:time_slice_indices_inst[j][1]]
@@ -1646,23 +1646,23 @@ if(len(gmtb_scm_datasets) > 1):
                             data_list_of_list_rs = []
                             for l in range(len(data_list_of_list)):
                                 data_list_rs = []
-                                for i in range(len(gmtb_scm_datasets)):
+                                for i in range(len(scm_datasets)):
                                     data_time_slice_series = pd.Series(data_list_of_list[l][i][:,0], index = data_date_range)
                                     data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
                                     data_list_rs.append(data_time_slice_series_rs)
                                 data_list_of_list_rs.append(data_list_rs)
 
-                            gspr.plot_time_series_multi(obs_date_range, data_list_of_list_rs, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'date', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, conversion_factor=conversion_factor)#, obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
+                            spr.plot_time_series_multi(obs_date_range, data_list_of_list_rs, [time_series_multi[multiplot]['vars_labels'],scm_datasets_labels], 'date', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, conversion_factor=conversion_factor)#, obs_time = obs_date_range, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'])
                         elif(obs_delta_seconds < data_delta_seconds):
                             print('The case where observations are more frequent than model output has not been implmented yet... ')
                         else:
                             obs_time_time_slice = obs_time_h[obs_time_slice_indices[j][0]:obs_time_slice_indices[j][1]]
-                            gspr.plot_time_series_multi(time_h_slice, data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], conversion_factor=conversion_factor)
+                            spr.plot_time_series_multi(time_h_slice, data_list_of_list, [time_series_multi[multiplot]['vars_labels'],scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], conversion_factor=conversion_factor)
                     else:
                         obs_time_time_slice = obs_dict['time_h'][obs_dict['time_slice_indices'][j][0]:obs_dict['time_slice_indices'][j][1]]
-                        gspr.plot_time_series_multi(time_h_slice, data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], conversion_factor=conversion_factor)
+                        spr.plot_time_series_multi(time_h_slice, data_list_of_list, [time_series_multi[multiplot]['vars_labels'],scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, obs_time = obs_time_time_slice, obs_values = obs_data_time_slice, obs_label = time_series_multi[multiplot]['obs_var_label'], conversion_factor=conversion_factor)
                 else:
-                    gspr.plot_time_series_multi(time_h_slice, data_list_of_list, [time_series_multi[multiplot]['vars_labels'],gmtb_scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, conversion_factor=conversion_factor)
+                    spr.plot_time_series_multi(time_h_slice, data_list_of_list, [time_series_multi[multiplot]['vars_labels'],scm_datasets_labels], 'time (h)', time_series_multi[multiplot]['y_label'], comp_dir + '/time_series_multi_' + multiplot + plot_ext, conversion_factor=conversion_factor)
 
             num_plots_completed += 1
             print_progress(num_plots_completed, num_total_plots)

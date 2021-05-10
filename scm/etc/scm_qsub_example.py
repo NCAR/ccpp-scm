@@ -10,7 +10,7 @@
 
  Command line arguments: none
 
- Usage: ./gmtb_scm_qsub_example.py   # from the bin directory
+ Usage: ./scm_qsub_example.py   # from the bin directory
 -----------------------------------------------------------------------
 """
 
@@ -29,7 +29,7 @@ ACCOUNT = "p48503002"
 WALLTIME = "walltime=00:20:00"
 PROCESSORS = "select=1:ncpus=1"
 QUEUE = "share"
-COMMAND = "./run_gmtb_scm.py -c twpice"
+COMMAND = "./run_scm.py -c twpice"
 EMAIL_ADDR = MY_EMAIL
 SERIAL_MEM = "512M"
 WORKING_DIR = os.path.dirname(os.path.abspath(__file__))

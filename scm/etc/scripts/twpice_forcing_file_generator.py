@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 import numpy as np
 import forcing_file_common as ffc
 import scipy.interpolate
-import gmtb_scm_plotting_routines as gspr
+import scm_plotting_routines as spr
 
 reload(ffc)
 
@@ -95,9 +95,9 @@ dT_dt = np.swapaxes(dT_dt, 0, 1)/3600.0 #swap the time and levels axis, convert 
 # h_advec_T = h_advec_T*86400.0
 # v_advec_T = v_advec_T*86400.0
 # dT_dt = dT_dt*86400.0
-# gspr.contour_plot_firl(time, levels, h_advec_T, np.min(h_advec_T), np.max(h_advec_T), 'h advec T', 'time', 'pressure', 'h_advec_T.eps', y_inverted = True)
-# gspr.contour_plot_firl(time, levels, v_advec_T, np.min(v_advec_T), np.max(v_advec_T), 'v advec T', 'time', 'pressure', 'v_advec_T.eps', y_inverted = True)
-# gspr.contour_plot_firl(time, levels, dT_dt, np.min(dT_dt), np.max(dT_dt), 'total T tend', 'time', 'pressure', 'dT_dt.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, h_advec_T, np.min(h_advec_T), np.max(h_advec_T), 'h advec T', 'time', 'pressure', 'h_advec_T.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, v_advec_T, np.min(v_advec_T), np.max(v_advec_T), 'v advec T', 'time', 'pressure', 'v_advec_T.eps', y_inverted = True)
+# spr.contour_plot_firl(time, levels, dT_dt, np.min(dT_dt), np.max(dT_dt), 'total T tend', 'time', 'pressure', 'dT_dt.eps', y_inverted = True)
 
 h_advec_qt = np.zeros((levels.size,time.size),dtype=float)
 h_advec_qt = nc_fid.variables['q_adv_h'][:] #g/kg/hr
@@ -115,9 +115,9 @@ dq_dt = np.swapaxes(dq_dt, 0, 1)*1.0E-3/3600.0 #swap the time and levels axis, c
 #h_advec_qt = h_advec_qt*86400.0
 #v_advec_qt = v_advec_qt*86400.0
 #dq_dt = dq_dt*86400.0
-#gspr.contour_plot_firl(time, levels, h_advec_qt, np.min(h_advec_qt), np.max(h_advec_qt), 'h advec q', 'time', 'pressure', 'h_advec_q.eps', y_inverted = True)
-#gspr.contour_plot_firl(time, levels, v_advec_qt, np.min(v_advec_qt), np.max(v_advec_qt), 'v advec q', 'time', 'pressure', 'v_advec_q.eps', y_inverted = True)
-#gspr.contour_plot_firl(time, levels, dq_dt, np.min(dq_dt), np.max(dq_dt), 'total q tend', 'time', 'pressure', 'dq_dt.eps', y_inverted = True)
+#spr.contour_plot_firl(time, levels, h_advec_qt, np.min(h_advec_qt), np.max(h_advec_qt), 'h advec q', 'time', 'pressure', 'h_advec_q.eps', y_inverted = True)
+#spr.contour_plot_firl(time, levels, v_advec_qt, np.min(v_advec_qt), np.max(v_advec_qt), 'v advec q', 'time', 'pressure', 'v_advec_q.eps', y_inverted = True)
+#spr.contour_plot_firl(time, levels, dq_dt, np.min(dq_dt), np.max(dq_dt), 'total q tend', 'time', 'pressure', 'dq_dt.eps', y_inverted = True)
 
 
 
@@ -159,7 +159,7 @@ ozone_mmr = ozone_ppb*1.0E-9
 #open processed input file for writing
 
 writefile_fid = Dataset('../../data/processed_case_input/twpice.nc', 'w', format='NETCDF4')
-writefile_fid.description = "GMTB SCM forcing file for TWP-ICE case"
+writefile_fid.description = "CCPP SCM forcing file for TWP-ICE case"
 
 #create groups for scalars, intitialization, and forcing
 

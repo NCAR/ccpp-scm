@@ -1,12 +1,12 @@
-!> \file gmtb_scm_input.f90
+!> \file scm_input.f90
 !!  Contains input-related subroutines -- reading in model configuration from file or the command line and reading in the case
 !!  initial conditions and forcing; also contains reference profile input (temporarily hard-coded).
 
-module gmtb_scm_input
+module scm_input
 
-use gmtb_scm_kinds, only : sp, dp, qp
+use scm_kinds, only : sp, dp, qp
 use netcdf
-use gmtb_scm_type_defs, only: character_length
+use scm_type_defs, only: character_length
 
 implicit none
 
@@ -18,7 +18,7 @@ contains
 
 !> \ingroup SCM
 !! @{
-!! \defgroup input gmtb_scm_input
+!! \defgroup input scm_input
 !! @{
 !! Contains input-related subroutines -- reading in model configuration from file or the command line and reading in the case
 !! initial conditions and forcing; also contains reference profile input (temporarily hard-coded).
@@ -29,7 +29,7 @@ contains
 !! a namelist file placed in the output directory. Note: This routine uses GET_COMMAND which is an intrinsic routine in the Fortran 2003 standard. This
 !! requires that the compiler supports this standard.
 subroutine get_config_nml(scm_state)
-  use gmtb_scm_type_defs, only : scm_state_type
+  use scm_type_defs, only : scm_state_type
 
   type(scm_state_type), target, intent(inout) :: scm_state
 
@@ -213,7 +213,7 @@ end subroutine get_config_nml
 !> Subroutine to read the netCDF file containing case initialization and forcing. The forcing files (netCDF4) should be located in the
 !! "processed_case_input" directory.
 subroutine get_case_init(scm_state, scm_input)
-  use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
+  use scm_type_defs, only : scm_state_type, scm_input_type
   use NetCDF_read, only: NetCDF_read_var, check, missing_value
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
@@ -267,7 +267,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_vegfrac  !< vegetation fraction
   real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
   real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
-  real(kind=dp)               :: input_zorlo    !< surfce roughness length over ocean [cm]
+  real(kind=dp)               :: input_zorlw    !< surfce roughness length over water [cm]
   real(kind=dp)               :: input_slmsk   !< sea land ice mask [0,1,2]
   real(kind=dp)               :: input_canopy  !< amount of water stored in canopy (kg m-2)
   real(kind=dp)               :: input_hice    !< sea ice thickness (m)
@@ -296,7 +296,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_tsfcl   !< surface skin temperature over land (K)
   real(kind=dp)               :: input_zorll   !< surface roughness length over land (cm)
   real(kind=dp)               :: input_zorli   !< surface roughness length over ice (cm)
-  real(kind=dp)               :: input_zorlw   !< surface roughness length from wave model (cm)
+  real(kind=dp)               :: input_zorlwav   !< surface roughness length from wave model (cm)
   
   real(kind=dp)               :: input_stddev !< standard deviation of subgrid orography (m)
   real(kind=dp)               :: input_convexity !< convexity of subgrid orography 
@@ -532,7 +532,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "vegfrac", .False., input_vegfrac)
   call NetCDF_read_var(grp_ncid, "shdmin",  .False., input_shdmin)
   call NetCDF_read_var(grp_ncid, "shdmax",  .False., input_shdmax)
-  call NetCDF_read_var(grp_ncid, "zorlo",   .False., input_zorlo)
+  call NetCDF_read_var(grp_ncid, "zorlw",   .False., input_zorlw)
   call NetCDF_read_var(grp_ncid, "slmsk",   .False., input_slmsk)
   call NetCDF_read_var(grp_ncid, "canopy",  .False., input_canopy)
   call NetCDF_read_var(grp_ncid, "hice",    .False., input_hice)
@@ -560,7 +560,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "tsfcl",   .False., input_tsfcl)
   call NetCDF_read_var(grp_ncid, "zorll",   .False., input_zorll)
   call NetCDF_read_var(grp_ncid, "zorli",   .False., input_zorli)
-  call NetCDF_read_var(grp_ncid, "zorlw",   .False., input_zorlw)
+  call NetCDF_read_var(grp_ncid, "zorlwav", .False., input_zorlwav)
   
   !orographic parameters
   call NetCDF_read_var(grp_ncid, "stddev",    .False., input_stddev)
@@ -755,7 +755,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_vegfrac  = input_vegfrac
   scm_input%input_shdmin   = input_shdmin
   scm_input%input_shdmax   = input_shdmax
-  scm_input%input_zorlo    = input_zorlo
+  scm_input%input_zorlw    = input_zorlw
   scm_input%input_slmsk    = input_slmsk
   scm_input%input_canopy   = input_canopy
   scm_input%input_hice     = input_hice
@@ -784,7 +784,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_tsfcl    = input_tsfcl
   scm_input%input_zorll    = input_zorll
   scm_input%input_zorli    = input_zorli
-  scm_input%input_zorlw    = input_zorlw
+  scm_input%input_zorlwav  = input_zorlwav
   
   scm_input%input_stddev   = input_stddev
   scm_input%input_convexity= input_convexity
@@ -878,10 +878,10 @@ end subroutine get_case_init
 subroutine get_case_init_DEPHY(scm_state, scm_input)
   !corresponds to the DEPHY-SCM specs, version 1
   
-  use gmtb_scm_type_defs, only : scm_state_type, scm_input_type
+  use scm_type_defs, only : scm_state_type, scm_input_type
   use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check, missing_value, missing_value_int
-  use gmtb_scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_rd
-  use gmtb_scm_utils, only: find_vertical_index_pressure, find_vertical_index_height
+  use scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_rd
+  use scm_utils, only: find_vertical_index_pressure, find_vertical_index_height
   
   type(scm_state_type), intent(inout) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
@@ -1990,7 +1990,7 @@ end subroutine get_case_init_DEPHY
 
 !> Subroutine to get reference profile to use above the case data (temporarily hard-coded profile)
 subroutine get_reference_profile(scm_state, scm_reference)
-  use gmtb_scm_type_defs, only : scm_state_type, scm_reference_type
+  use scm_type_defs, only : scm_state_type, scm_reference_type
   use NetCDF_read, only: check
   
   type(scm_state_type), target, intent(in) :: scm_state
@@ -2131,4 +2131,4 @@ end subroutine get_tracers
 
 !> @}
 !> @}
-end module gmtb_scm_input
+end module scm_input
