@@ -101,8 +101,8 @@ SCM_DIR=$TOP_DIR/scm
 ETC_DIR=$TOP_DIR/scm/etc
 SRC_DIR=$TOP_DIR/scm/src
 PHYS_DATA_DIR=$TOP_DIR/scm/data/physics_input_data
-#TODO:  Add script that gets cam5_4_143_NAAI_monclimo2.nc and cam5_4_143_NPCCN_monclimo2.nc files
 phys_data_files=( CCN_ACTIVATE.BIN freezeH2O.dat qr_acr_qgV2.dat qr_acr_qsV2.dat )
+mg_inccn_data_files=( cam5_4_143_NAAI_monclimo2.nc cam5_4_143_NPCCN_monclimo2.nc )
 job_prefix=test_job             # Batch job and std out file prefix
 
 #-----------------------------------------------------------------------
@@ -112,6 +112,15 @@ job_prefix=test_job             # Batch job and std out file prefix
 for phys_data_file in "${phys_data_files[@]}"; do
   if [ ! -f "${PHYS_DATA_DIR}/${phys_data_file}" ]; then
     ${TOP_DIR}/contrib/get_thompson_tables.sh
+    break
+  else
+    echo "Data file ${phys_data_file} exists..." >> ${TEST_OUTPUT}
+  fi
+done
+
+for mg_inccn_data_file in "${mg_inccn_data_files[@]}"; do
+  if [ ! -f "${PHYS_DATA_DIR}/${mg_inccn_data_file}" ]; then
+    ${TOP_DIR}/contrib/get_mg_inccn_data.sh
     break
   else
     echo "Data file ${phys_data_file} exists..." >> ${TEST_OUTPUT}
