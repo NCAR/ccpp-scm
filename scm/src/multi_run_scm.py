@@ -16,6 +16,9 @@ RUN_SCRIPT = './run_scm.py'
 # number of realizations to time if timer is used
 timer_iterations = 1
 
+# error strings to check in the output
+ERROR_STRINGS = ['systemexit','sigsegv','backtrace']
+
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()#required=True)
 group.add_argument('-c', '--case',       help='name of case to run',)
@@ -24,7 +27,8 @@ group.add_argument('-f', '--file',       help='name of file where SCM runs are d
 parser.add_argument('-v', '--verbose',   help='once: set logging level to debug; twice: set logging level to debug '\
                                               'and write log to file', action='count', default=0)
 parser.add_argument('-t', '--timer',     help='set to time each subprocess', action='store_true', default=False)
-parser.add_argument('-d', '--docker',     help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
+parser.add_argument('-d', '--docker',    help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
+parser.add_argument('--runtime',         help='set the runtime in the namelists', action='store', required=False)
 
 # Results are recorded in this global list (to avoid complications with getting return values from the partial functions used below)
 RESULTS = []
@@ -69,12 +73,14 @@ def subprocess_work(command):
         message = '####### The subprocess started using the command ({0}) exited with code {1}. #######\n'\
                   'Run the command ({0}) by itself again or use the -v or -vv options for more details.'.format(command, exit_code)
         logging.critical(message)
-    elif 'SystemExit' in str(output):
-        exit_code = str(output).split("SystemExit: ")[-1].split("\\n")[0].strip()
-        message = '####### The subprocess started using the command ({0}) exited with a normal exit code, but\n'\
-        'the terminal output indicated that an error occurred ({1}). #######\n'\
-        'Run the command ({0}) by itself again or use the -v or -vv options for more details.'.format(command, exit_code)
-        logging.critical(message)
+    else:
+        found_error_strings = {x for x in ERROR_STRINGS if x in str(output).lower()}
+        if found_error_strings:
+             message = '####### The subprocess started using the command ({0}) exited with a normal exit code, but\n'\
+             'the terminal output indicated the following strings occured in the output: ({1}). #######\n'\
+             'Run the command ({0}) by itself again or use the -v or -vv options for more details.'.format(command, found_error_strings)
+             logging.critical(message)
+             exit_code = -999 #unknown
     RESULTS.append([command, exit_code])
 
 def main():
@@ -89,6 +95,9 @@ def main():
             command = RUN_SCRIPT + ' -c ' + args.case + ' -s ' + suite
             if args.docker:
                 command = command + ' -d'
+            # If modifying the runtime, pass the -runtime argument to the RUN_SCRIPT
+            if args.runtime:
+                command = command + ' --runtime ' + args.runtime
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(suites), command))
             spawn_subprocess(command, args.timer)
 
@@ -99,6 +108,8 @@ def main():
             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + args.suite
             if args.docker:
                 command = command + ' -d'
+            if args.runtime:
+                command = command + ' --runtime ' + args.runtime
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(cases), command))
             spawn_subprocess(command, args.timer)
 
@@ -142,6 +153,8 @@ def main():
                 command = RUN_SCRIPT + ' -c ' + case
                 if args.docker:
                     command = command + ' -d'
+                if args.runtime:
+                    command = command + ' --runtime ' + args.runtime
                 logging.info('Executing process {0} of {1} ({2})'.format(i, len(scm_runs.cases), command))
                 spawn_subprocess(command, args.timer)
 
@@ -155,6 +168,8 @@ def main():
                             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + scm_runs.suites[0] + ' -n ' + namelist
                             if args.docker:
                                 command = command + ' -d'
+                            if args.runtime:
+                                command = command + ' --runtime ' + args.runtime
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                             spawn_subprocess(command, args.timer)
@@ -166,6 +181,8 @@ def main():
                             command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite + ' -n ' + scm_runs.namelists[j-1]
                             if args.docker:
                                 command = command + ' -d'
+                            if args.runtime:
+                                command = command + ' --runtime ' + args.runtime
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                             spawn_subprocess(command, args.timer)
@@ -183,6 +200,8 @@ def main():
                         command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
                         if args.docker:
                             command = command + ' -d'
+                        if args.runtime:
+                            command = command + ' --runtime ' + args.runtime
                         logging.info('Executing process {0} of {1} ({2})'.format(
                             len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                         spawn_subprocess(command, args.timer)
@@ -195,6 +214,8 @@ def main():
                     command = RUN_SCRIPT + ' -c ' + case + ' -n ' + namelist
                     if args.docker:
                         command = command + ' -d'
+                    if args.runtime:
+                        command = command + ' --runtime ' + args.runtime
                     logging.info('Executing process {0} of {1} ({2})'.format(
                         len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                     spawn_subprocess(command, args.timer)
@@ -208,6 +229,8 @@ def main():
                 command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
                 if args.docker:
                     command = command + ' -d'
+                if args.runtime:
+                    command = command + ' --runtime ' + args.runtime
                 logging.info('Executing process {0} of {1} ({2})'.format(
                     len(suites)*i+j, len(cases)*len(suites), command))
                 spawn_subprocess(command, args.timer)
@@ -219,6 +242,8 @@ def main():
                 logging.info('Process "{}" completed successfully'.format(command))
             else:
                 logging.error('Process "{}" exited with code {}'.format(command, exit_code))
+
+        logging.info('Done'.format(command))
 
 if __name__ == '__main__':
     main()

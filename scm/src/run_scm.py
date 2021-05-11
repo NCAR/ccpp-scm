@@ -75,6 +75,7 @@ parser.add_argument('-g', '--gdb',        help='invoke scm through gdb', action=
 parser.add_argument('-s', '--suite',      help='name of suite to use', default=DEFAULT_SUITE)
 parser.add_argument('-n', '--namelist',   help='physics namelist to use')
 parser.add_argument('-t', '--tracers',    help='tracer configuration to use')
+parser.add_argument('--runtime',          help='set the runtime in the namelists', action='store', type=int, required=False)
 parser.add_argument('-d', '--docker',     help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 
 ###############################################################################
@@ -114,7 +115,8 @@ def parse_arguments():
     namelist = args.namelist
     docker = args.docker
     tracers = args.tracers
-    return (case, gdb, suite, namelist, docker, tracers)
+    runtime = args.runtime
+    return (case, gdb, suite, namelist, docker, tracers, runtime)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -131,7 +133,7 @@ def find_gdb():
 
 class Experiment(object):
 
-    def __init__(self, case, suite, physics_namelist, tracers):
+    def __init__(self, case, suite, physics_namelist, tracers, runtime):
         """Initialize experiment. This routine does most of the work,
         including setting and checking the experiment configuration
         (namelist)."""
@@ -182,6 +184,15 @@ class Experiment(object):
             message = 'Experiment {0} with namelist {1} not found'.format(self._name, self._namelist)
             logging.critical(message)
             raise Exception(message)
+
+        if runtime:
+            self._runtime = runtime
+            message = 'Namelist runtime adjustment {0} IS applied'.format(self._runtime)
+            logging.info(message)
+        else:
+            self._runtime = None
+            message = 'Namelist runtime adjustment {0}  IS NOT applied'.format(self._runtime)
+            logging.info(message)
             
     @property
     def name(self):
@@ -241,6 +252,9 @@ class Experiment(object):
         # - surface_flux_spec
         logging.info('Parsing case configuration namelist {0}'.format(self._namelist))
         case_nml = f90nml.read(self._namelist)
+        # If running the regression test, reduce the runtime
+        if self._runtime:
+           case_nml['case_config']['runtime'] = self._runtime
         # look for the output_dir variable in the case configuration namelist and use it if it does; 
         # if it doesn't exist, create a default output directory name (from the case and suite names) and create a namelist patch
         try:
@@ -436,9 +450,10 @@ def launch_executable(use_gdb, gdb):
         cmd = '{executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(2)
-    return_code = os.system(cmd)
-    if return_code != 0:
-        sys.exit(return_code)
+    failure = os.system(cmd)
+    if failure:
+        logging.info('Execution of {0} failed!\n'.format(cmd))
+        sys.exit(1)
     
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""
@@ -448,7 +463,7 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (case, use_gdb, suite, namelist, docker, tracers) = parse_arguments()
+    (case, use_gdb, suite, namelist, docker, tracers, runtime) = parse_arguments()
     
     setup_logging()
     
@@ -463,7 +478,7 @@ def main():
             logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite and tracers {2}'.format(case,suite,tracers))
         else:
             logging.info('Setting up experiment {0} with suite {1} using the default namelist and tracers for the suite'.format(case,suite))
-    exp = Experiment(case, suite, namelist, tracers)
+    exp = Experiment(case, suite, namelist, tracers, runtime)
     exp_dir = exp.setup_rundir()
     # Debugger
     if use_gdb:
