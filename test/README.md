@@ -37,6 +37,8 @@ The debug tests use a reduced runtime for faster turnaround and to conserve comp
 
 ## Usage
 
+# To run the tests (no baseline generation or comparison):
+
 On Cheyenne:
 
 ```
@@ -52,3 +54,19 @@ cd test
 ```
 
 Upon completion, an email summary will be sent to ``$USER@ucar.edu`` or ``$USER.noaa.gov`` depending on the platform.  A summary of the tests will be in the file ``rt_summary$PID.out`` under the ``test`` directory.  More detailed output for each run can be found in the standard output file under each run directory, for example: ``scm/run_intel_release/test_job*``.
+
+# To run the tests and genereate a baseline:
+
+``./rt.sh machine -g /path/to/baseline/generated >& test.out &``
+
+# To run the tests and compare to an existing baseline:
+
+``./rt.sh machine -c /path/to/baseline/comparison >& test.out &``
+
+A useful workflow might consist of the following steps:
+
+1. Clone a working copy
+2. Run ``rt.sh ${machine} -g <dir>`` to generate a baseline and verify build/run
+3. Make changes to your working copy
+4. Run ``rt.sh ${machine} -c <dir>`` to verify your changes
+

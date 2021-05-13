@@ -1,14 +1,22 @@
 #!/bin/bash
 #=======================================================================
-# Description:  This script builds and runs the CCPP SCM
+# Description:  This script builds and runs the CCPP SCM.
 #               The executable scm is built for each compiler and
 #               build type on the platform (machine name).
+#               Command line options are available for baseline
+#               generation and comparison.
 #
 # Assumptions:
 #
 # Command line arguments: machine name (hera or cheyenne)
+#                         -g <dir> run tests, generate baseline in <dir>
+#                         -c <dir> run tests, compare to baseline in <dir>
+#                         -h display usage
 #
 # Usage: ./rt.sh $machine >& test.out &      # Run the regression tests
+#        ./rt.sh $machine -g /path/for/generated/baseline >& test.out &
+#        ./rt.sh $machine -c /path/for/baseline/comparison >& test.out &
+#
 # set -eux    # Uncomment for debugging
 #=======================================================================
 
@@ -16,9 +24,11 @@ fail() { echo -e "\n$1\n" >> ${TEST_OUTPUT} && exit 1; }
 
 function usage() {
   echo
-  echo "Usage: $0 machine | -h"
+  echo "Usage: $0 machine [-g <dir>] [-c <dir>] | -h"
   echo
   echo "       machine       [required] is one of: ${machines[@]}"
+  echo "       -g <dir>      [optional] run tests, write generated baseline to <dir>"
+  echo "       -c <dir>      [optional] run tests, compare to baseline in <dir>"
   echo "       -h            display this help"
   echo
   exit 1
@@ -60,11 +70,63 @@ function wait_for_criteria() {
 machines=( hera cheyenne )
 executable_name=scm
 
-[[ $# -eq 0 ]] && usage
-if [ "$1" = "-h" ] ; then usage ; fi
+[[ $# -eq 0 ]] && usage                     # Display usage if no command-line arguments
 
-export machine=${1}
+#-----------------------------------------------------------------------
+# Parse command-line arguments
+#-----------------------------------------------------------------------
+gen_baseline=false
+cmp_baseline=false
+while [ $# -gt 0 ]; do
+  while getopts "g:c:h" opt; do            # Parse parameters, exit on non-option parameter
+    case "$opt" in
+      g) gen_baseline_dir=$OPTARG; gen_baseline=true; shift;;
+      c) cmp_baseline_dir=$OPTARG; cmp_baseline=true; shift;;
+      h) usage;;
+      \?) echo unknown Option;;
+      :) echo missing required parameter for Option $opt;;
+    esac
+    shift
+    OPTIND=1
+  done
+  if [ $# -gt 0 ]; then                    # Save required parameter(s) in array
+    REQUIRED_ARGS=(${REQUIRED_ARGS[@]} $1)
+    shift
+    OPTIND=1
+  fi
+done
+
+export machine=$REQUIRED_ARGS
+
+#Check that only one required parameter has been entered
+if [ ${#REQUIRED_ARGS[@]} -gt 1 ] ; then
+  echo "ERROR: Number of required parameters entered is > 1"
+  usage
+  exit 1
+fi
+
 machine=$(echo "${machine}" | tr '[A-Z]' '[a-z]')  # Make machine name all lower case
+
+#-----------------------------------------------------------------------
+#Check that machine is valid
+#-----------------------------------------------------------------------
+if [[ "${machines[@]}" =~ "$machine" ]]; then
+  echo "machine ${machine} is valid"
+else
+  echo "ERROR: machine ${machine} is NOT valid"
+  exit 1
+fi
+
+#-----------------------------------------------------------------------
+#Check that -g and -c are not both set
+#-----------------------------------------------------------------------
+if [[ "$gen_baseline" == "true" ]] && [[ "$cmp_baseline" == "true" ]]; then
+  echo "ERROR: Baseline cannot be generated and compared in same run, set either -g OR -c"
+  exit 1
+fi
+if [[ "$gen_baseline" = "true" ]]; then echo "Generated baseline is in ${gen_baseline_dir}"; fi
+if [[ "$cmp_baseline" = "true" ]]; then echo "Comparison baseline is in ${cmp_baseline_dir}"; fi
+
 machine=$(echo "${machine^}")                      # Capitalize first letter for setup script name
 build_it=0                                         # Set to 1 to skip build (for testing run, pass/fail criteria)
 run_it=0                                           # Set to 1 to skip run (for testing pass/fail criteria)
@@ -123,7 +185,7 @@ for mg_inccn_data_file in "${mg_inccn_data_files[@]}"; do
     ${TOP_DIR}/contrib/get_mg_inccn_data.sh
     break
   else
-    echo "Data file ${phys_data_file} exists..." >> ${TEST_OUTPUT}
+    echo "Data file ${mg_inccn_data_file} exists..." >> ${TEST_OUTPUT}
   fi
 done
 
