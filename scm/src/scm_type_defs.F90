@@ -99,8 +99,8 @@ module scm_type_defs
     logical                           :: force_adv_u !< true = on
     logical                           :: force_adv_v !< true = on
     integer                           :: force_rad_T !< 0 => off, 1=> temperature, 2=> theta, 3=> thetal, 4=> included in advective forcing
-    logical                           :: force_w !< master flag for subsidence of all state variables using w (true = on)
-    logical                           :: force_omega !< master flag for subsidence of all state variables using omega (true = on)
+    logical                           :: force_w !< flag for subsidence of all state variables using w (true = on)
+    logical                           :: force_omega !< flag for subsidence of all state variables using omega (true = on)
     logical                           :: force_sub_for_T !< flag for subsidence of T variable only (true = on)
     logical                           :: force_sub_for_qv !< flag for subsidence of qv variable only (true = on)
     logical                           :: force_sub_for_u !< flag for subsidence of u variable only (true = on)
