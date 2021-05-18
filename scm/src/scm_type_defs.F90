@@ -1253,11 +1253,11 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_smcwtdxy, physics%Sfcprop%smcwtdxy(i), "smcwtdxy", .false., missing_var(27))
         call conditionally_set_var(scm_input%input_deeprechxy, physics%Sfcprop%deeprechxy(i), "deeprechxy", .false., missing_var(28))
         call conditionally_set_var(scm_input%input_rechxy, physics%Sfcprop%rechxy(i), "rechxy", .false., missing_var(29))
-        call conditionally_set_var(scm_input%input_albdvis, physics%Sfcprop%albdvis(i), "albdvis", .false., missing_var(30))
-        call conditionally_set_var(scm_input%input_albdnir, physics%Sfcprop%albdnir(i), "albdnir", .false., missing_var(31))
-        call conditionally_set_var(scm_input%input_albivis, physics%Sfcprop%albivis(i), "albivis", .false., missing_var(32))
-        call conditionally_set_var(scm_input%input_albinir, physics%Sfcprop%albinir(i), "albinir", .false., missing_var(33))
-        call conditionally_set_var(scm_input%input_emiss, physics%Sfcprop%emiss(i), "emiss", .false., missing_var(34))
+        call conditionally_set_var(scm_input%input_albdvis, physics%Sfcprop%albdvis_lnd(i), "albdvis_lnd", .false., missing_var(30))
+        call conditionally_set_var(scm_input%input_albdnir, physics%Sfcprop%albdnir_lnd(i), "albdnir_lnd", .false., missing_var(31))
+        call conditionally_set_var(scm_input%input_albivis, physics%Sfcprop%albivis_lnd(i), "albivis_lnd", .false., missing_var(32))
+        call conditionally_set_var(scm_input%input_albinir, physics%Sfcprop%albinir_lnd(i), "albinir_lnd", .false., missing_var(33))
+        call conditionally_set_var(scm_input%input_emiss, physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(34))
         
         !write out warning if missing data for non-required variables
         n = 34
