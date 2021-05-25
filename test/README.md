@@ -57,11 +57,11 @@ Upon completion, an email summary will be sent to ``$USER@ucar.edu`` or ``$USER.
 
 # To run the tests and genereate a baseline:
 
-``./rt.sh machine -g /path/to/baseline/generated >& test.out &``
+``./rt.sh machine -g /top_level/path/for/generated/baseline >& test.out &``
 
 # To run the tests and compare to an existing baseline:
 
-``./rt.sh machine -c /path/to/baseline/comparison >& test.out &``
+``./rt.sh machine -c /top_level/path/for/baseline/comparison >& test.out &``
 
 A useful workflow might consist of the following steps:
 

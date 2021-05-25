@@ -14,8 +14,8 @@
 #                         -h display usage
 #
 # Usage: ./rt.sh $machine >& test.out &      # Run the regression tests
-#        ./rt.sh $machine -g /path/for/generated/baseline >& test.out &
-#        ./rt.sh $machine -c /path/for/baseline/comparison >& test.out &
+#        ./rt.sh $machine -g /top_level/path/for/generated/baseline >& test.out &
+#        ./rt.sh $machine -c /top_level/path/for/baseline/comparison >& test.out &
 #
 # set -eux    # Uncomment for debugging
 #=======================================================================
@@ -125,7 +125,12 @@ if [[ "$gen_baseline" == "true" ]] && [[ "$cmp_baseline" == "true" ]]; then
   exit 1
 fi
 if [[ "$gen_baseline" = "true" ]]; then echo "Generated baseline is in ${gen_baseline_dir}"; fi
-if [[ "$cmp_baseline" = "true" ]]; then echo "Comparison baseline is in ${cmp_baseline_dir}"; fi
+if [[ "$cmp_baseline" = "true" ]]; then
+  if [ ! -d "${cmp_baseline_dir}" ]; then
+    fail "FAIL: Directory for baseline comparison ${cmp_baseline_dir} does not exist"
+  fi
+  echo "Comparison baseline is in ${cmp_baseline_dir}"
+fi
 
 machine=$(echo "${machine^}")                      # Capitalize first letter for setup script name
 build_it=0                                         # Set to 1 to skip build (for testing run, pass/fail criteria)
@@ -158,6 +163,7 @@ fi
 PID=$$
 TEST_DIR=$( pwd )                   # Directory with this script
 TEST_OUTPUT=${TEST_DIR}/rt_summary${PID}.out
+TEST_LOGFILE=${TEST_DIR}/rt_log${PID}.out
 TOP_DIR=$TEST_DIR/..
 SCM_DIR=$TOP_DIR/scm
 ETC_DIR=$TOP_DIR/scm/etc
@@ -168,6 +174,16 @@ mg_inccn_data_files=( cam5_4_143_NAAI_monclimo2.nc cam5_4_143_NPCCN_monclimo2.nc
 job_prefix=test_job             # Batch job and std out file prefix
 
 #-----------------------------------------------------------------------
+# Create the output and log files if they doesn't exist
+#-----------------------------------------------------------------------
+if [ ! -f "$TEST_OUTPUT" ]; then
+   touch ${TEST_OUTPUT}
+fi
+if [ ! -f "$TEST_LOGFILE" ]; then
+   touch ${TEST_LOGFILE}
+fi
+
+#-----------------------------------------------------------------------
 # Check if lookup tables and other large datasets have been downloaded
 # If any of the phys_data_files are missing, run the download script
 #-----------------------------------------------------------------------
@@ -176,7 +192,7 @@ for phys_data_file in "${phys_data_files[@]}"; do
     ${TOP_DIR}/contrib/get_thompson_tables.sh
     break
   else
-    echo "Data file ${phys_data_file} exists..." >> ${TEST_OUTPUT}
+    echo "Data file ${phys_data_file} exists..." >> ${TEST_LOGFILE}
   fi
 done
 
@@ -185,16 +201,9 @@ for mg_inccn_data_file in "${mg_inccn_data_files[@]}"; do
     ${TOP_DIR}/contrib/get_mg_inccn_data.sh
     break
   else
-    echo "Data file ${mg_inccn_data_file} exists..." >> ${TEST_OUTPUT}
+    echo "Data file ${mg_inccn_data_file} exists..." >> ${TEST_LOGFILE}
   fi
 done
-
-#-----------------------------------------------------------------------
-# Create the output file if it doesn't exist
-#-----------------------------------------------------------------------
-if [ ! -f "$TEST_OUTPUT" ]; then
-   touch ${TEST_OUTPUT}
-fi
 
 #-----------------------------------------------------------------------
 # Set up the build environment and run the build script.
@@ -332,11 +341,81 @@ n_completed=$(grep -c "PASS: All processes completed successfully" ${TEST_OUTPUT
 
 if [[ $n_completed -eq $n_tests && $n_fail -eq 0 && $n_error -eq 0 ]] ; then
   echo "ALL TESTS SUCCEEDED" >> ${TEST_OUTPUT}
-  msg="PASS"
+#-----------------------------------------------------------------------
+# Generate baseline if option is set
+#-----------------------------------------------------------------------
+  if [[ "$gen_baseline" == "true" ]]; then
+    echo "Generating baselines in ${gen_baseline_dir}..." >> ${TEST_OUTPUT}
+    if [ -d "${gen_baseline_dir}" ]; then rm -rf ${gen_baseline_dir}; fi
+    mkdir -p ${gen_baseline_dir} || \
+           fail "FAIL: Could not make directory ${gen_baseline_dir} for generated baseline"
+
+    for compiler in "${compilers[@]}"; do
+      for build_type in "${build_types[@]}"; do
+        build_type_lc=$(echo "${build_type}" | tr '[A-Z]' '[a-z]')  # Make build_type all lower case
+        run_dir_ext=run_${compiler}_${build_type_lc}
+        RUN_DIR=$TOP_DIR/scm/${run_dir_ext}
+        echo "Copying output from run diretory ${RUN_DIR}..." >> ${TEST_OUTPUT}
+        for run_path in ${RUN_DIR}/output_*; do
+          [ -d "${run_path}" ] || continue                          # if not a directory, skip
+          output_dir="$(basename "${run_path}")"
+          gen_baseline_path=${gen_baseline_dir}/${run_dir_ext}/${output_dir}
+          if [ ! -d "${gen_baseline_path}" ]; then mkdir -p ${gen_baseline_path}; fi
+          cp -r ${run_path}/output.nc ${gen_baseline_path}/output.nc || \
+            fail "FAIL:  Could not copy ${run_path} output to ${gen_baseline_path} for baseline generation"
+        done
+      done #End build type loop for baseline generation
+    done   #End compiler loop for baseline generation
+  fi
+#-----------------------------------------------------------------------
+# Compare baseline if option is set
+#-----------------------------------------------------------------------
+  if [[ "$cmp_baseline" == "true" ]]; then
+    echo "Comparing output to baselines in ${cmp_baseline_dir}..." >> ${TEST_OUTPUT}
+
+    n_identical=0
+    n_differs=0
+    n_comparisons=0
+    for compiler in "${compilers[@]}"; do
+      for build_type in "${build_types[@]}"; do
+        build_type_lc=$(echo "${build_type}" | tr '[A-Z]' '[a-z]')  # Make build_type all lower case
+        run_dir_ext=run_${compiler}_${build_type_lc}
+        RUN_DIR=$TOP_DIR/scm/${run_dir_ext}
+        echo "Comparing output from run diretory ${RUN_DIR}..." >> ${TEST_OUTPUT}
+        for run_path in ${RUN_DIR}/output_*; do
+          [ -d "${run_path}" ] || continue                          # if not a directory, skip
+          output_dir="$(basename "${run_path}")"
+          cmp_baseline_path=${cmp_baseline_dir}/${run_dir_ext}/${output_dir}
+          cmp ${run_path}/output.nc ${cmp_baseline_path}/output.nc
+          ((n_comparisons=n_comparisons+1))
+          ret_val=$?
+          if [ ${ret_val} -eq 0 ] ; then
+            echo "Output for ${run_dir_ext}/${output_dir} is IDENTICAL to baseline" >> ${TEST_LOGFILE}
+            ((n_identical=n_identical+1))
+          else
+            echo "Output for ${run_dir_ext}/${output_dir} DIFFERS from baseline" >> ${TEST_LOGFILE}
+            ((n_differs=n_differs+1))
+          fi
+        done
+      done #End build type loop for baseline comparison
+    done   #End compiler loop for baseline comparison
+  fi
+#-----------------------------------------------------------------------
+# PASS = All tests succeeded and output is identical
+#-----------------------------------------------------------------------
+  if [[ $n_identical -eq $n_comparisons && $n_differs -eq 0 ]] ; then
+    echo "ALL TESTS PASSED, OUTPUT IS IDENTICAL." >> ${TEST_OUTPUT}
+    msg="PASS"
+  else
+    echo "ALL TESTS PASSED, BUT OUTPUT DIFFERS FROM BASELINE." >> ${TEST_OUTPUT}
+    msg="FAIL"
+  fi
 else
   echo "TEST(S) FAILED" >> ${TEST_OUTPUT}
   msg="FAIL"
 fi
+
+echo "More output from this test can be found in ${TEST_LOGFILE}" >> ${TEST_OUTPUT}
 
 #-----------------------------------------------------------------------
 # Send email with PASS/FAIL message
