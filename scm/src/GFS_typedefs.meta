@@ -2182,6 +2182,38 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+[sfc_alb_nir_dir_cpl]
+  standard_name = surface_nir_albedo_direct_rad_for_coupling
+  long_name = sfc near IR albedo for direct radiation for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[sfc_alb_nir_dif_cpl]
+  standard_name = surface_nir_albedo_diffuse_rad_for_coupling
+  long_name = sfc near IR albedo for diffuse radiation for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[sfc_alb_vis_dir_cpl]
+  standard_name = surface_vis_albedo_direct_rad_for_coupling
+  long_name = sfc visible albedo for direct radiation for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
+[sfc_alb_vis_dif_cpl]
+  standard_name = surface_vis_albedo_diffuse_rad_for_coupling
+  long_name = sfc visible albedo for diffuse radiation for coupling
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (flag_for_flux_coupling)
 [slimskin_cpl]
   standard_name = sea_land_ice_mask_in	
   long_name = sea/land/ice mask input (=0/1/2)
@@ -3877,7 +3909,7 @@
   units = flag
   dimensions = ()
   type = integer
-[imfshalcnv_gf]
+[imfshalcnv_ntiedtke]
   standard_name = flag_for_ntiedtke_shallow_convection_scheme
   long_name = flag for new Tiedtke shallow convection scheme
   units = flag
@@ -10126,23 +10158,23 @@
   type = real
   kind = kind_phys
 [ztmax_water]
-  standard_name = ztmax_whatever_that_is_over_water
-  long_name = zxtmax whatever that is over water
-  units = ???
+  standard_name = bounded_surface_roughness_length_for_heat_over_water
+  long_name = bounded surface roughness length for heat over water
+  units = m
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
 [ztmax_land]
-  standard_name = ztmax_whatever_that_is_over_land
-  long_name = zxtmax whatever that is over land
-  units = ???
+  standard_name = bounded_surface_roughness_length_for_heat_over_land
+  long_name = bounded surface roughness length for heat over land
+  units = m
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
 [ztmax_ice]
-  standard_name = ztmax_whatever_that_is_over_ice
-  long_name = zxtmax whatever that is over ice
-  units = ???
+  standard_name = bounded_surface_roughness_length_for_heat_over_ice
+  long_name = bounded surface roughness length for heat over ice
+  units = m
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
