@@ -67,7 +67,7 @@ function wait_for_criteria() {
   fi
 }
 
-machines=( hera cheyenne )
+machines=( hera cheyenne desktop )
 executable_name=scm
 
 [[ $# -eq 0 ]] && usage                     # Display usage if no command-line arguments
@@ -132,7 +132,7 @@ if [[ "$cmp_baseline" = "true" ]]; then
   echo "Comparison baseline is in ${cmp_baseline_dir}"
 fi
 
-machine=$(echo "${machine^}")                      # Capitalize first letter for setup script name
+machine="$(tr '[:lower:]' '[:upper:]' <<< ${machine:0:1})${machine:1}"  # Capitalize first letter for setup script name
 build_it=0                                         # Set to 1 to skip build (for testing run, pass/fail criteria)
 run_it=0                                           # Set to 1 to skip run (for testing pass/fail criteria)
 
@@ -141,20 +141,28 @@ build_types=( Release Debug )                      # Set all instances of CMAKE_
 if [ "${machine}" == "Cheyenne" ] ; then
   users=( $USER@ucar.edu )
   compilers=( intel gnu )
+  use_batch_system=true
   job_submission_script=scm_qsub_example.py
   memory="512M"
   walltime="walltime=00:40:00"
   max_iterations=240                                 # Max # of iterations to wait for batch output file to
                                                      # be created and to job to complete
   n_sleep_sec=30                                     # Interval in seconds between interation
-else
+elif [ "${machine}" == "Hera" ] ; then
   users=( $USER@noaa.gov )
   compilers=( intel )
+  use_batch_system=true
   job_submission_script=scm_slurm_example.py
   memory="1G"
   walltime="40"
   max_iterations=120
   n_sleep_sec=30
+elif [ "${machine}" == "Desktop" ] ; then
+  users=( $USER@ucar.edu )
+  compilers=( gfortran )
+  use_batch_system=false
+  max_iterations=10
+  n_sleep_sec=2
 fi
 
 #-----------------------------------------------------------------------
@@ -256,25 +264,29 @@ for compiler in "${compilers[@]}"; do
       ln -s ${BIN_DIR}/${executable_name} ${executable_name}
       ln -s ${SRC_DIR}/multi_run_scm.py multi_run_scm.py
       ln -s ${SRC_DIR}/run_scm.py run_scm.py
-      cp ${ETC_DIR}/${job_submission_script} ${job_submission_script}.tmp
       job_name=${job_prefix}_${compiler}_${build_type_lc}
+      if ${use_batch_system} ; then
+        cp ${ETC_DIR}/${job_submission_script} ${job_submission_script}.tmp
 #-----------------------------------------------------------------------
 # Substitute COMMAND in job_submission script to use multi_run
 #-----------------------------------------------------------------------
-      sed "s,^.*COMMAND \= .*,COMMAND \= \"${test_run_cmd}\"," ${job_submission_script}.tmp > ${job_submission_script}.tmp2
-      sed "s,^.*WALLTIME \= .*,WALLTIME \= \"${walltime}\"," ${job_submission_script}.tmp2 > ${job_submission_script}.tmp3
-      sed "s,^.*SERIAL_MEM \= .*,SERIAL_MEM \= \"${memory}\"," ${job_submission_script}.tmp3 > ${job_submission_script}.tmp4
-      sed "s,^.*JOB_NAME \= .*,JOB_NAME \= \"${job_name}\"," ${job_submission_script}.tmp4 > ${job_submission_script}
-      chmod +x ${job_submission_script}
-      rm -rf ${job_submission_script}.tmp
-      rm -rf ${job_submission_script}.tmp2
-      rm -rf ${job_submission_script}.tmp3
-      rm -rf ${job_submission_script}.tmp4
+        sed "s,^.*COMMAND \= .*,COMMAND \= \"${test_run_cmd}\"," ${job_submission_script}.tmp > ${job_submission_script}.tmp2
+        sed "s,^.*WALLTIME \= .*,WALLTIME \= \"${walltime}\"," ${job_submission_script}.tmp2 > ${job_submission_script}.tmp3
+        sed "s,^.*SERIAL_MEM \= .*,SERIAL_MEM \= \"${memory}\"," ${job_submission_script}.tmp3 > ${job_submission_script}.tmp4
+        sed "s,^.*JOB_NAME \= .*,JOB_NAME \= \"${job_name}\"," ${job_submission_script}.tmp4 > ${job_submission_script}
+        chmod +x ${job_submission_script}
+        rm -rf ${job_submission_script}.tmp
+        rm -rf ${job_submission_script}.tmp2
+        rm -rf ${job_submission_script}.tmp3
+        rm -rf ${job_submission_script}.tmp4
 
 #-----------------------------------------------------------------------
 # Submit job_submission to queue
 #-----------------------------------------------------------------------
-      ./${job_submission_script}
+        ./${job_submission_script}
+      else
+        ${test_run_cmd} >& ${job_name}.o
+      fi
 
     fi # End of skip run for testing
 
@@ -399,17 +411,17 @@ if [[ $n_completed -eq $n_tests && $n_fail -eq 0 && $n_error -eq 0 ]] ; then
         done
       done #End build type loop for baseline comparison
     done   #End compiler loop for baseline comparison
-  fi
 #-----------------------------------------------------------------------
 # PASS = All tests succeeded and output is identical
 #-----------------------------------------------------------------------
-  if [[ $n_identical -eq $n_comparisons && $n_differs -eq 0 ]] ; then
-    echo "ALL TESTS PASSED, OUTPUT IS IDENTICAL." >> ${TEST_OUTPUT}
-    msg="PASS"
-  else
-    echo "ALL TESTS PASSED, BUT OUTPUT DIFFERS FROM BASELINE." >> ${TEST_OUTPUT}
-    msg="FAIL"
-  fi
+    if [[ $n_identical -eq $n_comparisons && $n_differs -eq 0 ]] ; then
+      echo "ALL TESTS PASSED, OUTPUT IS IDENTICAL." >> ${TEST_OUTPUT}
+      msg="PASS"
+    else
+      echo "ALL TESTS PASSED, BUT OUTPUT DIFFERS FROM BASELINE." >> ${TEST_OUTPUT}
+      msg="FAIL"
+    fi
+  fi    # End of if cmp_baseline=true
 else
   echo "TEST(S) FAILED" >> ${TEST_OUTPUT}
   msg="FAIL"
