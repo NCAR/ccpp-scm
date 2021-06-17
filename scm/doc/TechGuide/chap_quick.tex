@@ -29,11 +29,11 @@ If you would like to contribute as a developer to this project, please see (in a
 
 There you will find links to all of the documentation pertinent to developers.
 
-For working with the development branches (stability not guaranteed), check out the \exec{master} branch of the repository:
+For working with the development branches (stability not guaranteed), check out the \exec{main} branch of the repository:
 \begin{lstlisting}[language=bash]
-git clone --recursive -b master https://github.com/NCAR/ccpp-scm
+git clone --recursive -b main https://github.com/NCAR/ccpp-scm
 \end{lstlisting}
-By using the \execout{recursive} option, it guarantees that you are checking out the commits of ccpp-physics and ccpp-framework that were tested with the latest commit of the SCM master branch. You can always retrieve the commits of the submodules that were intended to be used with a given commit of the SCM by doing the following from the top level SCM directory:
+By using the \execout{recursive} option, it guarantees that you are checking out the commits of ccpp-physics and ccpp-framework that were tested with the latest commit of the SCM main branch. You can always retrieve the commits of the submodules that were intended to be used with a given commit of the SCM by doing the following from the top level SCM directory:
 \begin{lstlisting}[language=bash]
 git submodule update --init --recursive
 \end{lstlisting}
@@ -43,9 +43,9 @@ You can try to use the latest commits of the ccpp-physics and ccpp-framework sub
 \begin{lstlisting}[language=bash]
 cd ccpp-scm/ccpp/physics
 \end{lstlisting}
-\item Check out master.
+\item Check out main.
 \begin{lstlisting}[language=bash]
-git checkout master
+git checkout main
 \end{lstlisting}
 \item Pull down the latest changes just to be sure.
 \begin{lstlisting}[language=bash]
@@ -54,7 +54,7 @@ git pull
 \item Do the same for ccpp-framework
 \begin{lstlisting}[language=bash]
 cd ../framework
-git checkout master
+git checkout main
 git pull
 \end{lstlisting}
 \item Change back to the main directory for following the instructions in section \ref{section: compiling} assuming system requirements in section \ref{section: systemrequirements} are met.
