@@ -49,13 +49,13 @@ num_exited_processes=$(grep -c "exited with code" ${file}) || true
 #-----------------------------------------------------------------------
 # Determine PASS/FAIL criteria
 #-----------------------------------------------------------------------
-if [ "${num_exited_processes}" == "0" ] ; then
+if [ ${num_exited_processes} -eq 0 ] ; then
   echo "PASS:  Number of processes exited = ${num_exited_processes}" >> ${TEST_OUTPUT}
 else
   echo "FAIL:  Number of processes exited = ${num_exited_processes}" >> ${TEST_OUTPUT}
 fi
 
-if [ "${num_exec_processes}" == "${num_completed_processes}" ] ; then
+if [ ${num_exec_processes} -eq ${num_completed_processes} ] ; then
   echo "PASS: All processes completed successfully ${num_completed_processes}" >> ${TEST_OUTPUT}
 else
   echo "FAIL: Number processes executed ${num_exec_processes} /= \
@@ -68,7 +68,7 @@ fi
 num_output_nc_files=$(ls -l ${run_dir}/output_*/output.nc | wc -l)
 echo "Number of processes with output.nc files = ${num_output_nc_files}" >> ${TEST_OUTPUT}
 
-if [ "${num_output_nc_files}" == "${num_tests}" ] ; then
+if [ ${num_output_nc_files} -eq ${num_tests} ] ; then
   echo "PASS: Number output.nc files ${num_output_nc_files} = ${num_tests}" >> ${TEST_OUTPUT}
 else
   echo "FAIL: Number output.nc files ${num_output_nc_files} /= ${num_tests}" >> ${TEST_OUTPUT}
