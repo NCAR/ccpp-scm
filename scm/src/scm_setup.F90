@@ -321,19 +321,19 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   integer :: i
   
   !--- set control properties (including namelist read)
-  call Model%init (Init_parm%nlunit, Init_parm%fn_nml,           &
-                   Init_parm%me, Init_parm%master,               &
-                   Init_parm%logunit, Init_parm%isc,             &
-                   Init_parm%jsc, Init_parm%nx, Init_parm%ny,    &
-                   Init_parm%levs, Init_parm%cnx, Init_parm%cny, &
-                   Init_parm%gnx, Init_parm%gny,                 &
-                   Init_parm%dt_dycore, Init_parm%dt_phys,       &
-                   Init_parm%iau_offset,                         &
-                   Init_parm%bdat, Init_parm%cdat,               &
-                   Init_parm%tracer_names,                       &
-                   Init_parm%input_nml_file, Init_parm%tile_num, &
-                   Init_parm%blksz, Init_parm%ak, Init_parm%bk,  &
-                   Init_parm%restart, Init_parm%hydrostatic,     &
+  call Model%init (Init_parm%nlunit, Init_parm%fn_nml,             &
+                   Init_parm%me, Init_parm%master,                 &
+                   Init_parm%logunit, Init_parm%isc,               &
+                   Init_parm%jsc, Init_parm%nx, Init_parm%ny,      &
+                   Init_parm%levs, Init_parm%cnx, Init_parm%cny,   &
+                   Init_parm%gnx, Init_parm%gny,                   &
+                   Init_parm%dt_dycore, Init_parm%dt_phys,         &
+                   Init_parm%iau_offset,                           &
+                   Init_parm%bdat, Init_parm%cdat,                 &
+                   Init_parm%tracer_names, Init_parm%tracer_types, &
+                   Init_parm%input_nml_file, Init_parm%tile_num,   &
+                   Init_parm%blksz, Init_parm%ak, Init_parm%bk,    &
+                   Init_parm%restart, Init_parm%hydrostatic,       &
                    communicator, ntasks, nthreads)
 
   !--- initialize DDTs
