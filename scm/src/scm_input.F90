@@ -71,6 +71,7 @@ subroutine get_config_nml(scm_state)
   character(len=character_length)    :: physics_nml
   
   character(len=character_length), allocatable, dimension(:) :: tracer_names
+  integer,                         allocatable, dimension(:) :: tracer_types
 
   integer                          :: ioerror
 
@@ -160,9 +161,9 @@ subroutine get_config_nml(scm_state)
       n_time_levels = 2
   end select
   
-  call get_tracers(tracer_names)
+  call get_tracers(tracer_names, tracer_types)
   
-  call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels, tracer_names)
+  call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels, tracer_names, tracer_types)
 
   scm_state%experiment_name = experiment_name
   scm_state%model_name = model_name
@@ -2097,8 +2098,9 @@ subroutine get_reference_profile_old(nlev, pres, T, qv, ozone)
 
 end subroutine get_reference_profile_old
 
-subroutine get_tracers(tracer_names)
+subroutine get_tracers(tracer_names, tracer_types)
   character(len=character_length), allocatable, intent(inout), dimension(:) :: tracer_names
+  integer,                         allocatable, intent(inout), dimension(:) :: tracer_types
 
   character(len=*), parameter :: file_name = 'tracers.txt'
 
@@ -2113,12 +2115,13 @@ subroutine get_tracers(tracer_names)
             if (rc /= 0) exit
             n_lines = n_lines + 1
         end do
-        allocate(tracer_names(n_lines))
+        allocate(tracer_names(n_lines),tracer_types(n_lines))
         rewind(fu)
         do i=1,n_lines
             read (fu, *, iostat=rc) name!, std_name, units
             if (rc /= 0) exit
             tracer_names(i) = trim(name)
+            tracer_types(i) = 0 ! temporary until SCM is configured to work with GOCART
         end do
     else
         write(*,'(a,i0)') 'There was an error opening the file ' // FILE_NAME // &

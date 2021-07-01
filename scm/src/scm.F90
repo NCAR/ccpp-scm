@@ -126,6 +126,7 @@ subroutine scm_main_sub()
   !physics%Init_parm%xlat => scm_state%lat  !rank mismatch -> why does Init_parm%xlat have 2 dimensions?
   !physics%Init_parm%area => scm_state%area !rank mismatch -> why does Init_parm%area have 2 dimensions?
   physics%Init_parm%tracer_names => scm_state%tracer_names
+  physics%Init_parm%tracer_types => scm_state%tracer_types
   physics%Init_parm%fn_nml = scm_state%physics_nml
   physics%Init_parm%blksz => scm_state%blksz
   physics%Init_parm%tile_num = 1
