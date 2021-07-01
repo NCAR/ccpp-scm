@@ -81,7 +81,8 @@ module scm_type_defs
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
     integer                           :: mass_weighted_rime_factor_index !< index for mass-weighted rime factor
     integer                           :: init_year, init_month, init_day, init_hour, init_min
-    character(len=32), allocatable    :: tracer_names(:) !< name of physics suite (must be "GFS_operational" for prototype)
+    character(len=32), allocatable    :: tracer_names(:) !<
+    integer,           allocatable    :: tracer_types(:) !<
     integer, allocatable              :: blksz(:)
 
     logical                           :: sfc_flux_spec !< flag for using specified surface fluxes instead of calling a surface scheme
@@ -409,10 +410,11 @@ module scm_type_defs
 
   contains
 
-  subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels, tracers)
+  subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels, tracers, tracer_types)
     class(scm_state_type)             :: scm_state
     integer, intent(in)               :: n_columns, n_levels, n_soil, n_snow, n_time_levels
     character(len=character_length), intent(in), dimension(:) :: tracers
+    integer,                         intent(in), dimension(:) :: tracer_types
     
     integer :: i
 
@@ -440,8 +442,9 @@ module scm_type_defs
     scm_state%n_time_levels = n_time_levels
     
     scm_state%n_tracers = size(tracers)
-    allocate(scm_state%tracer_names(scm_state%n_tracers))
+    allocate(scm_state%tracer_names(scm_state%n_tracers), scm_state%tracer_types(scm_state%n_tracers))
     scm_state%tracer_names = tracers
+    scm_state%tracer_types = tracer_types
     scm_state%water_vapor_index               = get_tracer_index(scm_state%tracer_names,"sphum")
     scm_state%ozone_index                     = get_tracer_index(scm_state%tracer_names,"o3mr")
     scm_state%cloud_water_index               = get_tracer_index(scm_state%tracer_names,"liq_wat")
