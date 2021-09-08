@@ -74,6 +74,16 @@ else
   echo "FAIL: Number output.nc files ${num_output_nc_files} /= ${num_tests}" >> ${TEST_OUTPUT}
 fi
 
+#-----------------------------------------------------------------------
+# Get timing information
+#-----------------------------------------------------------------------
+echo " " >> ${TEST_OUTPUT}
+if grep -q "elapsed" ${file}; then
+  echo "Timing Information:" >> ${TEST_OUTPUT}
+  echo "===================" >> ${TEST_OUTPUT}
+  grep "elapsed" ${file} >> ${TEST_OUTPUT}
+fi
+
 echo " " >> ${TEST_OUTPUT}
 echo "Process details:" >> ${TEST_OUTPUT}
 echo "================" >> ${TEST_OUTPUT}
