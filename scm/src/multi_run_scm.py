@@ -57,7 +57,7 @@ def spawn_subprocess(command, timer):
         t = timeit.Timer(functools.partial(subprocess_work, command))
         #timer_iterations determines how many realizations are executed in order to calculate the elapsed time
         elapsed_time = t.timeit(timer_iterations)
-        logging.info('elapsed time: {0} s'.format(elapsed_time/timer_iterations))
+        return elapsed_time
     else:
         subprocess_work(command)
 
@@ -99,7 +99,10 @@ def main():
             if args.runtime:
                 command = command + ' --runtime ' + args.runtime
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(suites), command))
-            spawn_subprocess(command, args.timer)
+            elapsed_time = spawn_subprocess(command, args.timer)
+            if args.timer:
+               logging.info('elapsed time: {0} s for case: {1} suite: {2}'\
+                  .format(elapsed_time/timer_iterations, args.case, suite))
 
     # if the suite argument is specified, run through all supported cases with the specified suite
     if args.suite:
@@ -111,7 +114,10 @@ def main():
             if args.runtime:
                 command = command + ' --runtime ' + args.runtime
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(cases), command))
-            spawn_subprocess(command, args.timer)
+            elapsed_time = spawn_subprocess(command, args.timer)
+            if args.timer:
+              logging.info('elapsed time: {0} s for case: {1} suite: {2}'\
+                 .format(elapsed_time/timer_iterations, case, args.suite))
 
     # For maximum flexibility, run the SCM as specified from an external file where cases, suites, and physics namelists
     # are all specified. This file must contain python lists called 'cases','suites', and 'namelists'. The suites and
@@ -156,7 +162,10 @@ def main():
                 if args.runtime:
                     command = command + ' --runtime ' + args.runtime
                 logging.info('Executing process {0} of {1} ({2})'.format(i, len(scm_runs.cases), command))
-                spawn_subprocess(command, args.timer)
+                elapsed_time = spawn_subprocess(command, args.timer)
+                if args.timer:
+                   logging.info('elapsed time: {0} s for case: {1} suite: {2}'\
+                      .format(elapsed_time/timer_iterations, case, args.file))
 
         if scm_runs.cases and scm_runs.suites:
             if scm_runs.namelists:
@@ -172,7 +181,10 @@ def main():
                                 command = command + ' --runtime ' + args.runtime
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
-                            spawn_subprocess(command, args.timer)
+                            elapsed_time = spawn_subprocess(command, args.timer)
+                            if args.timer:
+                               logging.info('elapsed time: {0} s for case: {1} suite: {2}'\
+                                  .format(elapsed_time/timer_iterations, case, scm_runs.suites[0]))
                 elif len(scm_runs.suites) == len(scm_runs.namelists):
                     logging.info('Cases, suites, and namelists were specified in {0}, so running all cases with all '\
                         'suites, matched with namelists by order'.format(args.file))
@@ -185,7 +197,10 @@ def main():
                                 command = command + ' --runtime ' + args.runtime
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
-                            spawn_subprocess(command, args.timer)
+                            elapsed_time = spawn_subprocess(command, args.timer)
+                            if args.timer:
+                               logging.info('elapsed time: {0} s for case: {1} suite: {2}'\
+                                  .format(elapsed_time/timer_iterations, case, suite))
                 else:
                     message = 'The number of suites and namelists specified in {0} is incompatible. Either use one '\
                         'suite with many namelists or the number of suites must match the number of namelists '\
@@ -204,7 +219,10 @@ def main():
                             command = command + ' --runtime ' + args.runtime
                         logging.info('Executing process {0} of {1} ({2})'.format(
                             len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
-                        spawn_subprocess(command, args.timer)
+                        elapsed_time = spawn_subprocess(command, args.timer)
+                        if args.timer:
+                           logging.info('elapsed time: {0} s for case: {1} suite: {2}'\
+                              .format(elapsed_time/timer_iterations, case, suite))
 
         if scm_runs.cases and not scm_runs.suites and scm_runs.namelists:
             logging.info('Cases and namelists were specified in {0}, so running all cases with the default suite '\
@@ -218,7 +236,10 @@ def main():
                         command = command + ' --runtime ' + args.runtime
                     logging.info('Executing process {0} of {1} ({2})'.format(
                         len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
-                    spawn_subprocess(command, args.timer)
+                    elapsed_time = spawn_subprocess(command, args.timer)
+                    if args.timer:
+                      logging.info('elapsed time: {0} s for case: {1} namelist: {2}'\
+                         .format(elapsed_time/timer_iterations, case, namelist))
 
     # If running the script with no arguments, run all supported (case,suite) permutations.
     if not args.case and not args.suite and not args.file:
@@ -233,7 +254,10 @@ def main():
                     command = command + ' --runtime ' + args.runtime
                 logging.info('Executing process {0} of {1} ({2})'.format(
                     len(suites)*i+j, len(cases)*len(suites), command))
-                spawn_subprocess(command, args.timer)
+                elapsed_time = spawn_subprocess(command, args.timer)
+                if args.timer:
+                   logging.info('elapsed time: {0} s for case: {1} suite: {2}'\
+                      .format(elapsed_time/timer_iterations, case, suite))
 
     # Generate report at the end of the log file when verbose flag is set
     if args.verbose > 0:

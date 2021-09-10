@@ -231,7 +231,7 @@ for compiler in "${compilers[@]}"; do
       # Add --runtime ${runtime} to multi_run_scm.py to reduce runtime for tests
       test_run_cmd="${RUN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 86400" # 1 day
     else
-      test_run_cmd="${RUN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 259200" # 3 days
+      test_run_cmd="${RUN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --timer --runtime 259200" # 3 days
     fi
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh
@@ -353,6 +353,7 @@ n_completed=$(grep -c "PASS: All processes completed successfully" ${TEST_OUTPUT
 
 if [[ $n_completed -eq $n_tests && $n_fail -eq 0 && $n_error -eq 0 ]] ; then
   echo "ALL TESTS SUCCEEDED" >> ${TEST_OUTPUT}
+  msg="PASS"
 #-----------------------------------------------------------------------
 # Generate baseline if option is set
 #-----------------------------------------------------------------------
