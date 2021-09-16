@@ -7,7 +7,6 @@
       nst_anl        = .true.
       use_ufo        = .true.
       pre_rad        = .false.
-      ncld           = 5
       imp_physics    = 8
       spec_adv       = .true.        ! HWRF F-A
       RHGRD          = 0.98          ! HWRF F-A

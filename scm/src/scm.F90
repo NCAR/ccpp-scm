@@ -132,6 +132,7 @@ subroutine scm_main_sub()
   physics%Init_parm%tile_num = 1
   physics%Init_parm%hydrostatic = .true.
   physics%Init_parm%restart = .false.
+  physics%Init_parm%nwat = scm_state%nwat
   
   ! Allocate and initialize DDTs
   call GFS_suite_setup(physics%Model, physics%Statein, physics%Stateout,           &
