@@ -61,7 +61,7 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   type(ccpp_t), intent(inout)                  :: cdata
   logical, intent(in)                          :: in_spinup
 
-  integer :: i, ierr, kdt_rad
+  integer :: i, ierr, kdt_rad, idtend, itrac
 
   !> \section do_time_step_alg Algorithm
   !! @{
@@ -103,20 +103,35 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   ! due to anything else than physics)
   do i=1, scm_state%n_cols
     if (physics%Model%ldiag3d) then
-      physics%Diag%du3dt(i,:,8)  = physics%Diag%du3dt(i,:,8)  &
-                                      + (physics%Statein%ugrs(i,:) - physics%Stateout%gu0(i,:))
-      physics%Diag%dv3dt(i,:,8)  =   physics%Diag%dv3dt(i,:,8)  &
-                                      + (  physics%Statein%vgrs(i,:) - physics%Stateout%gv0(i,:))
-      physics%Diag%dt3dt(i,:,11) = physics%Diag%dt3dt(i,:,11) &
-                                      + (physics%Statein%tgrs(i,:) - physics%Stateout%gt0(i,:))
+      idtend = physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_non_physics)
+      if(idtend>=1) then
+        physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
+               + (physics%Statein%ugrs(i,:) - physics%Stateout%gu0(i,:))
+      endif
+      
+      idtend = physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics)
+      if(idtend>=1) then
+        physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
+               + (physics%Statein%vgrs(i,:) - physics%Stateout%gv0(i,:))
+      endif
+      
+      idtend = physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics)
+      if(idtend>=1) then
+        physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
+               + (physics%Statein%tgrs(i,:) - physics%Stateout%gt0(i,:))
+      endif
+      
       if (physics%Model%qdiag3d) then
-        physics%Diag%dq3dt(i,:,12) = physics%Diag%dq3dt(i,:,12) &
-              + (physics%Statein%qgrs(i,:,physics%Model%ntqv) - physics%Stateout%gq0(i,:,physics%Model%ntqv))
-        physics%Diag%dq3dt(i,:,13) = physics%Diag%dq3dt(i,:,13) &
-              + (physics%Statein%qgrs(i,:,physics%Model%ntoz) - physics%Stateout%gq0(i,:,physics%Model%ntoz))
+        do itrac=1,physics%Model%ntrac
+          idtend = physics%Model%dtidx(itrac+100,physics%Model%index_of_process_non_physics)
+          if(idtend>=1) then
+            physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
+                   + (physics%Statein%qgrs(i,:,itrac) - physics%Stateout%gq0(i,:,itrac))
+          endif
+        enddo
       endif
     endif
-  end do
+  enddo
   
   call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
   if (ierr/=0) then
