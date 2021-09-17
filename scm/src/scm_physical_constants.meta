@@ -105,7 +105,7 @@
   type = real
   kind = kind_phys
 [con_rd]
-  standard_name = gas_constant_dry_air
+  standard_name = gas_constant_of_dry_air
   long_name = ideal gas constant for dry air
   units = J kg-1 K-1
   dimensions = ()
@@ -196,7 +196,7 @@
   type = real
   kind = kind_phys
 [rhowater]
-  standard_name = liquid_water_density
+  standard_name = fresh_liquid_water_density_at_0c
   long_name = density of liquid water
   units = kg m-3
   dimensions = ()

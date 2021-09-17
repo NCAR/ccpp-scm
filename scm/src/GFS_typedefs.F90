@@ -99,6 +99,8 @@ module GFS_typedefs
   type GFS_init_type
     integer :: me                                !< my MPI-rank
     integer :: master                            !< master MPI-rank
+    integer :: fcst_mpi_comm                     !< forecast tasks mpi communicator
+    integer :: fcst_ntasks                       !< total number of forecast tasks
     integer :: tile_num                          !< tile number for this MPI rank
     integer :: isc                               !< starting i-index for this MPI-domain
     integer :: jsc                               !< starting j-index for this MPI-domain
@@ -8040,6 +8042,7 @@ module GFS_typedefs
     write (0,*) 'Interstitial%nsamftrac         = ', Interstitial%nsamftrac
     write (0,*) 'Interstitial%nscav             = ', Interstitial%nscav
     write (0,*) 'Interstitial%nspc1             = ', Interstitial%nspc1
+    write (0,*) 'Interstitial%ntcwx             = ', Interstitial%ntcwx
     write (0,*) 'Interstitial%ntiwx             = ', Interstitial%ntiwx
     write (0,*) 'Interstitial%nvdiff            = ', Interstitial%nvdiff
     write (0,*) 'Interstitial%phys_hydrostatic  = ', Interstitial%phys_hydrostatic
