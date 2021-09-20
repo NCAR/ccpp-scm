@@ -15,22 +15,23 @@ HOST_MODEL_IDENTIFIER = "SCM"
 # dependencies of these files to the list.
 VARIABLE_DEFINITION_FILES = [
     # actual variable definition files
+    'ccpp/framework/src/ccpp_types.F90',
     'ccpp/physics/physics/machine.F',
     'ccpp/physics/physics/radsw_param.f',
+    'ccpp/physics/physics/radlw_param.f',
     'ccpp/physics/physics/h2o_def.f',
     'ccpp/physics/physics/ozne_def.f',
-    'ccpp/physics/physics/radlw_param.f',
     'ccpp/physics/physics/radiation_surface.f',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
+    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
+    'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90',
     'scm/src/GFS_typedefs.F90',
     'scm/src/scm_kinds.F90',
     'scm/src/scm_type_defs.F90',
     'scm/src/scm_physical_constants.F90',
     'scm/src/scm_utils.F90', #no definitions, but scm_type_defs.F90 uses a module from this file
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90',
-    'ccpp/physics/physics/rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90',
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
-    'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
-    'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90'
     ]
 
 TYPEDEFS_NEW_METADATA = {
