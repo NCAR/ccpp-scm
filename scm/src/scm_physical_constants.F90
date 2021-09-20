@@ -24,6 +24,7 @@ public
   real(kind=dp),parameter:: con_cvap   =1.8460e+3
   real(kind=dp),parameter:: con_hvap   =2.5000e+6
   real(kind=dp),parameter:: con_hfus   =3.3358e+5
+  real(kind=dp),parameter:: con_psat   =6.1078e+2_dp                 !< pres at H2O 3pt (\f$Pa\f$)
   real(kind=dp),parameter:: con_t0c    =2.7315e+2
   real(kind=dp),parameter:: con_ttp    =2.7316e+2
   real(kind=dp),parameter:: con_epsq   =1.0E-12_dp
@@ -35,9 +36,11 @@ public
   real(kind=dp),parameter:: con_eps    =con_rd/con_rv
   real(kind=dp),parameter:: con_epsm1  =con_rd/con_rv-1.
 
-  real(kind=dp),parameter:: con_vonKarman = 0.4
+  real(kind=dp),parameter:: karman = 0.4_dp
   
   real(kind=dp),parameter:: cimin      =0.15
+  !> minimum rain amount
+  real(kind=dp),parameter:: rainmin    =1.e-13_dp
   real(kind=dp),parameter:: rlapse     =0.65e-2
   real(kind=dp),parameter:: con_jcal   =4.1855E+0
   real(kind=dp),parameter:: con_rhw0   =1022.0
