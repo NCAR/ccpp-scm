@@ -90,6 +90,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_psat]
+  standard_name = saturation_pressure_at_triple_point_of_water
+  long_name = saturation pressure at triple point of water
+  units = Pa
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [con_hvap]
   standard_name = latent_heat_of_vaporization_of_water_at_0C
   long_name = latent heat of evaporation/sublimation
@@ -105,7 +112,7 @@
   type = real
   kind = kind_phys
 [con_rd]
-  standard_name = gas_constant_dry_air
+  standard_name = gas_constant_of_dry_air
   long_name = ideal gas constant for dry air
   units = J kg-1 K-1
   dimensions = ()
@@ -139,9 +146,9 @@
   dimensions = ()
   type = real
   kind = kind_phys
-[con_vonKarman]
-  standard_name = vonKarman_constant
-  long_name = vonKarman constant
+[karman]
+  standard_name = von_karman_constant
+  long_name = Von Karman constant
   units = none
   dimensions = ()
   type = real
@@ -150,6 +157,13 @@
   standard_name = minimum_sea_ice_concentration
   long_name = minimum sea ice concentration
   units = frac
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[rainmin]
+  standard_name = lwe_thickness_of_minimum_rain_amount
+  long_name = liquid water equivalent thickness of minimum rain amount
+  units = m
   dimensions = ()
   type = real
   kind = kind_phys
@@ -196,7 +210,7 @@
   type = real
   kind = kind_phys
 [rhowater]
-  standard_name = liquid_water_density
+  standard_name = fresh_liquid_water_density_at_0c
   long_name = density of liquid water
   units = kg m-3
   dimensions = ()

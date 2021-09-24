@@ -633,46 +633,49 @@ subroutine output_append_diag_avg(ncid, scm_state, physics)
     inverse_n_diag = 1.0/physics%Model%nszero
     inverse_dt = 1.0/scm_state%dt
     
-    call NetCDF_put_var(ncid, "dT_dt_lwrad",     physics%Diag%dt3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_swrad",     physics%Diag%dt3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_pbl",       physics%Diag%dt3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_deepconv",  physics%Diag%dt3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_shalconv",  physics%Diag%dt3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_micro",     physics%Diag%dt3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_ogwd",      physics%Diag%dt3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_rayleigh",  physics%Diag%dt3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_cgwd",      physics%Diag%dt3dt(:,:,9),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_phys",      physics%Diag%dt3dt(:,:,10), scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dT_dt_nonphys",   physics%Diag%dt3dt(:,:,11), scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dq_dt_pbl",       physics%Diag%dq3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dq_dt_deepconv",  physics%Diag%dq3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dq_dt_shalconv",  physics%Diag%dq3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dq_dt_micro",     physics%Diag%dq3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "doz_dt_pbl",      physics%Diag%dq3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "doz_dt_prodloss", physics%Diag%dq3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "doz_dt_oz",       physics%Diag%dq3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "doz_dt_T",        physics%Diag%dq3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "doz_dt_ovhd",     physics%Diag%dq3dt(:,:,9),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dq_dt_phys",      physics%Diag%dq3dt(:,:,10), scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "doz_dt_phys",     physics%Diag%dq3dt(:,:,11), scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dq_dt_nonphys",   physics%Diag%dq3dt(:,:,12), scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "doz_dt_nonphys",  physics%Diag%dq3dt(:,:,13), scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_pbl",       physics%Diag%du3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_ogwd",      physics%Diag%du3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_deepconv",  physics%Diag%du3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_cgwd",      physics%Diag%du3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_rayleigh",  physics%Diag%du3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_shalconv",  physics%Diag%du3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_phys",      physics%Diag%du3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "du_dt_nonphys",   physics%Diag%du3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_pbl",       physics%Diag%dv3dt(:,:,1),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_ogwd",      physics%Diag%dv3dt(:,:,2),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_deepconv",  physics%Diag%dv3dt(:,:,3),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_cgwd",      physics%Diag%dv3dt(:,:,4),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_rayleigh",  physics%Diag%dv3dt(:,:,5),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_shalconv",  physics%Diag%dv3dt(:,:,6),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_phys",      physics%Diag%dv3dt(:,:,7),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "dv_dt_nonphys",   physics%Diag%dv3dt(:,:,8),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_longwave),          "dT_dt_lwrad",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_shortwave),         "dT_dt_swrad",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_pbl),               "dT_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_dcnv),              "dT_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_scnv),              "dT_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_mp),                "dT_dt_micro",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_orographic_gwd),    "dT_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_rayleigh_damping),  "dT_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_nonorographic_gwd), "dT_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_physics),           "dT_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics),       "dT_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_pbl),            "dq_dt_pbl",       scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_dcnv),           "dq_dt_deepconv",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_scnv),           "dq_dt_shalconv",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_mp),             "dq_dt_micro",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_physics),        "dq_dt_phys",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_non_physics),    "dq_dt_nonphys",   scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_pbl),            "doz_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_prod_loss),      "doz_dt_prodloss", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_ozmix),          "doz_dt_oz",       scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_temp),           "doz_dt_T",        scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_overhead_ozone), "doz_dt_ovhd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_physics),        "doz_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_non_physics),    "doz_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_pbl),               "du_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_orographic_gwd),    "du_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_dcnv),              "du_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_nonorographic_gwd), "du_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_rayleigh_damping),  "du_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_scnv),              "du_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_physics),           "du_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_non_physics),       "du_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_pbl),               "dv_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_orographic_gwd),    "dv_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_dcnv),              "dv_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_nonorographic_gwd), "dv_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_rayleigh_damping),  "dv_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_scnv),              "dv_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_physics),           "dv_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics),       "dv_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
     call NetCDF_put_var(ncid, "tprcp_accum",          physics%Diag%totprcpb(:), scm_state%itt_diag, inverse_n_diag)
     call NetCDF_put_var(ncid, "ice_accum",            physics%Diag%toticeb(:),  scm_state%itt_diag, inverse_n_diag)
@@ -686,6 +689,22 @@ subroutine output_append_diag_avg(ncid, scm_state, physics)
     call NetCDF_put_var(ncid, "conv_prcp_rate_accum", physics%Diag%cnvprcpb(:), scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
 end subroutine output_append_diag_avg
+
+subroutine output_append_tendency(ncid, scm_state, physics, idtend, label, itt, mult_const)
+  use scm_type_defs, only: scm_state_type, physics_type
+  use NetCDF_put, only: NetCDF_put_var
+  
+  integer, intent(in) :: ncid, idtend, itt
+  type(scm_state_type), intent(in) :: scm_state
+  type(physics_type), intent(in) :: physics
+  character(len=*), intent(in) :: label
+  real(kind=dp), intent(in), optional :: mult_const
+  
+  if(idtend>=1) then
+    call NetCDF_put_var(ncid, label, physics%Diag%dtend(:,:,idtend), itt, mult_const)
+  endif
+  
+end subroutine output_append_tendency
 
 !> @}
 !> @}

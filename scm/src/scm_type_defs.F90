@@ -63,6 +63,7 @@ module scm_type_defs
     integer                           :: n_itt_diag !< number of iterations between diagnostics resetting to zero
     integer                           :: n_levels_smooth !< the number of levels over which the input profiles are smoothed into the reference profiles
     integer                           :: n_tracers !< number of tracers
+    integer                           :: nwat !< number of water species to be included in condensate and water vapor loading
     integer                           :: water_vapor_index
     integer                           :: ozone_index  !< index for ozone in the tracer array
     integer                           :: cloud_water_index  !< index for cloud water in the tracer array
@@ -462,6 +463,26 @@ module scm_type_defs
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
     scm_state%mass_weighted_rime_factor_index = get_tracer_index(scm_state%tracer_names,"q_rimef")
+    
+    scm_state%nwat = 0
+    if(scm_state%water_vapor_index /= -99) then
+      scm_state%nwat = scm_state%nwat + 1
+    endif
+    if(scm_state%cloud_water_index /= -99) then
+      scm_state%nwat = scm_state%nwat + 1
+    endif
+    if(scm_state%cloud_ice_index /= -99) then
+      scm_state%nwat = scm_state%nwat + 1
+    endif
+    if(scm_state%rain_index /= -99) then
+      scm_state%nwat = scm_state%nwat + 1
+    endif
+    if(scm_state%snow_index /= -99) then
+      scm_state%nwat = scm_state%nwat + 1
+    endif
+    if(scm_state%graupel_index /= -99) then
+      scm_state%nwat = scm_state%nwat + 1
+    endif
     
     scm_state%n_itt_out = int_zero
     scm_state%n_itt_diag = int_zero
@@ -1256,10 +1277,10 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_smcwtdxy, physics%Sfcprop%smcwtdxy(i), "smcwtdxy", .false., missing_var(27))
         call conditionally_set_var(scm_input%input_deeprechxy, physics%Sfcprop%deeprechxy(i), "deeprechxy", .false., missing_var(28))
         call conditionally_set_var(scm_input%input_rechxy, physics%Sfcprop%rechxy(i), "rechxy", .false., missing_var(29))
-        call conditionally_set_var(scm_input%input_albdvis, physics%Sfcprop%albdvis_lnd(i), "albdvis_lnd", .false., missing_var(30))
-        call conditionally_set_var(scm_input%input_albdnir, physics%Sfcprop%albdnir_lnd(i), "albdnir_lnd", .false., missing_var(31))
-        call conditionally_set_var(scm_input%input_albivis, physics%Sfcprop%albivis_lnd(i), "albivis_lnd", .false., missing_var(32))
-        call conditionally_set_var(scm_input%input_albinir, physics%Sfcprop%albinir_lnd(i), "albinir_lnd", .false., missing_var(33))
+        call conditionally_set_var(scm_input%input_albdvis, physics%Sfcprop%albdirvis_lnd(i), "albdirvis_lnd", .false., missing_var(30))
+        call conditionally_set_var(scm_input%input_albdnir, physics%Sfcprop%albdirnir_lnd(i), "albdirnir_lnd", .false., missing_var(31))
+        call conditionally_set_var(scm_input%input_albivis, physics%Sfcprop%albdifvis_lnd(i), "albdifvis_lnd", .false., missing_var(32))
+        call conditionally_set_var(scm_input%input_albinir, physics%Sfcprop%albdirnir_lnd(i), "albdifnir_lnd", .false., missing_var(33))
         call conditionally_set_var(scm_input%input_emiss, physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(34))
         
         !write out warning if missing data for non-required variables

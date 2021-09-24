@@ -109,8 +109,8 @@ ELSE()
   ENDIF(DEFINED ENV{W3NCO_LIBd})
 ENDIF()
 
-SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
-SET(GFSPHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
+SET(CCPP_FRAMEWORK_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
+SET(CCPP_PHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
 
 # Use rpaths on MacOSX
 set(CMAKE_MACOSX_RPATH 1)
@@ -319,9 +319,9 @@ endif()
 
 #------------------------------------------------------------------------------
 # Configure sources
-ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
-ADD_SUBDIRECTORY(${GFSPHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
-ADD_DEPENDENCIES(ccppphys ccpp)
+ADD_SUBDIRECTORY(${CCPP_FRAMEWORK_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
+ADD_SUBDIRECTORY(${CCPP_PHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
+ADD_DEPENDENCIES(ccpp_physics ccpp_framework)
 
 SET(scm_source_files scm.F90
             scm_input.F90
@@ -337,9 +337,9 @@ SET(scm_source_files scm.F90
 ADD_EXECUTABLE(scm ${scm_source_files} ccpp_static_api.F90)
 if(NEW_NCEPLIBS)
   #the FindNetCDF.cmake module suggests to use NetCDF::NetCDF_[Fortran,C,CXX] rather than set compiler flags; you actually need both Fortan and C components to compile successfully
-  TARGET_LINK_LIBRARIES(scm ccppphys ccpp NetCDF::NetCDF_Fortran NetCDF::NetCDF_C bacio::bacio_4 sp::sp_d w3nco::w3nco_d)
+  TARGET_LINK_LIBRARIES(scm ccpp_physics ccpp_framework NetCDF::NetCDF_Fortran NetCDF::NetCDF_C bacio::bacio_4 sp::sp_d w3nco::w3nco_d)
 else()
-  TARGET_LINK_LIBRARIES(scm ccppphys ccpp ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
+  TARGET_LINK_LIBRARIES(scm ccpp_physics ccpp_framework ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
 endif()
 
 set_target_properties(scm PROPERTIES
