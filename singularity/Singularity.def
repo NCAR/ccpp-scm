@@ -1,0 +1,49 @@
+Bootstrap: docker
+From: dtcenter/common-community-container:gnu9
+
+%labels
+NOTE workaround by ngam <github.com/ngam> for Singularity, but please refer to maintainers below
+MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
+
+
+%post
+
+# Obtain CCPP SCM source code
+cd /comsoftware \
+&& git clone --recursive -b v5.0.0 https://github.com/NCAR/ccpp-scm
+
+# Obtain the pre-computed look-up tables for running with Thompson microphysics
+cd /comsoftware/ccpp-scm/ \
+&& . contrib/get_thompson_tables.sh
+  
+# Obtain the IN-CCN data for use with Morrison-Gettelman microphysics
+cd /comsoftware/ccpp-scm/ \
+&& . contrib/get_mg_inccn_data.sh
+
+# Run the machine setup script to set environment variables
+cd /comsoftware/ccpp-scm/scm/ \
+&& . etc/CENTOS_docker_setup.sh
+
+# set environment stuff (could be duplicate?)
+bacio_ROOT=/comsoftware/ccpp-scm/nceplibs
+sp_ROOT=/comsoftware/ccpp-scm/nceplibs
+w3nco_ROOT=/comsoftware/ccpp-scm/nceplibs
+
+# Set working directory
+cd /comsoftware/ccpp-scm/scm \
+&& mkdir bin \
+&& cd bin
+
+# Set environment stuff
+export bacio_ROOT=/comsoftware/ccpp-scm/nceplibs
+export sp_ROOT=/comsoftware/ccpp-scm/nceplibs
+export w3nco_ROOT=/comsoftware/ccpp-scm/nceplibs
+
+# Create your own link from python -> python3 
+
+ln -s /usr/bin/python3 /usr/local/bin/python
+
+# Invoke cmake on the source code to build
+cd /comsoftware/ccpp-scm/scm/bin \
+&& cmake ../src \
+&& make -j4
