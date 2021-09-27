@@ -5,7 +5,6 @@ From: dtcenter/common-community-container:gnu9
 NOTE workaround by ngam <github.com/ngam> for Singularity, but please refer to maintainers below
 MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
-
 %post
 
 # Obtain CCPP SCM source code
