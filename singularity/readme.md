@@ -53,5 +53,6 @@ The `Singularity.def` in this directory only does the following steps, so try go
 - `cd /comsoftware/ccpp-scm/scm/bin/`
 - `./multi_run_scm.py -c twpice` 
 
-
-## Your next step is to figure out how to bind your container to your filesystem and make _scientific_ use of it.  
+## Next steps and notes:
+- Next step is to figure out how to bind your container to your filesystem and make _scientific_ use of it.  
+- The tutorial (and container) should utilize a better filesystem structure such that (1) there are no mistakes in linking files (the tutorial as is doesn't work) and (2) all inputs/outputs should be in a separate "dev" or "working folder" so there will be no need to invoke `--writable` permissions in Singularity. Clearly, a developer or software engineer can figure these things out with little friction, however, a scientist will find such an exercise tasking and uninviting. 
