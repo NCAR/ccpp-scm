@@ -1,6 +1,6 @@
 # Information to run container via Singularity on HPC
 
-## You could build the provided Docker container (defined in the `../docker/` directory yourself in Singularity, using ``--remote`` if you have no sudo access like below, and with `--sandbox` or `--writable` to allow interaction with the filesystem,
+## You could build the provided Docker container (defined in the `../docker/` directory) yourself in Singularity, using ``--remote`` if you have no sudo access like below, and with `--sandbox` or `--writable` to allow interaction with the filesystem,
 ```bash
 singularity build --remote --sandbox ccpp-scm-v5-tutorial docker://dtcenter/ccpp-scm:v5.0.0-tutorial
 ```
