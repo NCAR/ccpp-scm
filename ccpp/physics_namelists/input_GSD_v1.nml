@@ -1,12 +1,12 @@
 &gfs_physics_nml
-       fhzero         = 6.
+       fhzero         = 0.16667
        h2o_phys       = .true.
        ldiag3d        = .true.
+       qdiag3d        = .true.
        fhcyc          = 0.
        nst_anl        = .true.
        use_ufo        = .true.
        pre_rad        = .false.
-       ncld           = 5
        imp_physics    = 8
        ltaerosol      = .true.
        lradar         = .true.
@@ -33,6 +33,7 @@
        lheatstrg      = .false.
        do_mynnedmf    = .true.
        do_mynnsfclay  = .false.
+       effr_in        = .true.
        random_clds    = .false.
        trans_trac     = .true.
        cnvcld         = .true.
@@ -55,6 +56,7 @@
        do_skeb        = .false.
        lsm            = 3
        lsoil_lsm      = 9
+       kice           = 9
        iopt_dveg      = 2
        iopt_crs       = 1
        iopt_btr       = 1

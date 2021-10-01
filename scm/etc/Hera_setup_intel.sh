@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "Setting environment variables for SCM-CCPP on Hera with icc/ifort"
+echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
-#load the modules in order to compile the GMTB SCM
+#load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
 module purge
 module load intel/18.0.5.274
@@ -15,17 +15,19 @@ export CXX=icpc
 export FC=ifort
 
 echo "Setting NCEPLIBS environment variables"
-module use -a /scratch1/BMC/gmtb/software/modulefiles/intel-18.0.5.274/impi-2018.0.4
-module load NCEPlibs/1.0.0
+module use /scratch1/BMC/gmtb/software/NCEPLIBS-ufs-v2.0.0/intel-18.0.5.274/impi-2018.0.4/modules
+module load NCEPLIBS/2.0.0
 
 echo "Loading cmake"
-module use -a /scratch1/BMC/gmtb/software/modulefiles/generic
-module load cmake/3.16.3
+module load cmake/3.16.1
+export CMAKE_C_COMPILER=icc
+export CMAKE_CXX_COMPILER=icpc
+export CMAKE_Fortran_COMPILER=ifort
 export CMAKE_Platform=hera.intel
 
 echo "Loading the anaconda python distribution"
 module use -a /contrib/anaconda/modulefiles
-module load anaconda/anaconda2
+module load anaconda/anaconda3-4.4.0
 
 #install f90nml for the local user
 
@@ -51,4 +53,26 @@ if [ $? -ne 0 ]; then
 	pip install --index-url http://anaconda.rdhpcs.noaa.gov/simple --trusted-host anaconda.rdhpcs.noaa.gov shapely --user
 else
 	echo "shapely is installed"
+fi
+
+#check to see if configobj is installed locally
+echo "Checking if configobj python module is installed"
+python -c "import configobj"
+
+if [ $? -ne 0 ]; then
+	echo "Not found; installing configobj"
+	pip install --index-url http://anaconda.rdhpcs.noaa.gov/simple --trusted-host anaconda.rdhpcs.noaa.gov configobj --user
+else
+	echo "configobj is installed"
+fi
+
+#check to see if netCDF4 is installed locally
+echo "Checking if netCDF4 python module is installed"
+python -c "import netCDF4"
+
+if [ $? -ne 0 ]; then
+	echo "Not found; installing netCDF4"
+	pip install --index-url http://anaconda.rdhpcs.noaa.gov/simple --trusted-host anaconda.rdhpcs.noaa.gov netCDF4 --user
+else
+	echo "netCDF4 is installed"
 fi

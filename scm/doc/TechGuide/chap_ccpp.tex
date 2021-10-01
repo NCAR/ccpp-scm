@@ -1,19 +1,19 @@
 \chapter{CCPP Interface}
 \label{chapter: ccpp_interface}
 
-Chapter 6 of the CCPP v4 Technical Documentation (\url{https://ccpp-techdoc.readthedocs.io/en/v4.0}) provides a wealth of information on the overall process of connecting a host model to the CCPP framework for calling physics. This chapter describes the particular implementation within this SCM, including how to set up, initialize, call, and change a physics suite using the CCPP framework.
+Chapter 6 of the CCPP v5 Technical Documentation (\url{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}) provides a wealth of information on the overall process of connecting a host model to the CCPP framework for calling physics. This chapter describes the particular implementation within this SCM, including how to set up, initialize, call, and change a physics suite using the CCPP framework.
 
 \section{Setting up a suite}
 
-Setting up a physics suite for use in the GMTB SCM with the CCPP framework involves three steps: preparing data to be made available to physics through the CCPP, running the \execout{ccpp\_prebuild.py} script to reconcile SCM-provided variables with physics-required variables, and preparing a suite definition file.
+Setting up a physics suite for use in the CCPP SCM with the CCPP framework involves three steps: preparing data to be made available to physics through the CCPP, running the \execout{ccpp\_prebuild.py} script to reconcile SCM-provided variables with physics-required variables, and preparing a suite definition file.
 
 \subsection{Preparing data from the SCM}
 
-As described in sections 6.1 and 6.2 of the \href{https://ccpp-techdoc.readthedocs.io/en/v4.0}{CCPP Technical Documentation} a host model must allocate memory and provide metadata for variables that are passed into and out of the schemes within the physics suite. As of this release, in practice this means that a host model must do this for all variables needed by all physics schemes that are expected to be used with the host model. For this SCM, all variables needed by the physics schemes are allocated and documented in the file \execout{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90} and are contained within the \execout{physics} derived data type. This derived data type initializes its component variables in a \execout{create} type-bound procedure. As mentioned in section 6.2 of the \href{https://ccpp-techdoc.readthedocs.io/en/v4.0/}{CCPP Technical Documentation}, a table containing all required metadata was constructed for describing all variables in the \execout{physics} derived data type. The standard names of all variables in this table must match with a corresponding variable within one or more of the physics schemes. A list of all standard names used can be found in \execout{ccpp/framework/doc/DevelopersGuide/CCPP\_VARIABLES\_SCM.pdf}. The \execout{local\_name} for each variable corresponds to how a variable is referenced from the point in the code where \execout{ccpp\_field\_add()} statements are made. For this SCM, then, all \execout{local\_name}s begin with the \execout{physics} derived data type. Nested within most of the \execout{local\_name}s is also the name of a derived data type used within the UFS Atmosphere cap (re-used here for expediency). Since the \execout{ccpp\_field\_add()} statements are made within a loop over all columns within \execout{gmtb\_scm.F90}, most \execout{local\_name}s are also referenced with \execout{i} as an array index.
+As described in sections 6.1 and 6.2 of the \href{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}{CCPP Technical Documentation} a host model must allocate memory and provide metadata for variables that are passed into and out of the schemes within the physics suite. As of this release, in practice this means that a host model must do this for all variables needed by all physics schemes that are expected to be used with the host model. For this SCM, all variables needed by the physics schemes are allocated and documented in the file \execout{ccpp-scm/scm/src/scm\_type\_defs.f90} and are contained within the \execout{physics} derived data type. This derived data type initializes its component variables in a \execout{create} type-bound procedure. As mentioned in section 6.2 of the \href{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}{CCPP Technical Documentation}, a table containing all required metadata was constructed for describing all variables in the \execout{physics} derived data type. The standard names of all variables in this table must match with a corresponding variable within one or more of the physics schemes. A list of all standard names used can be found in \execout{ccpp/framework/doc/DevelopersGuide/CCPP\_VARIABLES\_SCM.pdf}. The \execout{local\_name} for each variable corresponds to how a variable is referenced from the point in the code where \execout{ccpp\_field\_add()} statements are made. For this SCM, then, all \execout{local\_name}s begin with the \execout{physics} derived data type. Nested within most of the \execout{local\_name}s is also the name of a derived data type used within the UFS Atmosphere cap (re-used here for expediency). 
 
 \subsection{Editing and running \exec{ccpp\_prebuild.py}}
 
-General instructions for configuring and running the \execout{ccpp\_prebuild.py} script can be found in chapter 8 of the \href{https://ccpp-techdoc.readthedocs.io/en/v4.0/}{CCPP Technical Documentation}. The script expects to be run with a host-model-dependent configuration file, passed as argument \execout{--config=path\_to\_config\_file}. Within this configuration file are variables that hold paths to the variable definition files (where metadata tables can be found on the host model side), the scheme files (a list of paths to all source files containing scheme entry points), the auto-generated physics schemes makefile snippet, the auto-generated physics scheme caps makefile snippet, the file where \execout{ccpp\_modules.inc} and \execout{ccpp\_fields.inc} are included, and the directory where the auto-generated physics caps should be written out to. Other variables less likely to be modified by a user are included in this configuration file as well, such as code sections to be included in the auto-generated scheme caps. As mentioned in section \ref{section: compiling}, this script must be run to reconcile data provided by the SCM with data required by the physics schemes before compilation by following step 1 in that section.
+General instructions for configuring and running the \execout{ccpp\_prebuild.py} script can be found in chapter 8 of the \href{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}{CCPP Technical Documentation}. The script expects to be run with a host-model-dependent configuration file, passed as argument \execout{--config=path\_to\_config\_file}. Within this configuration file are variables that hold paths to the variable definition files (where metadata tables can be found on the host model side), the scheme files (a list of paths to all source files containing scheme entry points), the auto-generated physics schemes makefile snippet, the auto-generated physics scheme caps makefile snippet, the file where \execout{ccpp\_modules.inc} and \execout{ccpp\_fields.inc} are included, and the directory where the auto-generated physics caps should be written out to. Other variables less likely to be modified by a user are included in this configuration file as well, such as code sections to be included in the auto-generated scheme caps. As mentioned in section \ref{section: compiling}, this script must be run to reconcile data provided by the SCM with data required by the physics schemes before compilation by following step 1 in that section.
 
 \subsection{Preparing a suite definition file}
 The suite definition file is a text file read by the model at compile time. It is used to specify the physical parameterization suite, and includes information about the number of parameterization groupings, which parameterizations that are part of each of the groups, the order in which the parameterizations should be run, and whether subcycling will be used to run any of the parameterizations with shorter timesteps.
@@ -22,16 +22,16 @@ In addition to the six or so major parameterization categories (such as radiatio
 
 The suite definition file also invokes an initialization step, which is run only once when the model is first initialized. Finally, the name of the suite is listed in the suite definition file. By default, this suite name is used to compose the name of the shared library (.so file) that contains the code for the physical parameterizations and that must be dynamically linked at run time.
 
-For this release, supported suite definition files used with this SCM are found in \execout{gmtb-scm/ccpp/suites}. For all of these suites, the physics schemes have been organized into 3 groupings following how the physics are called in the UFS Atmosphere model, although no code is executed in the SCM time loop between execution of the grouped schemes. Several ``interstitial'' schemes are included in the suite definition file to execute code that previously was part of a hard-coded physics driver. Some of these schemes may eventually be rolled into the schemes themselves, improving portability.
+For this release, supported suite definition files used with this SCM are found in \execout{ccpp-scm/ccpp/suites}. For all of these suites, the physics schemes have been organized into 3 groupings following how the physics are called in the UFS Atmosphere model, although no code is executed in the SCM time loop between execution of the grouped schemes. Several ``interstitial'' schemes are included in the suite definition file to execute code that previously was part of a hard-coded physics driver. Some of these schemes may eventually be rolled into the schemes themselves, improving portability.
 
 \section{Initializing/running a suite}
-The process for initializing and running a suite in this SCM is described in sections \ref{section: physics init} and \ref{section: time integration}, respectively. A more general description of the process for performing suite initialization and running can also be found in sections 6.4 and 6.5 of the \href{https://ccpp-techdoc.readthedocs.io/en/v4.0/}{CCPP Technical Documentation}.
+The process for initializing and running a suite in this SCM is described in sections \ref{section: physics init} and \ref{section: time integration}, respectively. A more general description of the process for performing suite initialization and running can also be found in sections 6.4 and 6.5 of the \href{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}{CCPP Technical Documentation}.
 
 \section{Changing a suite}
 
 \subsection{Replacing a scheme with another}
 
-When the CCPP has reached a state of maturity, the process for modifying the contents of an existing physics suite will be a very straightforward process, consisting of merely changing the name of the scheme in the suite definition file. As of this release, which consists of one scheme of each ``type'' in the pool of CCPP-compliant physics schemes with many short interstitial schemes, the process requires some consideration. Of course, prior to being able to swap a scheme within a suite, one must first add a CCPP-compliant scheme to the pool of available schemes in the CCPP physics repository. This process is described in chapter 2 of the \href{https://ccpp-techdoc.readthedocs.io/en/v4.0/}{CCPP Technical Documentation}.
+When the CCPP has reached a state of maturity, the process for modifying the contents of an existing physics suite will be a very straightforward process, consisting of merely changing the name of the scheme in the suite definition file. As of this release, which consists of one scheme of each ``type'' in the pool of CCPP-compliant physics schemes with many short interstitial schemes, the process requires some consideration. Of course, prior to being able to swap a scheme within a suite, one must first add a CCPP-compliant scheme to the pool of available schemes in the CCPP physics repository. This process is described in chapter 2 of the \href{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}{CCPP Technical Documentation}.
 
 Once a CCPP-compliant scheme has been added to the CCPP physics repository, the process for modifying an existing suite should take the following steps into account:
 
@@ -39,7 +39,7 @@ Once a CCPP-compliant scheme has been added to the CCPP physics repository, the 
 \item Examine and compare the arguments of the scheme being replaced and the replacement scheme.
 \begin{itemize}
 \item Are there any new variables that the replacement scheme needs from the host application? If so, these new variables must be added to the host model cap. For the SCM, this involves adding a component variable to the \execout{physics} derived data type and a corresponding entry in the metadata table. The new variables must also be allocated and initialized in the \execout{physics\%create} type-bound procedure.
-\item Do any of the new variables need to be calculated in an interstitial scheme? If so, one must be written and made CCPP-compliant itself. The \href{https://ccpp-techdoc.readthedocs.io/en/v4.0/}{CCPP Technical Documentation} will help in this endeavor, and the process outlined in its chapter 2 should be followed.
+\item Do any of the new variables need to be calculated in an interstitial scheme? If so, one must be written and made CCPP-compliant itself. The \href{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}{CCPP Technical Documentation} will help in this endeavor, and the process outlined in its chapter 2 should be followed.
 \item Do other schemes in the suite rely on output variables from the scheme being replaced that are no longer being supplied by the replacement scheme? Do these output variables need to be derived/calculated in an interstitial scheme? If so, see the previous bullet about adding one.
 \end{itemize}
 \item Examine existing interstitial schemes related to the scheme being replaced.
@@ -47,7 +47,7 @@ Once a CCPP-compliant scheme has been added to the CCPP physics repository, the 
 \item There may be scheme-specific interstitial schemes (needed for one specific scheme) and/or type-generic interstitial schemes (those that are called for all schemes of a given type, i.e. all PBL schemes). Does one need to write analogous scheme-specific interstitial schemes for the replacement?
 \item Are the type-generic interstitial schemes relevant or do they need to be modified?
 \end{itemize}
-\item Depending on the answers to the above considerations, edit the suite definition file as necessary. Typically, this would involve finding the \execout{<scheme>} elements associated with the scheme to be replaced and its associated interstitial \execout{<scheme>} elements and simply replacing the scheme names to reflect their replacements. See chapter 4 of the \href{https://ccpp-techdoc.readthedocs.io/en/v4.0/}{CCPP Technical Documentation} for further details.
+\item Depending on the answers to the above considerations, edit the suite definition file as necessary. Typically, this would involve finding the \execout{<scheme>} elements associated with the scheme to be replaced and its associated interstitial \execout{<scheme>} elements and simply replacing the scheme names to reflect their replacements. See chapter 4 of the \href{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}{CCPP Technical Documentation} for further details.
 \end{itemize}
 
 \subsection{Modifying ``groups'' of parameterizations}
@@ -65,7 +65,7 @@ The suite definition file allows subcycling of schemes, or calling a subset of s
 Suppose that one wants to add the variable \exec{foo} to a scheme that spans the depth of the column and that this variable is internal to physics, not part of the SCM state or subject to external forcing. Here is how one would do so:
 
 \begin{enumerate}
-\item First, add the new variable to the \execout{physics} derived data type definition in \exec{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90}. Within the definition, you'll notice that there are nested derived data types (which contain most of the variables needed by the physics and are used for mainly legacy reasons) and several other integers/reals/logicals. One could add the new variable to one of the nested GFS derived data types if the variable neatly fits inside one of them, but it is suggested to bypass the GFS derived data types and add a variable directly to the \execout{physics} type definition:
+\item First, add the new variable to the \execout{physics} derived data type definition in \exec{ccpp-scm/scm/src/scm\_type\_defs.f90}. Within the definition, you'll notice that there are nested derived data types (which contain most of the variables needed by the physics and are used for mainly legacy reasons) and several other integers/reals/logicals. One could add the new variable to one of the nested GFS derived data types if the variable neatly fits inside one of them, but it is suggested to bypass the GFS derived data types and add a variable directly to the \execout{physics} type definition:
 \begin{lstlisting}[language=Fortran]
 real(kind=kind_phys), allocatable :: foo(:,:)
 \end{lstlisting}
@@ -77,13 +77,13 @@ physics%foo = 0.0
 \end{lstlisting}
 Note that even though foo only needs to have the vertical dimension, it is also allocated with the \execout{n\_columns} dimension as the first dimension since this model is intended to be used with multiple independent columns. Also, the initialization in this creation subroutine can be overwritten by an initialization subroutine associated with a particular scheme.
 
-\item At this point, these changes are enough to allocate the new variable (\execout{physics\%create} is called in the main subroutine of \execout{gmtb\_scm.F90}), although this variable cannot be used in a physics scheme yet. For that, you'll need to add an entry in the long metadata table entry that precedes the \execout{physics} type definition in \execout{gmtb\_scm\_type\_defs.F90}. This entry looks like:
+\item At this point, these changes are enough to allocate the new variable (\execout{physics\%create} is called in the main subroutine of \execout{scm.F90}), although this variable cannot be used in a physics scheme yet. For that, you'll need to add an entry in the long metadata table entry that precedes the \execout{physics} type definition in \execout{scm\_type\_defs.F90}. This entry looks like:
 
 \begin{lstlisting}[language=Fortran]
 !! | physics%foo(i) | foo | description of foo | units of foo | rank of foo | data type of foo| kind of data type (if real) | intent (none) | whether foo is optional (T or F) |
 \end{lstlisting}
 
-The elements of the metadata entry are all on one line (following the same format as other entries) and include the variable's ``local name'' or how it is referenced from \execout{gmtb\_scm.F90/main}, its ``standard name'' or how it is referenced by both the host model and the physics code, its units, its rank (dimensionality), Fortran intrinsic data type, the real kind if necessary, its intent (must be none for this host-side table), its optionality (must be F for this host-side table). This metadata entry is parsed by the CCPP framework and makes this variable available for any CCPP-compliant physics schemes to use.
+The elements of the metadata entry are all on one line (following the same format as other entries) and include the variable's ``local name'' or how it is referenced from \execout{scm.F90/main}, its ``standard name'' or how it is referenced by both the host model and the physics code, its units, its rank (dimensionality), Fortran intrinsic data type, the real kind if necessary, its intent (must be none for this host-side table), its optionality (must be F for this host-side table). This metadata entry is parsed by the CCPP framework and makes this variable available for any CCPP-compliant physics schemes to use.
 
 \item On the physics scheme side, there will also be a metadata table entry for \exec{foo} preceding the subroutine in which it is used. For example, say that scheme \exec{bar} uses \exec{foo}. If \exec{foo} is further initialized in \exec{bar}'s \execout{\_init} subroutine, a metadata entry for \exec{foo} must precede the \execout{bar\_init} subroutine's code. If it is used in \exec{bar}'s run subroutine, a metadata entry for foo must also appear in the preceding metadata table for \execout{bar\_run}. The metadata entry on the physics scheme side has the same format as the one on the host model side described above. The standard name, units, rank, type, and kind must match the entry from the host model table. Others attributes (local name, description, intent, optional) can differ. The local name corresponds to the name of the variable used within the scheme subroutine, and intent and optional attributes should reflect how the variable is actually used within the scheme.
 
@@ -104,7 +104,7 @@ Technically, the host model can ``see'' foo between calls to physics (since the 
 The following instructions are valid for adding a passive, prognostic tracer to the SCM. Throughout these instructions, the new tracer is called `smoke'.
 
 \begin{enumerate}
-\item Add a new tracer to the SCM state. In \execout{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90} do the following:
+\item Add a new tracer to the SCM state. In \execout{ccpp-scm/scm/src/scm\_type\_defs.f90} do the following:
 	\begin{itemize}
 	\item Add an index for the new tracer in the \execout{scm\_state\_type} definition.
 	\item Do the following in the \execout{scm\_state\_create} subroutine:
@@ -117,8 +117,8 @@ The following instructions are valid for adding a passive, prognostic tracer to 
 	\end{itemize}
 \item Initialize the new tracer to something other than zero (from an input file).
 	\begin{itemize}
-	\item Edit an existing input file (in \execout{gmtb-scm/scm/data/processed\_case\_input}): add a field in the `initial' group of the netCDF file(s) (with vertical dimension in pressure coordinates) with an appropriate name in one (or all) of the input netCDF files and populate with whatever values are necessary to initialize the new tracer.
-	\item Create a new input variable to read in the initialized values. In \execout{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90}:
+	\item Edit an existing input file (in \execout{ccpp-scm/scm/data/processed\_case\_input}): add a field in the `initial' group of the NetCDF file(s) (with vertical dimension in pressure coordinates) with an appropriate name in one (or all) of the input NetCDF files and populate with whatever values are necessary to initialize the new tracer.
+	\item Create a new input variable to read in the initialized values. In \execout{ccpp-scm/scm/src/scm\_type\_defs.f90}:
 		\begin{itemize}
 		\item Add a new input variable in \execout{scm\_input\_type}
 		\begin{lstlisting}[language = Fortran]
@@ -126,7 +126,7 @@ The following instructions are valid for adding a passive, prognostic tracer to 
 		\end{lstlisting}
 		\item In \execout{scm\_input\_create}, allocate and initialize the new variable to 0.
 		\end{itemize}
-	\item Read in the input values to initialize the new tracer. In \execout{gmtb-scm/scm/src/gmtb\_scm\_input.f90/get\_case\_init}:
+	\item Read in the input values to initialize the new tracer. In \execout{ccpp-scm/scm/src/scm\_input.f90/get\_case\_init}:
 		\begin{itemize}
 		\item Add a variable under the initial profile section:
 		\begin{lstlisting}[language = Fortran]
@@ -140,7 +140,7 @@ The following instructions are valid for adding a passive, prognostic tracer to 
 		\end{lstlisting}
 		\item set \execout{scm\_input\%input\_smoke} = \exec{input\_smoke}
 		\end{itemize}
-	\item Interpolate the input values to the model grid. Edit \execout{gmtb\_scm\_setup.f90/set\_state}:
+	\item Interpolate the input values to the model grid. Edit \execout{scm\_setup.f90/set\_state}:
 		\begin{itemize}
 		\item Add a loop over the columns to call \execout{interpolate\_to\_grid\_centers} that puts \exec{input\_smoke} on grid levels in \execout{scm\_state\%state\_tracer}
 		\begin{lstlisting}[language = Fortran]
@@ -158,11 +158,11 @@ The following instructions are valid for adding a passive, prognostic tracer to 
 	\item Create, allocate, and read in the new variable for forcing (similar to above).
 	\item Add to \execout{interpolate\_forcing} (similar to above, but interpolates the forcing to the model grid and model time).
 	\item Add statements to time loop to handle the first time step and different time-advancing schemes.
-	\item Edit \execout{apply\_forcing\_forward\_Euler} and \execout{apply\_forcing\_leapfrog} in \execout{gmtb-scm/scm/src/gmtb\_scm\_forcing.f90}.
+	\item Edit \execout{apply\_forcing\_forward\_Euler} and \execout{apply\_forcing\_leapfrog} in \execout{ccpp-scm/scm/src/scm\_forcing.f90}.
 	\end{itemize}
 \item In order to connect the new tracer to the CCPP physics, perform steps 1-4 in section \ref{adding_physics_only_variable} for adding a physics variable. In addition, do the following in order to associate the \execout{scm\_state} variable with variables used in the physics through a pointer:
 	\begin{itemize}
-	\item Point the new physics variable to \execout{scm\_state\%state\_tracer(:,:,:,scm\_state\%smoke\_index)} in \execout{gmtb-scm/scm/src/gmtb\_scm\_type\_defs.f90/physics\_associate}.
+	\item Point the new physics variable to \execout{scm\_state\%state\_tracer(:,:,:,scm\_state\%smoke\_index)} in \execout{ccpp-scm/scm/src/scm\_type\_defs.f90/physics\_associate}.
 	\end{itemize}
-\item There may be additional steps depending on how the tracer is used in the physics and how the physics scheme is integrated with the current GFS physics suite. For example, the GFS physics has two tracer arrays, one for holding tracer values before the physics timestep (\execout{gmtb-scm/scm/src/GFS\_typedefs.F90/GFS\_statein\_type/qgrs}) and one for holding tracer values that are updated during/after the physics (\execout{gmtb-scm/scm/src/GFS\_typedefs.F90/GFS\_stateout\_type/gq0}). If the tracer needs to be part of these arrays, there are a few additional steps to take.
+\item There may be additional steps depending on how the tracer is used in the physics and how the physics scheme is integrated with the current GFS physics suite. For example, the GFS physics has two tracer arrays, one for holding tracer values before the physics timestep (\execout{ccpp-scm/scm/src/GFS\_typedefs.F90/GFS\_statein\_type/qgrs}) and one for holding tracer values that are updated during/after the physics (\execout{ccpp-scm/scm/src/GFS\_typedefs.F90/GFS\_stateout\_type/gq0}). If the tracer needs to be part of these arrays, there are a few additional steps to take. If you need help, please post on the support forum at: \url{https://dtcenter.org/forum/ccpp-user-support/ccpp-single-column-model}.
 \end{enumerate}

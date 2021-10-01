@@ -11,7 +11,7 @@ variables:
 		levels:description = "pressure levels" ;
 
 // global attributes:
-		:description = "GMTB SCM forcing file for the ARM SGP Summer of 1997 case" ;
+		:description = "CCPP SCM forcing file for the ARM SGP Summer of 1997 case" ;
 
 group: scalars {
   } // group scalars

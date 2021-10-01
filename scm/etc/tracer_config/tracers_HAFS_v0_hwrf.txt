@@ -1,0 +1,7 @@
+"sphum","water_vapor_specific_humidity","kg kg-1"
+"liq_wat","cloud_condensed_water_mixing_ratio","kg kg-1"
+"ice_wat","ice_water_mixing_ratio","kg kg-1"
+"rainwat","rain_water_mixing_ratio","kg kg-1"
+"q_rimef","mass_weighted_rime_factor","kg kg-1"
+"o3mr","ozone_mixing_ratio","kg kg-1"
+"cld_amt","cloud_fraction","frac"

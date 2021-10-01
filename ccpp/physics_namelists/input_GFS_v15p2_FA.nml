@@ -1,11 +1,11 @@
 &gfs_physics_nml
-       fhzero         = 6.
+       fhzero         = 0.16667
        h2o_phys       = .true.
        ldiag3d        = .true.
+       qdiag3d        = .true.
        fhcyc          = 24.
        use_ufo        = .true.
        pre_rad        = .false.
-       ncld           = 5
        imp_physics    = 15
        spec_adv       = .true.
        RHGRD          = 0.98

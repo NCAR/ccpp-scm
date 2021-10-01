@@ -1,4 +1,5 @@
-FROM dtcenter/common-community-container:latest
+FROM dtcenter/common-community-container:gnu9
+
 MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 #
@@ -11,28 +12,37 @@ MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b dtc/develop https://github.com/NCAR/gmtb-scm
+  && git clone --recursive -b v5.0.0 https://github.com/NCAR/ccpp-scm
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
-RUN cd /comsoftware/gmtb-scm/scm/data/physics_input_data \
-  && curl -L -O https://dtcenter.org/GMTB/freezeH2O.dat \
-  && curl -L -O https://dtcenter.org/GMTB/qr_acr_qg.dat \
-  && curl -L -O https://dtcenter.org/GMTB/qr_acr_qs.dat
+RUN cd /comsoftware/ccpp-scm/ \
+  && . contrib/get_thompson_tables.sh
+  
+# Obtain the IN-CCN data for use with Morrison-Gettelman microphysics
+RUN cd /comsoftware/ccpp-scm/ \
+  && . contrib/get_mg_inccn_data.sh
 
 # Run the machine setup script to set environment variables
-RUN cd /comsoftware/gmtb-scm/scm/ \
+RUN cd /comsoftware/ccpp-scm/scm/ \
   && . etc/CENTOS_docker_setup.sh
 
-ENV BACIO_LIB4 /comsoftware/gmtb-scm/nceplibs/lib/libbacio_v2.2.0_4.a
-ENV SP_LIBd /comsoftware/gmtb-scm/nceplibs/lib/libsp_v2.1.0_d.a
-ENV W3NCO_LIBd /comsoftware/gmtb-scm/nceplibs/lib/libw3nco_v2.1.0_d.a
+ENV bacio_ROOT /comsoftware/ccpp-scm/nceplibs
+ENV sp_ROOT /comsoftware/ccpp-scm/nceplibs
+ENV w3nco_ROOT /comsoftware/ccpp-scm/nceplibs
+
+# Create your own link from python -> python3 
+# This works without setting the system PATH env var
+# since /usr/local/bin is before /usr/bin in the search path.
+USER root
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
+USER comuser
 
 # Invoke cmake on the source code to build
-RUN cd /comsoftware/gmtb-scm/scm \
+RUN cd /comsoftware/ccpp-scm/scm \
   && mkdir bin \
   && cd bin \
   && cmake ../src \
-  && make
+  && make -j4
 
 # The analysis scripts have options for using LaTeX when making figure labels.
 # If you would like to install LaTeK, uncomment the section below. 
@@ -43,4 +53,4 @@ RUN cd /comsoftware/gmtb-scm/scm \
 #USER comuser
 
 # Set working directory
-WORKDIR /comsoftware/gmtb-scm/scm/bin
+WORKDIR /comsoftware/ccpp-scm/scm/bin
