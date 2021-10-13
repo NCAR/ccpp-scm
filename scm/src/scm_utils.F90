@@ -743,39 +743,99 @@ end module NetCDF_put
 
 module data_qc
   use scm_kinds, only : sp, dp, qp
-  use NetCDF_read, only: missing_value
+  use NetCDF_read, only: missing_value, missing_value_int
   
   implicit none
   
   interface check_missing
-    module procedure check_missing_0d
-    module procedure check_missing_1d
+    module procedure check_missing_int_0d
+    module procedure check_missing_int_1d
+    module procedure check_missing_real_dp_0d
+    module procedure check_missing_real_dp_1d
   end interface
   
   interface conditionally_set_var
-    module procedure conditionally_set_var_0d
-    module procedure conditionally_set_var_1d
+    module procedure conditionally_set_int_var_0d
+    module procedure conditionally_set_int_var_1d
+    module procedure conditionally_set_real_dp_var_0d
+    module procedure conditionally_set_real_dp_var_1d
   end interface
   
   contains
+  
+  subroutine check_missing_int_0d(var, missing)
+    integer, intent(in) :: var
+    logical, intent(out) :: missing
     
-  subroutine check_missing_0d(var, missing)
+    missing = .false.
+    if (var == missing_value_int) missing = .true.
+  end subroutine check_missing_int_0d
+  
+  subroutine check_missing_int_1d(var, missing)
+    integer, dimension(:), intent(in) :: var
+    logical, intent(out) :: missing
+    
+    missing = .false.
+    if ( ANY(var == missing_value_int)) missing = .true.
+  end subroutine check_missing_int_1d
+  
+  subroutine check_missing_real_dp_0d(var, missing)
     real(kind=dp), intent(in) :: var
     logical, intent(out) :: missing
     
     missing = .false.
     if (var == missing_value) missing = .true.
-  end subroutine check_missing_0d
+  end subroutine check_missing_real_dp_0d
   
-  subroutine check_missing_1d(var, missing)
+  subroutine check_missing_real_dp_1d(var, missing)
     real(kind=dp), dimension(:), intent(in) :: var
     logical, intent(out) :: missing
     
     missing = .false.
     if ( ANY(var == missing_value)) missing = .true.
-  end subroutine check_missing_1d
+  end subroutine check_missing_real_dp_1d
   
-  subroutine conditionally_set_var_0d(input, set_var, input_name, req, missing)
+  subroutine conditionally_set_int_var_0d(input, set_var, input_name, req, missing)
+    integer, intent(in) :: input
+    integer, intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+    
+    call check_missing(input, missing)
+    
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        STOP
+      end if
+    end if
+    
+  end subroutine conditionally_set_int_var_0d
+  
+  subroutine conditionally_set_int_var_1d(input, set_var, input_name, req, missing)
+    integer, dimension(:), intent(in) :: input
+    integer, dimension(:), intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+    
+    call check_missing(input, missing)
+    
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        STOP
+      end if
+    end if
+    
+  end subroutine conditionally_set_int_var_1d
+  
+  subroutine conditionally_set_real_dp_var_0d(input, set_var, input_name, req, missing)
     real(kind=dp), intent(in) :: input
     real(kind=dp), intent(inout) :: set_var
     character (*), intent(in) :: input_name
@@ -793,9 +853,9 @@ module data_qc
       end if
     end if
     
-  end subroutine conditionally_set_var_0d
+  end subroutine conditionally_set_real_dp_var_0d
   
-  subroutine conditionally_set_var_1d(input, set_var, input_name, req, missing)
+  subroutine conditionally_set_real_dp_var_1d(input, set_var, input_name, req, missing)
     real(kind=dp), dimension(:), intent(in) :: input
     real(kind=dp), dimension(:), intent(inout) :: set_var
     character (*), intent(in) :: input_name
@@ -813,5 +873,5 @@ module data_qc
       end if
     end if
     
-  end subroutine conditionally_set_var_1d
+  end subroutine conditionally_set_real_dp_var_1d
 end module data_qc
