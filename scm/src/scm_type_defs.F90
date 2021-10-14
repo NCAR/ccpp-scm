@@ -173,7 +173,6 @@ module scm_type_defs
     integer                           :: input_nsnow !< number of snow layers in the input file
     integer                           :: input_nice !< number of sea ice layers in the input file
     integer                           :: input_ntimes !< number of times in the input file where forcing is available
-    
     real(kind=dp)                     :: input_lat !< latitude of column center
     real(kind=dp)                     :: input_lon !< longitude of column center
     real(kind=dp)                     :: input_area    !< surface area [m^2]
@@ -196,8 +195,8 @@ module scm_type_defs
     real(kind=dp)                     :: input_f10m      !< ratio of sigma level 1 wind and 10m wind
     real(kind=dp)                     :: input_t2m     !< 2-meter absolute temperature (K)
     real(kind=dp)                     :: input_q2m     !< 2-meter specific humidity (kg kg-1)
-    real(kind=dp)                     :: input_vegtyp !< vegetation type classification
-    real(kind=dp)                     :: input_soiltyp !<
+    integer                           :: input_vegtyp !< vegetation type classification
+    integer                           :: input_soiltyp !<
     real(kind=dp)                     :: input_uustar  !< surface friction velocity (m s-1)
     real(kind=dp)                     :: input_ffmm    !< Monin-Obukhov similarity function for momentum
     real(kind=dp)                     :: input_ffhh    !< Monin-Obukhov similarity function for heat
@@ -209,7 +208,7 @@ module scm_type_defs
     real(kind=dp)                     :: input_snwdph  !< water equivalent snow depth (mm)
     real(kind=dp)                     :: input_shdmin   !< minimun vegetation fraction
     real(kind=dp)                     :: input_shdmax   !< maximun vegetation fraction
-    real(kind=dp)                     :: input_slopetype !< surface slope classification
+    integer                           :: input_slopetype !< surface slope classification
     real(kind=dp)                     :: input_snoalb  !< maximum snow albedo (frac)
     real(kind=dp)                     :: input_sncovr  !< snow area fraction (frac)
     real(kind=dp)                     :: input_snodl   !< snowd on land portion of cell
@@ -681,8 +680,8 @@ module scm_type_defs
     scm_input%input_f10m          = real_zero
     scm_input%input_t2m           = real_zero
     scm_input%input_q2m           = real_zero
-    scm_input%input_vegtyp        = real_zero
-    scm_input%input_soiltyp       = real_zero
+    scm_input%input_vegtyp        = int_zero
+    scm_input%input_soiltyp       = int_zero
     scm_input%input_uustar        = real_zero
     scm_input%input_ffmm          = real_zero
     scm_input%input_ffhh          = real_zero
@@ -694,7 +693,7 @@ module scm_type_defs
     scm_input%input_snwdph        = real_zero
     scm_input%input_shdmin        = real_zero
     scm_input%input_shdmax        = real_zero
-    scm_input%input_slopetype     = real_zero
+    scm_input%input_slopetype     = int_zero
     scm_input%input_snoalb        = real_zero
     scm_input%input_sncovr        = real_zero
     scm_input%input_snodl         = real_zero
