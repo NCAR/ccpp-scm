@@ -1,5 +1,6 @@
 default_physics_namelists = {"SCM_csawmg":"input_csawmg.nml",
                             "SCM_GSD_v1":"input_GSD_v1.nml",
+                            "SCM_GSD_v1nssl":"input_GSD_v1nssl_nohail.nml",
                             "SCM_GFS_v15p2":"input_GFS_v15p2.nml",
                             "SCM_GFS_v16":"input_GFS_v16.nml",
                             "SCM_GFS_v15p2_no_nsst":"input_GFS_v15p2.nml",
@@ -14,5 +15,6 @@ default_physics_namelists = {"SCM_csawmg":"input_csawmg.nml",
                             "SCM_GFS_v15p2_ACM":"input_GFS_v15p2_ACM.nml",
                             "HAFS_v0_hwrf":"input_HAFS_v0_hwrf.nml",
                             "HAFS_v0_hwrf_thompson":"input_HAFS_v0_hwrf_thompson.nml",
-                            "SCM_RRFS_v1alpha":"input_RRFS_v1alpha.nml"
+                            "SCM_RRFS_v1alpha":"input_RRFS_v1alpha.nml",
+                            "SCM_RRFS_v1nssl":"input_RRFS_v1nssl_nohailnoccn.nml"
                             }
