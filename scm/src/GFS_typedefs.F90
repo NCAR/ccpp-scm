@@ -7138,7 +7138,11 @@ module GFS_typedefs
     integer                            :: iGas
     !
     allocate (Interstitial%otspt      (Model%ntracp1,2))
+<<<<<<< HEAD
     allocate (Interstitial%otsptflag  (Model%ntrac))
+=======
+    allocate (Interstitial%otsptflag  (Model%ntracp1))
+>>>>>>> f6b6d2f (Added support for NSSL microphysics scheme (CCPP) and its variables. Set default namelists and tracer config files.)
     ! Set up numbers of tracers for PBL, convection, etc: sets
     ! Interstitial%{nvdiff,mg3_as_mg2,nn,tracers_total,ntqvx,ntcwx,ntiwx,ntk,ntkev,ntozx,otspt,nsamftrac,ncstrac,nscav}
     call interstitial_setup_tracers(Interstitial, Model)
@@ -7761,6 +7765,7 @@ module GFS_typedefs
       Interstitial%otspt(1:3,:) = .false.    ! this is for sp.hum, ice and liquid water
       Interstitial%otsptflag(:) = .true.
       tracers = 2
+<<<<<<< HEAD
       do n=2,Model%ntrac ! should this also exclude ntlnc and ntinc?
         ltest = ( n /= Model%ntcw  .and. n /= Model%ntiw  .and. n /= Model%ntclamt .and. &
              n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
@@ -7770,6 +7775,14 @@ module GFS_typedefs
         Interstitial%otsptflag(n) = ltest
         
         if ( ltest ) then
+=======
+      do n=2,Model%ntrac ! why are ntcw and ntiw excluded but not ntlnc and ntinc
+        if ( n /= Model%ntcw  .and. n /= Model%ntiw  .and. n /= Model%ntclamt .and. &
+             n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
+             n /= Model%ntsnc .and. n /= Model%ntgl  .and. n /= Model%ntgnc   .and. &
+             n /= Model%nthl  .and. n /= Model%nthnc .and. n /= Model%ntgv    .and. &
+             n /= Model%nthv  .and. n /= Model%ntccn .and. n /= Model%ntccna ) then
+>>>>>>> f6b6d2f (Added support for NSSL microphysics scheme (CCPP) and its variables. Set default namelists and tracer config files.)
           tracers = tracers + 1
           if (Model%ntke  == n ) then
             Interstitial%otspt(tracers+1,1) = .false.
@@ -7781,6 +7794,8 @@ module GFS_typedefs
 !               ntrw  == n .or. ntsw  == n .or. ntgl  == n)                    &
                   Interstitial%otspt(tracers+1,1) = .false.
           if (Interstitial%trans_aero .and. Model%ntchs == n) Interstitial%itc = tracers
+        else
+          Interstitial%otsptflag(n) = .false.
         endif
       enddo
       Interstitial%tracers_total = tracers - 2
