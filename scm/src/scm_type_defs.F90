@@ -174,9 +174,9 @@ module scm_type_defs
     integer                           :: input_nice !< number of sea ice layers in the input file
     integer                           :: input_ntimes !< number of times in the input file where forcing is available
     integer                           :: input_vegsrc !< vegetation source
-    real(kind=dp)                     :: input_vegtyp !< vegetation type classification
-    real(kind=dp)                     :: input_soiltyp !<
-    real(kind=dp)                     :: input_slopetype !< surface slope classification
+    integer                           :: input_vegtyp !< vegetation type classification
+    integer                           :: input_soiltyp !<
+    integer                           :: input_slopetype !< surface slope classification
     real(kind=dp)                     :: input_lat !< latitude of column center
     real(kind=dp)                     :: input_lon !< longitude of column center
     real(kind=dp)                     :: input_tsfco !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
@@ -710,9 +710,9 @@ module scm_type_defs
     
     scm_input%input_tsfco = real_zero
     scm_input%input_vegsrc = int_zero
-    scm_input%input_vegtyp = real_zero
-    scm_input%input_soiltyp = real_zero
-    scm_input%input_slopetype = real_zero
+    scm_input%input_vegtyp = int_zero
+    scm_input%input_soiltyp = int_zero
+    scm_input%input_slopetype = int_zero
     scm_input%input_vegfrac = real_zero
     scm_input%input_shdmin = real_zero
     scm_input%input_shdmax = real_zero

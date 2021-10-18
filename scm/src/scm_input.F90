@@ -749,9 +749,9 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_flfr       = input_flfr
   
   scm_input%input_vegsrc   = input_vegsrc
-  scm_input%input_vegtyp   = REAL(input_vegtyp, kind=dp)
-  scm_input%input_soiltyp  = REAL(input_soiltyp, kind=dp)
-  scm_input%input_slopetype = REAL(input_slopetype, kind=dp)
+  scm_input%input_vegtyp   = input_vegtyp
+  scm_input%input_soiltyp  = input_soiltyp
+  scm_input%input_slopetype = input_slopetype
   scm_input%input_tsfco    = input_tsfco
   scm_input%input_vegfrac  = input_vegfrac
   scm_input%input_shdmin   = input_shdmin
