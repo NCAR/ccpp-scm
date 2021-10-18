@@ -442,6 +442,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: fluxlwUP_allsky(:,:)   => null()  !< GP          up   LW total sky flux profile ( w/m**2/K )
     real (kind=kind_phys), pointer :: fluxlwDOWN_allsky(:,:) => null()  !< GP          down LW total sky flux profile ( w/m**2/K )
     real (kind=kind_phys), pointer :: htrlw(:,:)             => null()  !< GP updated LW heating rate
+    real (kind=kind_phys), pointer :: tsfc_radtime(:)        => null()  !< GP surface temperature on radiation timestep
 
 !--- incoming quantities
     real (kind=kind_phys), pointer :: dusfcin_cpl(:)          => null()   !< aoi_fld%dusfcin(item,lan)
@@ -736,6 +737,7 @@ module GFS_typedefs
     real(kind_phys)      :: lfnc_p0                 !<          Logistic function transition level (Pa)
     logical              :: doGP_lwscat             !< If true, include scattering in longwave cloud-optics, only compatible w/ GP cloud-optics
     real(kind_phys)      :: minGPpres               !< Minimum pressure allowed in RRTMGP.
+    real(kind_phys)      :: maxGPpres               !< Maximum pressure allowed in RRTMGP.
     real(kind_phys)      :: minGPtemp               !< Minimum temperature allowed in RRTMGP.
     real(kind_phys)      :: maxGPtemp               !< Maximum temperature allowed in RRTMGP.
 
@@ -1270,7 +1272,6 @@ module GFS_typedefs
     logical              :: hydrostatic     !< flag whether this is a hydrostatic or non-hydrostatic run
     integer              :: jdat(1:8)       !< current forecast date and time
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
-    integer              :: imn             !< initial forecast month
     real(kind=kind_phys) :: julian          !< julian day using midnight of January 1 of forecast year as initial epoch
     integer              :: yearlen         !< length of the current forecast year in days
 !
@@ -1821,11 +1822,13 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: cld1d(:)           => null()  !<
     real (kind=kind_phys), pointer      :: clouds(:,:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: clw(:,:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: clw_surf(:)        => null()  !<
     real (kind=kind_phys), pointer      :: clx(:,:)           => null()  !<
     real (kind=kind_phys), pointer      :: cmc(:)             => null()  !<
     real (kind=kind_phys), pointer      :: cmm_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: cmm_land(:)        => null()  !<
     real (kind=kind_phys), pointer      :: cmm_water(:)       => null()  !<
+    real (kind=kind_phys), pointer      :: cndm_surf(:)       => null()  !<
     real (kind=kind_phys), pointer      :: cnv_dqldt(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: cnv_fice(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: cnv_mfd(:,:)       => null()  !<
@@ -2049,6 +2052,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: t2mmp(:)           => null()  !<
     real (kind=kind_phys), pointer      :: theta(:)           => null()  !<
     real (kind=kind_phys), pointer      :: th1(:)             => null()  !<
+    real (kind=kind_phys), pointer      :: tice(:)            => null()  !<
     real (kind=kind_phys), pointer      :: tlvl(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tlyr(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tprcp_ice(:)       => null()  !<
@@ -2063,9 +2067,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tseal(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsfa(:)            => null()  !<
     real (kind=kind_phys), pointer      :: tsfc_ice(:)        => null()  !<
+    real (kind=kind_phys), pointer      :: tsfc_land(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tsfc_land_save(:)  => null()  !<
     real (kind=kind_phys), pointer      :: tsfc_water(:)      => null()  !<
     real (kind=kind_phys), pointer      :: tsfg(:)            => null()  !<
+    real (kind=kind_phys), pointer      :: tsnow(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_ice(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_water(:)     => null()  !<
@@ -2374,6 +2380,7 @@ module GFS_typedefs
     Sfcprop%emis_lnd  = clear_val
 
 !--- In (radiation only)
+    allocate (Sfcprop%sncovr (IM))
     allocate (Sfcprop%snoalb (IM))
     allocate (Sfcprop%alvsf  (IM))
     allocate (Sfcprop%alnsf  (IM))
@@ -2382,6 +2389,7 @@ module GFS_typedefs
     allocate (Sfcprop%facsf  (IM))
     allocate (Sfcprop%facwf  (IM))
 
+    Sfcprop%sncovr = clear_val
     Sfcprop%snoalb = clear_val
     Sfcprop%alvsf  = clear_val
     Sfcprop%alnsf  = clear_val
@@ -2392,45 +2400,41 @@ module GFS_typedefs
 
 !--- physics surface props
 !--- In
-    allocate (Sfcprop%slope   (IM))
+    allocate (Sfcprop%slope      (IM))
     allocate (Sfcprop%slope_save (IM))
-    allocate (Sfcprop%shdmin  (IM))
-    allocate (Sfcprop%shdmax  (IM))
-    allocate (Sfcprop%snoalb  (IM))
-    allocate (Sfcprop%tg3     (IM))
-    allocate (Sfcprop%vfrac   (IM))
-    allocate (Sfcprop%vtype   (IM))
+    allocate (Sfcprop%shdmin     (IM))
+    allocate (Sfcprop%shdmax     (IM))
+    allocate (Sfcprop%snoalb     (IM))
+    allocate (Sfcprop%tg3        (IM))
+    allocate (Sfcprop%vfrac      (IM))
+    allocate (Sfcprop%vtype      (IM))
     allocate (Sfcprop%vtype_save (IM))
-    allocate (Sfcprop%stype   (IM))
+    allocate (Sfcprop%stype      (IM))
     allocate (Sfcprop%stype_save (IM))
-    allocate (Sfcprop%uustar  (IM))
-    allocate (Sfcprop%oro     (IM))
-    allocate (Sfcprop%oro_uf  (IM))
-    allocate (Sfcprop%evap    (IM))
-    allocate (Sfcprop%hflx    (IM))
-    allocate (Sfcprop%qss     (IM))
-    allocate (Sfcprop%spec_sh_flux  (IM))
-    allocate (Sfcprop%spec_lh_flux  (IM))
+    allocate (Sfcprop%uustar     (IM))
+    allocate (Sfcprop%oro        (IM))
+    allocate (Sfcprop%oro_uf     (IM))
+    allocate (Sfcprop%evap       (IM))
+    allocate (Sfcprop%hflx       (IM))
+    allocate (Sfcprop%qss        (IM))
 
     Sfcprop%slope      = zero
     Sfcprop%slope_save = zero
-    Sfcprop%shdmin  = clear_val
-    Sfcprop%shdmax  = clear_val
-    Sfcprop%snoalb  = clear_val
-    Sfcprop%tg3     = clear_val
-    Sfcprop%vfrac   = clear_val
+    Sfcprop%shdmin     = clear_val
+    Sfcprop%shdmax     = clear_val
+    Sfcprop%snoalb     = clear_val
+    Sfcprop%tg3        = clear_val
+    Sfcprop%vfrac      = clear_val
     Sfcprop%vtype      = zero
     Sfcprop%vtype_save = zero
     Sfcprop%stype      = zero
     Sfcprop%stype_save = zero
-    Sfcprop%uustar  = clear_val
-    Sfcprop%oro     = clear_val
-    Sfcprop%oro_uf  = clear_val
-    Sfcprop%evap    = clear_val
-    Sfcprop%hflx    = clear_val
-    Sfcprop%qss     = clear_val
-    Sfcprop%spec_sh_flux = clear_val
-    Sfcprop%spec_lh_flux = clear_val
+    Sfcprop%uustar     = clear_val
+    Sfcprop%oro        = clear_val
+    Sfcprop%oro_uf     = clear_val
+    Sfcprop%evap       = clear_val
+    Sfcprop%hflx       = clear_val
+    Sfcprop%qss        = clear_val
 
 !--- In/Out
     allocate (Sfcprop%hice   (IM))
@@ -2780,10 +2784,12 @@ module GFS_typedefs
        allocate (Coupling%fluxlwUP_allsky   (IM,Model%levs+1))
        allocate (Coupling%fluxlwDOWN_allsky (IM,Model%levs+1))
        allocate (Coupling%htrlw             (IM,Model%levs))
+       allocate (Coupling%tsfc_radtime      (IM))
        Coupling%fluxlwUP_jac      = clear_val
        Coupling%fluxlwUP_allsky   = clear_val
        Coupling%fluxlwDOWN_allsky = clear_val
        Coupling%htrlw             = clear_val
+       Coupling%tsfc_radtime      = clear_val
     endif
 
     if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global) then
@@ -3981,6 +3987,10 @@ module GFS_typedefs
        if (Model%doGP_cldoptics_PADE .and. Model%doGP_cldoptics_LUT) then
           write(0,*) "Logic error, Both RRTMGP cloud-optics options cannot be selected. "
           stop
+       end if
+       if (.not. Model%doGP_cldoptics_PADE .and. .not. Model%doGP_cldoptics_LUT .and. .not. Model%doG_cldoptics) then
+          write(0,*) "Logic error, No option for cloud-optics scheme provided. Using RRTMG cloud-optics"
+          Model%doG_cldoptics = .true.
        end if
        if (Model%rrtmgp_nGptsSW  .lt. 0 .or. Model%rrtmgp_nGptsLW  .lt. 0 .or. &
            Model%rrtmgp_nBandsSW .lt. 0 .or. Model%rrtmgp_nBandsLW .lt. 0) then
@@ -7106,6 +7116,7 @@ module GFS_typedefs
     allocate (Interstitial%stress_land     (IM))
     allocate (Interstitial%stress_water    (IM))
     allocate (Interstitial%theta           (IM))
+    allocate (Interstitial%tice            (IM))
     allocate (Interstitial%tlvl            (IM,Model%levr+1+LTP))
     allocate (Interstitial%tlyr            (IM,Model%levr+LTP))
     allocate (Interstitial%tprcp_ice       (IM))
@@ -7115,6 +7126,7 @@ module GFS_typedefs
     allocate (Interstitial%tseal           (IM))
     allocate (Interstitial%tsfa            (IM))
     allocate (Interstitial%tsfc_ice        (IM))
+    allocate (Interstitial%tsfc_land       (IM))
     allocate (Interstitial%tsfc_water      (IM))
     allocate (Interstitial%tsfg            (IM))
     allocate (Interstitial%tsurf_ice       (IM))
@@ -7452,6 +7464,8 @@ module GFS_typedefs
 
     Interstitial%nscav = Model%ntrac - Model%ncnd + 2
 
+
+    ! DH* STILL VALID GIVEN THE CHANGES BELOW FOR CPLCHM?
     if (Interstitial%nvdiff == Model%ntrac) then
       Interstitial%ntqvx = Model%ntqv
       Interstitial%ntcwx = Model%ntcw
@@ -7502,6 +7516,7 @@ module GFS_typedefs
         Interstitial%ntozx = 3
       endif
     endif
+    ! *DH
 
     if (Model%cplchm) then
       ! Only Zhao/Carr/Sundqvist and GFDL microphysics schemes are supported
@@ -7865,12 +7880,14 @@ module GFS_typedefs
     Interstitial%stress_land     = huge
     Interstitial%stress_water    = huge
     Interstitial%theta           = clear_val
+    Interstitial%tice            = clear_val
     Interstitial%tprcp_ice       = huge
     Interstitial%tprcp_land      = huge
     Interstitial%tprcp_water     = huge
     Interstitial%trans           = clear_val
     Interstitial%tseal           = clear_val
     Interstitial%tsfc_ice        = huge
+    Interstitial%tsfc_land       = huge
     Interstitial%tsfc_water      = huge
     Interstitial%tsurf_ice       = huge
     Interstitial%tsurf_land      = huge
