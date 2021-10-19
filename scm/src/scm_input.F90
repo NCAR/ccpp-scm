@@ -219,86 +219,73 @@ subroutine get_case_init(scm_state, scm_input)
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
   
-  integer               :: input_nlev !< number of levels in the input file
-  integer               :: input_nsoil !< number of soil levels in the input file
-  integer               :: input_ntimes !< number of times represented in the input file
-  integer               :: input_nsnow !< number of snow levels in the input file
-  integer               :: input_nice !< number of sea ice levels in the input file
-  integer               :: input_nsoil_plus_nsnow !< number of combined snow and soil levels in the input file
-
-  ! dimension variables
-  real(kind=dp), allocatable  :: input_pres(:) !< input file pressure levels (Pa)
-  real(kind=dp), allocatable  :: input_time(:) !< input file times (seconds since the beginning of the case)
-
-  !initial profile variables
-  real(kind=dp), allocatable  :: input_thetail(:) !< ice-liquid water potential temperature profile (K)
-  real(kind=dp), allocatable  :: input_temp(:) !< temperature profile (K)
-  real(kind=dp), allocatable  :: input_qt(:) !< total water specific humidity profile (kg kg^-1)
-  real(kind=dp), allocatable  :: input_ql(:) !< liquid water specific humidity profile (kg kg^-1)
-  real(kind=dp), allocatable  :: input_qi(:) !< ice water specific humidity profile (kg kg^-1)
-  real(kind=dp), allocatable  :: input_u(:) !< east-west horizontal wind profile (m s^-1)
-  real(kind=dp), allocatable  :: input_v(:) !< north-south horizontal wind profile (m s^-1)
-  real(kind=dp), allocatable  :: input_tke(:) !< TKE profile (m^2 s^-2)
-  real(kind=dp), allocatable  :: input_ozone(:) !< ozone profile (kg kg^-1)
-! additional land info
-  real(kind=dp), allocatable  :: input_stc(:) !< soil temperature (K)
-  real(kind=dp), allocatable  :: input_smc(:) !< total soil moisture content (fraction)  
-  real(kind=dp), allocatable  :: input_slc(:) !< liquid soil moisture content (fraction)
-  !real(kind=dp), allocatable  :: input_pres_i(:) !< interface pressures
-  !real(kind=dp), allocatable  :: input_pres_l(:) !< layer pressures
-  real(kind=dp), allocatable  :: input_snicexy(:) !< snow layer ice (mm)
-  real(kind=dp), allocatable  :: input_snliqxy(:) !< snow layer liquid (mm)
-  real(kind=dp), allocatable  :: input_tsnoxy(:) !< snow temperature (K)
-  real(kind=dp), allocatable  :: input_smoiseq(:) !< equilibrium soil water content (m3 m-3)
-  real(kind=dp), allocatable  :: input_zsnsoxy(:) !< layer bottom depth from snow surface (m)
-  real(kind=dp), allocatable  :: input_tiice(:)   !< sea ice internal temperature (K)
-  real(kind=dp), allocatable  :: input_tslb(:)    !< soil temperature for RUC LSM (K)
-  real(kind=dp), allocatable  :: input_smois(:)   !< volume fraction of soil moisture for RUC LSM (frac)
-  real(kind=dp), allocatable  :: input_sh2o(:)    !< volume fraction of unfrozen soil moisture for RUC LSM (frac)
-  real(kind=dp), allocatable  :: input_smfr(:)    !< volume fraction of frozen soil moisture for RUC LSM (frac)
-  real(kind=dp), allocatable  :: input_flfr(:)    !< flag for frozen soil physics
-  
-  integer                     :: input_vegsrc !< vegetation source
-  integer                     :: input_vegtyp !< vegetation type
-  integer                     :: input_soiltyp!< soil type
-  integer                     :: input_slopetype !< slope type
+  integer                     :: input_nlev !< number of levels in the input file
+  integer                     :: input_nsoil !< number of soil levels in the input file
+  integer                     :: input_nsnow !< number of snow levels in the input file
+  integer                     :: input_nice !< number of sea ice levels in the input file
+  integer                     :: input_ntimes !< number of times represented in the input file
+  integer                     :: input_nsoil_plus_nsnow !< number of combined snow and soil levels in the input file
   real(kind=dp)               :: input_lat !< column latitude (deg)
   real(kind=dp)               :: input_lon !< column longitude (deg)
-  real(kind=dp)               :: input_tsfco !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
-  real(kind=dp)               :: input_vegfrac  !< vegetation fraction
-  real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
-  real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
-  real(kind=dp)               :: input_zorlw    !< surfce roughness length over water [cm]
-  real(kind=dp)               :: input_slmsk   !< sea land ice mask [0,1,2]
-  real(kind=dp)               :: input_canopy  !< amount of water stored in canopy (kg m-2)
-  real(kind=dp)               :: input_hice    !< sea ice thickness (m)
-  real(kind=dp)               :: input_fice    !< ice fraction (frac)
-  real(kind=dp)               :: input_tisfc   !< ice surface temperature (K)
-  real(kind=dp)               :: input_snwdph  !< water equivalent snow depth (mm)
-  real(kind=dp)               :: input_snoalb  !< maximum snow albedo (frac)
-  real(kind=dp)               :: input_sncovr  !< snow area fraction (frac)
   real(kind=dp)               :: input_area    !< surface area [m^2]
+  
+  integer                     :: input_vegsrc !< vegetation source
+  
+  real(kind=dp)               :: input_slmsk   !< sea land ice mask [0,1,2]
+  real(kind=dp)               :: input_tsfco !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
+  real(kind=dp)               :: input_weasd !< water equivalent accumulated snow depth (mm)
   real(kind=dp)               :: input_tg3     !< deep soil temperature (K)
-  real(kind=dp)               :: input_uustar  !< surface friction velocity (m s-1)
+  real(kind=dp)               :: input_zorl  !< composite surface roughness length (cm)
   real(kind=dp)               :: input_alvsf !< 60 degree vis albedo with strong cosz dependency
-  real(kind=dp)               :: input_alnsf !< 60 degree nir albedo with strong cosz dependency
   real(kind=dp)               :: input_alvwf !< 60 degree vis albedo with weak cosz dependency
+  real(kind=dp)               :: input_alnsf !< 60 degree nir albedo with strong cosz dependency
   real(kind=dp)               :: input_alnwf !< 60 degree nir albedo with weak cosz dependency
   real(kind=dp)               :: input_facsf !< fractional coverage with strong cosz dependency
   real(kind=dp)               :: input_facwf !< fractional coverage with weak cosz dependency
-  real(kind=dp)               :: input_weasd !< water equivalent accumulated snow depth (mm)
+  real(kind=dp)               :: input_vegfrac  !< vegetation fraction
+  real(kind=dp)               :: input_canopy  !< amount of water stored in canopy (kg m-2)
   real(kind=dp)               :: input_f10m  !< ratio of sigma level 1 wind and 10m wind
   real(kind=dp)               :: input_t2m    !< 2-meter absolute temperature (K)
   real(kind=dp)               :: input_q2m    !< 2-meter specific humidity (kg kg-1)
+  integer                     :: input_vegtyp !< vegetation type
+  integer                     :: input_soiltyp!< soil type
+  real(kind=dp)               :: input_uustar  !< surface friction velocity (m s-1)
   real(kind=dp)               :: input_ffmm    !< Monin-Obukhov similarity function for momentum
   real(kind=dp)               :: input_ffhh    !< Monin-Obukhov similarity function for heat
+  real(kind=dp)               :: input_hice    !< sea ice thickness (m)
+  real(kind=dp)               :: input_fice    !< ice fraction (frac)
+  real(kind=dp)               :: input_tisfc   !< ice surface temperature (K)
   real(kind=dp)               :: input_tprcp   !< instantaneous total precipitation amount (m)
   real(kind=dp)               :: input_srflag  !< snow/rain flag for precipitation
+  real(kind=dp)               :: input_snwdph  !< water equivalent snow depth (mm)
+  real(kind=dp)               :: input_shdmin  !< minimun vegetation fraction
+  real(kind=dp)               :: input_shdmax  !< maximun vegetation fraction
+  integer                     :: input_slopetype !< slope type
+  real(kind=dp)               :: input_snoalb  !< maximum snow albedo (frac)
+  real(kind=dp)               :: input_sncovr  !< snow area fraction (frac)
+  real(kind=dp)               :: input_snodl   !< snowd on land portion of cell
+  real(kind=dp)               :: input_weasdl  !< weasd on land portion of cell
+  real(kind=dp)               :: input_tsfc    !< tsfc composite
   real(kind=dp)               :: input_tsfcl   !< surface skin temperature over land (K)
+  real(kind=dp)               :: input_zorlw    !< surfce roughness length over water [cm]
   real(kind=dp)               :: input_zorll   !< surface roughness length over land (cm)
   real(kind=dp)               :: input_zorli   !< surface roughness length over ice (cm)
+  real(kind=dp)               :: input_albdirvis_lnd !<
+  real(kind=dp)               :: input_albdirnir_lnd !<
+  real(kind=dp)               :: input_albdifvis_lnd !<
+  real(kind=dp)               :: input_albdifnir_lnd !<
+  real(kind=dp)               :: input_emis_lnd   !<
+  real(kind=dp)               :: input_albdirvis_ice !<
+  real(kind=dp)               :: input_albdirnir_ice !<
+  real(kind=dp)               :: input_albdifvis_ice !<
+  real(kind=dp)               :: input_albdifnir_ice !<
   real(kind=dp)               :: input_zorlwav   !< surface roughness length from wave model (cm)
   
+  real(kind=dp), allocatable  :: input_stc(:) !< soil temperature (K)
+  real(kind=dp), allocatable  :: input_smc(:) !< total soil moisture content (fraction)  
+  real(kind=dp), allocatable  :: input_slc(:) !< liquid soil moisture content (fraction)
+  real(kind=dp), allocatable  :: input_tiice(:)   !< sea ice internal temperature (K)
+
   real(kind=dp)               :: input_stddev !< standard deviation of subgrid orography (m)
   real(kind=dp)               :: input_convexity !< convexity of subgrid orography 
   real(kind=dp)               :: input_ol1 !< fraction of grid box with subgrid orography higher than critical height 1
@@ -318,7 +305,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_landfrac !< fraction of horizontal grid area occupied by land
   real(kind=dp)               :: input_lakefrac !< fraction of horizontal grid area occupied by lake
   real(kind=dp)               :: input_lakedepth !< lake depth (m)
-  
+
   real(kind=dp)               :: input_tvxy !< vegetation temperature (K)
   real(kind=dp)               :: input_tgxy !< ground temperature for Noahmp (K)
   real(kind=dp)               :: input_tahxy !< canopy air temperature (K)
@@ -348,11 +335,12 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_deeprechxy !< recharge to or from the water table when deep (m)
   real(kind=dp)               :: input_rechxy !< recharge to or from the water table when shallow (m)
   real(kind=dp)               :: input_snowxy !< number of snow layers
-  real(kind=dp)               :: input_albdvis !<
-  real(kind=dp)               :: input_albdnir !<
-  real(kind=dp)               :: input_albivis !<
-  real(kind=dp)               :: input_albinir !<
-  real(kind=dp)               :: input_emiss   !<
+  
+  real(kind=dp), allocatable  :: input_snicexy(:) !< snow layer ice (mm)
+  real(kind=dp), allocatable  :: input_snliqxy(:) !< snow layer liquid (mm)
+  real(kind=dp), allocatable  :: input_tsnoxy(:) !< snow temperature (K)
+  real(kind=dp), allocatable  :: input_smoiseq(:) !< equilibrium soil water content (m3 m-3)
+  real(kind=dp), allocatable  :: input_zsnsoxy(:) !< layer bottom depth from snow surface (m)
   
   real(kind=dp)               :: input_tref !< sea surface reference temperature for NSST (K)
   real(kind=dp)               :: input_z_c !< sub-layer cooling thickness for NSST (m)
@@ -383,15 +371,38 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_snowfallac_land !< run-total snow accumulation on the ground over land for RUC LSM (kg m-2)
   real(kind=dp)               :: input_snowfallac_ice !< run-total snow accumulation on the ground over ice for RUC LSM (kg m-2)
   real(kind=dp)               :: input_sncovr_ice !<
+  real(kind=dp)               :: input_sfalb_lnd
+  real(kind=dp)               :: input_sfalb_lnd_bck
+  real(kind=dp)               :: input_sfalb_ice
+  real(kind=dp)               :: input_emis_ice
   real(kind=dp)               :: input_lai !< leaf area index for RUC LSM
   
-  !surface time-series variables
+  real(kind=dp), allocatable  :: input_tslb(:)    !< soil temperature for RUC LSM (K)
+  real(kind=dp), allocatable  :: input_smois(:)   !< volume fraction of soil moisture for RUC LSM (frac)
+  real(kind=dp), allocatable  :: input_sh2o(:)    !< volume fraction of unfrozen soil moisture for RUC LSM (frac)
+  real(kind=dp), allocatable  :: input_smfr(:)    !< volume fraction of frozen soil moisture for RUC LSM (frac)
+  real(kind=dp), allocatable  :: input_flfr(:)    !< flag for frozen soil physics
+  
+  ! dimension variables
+  !real(kind=dp), allocatable  :: input_pres_i(:) !< interface pressures
+  !real(kind=dp), allocatable  :: input_pres_l(:) !< layer pressures
+  real(kind=dp), allocatable  :: input_pres(:) !< input file pressure levels (Pa)
+  real(kind=dp), allocatable  :: input_time(:) !< input file times (seconds since the beginning of the case)
+
+  !initial profile variables
+  real(kind=dp), allocatable  :: input_thetail(:) !< ice-liquid water potential temperature profile (K)
+  real(kind=dp), allocatable  :: input_temp(:) !< temperature profile (K)
+  real(kind=dp), allocatable  :: input_qt(:) !< total water specific humidity profile (kg kg^-1)
+  real(kind=dp), allocatable  :: input_ql(:) !< liquid water specific humidity profile (kg kg^-1)
+  real(kind=dp), allocatable  :: input_qi(:) !< ice water specific humidity profile (kg kg^-1)
+  real(kind=dp), allocatable  :: input_u(:) !< east-west horizontal wind profile (m s^-1)
+  real(kind=dp), allocatable  :: input_v(:) !< north-south horizontal wind profile (m s^-1)
+  real(kind=dp), allocatable  :: input_tke(:) !< TKE profile (m^2 s^-2)
+  real(kind=dp), allocatable  :: input_ozone(:) !< ozone profile (kg kg^-1)
+  
   real(kind=dp), allocatable  :: input_pres_surf(:) !< time-series of surface pressure (Pa)
   real(kind=dp), allocatable  :: input_T_surf(:) !< time-series of surface temperature (K)
-  real(kind=dp), allocatable  :: input_sh_flux_sfc(:) !< time-series of surface sensible heat flux (K m s^-1)
-  real(kind=dp), allocatable  :: input_lh_flux_sfc(:) !< time-series of surface latent heat flux (kg kg^-1 m s^-1)
 
-  !2D (time, pressure) variables
   real(kind=dp), allocatable  :: input_w_ls(:,:) !< 2D vertical velocity (m s^-1)
   real(kind=dp), allocatable  :: input_omega(:,:) !< 2D pressure vertical velocity (Pa s^-1)
   real(kind=dp), allocatable  :: input_u_g(:,:) !< 2D geostrophic east-west wind (m s^-1)
@@ -407,6 +418,9 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_v_advec_thetail(:,:) !< 2D theta_il tendency due to large-scale vertical advection (K s^-1)
   real(kind=dp), allocatable  :: input_v_advec_qt(:,:) !< 2D q_t tendency due to large-scale horizontal vertical (kg kg^-1 s^-1)
 
+  real(kind=dp), allocatable  :: input_sh_flux_sfc(:) !< time-series of surface sensible heat flux (K m s^-1)
+  real(kind=dp), allocatable  :: input_lh_flux_sfc(:) !< time-series of surface latent heat flux (kg kg^-1 m s^-1)
+  
   CHARACTER(LEN=nf90_max_name)      :: tmpName
   integer                           :: ncid, varID, grp_ncid, allocate_status,ierr
   real(kind=dp)                     :: nc_missing_value
@@ -525,42 +539,55 @@ subroutine get_case_init(scm_state, scm_input)
   
   !possible scalars
   !Noah LSM parameters (when running with model ICs)
-  call NetCDF_read_var(grp_ncid, "vegsrc",   .False., input_vegsrc   )
-  call NetCDF_read_var(grp_ncid, "vegtyp",   .False., input_vegtyp   )
-  call NetCDF_read_var(grp_ncid, "soiltyp",  .False., input_soiltyp  )
-  call NetCDF_read_var(grp_ncid, "slopetyp", .False., input_slopetype)
-  call NetCDF_read_var(grp_ncid, "tsfco",   .False., input_tsfco)
-  call NetCDF_read_var(grp_ncid, "vegfrac", .False., input_vegfrac)
-  call NetCDF_read_var(grp_ncid, "shdmin",  .False., input_shdmin)
-  call NetCDF_read_var(grp_ncid, "shdmax",  .False., input_shdmax)
-  call NetCDF_read_var(grp_ncid, "zorlw",   .False., input_zorlw)
+  call NetCDF_read_var(grp_ncid, "vegsrc",  .False., input_vegsrc   )
   call NetCDF_read_var(grp_ncid, "slmsk",   .False., input_slmsk)
-  call NetCDF_read_var(grp_ncid, "canopy",  .False., input_canopy)
-  call NetCDF_read_var(grp_ncid, "hice",    .False., input_hice)
-  call NetCDF_read_var(grp_ncid, "fice",    .False., input_fice)
-  call NetCDF_read_var(grp_ncid, "tisfc",   .False., input_tisfc)
-  call NetCDF_read_var(grp_ncid, "snwdph",  .False., input_snwdph)
-  call NetCDF_read_var(grp_ncid, "snoalb",  .False., input_snoalb)
+  call NetCDF_read_var(grp_ncid, "tsfco",   .False., input_tsfco)
+  call NetCDF_read_var(grp_ncid, "weasd",   .False., input_weasd)
   call NetCDF_read_var(grp_ncid, "tg3",     .False., input_tg3)
-  call NetCDF_read_var(grp_ncid, "uustar",  .False., input_uustar)
+  call NetCDF_read_var(grp_ncid, "zorl",    .False., input_zorl)
   call NetCDF_read_var(grp_ncid, "alvsf",   .False., input_alvsf)
-  call NetCDF_read_var(grp_ncid, "alnsf",   .False., input_alnsf)
   call NetCDF_read_var(grp_ncid, "alvwf",   .False., input_alvwf)
+  call NetCDF_read_var(grp_ncid, "alnsf",   .False., input_alnsf)
   call NetCDF_read_var(grp_ncid, "alnwf",   .False., input_alnwf)
   call NetCDF_read_var(grp_ncid, "facsf",   .False., input_facsf)
   call NetCDF_read_var(grp_ncid, "facwf",   .False., input_facwf)
-  call NetCDF_read_var(grp_ncid, "weasd",   .False., input_weasd)
+  call NetCDF_read_var(grp_ncid, "vegfrac", .False., input_vegfrac)
+  call NetCDF_read_var(grp_ncid, "canopy",  .False., input_canopy)
   call NetCDF_read_var(grp_ncid, "f10m",    .False., input_f10m)
   call NetCDF_read_var(grp_ncid, "t2m",     .False., input_t2m)
   call NetCDF_read_var(grp_ncid, "q2m",     .False., input_q2m)
+  call NetCDF_read_var(grp_ncid, "vegtyp",  .False., input_vegtyp   )
+  call NetCDF_read_var(grp_ncid, "soiltyp", .False., input_soiltyp  )
+  call NetCDF_read_var(grp_ncid, "uustar",  .False., input_uustar)
   call NetCDF_read_var(grp_ncid, "ffmm",    .False., input_ffmm)
   call NetCDF_read_var(grp_ncid, "ffhh",    .False., input_ffhh)
+  call NetCDF_read_var(grp_ncid, "hice",    .False., input_hice)
+  call NetCDF_read_var(grp_ncid, "fice",    .False., input_fice)
+  call NetCDF_read_var(grp_ncid, "tisfc",   .False., input_tisfc)
   call NetCDF_read_var(grp_ncid, "tprcp",   .False., input_tprcp)
   call NetCDF_read_var(grp_ncid, "srflag",  .False., input_srflag)
+  call NetCDF_read_var(grp_ncid, "snwdph",  .False., input_snwdph)
+  call NetCDF_read_var(grp_ncid, "shdmin",  .False., input_shdmin)
+  call NetCDF_read_var(grp_ncid, "shdmax",  .False., input_shdmax)
+  call NetCDF_read_var(grp_ncid, "slopetyp",.False., input_slopetype)
+  call NetCDF_read_var(grp_ncid, "snoalb",  .False., input_snoalb)
   call NetCDF_read_var(grp_ncid, "sncovr",  .False., input_sncovr)
+  call NetCDF_read_var(grp_ncid, "snodl",   .False., input_snodl)
+  call NetCDF_read_var(grp_ncid, "weasdl",  .False., input_weasdl)
+  call NetCDF_read_var(grp_ncid, "tsfc",    .False., input_tsfc)
   call NetCDF_read_var(grp_ncid, "tsfcl",   .False., input_tsfcl)
+  call NetCDF_read_var(grp_ncid, "zorlw",   .False., input_zorlw)
   call NetCDF_read_var(grp_ncid, "zorll",   .False., input_zorll)
   call NetCDF_read_var(grp_ncid, "zorli",   .False., input_zorli)
+  call NetCDF_read_var(grp_ncid, "albdirvis_lnd", .False., input_albdirvis_lnd)
+  call NetCDF_read_var(grp_ncid, "albdirnir_lnd", .False., input_albdirnir_lnd)
+  call NetCDF_read_var(grp_ncid, "albdifvis_lnd", .False., input_albdifvis_lnd)
+  call NetCDF_read_var(grp_ncid, "albdifnir_lnd", .False., input_albdifnir_lnd)
+  call NetCDF_read_var(grp_ncid, "emis_lnd",      .False., input_emis_lnd)
+  call NetCDF_read_var(grp_ncid, "albdirvis_ice", .False., input_albdirvis_ice)
+  call NetCDF_read_var(grp_ncid, "albdirnir_ice", .False., input_albdirnir_ice)
+  call NetCDF_read_var(grp_ncid, "albdifvis_ice", .False., input_albdifvis_ice)
+  call NetCDF_read_var(grp_ncid, "albdifnir_ice", .False., input_albdifnir_ice)
   call NetCDF_read_var(grp_ncid, "zorlwav", .False., input_zorlwav)
   
   !orographic parameters
@@ -614,11 +641,6 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "deeprechxy",.False., input_deeprechxy)
   call NetCDF_read_var(grp_ncid, "rechxy",    .False., input_rechxy)
   call NetCDF_read_var(grp_ncid, "snowxy",    .False., input_snowxy)
-  call NetCDF_read_var(grp_ncid, "albdvis",   .False., input_albdvis)
-  call NetCDF_read_var(grp_ncid, "albdnir",   .False., input_albdnir)
-  call NetCDF_read_var(grp_ncid, "albivis",   .False., input_albivis)
-  call NetCDF_read_var(grp_ncid, "albinir",   .False., input_albinir)
-  call NetCDF_read_var(grp_ncid, "emiss",     .False., input_emiss)
   
   !NSST variables
   call NetCDF_read_var(grp_ncid, "tref",    .False., input_tref)
@@ -749,42 +771,55 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_flfr       = input_flfr
   
   scm_input%input_vegsrc   = input_vegsrc
-  scm_input%input_vegtyp   = input_vegtyp
-  scm_input%input_soiltyp  = input_soiltyp
-  scm_input%input_slopetype = input_slopetype
-  scm_input%input_tsfco    = input_tsfco
-  scm_input%input_vegfrac  = input_vegfrac
-  scm_input%input_shdmin   = input_shdmin
-  scm_input%input_shdmax   = input_shdmax
-  scm_input%input_zorlw    = input_zorlw
+  
   scm_input%input_slmsk    = input_slmsk
-  scm_input%input_canopy   = input_canopy
-  scm_input%input_hice     = input_hice
-  scm_input%input_fice     = input_fice
-  scm_input%input_tisfc    = input_tisfc
-  scm_input%input_snwdph   = input_snwdph
-  scm_input%input_snoalb   = input_snoalb
-  scm_input%input_sncovr   = input_sncovr
-  scm_input%input_area     = input_area
+  scm_input%input_tsfco    = input_tsfco
+  scm_input%input_weasd    = input_weasd
   scm_input%input_tg3      = input_tg3
-  scm_input%input_uustar   = input_uustar
+  scm_input%input_zorl     = input_zorl
   scm_input%input_alvsf    = input_alvsf
-  scm_input%input_alnsf    = input_alnsf
   scm_input%input_alvwf    = input_alvwf
+  scm_input%input_alnsf    = input_alnsf
   scm_input%input_alnwf    = input_alnwf
   scm_input%input_facsf    = input_facsf
   scm_input%input_facwf    = input_facwf
-  scm_input%input_weasd    = input_weasd
+  scm_input%input_vegfrac  = input_vegfrac
+  scm_input%input_canopy   = input_canopy
   scm_input%input_f10m     = input_f10m
   scm_input%input_t2m      = input_t2m
   scm_input%input_q2m      = input_q2m
+  scm_input%input_vegtyp   = input_vegtyp
+  scm_input%input_soiltyp  = input_soiltyp
+  scm_input%input_uustar   = input_uustar
   scm_input%input_ffmm     = input_ffmm
   scm_input%input_ffhh     = input_ffhh
+  scm_input%input_hice     = input_hice
+  scm_input%input_fice     = input_fice
+  scm_input%input_tisfc    = input_tisfc
   scm_input%input_tprcp    = input_tprcp
   scm_input%input_srflag   = input_srflag
+  scm_input%input_snwdph   = input_snwdph
+  scm_input%input_shdmin   = input_shdmin
+  scm_input%input_shdmax   = input_shdmax
+  scm_input%input_slopetype = input_slopetype
+  scm_input%input_snoalb   = input_snoalb
+  scm_input%input_sncovr   = input_sncovr
+  scm_input%input_snodl    = input_snodl
+  scm_input%input_weasdl   = input_weasdl
+  scm_input%input_tsfc     = input_tsfc
   scm_input%input_tsfcl    = input_tsfcl
+  scm_input%input_zorlw    = input_zorlw
   scm_input%input_zorll    = input_zorll
   scm_input%input_zorli    = input_zorli
+  scm_input%input_albdirvis_lnd = input_albdirvis_lnd
+  scm_input%input_albdirnir_lnd = input_albdirnir_lnd
+  scm_input%input_albdifvis_lnd = input_albdifvis_lnd
+  scm_input%input_albdifnir_lnd = input_albdifnir_lnd
+  scm_input%input_emis_lnd = input_emis_lnd
+  scm_input%input_albdirvis_ice = input_albdirvis_ice
+  scm_input%input_albdirnir_ice = input_albdirnir_ice
+  scm_input%input_albdifvis_ice = input_albdifvis_ice
+  scm_input%input_albdifnir_ice = input_albdifnir_ice
   scm_input%input_zorlwav  = input_zorlwav
   
   scm_input%input_stddev   = input_stddev
@@ -836,11 +871,6 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_deeprechxy = input_deeprechxy
   scm_input%input_rechxy = input_rechxy
   scm_input%input_snowxy = input_snowxy
-  scm_input%input_albdvis = input_albdvis
-  scm_input%input_albdnir = input_albdnir
-  scm_input%input_albivis = input_albivis
-  scm_input%input_albinir = input_albinir
-  scm_input%input_emiss = input_emiss
   
   scm_input%input_tref    = input_tref
   scm_input%input_z_c     = input_z_c
@@ -861,6 +891,8 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_dt_cool = input_dt_cool
   scm_input%input_qrain   = input_qrain
   
+  scm_input%input_area     = input_area
+  
   scm_input%input_wetness         = input_wetness
   scm_input%input_clw_surf_land   = input_clw_surf_land
   scm_input%input_clw_surf_ice    = input_clw_surf_ice
@@ -871,6 +903,9 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_snowfallac_land = input_snowfallac_land
   scm_input%input_snowfallac_ice  = input_snowfallac_ice
   scm_input%input_sncovr_ice      = input_sncovr_ice
+  scm_input%input_sfalb_lnd       = input_sfalb_lnd
+  scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck
+  scm_input%input_emis_ice        = input_emis_ice
   scm_input%input_lai             = input_lai
   
 !> @}
