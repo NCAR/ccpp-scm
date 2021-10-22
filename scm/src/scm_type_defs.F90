@@ -1047,6 +1047,12 @@ module scm_type_defs
     !double check under what circumstances these should actually be set from input!!! (these overwrite the initialzation in GFS_typedefs)
     missing_var = .false.
     do i = 1, physics%Model%ncols
+      !since landfrac and lakefrac are read in with the orographic data (here and in FV3GFS_io), we need to set their values
+      !to missing when only LSM ICs are available in order for some of the logic below to work as intended.
+      if (scm_state%lsm_ics) then
+        physics%Sfcprop%landfrac(i) = missing_value
+        physics%Sfcprop%lakefrac(i) = missing_value
+      end if
       if (scm_state%model_ics) then
         write(0,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_stddev,    physics%Sfcprop%hprime(i,1),  "stddev",    .true., missing_var(1))
@@ -1068,7 +1074,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_landfrac,  physics%Sfcprop%landfrac(i),  "landfrac",  physics%Model%frac_grid, missing_var(17))
         call conditionally_set_var(scm_input%input_lakefrac,  physics%Sfcprop%lakefrac(i),  "lakefrac",  (physics%Model%lkm == 1), missing_var(18))
         call conditionally_set_var(scm_input%input_lakedepth, physics%Sfcprop%lakedepth(i), "lakedepth", (physics%Model%lkm == 1), missing_var(19))
-
+        
         !write out warning if missing data for non-required variables
         n = 19
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
@@ -1556,8 +1562,9 @@ module scm_type_defs
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if
-      
+
     end do
+    
     
   end subroutine physics_set
   
