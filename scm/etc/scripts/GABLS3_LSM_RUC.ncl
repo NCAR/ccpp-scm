@@ -572,15 +572,15 @@ begin
   tsnow_ice@long_name = "snow temperature at the bottom of the first snow layer over ice"
   tsnow_ice@units = "K"
   
-  snowfallac_land = 0
+  snowfallac_land = 0.0
   snowfallac_land@long_name = "run-total snow accumulation on the ground"
   snowfallac_land@units = "kg m-2"
   
-  snowfallac_ice = 0
+  snowfallac_ice = 0.0
   snowfallac_ice@long_name = "run-total snow accumulation on the ice"
   snowfallac_ice@units = "kg m-2"
   
-  sncovr_ice = 0
+  sncovr_ice = 0.0
   sncovr_ice@long_name = "surface snow area fraction over ice"
   
   sfalb_lnd = 0.23
@@ -599,7 +599,7 @@ begin
   tslb@units = "K"
   tslb@long_name = "initial profile of soil temperature for RUC LSM"
   
-  smois = (/ 0.1899, 0.1899, 0.1899, 0.1899, 0.1899, 0.1899, 0.1899, 0.1899, 0.1899/)
+  smois = (/ 0.315, 0.315, 0.315, 0.315, 0.315, 0.315, 0.315, 0.315, 0.315/)
   smois@units = "fraction"
   smois@long_name = "volumetric fraction of soil moisture for RUC LSM"
   
