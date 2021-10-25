@@ -1036,11 +1036,19 @@ module scm_type_defs
       if (physics%Model%lsm == physics%Model%lsm_noahmp) then
         !FV3GFS_io.F90 uses the presence of the snowxy variable in the ICs to indicate presence of NoahMP warm start
         call check_missing(scm_input%input_snowxy, missing_var(1))
-        if (missing_var(1)) physics%Model%lsm_cold_start = .true.
+        if (missing_var(1)) then
+          physics%Model%lsm_cold_start = .true.
+        else
+          physics%Model%lsm_cold_start = .false.
+        end if
       elseif (physics%Model%lsm == physics%Model%lsm_ruc) then
         !RUC LSM uses the tslb variable as soil temperature; if it is missing, assume a cold start using Noah LSM ICs
         call check_missing(scm_input%input_tslb(:), missing_var(1))
-        if (missing_var(1)) physics%Model%lsm_cold_start = .true.
+        if (missing_var(1)) then
+          physics%Model%lsm_cold_start = .true.
+        else
+          physics%Model%lsm_cold_start = .false.
+        end if
       end if
     end if
     
@@ -1564,7 +1572,6 @@ module scm_type_defs
       end if
 
     end do
-    
     
   end subroutine physics_set
   
