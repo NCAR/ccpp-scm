@@ -1170,7 +1170,7 @@ module scm_type_defs
         physics%Sfcprop%slmsk(i) = scm_state%sfc_type(i)
         ! tsfco is already pointing to T_surf forcing in physics_associate
         ! physics%Sfcprop%tsfco(i) => scm_state%T_surf
-        physics%Sfcprop%zorlw(i) = scm_state%sfc_roughness_length_cm(i)
+        physics%Sfcprop%zorl(i) = scm_state%sfc_roughness_length_cm(i)
         ! tisfc is already pointing to T_surf forcing in physics_associate
         ! physics%Sfcprop%tisfc(i) => scm_state%T_surf
         ! tsfcl is already pointing to T_surf forcing in physics_associate
@@ -1483,22 +1483,24 @@ module scm_type_defs
         end if
       end if
       
-      if (scm_input%input_snodl <= real_zero) then
-        if (physics%Sfcprop%landfrac(i) > real_zero) then
-          tem = real_one / physics%Sfcprop%landfrac(i)
-          physics%Sfcprop%snodl(i)  = physics%Sfcprop%snowd(i) * tem
-        else
-          physics%Sfcprop%snodl(i)  = real_zero
-        endif
-      end if
-      
-      if (scm_input%input_weasdl <= real_zero) then
-        if (physics%Sfcprop%landfrac(i) > real_zero) then
-          tem = real_one / physics%Sfcprop%landfrac(i)
-          physics%Sfcprop%weasdl(i) = physics%Sfcprop%weasd(i) * tem
-        else
-          physics%Sfcprop%weasdl(i) = real_zero
-        endif
+      if (scm_state%model_ics .or. scm_state%lsm_ics) then
+        if (scm_input%input_snodl <= real_zero) then
+          if (physics%Sfcprop%landfrac(i) > real_zero) then
+            tem = real_one / physics%Sfcprop%landfrac(i)
+            physics%Sfcprop%snodl(i)  = physics%Sfcprop%snowd(i) * tem
+          else
+            physics%Sfcprop%snodl(i)  = real_zero
+          endif
+        end if
+        
+        if (scm_input%input_weasdl <= real_zero) then
+          if (physics%Sfcprop%landfrac(i) > real_zero) then
+            tem = real_one / physics%Sfcprop%landfrac(i)
+            physics%Sfcprop%weasdl(i) = physics%Sfcprop%weasd(i) * tem
+          else
+            physics%Sfcprop%weasdl(i) = real_zero
+          endif
+        end if
       end if
       
       if (scm_input%input_tsfcl <= real_zero) then
