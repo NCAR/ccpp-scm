@@ -1143,10 +1143,12 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_albdifvis_lnd, physics%Sfcprop%albdifvis_lnd(i), "albdifvis_lnd", .false., missing_var(42))
         call conditionally_set_var(scm_input%input_albdifnir_lnd, physics%Sfcprop%albdifnir_lnd(i), "albdifnir_lnd", .false., missing_var(43))
         call conditionally_set_var(scm_input%input_emis_lnd, physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(44))
-        call conditionally_set_var(scm_input%input_albdirvis_ice, physics%Sfcprop%albdirvis_ice(i), "albdirvis_ice", .false., missing_var(45))
-        call conditionally_set_var(scm_input%input_albdirnir_ice, physics%Sfcprop%albdirnir_ice(i), "albdirnir_ice", .false., missing_var(46))
-        call conditionally_set_var(scm_input%input_albdifvis_ice, physics%Sfcprop%albdifvis_ice(i), "albdifvis_ice", .false., missing_var(47))
-        call conditionally_set_var(scm_input%input_albdifnir_ice, physics%Sfcprop%albdifnir_ice(i), "albdifnir_ice", .false., missing_var(48))
+        if (physics%Model%use_cice_alb .or. physics%Model%lsm == physics%Model%lsm_ruc) then
+          call conditionally_set_var(scm_input%input_albdirvis_ice, physics%Sfcprop%albdirvis_ice(i), "albdirvis_ice", .false., missing_var(45))
+          call conditionally_set_var(scm_input%input_albdirnir_ice, physics%Sfcprop%albdirnir_ice(i), "albdirnir_ice", .false., missing_var(46))
+          call conditionally_set_var(scm_input%input_albdifvis_ice, physics%Sfcprop%albdifvis_ice(i), "albdifvis_ice", .false., missing_var(47))
+          call conditionally_set_var(scm_input%input_albdifnir_ice, physics%Sfcprop%albdifnir_ice(i), "albdifnir_ice", .false., missing_var(48))
+        end if
         if (physics%Model%cplwav) then
           call conditionally_set_var(scm_input%input_zorlwav, physics%Sfcprop%zorlwav(i), "zorlwav", .true., missing_var(49))
         else

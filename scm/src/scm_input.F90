@@ -673,8 +673,11 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "snowfallac_land",  .False., input_snowfallac_land)
   call NetCDF_read_var(grp_ncid, "snowfallac_ice",   .False., input_snowfallac_ice)
   call NetCDF_read_var(grp_ncid, "sncovr_ice",       .False., input_sncovr_ice)
+  call NetCDF_read_var(grp_ncid, "sfalb_lnd",        .False., input_sfalb_lnd)
+  call NetCDF_read_var(grp_ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
+  call NetCDF_read_var(grp_ncid, "emis_ice",         .False., input_emis_ice)
   call NetCDF_read_var(grp_ncid, "lai",              .False., input_lai)
-    
+  
   !> - Read in the forcing data.
 
   !>  - Find group ncid for forcing group.
