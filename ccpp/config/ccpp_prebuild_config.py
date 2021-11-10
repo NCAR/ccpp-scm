@@ -290,14 +290,6 @@ OPTIONAL_ARGUMENTS = {
             'tendency_of_nonhygroscopic_ice_nucleating_aerosols_at_surface_adjacent_layer',
             ],
         },
-    'mp_nssl' : {
-         'mp_nssl_run' : [
-           'effective_radius_of_stratiform_cloud_liquid_water_particle',
-           'effective_radius_of_stratiform_cloud_ice_particle',
-           'effective_radius_of_stratiform_cloud_snow_particle',
-           'effective_radius_of_stratiform_cloud_rain_particle'
-             ],
-         },
     'rrtmgp_sw_rte' : {
          'rrtmgp_sw_rte_run' : [
              'components_of_surface_downward_shortwave_fluxes',
