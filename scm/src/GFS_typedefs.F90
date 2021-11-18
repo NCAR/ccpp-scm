@@ -1,7 +1,7 @@
 
 module GFS_typedefs
 
-       use machine,                  only: kind_phys, kind_dbl_prec
+    use machine,                  only: kind_phys, kind_dbl_prec
        use module_radsw_parameters,  only: topfsw_type, sfcfsw_type, profsw_type, cmpfsw_type, NBDSW
        use module_radlw_parameters,  only: topflw_type, sfcflw_type, proflw_type, NBDLW
        use ozne_def,                 only: levozp, oz_coeff
@@ -1107,8 +1107,8 @@ module GFS_typedefs
 
 !---cellular automata control parameters
     integer              :: nca             !< number of independent cellular automata
-    integer              :: tlives          !< cellular automata lifetime
-    integer              :: scells          !< cellular automata finer grid
+    integer              :: nlives          !< cellular automata lifetime
+    integer              :: ncells          !< cellular automata finer grid
     integer              :: nca_g           !< number of independent cellular automata
     integer              :: nlives_g        !< cellular automata lifetime
     integer              :: ncells_g        !< cellular automata finer grid
@@ -1121,7 +1121,6 @@ module GFS_typedefs
     logical              :: ca_smooth       !< switch for gaussian spatial filter
     integer(kind=kind_dbl_prec) :: iseed_ca        !< seed for random number generation in ca scheme
     integer              :: nspinup         !< number of iterations to spin up the ca
-    real(kind=kind_phys) :: rcell           !< threshold used for CA scheme
     real(kind=kind_phys) :: nthresh         !< threshold used for convection coupling
     real                 :: ca_amplitude    !< amplitude of ca trigger perturbation
     integer              :: nsmooth         !< number of passes through smoother
@@ -1961,6 +1960,7 @@ module GFS_typedefs
     integer                             :: ntqvx                         !<
     integer                             :: ntcwx                         !<
     integer                             :: ntiwx                         !<
+    integer                             :: ntrwx                         !<
     integer                             :: ntozx                         !<
     integer                             :: ntk                           !<
     integer                             :: ntkev                         !<
@@ -2148,10 +2148,10 @@ module GFS_typedefs
     type(ty_source_func_lw)             :: sources                              !< RRTMGP DDT
 
     !-- GSL drag suite
-    real (kind=kind_phys), pointer :: varss(:)           => null()  !<
-    real (kind=kind_phys), pointer :: ocss(:)            => null()  !<
-    real (kind=kind_phys), pointer :: oa4ss(:,:)         => null()  !<
-    real (kind=kind_phys), pointer :: clxss(:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: varss(:)           => null()  !<
+    real (kind=kind_phys), pointer      :: ocss(:)            => null()  !<
+    real (kind=kind_phys), pointer      :: oa4ss(:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: clxss(:,:)         => null()  !<
 
     !-- 3D diagnostics
     integer :: rtg_ozone_index, rtg_tke_index
@@ -2422,8 +2422,8 @@ module GFS_typedefs
       Sfcprop%albdifnir_ice = clear_val
     endif
     if (Model%lsm == Model%lsm_ruc) then
-      Sfcprop%sfalb_lnd   = clear_val
-      Sfcprop%sfalb_ice   = clear_val
+      Sfcprop%sfalb_lnd     = clear_val
+      Sfcprop%sfalb_ice     = clear_val
       Sfcprop%sfalb_lnd_bck = clear_val
     endif
     Sfcprop%canopy = clear_val
@@ -2501,90 +2501,90 @@ module GFS_typedefs
 !
     if (Model%lsm == Model%lsm_noahmp ) then
 
-    allocate (Sfcprop%snowxy   (IM))
-    allocate (Sfcprop%tvxy     (IM))
-    allocate (Sfcprop%tgxy     (IM))
-    allocate (Sfcprop%canicexy (IM))
-    allocate (Sfcprop%canliqxy (IM))
-    allocate (Sfcprop%eahxy    (IM))
-    allocate (Sfcprop%tahxy    (IM))
-    allocate (Sfcprop%cmxy     (IM))
-    allocate (Sfcprop%chxy     (IM))
-    allocate (Sfcprop%fwetxy   (IM))
-    allocate (Sfcprop%sneqvoxy (IM))
-    allocate (Sfcprop%alboldxy (IM))
-    allocate (Sfcprop%qsnowxy  (IM))
-    allocate (Sfcprop%wslakexy (IM))
-    allocate (Sfcprop%zwtxy    (IM))
-    allocate (Sfcprop%waxy     (IM))
-    allocate (Sfcprop%wtxy     (IM))
-    allocate (Sfcprop%lfmassxy (IM))
-    allocate (Sfcprop%rtmassxy (IM))
-    allocate (Sfcprop%stmassxy (IM))
-    allocate (Sfcprop%woodxy   (IM))
-    allocate (Sfcprop%stblcpxy (IM))
-    allocate (Sfcprop%fastcpxy (IM))
-    allocate (Sfcprop%xsaixy   (IM))
-    allocate (Sfcprop%xlaixy   (IM))
-    allocate (Sfcprop%taussxy  (IM))
-    allocate (Sfcprop%smcwtdxy (IM))
-    allocate (Sfcprop%deeprechxy (IM))
-    allocate (Sfcprop%rechxy    (IM))
-    allocate (Sfcprop%snicexy    (IM, Model%lsnow_lsm_lbound:Model%lsnow_lsm_ubound))
-    allocate (Sfcprop%snliqxy    (IM, Model%lsnow_lsm_lbound:Model%lsnow_lsm_ubound))
-    allocate (Sfcprop%tsnoxy     (IM, Model%lsnow_lsm_lbound:Model%lsnow_lsm_ubound))
-    allocate (Sfcprop%smoiseq    (IM, Model%lsoil_lsm))
-    allocate (Sfcprop%zsnsoxy    (IM, Model%lsnow_lsm_lbound:Model%lsoil_lsm))
+      allocate (Sfcprop%snowxy   (IM))
+      allocate (Sfcprop%tvxy     (IM))
+      allocate (Sfcprop%tgxy     (IM))
+      allocate (Sfcprop%canicexy (IM))
+      allocate (Sfcprop%canliqxy (IM))
+      allocate (Sfcprop%eahxy    (IM))
+      allocate (Sfcprop%tahxy    (IM))
+      allocate (Sfcprop%cmxy     (IM))
+      allocate (Sfcprop%chxy     (IM))
+      allocate (Sfcprop%fwetxy   (IM))
+      allocate (Sfcprop%sneqvoxy (IM))
+      allocate (Sfcprop%alboldxy (IM))
+      allocate (Sfcprop%qsnowxy  (IM))
+      allocate (Sfcprop%wslakexy (IM))
+      allocate (Sfcprop%zwtxy    (IM))
+      allocate (Sfcprop%waxy     (IM))
+      allocate (Sfcprop%wtxy     (IM))
+      allocate (Sfcprop%lfmassxy (IM))
+      allocate (Sfcprop%rtmassxy (IM))
+      allocate (Sfcprop%stmassxy (IM))
+      allocate (Sfcprop%woodxy   (IM))
+      allocate (Sfcprop%stblcpxy (IM))
+      allocate (Sfcprop%fastcpxy (IM))
+      allocate (Sfcprop%xsaixy   (IM))
+      allocate (Sfcprop%xlaixy   (IM))
+      allocate (Sfcprop%taussxy  (IM))
+      allocate (Sfcprop%smcwtdxy (IM))
+      allocate (Sfcprop%deeprechxy (IM))
+      allocate (Sfcprop%rechxy     (IM))
+      allocate (Sfcprop%snicexy    (IM, Model%lsnow_lsm_lbound:Model%lsnow_lsm_ubound))
+      allocate (Sfcprop%snliqxy    (IM, Model%lsnow_lsm_lbound:Model%lsnow_lsm_ubound))
+      allocate (Sfcprop%tsnoxy     (IM, Model%lsnow_lsm_lbound:Model%lsnow_lsm_ubound))
+      allocate (Sfcprop%smoiseq    (IM, Model%lsoil_lsm))
+      allocate (Sfcprop%zsnsoxy    (IM, Model%lsnow_lsm_lbound:Model%lsoil_lsm))
 
-    Sfcprop%snowxy     = clear_val
-    Sfcprop%tvxy       = clear_val
-    Sfcprop%tgxy       = clear_val
-    Sfcprop%canicexy   = clear_val
-    Sfcprop%canliqxy   = clear_val
-    Sfcprop%eahxy      = clear_val
-    Sfcprop%tahxy      = clear_val
-    Sfcprop%cmxy       = clear_val
-    Sfcprop%chxy       = clear_val
-    Sfcprop%fwetxy     = clear_val
-    Sfcprop%sneqvoxy   = clear_val
-    Sfcprop%alboldxy   = clear_val
-    Sfcprop%qsnowxy    = clear_val
-    Sfcprop%wslakexy   = clear_val
-    Sfcprop%zwtxy      = clear_val
-    Sfcprop%waxy       = clear_val
-    Sfcprop%wtxy       = clear_val
-    Sfcprop%lfmassxy   = clear_val
-    Sfcprop%rtmassxy   = clear_val
-    Sfcprop%stmassxy   = clear_val
-    Sfcprop%woodxy     = clear_val
-    Sfcprop%stblcpxy   = clear_val
-    Sfcprop%fastcpxy   = clear_val
-    Sfcprop%xsaixy     = clear_val
-    Sfcprop%xlaixy     = clear_val
-    Sfcprop%taussxy    = clear_val
-    Sfcprop%smcwtdxy   = clear_val
-    Sfcprop%deeprechxy = clear_val
-    Sfcprop%rechxy     = clear_val
+      Sfcprop%snowxy     = clear_val
+      Sfcprop%tvxy       = clear_val
+      Sfcprop%tgxy       = clear_val
+      Sfcprop%canicexy   = clear_val
+      Sfcprop%canliqxy   = clear_val
+      Sfcprop%eahxy      = clear_val
+      Sfcprop%tahxy      = clear_val
+      Sfcprop%cmxy       = clear_val
+      Sfcprop%chxy       = clear_val
+      Sfcprop%fwetxy     = clear_val
+      Sfcprop%sneqvoxy   = clear_val
+      Sfcprop%alboldxy   = clear_val
+      Sfcprop%qsnowxy    = clear_val
+      Sfcprop%wslakexy   = clear_val
+      Sfcprop%zwtxy      = clear_val
+      Sfcprop%waxy       = clear_val
+      Sfcprop%wtxy       = clear_val
+      Sfcprop%lfmassxy   = clear_val
+      Sfcprop%rtmassxy   = clear_val
+      Sfcprop%stmassxy   = clear_val
+      Sfcprop%woodxy     = clear_val
+      Sfcprop%stblcpxy   = clear_val
+      Sfcprop%fastcpxy   = clear_val
+      Sfcprop%xsaixy     = clear_val
+      Sfcprop%xlaixy     = clear_val
+      Sfcprop%taussxy    = clear_val
+      Sfcprop%smcwtdxy   = clear_val
+      Sfcprop%deeprechxy = clear_val
+      Sfcprop%rechxy     = clear_val
 
-    Sfcprop%snicexy    = clear_val
-    Sfcprop%snliqxy    = clear_val
-    Sfcprop%tsnoxy     = clear_val
-    Sfcprop%smoiseq    = clear_val
-    Sfcprop%zsnsoxy    = clear_val
+      Sfcprop%snicexy    = clear_val
+      Sfcprop%snliqxy    = clear_val
+      Sfcprop%tsnoxy     = clear_val
+      Sfcprop%smoiseq    = clear_val
+      Sfcprop%zsnsoxy    = clear_val
 
-    allocate(Sfcprop%draincprv  (IM))
-    allocate(Sfcprop%drainncprv (IM))
-    allocate(Sfcprop%diceprv    (IM))
-    allocate(Sfcprop%dsnowprv   (IM))
-    allocate(Sfcprop%dgraupelprv(IM))
+      allocate(Sfcprop%draincprv  (IM))
+      allocate(Sfcprop%drainncprv (IM))
+      allocate(Sfcprop%diceprv    (IM))
+      allocate(Sfcprop%dsnowprv   (IM))
+      allocate(Sfcprop%dgraupelprv(IM))
 
-    Sfcprop%draincprv   = clear_val
-    Sfcprop%drainncprv  = clear_val
-    Sfcprop%diceprv     = clear_val
-    Sfcprop%dsnowprv    = clear_val
-    Sfcprop%dgraupelprv = clear_val
+      Sfcprop%draincprv   = clear_val
+      Sfcprop%drainncprv  = clear_val
+      Sfcprop%diceprv     = clear_val
+      Sfcprop%dsnowprv    = clear_val
+      Sfcprop%dgraupelprv = clear_val
 
-   endif
+    endif
 
     if (Model%do_myjsfc .or. Model%do_myjpbl) then
       allocate(Sfcprop%z0base(IM))
@@ -2903,7 +2903,7 @@ module GFS_typedefs
     endif
 
     !--- stochastic physics option
-    if (Model%do_sppt .or. Model%ca_global)then
+    if (Model%do_sppt .or. Model%ca_global) then
       allocate (Coupling%sppt_wts  (IM,Model%levs))
       Coupling%sppt_wts = clear_val
     endif
@@ -3439,8 +3439,9 @@ module GFS_typedefs
 
 !---Cellular automaton options
     integer              :: nca            = 1
-    integer              :: scells         = 2600
-    integer              :: tlives         = 1800
+    integer              :: ncells         = 5
+    integer              :: nlives         = 12
+    
     integer              :: nca_g          = 1
     integer              :: ncells_g       = 1
     integer              :: nlives_g       = 100
@@ -3453,7 +3454,7 @@ module GFS_typedefs
     logical              :: ca_sgs         = .false.
     logical              :: ca_global      = .false.
     logical              :: ca_smooth      = .false.
-    real(kind=kind_phys) :: rcell          = 0.72
+    real(kind=kind_phys) :: nthresh        = 18
     real                 :: ca_amplitude   = 0.35
     integer              :: nsmooth        = 100
     logical              :: ca_closure     = .false.
@@ -3602,8 +3603,8 @@ module GFS_typedefs
                           !--- canopy heat storage parameterization
                                h0facu, h0facs,                                              &
                           !--- cellular automata
-                               nca, scells, tlives, nca_g, ncells_g, nlives_g, nfracseed,   &
-                               nseed, nseed_g, rcell, do_ca,                              &
+                               nca, ncells, nlives, nca_g, ncells_g, nlives_g, nfracseed,   &
+                               nseed,  nseed_g,  nthresh, do_ca,                              &
                                ca_sgs, ca_global,iseed_ca,ca_smooth,                        &
                                nspinup,ca_amplitude,nsmooth,ca_closure,ca_entr,ca_trigger,  &
                           !--- IAU
@@ -3776,7 +3777,7 @@ module GFS_typedefs
       write(0,*) "Error, the SCM has not implemented time averaging of diagnostics in GFS_typedefs.F90"
       stop
     end if
-    
+
     Model%fhcyc            = fhcyc
     Model%thermodyn_id     = thermodyn_id
     Model%sfcpress_id      = sfcpress_id
@@ -4384,8 +4385,8 @@ module GFS_typedefs
     if ( .not. ca_sgs ) nca=0
      
     Model%nca              = nca
-    Model%scells           = scells
-    Model%tlives           = tlives
+    Model%ncells           = ncells
+    Model%nlives           = nlives
     Model%nca_g            = nca_g
     Model%ncells_g         = ncells_g
     Model%nlives_g         = nlives_g
@@ -4398,7 +4399,7 @@ module GFS_typedefs
     Model%iseed_ca         = iseed_ca
     Model%ca_smooth        = ca_smooth
     Model%nspinup          = nspinup
-    Model%rcell            = rcell
+    Model%nthresh          = nthresh
     Model%ca_amplitude     = ca_amplitude
     Model%nsmooth          = nsmooth
     Model%ca_closure       = ca_closure
@@ -5749,8 +5750,8 @@ module GFS_typedefs
       print *, ' '
       print *, 'cellular automata'
       print *, ' nca               : ', Model%nca
-      print *, ' scells            : ', Model%scells
-      print *, ' tlives            : ', Model%tlives
+      print *, ' ncells            : ', Model%ncells
+      print *, ' nlives            : ', Model%nlives
       print *, ' nca_g             : ', Model%nca_g
       print *, ' ncells_g          : ', Model%ncells_g
       print *, ' nlives_g          : ', Model%nlives_g
@@ -5763,7 +5764,7 @@ module GFS_typedefs
       print *, ' iseed_ca          : ', Model%iseed_ca
       print *, ' ca_smooth         : ', Model%ca_smooth
       print *, ' nspinup           : ', Model%nspinup
-      print *, ' rcell             : ', Model%rcell
+      print *, ' nthresh           : ', Model%nthresh
       print *, ' ca_amplitude      : ', Model%ca_amplitude
       print *, ' nsmooth           : ', Model%nsmooth
       print *, ' ca_closure        : ', Model%ca_closure
@@ -7344,6 +7345,9 @@ module GFS_typedefs
     Interstitial%otspt(:,:)       = .true.
     Interstitial%nsamftrac        = 0
     Interstitial%ncstrac          = 0
+    Interstitial%ntcwx            = 0
+    Interstitial%ntiwx            = 0
+    Interstitial%ntrwx            = 0
 
     ! perform aerosol convective transport and PBL diffusion
     Interstitial%trans_aero = Model%cplchm .and. Model%trans_trac
@@ -7380,6 +7384,7 @@ module GFS_typedefs
       Interstitial%ntqvx = Model%ntqv
       Interstitial%ntcwx = Model%ntcw
       Interstitial%ntiwx = Model%ntiw
+      Interstitial%ntrwx = Model%ntrw
       Interstitial%ntozx = Model%ntoz
     else
       if (Model%imp_physics == Model%imp_physics_wsm6) then
@@ -7392,33 +7397,42 @@ module GFS_typedefs
           Interstitial%ntqvx = 1
           Interstitial%ntcwx = 2
           Interstitial%ntiwx = 3
+          Interstitial%ntrwx = 4
           Interstitial%ntozx = 10
         else
           Interstitial%ntqvx = 1
           Interstitial%ntcwx = 2
           Interstitial%ntiwx = 3
+          Interstitial%ntrwx = 4
           Interstitial%ntozx = 9
         endif
       elseif (Model%imp_physics == Model%imp_physics_gfdl) then
         Interstitial%ntqvx = 1
         Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3
+        Interstitial%ntrwx = 4
         Interstitial%ntozx = 7
       ! F-A MP scheme
       elseif (Model%imp_physics == Model%imp_physics_fer_hires) then
         Interstitial%ntqvx = 1
         Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3 ! total ice or total condensate
-        Interstitial%ntozx = 6 
+        Interstitial%ntrwx = 4
+        Interstitial%ntozx = 6
       elseif (Model%imp_physics == Model%imp_physics_mg) then
         Interstitial%ntqvx = 1
         Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3
+        Interstitial%ntrwx = 4
         if (Model%ntgl > 0) then
           Interstitial%ntozx = 12
         else
           Interstitial%ntozx = 10
         end if
+      elseif (Model%imp_physics == Model%imp_physics_zhao_carr) then
+        Interstitial%ntqvx = 1
+        Interstitial%ntcwx = 2
+        Interstitial%ntozx = 3
       else
         Interstitial%ntqvx = 1
         Interstitial%ntcwx = 2
