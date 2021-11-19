@@ -54,6 +54,7 @@ module scm_type_defs
     integer                           :: itt_out  !< output iteration counter
     integer                           :: itt_swrad  !< sw radiation iteration counter
     integer                           :: itt_lwrad  !< lw radiation iteration counter
+    integer                           :: itt_rad !< radition (either LW or SW) counter
     integer                           :: itt_diag !< diagnostics iteration counter
     integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
     integer                           :: n_cols !< number of columns
@@ -436,6 +437,7 @@ module scm_type_defs
     scm_state%itt_out = int_zero
     scm_state%itt_swrad = int_zero
     scm_state%itt_lwrad = int_zero
+    scm_state%itt_rad = int_zero
     scm_state%itt_diag = int_zero
     scm_state%time_scheme = int_zero
     scm_state%n_cols = n_columns
