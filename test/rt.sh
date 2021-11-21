@@ -399,10 +399,8 @@ if [[ $n_completed -eq $n_tests && $n_fail -eq 0 && $n_error -eq 0 ]] ; then
           [ -d "${run_path}" ] || continue                          # if not a directory, skip
           output_dir="$(basename "${run_path}")"
           cmp_baseline_path=${cmp_baseline_dir}/${run_dir_ext}/${output_dir}
-          cmp ${run_path}/output.nc ${cmp_baseline_path}/output.nc
           ((n_comparisons=n_comparisons+1))
-          ret_val=$?
-          if [ ${ret_val} -eq 0 ] ; then
+          if cmp ${run_path}/output.nc ${cmp_baseline_path}/output.nc ; then
             echo "Output for ${run_dir_ext}/${output_dir} is IDENTICAL to baseline" >> ${TEST_LOGFILE}
             ((n_identical=n_identical+1))
           else
