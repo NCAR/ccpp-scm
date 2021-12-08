@@ -48,9 +48,8 @@
       prslrd0        = 0.
       ivegsrc        = 1
       isot           = 1
-      lsm            = 4               !HWRF set to 4
-      sfc_z0_type    = 4               !HWRF set to 4
-      iopt_dveg      = 2
+      lsm            = 2
+      iopt_dveg      = 1
       iopt_crs       = 1
       iopt_btr       = 1
       iopt_run       = 1
