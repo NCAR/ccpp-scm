@@ -809,6 +809,14 @@
   type = real
   kind = kind_phys
   active = (control_for_deep_convection_scheme == identifier_for_grell_freitas_deep_convection)
+[conv_act_m]
+  standard_name = consecutive_calls_for_grell_freitas_mid_level_convection
+  long_name = Memory counter for GF midlevel
+  units = none
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (control_for_deep_convection_scheme == identifier_for_grell_freitas_deep_convection)
 [spec_sh_flux]
   standard_name = specified_surface_upward_temperature_flux
   long_name = specified kinematic surface upward sensible heat flux
@@ -5803,6 +5811,14 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_aerosol_tracers_MG)
   type = real
   kind = kind_phys
+[aod_gf]
+  standard_name = aerosol_optical_depth_for_grell_freitas_deep_convection
+  long_name = aerosol optical depth used in Grell-Freitas Convective Parameterization
+  units = none
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = (control_for_deep_convection_scheme == identifier_for_grell_freitas_deep_convection)
 [imap]
   standard_name = map_of_block_column_number_to_global_i_index
   long_name = map of local index ix to global index i for this block
@@ -6054,6 +6070,13 @@
 [cactiv]
   standard_name = counter_for_grell_freitas_convection
   long_name = convective activity memory
+  units = none
+  dimensions = (horizontal_loop_extent)
+  type = integer
+  active = (control_for_deep_convection_scheme == identifier_for_grell_freitas_deep_convection)
+[cactiv_m]
+  standard_name = counter_for_grell_freitas_mid_level_convection
+  long_name = mid-level convective activity memory
   units = none
   dimensions = (horizontal_loop_extent)
   type = integer
@@ -7376,7 +7399,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22)
 [dvdt_ogw]
   standard_name = tendency_of_y_wind_due_to_mesoscale_orographic_gravity_wave_drag
   long_name = y momentum tendency from meso scale ogw
@@ -7384,7 +7407,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22)
 [du_ogwcol]
   standard_name = vertically_integrated_x_momentum_flux_due_to_mesoscale_orographic_gravity_wave_drag
   long_name = integrated x momentum flux from meso scale ogw
@@ -7392,7 +7415,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22)
 [dv_ogwcol]
   standard_name = vertically_integrated_y_momentum_flux_due_to_mesoscale_orographic_gravity_wave_drag
   long_name = integrated y momentum flux from meso scale ogw
@@ -7400,7 +7423,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22)
 [dudt_obl]
   standard_name = tendency_of_x_momentum_due_to_blocking_drag
   long_name = x momentum tendency from blocking drag
@@ -7408,7 +7431,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22)
 [dvdt_obl]
   standard_name = tendency_of_y_momentum_due_to_blocking_drag
   long_name = y momentum tendency from blocking drag
@@ -7416,7 +7439,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22)
 [du_oblcol]
   standard_name = vertically_integrated_x_momentum_flux_due_to_blocking_drag
   long_name = integrated x momentum flux from blocking drag
@@ -7424,7 +7447,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22)
 [dv_oblcol]
   standard_name = vertically_integrated_y_momentum_flux_due_to_blocking_drag
   long_name = integrated y momentum flux from blocking drag
@@ -7432,7 +7455,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [dudt_oss]
   standard_name = tendency_of_x_momentum_due_to_small_scale_gravity_wave_drag
   long_name = x momentum tendency from small scale gwd
@@ -7440,7 +7463,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [dvdt_oss]
   standard_name = tendency_of_y_momentum_due_to_small_scale_gravity_wave_drag
   long_name = y momentum tendency from small scale gwd
@@ -7448,7 +7471,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [du_osscol]
   standard_name = vertically_integrated_x_momentum_flux_due_to_small_scale_gravity_wave_drag
   long_name = integrated x momentum flux from small scale gwd
@@ -7456,7 +7479,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [dv_osscol]
   standard_name = vertically_integrated_y_momentum_flux_due_to_small_scale_gravity_wave_drag
   long_name = integrated y momentum flux from small scale gwd
@@ -7464,7 +7487,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [dudt_ofd]
   standard_name = tendency_of_x_momentum_due_to_form_drag
   long_name = x momentum tendency from form drag
@@ -7472,7 +7495,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [dvdt_ofd]
   standard_name = tendency_of_y_momentum_due_to_form_drag
   long_name = y momentum tendency from form drag
@@ -7480,7 +7503,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [du_ofdcol]
   standard_name = vertically_integrated_x_momentum_flux_due_to_form_drag
   long_name = integrated x momentum flux from form drag
@@ -7488,7 +7511,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [dv_ofdcol]
   standard_name = vertically_integrated_y_momentum_flux_due_to_form_drag
   long_name = integrated y momentum flux from form drag
@@ -7496,7 +7519,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33 .or. control_for_drag_suite_gravity_wave_drag==22 .or. control_for_drag_suite_gravity_wave_drag==3 .or. control_for_drag_suite_gravity_wave_drag==2)
+  active = (flag_for_ugwp_version_1 .or. control_for_drag_suite_gravity_wave_drag==33)
 [dv3dt_ngw]
   standard_name = time_integral_of_change_in_y_wind_due_to_nonstationary_gravity_wave
   long_name = time integral of change in y wind due to NGW
