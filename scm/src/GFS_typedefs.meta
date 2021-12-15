@@ -671,7 +671,13 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (control_for_land_surface_scheme == identifier_for_ruc_land_surface_scheme)
+[emis_wat]
+  standard_name = surface_longwave_emissivity_over_water
+  long_name = surface lw emissivity in fraction over water
+  units = frac
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
 [sfalb_lnd]
   standard_name = surface_diffused_shortwave_albedo_over_land
   long_name = mean surface diffused sw albedo over land
@@ -8156,13 +8162,6 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[semis_water]
-  standard_name = surface_longwave_emissivity_over_water
-  long_name = surface lw emissivity in fraction over water
-  units = frac
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys
 [ep1d]
   standard_name = surface_upward_potential_latent_heat_flux
   long_name = surface upward potential latent heat flux
@@ -10465,4 +10464,3 @@
   units = none
   dimensions = ()
   type = integer
-
