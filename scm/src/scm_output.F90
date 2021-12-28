@@ -434,6 +434,8 @@ subroutine output_append(scm_state, physics)
     end if
     call output_append_radtend(ncid, scm_state, physics)
     scm_state%itt_rad = scm_state%itt_rad + 1
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_rad",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_rad /)))
     call output_append_interstitial_rad(ncid, scm_state, physics)
     call output_append_diag_rad(ncid, scm_state, physics)
   end if
