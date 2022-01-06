@@ -197,13 +197,42 @@ subroutine scm_main_sub()
   endif
   
   !initialize the column's physics
-
-  write(0,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
-  call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
-  write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
-  if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop 1
+  if (adjustl(scm_state%physics_suite_name) == 'SCM_GSD_v1_GPU') then
+    call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='time_vary', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init, time_vary group: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='radiation', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init, radiation group: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='physics_before_GF', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init, physics_before_GF group: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    !##### REPLACE IF NECESSARY FOR GPU CALLS
+    call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='GF_scheme', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init, GF_scheme group: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    !#####
+    call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='physics_after_GF', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init, physics_after_GF group: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+  else
+    write(0,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
+    call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
+    write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
   end if
   
   physics%Model%first_time_step = .true.
@@ -437,12 +466,40 @@ subroutine scm_main_sub()
 
     end if
   end do
-
-  call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
-
-  if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop 1
+  if (adjustl(scm_state%physics_suite_name) == 'SCM_GSD_v1_GPU') then
+    call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='time_vary', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: time_vary group' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='radiation', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: radiation group' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='physics_before_GF', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: physics_before_GF group' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    !##### REPLACE IF NECESSARY FOR GPU CALLS
+    call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='GF_scheme', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: GF_scheme group' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+    !#####
+    call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), group_name='physics_after_GF', ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: physics_after_GF group' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
+  else
+    call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
+    if (ierr/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
+        stop 1
+    end if
   end if
 
 end subroutine scm_main_sub
