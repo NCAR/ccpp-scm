@@ -27,10 +27,10 @@ subroutine output_init(scm_state, physics)
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type),   intent(in) :: physics
   
-  integer :: n_timesteps, n_inst, n_diag, n_swrad, n_lwrad
+  integer :: n_timesteps, n_inst, n_diag, n_swrad, n_lwrad, n_rad
   integer :: ncid, hor_dim_id, vert_dim_id, vert_dim_i_id, vert_dim_rad_id, vert_dim_soil_id, dummy_id
-  integer :: time_inst_id, time_diag_id, time_swrad_id, time_lwrad_id
-  integer :: year_id, month_id, day_id, hour_id, min_id, time_swrad_var_id, time_lwrad_var_id
+  integer :: time_inst_id, time_diag_id, time_swrad_id, time_lwrad_id, time_rad_id
+  integer :: year_id, month_id, day_id, hour_id, min_id, time_swrad_var_id, time_lwrad_var_id, time_rad_var_id
   character(2) :: idx
   
   real(kind=dp), dimension(scm_state%n_cols,scm_state%n_levels) :: missing_value_2D
@@ -67,11 +67,25 @@ subroutine output_init(scm_state, physics)
   else
     n_lwrad = 1
   end if
+  if (physics%Model%nslwr > 0) then
+    if (physics%Model%nsswr > 0) then
+      n_rad = min(n_swrad, n_lwrad)
+    else
+      n_rad = n_lwrad
+    end if
+  else
+    if (physics%Model%nsswr > 0) then
+      n_rad = n_swrad
+    else
+      n_rad = 1
+    end if
+  end if
   
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_swrad_dim",LEN=n_swrad,DIMID=time_swrad_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_lwrad_dim",LEN=n_lwrad,DIMID=time_lwrad_id))
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_rad_dim",LEN=n_rad,DIMID=time_rad_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="hor_dim_layer",LEN=scm_state%n_cols,DIMID=hor_dim_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_layer",LEN=scm_state%n_levels,DIMID=vert_dim_id))
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_interface",LEN=scm_state%n_levels+1,DIMID=vert_dim_i_id))
@@ -83,6 +97,7 @@ subroutine output_init(scm_state, physics)
   call NetCDF_def_var(ncid, 'time_diag', NF90_FLOAT, "model elapsed time for diagnostic variables", "s", dummy_id, (/ time_diag_id /))
   call NetCDF_def_var(ncid, 'time_swrad', NF90_FLOAT, "model elapsed time for shortwave radiation variables", "s", time_swrad_var_id, (/ time_swrad_id /))
   call NetCDF_def_var(ncid, 'time_lwrad', NF90_FLOAT, "model elapsed time for longwave radiation variables", "s", time_lwrad_var_id, (/ time_lwrad_id /))
+  call NetCDF_def_var(ncid, 'time_rad', NF90_FLOAT, "model elapsed time for either LW or SW radiation variables", "s", time_rad_var_id, (/ time_rad_id /))
 
   !> - Define the state variables
   CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
@@ -91,9 +106,9 @@ subroutine output_init(scm_state, physics)
   
   !> - Define all diagnostic/physics variables
   CALL output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id, scm_state, physics)
-  CALL output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
+  CALL output_init_interstitial(ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
   CALL output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
-  CALL output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id, physics)
+  CALL output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_dim_id, vert_dim_id, physics)
   
   call NetCDF_def_var(ncid, 'init_year',   NF90_FLOAT, "model initialization year",   "year",   year_id)
   call NetCDF_def_var(ncid, 'init_month',  NF90_FLOAT, "model initialization month",  "month",  month_id)
@@ -121,6 +136,26 @@ subroutine output_init(scm_state, physics)
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_lwrad_var_id,VALUES=0.0,START=(/ 1 /)))
     missing_value_2D = missing_value
     call NetCDF_put_var(ncid, "lw_rad_heating_rate",  missing_value_2D, 1)
+  end if
+  if (physics%Model%nsswr <= 0 .and. physics%Model%nslwr <= 0) then
+    !write out missing values at the initial time
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_rad_var_id,VALUES=0.0,START=(/ 1 /)))
+    missing_value_2D = missing_value
+    call NetCDF_put_var(ncid, "rad_cloud_fraction", missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_cloud_lwp",      missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_eff_rad_ql",     missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_cloud_iwp",      missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qi",     missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_cloud_rwp",      missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qr",     missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_cloud_swp",      missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qs",     missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'max_cloud_fraction', missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'toa_total_albedo',   missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_mp',    missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_mp',    missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_2D, 1)
   end if
   
   CALL CHECK(NF90_CLOSE(NCID=ncid))
@@ -206,10 +241,10 @@ subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id,
   
 end subroutine output_init_sfcprop
 
-subroutine output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
+subroutine output_init_interstitial(ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
   use NetCDF_def, only : NetCDF_def_var
   
-  integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_rad_id
+  integer, intent(in) :: ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id
   
   integer :: dummy_id
   
@@ -235,15 +270,15 @@ subroutine output_init_interstitial(ncid, time_inst_id, hor_dim_id, vert_dim_id,
   call NetCDF_def_var(ncid, 'dcnv_prcp_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation from deep convection scheme",    "m", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'scnv_prcp_inst', NF90_FLOAT, "instantaneous surface liquid water equivalent thickness of total precipitation from shallow convection scheme", "m", dummy_id, (/ hor_dim_id, time_inst_id /))
   
-  call NetCDF_def_var(ncid, 'rad_cloud_fraction', NF90_FLOAT, "instantaneous cloud fraction used in radiation",                   "fraction", dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_cloud_lwp',      NF90_FLOAT, "instantaneous cloud liquid water path used in radiation",          "g m-2",    dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_eff_rad_ql',     NF90_FLOAT, "instantaneous effective radius for liquid cloud used in radiation", "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_cloud_iwp',      NF90_FLOAT, "instantaneous cloud ice water path used in radiation",              "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_eff_rad_qi',     NF90_FLOAT, "instantaneous effective radius for ice cloud used in radiation",    "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_cloud_rwp',      NF90_FLOAT, "instantaneous rain water path used in radiation",                   "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_eff_rad_qr',     NF90_FLOAT, "instantaneous effective radius for raindrop used in radiation",     "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_cloud_swp',      NF90_FLOAT, "instantaneous snow water path used in radiation",                   "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'rad_eff_rad_qs',     NF90_FLOAT, "instantaneous effective radius for snowflake in radiation",         "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_fraction', NF90_FLOAT, "instantaneous cloud fraction used in radiation (radiation timesteps only)",                   "fraction", dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_lwp',      NF90_FLOAT, "instantaneous cloud liquid water path used in radiation (radiation timesteps only)",          "g m-2",    dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_ql',     NF90_FLOAT, "instantaneous effective radius for liquid cloud used in radiation (radiation timesteps only)", "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_iwp',      NF90_FLOAT, "instantaneous cloud ice water path used in radiation (radiation timesteps only)",              "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_qi',     NF90_FLOAT, "instantaneous effective radius for ice cloud used in radiation (radiation timesteps only)",    "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_rwp',      NF90_FLOAT, "instantaneous rain water path used in radiation (radiation timesteps only)",                   "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_qr',     NF90_FLOAT, "instantaneous effective radius for raindrop used in radiation (radiation timesteps only)",     "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_cloud_swp',      NF90_FLOAT, "instantaneous snow water path used in radiation (radiation timesteps only)",                   "g m-2",   dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'rad_eff_rad_qs',     NF90_FLOAT, "instantaneous effective radius for snowflake in radiation (radiation timesteps only)",         "um",      dummy_id, (/ hor_dim_id, vert_dim_rad_id, time_rad_id /))
   
 end subroutine output_init_interstitial
 
@@ -259,11 +294,11 @@ subroutine output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, v
   
 end subroutine output_init_radtend
 
-subroutine output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id, physics)
+subroutine output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_dim_id, vert_dim_id, physics)
   use scm_type_defs, only: physics_type
   use NetCDF_def, only : NetCDF_def_var
   
-  integer, intent(in) :: ncid, time_inst_id, time_diag_id, hor_dim_id, vert_dim_id
+  integer, intent(in) :: ncid, time_inst_id, time_diag_id, time_rad_id, hor_dim_id, vert_dim_id
   type(physics_type), intent(in) :: physics
   
   integer :: i, dummy_id
@@ -332,6 +367,12 @@ subroutine output_init_diag(ncid, time_inst_id, time_diag_id, hor_dim_id, vert_d
   call NetCDF_def_var(ncid, 'graupel_rate_accum',   NF90_FLOAT, "cumulative surface liquid water equivalent thickness of graupel precipitation rate (valid over diagnostic interval)",    "m s-1", dummy_id, (/ hor_dim_id, time_diag_id /))
   call NetCDF_def_var(ncid, 'conv_prcp_rate_accum', NF90_FLOAT, "cumulative surface liquid water equivalent thickness of convective precipitation rate (valid over diagnostic interval)", "m s-1", dummy_id, (/ hor_dim_id, time_diag_id /))
   
+  call NetCDF_def_var(ncid, 'max_cloud_fraction', NF90_FLOAT, "maximum cloud fraction in the column (radiation timesteps only)",                           "fraction",     dummy_id, (/ hor_dim_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'toa_total_albedo',   NF90_FLOAT, "top-of-atmosphere total sky albedo (radiation timesteps only)",                             "fraction",     dummy_id, (/ hor_dim_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'vert_int_lwp_mp',    NF90_FLOAT, "vertically-integrated liquid water path from microphysics (radiation timesteps only)",      "kg m-2",     dummy_id, (/ hor_dim_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'vert_int_iwp_mp',    NF90_FLOAT, "vertically-integrated ice water path from microphysics (radiation timesteps only)",         "kg m-2",     dummy_id, (/ hor_dim_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'vert_int_lwp_cf',    NF90_FLOAT, "vertically-integrated liquid water path from fractional clouds (radiation timesteps only)", "kg m-2",     dummy_id, (/ hor_dim_id, time_rad_id /))
+  call NetCDF_def_var(ncid, 'vert_int_iwp_cf',    NF90_FLOAT, "vertically-integrated ice water path from fractional clouds (radiation timesteps only)",    "kg m-2",     dummy_id, (/ hor_dim_id, time_rad_id /))
   
   !all auxilliary diagnostics will be output every timestep (logic will need to be added to implement time averaging -- including resetting in GFS_typedefs/phys_diag_zero)
   if (physics%Model%naux2d > 0) then
@@ -379,7 +420,7 @@ subroutine output_append(scm_state, physics)
   call output_append_forcing(ncid, scm_state)
   
   call output_append_sfcprop(ncid, scm_state, physics)
-  call output_append_interstitial(ncid, scm_state, physics)
+  call output_append_interstitial_inst(ncid, scm_state, physics)
   if(physics%Model%lslwr .or. physics%Model%lsswr) then
     if (physics%Model%lsswr) then
       scm_state%itt_swrad = scm_state%itt_swrad + 1
@@ -392,6 +433,11 @@ subroutine output_append(scm_state, physics)
       CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_lwrad /)))
     end if
     call output_append_radtend(ncid, scm_state, physics)
+    scm_state%itt_rad = scm_state%itt_rad + 1
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_rad",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_rad /)))
+    call output_append_interstitial_rad(ncid, scm_state, physics)
+    call output_append_diag_rad(ncid, scm_state, physics)
   end if
   call output_append_diag_inst(ncid, scm_state, physics)
   if(mod(scm_state%itt,physics%Model%nszero) == 0) then
@@ -499,7 +545,7 @@ subroutine output_append_sfcprop(ncid, scm_state, physics)
   
 end subroutine output_append_sfcprop
 
-subroutine output_append_interstitial(ncid, scm_state, physics)
+subroutine output_append_interstitial_inst(ncid, scm_state, physics)
     use scm_type_defs, only: scm_state_type, physics_type
     use NetCDF_put, only: NetCDF_put_var
     
@@ -528,18 +574,28 @@ subroutine output_append_interstitial(ncid, scm_state, physics)
     call NetCDF_put_var(ncid, "mp_prcp_inst",    physics%Interstitial%prcpmp(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "dcnv_prcp_inst",  physics%Interstitial%raincd(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "scnv_prcp_inst",  physics%Interstitial%raincs(:), scm_state%itt_out)
-    
-    call NetCDF_put_var(ncid, "rad_cloud_fraction", physics%Interstitial%clouds(:,:,1), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_cloud_lwp",      physics%Interstitial%clouds(:,:,2), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_eff_rad_ql",     physics%Interstitial%clouds(:,:,3), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_cloud_iwp",      physics%Interstitial%clouds(:,:,4), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_eff_rad_qi",     physics%Interstitial%clouds(:,:,5), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_cloud_rwp",      physics%Interstitial%clouds(:,:,6), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_eff_rad_qr",     physics%Interstitial%clouds(:,:,7), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_cloud_swp",      physics%Interstitial%clouds(:,:,8), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "rad_eff_rad_qs",     physics%Interstitial%clouds(:,:,9), scm_state%itt_out)
 
-end subroutine output_append_interstitial
+end subroutine output_append_interstitial_inst
+
+subroutine output_append_interstitial_rad(ncid, scm_state, physics)
+    use scm_type_defs, only: scm_state_type, physics_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    type(physics_type), intent(in) :: physics
+    
+    call NetCDF_put_var(ncid, "rad_cloud_fraction", physics%Interstitial%clouds(:,:,1), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_lwp",      physics%Interstitial%clouds(:,:,2), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_ql",     physics%Interstitial%clouds(:,:,3), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_iwp",      physics%Interstitial%clouds(:,:,4), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qi",     physics%Interstitial%clouds(:,:,5), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_rwp",      physics%Interstitial%clouds(:,:,6), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qr",     physics%Interstitial%clouds(:,:,7), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_swp",      physics%Interstitial%clouds(:,:,8), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qs",     physics%Interstitial%clouds(:,:,9), scm_state%itt_rad)
+
+end subroutine output_append_interstitial_rad
 
 subroutine output_append_radtend(ncid, scm_state, physics)
     use scm_type_defs, only: scm_state_type, physics_type
@@ -689,6 +745,23 @@ subroutine output_append_diag_avg(ncid, scm_state, physics)
     call NetCDF_put_var(ncid, "conv_prcp_rate_accum", physics%Diag%cnvprcpb(:), scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
 end subroutine output_append_diag_avg
+
+subroutine output_append_diag_rad(ncid, scm_state, physics)
+    use scm_type_defs, only: scm_state_type, physics_type
+    use NetCDF_put, only: NetCDF_put_var
+    
+    integer, intent(in) :: ncid
+    type(scm_state_type), intent(in) :: scm_state
+    type(physics_type), intent(in) :: physics
+      
+    call NetCDF_put_var(ncid, 'max_cloud_fraction', physics%Diag%cldfra2d(:),     scm_state%itt_rad)
+    call NetCDF_put_var(ncid, 'toa_total_albedo',   physics%Diag%total_albedo(:), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_mp',    physics%Diag%lwp_ex(:),       scm_state%itt_rad)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_mp',    physics%Diag%iwp_ex(:),       scm_state%itt_rad)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    physics%Diag%lwp_fc(:),       scm_state%itt_rad)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    physics%Diag%iwp_fc(:),       scm_state%itt_rad)
+    
+end subroutine output_append_diag_rad
 
 subroutine output_append_tendency(ncid, scm_state, physics, idtend, label, itt, mult_const)
   use scm_type_defs, only: scm_state_type, physics_type
