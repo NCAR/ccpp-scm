@@ -3586,7 +3586,10 @@ module GFS_typedefs
                                mg_alf,   mg_qcmin, mg_do_ice_gmao, mg_do_liq_liu,           &
                                ltaerosol, lradar, nsradar_reset, lrefres, ttendlim,         &
                                ext_diag_thompson, dt_inner, lgfdlmprad,                     &
+<<<<<<< HEAD
                                sedi_semi, decfl,                                            &
+=======
+>>>>>>> 14ce3817958283ded120bbe93217dbf417d8bed6
                                nssl_cccn, nssl_alphah, nssl_alphahl,                        &
                                nssl_invertccn, nssl_hail_on, nssl_ccn_on,                   &
                           !--- max hourly
