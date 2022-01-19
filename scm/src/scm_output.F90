@@ -33,6 +33,7 @@ subroutine output_init(scm_state, physics)
   integer :: year_id, month_id, day_id, hour_id, min_id, time_swrad_var_id, time_lwrad_var_id, time_rad_var_id
   character(2) :: idx
   
+  real(kind=dp), dimension(scm_state%n_cols) :: missing_value_1D
   real(kind=dp), dimension(scm_state%n_cols,scm_state%n_levels) :: missing_value_2D
   
   !> \section output_init_alg Algorithm
@@ -141,6 +142,7 @@ subroutine output_init(scm_state, physics)
     !write out missing values at the initial time
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_rad_var_id,VALUES=0.0,START=(/ 1 /)))
     missing_value_2D = missing_value
+    missing_value_1D = missing_value
     call NetCDF_put_var(ncid, "rad_cloud_fraction", missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_cloud_lwp",      missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_eff_rad_ql",     missing_value_2D, 1)
@@ -150,12 +152,12 @@ subroutine output_init(scm_state, physics)
     call NetCDF_put_var(ncid, "rad_eff_rad_qr",     missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_cloud_swp",      missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_eff_rad_qs",     missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'max_cloud_fraction', missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'toa_total_albedo',   missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_lwp_mp',    missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_iwp_mp',    missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'max_cloud_fraction', missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'toa_total_albedo',   missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_mp',    missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_mp',    missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_1D, 1)
   end if
   
   CALL CHECK(NF90_CLOSE(NCID=ncid))
