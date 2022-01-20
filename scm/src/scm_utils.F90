@@ -666,7 +666,12 @@ module NetCDF_def
     end if
     CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="description",VALUES=desc))
     CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="units",VALUES=unit))
+!    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value))
+    IF ( var_type /= NF90_INT ) THEN
     CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value))
+    ELSE
+    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=NF90_FILL_INT))
+    ENDIF
   
   end subroutine NetCDF_def_var
 end module NetCDF_def
