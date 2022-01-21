@@ -42,6 +42,13 @@ except (AttributeError):
 def print_progress(n_complete, n_total):
     print(str(n_complete) + ' of ' + str(n_total) + ' complete: (' + str(100.0*n_complete/float(n_total)) + '%)')
 
+def replace_fill_with_nan(nc_ds, var_name, var, group):
+    raw_data = nc_ds.variables[var_name][:]
+    raw_data[raw_data == nc_fid.variables[var_name]._FillValue] = np.nan
+    var.append(raw_data)
+    group.append(var_name)
+    return [var, group]
+
 #set up command line argument parser to read in name of config file to use
 parser = argparse.ArgumentParser()
 parser.add_argument('config', help='configuration file for CCPP SCM analysis', nargs=1)
@@ -123,8 +130,6 @@ for filename in glob.glob(os.path.join(dir, '*.nml')):
     nml = f90nml.read(filename)
     if nml['case_config']:
         case_name = nml['case_config']['case_name']
-
-
 
 #initialize lists for output variables
 year = []
@@ -574,137 +579,97 @@ for i in range(len(scm_datasets)):
     hpbl.append(nc_fid.variables['hpbl'][:])
     inst_time_group.append('hpbl')
     
-    dT_dt_lwrad.append(nc_fid.variables['dT_dt_lwrad'][:])
-    diag_time_group.append('dT_dt_lwrad')
+    [dT_dt_lwrad, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_lwrad', dT_dt_lwrad, diag_time_group)
     
-    dT_dt_swrad.append(nc_fid.variables['dT_dt_swrad'][:])
-    diag_time_group.append('dT_dt_swrad')
+    [dT_dt_swrad, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_swrad', dT_dt_swrad, diag_time_group)    
     
-    dT_dt_pbl.append(nc_fid.variables['dT_dt_pbl'][:])
-    diag_time_group.append('dT_dt_pbl')
+    [dT_dt_pbl, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_pbl', dT_dt_pbl, diag_time_group)    
     
-    dT_dt_deepconv.append(nc_fid.variables['dT_dt_deepconv'][:])
-    diag_time_group.append('dT_dt_deepconv')
+    [dT_dt_deepconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_deepconv', dT_dt_deepconv, diag_time_group)    
     
-    dT_dt_shalconv.append(nc_fid.variables['dT_dt_shalconv'][:])
-    diag_time_group.append('dT_dt_shalconv')
+    [dT_dt_shalconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_shalconv', dT_dt_shalconv, diag_time_group)    
     
-    dT_dt_micro.append(nc_fid.variables['dT_dt_micro'][:])
-    diag_time_group.append('dT_dt_micro')
+    [dT_dt_micro, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_micro', dT_dt_micro, diag_time_group)
     
     dT_dt_conv.append(dT_dt_deepconv[-1] + dT_dt_shalconv[-1])
     diag_time_group.append('dT_dt_conv')
     
-    dT_dt_ogwd.append(nc_fid.variables['dT_dt_ogwd'][:])
-    diag_time_group.append('dT_dt_ogwd')
+    [dT_dt_ogwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_ogwd', dT_dt_ogwd, diag_time_group)
     
-    dT_dt_rayleigh.append(nc_fid.variables['dT_dt_rayleigh'][:])
-    diag_time_group.append('dT_dt_rayleigh')
+    [dT_dt_rayleigh, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_rayleigh', dT_dt_rayleigh, diag_time_group)    
     
-    dT_dt_cgwd.append(nc_fid.variables['dT_dt_cgwd'][:])
-    diag_time_group.append('dT_dt_cgwd')
+    [dT_dt_cgwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_cgwd', dT_dt_cgwd, diag_time_group)    
     
-    dT_dt_phys.append(nc_fid.variables['dT_dt_phys'][:])
-    diag_time_group.append('dT_dt_phys')
+    [dT_dt_phys, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_phys', dT_dt_phys, diag_time_group)    
     
-    dT_dt_nonphys.append(nc_fid.variables['dT_dt_nonphys'][:])
-    diag_time_group.append('dT_dt_nonphys')
+    [dT_dt_nonphys, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_nonphys', dT_dt_nonphys, diag_time_group)    
     
-    dq_dt_pbl.append(nc_fid.variables['dq_dt_pbl'][:])
-    diag_time_group.append('dq_dt_pbl')
+    [dq_dt_pbl, diag_time_group] = replace_fill_with_nan(nc_fid, 'dq_dt_pbl', dq_dt_pbl, diag_time_group)    
+        
+    [dq_dt_deepconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dq_dt_deepconv', dq_dt_deepconv, diag_time_group)
     
-    dq_dt_deepconv.append(nc_fid.variables['dq_dt_deepconv'][:])
-    diag_time_group.append('dq_dt_deepconv')
+    [dq_dt_shalconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dq_dt_shalconv', dq_dt_shalconv, diag_time_group)
     
-    dq_dt_shalconv.append(nc_fid.variables['dq_dt_shalconv'][:])
-    diag_time_group.append('dq_dt_shalconv')
-    
-    dq_dt_micro.append(nc_fid.variables['dq_dt_micro'][:])
-    diag_time_group.append('dq_dt_micro')
-    
+    [dq_dt_micro, diag_time_group] = replace_fill_with_nan(nc_fid, 'dq_dt_micro', dq_dt_micro, diag_time_group)    
+        
     dq_dt_conv.append(dq_dt_deepconv[-1] + dq_dt_shalconv[-1])
     diag_time_group.append('dq_dt_conv')
     
-    dq_dt_phys.append(nc_fid.variables['dq_dt_phys'][:])
-    diag_time_group.append('dq_dt_phys')
+    [dq_dt_phys, diag_time_group] = replace_fill_with_nan(nc_fid, 'dq_dt_phys', dq_dt_phys, diag_time_group)
     
-    dq_dt_nonphys.append(nc_fid.variables['dq_dt_nonphys'][:])
-    diag_time_group.append('dq_dt_nonphys')
+    [dq_dt_nonphys, diag_time_group] = replace_fill_with_nan(nc_fid, 'dq_dt_nonphys', dq_dt_nonphys, diag_time_group)    
     
-    doz_dt_pbl.append(nc_fid.variables['doz_dt_pbl'][:])
-    diag_time_group.append('doz_dt_pbl')
+    [doz_dt_pbl, diag_time_group] = replace_fill_with_nan(nc_fid, 'doz_dt_pbl', doz_dt_pbl, diag_time_group)    
     
-    doz_dt_prodloss.append(nc_fid.variables['doz_dt_prodloss'][:])
-    diag_time_group.append('doz_dt_prodloss')
+    [doz_dt_prodloss, diag_time_group] = replace_fill_with_nan(nc_fid, 'doz_dt_prodloss', doz_dt_prodloss, diag_time_group)    
     
-    doz_dt_oz.append(nc_fid.variables['doz_dt_oz'][:])
-    diag_time_group.append('doz_dt_oz')
+    [doz_dt_oz, diag_time_group] = replace_fill_with_nan(nc_fid, 'doz_dt_oz', doz_dt_oz, diag_time_group)    
     
-    doz_dt_T.append(nc_fid.variables['doz_dt_T'][:])
-    diag_time_group.append('doz_dt_T')
+    [doz_dt_T, diag_time_group] = replace_fill_with_nan(nc_fid, 'doz_dt_T', doz_dt_T, diag_time_group)    
     
-    doz_dt_ovhd.append(nc_fid.variables['doz_dt_ovhd'][:])
-    diag_time_group.append('doz_dt_ovhd')
+    [doz_dt_ovhd, diag_time_group] = replace_fill_with_nan(nc_fid, 'doz_dt_ovhd', doz_dt_ovhd, diag_time_group)    
     
-    doz_dt_phys.append(nc_fid.variables['doz_dt_phys'][:])
-    diag_time_group.append('doz_dt_phys')
+    [doz_dt_phys, diag_time_group] = replace_fill_with_nan(nc_fid, 'doz_dt_phys', doz_dt_phys, diag_time_group)
     
-    doz_dt_nonphys.append(nc_fid.variables['doz_dt_nonphys'][:])
-    diag_time_group.append('doz_dt_nonphys')
-        
-    du_dt_pbl.append(nc_fid.variables['du_dt_pbl'][:])
-    diag_time_group.append('du_dt_pbl')
+    [doz_dt_nonphys, diag_time_group] = replace_fill_with_nan(nc_fid, 'doz_dt_nonphys', doz_dt_nonphys, diag_time_group)    
     
-    du_dt_ogwd.append(nc_fid.variables['du_dt_ogwd'][:])
-    diag_time_group.append('du_dt_ogwd')
+    [du_dt_pbl, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_pbl', du_dt_pbl, diag_time_group)    
     
-    du_dt_deepconv.append(nc_fid.variables['du_dt_deepconv'][:])
-    diag_time_group.append('du_dt_deepconv')
+    [du_dt_ogwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_ogwd', du_dt_ogwd, diag_time_group)
     
-    du_dt_cgwd.append(nc_fid.variables['du_dt_cgwd'][:])
-    diag_time_group.append('du_dt_cgwd')
+    [du_dt_deepconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_deepconv', du_dt_deepconv, diag_time_group)
     
-    du_dt_rayleigh.append(nc_fid.variables['du_dt_rayleigh'][:])
-    diag_time_group.append('du_dt_rayleigh')
+    [du_dt_cgwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_cgwd', du_dt_cgwd, diag_time_group)
     
-    du_dt_shalconv.append(nc_fid.variables['du_dt_shalconv'][:])
-    diag_time_group.append('du_dt_shalconv')
+    [du_dt_rayleigh, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_rayleigh', du_dt_rayleigh, diag_time_group)
+    
+    [du_dt_shalconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_shalconv', du_dt_shalconv, diag_time_group)
     
     du_dt_conv.append(du_dt_deepconv[-1] + du_dt_shalconv[-1])
     diag_time_group.append('du_dt_conv')
     
-    du_dt_phys.append(nc_fid.variables['du_dt_phys'][:])
-    diag_time_group.append('du_dt_phys')
+    [du_dt_phys, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_phys', du_dt_phys, diag_time_group)
     
-    du_dt_nonphys.append(nc_fid.variables['du_dt_nonphys'][:])
-    diag_time_group.append('du_dt_nonphys')
+    [du_dt_nonphys, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_nonphys', du_dt_nonphys, diag_time_group)
+        
+    [dv_dt_pbl, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_pbl', dv_dt_pbl, diag_time_group)    
     
-    dv_dt_pbl.append(nc_fid.variables['dv_dt_pbl'][:])
-    diag_time_group.append('dv_dt_pbl')
+    [dv_dt_ogwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_ogwd', dv_dt_ogwd, diag_time_group)
     
-    dv_dt_ogwd.append(nc_fid.variables['dv_dt_ogwd'][:])
-    diag_time_group.append('dv_dt_ogwd')
+    [dv_dt_deepconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_deepconv', dv_dt_deepconv, diag_time_group)
     
-    dv_dt_deepconv.append(nc_fid.variables['dv_dt_deepconv'][:])
-    diag_time_group.append('dv_dt_deepconv')
+    [dv_dt_cgwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_cgwd', dv_dt_cgwd, diag_time_group)
     
-    dv_dt_cgwd.append(nc_fid.variables['dv_dt_cgwd'][:])
-    diag_time_group.append('dv_dt_cgwd')
+    [dv_dt_rayleigh, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_rayleigh', dv_dt_rayleigh, diag_time_group)
     
-    dv_dt_rayleigh.append(nc_fid.variables['dv_dt_rayleigh'][:])
-    diag_time_group.append('dv_dt_rayleigh')
-    
-    dv_dt_shalconv.append(nc_fid.variables['dv_dt_shalconv'][:])
-    diag_time_group.append('dv_dt_shalconv')
+    [dv_dt_shalconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_shalconv', dv_dt_shalconv, diag_time_group)
     
     dv_dt_conv.append(dv_dt_deepconv[-1] + dv_dt_shalconv[-1])
     diag_time_group.append('dv_dt_conv')
     
-    dv_dt_phys.append(nc_fid.variables['dv_dt_phys'][:])
-    diag_time_group.append('dv_dt_phys')
+    [dv_dt_phys, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_phys', dv_dt_phys, diag_time_group)
     
-    dv_dt_nonphys.append(nc_fid.variables['dv_dt_nonphys'][:])
-    diag_time_group.append('dv_dt_nonphys')
+    [dv_dt_nonphys, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_nonphys', dv_dt_nonphys, diag_time_group)
     
     tprcp_accum.append(nc_fid.variables['tprcp_accum'][:])
     diag_time_group.append('tprcp_accum')
@@ -785,7 +750,7 @@ for i in range(len(scm_datasets)):
     date_swrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_swrad[-1]]))
     date_lwrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_lwrad[-1]]))
     date_rad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_rad[-1]]))
-
+        
     nc_fid.close()
 
     #calculate diagnostic values from model output
@@ -1026,7 +991,6 @@ if(plot_ind_datasets):
                                 data_time_slice = data[i,time_slice_indices_lwrad[j][0]:time_slice_indices_lwrad[j][1],:,:]
                             elif (profiles_mean_multi[multiplot]['vars'][l] in rad_time_group):
                                 #print("{} in time group rad".format(profiles_mean_multi[multiplot]['vars'][l]))
-                                print(profiles_mean_multi[multiplot]['vars'][l])
                                 data_time_slice = data[i,time_slice_indices_rad[j][0]:time_slice_indices_rad[j][1],:,:]
                             else:
                                 print("{} not found in any time groups".format(profiles_mean_multi[multiplot]['vars'][l]))

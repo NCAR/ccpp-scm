@@ -403,20 +403,28 @@ subroutine output_append(scm_state, physics, force)
   logical, optional, intent(in) :: force
   
   integer :: ncid, var_id
-
+  logical :: force_inst
+  
+  if (PRESENT(force)) then
+    force_inst = force
+  else
+    force_inst = .false.
+  end if
+  
   !> \section output_append_alg Algorithm
   !! @{
   if (.not. (mod(scm_state%itt, scm_state%n_itt_out)==0 .or. &
             physics%Model%lsswr .or. physics%Model%lslwr .or. &
             mod(scm_state%itt,physics%Model%nszero) == 0 .or. &
-            (PRESENT(force) .and. force))) then
+            force_inst)) then
     return
   end if
   !> - Open the file.
   CALL CHECK(NF90_OPEN(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",MODE=NF90_WRITE,NCID=ncid))
   
   !> - Append all of the variables to the file.
-  if (mod(scm_state%itt, scm_state%n_itt_out)==0 .or. (PRESENT(force) .and. force)) then
+  
+  if (mod(scm_state%itt, scm_state%n_itt_out)==0 .or. force_inst) then
     scm_state%itt_out = scm_state%itt_out+1
     
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_inst",VARID=var_id))
