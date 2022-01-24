@@ -750,7 +750,6 @@ for i in range(len(scm_datasets)):
     date_swrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_swrad[-1]]))
     date_lwrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_lwrad[-1]]))
     date_rad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_rad[-1]]))
-        
     nc_fid.close()
 
     #calculate diagnostic values from model output
