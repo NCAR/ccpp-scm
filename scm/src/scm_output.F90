@@ -33,6 +33,7 @@ subroutine output_init(scm_state, physics)
   integer :: year_id, month_id, day_id, hour_id, min_id, time_swrad_var_id, time_lwrad_var_id, time_rad_var_id
   character(2) :: idx
   
+  real(kind=dp), dimension(scm_state%n_cols) :: missing_value_1D
   real(kind=dp), dimension(scm_state%n_cols,scm_state%n_levels) :: missing_value_2D
   
   !> \section output_init_alg Algorithm
@@ -115,11 +116,6 @@ subroutine output_init(scm_state, physics)
   call NetCDF_def_var(ncid, 'init_day',    NF90_INT, "model initialization day",    "day",    day_id)
   call NetCDF_def_var(ncid, 'init_hour',   NF90_INT, "model initialization hour",   "hour",   hour_id)
   call NetCDF_def_var(ncid, 'init_minute', NF90_INT, "model initialization minute", "minute", min_id)
-!  call check( nf90_put_att(NCID, year_id, "_FillValue", NF90_FILL_INT) )
-!  call check( nf90_put_att(NCID, month_id, "_FillValue", NF90_FILL_INT) )
-!  call check( nf90_put_att(NCID, day_id, "_FillValue", NF90_FILL_INT) )
-!  call check( nf90_put_att(NCID, hour_id, "_FillValue", NF90_FILL_INT) )
-!  call check( nf90_put_att(NCID, min_id, "_FillValue", NF90_FILL_INT) )
   
   !> - Close variable definition and the file.
   CALL CHECK(NF90_ENDDEF(NCID=ncid))
@@ -146,6 +142,7 @@ subroutine output_init(scm_state, physics)
     !write out missing values at the initial time
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_rad_var_id,VALUES=0.0,START=(/ 1 /)))
     missing_value_2D = missing_value
+    missing_value_1D = missing_value
     call NetCDF_put_var(ncid, "rad_cloud_fraction", missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_cloud_lwp",      missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_eff_rad_ql",     missing_value_2D, 1)
@@ -155,12 +152,12 @@ subroutine output_init(scm_state, physics)
     call NetCDF_put_var(ncid, "rad_eff_rad_qr",     missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_cloud_swp",      missing_value_2D, 1)
     call NetCDF_put_var(ncid, "rad_eff_rad_qs",     missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'max_cloud_fraction', missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'toa_total_albedo',   missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_lwp_mp',    missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_iwp_mp',    missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    missing_value_2D, 1)
-    call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_2D, 1)
+    call NetCDF_put_var(ncid, 'max_cloud_fraction', missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'toa_total_albedo',   missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_mp',    missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_mp',    missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    missing_value_1D, 1)
+    call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_1D, 1)
   end if
   
   CALL CHECK(NF90_CLOSE(NCID=ncid))
@@ -397,35 +394,51 @@ subroutine output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_d
 end subroutine output_init_diag
 
 !> This subroutine appends data to the "output.nc" file.
-subroutine output_append(scm_state, physics)
+subroutine output_append(scm_state, physics, force)
 
   use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout) :: scm_state
   type(physics_type), intent(in) :: physics
-
-  real(kind=dp), allocatable :: dummy_1D(:), dummy_2d(:,:)
+  logical, optional, intent(in) :: force
   
-  integer :: ncid, var_id, i, j
-  character(2) :: idx
-
-  allocate(dummy_1D(scm_state%n_cols), dummy_2d(scm_state%n_cols, scm_state%n_levels))
-
+  integer :: ncid, var_id
+  logical :: force_inst
+  
+  if (PRESENT(force)) then
+    force_inst = force
+  else
+    force_inst = .false.
+  end if
+  
   !> \section output_append_alg Algorithm
   !! @{
-
+  if (.not. (mod(scm_state%itt, scm_state%n_itt_out)==0 .or. &
+            physics%Model%lsswr .or. physics%Model%lslwr .or. &
+            mod(scm_state%itt,physics%Model%nszero) == 0 .or. &
+            force_inst)) then
+    return
+  end if
   !> - Open the file.
   CALL CHECK(NF90_OPEN(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",MODE=NF90_WRITE,NCID=ncid))
   
   !> - Append all of the variables to the file.
-  CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_inst",VARID=var_id))
-  CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_out /)))
-
-  call output_append_state(ncid, scm_state, physics)
-  call output_append_forcing(ncid, scm_state)
   
-  call output_append_sfcprop(ncid, scm_state, physics)
-  call output_append_interstitial_inst(ncid, scm_state, physics)
+  if (mod(scm_state%itt, scm_state%n_itt_out)==0 .or. force_inst) then
+    scm_state%itt_out = scm_state%itt_out+1
+    
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_inst",VARID=var_id))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_out /)))
+
+    call output_append_state(ncid, scm_state, physics)
+    call output_append_forcing(ncid, scm_state)
+  
+    call output_append_sfcprop(ncid, scm_state, physics)
+    call output_append_interstitial_inst(ncid, scm_state, physics)
+    
+    call output_append_diag_inst(ncid, scm_state, physics)
+  end if
+  
   if(physics%Model%lslwr .or. physics%Model%lsswr) then
     if (physics%Model%lsswr) then
       scm_state%itt_swrad = scm_state%itt_swrad + 1
@@ -444,7 +457,7 @@ subroutine output_append(scm_state, physics)
     call output_append_interstitial_rad(ncid, scm_state, physics)
     call output_append_diag_rad(ncid, scm_state, physics)
   end if
-  call output_append_diag_inst(ncid, scm_state, physics)
+  
   if(mod(scm_state%itt,physics%Model%nszero) == 0) then
     scm_state%itt_diag = scm_state%itt_diag + 1
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_diag",VARID=var_id))

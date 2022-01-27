@@ -650,7 +650,7 @@ module NetCDF_def
   contains
   
   subroutine NetCDF_def_var(ncid, var_name, var_type, desc, unit, varid, dims)
-    use NetCDF_read, only: missing_value
+    use NetCDF_read, only: missing_value, missing_value_int
     integer, intent(in) :: ncid
     character (*), intent(in) :: var_name
     integer, intent(in) :: var_type
@@ -660,17 +660,21 @@ module NetCDF_def
     integer, intent(out) :: varid
     
     if (present(dims)) then
-      CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,DIMIDS=dims,VARID=varid))
+      call CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,DIMIDS=dims,VARID=varid))
     else
-      CALL CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,VARID=varid))
+      call CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,VARID=varid))
     end if
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="description",VALUES=desc))
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="units",VALUES=unit))
-    IF ( var_type /= NF90_INT ) THEN
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value))
-    ELSE
-    CALL CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=NF90_FILL_INT))
-    ENDIF
+    call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="description",VALUES=desc))
+    call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="units",VALUES=unit))
+    
+    if (var_type == NF90_FLOAT) then
+      call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value))
+    elseif (var_type == NF90_INT) then
+      call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value_int))
+    else
+      write(0,'(a,i0,a)') "The variable '" // var_name // "' is defined as a type other than NF90_FLOAT or NF90_INT. Stopping..."
+      STOP
+    end if
   
   end subroutine NetCDF_def_var
 end module NetCDF_def
