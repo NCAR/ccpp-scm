@@ -34,6 +34,7 @@
     imfshalcnv = -1
     imp_physics = 17
     nssl_ccn_on = .false.
+    nssl_cccn = 0.2e8
     nssl_invertccn = .true.
     nssl_hail_on = .false.
     iopt_alb = 2
