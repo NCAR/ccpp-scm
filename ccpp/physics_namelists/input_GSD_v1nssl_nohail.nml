@@ -8,6 +8,7 @@
        use_ufo        = .true.
        pre_rad        = .false.
        imp_physics    = 17
+       nssl_cccn      = 0.3e9
        nssl_ccn_on    = .true.
        nssl_invertccn = .true.
        nssl_hail_on   = .false.
