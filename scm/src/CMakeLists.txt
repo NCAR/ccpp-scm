@@ -32,13 +32,23 @@ string(REGEX REPLACE "(.+),$" "\\1" SUITES ${SUITES})
 message (STATUS "Running ccpp_prebuild.py for CCPP")
 # Make the directories where the ccpp_prebuild.py script wants to write caps and make snippets
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
-execute_process(
-  COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR}
-  OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
-  ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-  RESULT_VARIABLE return_code
-)
+if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  execute_process(
+    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug
+    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
+    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    RESULT_VARIABLE return_code
+    )
+else()
+  execute_process(
+    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR}
+    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
+    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    RESULT_VARIABLE return_code
+    )
+endif()
   
 # Check return code from CCPP prebuild.py
 if(return_code EQUAL 0)
