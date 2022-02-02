@@ -238,8 +238,7 @@ subroutine scm_main_sub()
   physics%Model%first_time_step = .true.
 
   call output_init(scm_state, physics)
-  scm_state%itt_out = 1
-  call output_append(scm_state, physics)
+  call output_append(scm_state, physics, force=.true.)
 
   !first time step (call once)
 
@@ -387,7 +386,6 @@ subroutine scm_main_sub()
   end if
 
   if (.not. in_spinup) then
-    scm_state%itt_out = scm_state%itt_out + 1
     call output_append(scm_state, physics)
   end if
 
@@ -447,23 +445,17 @@ subroutine scm_main_sub()
       scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,scm_state%cloud_water_index,2)
       scm_state%state_tracer(:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,scm_state%ozone_index,2)
     end if
-
-    if(mod(scm_state%itt, scm_state%n_itt_out)==0) then
-      
-      write(*,*) "itt = ",scm_state%itt
-      write(*,*) "model time (s) = ",scm_state%model_time
-      if (scm_state%lsm_ics .or. scm_state%model_ics) then
-        write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
-        write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
-        write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
-      end if
-      write(*,*) "calling output routine..."
-      
-      if (.not. in_spinup) then
-        scm_state%itt_out = scm_state%itt_out+1
-        call output_append(scm_state, physics)
-      end if
-
+    
+    write(*,*) "itt = ",scm_state%itt
+    write(*,*) "model time (s) = ",scm_state%model_time
+    if (scm_state%lsm_ics .or. scm_state%model_ics) then
+      write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
+      write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
+      write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
+    end if
+    
+    if (.not. in_spinup) then
+      call output_append(scm_state, physics)
     end if
   end do
   if (adjustl(scm_state%physics_suite_name) == 'SCM_GSD_v1_GPU') then
