@@ -599,7 +599,7 @@ begin
   tslb@units = "K"
   tslb@long_name = "initial profile of soil temperature for RUC LSM"
   
-  smois = (/ 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30/)
+  smois = (/ 0.31, 0.31, 0.31, 0.31, 0.31, 0.31, 0.31, 0.31, 0.31/)
   smois@units = "fraction"
   smois@long_name = "volumetric fraction of soil moisture for RUC LSM"
   
