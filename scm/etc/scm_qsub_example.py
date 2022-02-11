@@ -21,7 +21,7 @@ import time
 USER = os.getenv('USER')
 STRINGS = [USER, 'ucar.edu']
 MY_EMAIL = '@'.join(STRINGS)
-PROC = Popen('qsub', shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+PROC = Popen('qsub -V', shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
 
 ### Begin User-editable section ###
 JOB_NAME = "test_job"

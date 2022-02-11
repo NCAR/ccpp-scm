@@ -174,46 +174,66 @@ module scm_type_defs
     integer                           :: input_nsnow !< number of snow layers in the input file
     integer                           :: input_nice !< number of sea ice layers in the input file
     integer                           :: input_ntimes !< number of times in the input file where forcing is available
-    integer                           :: input_vegsrc !< vegetation source
-    integer                           :: input_vegtyp !< vegetation type classification
-    integer                           :: input_soiltyp !<
-    integer                           :: input_slopetype !< surface slope classification
     real(kind=dp)                     :: input_lat !< latitude of column center
     real(kind=dp)                     :: input_lon !< longitude of column center
-    real(kind=dp)                     :: input_tsfco !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
-    real(kind=dp)                     :: input_vegfrac  !< vegetation area fraction
-    real(kind=dp)                     :: input_shdmin   !< minimun vegetation fraction
-    real(kind=dp)                     :: input_shdmax   !< maximun vegetation fraction
-    real(kind=dp)                     :: input_zorlw    !< surfce roughness length over water [cm]
-    real(kind=dp)                     :: input_slmsk   !< sea land ice mask [0,1,2]
-    real(kind=dp)                     :: input_canopy  !< amount of water stored in canopy (kg m-2)
-    real(kind=dp)                     :: input_hice    !< sea ice thickness (m)
-    real(kind=dp)                     :: input_fice    !< ice fraction (frac)
-    real(kind=dp)                     :: input_tisfc   !< ice surface temperature (K)
-    real(kind=dp)                     :: input_snwdph  !< water equivalent snow depth (mm)
-    real(kind=dp)                     :: input_snoalb  !< maximum snow albedo (frac)
-    real(kind=dp)                     :: input_sncovr  !< snow area fraction (frac)
     real(kind=dp)                     :: input_area    !< surface area [m^2]
+    
+    integer                           :: input_vegsrc !< vegetation source
+    
+    real(kind=dp)                     :: input_slmsk   !< sea land ice mask [0,1,2]
+    real(kind=dp)                     :: input_tsfco !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
+    real(kind=dp)                     :: input_weasd     !< water equivalent accumulated snow depth (mm)
     real(kind=dp)                     :: input_tg3     !< deep soil temperature (K)
-    real(kind=dp)                     :: input_uustar  !< surface friction velocity (m s-1)
+    real(kind=dp)                     :: input_zorl     !< composite surface roughness length (cm)
     real(kind=dp)                     :: input_alvsf   !< 60 degree vis albedo with strong cosz dependency
-    real(kind=dp)                     :: input_alnsf     !< 60 degree nir albedo with strong cosz dependency
     real(kind=dp)                     :: input_alvwf     !< 60 degree vis albedo with weak cosz dependency
+    real(kind=dp)                     :: input_alnsf     !< 60 degree nir albedo with strong cosz dependency
     real(kind=dp)                     :: input_alnwf     !< 60 degree nir albedo with weak cosz dependency
     real(kind=dp)                     :: input_facsf     !< fractional coverage with strong cosz dependency
     real(kind=dp)                     :: input_facwf     !< fractional coverage with weak cosz dependency
-    real(kind=dp)                     :: input_weasd     !< water equivalent accumulated snow depth (mm)
+    real(kind=dp)                     :: input_vegfrac  !< vegetation area fraction
+    real(kind=dp)                     :: input_canopy  !< amount of water stored in canopy (kg m-2)
     real(kind=dp)                     :: input_f10m      !< ratio of sigma level 1 wind and 10m wind
     real(kind=dp)                     :: input_t2m     !< 2-meter absolute temperature (K)
     real(kind=dp)                     :: input_q2m     !< 2-meter specific humidity (kg kg-1)
+    integer                           :: input_vegtyp !< vegetation type classification
+    integer                           :: input_soiltyp !<
+    real(kind=dp)                     :: input_uustar  !< surface friction velocity (m s-1)
     real(kind=dp)                     :: input_ffmm    !< Monin-Obukhov similarity function for momentum
     real(kind=dp)                     :: input_ffhh    !< Monin-Obukhov similarity function for heat
+    real(kind=dp)                     :: input_hice    !< sea ice thickness (m)
+    real(kind=dp)                     :: input_fice    !< ice fraction (frac)
+    real(kind=dp)                     :: input_tisfc   !< ice surface temperature (K)
     real(kind=dp)                     :: input_tprcp   !< instantaneous total precipitation amount (m)
     real(kind=dp)                     :: input_srflag  !< snow/rain flag for precipitation
+    real(kind=dp)                     :: input_snwdph  !< water equivalent snow depth (mm)
+    real(kind=dp)                     :: input_shdmin   !< minimun vegetation fraction
+    real(kind=dp)                     :: input_shdmax   !< maximun vegetation fraction
+    integer                           :: input_slopetype !< surface slope classification
+    real(kind=dp)                     :: input_snoalb  !< maximum snow albedo (frac)
+    real(kind=dp)                     :: input_sncovr  !< snow area fraction (frac)
+    real(kind=dp)                     :: input_snodl   !< snowd on land portion of cell
+    real(kind=dp)                     :: input_weasdl   !< weasd on land portion of cell
+    real(kind=dp)                     :: input_tsfc    !< tsfc composite
     real(kind=dp)                     :: input_tsfcl   !< surface skin temperature over land (K)
+    real(kind=dp)                     :: input_zorlw    !< surfce roughness length over water [cm]
     real(kind=dp)                     :: input_zorll   !< surface roughness length over land (cm)
     real(kind=dp)                     :: input_zorli   !< surface roughness length over ice (cm)
+    real(kind=dp)                     :: input_albdirvis_lnd !<
+    real(kind=dp)                     :: input_albdirnir_lnd !<
+    real(kind=dp)                     :: input_albdifvis_lnd !<
+    real(kind=dp)                     :: input_albdifnir_lnd !<
+    real(kind=dp)                     :: input_emis_lnd   !<
+    real(kind=dp)                     :: input_albdirvis_ice  !<
+    real(kind=dp)                     :: input_albdifvis_ice  !<
+    real(kind=dp)                     :: input_albdirnir_ice  !<
+    real(kind=dp)                     :: input_albdifnir_ice  !<
     real(kind=dp)                     :: input_zorlwav !< surface roughness length from wave model (cm)
+    
+    real(kind=dp), allocatable        :: input_stc(:) !< soil temperature (k) (initial)
+    real(kind=dp), allocatable        :: input_smc(:) !< soil moisture content (g/g) (initial)
+    real(kind=dp), allocatable        :: input_slc(:) !< soil liquid content (g/g) (initial)
+    real(kind=dp), allocatable        :: input_tiice(:) !< sea ice internal temperature (K)
     
     real(kind=dp)                     :: input_stddev !< standard deviation of subgrid orography (m)
     real(kind=dp)                     :: input_convexity !< convexity of subgrid orography 
@@ -264,11 +284,12 @@ module scm_type_defs
     real(kind=dp)                     :: input_deeprechxy !< recharge to or from the water table when deep (m)
     real(kind=dp)                     :: input_rechxy !< recharge to or from the water table when shallow (m)
     real(kind=dp)                     :: input_snowxy !< number of snow layers
-    real(kind=dp)                     :: input_albdvis !<
-    real(kind=dp)                     :: input_albdnir !<
-    real(kind=dp)                     :: input_albivis !<
-    real(kind=dp)                     :: input_albinir !<
-    real(kind=dp)                     :: input_emiss   !<
+    
+    real(kind=dp), allocatable        :: input_snicexy(:) !< snow layer ice (mm)
+    real(kind=dp), allocatable        :: input_snliqxy(:) !< snow layer liquid (mm)
+    real(kind=dp), allocatable        :: input_tsnoxy(:) !< snow temperature (K)
+    real(kind=dp), allocatable        :: input_smoiseq(:) !< equilibrium soil water content (m3 m-3)
+    real(kind=dp), allocatable        :: input_zsnsoxy(:) !< layer bottom depth from snow surface (m)
     
     real(kind=dp)                     :: input_tref !< sea surface reference temperature for NSST (K)
     real(kind=dp)                     :: input_z_c !< sub-layer cooling thickness for NSST (m)
@@ -298,8 +319,18 @@ module scm_type_defs
     real(kind=dp)                     :: input_tsnow_ice !< snow temperature at the bottom of the first snow layer over ice for RUC LSM (K)
     real(kind=dp)                     :: input_snowfallac_land !< run-total snow accumulation on the ground over land for RUC LSM (kg m-2)
     real(kind=dp)                     :: input_snowfallac_ice !< run-total snow accumulation on the ground over ice for RUC LSM (kg m-2)
-    real(kind=dp)                     :: input_sncovr_ice !< 
+    real(kind=dp)                     :: input_sncovr_ice !<
+    real(kind=dp)                     :: input_sfalb_lnd !<
+    real(kind=dp)                     :: input_sfalb_lnd_bck !<
+    real(kind=dp)                     :: input_sfalb_ice !<
+    real(kind=dp)                     :: input_emis_ice !<
     real(kind=dp)                     :: input_lai !< leaf area index for RUC LSM
+    
+    real(kind=dp), allocatable        :: input_tslb(:) !< soil temperature for RUC LSM (K)    
+    real(kind=dp), allocatable        :: input_smois(:) !< volume fraction of soil moisture for RUC LSM (frac)
+    real(kind=dp), allocatable        :: input_sh2o(:) !< volume fraction of unfrozen soil moisture for RUC LSM (frac)
+    real(kind=dp), allocatable        :: input_smfr(:) !< volume fraction of frozen soil moisture for RUC LSM (frac)
+    real(kind=dp), allocatable        :: input_flfr(:) !< flag for frozen soil physics
     
     real(kind=dp), allocatable        :: input_pres_i(:) !< pressure (Pa) of input interface
     real(kind=dp), allocatable        :: input_pres_l(:) !< pressure (Pa) of input levels
@@ -316,20 +347,6 @@ module scm_type_defs
     real(kind=dp), allocatable        :: input_v(:) !< meridional wind (m/s) (initial)
     real(kind=dp), allocatable        :: input_tke(:) !< turbulence kinetic energy (m^2/s^2) (initial)
     real(kind=dp), allocatable        :: input_ozone(:) !< ozone mass mixing ratio (kg/kg) (initial)
-    real(kind=dp), allocatable        :: input_stc(:) !< soil temperature (k) (initial)
-    real(kind=dp), allocatable        :: input_smc(:) !< soil moisture conteng (g/g) (initial)
-    real(kind=dp), allocatable        :: input_slc(:) !< soil liquid content (g/g) (initial)
-    real(kind=dp), allocatable        :: input_snicexy(:) !< snow layer ice (mm)
-    real(kind=dp), allocatable        :: input_snliqxy(:) !< snow layer liquid (mm)
-    real(kind=dp), allocatable        :: input_tsnoxy(:) !< snow temperature (K)
-    real(kind=dp), allocatable        :: input_smoiseq(:) !< equilibrium soil water content (m3 m-3)
-    real(kind=dp), allocatable        :: input_zsnsoxy(:) !< layer bottom depth from snow surface (m)
-    real(kind=dp), allocatable        :: input_tiice(:) !< sea ice internal temperature (K)
-    real(kind=dp), allocatable        :: input_tslb(:) !< soil temperature for RUC LSM (K)    
-    real(kind=dp), allocatable        :: input_smois(:) !< volume fraction of soil moisture for RUC LSM (frac)
-    real(kind=dp), allocatable        :: input_sh2o(:) !< volume fraction of unfrozen soil moisture for RUC LSM (frac)
-    real(kind=dp), allocatable        :: input_smfr(:) !< volume fraction of frozen soil moisture for RUC LSM (frac)
-    real(kind=dp), allocatable        :: input_flfr(:) !< flag for frozen soil physics
     real(kind=dp), allocatable        :: input_pres_surf(:) !< time-series of surface pressure (Pa)
     real(kind=dp), allocatable        :: input_T_surf(:) !< time-series of surface temperture
     real(kind=dp), allocatable        :: input_w_ls(:,:) !< large-scale vertical velocity (m/s) (time, levels)
@@ -636,60 +653,126 @@ module scm_type_defs
   subroutine scm_input_create(scm_input, ntimes, nlev, nsoil, nsnow, nice)
     class(scm_input_type)             :: scm_input
     integer, intent(in)               :: ntimes, nlev, nsoil, nsnow, nice
-
-    scm_input%input_nlev = nlev
+    
+    scm_input%input_nlev   = nlev
+    scm_input%input_nsoil  = nsoil
+    scm_input%input_nsnow  = nsnow
+    scm_input%input_nice   = nice
     scm_input%input_ntimes = ntimes
-    scm_input%input_nsoil = nsoil
-    scm_input%input_nsnow = nsnow
-    scm_input%input_nice = nice
-
-    allocate(scm_input%input_pres(nlev),scm_input%input_time(ntimes))
-    scm_input%input_pres = real_zero
-    scm_input%input_time = real_zero
-
-    allocate(scm_input%input_height(nlev), scm_input%input_thetail(nlev), scm_input%input_qt(nlev), scm_input%input_qv(nlev), &
-      scm_input%input_ql(nlev), scm_input%input_qi(nlev), scm_input%input_u(nlev), scm_input%input_v(nlev), scm_input%input_tke(nlev), &
-      scm_input%input_ozone(nlev), scm_input%input_temp(nlev))
-    scm_input%input_height = real_zero
-    scm_input%input_thetail = real_zero
-    scm_input%input_temp = real_zero
-    scm_input%input_qt = real_zero
-    scm_input%input_qv = real_zero
-    scm_input%input_ql = real_zero
-    scm_input%input_qi = real_zero
-    scm_input%input_u = real_zero
-    scm_input%input_v = real_zero
-    scm_input%input_tke = real_zero
-    scm_input%input_ozone = real_zero
     
-    allocate(scm_input%input_pres_i(nlev+1),scm_input%input_pres_l(nlev))
-    scm_input%input_pres_i = real_zero
-    scm_input%input_pres_l = real_zero
-
-    allocate(scm_input%input_pres_surf(ntimes), &
-      scm_input%input_T_surf(ntimes), scm_input%input_sh_flux_sfc_kin(ntimes), scm_input%input_lh_flux_sfc_kin(ntimes), &
-      scm_input%input_sh_flux_sfc(ntimes), scm_input%input_lh_flux_sfc(ntimes), &
-      scm_input%input_w_ls(ntimes, nlev), scm_input%input_omega(ntimes, nlev), scm_input%input_u_g(ntimes, nlev), &
-      scm_input%input_v_g(ntimes, nlev), scm_input%input_dT_dt_rad(ntimes, nlev), scm_input%input_h_advec_thetail(ntimes, nlev), &
-      scm_input%input_h_advec_qt(ntimes, nlev), scm_input%input_v_advec_thetail(ntimes, nlev), &
-      scm_input%input_v_advec_qt(ntimes, nlev), scm_input%input_u_nudge(ntimes, nlev), scm_input%input_v_nudge(ntimes, nlev),    &
-      scm_input%input_T_nudge(ntimes, nlev), scm_input%input_thil_nudge(ntimes, nlev), scm_input%input_qt_nudge(ntimes, nlev), &
-      scm_input%input_k_T_nudge(ntimes), scm_input%input_k_thil_nudge(ntimes), scm_input%input_k_qt_nudge(ntimes), &
-      scm_input%input_k_u_nudge(ntimes), scm_input%input_k_v_nudge(ntimes))
-    scm_input%input_pres_surf = real_zero
-    scm_input%input_T_surf = real_zero
-    scm_input%input_lat = real_zero
-    scm_input%input_lon = real_zero
+    scm_input%input_lat    = real_zero
+    scm_input%input_lon    = real_zero
+    scm_input%input_area   = real_zero
     
-    allocate(scm_input%input_tot_advec_t(ntimes, nlev), scm_input%input_tot_advec_theta(ntimes, nlev), &
-      scm_input%input_tot_advec_thetal(ntimes, nlev), scm_input%input_tot_advec_qv(ntimes, nlev), &
-      scm_input%input_tot_advec_u(ntimes, nlev), scm_input%input_tot_advec_v(ntimes, nlev), &
-      scm_input%input_pres_forcing(ntimes, nlev))
+    scm_input%input_vegsrc = int_zero
+    
+    scm_input%input_slmsk         = real_zero
+    scm_input%input_tsfco         = real_zero
+    scm_input%input_weasd         = real_zero
+    scm_input%input_tg3           = real_zero
+    scm_input%input_zorl          = real_zero
+    scm_input%input_alvsf         = real_zero
+    scm_input%input_alnsf         = real_zero
+    scm_input%input_alvwf         = real_zero
+    scm_input%input_alnwf         = real_zero
+    scm_input%input_facsf         = real_zero
+    scm_input%input_facwf         = real_zero
+    scm_input%input_vegfrac       = real_zero
+    scm_input%input_canopy        = real_zero
+    scm_input%input_f10m          = real_zero
+    scm_input%input_t2m           = real_zero
+    scm_input%input_q2m           = real_zero
+    scm_input%input_vegtyp        = int_zero
+    scm_input%input_soiltyp       = int_zero
+    scm_input%input_uustar        = real_zero
+    scm_input%input_ffmm          = real_zero
+    scm_input%input_ffhh          = real_zero
+    scm_input%input_hice          = real_zero
+    scm_input%input_fice          = real_zero
+    scm_input%input_tisfc         = real_zero
+    scm_input%input_tprcp         = real_zero
+    scm_input%input_srflag        = real_zero
+    scm_input%input_snwdph        = real_zero
+    scm_input%input_shdmin        = real_zero
+    scm_input%input_shdmax        = real_zero
+    scm_input%input_slopetype     = int_zero
+    scm_input%input_snoalb        = real_zero
+    scm_input%input_sncovr        = real_zero
+    scm_input%input_snodl         = real_zero
+    scm_input%input_weasdl        = real_zero
+    scm_input%input_tsfc          = real_zero
+    scm_input%input_tsfcl         = real_zero
+    scm_input%input_zorlw         = real_zero
+    scm_input%input_zorll         = real_zero
+    scm_input%input_zorli         = real_zero
+    scm_input%input_albdirvis_lnd = real_zero
+    scm_input%input_albdirnir_lnd = real_zero
+    scm_input%input_albdifvis_lnd = real_zero
+    scm_input%input_albdifnir_lnd = real_zero
+    scm_input%input_emis_lnd      = real_zero
+    scm_input%input_albdirvis_ice = real_zero
+    scm_input%input_albdifvis_ice = real_zero
+    scm_input%input_albdirnir_ice = real_zero
+    scm_input%input_albdifnir_ice = real_zero
+    scm_input%input_zorlwav       = real_zero
     
     allocate(scm_input%input_stc(nsoil), scm_input%input_smc(nsoil), scm_input%input_slc(nsoil))
     scm_input%input_stc = real_zero
     scm_input%input_smc = real_zero
     scm_input%input_slc = real_zero
+    
+    allocate(scm_input%input_tiice(nice))
+    scm_input%input_tiice = real_zero
+    
+    scm_input%input_stddev       = real_zero
+    scm_input%input_convexity    = real_zero
+    scm_input%input_ol1          = real_zero
+    scm_input%input_ol2          = real_zero
+    scm_input%input_ol3          = real_zero
+    scm_input%input_ol4          = real_zero
+    scm_input%input_oa1          = real_zero
+    scm_input%input_oa2          = real_zero
+    scm_input%input_oa3          = real_zero
+    scm_input%input_oa4          = real_zero
+    scm_input%input_sigma        = real_zero
+    scm_input%input_theta        = real_zero
+    scm_input%input_gamma        = real_zero
+    scm_input%input_elvmax       = real_zero
+    scm_input%input_oro          = real_zero
+    scm_input%input_oro_uf       = real_zero
+    scm_input%input_landfrac     = real_zero
+    scm_input%input_lakefrac     = real_zero
+    scm_input%input_lakedepth    = real_zero
+    
+    scm_input%input_tvxy       = real_zero
+    scm_input%input_tgxy       = real_zero
+    scm_input%input_tahxy      = real_zero
+    scm_input%input_canicexy   = real_zero
+    scm_input%input_canliqxy   = real_zero
+    scm_input%input_eahxy      = real_zero
+    scm_input%input_cmxy       = real_zero
+    scm_input%input_chxy       = real_zero
+    scm_input%input_fwetxy     = real_zero
+    scm_input%input_sneqvoxy   = real_zero
+    scm_input%input_alboldxy   = real_zero
+    scm_input%input_qsnowxy    = real_zero
+    scm_input%input_wslakexy   = real_zero
+    scm_input%input_taussxy    = real_zero
+    scm_input%input_waxy       = real_zero
+    scm_input%input_wtxy       = real_zero
+    scm_input%input_zwtxy      = real_zero
+    scm_input%input_xlaixy     = real_zero
+    scm_input%input_xsaixy     = real_zero
+    scm_input%input_lfmassxy   = real_zero
+    scm_input%input_stmassxy   = real_zero
+    scm_input%input_rtmassxy   = real_zero
+    scm_input%input_woodxy     = real_zero
+    scm_input%input_stblcpxy   = real_zero
+    scm_input%input_fastcpxy   = real_zero
+    scm_input%input_smcwtdxy   = real_zero
+    scm_input%input_deeprechxy = real_zero
+    scm_input%input_rechxy     = real_zero
+    scm_input%input_snowxy     = real_zero
     
     allocate(scm_input%input_snicexy(nsnow),scm_input%input_snliqxy(nsnow), scm_input%input_tsnoxy(nsnow), &
       scm_input%input_smoiseq(nsoil), scm_input%input_zsnsoxy(nsnow + nsoil))
@@ -698,112 +781,7 @@ module scm_type_defs
     scm_input%input_tsnoxy  = real_zero
     scm_input%input_smoiseq = real_zero
     scm_input%input_zsnsoxy = real_zero
-    
-    allocate(scm_input%input_tiice(nice))
-    scm_input%input_tiice = real_zero
-    
-    allocate(scm_input%input_tslb(nsoil), scm_input%input_smois(nsoil), scm_input%input_sh2o(nsoil), &
-        scm_input%input_smfr(nsoil), scm_input%input_flfr(nsoil))
-    scm_input%input_tslb = real_zero
-    scm_input%input_smois = real_zero
-    scm_input%input_sh2o = real_zero
-    scm_input%input_smfr = real_zero
-    scm_input%input_flfr = real_zero
-    
-    scm_input%input_tsfco = real_zero
-    scm_input%input_vegsrc = int_zero
-    scm_input%input_vegtyp = int_zero
-    scm_input%input_soiltyp = int_zero
-    scm_input%input_slopetype = int_zero
-    scm_input%input_vegfrac = real_zero
-    scm_input%input_shdmin = real_zero
-    scm_input%input_shdmax = real_zero
-    scm_input%input_zorlw = real_zero
-    scm_input%input_slmsk = real_zero
-    scm_input%input_canopy = real_zero
-    scm_input%input_hice = real_zero
-    scm_input%input_fice = real_zero
-    scm_input%input_tisfc = real_zero
-    scm_input%input_snwdph = real_zero
-    scm_input%input_snoalb = real_zero
-    scm_input%input_sncovr = real_zero
-    scm_input%input_area = real_zero
-    scm_input%input_tg3 = real_zero
-    scm_input%input_uustar = real_zero
-    scm_input%input_alvsf        = real_zero
-    scm_input%input_alnsf        = real_zero
-    scm_input%input_alvwf        = real_zero
-    scm_input%input_alnwf        = real_zero
-    scm_input%input_facsf        = real_zero
-    scm_input%input_facwf        = real_zero
-    scm_input%input_weasd        = real_zero
-    scm_input%input_f10m         = real_zero
-    scm_input%input_t2m         = real_zero
-    scm_input%input_q2m         = real_zero
-    scm_input%input_ffmm         = real_zero
-    scm_input%input_ffhh         = real_zero
-    scm_input%input_tprcp         = real_zero
-    scm_input%input_srflag         = real_zero
-    scm_input%input_tsfcl         = real_zero
-    scm_input%input_zorll         = real_zero
-    scm_input%input_zorli         = real_zero
-    scm_input%input_zorlwav       = real_zero
-    
-    scm_input%input_stddev       = real_zero
-    scm_input%input_convexity    = real_zero
-    scm_input%input_oa1          = real_zero
-    scm_input%input_oa2          = real_zero
-    scm_input%input_oa3          = real_zero
-    scm_input%input_oa4          = real_zero
-    scm_input%input_ol1          = real_zero
-    scm_input%input_ol2          = real_zero
-    scm_input%input_ol3          = real_zero
-    scm_input%input_ol4          = real_zero
-    scm_input%input_theta        = real_zero
-    scm_input%input_gamma        = real_zero
-    scm_input%input_sigma        = real_zero
-    scm_input%input_elvmax       = real_zero
-    scm_input%input_oro          = real_zero
-    scm_input%input_oro_uf       = real_zero
-    scm_input%input_landfrac     = real_zero
-    scm_input%input_lakefrac     = real_zero
-    scm_input%input_lakedepth    = real_zero
-    
-    scm_input%input_tvxy = real_zero
-    scm_input%input_tgxy = real_zero
-    scm_input%input_tahxy = real_zero
-    scm_input%input_canicexy = real_zero
-    scm_input%input_canliqxy = real_zero
-    scm_input%input_eahxy = real_zero
-    scm_input%input_cmxy = real_zero
-    scm_input%input_chxy = real_zero
-    scm_input%input_fwetxy = real_zero
-    scm_input%input_sneqvoxy = real_zero
-    scm_input%input_alboldxy = real_zero
-    scm_input%input_qsnowxy = real_zero
-    scm_input%input_wslakexy = real_zero
-    scm_input%input_taussxy = real_zero
-    scm_input%input_waxy = real_zero
-    scm_input%input_wtxy = real_zero
-    scm_input%input_zwtxy = real_zero
-    scm_input%input_xlaixy = real_zero
-    scm_input%input_xsaixy = real_zero
-    scm_input%input_lfmassxy = real_zero
-    scm_input%input_stmassxy = real_zero
-    scm_input%input_rtmassxy = real_zero
-    scm_input%input_woodxy = real_zero
-    scm_input%input_stblcpxy = real_zero
-    scm_input%input_fastcpxy = real_zero
-    scm_input%input_smcwtdxy = real_zero
-    scm_input%input_deeprechxy = real_zero
-    scm_input%input_rechxy = real_zero
-    scm_input%input_snowxy = real_zero
-    scm_input%input_albdvis = real_zero
-    scm_input%input_albdnir = real_zero
-    scm_input%input_albivis = real_zero
-    scm_input%input_albinir = real_zero
-    scm_input%input_emiss = real_zero
-    
+      
     scm_input%input_tref       = real_zero  !< sea surface reference temperature for NSST (K)
     scm_input%input_z_c        = real_zero  !< sub-layer cooling thickness for NSST (m)
     scm_input%input_c_0        = real_zero  !< coefficient 1 to calculate d(Tz)/d(Ts) for NSST
@@ -833,39 +811,94 @@ module scm_type_defs
     scm_input%input_snowfallac_land = real_zero  !< run-total snow accumulation on the ground over land for RUC LSM (kg m-2)
     scm_input%input_snowfallac_ice  = real_zero  !< run-total snow accumulation on the ground over ice for RUC LSM (kg m-2)
     scm_input%input_sncovr_ice      = real_zero  !< 
+    scm_input%input_sfalb_lnd       = real_zero
+    scm_input%input_sfalb_lnd_bck   = real_zero
+    scm_input%input_emis_ice        = real_zero
     scm_input%input_lai             = real_zero  !< leaf area index for RUC LSM
     
+    allocate(scm_input%input_tslb(nsoil), scm_input%input_smois(nsoil), scm_input%input_sh2o(nsoil), &
+        scm_input%input_smfr(nsoil), scm_input%input_flfr(nsoil))
+    scm_input%input_tslb = real_zero
+    scm_input%input_smois = real_zero
+    scm_input%input_sh2o = real_zero
+    scm_input%input_smfr = real_zero
+    scm_input%input_flfr = real_zero
+    
+    allocate(scm_input%input_pres_i(nlev+1),scm_input%input_pres_l(nlev))
+    scm_input%input_pres_i = real_zero
+    scm_input%input_pres_l = real_zero
+    
+    allocate(scm_input%input_pres(nlev),scm_input%input_time(ntimes))
+    scm_input%input_pres = real_zero
+    scm_input%input_time = real_zero
+    
+    allocate(scm_input%input_height(nlev), scm_input%input_thetail(nlev), scm_input%input_temp(nlev), &
+             scm_input%input_qt(nlev), scm_input%input_qv(nlev), scm_input%input_ql(nlev),            &
+             scm_input%input_qi(nlev), scm_input%input_u(nlev), scm_input%input_v(nlev), scm_input%input_tke(nlev), &
+             scm_input%input_ozone(nlev))
+    scm_input%input_height  = real_zero
+    scm_input%input_thetail = real_zero
+    scm_input%input_temp    = real_zero
+    scm_input%input_qt      = real_zero
+    scm_input%input_qv      = real_zero
+    scm_input%input_ql      = real_zero
+    scm_input%input_qi      = real_zero
+    scm_input%input_u       = real_zero
+    scm_input%input_v       = real_zero
+    scm_input%input_tke     = real_zero
+    scm_input%input_ozone   = real_zero
+    
+    allocate(scm_input%input_pres_surf(ntimes), scm_input%input_T_surf(ntimes))
+    scm_input%input_pres_surf = real_zero
+    scm_input%input_T_surf    = real_zero
+    
+    allocate(scm_input%input_w_ls(ntimes, nlev), scm_input%input_omega(ntimes, nlev), scm_input%input_u_g(ntimes, nlev), &
+      scm_input%input_v_g(ntimes, nlev), scm_input%input_u_nudge(ntimes, nlev), scm_input%input_v_nudge(ntimes, nlev),    &
+      scm_input%input_T_nudge(ntimes, nlev), scm_input%input_thil_nudge(ntimes, nlev), scm_input%input_qt_nudge(ntimes, nlev), &
+      scm_input%input_dT_dt_rad(ntimes, nlev), scm_input%input_h_advec_thetail(ntimes, nlev), &
+      scm_input%input_h_advec_qt(ntimes, nlev), scm_input%input_v_advec_thetail(ntimes, nlev), &
+      scm_input%input_v_advec_qt(ntimes, nlev))
+    scm_input%input_w_ls            = real_zero
+    scm_input%input_omega           = real_zero
+    scm_input%input_u_g             = real_zero
+    scm_input%input_v_g             = real_zero
+    scm_input%input_u_nudge         = real_zero
+    scm_input%input_v_nudge         = real_zero
+    scm_input%input_T_nudge         = real_zero
+    scm_input%input_thil_nudge      = real_zero
+    scm_input%input_qt_nudge        = real_zero
+    scm_input%input_dT_dt_rad       = real_zero
+    scm_input%input_h_advec_thetail = real_zero
+    scm_input%input_h_advec_qt      = real_zero
+    scm_input%input_v_advec_thetail = real_zero
+    scm_input%input_v_advec_qt      = real_zero
+    
+    allocate(scm_input%input_sh_flux_sfc_kin(ntimes), scm_input%input_lh_flux_sfc_kin(ntimes), &
+      scm_input%input_sh_flux_sfc(ntimes), scm_input%input_lh_flux_sfc(ntimes))
     scm_input%input_sh_flux_sfc_kin = real_zero
     scm_input%input_lh_flux_sfc_kin = real_zero
-    scm_input%input_sh_flux_sfc = real_zero
-    scm_input%input_lh_flux_sfc = real_zero
-    scm_input%input_w_ls = real_zero
-    scm_input%input_omega = real_zero
-    scm_input%input_u_g = real_zero
-    scm_input%input_v_g = real_zero
-    scm_input%input_dT_dt_rad = real_zero
-    scm_input%input_h_advec_thetail = real_zero
-    scm_input%input_h_advec_qt = real_zero
-    scm_input%input_v_advec_thetail = real_zero
-    scm_input%input_v_advec_qt = real_zero
-    scm_input%input_u_nudge = real_zero
-    scm_input%input_v_nudge = real_zero
-    scm_input%input_T_nudge = real_zero
-    scm_input%input_thil_nudge = real_zero
-    scm_input%input_qt_nudge = real_zero
-    scm_input%input_tot_advec_t = real_zero
-    scm_input%input_tot_advec_theta = real_zero
-    scm_input%input_tot_advec_thetal = real_zero
-    scm_input%input_tot_advec_qv = real_zero
-    scm_input%input_tot_advec_u = real_zero
-    scm_input%input_tot_advec_v = real_zero
-    scm_input%input_pres_forcing = real_zero
+    scm_input%input_sh_flux_sfc     = real_zero
+    scm_input%input_lh_flux_sfc     = real_zero
     
-    scm_input%input_k_T_nudge = int_one
+    allocate(scm_input%input_tot_advec_t(ntimes, nlev), scm_input%input_tot_advec_theta(ntimes, nlev), &
+      scm_input%input_tot_advec_thetal(ntimes, nlev), scm_input%input_tot_advec_qv(ntimes, nlev), &
+      scm_input%input_tot_advec_u(ntimes, nlev), scm_input%input_tot_advec_v(ntimes, nlev), &
+      scm_input%input_pres_forcing(ntimes, nlev))
+    scm_input%input_tot_advec_t      = real_zero
+    scm_input%input_tot_advec_theta  = real_zero
+    scm_input%input_tot_advec_thetal = real_zero
+    scm_input%input_tot_advec_qv     = real_zero
+    scm_input%input_tot_advec_u      = real_zero
+    scm_input%input_tot_advec_v      = real_zero
+    scm_input%input_pres_forcing     = real_zero
+    
+    allocate(scm_input%input_k_T_nudge(ntimes), scm_input%input_k_thil_nudge(ntimes), scm_input%input_k_qt_nudge(ntimes), &
+      scm_input%input_k_u_nudge(ntimes), scm_input%input_k_v_nudge(ntimes))
+    scm_input%input_k_T_nudge    = int_one
     scm_input%input_k_thil_nudge = int_one
-    scm_input%input_k_qt_nudge = int_one
-    scm_input%input_k_u_nudge = int_one
-    scm_input%input_k_v_nudge = int_one
+    scm_input%input_k_qt_nudge   = int_one
+    scm_input%input_k_u_nudge    = int_one
+    scm_input%input_k_v_nudge    = int_one
     
   end subroutine scm_input_create
 
@@ -988,7 +1021,7 @@ module scm_type_defs
     !this should be utilized for variables that cannot be modified or "forced" by the SCM;
     !most of this routine follows what is in FV3/io/FV3GFS_io.F90/sfc_prop_restart_read
     use scm_physical_constants, only: con_tice
-    use data_qc, only: conditionally_set_var
+    use data_qc, only: conditionally_set_var, check_missing
     use NetCDF_read, only: missing_value
     
     class(physics_type) :: physics
@@ -998,10 +1031,38 @@ module scm_type_defs
     integer :: i,j,n
     real(kind=dp) :: tem1, tem
     logical :: missing_var(100)
+    real, parameter:: min_lake_orog = 200.0_dp
+    
+    !check whether input has NoahMP or RUC LSM input data
+    if (scm_state%model_ics .or. scm_state%lsm_ics) then
+      if (physics%Model%lsm == physics%Model%lsm_noahmp) then
+        !FV3GFS_io.F90 uses the presence of the snowxy variable in the ICs to indicate presence of NoahMP warm start
+        call check_missing(scm_input%input_snowxy, missing_var(1))
+        if (missing_var(1)) then
+          physics%Model%lsm_cold_start = .true.
+        else
+          physics%Model%lsm_cold_start = .false.
+        end if
+      elseif (physics%Model%lsm == physics%Model%lsm_ruc) then
+        !RUC LSM uses the tslb variable as soil temperature; if it is missing, assume a cold start using Noah LSM ICs
+        call check_missing(scm_input%input_tslb(:), missing_var(1))
+        if (missing_var(1)) then
+          physics%Model%lsm_cold_start = .true.
+        else
+          physics%Model%lsm_cold_start = .false.
+        end if
+      end if
+    end if
     
     !double check under what circumstances these should actually be set from input!!! (these overwrite the initialzation in GFS_typedefs)
     missing_var = .false.
     do i = 1, physics%Model%ncols
+      !since landfrac and lakefrac are read in with the orographic data (here and in FV3GFS_io), we need to set their values
+      !to missing when only LSM ICs are available in order for some of the logic below to work as intended.
+      if (scm_state%lsm_ics) then
+        physics%Sfcprop%landfrac(i) = missing_value
+        physics%Sfcprop%lakefrac(i) = missing_value
+      end if
       if (scm_state%model_ics) then
         write(0,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_stddev,    physics%Sfcprop%hprime(i,1),  "stddev",    .true., missing_var(1))
@@ -1023,7 +1084,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_landfrac,  physics%Sfcprop%landfrac(i),  "landfrac",  physics%Model%frac_grid, missing_var(17))
         call conditionally_set_var(scm_input%input_lakefrac,  physics%Sfcprop%lakefrac(i),  "lakefrac",  (physics%Model%lkm == 1), missing_var(18))
         call conditionally_set_var(scm_input%input_lakedepth, physics%Sfcprop%lakedepth(i), "lakedepth", (physics%Model%lkm == 1), missing_var(19))
-
+        
         !write out warning if missing data for non-required variables
         n = 19
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
@@ -1040,9 +1101,9 @@ module scm_type_defs
         write(0,'(a)') "Setting internal physics variables from the surface section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_slmsk, physics%Sfcprop%slmsk(i), "slmsk", (.not. physics%Model%frac_grid), missing_var(1))
         call conditionally_set_var(scm_input%input_tsfco, physics%Sfcprop%tsfco(i), "tsfco", .true., missing_var(2))
-        call conditionally_set_var(scm_input%input_weasd, physics%Sfcprop%weasd(i), "weasd", .false., missing_var(3))
+        call conditionally_set_var(scm_input%input_weasd, physics%Sfcprop%weasd(i), "weasd", .true., missing_var(3))
         call conditionally_set_var(scm_input%input_tg3,   physics%Sfcprop%tg3(i), "tg3", .true., missing_var(4))
-        call conditionally_set_var(scm_input%input_zorlw, physics%Sfcprop%zorlw(i), "zorlw", .true., missing_var(5))
+        call conditionally_set_var(scm_input%input_zorl,  physics%Sfcprop%zorl(i), "zorl", .true., missing_var(5))
         call conditionally_set_var(scm_input%input_alvsf, physics%Sfcprop%alvsf(i), "alvsf", .true., missing_var(6))
         call conditionally_set_var(scm_input%input_alnsf, physics%Sfcprop%alnsf(i), "alnsf", .true., missing_var(7))
         call conditionally_set_var(scm_input%input_alvwf, physics%Sfcprop%alvwf(i), "alvwf", .true., missing_var(8))
@@ -1066,25 +1127,41 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_tisfc, physics%Sfcprop%tisfc(i), "tisfc", .true., missing_var(24))
         call conditionally_set_var(scm_input%input_tprcp, physics%Sfcprop%tprcp(i), "tprcp", .false., missing_var(25))
         call conditionally_set_var(scm_input%input_srflag, physics%Sfcprop%srflag(i), "srflag", .false., missing_var(26))
-        call conditionally_set_var(scm_input%input_snwdph, physics%Sfcprop%snowd(i), "snwdph", .false., missing_var(27))
+        call conditionally_set_var(scm_input%input_snwdph, physics%Sfcprop%snowd(i), "snwdph", .true., missing_var(27))
         call conditionally_set_var(scm_input%input_shdmin, physics%Sfcprop%shdmin(i), "shdmin", .true., missing_var(28))
         call conditionally_set_var(scm_input%input_shdmax, physics%Sfcprop%shdmax(i), "shdmax", .true., missing_var(29))
         call conditionally_set_var(scm_input%input_slopetype, physics%Sfcprop%slope(i), "slopetyp", .true., missing_var(30))
         call conditionally_set_var(scm_input%input_snoalb, physics%Sfcprop%snoalb(i), "snoalb", .true., missing_var(31))
         call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr(i), "sncovr", .false., missing_var(32))
-        call conditionally_set_var(scm_input%input_tsfcl, physics%Sfcprop%tsfcl(i), "tsfcl", .false., missing_var(33))
-        call conditionally_set_var(scm_input%input_zorll, physics%Sfcprop%zorll(i), "zorll", .false., missing_var(34))
-        call conditionally_set_var(scm_input%input_zorli, physics%Sfcprop%zorli(i), "zorli", .false., missing_var(35))
+        call conditionally_set_var(scm_input%input_snodl, physics%Sfcprop%snodl(i), "snodl", .false., missing_var(33))
+        call conditionally_set_var(scm_input%input_weasdl, physics%Sfcprop%weasdl(i), "weasdl", .false., missing_var(34))
+        call conditionally_set_var(scm_input%input_tsfc, physics%Sfcprop%tsfc(i), "tsfc", .false., missing_var(35))
+        call conditionally_set_var(scm_input%input_tsfcl, physics%Sfcprop%tsfcl(i), "tsfcl", .false., missing_var(36))
+        call conditionally_set_var(scm_input%input_zorlw, physics%Sfcprop%zorlw(i), "zorlw", .false., missing_var(37))
+        call conditionally_set_var(scm_input%input_zorll, physics%Sfcprop%zorll(i), "zorll", .false., missing_var(38))
+        call conditionally_set_var(scm_input%input_zorli, physics%Sfcprop%zorli(i), "zorli", .false., missing_var(39))
+        call conditionally_set_var(scm_input%input_albdirvis_lnd, physics%Sfcprop%albdirvis_lnd(i), "albdirvis_lnd", .false., missing_var(40))
+        call conditionally_set_var(scm_input%input_albdirnir_lnd, physics%Sfcprop%albdirnir_lnd(i), "albdirnir_lnd", .false., missing_var(41))
+        call conditionally_set_var(scm_input%input_albdifvis_lnd, physics%Sfcprop%albdifvis_lnd(i), "albdifvis_lnd", .false., missing_var(42))
+        call conditionally_set_var(scm_input%input_albdifnir_lnd, physics%Sfcprop%albdifnir_lnd(i), "albdifnir_lnd", .false., missing_var(43))
+        call conditionally_set_var(scm_input%input_emis_lnd, physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(44))
+        if (physics%Model%use_cice_alb .or. physics%Model%lsm == physics%Model%lsm_ruc) then
+          call conditionally_set_var(scm_input%input_albdirvis_ice, physics%Sfcprop%albdirvis_ice(i), "albdirvis_ice", .false., missing_var(45))
+          call conditionally_set_var(scm_input%input_albdirnir_ice, physics%Sfcprop%albdirnir_ice(i), "albdirnir_ice", .false., missing_var(46))
+          call conditionally_set_var(scm_input%input_albdifvis_ice, physics%Sfcprop%albdifvis_ice(i), "albdifvis_ice", .false., missing_var(47))
+          call conditionally_set_var(scm_input%input_albdifnir_ice, physics%Sfcprop%albdifnir_ice(i), "albdifnir_ice", .false., missing_var(48))
+        end if
         if (physics%Model%cplwav) then
-          call conditionally_set_var(scm_input%input_zorlwav, physics%Sfcprop%zorlwav(i), "zorlwav", .true., missing_var(36))
+          call conditionally_set_var(scm_input%input_zorlwav, physics%Sfcprop%zorlwav(i), "zorlwav", .true., missing_var(49))
         else
           physics%Sfcprop%zorlwav(i)  = physics%Sfcprop%zorlw(i)
         end if
         
+        !GJF: Is this still needed?
         if (missing_var(32)) physics%Sfcprop%sncovr(i) = real_zero
                 
         !write out warning if missing data for non-required variables
-        n = 36
+        n = 49
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables. This may lead to crashes or other strange behavior."
           write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
@@ -1097,7 +1174,7 @@ module scm_type_defs
         physics%Sfcprop%slmsk(i) = scm_state%sfc_type(i)
         ! tsfco is already pointing to T_surf forcing in physics_associate
         ! physics%Sfcprop%tsfco(i) => scm_state%T_surf
-        physics%Sfcprop%zorlw(i) = scm_state%sfc_roughness_length_cm(i)
+        physics%Sfcprop%zorl(i) = scm_state%sfc_roughness_length_cm(i)
         ! tisfc is already pointing to T_surf forcing in physics_associate
         ! physics%Sfcprop%tisfc(i) => scm_state%T_surf
         ! tsfcl is already pointing to T_surf forcing in physics_associate
@@ -1110,62 +1187,104 @@ module scm_type_defs
       !  physics%Model%ivegsrc = scm_input%input_vegsrc
       !end if
       
-      if(scm_state%model_ics .and. physics%Model%frac_grid) then ! obtain slmsk from landfrac
-        !! next 5 lines are temporary till lake model is available
-        !if (physics%Sfcprop%lakefrac(i) > real_zero) then
-        !  !physics%Sfcprop%lakefrac(i) = nint(physics%Sfcprop%lakefrac(i))
-        !  physics%Sfcprop%landfrac(i) = real_one - physics%Sfcprop%lakefrac(i)
-        !  if (physics%Sfcprop%lakefrac(i) == real_zero) physics%Sfcprop%fice(i) = real_zero
-        !endif 
-        !physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i))
-        !if (physics%Sfcprop%fice(i) > physics%Model%min_lakeice .and. physics%Sfcprop%landfrac(i) == real_zero) physics%Sfcprop%slmsk(i) = 2 ! land dominates ice if co-exist
-        physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i)) !nint/floor are options
-      else ! obtain landfrac from slmsk
-        if (physics%Sfcprop%slmsk(i) > 1.9_dp) then
+      if(scm_state%model_ics .or. scm_state%lsm_ics) then
+        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i)+0.5 <= 0) then
           physics%Sfcprop%landfrac(i) = real_zero
-        else
-          physics%Sfcprop%landfrac(i) = physics%Sfcprop%slmsk(i)
+          physics%Sfcprop%stype(i) = 0
+          if (physics%Sfcprop%lakefrac(i) > real_zero) then
+            physics%Sfcprop%lakefrac(i) = real_one
+          endif
         endif
-      endif
-      
-      if (physics%Sfcprop%lakefrac(i) > real_zero) then
-        physics%Sfcprop%oceanfrac(i) = real_zero ! lake & ocean don't coexist in a cell
-        !GJF: the following code was taken from fv3atm/develop branch commit d10e450 from 2020/12/2, but the if statements seem like they are in error (reproduced here)
-        if (physics%Sfcprop%slmsk(i) /= real_one) then
-          if (physics%Sfcprop%fice(i) >= physics%Model%min_lakeice) then
-            if (physics%Sfcprop%slmsk(i) < 1.9_dp)      &
-              write(*,'(a,2i3,3f6.2)') 'reset lake slmsk=2 at i=' &
-              ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%lakefrac(i)
-            physics%Sfcprop%slmsk(i) = 2.
-          else if (physics%Sfcprop%slmsk(i) > 1.e-7) then
-            write(*,'(a,2i3,3f6.2)') 'reset lake slmsk=0 at i=' &
-            ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%lakefrac(i)
-            physics%Sfcprop%slmsk(i) = real_zero
-          end if
-        end if
-        !if (physics%Sfcprop%fice(i) < physics%Model%min_lakeice) then
-        !   physics%Sfcprop%fice(i) = real_zero
-        !   if (physics%Sfcprop%slmsk(i) == 2) physics%Sfcprop%slmsk(i) = 0
-        !endif
-      else
-        physics%Sfcprop%oceanfrac(i) = real_one - physics%Sfcprop%landfrac(i)
-        if (physics%Sfcprop%slmsk(i) /= real_one) then
-          if (physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
-            if (physics%Sfcprop%slmsk(i) < 1.9_dp)      &
-              write(*,'(a,2i3,3f6.2)') 'reset sea slmsk=2 at i,=' &
-              ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%landfrac(i)
-            physics%Sfcprop%slmsk(i) = 2.
-          else if (physics%Sfcprop%slmsk(i) > 1.e-7) then
-            write(*,'(a,2i3,4f6.2)') 'reset sea slmsk=0 at i=' &
-            ,i,physics%Sfcprop%fice(i),physics%Sfcprop%slmsk(i),physics%Sfcprop%landfrac(i)
-            physics%Sfcprop%slmsk(i) = real_zero
-          end if
-        end if
-        ! if (physics%Sfcprop%fice(i) < physics%Model%min_seaice) then
-        !    physics%Sfcprop%fice(i) = real_zero
-        !    if (physics%Sfcprop%slmsk(i) == 2) physics%Sfcprop%slmsk(i) = 0
-        ! endif
-      endif
+        
+        if (physics%Model%frac_grid) then
+          if (physics%Sfcprop%landfrac(i) > -999.0_dp) then
+            physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i)-1.0e-6)
+            if (physics%Sfcprop%slmsk(i) == 1 .and. physics%Sfcprop%stype(i) == 14) &
+              physics%Sfcprop%slmsk(i) = 0
+            if (physics%Sfcprop%lakefrac(i) > real_zero) then
+              physics%Sfcprop%oceanfrac(i) = real_zero ! lake & ocean don't coexist in a cell
+              if (nint(physics%Sfcprop%slmsk(i)) /= 1) then
+                if(physics%Sfcprop%fice(i) >= physics%Model%min_lakeice) then
+                  physics%Sfcprop%slmsk(i) = 2
+                else
+                  physics%Sfcprop%slmsk(i) = 0
+                endif
+              endif
+            else
+              physics%Sfcprop%lakefrac(i)  = real_zero
+              physics%Sfcprop%oceanfrac(i) = real_one - physics%Sfcprop%landfrac(i)
+              if (nint(physics%Sfcprop%slmsk(i)) /= 1) then
+                if (physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
+                  physics%Sfcprop%slmsk(i) = 2
+                else
+                  physics%Sfcprop%slmsk(i) = 0
+                endif
+              endif
+            endif
+          else
+            physics%Model%frac_grid = .false.
+            if (nint(physics%Sfcprop%slmsk(i)) == 1) then
+              physics%Sfcprop%landfrac(i)  = real_one
+              physics%Sfcprop%lakefrac(i)  = real_zero
+              physics%Sfcprop%oceanfrac(i) = real_zero
+            else
+              if (physics%Sfcprop%slmsk(i) < 0.1_dp .or. physics%Sfcprop%slmsk(i) > 1.9_dp) then
+                physics%Sfcprop%landfrac(i) = real_zero
+                if (physics%Sfcprop%oro_uf(i) > min_lake_orog) then   ! lakes
+                  physics%Sfcprop%lakefrac(i)  = real_one
+                  physics%Sfcprop%oceanfrac(i) = real_zero
+                else                                               ! ocean
+                  physics%Sfcprop%lakefrac(i)  = real_zero
+                  physics%Sfcprop%oceanfrac(i) = real_one
+                endif
+              endif
+            endif
+          endif
+        else                                             ! not a fractional grid
+          if (physics%Sfcprop%landfrac(i) > -999.0_dp) then
+            if (physics%Sfcprop%lakefrac(i) > real_zero) then
+              physics%Sfcprop%oceanfrac(i) = real_zero
+              physics%Sfcprop%landfrac(i)  = real_zero
+              physics%Sfcprop%lakefrac(i)  = real_one
+              physics%Sfcprop%slmsk(i)     = real_zero
+              if (physics%Sfcprop%fice(i) >= physics%Model%min_lakeice) physics%Sfcprop%slmsk(i) = 2.0
+            else
+              physics%Sfcprop%slmsk(i) = nint(physics%Sfcprop%landfrac(i))
+              if (physics%Sfcprop%stype(i) <= 0 .or. physics%Sfcprop%stype(i) == 14) &
+                physics%Sfcprop%slmsk(i) = real_zero
+              if (nint(physics%Sfcprop%slmsk(i)) == 0) then
+                physics%Sfcprop%oceanfrac(i) = real_one
+                physics%Sfcprop%landfrac(i)  = real_zero
+                physics%Sfcprop%lakefrac(i)  = real_zero
+                if (physics%Sfcprop%fice(i) >= physics%Model%min_seaice) physics%Sfcprop%slmsk(i) = 2.0
+              else
+                physics%Sfcprop%landfrac(i)  = real_one
+                physics%Sfcprop%lakefrac(i)  = real_zero
+                physics%Sfcprop%oceanfrac(i) = real_zero
+              endif
+            endif
+          else
+            if (nint(physics%Sfcprop%slmsk(i)) == 1 .and. physics%Sfcprop%stype(i) > 0      &
+                                                 .and. physics%Sfcprop%stype(i) /= 14) then
+              physics%Sfcprop%landfrac(i)  = real_one
+              physics%Sfcprop%lakefrac(i)  = real_zero
+              physics%Sfcprop%oceanfrac(i) = real_zero
+            else
+              physics%Sfcprop%slmsk(i)    = real_zero
+              physics%Sfcprop%landfrac(i) = real_zero
+              if (physics%Sfcprop%oro_uf(i) > min_lake_orog) then   ! lakes
+                physics%Sfcprop%lakefrac(i)  = real_one
+                physics%Sfcprop%oceanfrac(i) = real_zero
+                if (physics%Sfcprop%fice(i) > physics%Model%min_lakeice) physics%Sfcprop%slmsk(i) = 2.0
+              else                                       ! ocean
+                physics%Sfcprop%lakefrac(i)  = real_zero
+                physics%Sfcprop%oceanfrac(i) = real_one
+                if (physics%Sfcprop%fice(i) > physics%Model%min_seaice) physics%Sfcprop%slmsk(i) = 2.0
+              endif
+            endif
+          endif
+        endif
+      end if
       
       !--- NSSTM variables
       if (physics%Model%nstf_name(1) > 0) then
@@ -1214,31 +1333,35 @@ module scm_type_defs
         endif
       endif
       
-      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then !.and. warm_start (not implemented here -- assuming that RUC LSM has warm start data from file)
+      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc .and. .not. physics%Model%lsm_cold_start) then
         !--- Extra RUC LSM variables
         write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
-        call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .false., missing_var(1))
-        call conditionally_set_var(scm_input%input_clw_surf_land, physics%Sfcprop%clw_surf_land(i), "clw_surf_land", .false., missing_var(2))
-        call conditionally_set_var(scm_input%input_clw_surf_ice, physics%Sfcprop%clw_surf_ice(i), "clw_surf_ice", .false., missing_var(3))
-        call conditionally_set_var(scm_input%input_qwv_surf_land, physics%Sfcprop%qwv_surf_land(i), "qwv_surf_land", .false., missing_var(4))
-        call conditionally_set_var(scm_input%input_qwv_surf_ice, physics%Sfcprop%qwv_surf_ice(i), "qwv_surf_ice", .false., missing_var(5))
-        call conditionally_set_var(scm_input%input_tsnow_land, physics%Sfcprop%tsnow_land(i), "tsnow_land", .false., missing_var(6))
-        call conditionally_set_var(scm_input%input_tsnow_ice, physics%Sfcprop%tsnow_ice(i), "tsnow_ice", .false., missing_var(7))
-        call conditionally_set_var(scm_input%input_snowfallac_land, physics%Sfcprop%snowfallac_land(i), "snowfallac_land", .false., missing_var(8))
-        call conditionally_set_var(scm_input%input_snowfallac_ice, physics%Sfcprop%snowfallac_ice(i), "snowfallac_ice", .false., missing_var(9))
+        call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .true., missing_var(1))
+        call conditionally_set_var(scm_input%input_clw_surf_land, physics%Sfcprop%clw_surf_land(i), "clw_surf_land", .true., missing_var(2))
+        call conditionally_set_var(scm_input%input_clw_surf_ice, physics%Sfcprop%clw_surf_ice(i), "clw_surf_ice", .true., missing_var(3))
+        call conditionally_set_var(scm_input%input_qwv_surf_land, physics%Sfcprop%qwv_surf_land(i), "qwv_surf_land", .true., missing_var(4))
+        call conditionally_set_var(scm_input%input_qwv_surf_ice, physics%Sfcprop%qwv_surf_ice(i), "qwv_surf_ice", .true., missing_var(5))
+        call conditionally_set_var(scm_input%input_tsnow_land, physics%Sfcprop%tsnow_land(i), "tsnow_land", .true., missing_var(6))
+        call conditionally_set_var(scm_input%input_tsnow_ice, physics%Sfcprop%tsnow_ice(i), "tsnow_ice", .true., missing_var(7))
+        call conditionally_set_var(scm_input%input_snowfallac_land, physics%Sfcprop%snowfallac_land(i), "snowfallac_land", .true., missing_var(8))
+        call conditionally_set_var(scm_input%input_snowfallac_ice, physics%Sfcprop%snowfallac_ice(i), "snowfallac_ice", .true., missing_var(9))
         call conditionally_set_var(scm_input%input_sncovr_ice, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .false., missing_var(10))
+        call conditionally_set_var(scm_input%input_sfalb_lnd, physics%Sfcprop%sfalb_lnd(i), "sfalb_lnd", .true., missing_var(11))
+        call conditionally_set_var(scm_input%input_sfalb_lnd_bck, physics%Sfcprop%sfalb_lnd_bck(i), "sfalb_lnd_bck", .true., missing_var(12))
+        call conditionally_set_var(scm_input%input_sfalb_ice, physics%Sfcprop%sfalb_ice(i), "sfalb_ice", .true., missing_var(13))
+        call conditionally_set_var(scm_input%input_emis_ice, physics%Sfcprop%emis_ice(i), "emis_ice", .true., missing_var(14))
         if (physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%rdlai) then
            !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
-           call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(11))
+           call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(15))
         end if
         
         !if sncovr_ice is missing, set to the land value
         if(missing_var(10)) then
-          call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .false., missing_var(10))
+          call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .true., missing_var(10))
         end if
          
          !write out warning if missing data for non-required variables
-        n = 11
+        n = 15
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
           write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
@@ -1247,6 +1370,23 @@ module scm_type_defs
           end do
         end if
         missing_var = .false.
+      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%lsm_cold_start) then
+        call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .true., missing_var(1))
+        if (physics%Model%rdlai) then
+           !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
+           call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(2))
+        end if
+        
+        !write out warning if missing data for non-required variables
+       n = 2
+       if ( i==1 .and. ANY( missing_var(1:n) ) ) then
+         write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
+         write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+         do j=1, n
+           if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+         end do
+       end if
+       missing_var = .false.
       elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_noahmp) then
         write(0,'(a)') "Setting internal physics variables from the NoahMP section of the case input file (scalars)..."
         !all of these can be missing, since a method exists to "cold start" these variables
@@ -1279,14 +1419,9 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_smcwtdxy, physics%Sfcprop%smcwtdxy(i), "smcwtdxy", .false., missing_var(27))
         call conditionally_set_var(scm_input%input_deeprechxy, physics%Sfcprop%deeprechxy(i), "deeprechxy", .false., missing_var(28))
         call conditionally_set_var(scm_input%input_rechxy, physics%Sfcprop%rechxy(i), "rechxy", .false., missing_var(29))
-        call conditionally_set_var(scm_input%input_albdvis, physics%Sfcprop%albdirvis_lnd(i), "albdirvis_lnd", .false., missing_var(30))
-        call conditionally_set_var(scm_input%input_albdnir, physics%Sfcprop%albdirnir_lnd(i), "albdirnir_lnd", .false., missing_var(31))
-        call conditionally_set_var(scm_input%input_albivis, physics%Sfcprop%albdifvis_lnd(i), "albdifvis_lnd", .false., missing_var(32))
-        call conditionally_set_var(scm_input%input_albinir, physics%Sfcprop%albdirnir_lnd(i), "albdifnir_lnd", .false., missing_var(33))
-        call conditionally_set_var(scm_input%input_emiss, physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(34))
         
         !write out warning if missing data for non-required variables
-        n = 34
+        n = 29
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
           write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
@@ -1298,36 +1433,19 @@ module scm_type_defs
       end if
       
       if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. (physics%Model%lsm == physics%Model%lsm_noah .or. &
-          physics%Model%lsm == physics%Model%lsm_noahmp)) then    !.or. (.not. warm_start) from FV3GFS_io is not implemented
-        !check for nonmissing values
-        !--- 3D variables
-        ! do lsoil = 1,physics%Model%lsoil
-        !   physics%Sfcprop%stc(i,lsoil) = scm_input%input_stc(lsoil)    !--- stc
-        !   physics%Sfcprop%smc(i,lsoil) = scm_input%input_smc(lsoil)    !--- smc
-        !   physics%Sfcprop%slc(i,lsoil) = scm_input%input_slc(lsoil)    !--- slc
-        ! enddo
+          physics%Model%lsm == physics%Model%lsm_noahmp .or. physics%Model%lsm_cold_start)) then
+        
         call conditionally_set_var(scm_input%input_stc(:), physics%Sfcprop%stc(i,:), "stc", .true., missing_var(1))
         call conditionally_set_var(scm_input%input_smc(:), physics%Sfcprop%smc(i,:), "smc", .true., missing_var(2))
         call conditionally_set_var(scm_input%input_slc(:), physics%Sfcprop%slc(i,:), "slc", .true., missing_var(3))
 
         if (physics%Model%lsm == physics%Model%lsm_noahmp) then
-          ! do lsoil = -2, 0
-          !   physics%Sfcprop%snicexy(i,lsoil) = scm_input%input_snicexy(lsoil)
-          !   physics%Sfcprop%snliqxy(i,lsoil) = scm_input%input_snliqxy(lsoil)
-          !   physics%Sfcprop%tsnoxy(i,lsoil)  = scm_input%input_tsnoxy(lsoil)
-          ! enddo
           call conditionally_set_var(scm_input%input_snicexy(:), physics%Sfcprop%snicexy(i,:), "snicexy", .false., missing_var(4))
           call conditionally_set_var(scm_input%input_snliqxy(:), physics%Sfcprop%snliqxy(i,:), "sliqexy", .false., missing_var(5))
           call conditionally_set_var(scm_input%input_tsnoxy(:), physics%Sfcprop%tsnoxy(i,:), "tsnoxy", .false., missing_var(6))
 
-          ! do lsoil = 1, 4
-          !   physics%Sfcprop%smoiseq(i,lsoil)  = scm_input%input_smoiseq(lsoil) 
-          ! enddo
           call conditionally_set_var(scm_input%input_smoiseq(:), physics%Sfcprop%smoiseq(i,:), "smoiseq", .false., missing_var(7))
 
-          ! do lsoil = -2, 4
-          !   physics%Sfcprop%zsnsoxy(i,lsoil)  = scm_input%input_zsnsoxy(lsoil)
-          ! enddo
           call conditionally_set_var(scm_input%input_zsnsoxy(:), physics%Sfcprop%zsnsoxy(i,:), "zsnzoxy", .false., missing_var(8))
           
           !write out warning if missing data for non-required variables
@@ -1343,14 +1461,6 @@ module scm_type_defs
         endif
 
       else if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then
-        !--- 3D variables
-        ! do lsoil = 1,Model%lsoil_lsm
-        !   physics%Sfcprop%tslb(i,lsoil) = scm_input%input_tslb(lsoil)
-        !   physics%Sfcprop%smois(i,lsoil) = scm_input%input_smois(lsoil)
-        !   physics%Sfcprop%sh2o(i,lsoil) = scm_input%input_sh2o(lsoil)
-        !   physics%Sfcprop%keepsmfr(i,lsoil) = scm_input%input_smfr(lsoil)
-        !   physics%Sfcprop%flag_frsoil(i,lsoil) = scm_input%input_flfr(lsoil)
-        ! enddo
         call conditionally_set_var(scm_input%input_tslb(:), physics%Sfcprop%tslb(i,:), "tslb", .false., missing_var(1))
         call conditionally_set_var(scm_input%input_smois(:), physics%Sfcprop%smois(i,:), "smois", .false., missing_var(2))
         call conditionally_set_var(scm_input%input_sh2o(:), physics%Sfcprop%sh2o(i,:), "sh2o", .false., missing_var(3))
@@ -1371,12 +1481,29 @@ module scm_type_defs
 
       if (scm_state%model_ics .or. scm_state%lsm_ics) then
         !check for nonmissing values
-        ! do k = 1,Model%kice
-        !   physics%Sfcprop%tiice(i,k) = scm_input%input_tiice(k)   !--- internal ice temp
-        ! enddo
         call conditionally_set_var(scm_input%input_tiice(:), physics%Sfcprop%tiice(i,:), "tiice", .false., missing_var(1))
         if (missing_var(1)) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to the internal sea ice temperature. These will be set from the internal soil temperature variable (stc)."
+        end if
+      end if
+      
+      if (scm_state%model_ics .or. scm_state%lsm_ics) then
+        if (scm_input%input_snodl <= real_zero) then
+          if (physics%Sfcprop%landfrac(i) > real_zero) then
+            tem = real_one / physics%Sfcprop%landfrac(i)
+            physics%Sfcprop%snodl(i)  = physics%Sfcprop%snowd(i) * tem
+          else
+            physics%Sfcprop%snodl(i)  = real_zero
+          endif
+        end if
+        
+        if (scm_input%input_weasdl <= real_zero) then
+          if (physics%Sfcprop%landfrac(i) > real_zero) then
+            tem = real_one / physics%Sfcprop%landfrac(i)
+            physics%Sfcprop%weasdl(i) = physics%Sfcprop%weasd(i) * tem
+          else
+            physics%Sfcprop%weasdl(i) = real_zero
+          endif
         end if
       end if
       
@@ -1384,54 +1511,72 @@ module scm_type_defs
         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i) !--- compute tsfcl from existing variables
       end if
       
+      if (scm_input%input_zorlw <= real_zero) then
+        physics%Sfcprop%zorlw(i) = physics%Sfcprop%zorl(i) !--- compute zorlw from existing variables
+      end if
+      
       if (scm_input%input_zorll <= real_zero) then
-        physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlw(i) !--- compute zorll from existing variables
+        physics%Sfcprop%zorll(i) = physics%Sfcprop%zorl(i) !--- compute zorll from existing variables
       end if
       
       if (scm_input%input_zorli <= real_zero) then
-        physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlw(i) !--- compute zorli from existing variables
+        physics%Sfcprop%zorli(i) = physics%Sfcprop%zorl(i) !--- compute zorli from existing variables
       end if
+      
+      if (physics%Model%use_cice_alb) then
+        if (scm_input%input_albdirvis_ice <= real_zero) then
+          if (physics%Sfcprop%oceanfrac(i) > real_zero .and. &
+                physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
+              physics%Sfcprop%albdirvis_ice(i) = 0.6_dp
+              physics%Sfcprop%albdifvis_ice(i) = 0.6_dp
+              physics%Sfcprop%albdirnir_ice(i) = 0.6_dp
+              physics%Sfcprop%albdifnir_ice(i) = 0.6_dp
+          endif
+        endif
+      endif
       
       if (scm_input%input_zorlwav <= real_zero) then
         physics%Sfcprop%zorlwav(i) = physics%Sfcprop%zorlw(i) !--- compute zorlwav from existing variables
       end if
       
-      if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics)) then ! 3-way composite
-            if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
-            tem1 = real_one - physics%Sfcprop%landfrac(i)
-            tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
-            physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
-                                 + physics%Sfcprop%zorli(i) * tem                      &
-                                 + physics%Sfcprop%zorlw(i) * (tem1-tem)
+      if (physics%Model%lsm_cold_start) then
+        if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics)) then ! 3-way composite
+              if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
+              tem1 = real_one - physics%Sfcprop%landfrac(i)
+              tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
+              physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
+                                   + physics%Sfcprop%zorli(i) * tem                      &
+                                   + physics%Sfcprop%zorlw(i) * (tem1-tem)
 
-            physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
-                                 + physics%Sfcprop%tisfc(i) * tem                      &
-                                 + physics%Sfcprop%tsfco(i) * (tem1-tem)
-      else
-          !--- specify tsfcl/zorll/zorli from existing variable tsfco/zorlw
-  !         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i)
-  !         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlw(i)
-  !         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlw(i)
-  !         physics%Sfcprop%zorl(i)  = physics%Sfcprop%zorlw(i)
-  !         physics%Sfcprop%tsfc(i)  = physics%Sfcprop%tsfco(i)
-            if (physics%Sfcprop%slmsk(i) == 1) then
-              physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) 
-              physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i)
-            else
-              tem = real_one - physics%Sfcprop%fice(i)
-              physics%Sfcprop%zorl(i) = physics%Sfcprop%zorli(i) * physics%Sfcprop%fice(i) &
-                                   + physics%Sfcprop%zorlw(i) * tem
+              physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
+                                   + physics%Sfcprop%tisfc(i) * tem                      &
+                                   + physics%Sfcprop%tsfco(i) * (tem1-tem)
+        else
+            !--- specify tsfcl/zorll/zorli from existing variable tsfco/zorlw
+    !         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i)
+    !         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlw(i)
+    !         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlw(i)
+    !         physics%Sfcprop%zorl(i)  = physics%Sfcprop%zorlw(i)
+    !         physics%Sfcprop%tsfc(i)  = physics%Sfcprop%tsfco(i)
+              if (physics%Sfcprop%slmsk(i) == 1) then
+                physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) 
+                physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i)
+              else
+                tem = real_one - physics%Sfcprop%fice(i)
+                physics%Sfcprop%zorl(i) = physics%Sfcprop%zorli(i) * physics%Sfcprop%fice(i) &
+                                     + physics%Sfcprop%zorlw(i) * tem
 
-              physics%Sfcprop%tsfc(i) = physics%Sfcprop%tisfc(i) * physics%Sfcprop%fice(i) &
-                                   + physics%Sfcprop%tsfco(i) * tem
-            endif
-      endif ! if (Model%frac_grid)
+                physics%Sfcprop%tsfc(i) = physics%Sfcprop%tisfc(i) * physics%Sfcprop%fice(i) &
+                                     + physics%Sfcprop%tsfco(i) * tem
+              endif
+        endif ! if (Model%frac_grid)
+      endif !if (physics%Model%lsm_cold_start)
       
       if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. MAXVAL(scm_input%input_tiice) < real_zero) then
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if
-      
+
     end do
     
   end subroutine physics_set
