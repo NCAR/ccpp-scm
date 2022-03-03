@@ -1180,6 +1180,7 @@ module scm_type_defs
         ! tsfcl is already pointing to T_surf forcing in physics_associate
         ! physics%Sfcprop%tsfcl(i) => scm_state%T_surf
         if (physics%Sfcprop%slmsk(i) > 1.9_dp) physics%Sfcprop%fice(i) = 1.0 !needed to calculate tsfc and zorl below when model_ics == .false.
+        if (physics%Sfcprop%slmsk(i) < 0.1_dp) physics%Sfcprop%oceanfrac(i) = 1.0
       end if
       
       !this overwrites what is in the suite namelist file -- is that desirable? 
