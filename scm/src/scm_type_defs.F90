@@ -48,8 +48,8 @@ module scm_type_defs
     character(len=character_length)                 :: physics_suite_name !< name of physics suite (must be "GFS_operational" for prototype)
     character(len=character_length)                 :: physics_nml
 
-    integer                           :: n_levels !< number of model levels (must be 64 for prototype)
-    integer                           :: n_soil  !< number of model levels (must be 4 for prototype)
+    integer                           :: n_levels !< number of model levels
+    integer                           :: n_soil  !< number of model levels
     integer                           :: itt !< current model iteration
     integer                           :: itt_out  !< output iteration counter
     integer                           :: itt_swrad  !< sw radiation iteration counter
