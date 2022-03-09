@@ -29,6 +29,10 @@ parser.add_argument('-v', '--verbose',   help='once: set logging level to debug;
 parser.add_argument('-t', '--timer',     help='set to time each subprocess', action='store_true', default=False)
 parser.add_argument('-d', '--docker',    help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 parser.add_argument('--runtime',         help='set the runtime in the namelists', action='store', required=False)
+parser.add_argument('-l', '--levels',    help='number of vertical levels', required=False)
+parser.add_argument('--npz_type',        help='type of FV3 vertical grid to produce (see scm_vgrid.F90 for valid values)', required=False)
+parser.add_argument('--vert_coord_file', help='filename with coefficients to produce a vertical grid', required=False)
+parser.add_argument('--case_data_dir',   help='directory containing the case input data netCDF file', required=False)
 
 # Results are recorded in this global list (to avoid complications with getting return values from the partial functions used below)
 RESULTS = []
@@ -87,17 +91,32 @@ def main():
     args = parser.parse_args()
 
     setup_logging(args.verbose)
-
+    
+    passthrough_args = ''
+    if args.levels:
+        passthrough_args += ' -l ' + args.levels
+    if args.npz_type:
+        if args.npz_type == 'input':
+            if args.vert_coord_file:
+                passthrough_args += ' --npz_type ' + args.npz_type + ' --vert_coord_file ' + args.vert_coord_file
+            else:
+                message = 'The npz_type was set to \'input\' but no file was specified via --vert_coord_file. Please specify the name of the file via --vert_coord_file name_of_file'
+                logging.critical(message)
+                raise Exception(message)
+        else:
+            passthrough_args += ' --npz_type ' + args.npz_type
+    if args.case_data_dir:
+        passthrough_args += ' --case_data_dir ' + args.case_data_dir
+    if args.docker:
+        passthrough_args += ' -d'
+    if args.runtime:
+        passthrough_args += ' --runtime ' + args.runtime
+    
     # if the case argument is specified, run through all supported suites with the specified case
     if args.case:
-        logging.info('Running all supported suites with case {0}'.format(args.case))
+        logging.info('Running all supported suites with case {0} and passthrough args: {1}'.format(args.case, passthrough_args))
         for i, suite in enumerate(suites,1):
-            command = RUN_SCRIPT + ' -c ' + args.case + ' -s ' + suite
-            if args.docker:
-                command = command + ' -d'
-            # If modifying the runtime, pass the -runtime argument to the RUN_SCRIPT
-            if args.runtime:
-                command = command + ' --runtime ' + args.runtime
+            command = RUN_SCRIPT + ' -c ' + args.case + ' -s ' + suite + passthrough_args
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(suites), command))
             elapsed_time = spawn_subprocess(command, args.timer)
             if args.timer:
@@ -106,13 +125,9 @@ def main():
 
     # if the suite argument is specified, run through all supported cases with the specified suite
     if args.suite:
-        logging.info('Running all supported cases with suite {0}'.format(args.suite))
+        logging.info('Running all supported cases with suite {0} and passthrough args: {1}'.format(args.suite, passthrough_args))
         for i, case in enumerate(cases,1):
-            command = RUN_SCRIPT + ' -c ' + case + ' -s ' + args.suite
-            if args.docker:
-                command = command + ' -d'
-            if args.runtime:
-                command = command + ' --runtime ' + args.runtime
+            command = RUN_SCRIPT + ' -c ' + case + ' -s ' + args.suite + passthrough_args
             logging.info('Executing process {0} of {1} ({2})'.format(i, len(cases), command))
             elapsed_time = spawn_subprocess(command, args.timer)
             if args.timer:
@@ -154,13 +169,9 @@ def main():
 
         if scm_runs.cases and not scm_runs.suites and not scm_runs.namelists:
             logging.info(
-                'Only cases were specified in {0}, so running all cases with the default suite'.format(args.file))
+                'Only cases were specified in {0}, so running all cases with the default suite and passthrough args: {1}'.format(args.file, passthrough_args))
             for i, case in enumerate(scm_runs.cases,1):
-                command = RUN_SCRIPT + ' -c ' + case
-                if args.docker:
-                    command = command + ' -d'
-                if args.runtime:
-                    command = command + ' --runtime ' + args.runtime
+                command = RUN_SCRIPT + ' -c ' + case + passthrough_args
                 logging.info('Executing process {0} of {1} ({2})'.format(i, len(scm_runs.cases), command))
                 elapsed_time = spawn_subprocess(command, args.timer)
                 if args.timer:
@@ -171,14 +182,10 @@ def main():
             if scm_runs.namelists:
                 if len(scm_runs.suites) == 1:
                     logging.info('Cases and namelists were specified with 1 suite in {0}, so running all cases with '\
-                        'the suite {1} for all specified namelists'.format(args.file, scm_runs.suites[0]))
+                        'the suite {1} for all specified namelists and passthrough args: {2}'.format(args.file, scm_runs.suites[0], passthrough_args))
                     for i, case in enumerate(scm_runs.cases):
                         for j, namelist in enumerate(scm_runs.namelists,1):
-                            command = RUN_SCRIPT + ' -c ' + case + ' -s ' + scm_runs.suites[0] + ' -n ' + namelist
-                            if args.docker:
-                                command = command + ' -d'
-                            if args.runtime:
-                                command = command + ' --runtime ' + args.runtime
+                            command = RUN_SCRIPT + ' -c ' + case + ' -s ' + scm_runs.suites[0] + ' -n ' + namelist + passthrough_args
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                             elapsed_time = spawn_subprocess(command, args.timer)
@@ -187,14 +194,10 @@ def main():
                                   .format(elapsed_time/timer_iterations, case, scm_runs.suites[0]))
                 elif len(scm_runs.suites) == len(scm_runs.namelists):
                     logging.info('Cases, suites, and namelists were specified in {0}, so running all cases with all '\
-                        'suites, matched with namelists by order'.format(args.file))
+                        'suites, matched with namelists by order and passthrough args: {1}'.format(args.file, passthrough_args))
                     for i, case in enumerate(scm_runs.cases):
                         for j, suite in enumerate(scm_runs.suites,1):
-                            command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite + ' -n ' + scm_runs.namelists[j-1]
-                            if args.docker:
-                                command = command + ' -d'
-                            if args.runtime:
-                                command = command + ' --runtime ' + args.runtime
+                            command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite + ' -n ' + scm_runs.namelists[j-1] + passthrough_args
                             logging.info('Executing process {0} of {1} ({2})'.format(
                                 len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                             elapsed_time = spawn_subprocess(command, args.timer)
@@ -209,14 +212,10 @@ def main():
                     raise Exception(message)
             else:
                 logging.info('Cases and suites specified in {0}, so running all cases with all suites using default '\
-                    'namelists for each suite'.format(args.file))
+                    'namelists for each suite and passthrough args: {1}'.format(args.file, passthrough_args))
                 for i, case in enumerate(scm_runs.cases):
                     for j, suite in enumerate(scm_runs.suites,1):
-                        command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
-                        if args.docker:
-                            command = command + ' -d'
-                        if args.runtime:
-                            command = command + ' --runtime ' + args.runtime
+                        command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite + passthrough_args
                         logging.info('Executing process {0} of {1} ({2})'.format(
                             len(scm_runs.suites)*i+j, len(scm_runs.cases)*len(scm_runs.suites), command))
                         elapsed_time = spawn_subprocess(command, args.timer)
@@ -226,14 +225,10 @@ def main():
 
         if scm_runs.cases and not scm_runs.suites and scm_runs.namelists:
             logging.info('Cases and namelists were specified in {0}, so running all cases with the default suite '\
-                'using the list of namelists'.format(args.file))
+                'using the list of namelists and passthrough args: {1}'.format(args.file, passthrough_args))
             for i, case in enumerate(scm_runs.cases):
                 for j, namelist in enumerate(scm_runs.namelists,1):
-                    command = RUN_SCRIPT + ' -c ' + case + ' -n ' + namelist
-                    if args.docker:
-                        command = command + ' -d'
-                    if args.runtime:
-                        command = command + ' --runtime ' + args.runtime
+                    command = RUN_SCRIPT + ' -c ' + case + ' -n ' + namelist + passthrough_args
                     logging.info('Executing process {0} of {1} ({2})'.format(
                         len(scm_runs.namelists)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), command))
                     elapsed_time = spawn_subprocess(command, args.timer)
@@ -244,14 +239,10 @@ def main():
     # If running the script with no arguments, run all supported (case,suite) permutations.
     if not args.case and not args.suite and not args.file:
         logging.info('Since no arguments were specified, running through all permuatations of supported cases and '\
-            'suites')
+            'suites with passthrough args: {0}').format(passthrough_args)
         for i, case in enumerate(cases):
             for j, suite in enumerate(suites,1):
-                command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite
-                if args.docker:
-                    command = command + ' -d'
-                if args.runtime:
-                    command = command + ' --runtime ' + args.runtime
+                command = RUN_SCRIPT + ' -c ' + case + ' -s ' + suite + passthrough_args
                 logging.info('Executing process {0} of {1} ({2})'.format(
                     len(suites)*i+j, len(cases)*len(suites), command))
                 elapsed_time = spawn_subprocess(command, args.timer)

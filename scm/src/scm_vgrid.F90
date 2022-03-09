@@ -9,7 +9,7 @@ use scm_physical_constants, only : con_cp, con_rocp, con_fvirt, con_g, con_rd
 implicit none
 
 private
-public get_GFS_vgrid, get_FV3_vgrid, calc_pres_exner_geopotential, calc_geopotential
+public get_FV3_vgrid, calc_pres_exner_geopotential, calc_geopotential
 
 logical :: verbose = .true.
 
@@ -21,94 +21,6 @@ contains
 !! @{
 !! Contains the vertical grid setup routines.
 
-!> Subroutine for setting up the GFS hybrid coordinate vertical grid. Files with precalculated coefficients (A_k and B_k) from the
-!! "fix" directory in Patrick Tripp's V2 code are used; their filenames start with "global_hyblev". There are only files for 28, 42,
-!! 60, 64, and 91 levels. If a different number of levels are specified, an error is returned. Using the A_k and B_k coefficients, the
-!! model level pressures, sigma values, and exner function (at interfaces and layer centers) are calculated and returned to the calling
-!! procedure.
-subroutine get_GFS_vgrid(scm_input, scm_state, error)
-  use scm_type_defs, only: scm_input_type, scm_state_type
-
-  type(scm_input_type), intent(in) :: scm_input
-  type(scm_state_type), intent(inout) :: scm_state
-
-  !create GFS hybrid coordinate vertical grid
-  integer, intent(out) :: error !< error code
-
-  integer               :: i, ierr
-
-  real(kind=dp)               :: pres_sfc_inv, p0
-  character(len=37)     :: filename
-  character(len=80)     :: line
-  character(len=16)     :: file_format
-
-  !>  \section get_GFS_vgrid_alg Algorithm
-  !!  @{
-
-  error = 0
-
-  !file format for all but the 91 level file is the same
-  file_format = '(1F12.3, 1F12.8)'
-
-
-  !> - Check to see if the desired number of grid levels is available. If not, return an error code.
-  select case (scm_state%n_levels)
-    case(28)
-      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l28.txt"
-    case(42)
-      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l42.txt"
-    case(60)
-      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l60.txt"
-    case(64)
-      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l64.txt"
-    case(91)
-      filename = trim(adjustl(scm_state%vert_coord_data_dir))//"/global_hyblev.l91.txt"
-      !file format for the 91-level file is different
-      file_format = '(1F14.6, 1F10.6)'
-    case default
-      error = 1
-      return
-  end select
-
-  !> - Open the appropriate file.
-  open(unit=1, file=filename, status='old', action='read', iostat=ierr)
-  if(ierr /= 0) then
-    write(*,*) 'There was an error opening the file ', filename, ' in the model_config directory. &
-      Error code = ',ierr
-    error = 2
-  endif
-
-  !> - The first line contains the number of coefficients and number of levels (these should already by known; discard this info)
-  read(1,'(a)',iostat=ierr) line
-  !> - Read in the coefficient data.
-  do i=1, scm_state%n_levels+1
-    read(1,file_format)  scm_state%a_k(i), scm_state%b_k(i)
-  end do
-  close(1)
-
-  !> - Calculate interface pressures, sigma, and exner function.
-
-  p0 = scm_input%input_pres_surf(1)
-  pres_sfc_inv = 1.0/p0
-  do i=1, scm_state%n_levels+1
-    scm_state%pres_i(:,i) = scm_state%a_k(i) + scm_state%b_k(i)*p0
-    scm_state%si(:,i) = scm_state%a_k(i)*pres_sfc_inv + scm_state%b_k(i)
-    scm_state%exner_i(:,i) = (scm_state%pres_i(:,i)/1.0E5)**con_rocp
-  end do
-
-  !> - Calculate layer center pressures, sigma, and exner function.
-  do i=1, scm_state%n_levels
-    scm_state%pres_l(:,i) = ((1.0/(con_rocp+1.0))*&
-      (scm_state%pres_i(:,i)**(con_rocp+1.0) - scm_state%pres_i(:,i+1)**(con_rocp+1.0))/ &
-      (scm_state%pres_i(:,i) - scm_state%pres_i(:,i+1)))**(1.0/con_rocp)
-    scm_state%sl(:,i) = 0.5*(scm_state%si(:,i) + scm_state%si(:,i+1))
-
-    scm_state%exner_l(:,i) = (scm_state%pres_l(:,i)/1.0E5)**con_rocp
-
-  end do
-  !> @}
-end subroutine get_GFS_vgrid
-
 !GJF: most of this was obtained from FV3/atmos_cubed_sphere/tools/fv_eta.F90 from FV3
 !GJF: current as of March 2022
 !GJF: assuming proprocessor variable USE_VAR_ETA is NOT set
@@ -118,7 +30,6 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       type(scm_input_type), intent(in) :: scm_input
       type(scm_state_type), intent(inout) :: scm_state
 
-      character(24) :: npz_type
       integer :: km           ! vertical dimension
       integer :: ks           ! number of pure p layers
       real(kind=dp) :: ptop         ! model top (Pa)
@@ -133,16 +44,18 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       real :: stretch_fac = 1.03
       integer :: auto_routine = 0
       
-      integer  k, last_index, mid_index
+      integer  k, last_index, mid_index, ierr, dummy, n_levels_file
+      
+      character(len=80)     :: line
+      character(len=16)     :: file_format
       
 #include "fv_eta.h"
       
-      npz_type = '' !GJF: this  is the default in atmos_cubed_sphere/model/fv_arrays.F90
       km = scm_state%n_levels
       ptop = 1.
 ! Definition: press(i,j,k) = ak(k) + bk(k) * ps(i,j)
       
-      if (trim(npz_type) == 'superC' .or. trim(npz_type) == 'superK') then
+      if (trim(scm_state%npz_type) == 'superC' .or. trim(scm_state%npz_type) == 'superK') then
         auto_routine = 1
         select case (km)
           case (20)
@@ -178,30 +91,47 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
              stretch_fac = 1.025
              auto_routine = 2
         end select
-      else if (trim(npz_type) == 'input') then
-        !GJF: not implemented yet
-        write(*,*) 'scm_vgrid: npz_type = input is not supported yet'
-        stop
-        ! Jili Dong add ak/bk input
-        !call ascii_read (trim(fv_eta_file), eta_level_unit)
-        !!--- fv_eta_file being read in must have the following format:
-        !!       include a single line description
+      else if (trim(scm_state%npz_type) == 'input') then
+        
+        !> - Open the appropriate file.
+        open(unit=1, file=scm_state%vert_coord_file, status='old', action='read', iostat=ierr)
+        if(ierr /= 0) then
+          write(*,*) 'There was an error opening the file ', scm_state%vert_coord_file, ' in the run directory. &
+            Error code = ',ierr
+          stop
+        endif
+        
+        !> The file being read in must have the following format:
+        !!       include a single line description: number of coefficients, number of layers
         !!       ak/bk pairs, with each pair occupying a single line
         !!       the pairs must be ordered from surface to TOA
-        !!       the pairs define the levels of the grid to create levels-1 layers
-        !if (size(eta_level_unit(:)) /= km+2) then
-        !   print *,' size is ', size(eta_level_unit(:))
-        !   call error_mesg ('FV3 set_eta',trim(fv_eta_file)//" has too few or too many entries or has extra &
-        !                   &spaces at the end of the file", FATAL)
-        !endif
-        !l = 1
-        !read(eta_level_unit(l),*)
-        !do k=km+1,1,-1
-        !   l = l + 1
-        !   read(eta_level_unit(l),*) ak(k),bk(k)
-        !end do
-        !deallocate (eta_level_unit)
-        !call set_external_eta(ak, bk, ptop, ks)
+        !!       the pairs define the interfaces of the grid to create levels-1 layer
+        
+        !> - The first line contains the number of coefficients and number of levels 
+        read(1,*) dummy, n_levels_file
+        if (n_levels_file /= scm_state%n_levels) then
+          write(*,*) 'There is a mismatch in the number of levels expected and the number of coefficients supplied in the file ',scm_state%vert_coord_file
+          stop
+        end if
+        !> - Read in the coefficient data. 
+        do k=1, km+1
+          read(1,*)  scm_state%a_k(k), scm_state%b_k(k)
+        end do
+        close(1)
+        
+        ! flip scm_state%a_k, scm_state%b_k in vertical (a_k and b_k are expected to be TOA-to-surface at this point)
+        mid_index = (km+1)/2
+        last_index = km+1
+        do k = 1, mid_index
+            ak_tmp = scm_state%a_k(k)
+            bk_tmp = scm_state%b_k(k)
+            scm_state%a_k(k) = scm_state%a_k(last_index)
+            scm_state%b_k(k) = scm_state%b_k(last_index)
+            scm_state%a_k(last_index) = ak_tmp
+            scm_state%b_k(last_index) = bk_tmp
+            last_index = last_index - 1
+        end do
+        
       else
         select case (km)
           case (5,10) ! does this work????
@@ -230,7 +160,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             stretch_fac = 1.03
             auto_routine = 1
           case (31)               ! N = 4, M=2
-            if (trim(npz_type) == 'lowtop') then
+            if (trim(scm_state%npz_type) == 'lowtop') then
               ptop = 300.
               pint = 100.E2
               stretch_fac = 1.035
@@ -241,13 +171,13 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               auto_routine = 1
             endif
           case (32)
-            if (trim(npz_type) == 'old32') then
+            if (trim(scm_state%npz_type) == 'old32') then
               ks = 13              ! high-res trop_32 setup
               do k=1,km+1
                 scm_state%a_k(k) = a32old(k)
                 scm_state%b_k(k) = b32old(k)
               enddo
-            elseif (trim(npz_type) == 'lowtop') then
+            elseif (trim(scm_state%npz_type) == 'lowtop') then
               ptop = 100.
               stretch_fac = 1.035
               auto_routine = 1
@@ -281,7 +211,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             stretch_fac = 1.035
             auto_routine = 1
           case (47) 
-            if (trim(npz_type) == 'lowtop') then
+            if (trim(scm_state%npz_type) == 'lowtop') then
               ptop = 100.
               stretch_fac = 1.035
               auto_routine = 1
@@ -311,16 +241,16 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               scm_state%b_k(k) = b50(k)
             enddo
           case (51)
-            if (trim(npz_type) == 'lowtop') then
+            if (trim(scm_state%npz_type) == 'lowtop') then
               ptop = 100.
               stretch_fac = 1.03
               auto_routine = 1
-            elseif (trim(npz_type) == 'meso') then
+            elseif (trim(scm_state%npz_type) == 'meso') then
               ptop = 20.E2
               pint = 100.E2
               stretch_fac = 1.05
               auto_routine = 1
-            elseif (trim(npz_type) == 'meso2') then
+            elseif (trim(scm_state%npz_type) == 'meso2') then
               ptop = 1.E2
               pint = 100.E2
               stretch_fac = 1.05
@@ -332,7 +262,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               auto_routine = 1
             endif
           case (52)
-            if (trim(npz_type) == 'rce') then
+            if (trim(scm_state%npz_type) == 'rce') then
               ptop = 30.e2    ! for special DPM RCE experiments
               stretch_fac = 1.03
               auto_routine = 1
@@ -361,19 +291,19 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               scm_state%b_k(k) = b56(k)
             enddo
           case (60)
-            if (trim(npz_type) == 'gfs') then
+            if (trim(scm_state%npz_type) == 'gfs') then
               ks = 20
               do k=1,km+1
                 scm_state%a_k(k) = a60gfs(k)
                 scm_state%b_k(k) = b60gfs(k)
               enddo
-            else if (trim(npz_type) == 'BCwave') then
+            else if (trim(scm_state%npz_type) == 'BCwave') then
               ptop = 3.e2
               !            pint = 250.E2
               pint = 300.E2    ! revised for Moist test
               stretch_fac = 1.03
               auto_routine = 1
-            else if (trim(npz_type) == 'meso') then
+            else if (trim(scm_state%npz_type) == 'meso') then
               ptop = 40.e2
               pint = 250.E2
               stretch_fac = 1.03
@@ -386,18 +316,18 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               enddo
             endif
           case (63)
-            if (trim(npz_type) == 'meso') then
+            if (trim(scm_state%npz_type) == 'meso') then
               ks = 11
               do k=1,km+1
                 scm_state%a_k(k) = a63meso(k)
                 scm_state%b_k(k) = b63meso(k)
               enddo
-            elseif (trim(npz_type) == 'hitop') then
+            elseif (trim(scm_state%npz_type) == 'hitop') then
               ptop = 1.   ! high top
               pint = 100.E2
               stretch_fac = 1.035
               auto_routine = 1
-            else!if (trim(npz_type) == 'gfs') then
+            else!if (trim(scm_state%npz_type) == 'gfs') then
               !Used for SHiELD
               ! GFS L64 equivalent setting
               ks = 23
@@ -407,7 +337,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               enddo
             endif
           case (64)
-            if (trim(npz_type) == 'gfs') then
+            if (trim(scm_state%npz_type) == 'gfs') then
               ks = 23
               do k=1,km+1
                 scm_state%a_k(k) = a64gfs(k)
@@ -437,7 +367,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             stretch_fac = 1.035
             auto_routine = 6
           case (79)               ! N = 10, M=5
-            if (trim(npz_type) == 'gcrm') then
+            if (trim(scm_state%npz_type) == 'gcrm') then
               pint = 100.E2
               ptop = 3.E2
               stretch_fac = 1.035
@@ -491,7 +421,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               scm_state%b_k(k) = b125(k)
             enddo
           case (127)               ! N = 10, M=5
-            if (trim(npz_type) == 'hitop') then
+            if (trim(scm_state%npz_type) == 'hitop') then
               ptop = 1.
               stretch_fac = 1.03
               auto_routine = 2
@@ -508,22 +438,22 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             stretch_fac = 1.01
             auto_routine = 3
           case default
-            if(trim(npz_type) == 'hitop') then
+            if(trim(scm_state%npz_type) == 'hitop') then
               ptop = 1.
               pint = 100.E2
-            elseif(trim(npz_type) == 'midtop') then
+            elseif(trim(scm_state%npz_type) == 'midtop') then
               ptop = 10.
               pint = 100.E2
-            elseif(trim(npz_type) == 'lowtop') then
+            elseif(trim(scm_state%npz_type) == 'lowtop') then
               ptop = 1.E2
               pint = 100.E2
             endif
 
-            if (trim(npz_type) == 'gfs') then
+            if (trim(scm_state%npz_type) == 'gfs') then
               auto_routine = 6
-            elseif(trim(npz_type) == 'les') then
+            elseif(trim(scm_state%npz_type) == 'les') then
               auto_routine = 3
-            elseif(trim(npz_type) == 'mountain_wave') then
+            elseif(trim(scm_state%npz_type) == 'mountain_wave') then
               auto_routine = 4
             elseif (km > 79) then
               auto_routine = 2
