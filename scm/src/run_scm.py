@@ -9,8 +9,6 @@ import shutil
 import subprocess
 import sys
 import time
-from default_namelists import default_physics_namelists
-from default_tracers import default_tracers
 from suite_info import suite, suite_list
 from netCDF4 import Dataset
 
@@ -112,6 +110,7 @@ parser.add_argument('--run_dir',          help='path for the run directory', req
 parser.add_argument('--case_data_dir',    help='directory containing the case input data netCDF file', required=False)
 parser.add_argument('--n_itt_out',        help='period of instantaneous output (number of timesteps)', required=False, type=int)
 parser.add_argument('--n_itt_diag',       help='period of diagnostic output (number of timesteps)', required=False, type=int)
+parser.add_argument('-dt', '--timestep',  help='timestep (s)', required=False, type=float)
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -158,8 +157,9 @@ def parse_arguments():
     n_itt_out = args.n_itt_out
     n_itt_diag = args.n_itt_diag
     run_dir = args.run_dir
+    timestep = args.timestep
     
-    return (case, gdb, suite, namelist, docker, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir)
+    return (case, gdb, suite, namelist, docker, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -176,44 +176,25 @@ def find_gdb():
 
 class Experiment(object):
 
-    def __init__(self, case, suite, physics_namelist, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag):
+    def __init__(self, case, suite, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag):
         """Initialize experiment. This routine does most of the work,
         including setting and checking the experiment configuration
         (namelist)."""
         
         self._case = case
-        self._suite = suite
-        self._name = case + '_' + suite
+        self._suite_obj = suite
+        self._suite = suite._name
+        self._name = case + '_' + suite._name
         
-        #if a physics namelist is specified (entire filename), it will be used; 
-        #otherwise, a default physics namelist for the given suite is used from default_namelists.py
-        if physics_namelist:
-            self._physics_namelist = physics_namelist
-        else:
-            if self._suite in default_physics_namelists:
-                self._physics_namelist = default_physics_namelists.get(self._suite)
-            else:
-                message = 'A default physics namelist for suite {0} is not found in default_namelists.py'.format(self._suite)
-                logging.critical(message)
-                raise Exception(message)
-        
+        self._physics_namelist = suite.namelist
+                
         #check to see that the physics namelists exists in the right dir
         if not os.path.isfile(os.path.join(SCM_ROOT, PHYSICS_NAMELIST_DIR, self._physics_namelist)):
             message = 'The physics namelist {0} was not found'.format(os.path.join(SCM_ROOT, PHYSICS_NAMELIST_DIR, self._physics_namelist))
             logging.critical(message)
             raise Exception(message)
         
-        #if a tracer configuration is specified (entire filename), it will be used; 
-        #otherwise, a default tracer configuration for the given suite is used from default_tracers.py
-        if tracers:
-            self._tracers = tracers
-        else:
-            if self._suite in default_tracers:
-                self._tracers = default_tracers.get(self._suite)
-            else:
-                message = 'A default tracer configuration for suite {0} is not found in default_tracers.py'.format(self._suite)
-                logging.critical(message)
-                raise Exception(message)
+        self._tracers = suite.tracers
         
         #check to see that the tracers exists in the right dir
         if not os.path.isfile(os.path.join(SCM_ROOT, TRACERS_DIR, self._tracers)):
@@ -289,6 +270,9 @@ class Experiment(object):
             self._n_itt_diag = n_itt_diag
         else:
             self._n_itt_diag = DEFAULT_DIAG_PERIOD
+        
+        if suite.timestep is not None:
+            self._timestep = suite.timestep
         
     @property
     def name(self):
@@ -433,6 +417,8 @@ class Experiment(object):
            case_nml['case_config']['n_itt_out'] = self._n_itt_out
         if self._n_itt_diag:
            case_nml['case_config']['n_itt_diag'] = self._n_itt_diag
+        if self._timestep:
+           case_nml['case_config']['dt'] = self._timestep
         # look for the output_dir variable in the case configuration namelist and use it if it does; 
         # if it doesn't exist, create a default output directory name (from the case and suite names) and create a namelist patch
         try:
@@ -440,7 +426,7 @@ class Experiment(object):
             custom_output_dir = True
         except KeyError:
             # If using the default namelist, no need to include it in the output directory name; if not, need to use write custom namelist in output dir name in case running multiple experiments with the same case and suite but different namelists
-            if self._physics_namelist == default_physics_namelists.get(self._suite):
+            if self._physics_namelist == self._suite_obj._default_namelist:
                 output_dir = 'output_' + self._case + '_' + self._suite
             else:
                 output_dir = 'output_' + self._case + '_' + self._suite + '_' + os.path.splitext(self._physics_namelist)[0]
@@ -655,7 +641,7 @@ class Experiment(object):
         
         # Write experiment configuration file to output directory
         logging.info('Writing experiment configuration {0}.nml to output directory'.format(self._name))
-        cmd = 'cp {0} {1}'.format(STANDARD_EXPERIMENT_NAMELIST, os.path.join(SCM_RUN, output_dir,self._name + '.nml'))
+        cmd = 'cp {0} {1}'.format(os.path.join(SCM_RUN, STANDARD_EXPERIMENT_NAMELIST), os.path.join(SCM_RUN, output_dir,self._name + '.nml'))
         execute(cmd)
         
         # Copy executable to run dir (does copying the executable give any performance gains on, say, HPC where build dir is in home and run dir on scratch/glade?)
@@ -686,7 +672,7 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (case, use_gdb, suite_name, namelist, docker, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir) = parse_arguments()
+    (case, use_gdb, suite_name, namelist, docker, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep) = parse_arguments()
     
     global SCM_ROOT
     SCM_ROOT = os.getenv('SCM_ROOT')
@@ -728,9 +714,26 @@ def main():
         if suite_name == s._name:
             active_suite = s
             break
+        
+    if (active_suite is None):
+        if (namelist and tracers):
+            if timestep:
+                active_suite = suite(suite_name, tracers, namelist, timestep, -1, False)
+            else:
+                active_sutie = suite(suite_name, tracers, namelist, -1, -1, False)
+        else:
+            message = 'The given suite ({0}), does not have defaults set in suite_info.py and either the tracers file or physics namelist file (or both) were not provided.'.format(suite_name)
+            logging.critical(message)
+            raise Exception(message)
+    else:
+        if namelist:
+            active_suite.namelist = namelist
+        if tracers:
+            active_suite.tracers = tracers
+        if timestep:
+            active_suite.timestep = timestep
     
-    
-    exp = Experiment(case, suite_name, namelist, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
+    exp = Experiment(case, active_suite, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
     exp_dir = exp.setup_rundir()
     # Debugger
     if use_gdb:
