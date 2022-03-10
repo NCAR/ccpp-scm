@@ -1,16 +1,6 @@
 $case_config
-model_name = 'FV3',
-n_columns = 1,
 case_name = 'DYNAMO_NSA3a_D1',
 input_type = 1
-dt = 600.0,
-time_scheme = 1,
-n_itt_out = 1,
-n_itt_diag = 1,
-n_levels = 64,
-output_file = 'output',
-case_data_dir = '../data/DEPHY-SCM/DYNAMO/NSA3a_D1',
-vert_coord_data_dir = '../data/vert_coord_data',
 lsm_ics = .false.,
 do_spinup = .false.,
 spinup_timesteps = 0,

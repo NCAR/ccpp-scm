@@ -229,9 +229,9 @@ for compiler in "${compilers[@]}"; do
     BUILD_OUTPUT=${BIN_DIR}/build.out
     if [ "${build_type}" == "Debug" ] ; then
       # Add --runtime ${runtime} to multi_run_scm.py to reduce runtime for tests
-      test_run_cmd="${RUN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime 86400" # 1 day
+      test_run_cmd="${BIN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime_mult 0.1 --run_dir ${RUN_DIR}"
     else
-      test_run_cmd="${RUN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --timer --runtime 259200" # 3 days
+      test_run_cmd="${BIN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --timer --runtime_mult 0.1 --run_dir ${RUN_DIR}"
     fi
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh
@@ -261,8 +261,8 @@ for compiler in "${compilers[@]}"; do
       if [ -d "${RUN_DIR}" ] ; then rm -rf ${RUN_DIR}; fi
       mkdir ${RUN_DIR}
       cd ${RUN_DIR}
-      ln -s ${BIN_DIR}/${executable_name} ${executable_name}
-      ln -s ${SRC_DIR}/multi_run_scm.py multi_run_scm.py
+      #ln -s ${BIN_DIR}/${executable_name} ${executable_name}
+      #ln -s ${SRC_DIR}/multi_run_scm.py multi_run_scm.py
       ln -s ${SRC_DIR}/run_scm.py run_scm.py
       job_name=${job_prefix}_${compiler}_${build_type_lc}
       if ${use_batch_system} ; then

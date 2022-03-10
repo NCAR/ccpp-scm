@@ -30,9 +30,12 @@ DEFAULT_RUN_DIR = 'scm/run'
 # Path to default bin directory (relative to scm_root)
 DEFAULT_BIN_DIR = 'scm/bin'
 
-# Default 
+# Copy executable to run directory if true (otherwise it will be linked)
+COPY_EXECUTABLE = False
+
+# Default output periods
 DEFAULT_OUTPUT_PERIOD = 1
-DEFAULT_DIAG_PERIOD = 1
+DEFAULT_DIAG_PERIOD = 6
 
 # Path to the directory containing experiment namelists (relative to scm_root)
 CASE_NAMELIST_DIR = 'scm/etc/case_config'
@@ -102,6 +105,7 @@ parser.add_argument('-s', '--suite',      help='name of suite to use', default=D
 parser.add_argument('-n', '--namelist',   help='physics namelist to use')
 parser.add_argument('-t', '--tracers',    help='tracer configuration to use')
 parser.add_argument('--runtime',          help='set the runtime in the namelists', action='store', type=int, required=False)
+parser.add_argument('--runtime_mult',     help='multiply the existing runtime in the namelist by some factor', action='store', type=float, required=False)
 parser.add_argument('-d', '--docker',     help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
 parser.add_argument('-l', '--levels',     help='number of vertical levels', required=False, type=int)
 parser.add_argument('--npz_type',         help='type of FV3 vertical grid to produce (see scm_vgrid.F90 for valid values)', required=False)
@@ -150,6 +154,7 @@ def parse_arguments():
     docker = args.docker
     tracers = args.tracers
     runtime = args.runtime
+    runtime_mult = args.runtime_mult
     levels = args.levels
     npz_type = args.npz_type
     vert_coord_file = args.vert_coord_file
@@ -159,7 +164,7 @@ def parse_arguments():
     run_dir = args.run_dir
     timestep = args.timestep
     
-    return (case, gdb, suite, namelist, docker, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep)
+    return (case, gdb, suite, namelist, docker, tracers, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -176,7 +181,7 @@ def find_gdb():
 
 class Experiment(object):
 
-    def __init__(self, case, suite, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag):
+    def __init__(self, case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag):
         """Initialize experiment. This routine does most of the work,
         including setting and checking the experiment configuration
         (namelist)."""
@@ -216,6 +221,11 @@ class Experiment(object):
         else:
             self._runtime = None
             message = 'Namelist runtime adjustment {0}  IS NOT applied'.format(self._runtime)
+            logging.info(message)
+        
+        if runtime_mult:
+            self._runtime_mult = runtime_mult
+            message = 'Existing case namelist runtime multipled by {0}'.format(self._runtime_mult)
             logging.info(message)
         
         if levels:
@@ -405,6 +415,12 @@ class Experiment(object):
         # If running the regression test, reduce the runtime
         if self._runtime:
            case_nml['case_config']['runtime'] = self._runtime
+        if self._runtime_mult:
+            try:
+                old_runtime = case_nml['case_config']['runtime']
+                case_nml['case_config']['runtime'] = old_runtime*self._runtime_mult
+            except KeyError:
+                logging.info('The runtime multiplier argument was set, but the runtime is not set in {0} '.format(self._namelist))
         # If the number of levels is specified, set the namelist value
         if self._levels:
            case_nml['case_config']['n_levels'] = self._levels
@@ -644,10 +660,15 @@ class Experiment(object):
         cmd = 'cp {0} {1}'.format(os.path.join(SCM_RUN, STANDARD_EXPERIMENT_NAMELIST), os.path.join(SCM_RUN, output_dir,self._name + '.nml'))
         execute(cmd)
         
-        # Copy executable to run dir (does copying the executable give any performance gains on, say, HPC where build dir is in home and run dir on scratch/glade?)
-        logging.info('Copying executable to run directory')
-        cmd = 'cp {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
-        execute(cmd)
+        # Move executable to run dir
+        if COPY_EXECUTABLE:
+            logging.info('Copying executable to run directory')
+            cmd = 'cp {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
+            execute(cmd)
+        else:
+            logging.info('Linking executable to run directory')
+            cmd = 'ln -s {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
+            execute(cmd)
         
         return output_dir
 
@@ -672,7 +693,7 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (case, use_gdb, suite_name, namelist, docker, tracers, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep) = parse_arguments()
+    (case, use_gdb, suite_name, namelist, docker, tracers, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep) = parse_arguments()
     
     global SCM_ROOT
     SCM_ROOT = os.getenv('SCM_ROOT')
@@ -733,7 +754,7 @@ def main():
         if timestep:
             active_suite.timestep = timestep
     
-    exp = Experiment(case, active_suite, runtime, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
+    exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
     exp_dir = exp.setup_rundir()
     # Debugger
     if use_gdb:
