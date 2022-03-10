@@ -2,6 +2,8 @@
 
 echo "Setting environment variables for CCPP-SCM on Cheyenne with icc/ifort"
 
+export SCM_ROOT=$PWD
+
 #start with a "clean" environment; activate and deactivate ncar_pylib in order to successfully deactivate previously activated environment without errors
 module load ncarenv/1.3
 ncar_pylib
@@ -53,4 +55,3 @@ if [ $? -ne 0 ]; then
 else
         echo "f90nml is installed"
 fi
-
