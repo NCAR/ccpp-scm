@@ -227,6 +227,8 @@ class Experiment(object):
             self._runtime_mult = runtime_mult
             message = 'Existing case namelist runtime multipled by {0}'.format(self._runtime_mult)
             logging.info(message)
+        else:
+            self._runtime_mult = None
         
         if levels:
             self._levels = levels
@@ -283,6 +285,8 @@ class Experiment(object):
         
         if suite.timestep is not None:
             self._timestep = suite.timestep
+        else:
+            self._timestep = None
         
     @property
     def name(self):
