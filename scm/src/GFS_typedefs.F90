@@ -14,8 +14,8 @@ module GFS_typedefs
 
        implicit none
 
-      ! To ensure that these values match what's in the physics,
-      ! array sizes are compared during model init in GFS_rrtmg_setup_init()
+      ! To ensure that these values match what's in the physics, array
+      ! sizes are compared in the auto-generated physics caps in debug mode
       private :: NF_AESW, NF_AELW, NSPC, NSPC1, NF_CLDS, NF_VGAS, NF_ALBD, ntrcaerm
       ! from module_radiation_aerosols
       integer, parameter :: NF_AESW = 3
@@ -534,6 +534,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: skebu_wts (:,:) => null()  !
     real (kind=kind_phys), pointer :: skebv_wts (:,:) => null()  !
     real (kind=kind_phys), pointer :: sfc_wts   (:,:) => null()  ! mg, sfc-perts
+    real (kind=kind_phys), pointer :: spp_wts_pbl   (:,:) => null()  ! spp-pbl-perts
+    real (kind=kind_phys), pointer :: spp_wts_sfc   (:,:) => null()  ! spp-sfc-perts
+    real (kind=kind_phys), pointer :: spp_wts_mp    (:,:) => null()  ! spp-mp-perts
+    real (kind=kind_phys), pointer :: spp_wts_gwd   (:,:) => null()  ! spp-gwd-perts
+    real (kind=kind_phys), pointer :: spp_wts_rad   (:,:) => null()  ! spp-rad-perts
 
     !--- aerosol surface emissions for Thompson microphysics
     real (kind=kind_phys), pointer :: nwfa2d  (:)     => null()  !< instantaneous water-friendly sfc aerosol source
@@ -1178,6 +1183,16 @@ module GFS_typedefs
                                               ! multiple patterns. It wasn't fully coded (and wouldn't have worked
                                               ! with nlndp>1, so I just dropped it). If we want to code it properly,
                                               ! we'd need to make this dim(6,5).
+    logical              :: do_spp            ! Overall flag to turn on SPP or not
+    integer              :: spp_pbl
+    integer              :: spp_sfc
+    integer              :: spp_mp
+    integer              :: spp_rad
+    integer              :: spp_gwd
+    integer              :: n_var_spp
+    character(len=3)    , pointer :: spp_var_list(:)  ! dimension here must match n_var_spp in stochy_nml_def
+    real(kind=kind_phys), pointer :: spp_prt_list(:)  ! dimension here must match n_var_spp in stochy_nml_def 
+
 !--- tracer handling
     character(len=32), pointer :: tracer_names(:) !< array of initialized tracers from dynamic core
     integer              :: ntrac                 !< number of tracers
@@ -2981,11 +2996,25 @@ module GFS_typedefs
       Coupling%skebu_wts = clear_val
       Coupling%skebv_wts = clear_val
     endif
-
+    
     !--- stochastic land perturbation option
     if (Model%lndp_type /= 0) then
       allocate (Coupling%sfc_wts  (IM,Model%n_var_lndp))
       Coupling%sfc_wts = clear_val
+    endif
+    
+    !--- stochastic spp perturbation option
+    if (Model%do_spp) then
+      allocate (Coupling%spp_wts_pbl  (IM,Model%levs))
+      Coupling%spp_wts_pbl = clear_val
+      allocate (Coupling%spp_wts_sfc  (IM,Model%levs))
+      Coupling%spp_wts_sfc = clear_val
+      allocate (Coupling%spp_wts_mp   (IM,Model%levs))
+      Coupling%spp_wts_mp = clear_val
+      allocate (Coupling%spp_wts_gwd   (IM,Model%levs))
+      Coupling%spp_wts_gwd = clear_val
+      allocate (Coupling%spp_wts_rad   (IM,Model%levs))
+      Coupling%spp_wts_rad = clear_val
     endif
 
     !--- needed for Thompson's aerosol option
@@ -3558,10 +3587,17 @@ module GFS_typedefs
     integer :: lndp_type      = 0
     integer :: n_var_lndp     = 0
     logical :: lndp_each_step = .false.
+    integer :: n_var_spp    =  0
+    integer :: spp_pbl      =  0
+    integer :: spp_sfc      =  0
+    integer :: spp_mp       =  0
+    integer :: spp_rad      =  0
+    integer :: spp_gwd      =  0
+    logical :: do_spp       = .false.
 
 !--- aerosol scavenging factors
     integer, parameter :: max_scav_factors = 25
-    character(len=40)  :: fscav_aero(max_scav_factors) = ' '
+    character(len=40)  :: fscav_aero(max_scav_factors)
 
     real(kind=kind_phys) :: radar_tten_limits(2) = (/ limit_unspecified, limit_unspecified /)
     integer :: itime
@@ -3649,6 +3685,7 @@ module GFS_typedefs
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
                                dlqf, rbcr, shoc_parm, psauras, prauras, wminras,            &
                                do_sppt, do_shum, do_skeb,                                   &
+                               do_spp, n_var_spp,                                           &
                                lndp_type,  n_var_lndp, lndp_each_step,                      &
                                pert_mp,pert_clds,pert_radtend,                              &
                           !--- Rayleigh friction
@@ -4133,7 +4170,7 @@ module GFS_typedefs
 
 !--- GFDL MP parameters
     Model%lgfdlmprad       = lgfdlmprad
-!--- Thompson,GFDL MP parameter
+!--- Thompson,GFDL,NSSL MP parameter
     Model%lrefres          = lrefres
 
 !--- land/surface model parameters
@@ -4465,12 +4502,23 @@ module GFS_typedefs
     Model%lndp_type        = lndp_type
     Model%n_var_lndp       = n_var_lndp
     Model%lndp_each_step   = lndp_each_step
+    Model%do_spp           = do_spp
+    Model%n_var_spp        = n_var_spp
+
     if (Model%lndp_type/=0) then
       allocate(Model%lndp_var_list(Model%n_var_lndp))
       allocate(Model%lndp_prt_list(Model%n_var_lndp))
       Model%lndp_var_list(:) = ''
       Model%lndp_prt_list(:) = clear_val
     end if
+    
+    if (Model%do_spp) then
+      allocate(Model%spp_var_list(Model%n_var_spp))
+      allocate(Model%spp_prt_list(Model%n_var_spp))
+      Model%spp_var_list(:) = ''
+      Model%spp_prt_list(:) = clear_val
+    end if
+
     !--- cellular automata options
     ! force namelist constsitency
     allocate(Model%vfact_ca(levs))
@@ -5825,6 +5873,7 @@ module GFS_typedefs
         print *, ' nssl_alphahl - hail shape parameter   : ', Model%nssl_alphahl
         print *, ' nssl_hail_on - hail activation flag   : ', Model%nssl_hail_on
         print *, ' lradar - radar refl. flag             : ', Model%lradar
+        print *, ' lrefres                : ', Model%lrefres
       endif
       if (Model%imp_physics == Model%imp_physics_mg) then
         print *, ' M-G microphysical parameters'
@@ -6051,6 +6100,8 @@ module GFS_typedefs
       print *, ' lndp_type         : ', Model%lndp_type
       print *, ' n_var_lndp        : ', Model%n_var_lndp
       print *, ' lndp_each_step    : ', Model%lndp_each_step
+      print *, ' do_spp            : ', Model%do_spp
+      print *, ' n_var_spp         : ', Model%n_var_spp
       print *, ' '
       print *, 'cellular automata'
       print *, ' nca               : ', Model%nca
@@ -7835,9 +7886,7 @@ module GFS_typedefs
     endif
 
     if (Model%cplchm) then
-      ! Only Zhao/Carr/Sundqvist and GFDL microphysics schemes are supported
-      ! when coupling with chemistry. PBL diffusion of aerosols is only supported
-      ! for GFDL microphysics and MG microphysics.
+      ! Only the following microphysics schemes are supported with coupled chemistry
       if (Model%imp_physics == Model%imp_physics_zhao_carr) then
         Interstitial%nvdiff = 3
       elseif (Model%imp_physics == Model%imp_physics_mg) then
@@ -7848,8 +7897,14 @@ module GFS_typedefs
         endif
       elseif (Model%imp_physics == Model%imp_physics_gfdl) then
         Interstitial%nvdiff = 7
+      elseif (Model%imp_physics == Model%imp_physics_thompson) then
+        if (Model%ltaerosol) then
+          Interstitial%nvdiff = 12
+        else
+          Interstitial%nvdiff = 9
+        endif
       else
-        write(0,*) "Only Zhao/Carr/Sundqvist and GFDL microphysics schemes are supported when coupling with chemistry"
+        write(0,*) "Selected microphysics scheme is not supported when coupling with chemistry"
         stop
       endif
       if (Interstitial%trans_aero) Interstitial%nvdiff = Interstitial%nvdiff + Model%ntchm
@@ -7875,7 +7930,7 @@ module GFS_typedefs
       Interstitial%otspt(1:3,:) = .false.    ! this is for sp.hum, ice and liquid water
       Interstitial%otsptflag(:) = .true.
       tracers = 2
-      do n=2,Model%ntrac ! should this also exclude ntlnc and ntinc?
+      do n=2,Model%ntrac
         ltest = ( n /= Model%ntcw  .and. n /= Model%ntiw  .and. n /= Model%ntclamt .and. &
              n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
              n /= Model%ntsnc .and. n /= Model%ntgl  .and. n /= Model%ntgnc   .and. &
@@ -7889,9 +7944,8 @@ module GFS_typedefs
             Interstitial%otspt(tracers+1,1) = .false.
             Interstitial%ntk = tracers
           endif
-          if (Model%ntlnc == n .or. Model%ntinc == n .or. Model%ntrnc == n .or. Model%ntsnc == n  &
-              .or. Model%ntgnc == n .or. Model%nthnc == n)    &
-!           if (ntlnc == n .or. ntinc == n .or. ntrnc == n .or. ntsnc == n .or.& ! these are already excluded by first conditional
+          if (Model%ntlnc == n .or. Model%ntinc == n .or. Model%ntrnc == n .or. Model%ntsnc == n .or. Model%ntgnc == n)    &
+!           if (ntlnc == n .or. ntinc == n .or. ntrnc == n .or. ntsnc == n .or.&
 !               ntrw  == n .or. ntsw  == n .or. ntgl  == n)                    &
                   Interstitial%otspt(tracers+1,1) = .false.
           if (Interstitial%trans_aero .and. Model%ntchs == n) Interstitial%itc = tracers
