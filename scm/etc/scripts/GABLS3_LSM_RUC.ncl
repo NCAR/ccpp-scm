@@ -45,8 +45,8 @@ begin
   height@long_name = "physical height at pressure levels"
   height@units     = "m"
 
-; Soil levels for Noah LSM
-  soil_depth           = (/ 0.1, 0.4, 1.0, 2.0 /)
+; Soil levels for RUC LSM
+  soil_depth           = (/ 0.0, 0.01, 0.04, 0.10, 0.30, 0.60, 1.0, 1.6, 3.0 /)
   soil_depth@long_name = "depth of bottom of soil layers"
   soil_depth@units     = "m"
 
@@ -545,27 +545,84 @@ begin
   zorli@long_name = "surface roughness length over ice"
   zorli@units = "cm"
   
-  stc = (/ 292.55, 289.9, 285.35, 283.15 /)
-  stc@units = "K"
-  stc@long_name = "initial profile of soil temperature"
+  wetness = 0.37; from rucinit using Noah ICs
+  wetness@long_name = "normalized soil wetness for land surface model"
   
-  smc = (/ 0.203, 0.203, 0.203, 0.203 /)
-  smc@units = "m3 m-3"
-  smc@long_name = "initial profile of soil moisture"
+  clw_surf_land = 0.0
+  clw_surf_land@long_name = "moist cloud water mixing ratio at surface over land"
+  clw_surf_land@units = "kg kg-1"
   
-  slc = smc ;all liquid (no ice)
-  slc@units = "m3 m-3"
-  slc@long_name = "initial profile of soil liquid moisture"
+  clw_surf_ice = 0.0
+  clw_surf_ice@long_name = "moist cloud water mixing ratio at surface over ice"
+  clw_surf_ice@units = "kg kg-1"
+  
+  qwv_surf_land = qt(0)/(1.0 - qt(0))
+  qwv_surf_land@long_name = "water vapor mixing ratio at surface over land"
+  qwv_surf_land@units = "kg kg-1"
+  
+  qwv_surf_ice = qwv_surf_land
+  qwv_surf_ice@long_name = "water vapor mixing ratio at surface over ice"
+  qwv_surf_ice@units = "kg kg-1"
+  
+  tsnow_land = 273.14
+  tsnow_land@long_name = "snow temperature at the bottom of the first snow layer over land"
+  tsnow_land@units = "K"
+  
+  tsnow_ice = tsnow_land
+  tsnow_ice@long_name = "snow temperature at the bottom of the first snow layer over ice"
+  tsnow_ice@units = "K"
+  
+  snowfallac_land = 0.0
+  snowfallac_land@long_name = "run-total snow accumulation on the ground"
+  snowfallac_land@units = "kg m-2"
+  
+  snowfallac_ice = 0.0
+  snowfallac_ice@long_name = "run-total snow accumulation on the ice"
+  snowfallac_ice@units = "kg m-2"
+  
+  sncovr_ice = 0.0
+  sncovr_ice@long_name = "surface snow area fraction over ice"
+  
+  sfalb_lnd = 0.23
+  sfalb_lnd@long_name = "mean surface diffused sw albedo over land"
+  
+  sfalb_lnd_bck = 0.23
+  sfalb_lnd_bck@long_name = "surface snow-free albedo over ice"
+  
+  sfalb_ice = 0.6
+  sfalb_ice@long_name = "mean surface diffused sw albedo over ice"
+  
+  emis_ice = 0.97
+  emis_ice@long_name = "surface lw emissivity in fraction over ice"
+  
+  tslb = (/ 296.55, 295.95, 294.55, 292.55, 290.65, 288.39, 285.35, 284.03, 283.15/)
+  tslb@units = "K"
+  tslb@long_name = "initial profile of soil temperature for RUC LSM"
+  
+  smois = (/ 0.31, 0.31, 0.31, 0.31, 0.31, 0.31, 0.31, 0.31, 0.31/)
+  smois@units = "fraction"
+  smois@long_name = "volumetric fraction of soil moisture for RUC LSM"
+  
+  sh2o = smois
+  sh2o@units = "fraction"
+  sh2o@long_name = "volume fraction of unfrozen soil moisture for RUC LSM"
+  
+  smfr = (/ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
+  smfr@units = "fraction"
+  smfr@long_name = "volume fraction of frozen soil moisture for RUC LSM"
+  
+  flfr = (/ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
+  flfr@long_name = "flag for frozen soil physics for RUC LSM"
 
 ; Define dimension sizes for file creation
   ntim = dimsizes(time)
   klev = dimsizes(levels)
   ksoil = dimsizes(soil_depth)
 
-; Write the netCDF output file, titled "gabls3.nc"
+; Write the netCDF output file, titled "gabls3_ruc.nc"
   setfileoption("nc","FileStructure","Advanced")
   setfileoption("nc","Format","NetCDF4")
-  fout = "gabls3.nc"           ;File name of output file
+  fout = "gabls3_ruc.nc"           ;File name of output file
   system("/bin/rm -fv "+fout) ;If a version already exists, delete it.
   fo = addfile(fout,"c")      ;Create the netCDF file
 
@@ -768,6 +825,62 @@ begin
   filevarattdef(g1,"zorli",zorli)
   g1->zorli = zorli
   
+  filevardef(g1,"wetness",typeof(wetness),"ncl_scalar")
+  filevarattdef(g1,"wetness",wetness)
+  g1->wetness = wetness
+  
+  filevardef(g1,"clw_surf_land",typeof(clw_surf_land),"ncl_scalar")
+  filevarattdef(g1,"clw_surf_land",clw_surf_land)
+  g1->clw_surf_land = clw_surf_land
+  
+  filevardef(g1,"clw_surf_ice",typeof(clw_surf_ice),"ncl_scalar")
+  filevarattdef(g1,"clw_surf_ice",clw_surf_ice)
+  g1->clw_surf_ice = clw_surf_ice
+  
+  filevardef(g1,"qwv_surf_land",typeof(qwv_surf_land),"ncl_scalar")
+  filevarattdef(g1,"qwv_surf_land",qwv_surf_land)
+  g1->qwv_surf_land = qwv_surf_land
+  
+  filevardef(g1,"qwv_surf_ice",typeof(qwv_surf_ice),"ncl_scalar")
+  filevarattdef(g1,"qwv_surf_ice",qwv_surf_ice)
+  g1->qwv_surf_ice = qwv_surf_ice
+  
+  filevardef(g1,"tsnow_land",typeof(tsnow_land),"ncl_scalar")
+  filevarattdef(g1,"tsnow_land",tsnow_land)
+  g1->tsnow_land = tsnow_land
+  
+  filevardef(g1,"tsnow_ice",typeof(tsnow_ice),"ncl_scalar")
+  filevarattdef(g1,"tsnow_ice",tsnow_ice)
+  g1->tsnow_ice = tsnow_ice
+  
+  filevardef(g1,"snowfallac_land",typeof(snowfallac_land),"ncl_scalar")
+  filevarattdef(g1,"snowfallac_land",snowfallac_land)
+  g1->snowfallac_land = snowfallac_land
+  
+  filevardef(g1,"snowfallac_ice",typeof(snowfallac_ice),"ncl_scalar")
+  filevarattdef(g1,"snowfallac_ice",snowfallac_ice)
+  g1->snowfallac_ice = snowfallac_ice
+  
+  filevardef(g1,"sncovr_ice",typeof(sncovr_ice),"ncl_scalar")
+  filevarattdef(g1,"sncovr_ice",sncovr_ice)
+  g1->sncovr_ice = sncovr_ice
+  
+  filevardef(g1,"sfalb_lnd",typeof(sfalb_lnd),"ncl_scalar")
+  filevarattdef(g1,"sfalb_lnd",sfalb_lnd)
+  g1->sfalb_lnd = sfalb_lnd
+  
+  filevardef(g1,"sfalb_lnd_bck",typeof(sfalb_lnd_bck),"ncl_scalar")
+  filevarattdef(g1,"sfalb_lnd_bck",sfalb_lnd_bck)
+  g1->sfalb_lnd_bck = sfalb_lnd_bck
+  
+  filevardef(g1,"sfalb_ice",typeof(sfalb_ice),"ncl_scalar")
+  filevarattdef(g1,"sfalb_ice",sfalb_ice)
+  g1->sfalb_ice = sfalb_ice
+  
+  filevardef(g1,"emis_ice",typeof(emis_ice),"ncl_scalar")
+  filevarattdef(g1,"emis_ice",emis_ice)
+  g1->emis_ice = emis_ice
+  
   filevardef(g2,"height",typeof(height),"levels")
   filevarattdef(g2,"height",height)
   g2->height = (/height/)
@@ -804,17 +917,25 @@ begin
   filevarattdef(g2,"ozone",ozone)
   g2->ozone = (/ozone/)
   
-  filevardef(g2,"stc",typeof(stc),"nsoil")
-  filevarattdef(g2,"stc",stc)
-  g2->stc = (/stc/)
+  filevardef(g2,"tslb",typeof(tslb),"nsoil")
+  filevarattdef(g2,"tslb",tslb)
+  g2->tslb = (/tslb/)
   
-  filevardef(g2,"smc",typeof(smc),"nsoil")
-  filevarattdef(g2,"smc",smc)
-  g2->smc = (/smc/)
+  filevardef(g2,"smois",typeof(smois),"nsoil")
+  filevarattdef(g2,"smois",smois)
+  g2->smois = (/smois/)
   
-  filevardef(g2,"slc",typeof(slc),"nsoil")
-  filevarattdef(g2,"slc",slc)
-  g2->slc = (/slc/)
+  filevardef(g2,"sh2o",typeof(sh2o),"nsoil")
+  filevarattdef(g2,"sh2o",sh2o)
+  g2->sh2o = (/sh2o/)
+  
+  filevardef(g2,"smfr",typeof(smfr),"nsoil")
+  filevarattdef(g2,"smfr",smfr)
+  g2->smfr = (/smfr/)
+  
+  filevardef(g2,"flfr",typeof(flfr),"nsoil")
+  filevarattdef(g2,"flfr",flfr)
+  g2->flfr = (/flfr/)
 
 ; Forcing
 
