@@ -161,6 +161,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/mp_thompson_pre.F90'              ,
     'ccpp/physics/physics/mp_thompson.F90'                  ,
     'ccpp/physics/physics/mp_thompson_post.F90'             ,
+    'ccpp/physics/physics/mp_nssl.F90'                      ,
     'ccpp/physics/physics/ozphys.f'                         ,
     'ccpp/physics/physics/ozphys_2015.f'                    ,
     'ccpp/physics/physics/precpd.f'                         ,
