@@ -72,13 +72,18 @@ module scm_type_defs
     integer                           :: rain_index  !< index for rain water in the tracer array
     integer                           :: snow_index   !< index for snow water in the tracer array
     integer                           :: graupel_index    !< index for graupel water in the tracer array
+    integer                           :: hail_index    !< index for hail in the tracer array
     integer                           :: cloud_amount_index   !< index for cloud amount in the tracer array
     integer                           :: cloud_droplet_nc_index !< index for liquid cloud droplet number concentration in the tracer array
     integer                           :: cloud_ice_nc_index !< index for ice cloud particle number concentration in the tracer array
     integer                           :: rain_nc_index !< index for rain number concentration in the tracer array
     integer                           :: snow_nc_index !< index for snow number concentration in the tracer array
     integer                           :: graupel_nc_index !< index for graupel number concentration in the tracer array
+    integer                           :: hail_nc_index !< index for hail number concentration in the tracer array
+    integer                           :: graupel_volume_index !< index for graupel volume in the tracer array
+    integer                           :: hail_volume_index !< index for hail volume in the tracer array
     integer                           :: tke_index !< index for TKE in the tracer array
+    integer                           :: ccn_index !< index for CCN in the tracer array
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
     integer                           :: mass_weighted_rime_factor_index !< index for mass-weighted rime factor
@@ -472,13 +477,18 @@ module scm_type_defs
     scm_state%rain_index                      = get_tracer_index(scm_state%tracer_names,"rainwat")
     scm_state%snow_index                      = get_tracer_index(scm_state%tracer_names,"snowwat")
     scm_state%graupel_index                   = get_tracer_index(scm_state%tracer_names,"graupel")
+    scm_state%hail_index                      = get_tracer_index(scm_state%tracer_names,"hailwat")
     scm_state%cloud_amount_index              = get_tracer_index(scm_state%tracer_names,"cld_amt")
     scm_state%cloud_droplet_nc_index          = get_tracer_index(scm_state%tracer_names,"water_nc")
     scm_state%cloud_ice_nc_index              = get_tracer_index(scm_state%tracer_names,"ice_nc")
     scm_state%rain_nc_index                   = get_tracer_index(scm_state%tracer_names,"rain_nc")
     scm_state%snow_nc_index                   = get_tracer_index(scm_state%tracer_names,"snow_nc")
     scm_state%graupel_nc_index                = get_tracer_index(scm_state%tracer_names,"graupel_nc")
+    scm_state%hail_nc_index                   = get_tracer_index(scm_state%tracer_names,"hail_nc")
+    scm_state%graupel_volume_index            = get_tracer_index(scm_state%tracer_names,"graupel_vol")
+    scm_state%hail_volume_index               = get_tracer_index(scm_state%tracer_names,"hail_vol")
     scm_state%tke_index                       = get_tracer_index(scm_state%tracer_names,"sgs_tke")
+    scm_state%ccn_index                       = get_tracer_index(scm_state%tracer_names,"ccn_nc")
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
     scm_state%mass_weighted_rime_factor_index = get_tracer_index(scm_state%tracer_names,"q_rimef")
@@ -500,6 +510,9 @@ module scm_type_defs
       scm_state%nwat = scm_state%nwat + 1
     endif
     if(scm_state%graupel_index /= -99) then
+      scm_state%nwat = scm_state%nwat + 1
+    endif
+    if(scm_state%hail_index /= -99) then
       scm_state%nwat = scm_state%nwat + 1
     endif
     
