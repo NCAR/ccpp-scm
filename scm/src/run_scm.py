@@ -12,6 +12,9 @@ import time
 from default_namelists import default_physics_namelists
 from default_tracers import default_tracers
 from netCDF4 import Dataset
+# multi-run
+from supported_suites import suites
+from supported_cases import cases
 
 ###############################################################################
 # Global settings                                                             #
@@ -61,30 +64,46 @@ DEFAULT_DO_UGWP_V1   = False
 TAU_TARGET           = 'ugwp_c384_tau.nc'
 TAU_LINK             = 'ugwp_limb_tau.nc'
 
-# For developers: set logging level to DEBUG for additional output
-#LOGLEVEL = logging.DEBUG
-LOGLEVEL = logging.INFO
-
 ###############################################################################
 # Command line arguments                                                      #
 ###############################################################################
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--case',       help='name of case to run', required=True)
+mgroup= parser.add_argument_group('Multiple experiments')
+mgroup.add_argument('-m', '--multirun',   help='run all experiments (loop through cases and suites), '\
+    'mutually exclusive with --case --suite --namelist --tracers', action='store_true', default=False)
+sgroup= parser.add_argument_group('Single experiment')
+sgroup.add_argument('-c', '--case',       help='name of case to run')
+sgroup.add_argument('-s', '--suite',      help='name of suite to use')
+sgroup.add_argument('-n', '--namelist',   help='physics namelist to use')
+sgroup.add_argument('-t', '--tracers',    help='tracer configuration to use')
 parser.add_argument('-g', '--gdb',        help='invoke scm through gdb', action='store_true', default=False)
-parser.add_argument('-s', '--suite',      help='name of suite to use', default=DEFAULT_SUITE)
-parser.add_argument('-n', '--namelist',   help='physics namelist to use')
-parser.add_argument('-t', '--tracers',    help='tracer configuration to use')
-parser.add_argument('--runtime',          help='set the runtime in the namelists', action='store', type=int, required=False)
+parser.add_argument('-r', '--runtime',    help='set the runtime in the namelists', action='store', type=int, required=False)
 parser.add_argument('-d', '--docker',     help='include if scm is being run in a docker container to mount volumes', action='store_true', default=False)
+parser.add_argument('-v', '--verbose',    help='once: set logging level to debug; twice: set logging level to debug '\
+                                               'and write log to file', action='count', default=0)
 
 ###############################################################################
 # Functions and subroutines                                                   #
 ###############################################################################
 
-def setup_logging():
+def setup_logging(verbose):
     """Sets up the logging module."""
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=LOGLEVEL)
+    # print out debug messages (logs and output from subprocesses) if verbose argument is set
+    if verbose:
+        LOG_LEVEL = logging.DEBUG
+    else:
+        LOG_LEVEL = logging.INFO
+    LOG_FILE = 'multi_run_scm.log'
+    LOG_FORMAT = '%(levelname)s: %(message)s'
+
+    logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+
+    # write out a log file if verbosity is set twice (-vv)
+    if verbose > 1:
+        fh = logging.FileHandler(LOG_FILE, mode='w')
+        logger = logging.getLogger()
+        logger.addHandler(fh)
 
 def execute(cmd):
     """Runs a local command in a shell. Waits for completion and
@@ -109,14 +128,20 @@ def execute(cmd):
 def parse_arguments():
     """Parse command line arguments"""
     args = parser.parse_args()
+    multirun = args.multirun
     case = args.case
-    gdb = args.gdb
     suite = args.suite
     namelist = args.namelist
-    docker = args.docker
     tracers = args.tracers
+    # Consistency checks
+    if (multirun and (case or suite or namelist or tracers)) \
+            or (not multirun and not case):
+        raise Exception("Specify either --multirun or --case [--suite --namelist --tracers]")
+    gdb = args.gdb
     runtime = args.runtime
-    return (case, gdb, suite, namelist, docker, tracers, runtime)
+    docker = args.docker
+    verbose = args.verbose
+    return (multirun, case, gdb, suite, namelist, docker, tracers, runtime, verbose)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -139,8 +164,11 @@ class Experiment(object):
         (namelist)."""
         
         self._case = case
-        self._suite = suite
-        self._name = case + '_' + suite
+        if not suite:
+            self._suite = DEFAULT_SUITE
+        else:
+            self._suite = suite
+        self._name = case + '_' + self._suite
         
         #if a physics namelist is specified (entire filename), it will be used; 
         #otherwise, a default physics namelist for the given suite is used from default_namelists.py
@@ -447,14 +475,18 @@ def launch_executable(use_gdb, gdb):
     if use_gdb:
         cmd = '{gdb} {executable}'.format(gdb=gdb, executable=EXECUTABLE)
     else:
-        cmd = '{executable}'.format(executable=EXECUTABLE)
+        cmd = 'time {executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
-    time.sleep(2)
-    failure = os.system(cmd)
-    if failure:
-        logging.info('Execution of {0} failed!\n'.format(cmd))
-        sys.exit(1)
-    
+    time.sleep(1)
+    #time.sleep(2)
+    #failure = os.system(cmd)
+    #if failure:
+    #    logging.info('Execution of {0} failed!\n'.format(cmd))
+    #    sys.exit(1)
+    (status, stdout, stderr) = execute(cmd)
+    if not status == 0:
+        raise Exception("Command '{0}' returned with errors".format(cmd))
+
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""
     home_output_dir = '/home/'+exp_dir
@@ -463,34 +495,52 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (case, use_gdb, suite, namelist, docker, tracers, runtime) = parse_arguments()
-    
-    setup_logging()
-    
-    #Experiment
-    if namelist:
-        if tracers:
-            logging.info('Setting up experiment {0} with suite {1} using namelist {2} and tracers {3}'.format(case,suite,namelist,tracers))
-        else:
-            logging.info('Setting up experiment {0} with suite {1} using namelist {2} using default tracers for the suite'.format(case,suite,namelist))
-    else:
-        if tracers:
-            logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite and tracers {2}'.format(case,suite,tracers))
-        else:
-            logging.info('Setting up experiment {0} with suite {1} using the default namelist and tracers for the suite'.format(case,suite))
-    exp = Experiment(case, suite, namelist, tracers, runtime)
-    exp_dir = exp.setup_rundir()
+    (multirun, case, use_gdb, suite, namelist, docker, tracers, runtime, verbose) = parse_arguments()
+
+    setup_logging(verbose)
+
     # Debugger
     if use_gdb:
         gdb = find_gdb()
     else:
         gdb = None
-    # Launch model on exit
-    if docker:
-        #registering this function first should mean that it executes last, which is what we want
-        atexit.register(copy_outdir, exp_dir)
-    atexit.register(launch_executable, use_gdb, gdb)
-    
-    
+
+    if multirun:
+        # Loop through all experiments
+        logging.info('Multi-run: loop through all cases and suite definition files with standard namelists and tracer configs')
+        for i, case in enumerate(cases):
+            for j, suite in enumerate(suites,1):
+                logging.info('Executing process {0} of {1}: case={2}, suite={3}'.format(
+                    len(suites)*i+j, len(cases)*len(suites), case, suite))
+                exp = Experiment(case, suite, namelist, tracers, runtime)
+                exp_dir = exp.setup_rundir()
+                launch_executable(use_gdb, gdb)
+                if docker:
+                    copy_outdir(exp_dir)
+    else:
+        # Single experiment
+        if namelist:
+            if tracers:
+                logging.info('Setting up experiment {0} with suite {1} using namelist {2} and tracers {3}'.format(case,suite,namelist,tracers))
+            else:
+                logging.info('Setting up experiment {0} with suite {1} using namelist {2} using default tracers for the suite'.format(case,suite,namelist))
+        else:
+            if tracers:
+                logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite and tracers {2}'.format(case,suite,tracers))
+            else:
+                logging.info('Setting up experiment {0} with suite {1} using the default namelist and tracers for the suite'.format(case,suite))
+        exp = Experiment(case, suite, namelist, tracers, runtime)
+        exp_dir = exp.setup_rundir()
+        # Debugger
+        if use_gdb:
+            gdb = find_gdb()
+        else:
+            gdb = None
+        # Launch model on exit
+        if docker:
+            #registering this function first should mean that it executes last, which is what we want
+            atexit.register(copy_outdir, exp_dir)
+        atexit.register(launch_executable, use_gdb, gdb)
+
 if __name__ == '__main__':
     main()
