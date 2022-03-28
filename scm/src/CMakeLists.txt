@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project(scm
         VERSION 5.0.0
-        LANGUAGES C CXX Fortran)
+        LANGUAGES C Fortran)
 set(PROJECT "CCPP-SCM")
 
 ####################################################################
@@ -34,7 +34,7 @@ message (STATUS "Running ccpp_prebuild.py for CCPP")
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug
+    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
     OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
     ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
@@ -64,60 +64,12 @@ ENABLE_LANGUAGE(Fortran)
 
 include(CMakeForceCompiler)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../../CMakeModules/Modules)
 
-# First, need to figure out if using the new NCEPLIBS-external/NCEPLIBS packages
-# or the legacy/contrib netCDF and NCEPLIBS installations
-IF(DEFINED ENV{bacio_ROOT})
-  message(STATUS "Configuring SCM build for new NCEPLIBS-external/NCEPLIBS software packages")
-  set(NEW_NCEPLIBS ON)
-ELSE()
-  message(STATUS "Configuring SCM build for legacy/contrib netCDF/NCEPLIBS software packages")
-  set(NEW_NCEPLIBS OFF)
-ENDIF()
-
-IF(NEW_NCEPLIBS)
-  MESSAGE(STATUS "Using FindNetCDF.cmake module for $ENV{CMAKE_Platform}")
-  FIND_PACKAGE(NetCDF REQUIRED COMPONENTS C Fortran)
-else()
-  IF(DEFINED ENV{NETCDF})
-    MESSAGE(STATUS "The NETCDF environment variable is $ENV{NETCDF}")
-    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
-  ELSE(DEFINED ENV{NETCDF})
-    MESSAGE(FATAL_ERROR "The NETCDF environement variable must be set to point to your NetCDF installation before building. Stopping...")
-  ENDIF(DEFINED ENV{NETCDF})
-ENDIF()
-
-IF(NEW_NCEPLIBS)
-  find_package(bacio REQUIRED)
-  find_package(sp    REQUIRED)
-  find_package(w3nco REQUIRED)
-ELSE()
-  # Find bacio
-  IF(DEFINED ENV{BACIO_LIB4})
-    MESSAGE(STATUS "The BACIO_LIB4 environment variable is $ENV{BACIO_LIB4}")
-    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{BACIO_LIB4})
-    SET(BACIO_LIB4 $ENV{BACIO_LIB4})
-  ELSE()
-    MESSAGE(FATAL_ERROR "The BACIO_LIB4 environment variable must be set to point to your BACIO installation (part of NCEPLIBS) before building. Stopping...")
-  ENDIF()
-  # Find sp
-  IF(DEFINED ENV{SP_LIBd})
-    MESSAGE(STATUS "The SP_LIBd environment variable is $ENV{SP_LIBd}")
-    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{SP_LIBd})
-    SET(SP_LIBd $ENV{SP_LIBd})
-  ELSE(DEFINED ENV{SP_LIBd})
-    MESSAGE(FATAL_ERROR "The SP_LIBd environment variable must be set to point to your SP installation (part of NCEPLIBS) before building. Stopping...")
-  ENDIF(DEFINED ENV{SP_LIBd})
-  # Find w3nco
-  IF(DEFINED ENV{W3NCO_LIBd})
-    MESSAGE(STATUS "The W3NCO_LIBd environment variable is $ENV{W3NCO_LIBd}")
-    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{W3NCO_LIBd})
-    SET(W3NCO_LIBd $ENV{W3NCO_LIBd})
-  ELSE(DEFINED ENV{W3NCO_LIBd})
-    MESSAGE(FATAL_ERROR "The W3NCO_LIBd environment variable must be set to point to your W3NCO installation (part of NCEPLIBS) before building. Stopping...")
-  ENDIF(DEFINED ENV{W3NCO_LIBd})
-ENDIF()
+find_package(NetCDF REQUIRED COMPONENTS C Fortran)
+find_package(bacio REQUIRED)
+find_package(sp    REQUIRED)
+find_package(w3nco REQUIRED)
 
 SET(CCPP_FRAMEWORK_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(CCPP_PHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -132,8 +84,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 
     # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-                 "MinSizeRel" "RelWithDebInfo")
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
@@ -143,7 +94,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
 # Add required preprocessor flags for build type
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   ADD_DEFINITIONS(-DDEBUG)
-endif (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+endif ()
 
 #------------------------------------------------------------------------------
 # Add -DCCPP preprocessor flag (needed to preprocess GFS_typedefs.F90 from FV3)
@@ -165,7 +116,7 @@ if(APPLE)
   ADD_DEFINITIONS(-DMACOSX)
 elseif(UNIX)
   ADD_DEFINITIONS(-DLINUX)
-else (APPLE)
+else ()
   message (FATAL_ERROR "Unsupported platform, only Linux and MacOSX are supported at this time.")
 endif()
 
@@ -197,10 +148,8 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   endif()
   
   set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_FLAGS_RELEASE     "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_FLAGS_BITFORBIT     "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback -fpp -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -nowarn -sox -align array64byte -qno-opt-dynamic-align")
@@ -234,10 +183,8 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   endif()
   
   set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_FLAGS_RELEASE     "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_FLAGS_BITFORBIT     "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message (FATAL_ERROR "This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
@@ -264,79 +211,19 @@ else()
 endif()
 
 #------------------------------------------------------------------------------
-# Set netCDF flags for preprocessor, compiler and linker (if defined)
-if(NEW_NCEPLIBS)
-  #If using hera.intel, we use the target_link_libraries(NetCDF::NetCDF_[Fortran,C,CXX]), but ccpp-phyics inherits ${CMAKE_Fortran_FLAGS} for compiling physics, so we still need to set these
-  ADD_DEFINITIONS(-DNETCDF)
-  message (STATUS "Enable netCDF support")
-  message (STATUS "NetCDF_Fortran_INCLUDE_DIRS is ${NetCDF_Fortran_INCLUDE_DIRS}")
-  message (STATUS "NetCDF_Fortran_LIBRARIES is ${NetCDF_Fortran_LIBRARIES}")
-  set (NETCDF_INC "-I${NetCDF_Fortran_INCLUDE_DIRS}")
-  set (NETCDF_LIB ${NetCDF_Fortran_LIBRARIES})
-  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${NETCDF_INC} ${NETCDF_LIB}")
-else()
-  set(NETCDF_DIR $ENV{NETCDF})
-  if(NETCDF_DIR)
-    set (NETCDF_INC "-I${NETCDF_DIR}/include")
-    set (NETCDF_LIB "-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf")
-    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${NETCDF_INC} ${NETCDF_LIB}")
-    ADD_DEFINITIONS(-DNETCDF)
-    message (STATUS "Enable netCDF support")
-  else(NETCDF_DIR)
-    message (STATUS "Disable netCDF support")
-  endif(NETCDF_DIR)
-endif()
+# Set netCDF flags for preprocessor
+ADD_DEFINITIONS(-DNETCDF)
 
-#------------------------------------------------------------------------------
-# Set SIONlib flags for preprocessor, compiler and linker (if defined)
-set(SIONLIB $ENV{SIONLIB})
-if (SIONLIB)
-  execute_process(COMMAND ${SIONLIB}/bin/sionconfig --mpi --cflags --f90
-                  RESULT_VARIABLE exit_code
-                  OUTPUT_VARIABLE SIONlib_Fortran_FLAGS
-                  ERROR_VARIABLE stderr
-                  OUTPUT_STRIP_TRAILING_WHITESPACE
-                  ERROR_STRIP_TRAILING_WHITESPACE)
-  if (NOT exit_code EQUAL "0")
-     message (FATAL_ERROR "Execution of '${SIONLIB}/bin/sionconfig --mpi --cflags --f90' failed")
-  endif (NOT exit_code EQUAL "0")
-  execute_process(COMMAND ${SIONLIB}/bin/sionconfig --mpi --libs --f90
-                  RESULT_VARIABLE exit_code
-                  OUTPUT_VARIABLE SIONlib_Fortran_LIBS
-                  ERROR_VARIABLE stderr
-                  OUTPUT_STRIP_TRAILING_WHITESPACE
-                  ERROR_STRIP_TRAILING_WHITESPACE)
-  if (NOT exit_code EQUAL "0")
-     message (FATAL_ERROR "Execution of '${SIONLIB}/bin/sionconfig --mpi --libs --f90' failed")
-  endif (NOT exit_code EQUAL "0")
-  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${SIONlib_Fortran_FLAGS} ${SIONlib_Fortran_LIBS}")
-  ADD_DEFINITIONS(-DSION)
-  message (STATUS "Enable SIONlib support")
-else (SIONLIB)
-  message (STATUS "Disable SIONlib support")
-endif (SIONLIB)
-
-#------------------------------------------------------------------------------
-# CMake Modules
-# Set the CMake module path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp/framework/cmake")
-#------------------------------------------------------------------------------
 # Set OpenMP flags for C/C++/Fortran
 if (OPENMP)
-  # OpenMP broken for clang compiler
+  # Clang compiler does not support OpenMP out of the box
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang*")
-    message(FATAL_ERROR "OpenMP not supported for the LLVM Clang compiler")
+    message(FATAL_ERROR "OpenMP not supported for Apple/LLVM Clang compilers")
   endif()
-  include(detect_openmp)
-  detect_openmp()
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
-  message(STATUS "Enable OpenMP support for C/C++/Fortran compiler")
-else(OPENMP)
-  message (STATUS "Disable OpenMP support for C/C++/Fortran compiler")
+  find_package(OpenMP REQUIRED)
 endif()
 
+# How about using proper compile targets etc?
 #------------------------------------------------------------------------------
 # Configure sources
 ADD_SUBDIRECTORY(${CCPP_FRAMEWORK_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
@@ -353,26 +240,29 @@ SET(scm_source_files scm.F90
             scm_output.F90
 )
 
-
 ADD_EXECUTABLE(scm ${scm_source_files} ccpp_static_api.F90)
-if(NEW_NCEPLIBS)
-  #the FindNetCDF.cmake module suggests to use NetCDF::NetCDF_[Fortran,C,CXX] rather than set compiler flags; you actually need both Fortan and C components to compile successfully
-  TARGET_LINK_LIBRARIES(scm ccpp_physics ccpp_framework NetCDF::NetCDF_Fortran NetCDF::NetCDF_C bacio::bacio_4 sp::sp_d w3nco::w3nco_d)
-else()
-  TARGET_LINK_LIBRARIES(scm ccpp_physics ccpp_framework ${BACIO_LIB4} ${SP_LIBd} ${W3NCO_LIBd})
-endif()
 
-set_target_properties(scm PROPERTIES
+if(OPENMP)
+  TARGET_LINK_LIBRARIES(scm PUBLIC OpenMP::OpenMP_Fortran)
+endif()
+TARGET_LINK_LIBRARIES(scm NetCDF::NetCDF_Fortran)
+TARGET_LINK_LIBRARIES(scm bacio::bacio_4)
+TARGET_LINK_LIBRARIES(scm sp::sp_d)
+TARGET_LINK_LIBRARIES(scm w3nco::w3nco_d)
+TARGET_LINK_LIBRARIES(scm ccpp_framework)
+TARGET_LINK_LIBRARIES(scm ccpp_physics)
+
+SET_TARGET_PROPERTIES(scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
 
-add_custom_command(
+ADD_CUSTOM_COMMAND(
         TARGET scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_SOURCE_DIR}/run_scm.py
                 ${CMAKE_CURRENT_BINARY_DIR}/run_scm.py)
 
-add_custom_command(
+ADD_CUSTOM_COMMAND(
         TARGET scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_SOURCE_DIR}/multi_run_scm.py
