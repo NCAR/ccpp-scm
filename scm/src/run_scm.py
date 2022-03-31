@@ -484,6 +484,7 @@ def launch_executable(use_gdb, gdb):
     time.sleep(1)
     # This will abort in 'execute' in the event of an error
     (status, stdout, stderr) = execute(cmd)
+    logging.info('Process "{0}" returned with status {1}'.format(cmd, status))
     # Get timing info if not using gdb
     time_elapsed = None
     if not use_gdb:
@@ -537,16 +538,11 @@ def main():
                     copy_outdir(exp_dir)
     else:
         # Single experiment
-        if namelist:
-            if tracers:
-                logging.warning('Setting up experiment {0} with suite {1} using namelist {2} and tracers {3}'.format(case,suite,namelist,tracers))
-            else:
-                logging.warning('Setting up experiment {0} with suite {1} using namelist {2} using default tracers for the suite'.format(case,suite,namelist))
-        else:
-            if tracers:
-                logging.warning('Setting up experiment {0} with suite {1} using the default namelist for the suite and tracers {2}'.format(case,suite,tracers))
-            else:
-                logging.warning('Setting up experiment {0} with suite {1} using the default namelist and tracers for the suite'.format(case,suite))
+        suite_string = 'suite {0}'.format(suite) if suite else 'default suite'
+        namelist_string = 'namelist {0}'.format(namelist) if namelist else 'default namelist'
+        tracers_string = 'tracers {0}'.format(tracers) if tracers else 'default tracers'
+        logging.warning('Setting up experiment {case} with {suite} using {namelist} and {tracers}'.format(
+            case=case, suite=suite_string, namelist=namelist_string, tracers=tracers_string))
         exp = Experiment(case, suite, namelist, tracers, runtime)
         exp_dir = exp.setup_rundir()
         # Debugger
@@ -554,6 +550,8 @@ def main():
             gdb = find_gdb()
         else:
             gdb = None
+        logging.warning('Launching experiment {case} with {suite} using {namelist} and {tracers}'.format(
+            case=case, suite=suite_string, namelist=namelist_string, tracers=tracers_string))
         # Launch model on exit
         if docker:
             #registering this function first should mean that it executes last, which is what we want
