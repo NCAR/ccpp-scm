@@ -261,8 +261,6 @@ for compiler in "${compilers[@]}"; do
       if [ -d "${RUN_DIR}" ] ; then rm -rf ${RUN_DIR}; fi
       mkdir ${RUN_DIR}
       cd ${RUN_DIR}
-      #ln -s ${BIN_DIR}/${executable_name} ${executable_name}
-      #ln -s ${SRC_DIR}/multi_run_scm.py multi_run_scm.py
       ln -s ${SRC_DIR}/run_scm.py run_scm.py
       job_name=${job_prefix}_${compiler}_${build_type_lc}
       if ${use_batch_system} ; then

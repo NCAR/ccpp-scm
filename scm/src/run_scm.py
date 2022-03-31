@@ -225,7 +225,7 @@ class Experiment(object):
         
         if runtime_mult:
             self._runtime_mult = runtime_mult
-            message = 'Existing case namelist runtime multipled by {0}'.format(self._runtime_mult)
+            message = 'Existing case namelist runtime multiplied by {0}'.format(self._runtime_mult)
             logging.info(message)
         else:
             self._runtime_mult = None
@@ -418,8 +418,12 @@ class Experiment(object):
         case_nml = f90nml.read(self._namelist)
         # If running the regression test, reduce the runtime
         if self._runtime:
-           case_nml['case_config']['runtime'] = self._runtime
+            case_nml['case_config']['runtime'] = self._runtime
         if self._runtime_mult:
+            if self._runtime_mult < 0.0:
+                message = 'The --runtime_mult argument must be greater than 0 ({0} was entered)'.format(self._runtime_mult)
+                logging.critical(message)
+                raise Exception(message)
             try:
                 old_runtime = case_nml['case_config']['runtime']
                 case_nml['case_config']['runtime'] = old_runtime*self._runtime_mult
@@ -427,18 +431,18 @@ class Experiment(object):
                 logging.info('The runtime multiplier argument was set, but the runtime is not set in {0} '.format(self._namelist))
         # If the number of levels is specified, set the namelist value
         if self._levels:
-           case_nml['case_config']['n_levels'] = self._levels
+            case_nml['case_config']['n_levels'] = self._levels
         # If the npz_type is specified, set the namelist value
         if self._npz_type:
-           case_nml['case_config']['npz_type'] = self._npz_type
+            case_nml['case_config']['npz_type'] = self._npz_type
         if self._vert_coord_file:
-           case_nml['case_config']['vert_coord_file'] = self._vert_coord_file
+            case_nml['case_config']['vert_coord_file'] = self._vert_coord_file
         if self._n_itt_out:
-           case_nml['case_config']['n_itt_out'] = self._n_itt_out
+            case_nml['case_config']['n_itt_out'] = self._n_itt_out
         if self._n_itt_diag:
-           case_nml['case_config']['n_itt_diag'] = self._n_itt_diag
+            case_nml['case_config']['n_itt_diag'] = self._n_itt_diag
         if self._timestep:
-           case_nml['case_config']['dt'] = self._timestep
+            case_nml['case_config']['dt'] = self._timestep
         # look for the output_dir variable in the case configuration namelist and use it if it does; 
         # if it doesn't exist, create a default output directory name (from the case and suite names) and create a namelist patch
         try:
@@ -503,7 +507,7 @@ class Experiment(object):
         if os.path.isfile(os.path.join(SCM_RUN, self._physics_namelist)):
             os.remove(os.path.join(SCM_RUN,self._physics_namelist))
         if not os.path.isfile(os.path.join(SCM_ROOT, PHYSICS_NAMELIST_DIR, self._physics_namelist)):
-            message = 'Physics namelist {0} not found in directory {1}'.format(SCM_ROOT, self._physics_namelist, PHYSICS_NAMELIST_DIR)
+            message = 'Physics namelist {0} not found in directory {1}'.format(os.path.join(SCM_ROOT, self._physics_namelist), PHYSICS_NAMELIST_DIR)
             logging.critical(message)
             raise Exception(message)
         cmd = "ln -sf {0} {1}".format(os.path.join(SCM_ROOT, PHYSICS_NAMELIST_DIR, self._physics_namelist), os.path.join(SCM_RUN, self._physics_namelist))
