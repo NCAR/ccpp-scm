@@ -5,6 +5,7 @@ import atexit
 import f90nml
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -90,10 +91,12 @@ parser.add_argument('-v', '--verbose',    help='once: set logging level to debug
 def setup_logging(verbose):
     """Sets up the logging module."""
     # print out debug messages (logs and output from subprocesses) if verbose argument is set
-    if verbose:
+    if verbose==2:
         LOG_LEVEL = logging.DEBUG
-    else:
+    elif verbose==1:
         LOG_LEVEL = logging.INFO
+    else:
+        LOG_LEVEL = logging.WARNING
     LOG_FILE = 'multi_run_scm.log'
     LOG_FORMAT = '%(levelname)s: %(message)s'
 
@@ -105,7 +108,7 @@ def setup_logging(verbose):
         logger = logging.getLogger()
         logger.addHandler(fh)
 
-def execute(cmd):
+def execute(cmd, ignore_error = False):
     """Runs a local command in a shell. Waits for completion and
     returns status, stdout and stderr."""
     logging.debug('Executing "{0}"'.format(cmd))
@@ -118,11 +121,12 @@ def execute(cmd):
         message += '    stdout: "{0}"\n'.format(stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'))
         message += '    stderr: "{0}"'.format(stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
         logging.debug(message)
-    else:
+    elif not ignore_error:
         message = 'Execution of command "{0}" failed, exit code {1}\n'.format(cmd, status)
         message += '    stdout: "{0}"\n'.format(stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'))
         message += '    stderr: "{0}"'.format(stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
-        logging.debug(message)
+        logging.critical(message)
+        raise Exception('Execution of command "{0}" failed, exit code {1}\n'.format(cmd, status))
     return (status, stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'), stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
 
 def parse_arguments():
@@ -147,7 +151,7 @@ def find_gdb():
     """Detect gdb, abort if not found"""
     logging.info('Searching for gdb ...')
     cmd = 'which gdb'
-    (status, stdout, stderr) = execute(cmd)
+    (status, stdout, stderr) = execute(cmd, ignore_error = True)
     if status==1:
         message = 'gdb not found'
         logging.critical(message)
@@ -478,14 +482,26 @@ def launch_executable(use_gdb, gdb):
         cmd = 'time {executable}'.format(executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(1)
-    #time.sleep(2)
-    #failure = os.system(cmd)
-    #if failure:
-    #    logging.info('Execution of {0} failed!\n'.format(cmd))
-    #    sys.exit(1)
+    # This will abort in 'execute' in the event of an error
     (status, stdout, stderr) = execute(cmd)
-    if not status == 0:
-        raise Exception("Command '{0}' returned with errors".format(cmd))
+    # Get timing info if not using gdb
+    time_elapsed = None
+    if not use_gdb:
+        minutes = None
+        seconds = None
+        for line in stderr.split('\n'):
+            line = line.strip()
+            if line.startswith('real'):
+                matches = re.findall(r'real\s+(\d+)m(\d+\.\d+)s', stderr)
+                if len(matches)==1:
+                    (minutes, seconds) = matches[0]
+                    break
+                raise Exception('matches "{}"'.format(matches))
+        if not minutes and not seconds:
+            logging.warning('Unable to get timing information from {0} stderr'.format(cmd))
+        else:
+            time_elapsed = int(minutes)*60 + float(seconds)
+    return time_elapsed
 
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""
@@ -507,28 +523,30 @@ def main():
 
     if multirun:
         # Loop through all experiments
-        logging.info('Multi-run: loop through all cases and suite definition files with standard namelists and tracer configs')
+        logging.warning('Multi-run: loop through all cases and suite definition files with standard namelists and tracer configs')
         for i, case in enumerate(cases):
             for j, suite in enumerate(suites,1):
-                logging.info('Executing process {0} of {1}: case={2}, suite={3}'.format(
+                logging.warning('Executing process {0} of {1}: case={2}, suite={3}'.format(
                     len(suites)*i+j, len(cases)*len(suites), case, suite))
                 exp = Experiment(case, suite, namelist, tracers, runtime)
                 exp_dir = exp.setup_rundir()
-                launch_executable(use_gdb, gdb)
+                time_elapsed = launch_executable(use_gdb, gdb)
+                if time_elapsed:
+                    logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                 if docker:
                     copy_outdir(exp_dir)
     else:
         # Single experiment
         if namelist:
             if tracers:
-                logging.info('Setting up experiment {0} with suite {1} using namelist {2} and tracers {3}'.format(case,suite,namelist,tracers))
+                logging.warning('Setting up experiment {0} with suite {1} using namelist {2} and tracers {3}'.format(case,suite,namelist,tracers))
             else:
-                logging.info('Setting up experiment {0} with suite {1} using namelist {2} using default tracers for the suite'.format(case,suite,namelist))
+                logging.warning('Setting up experiment {0} with suite {1} using namelist {2} using default tracers for the suite'.format(case,suite,namelist))
         else:
             if tracers:
-                logging.info('Setting up experiment {0} with suite {1} using the default namelist for the suite and tracers {2}'.format(case,suite,tracers))
+                logging.warning('Setting up experiment {0} with suite {1} using the default namelist for the suite and tracers {2}'.format(case,suite,tracers))
             else:
-                logging.info('Setting up experiment {0} with suite {1} using the default namelist and tracers for the suite'.format(case,suite))
+                logging.warning('Setting up experiment {0} with suite {1} using the default namelist and tracers for the suite'.format(case,suite))
         exp = Experiment(case, suite, namelist, tracers, runtime)
         exp_dir = exp.setup_rundir()
         # Debugger
@@ -540,6 +558,7 @@ def main():
         if docker:
             #registering this function first should mean that it executes last, which is what we want
             atexit.register(copy_outdir, exp_dir)
+        # Ignore time_elapsed return value for single experiment
         atexit.register(launch_executable, use_gdb, gdb)
 
 if __name__ == '__main__':
