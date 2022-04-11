@@ -14,28 +14,29 @@ class suite(object):
             self._max_timestep = max_timestep     #should remain unchanged after init
         else:
             self._max_timestep = DEFAULT_MAX_TIMESTEP
-            if timestep <= self._max_timestep and timestep > 0:
-                self._default_timestep = timestep #should remain unchanged after init
-                self.timestep = self._default_timestep #can be modified after init
-            elif timestep <= 0:
-                self.timestep = None #use the default dt in the SCM code
-            else:
-                message = 'The timestep for suite {0} cannot be set greater than the max_timestep of {1}'.format(self._name, self._max_timestep)
-                raise Exception(message)
-      
-    @property
-    def timestep(self):
-        """Get the timestep for the given suite."""
-        return self.timestep
-
-    @timestep.setter
-    def timestep(self, value):
-        """Set the timestep for the given suite."""
-        if value <= self._max_timestep:
-            self.timestep = value
+        
+        if timestep <= self._max_timestep and timestep > 0:
+            self._default_timestep = timestep #should remain unchanged after init
+            self.timestep = self._default_timestep #can be modified after init
+        elif timestep <= 0:
+            self.timestep = None #use the default dt in the SCM code
         else:
             message = 'The timestep for suite {0} cannot be set greater than the max_timestep of {1}'.format(self._name, self._max_timestep)
             raise Exception(message)
+      
+        @property
+        def timestep(self):
+            """Get the timestep for the given suite."""
+            return self.timestep
+
+        @timestep.setter
+        def timestep(self, value):
+            """Set the timestep for the given suite."""
+            if value <= self._max_timestep:
+                self.timestep = value
+            else:
+                message = 'The timestep for suite {0} cannot be set greater than the max_timestep of {1}'.format(self._name, self._max_timestep)
+                raise Exception(message)
       
 suite_list = []
 suite_list.append(suite('SCM_GFS_v15p2',         'tracers_GFS_v15p2.txt',                'input_GFS_v15p2.nml',               600.0, 1800.0, True ))
