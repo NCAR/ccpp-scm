@@ -908,6 +908,7 @@ module GFS_typedefs
     integer              :: iopt_snf  !rainfall & snowfall (1-jordan91; 2->bats; 3->noah)
     integer              :: iopt_tbot !lower boundary of soil temperature (1->zero-flux; 2->noah)
     integer              :: iopt_stc  !snow/soil temperature time scheme (only layer 1)
+    integer              :: iopt_trs  !thermal roughness scheme (1-z0h=z0m; 2-czil; 3-ec;4-kb inversed)
 
     logical              :: use_ufo         !< flag for gcycle surface option
 
@@ -3307,6 +3308,7 @@ module GFS_typedefs
     integer              :: iopt_snf       =  1  !rainfall & snowfall (1-jordan91; 2->bats; 3->noah)
     integer              :: iopt_tbot      =  2  !lower boundary of soil temperature (1->zero-flux; 2->noah)
     integer              :: iopt_stc       =  1  !snow/soil temperature time scheme (only layer 1)
+    integer              :: iopt_trs       =  2  !thermal roughness scheme (1-z0h=z0m; 2-czil; 3-ec;4-kb reversed)
 
     logical              :: use_ufo        = .false.                  !< flag for gcycle surface option
 
@@ -3657,6 +3659,7 @@ module GFS_typedefs
                           !    Noah MP options
                                iopt_dveg,iopt_crs,iopt_btr,iopt_run,iopt_sfc, iopt_frz,     &
                                iopt_inf, iopt_rad,iopt_alb,iopt_snf,iopt_tbot,iopt_stc,     &
+                               iopt_trs,                                                    &
                           !    GFDL surface layer options
                                lcurr_sf, pert_cd, ntsflg, sfenth,                           &
                           !--- lake model control
@@ -4289,6 +4292,7 @@ module GFS_typedefs
     Model%iopt_snf         = iopt_snf
     Model%iopt_tbot        = iopt_tbot
     Model%iopt_stc         = iopt_stc
+    Model%iopt_trs         = iopt_trs
 
 !--- tuning parameters for physical parameterizations
     Model%ras              = ras
@@ -5126,6 +5130,7 @@ module GFS_typedefs
         print *,'iopt_snf   =  ', Model%iopt_snf
         print *,'iopt_tbot   =  ',Model%iopt_tbot
         print *,'iopt_stc   =  ', Model%iopt_stc
+        print *,'iopt_trs   =  ', Model%iopt_trs
       elseif (Model%lsm == Model%lsm_ruc) then
         print *,' RUC Land Surface Model used'
       else
@@ -5950,6 +5955,7 @@ module GFS_typedefs
         print *, ' iopt_snf          : ', Model%iopt_snf
         print *, ' iopt_tbot         : ', Model%iopt_tbot
         print *, ' iopt_stc          : ', Model%iopt_stc
+        print *, ' iopt_trs          : ', Model%iopt_trs
       endif
       print *, ' use_ufo           : ', Model%use_ufo
       print *, ' lcurr_sf          : ', Model%lcurr_sf
@@ -7824,18 +7830,6 @@ module GFS_typedefs
         Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3
         Interstitial%ntozx = 4
-      elseif (Model%imp_physics == Model%imp_physics_nssl) then ! ERM: temporary settings - what is needed?
-        Interstitial%ntqvx = 1
-        Interstitial%ntcwx = 2
-        Interstitial%ntiwx = 3
-        IF ( Model%nssl_hail_on ) THEN
-           Interstitial%ntozx = 15 ! 17
-        ELSE
-           Interstitial%ntozx = 12 ! 14
-        ENDIF
-        IF ( Model%nssl_ccn_on ) THEN
-           Interstitial%ntozx = Interstitial%ntozx + 1 ! not clear if ntozx is used?
-        ENDIF
       elseif (Model%imp_physics == Model%imp_physics_thompson) then
         if(Model%ltaerosol) then
           Interstitial%ntqvx = 1
@@ -7850,6 +7844,19 @@ module GFS_typedefs
           Interstitial%ntrwx = 4
           Interstitial%ntozx = 9
         endif
+      elseif (Model%imp_physics == Model%imp_physics_nssl) then ! ERM: temporary settings - what is needed?
+        Interstitial%ntqvx = 1
+        Interstitial%ntcwx = 2
+        Interstitial%ntiwx = 3
+        Interstitial%ntrwx = 4
+        IF ( Model%nssl_hail_on ) THEN
+           Interstitial%ntozx = 15 ! 17
+        ELSE
+           Interstitial%ntozx = 12 ! 14
+        ENDIF
+        IF ( Model%nssl_ccn_on ) THEN
+           Interstitial%ntozx = Interstitial%ntozx + 1 ! not clear if ntozx is used?
+        ENDIF
       elseif (Model%imp_physics == Model%imp_physics_gfdl) then
         Interstitial%ntqvx = 1
         Interstitial%ntcwx = 2
