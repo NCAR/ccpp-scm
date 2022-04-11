@@ -2,6 +2,8 @@
 
 echo "Setting environment variables for SCM-CCPP on CENTOS with gcc/gfortran"
 
+export SCM_ROOT=$PWD
+
 export CC=/opt/rh/devtoolset-9/root/usr/bin/gcc
 export CXX=/opt/rh/devtoolset-9/root/usr/bin/g++
 export F77=/opt/rh/devtoolset-9/root/usr/bin/gfortran
