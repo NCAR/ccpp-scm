@@ -288,8 +288,8 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                                  GFS_sfcprop_type,  GFS_coupling_type,   &
                                  GFS_control_type,  GFS_grid_type,       &
                                  GFS_tbd_type,      GFS_cldprop_type,    &
-                                 GFS_radtend_type,  GFS_diag_type,       &
-                                 GFS_interstitial_type
+                                 GFS_radtend_type,  GFS_diag_type
+  use CCPP_typedefs,       only: GFS_interstitial_type
   use physcons,            only: pi => con_pi
   
   

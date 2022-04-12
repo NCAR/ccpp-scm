@@ -27,6 +27,7 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_optical_props.F90',
     'ccpp/physics/physics/rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90',
     'ccpp/physics/physics/rte-rrtmgp/rte/mo_source_functions.F90',
+    'scm/src/CCPP_typedefs.F90',
     'scm/src/GFS_typedefs.F90',
     'scm/src/scm_kinds.F90',
     'scm/src/scm_type_defs.F90',
@@ -48,6 +49,10 @@ TYPEDEFS_NEW_METADATA = {
     'module_radlw_parameters' : {
         'module_radlw_parameters' : '',
         },
+    'CCPP_typedefs' : {
+        'GFS_interstitial_type' : 'physics%Interstitial',
+        'CCPP_typedefs' : '',
+        },
     'GFS_typedefs' : {
         'GFS_diag_type' : 'physics%Diag',
         'GFS_control_type' : 'physics%Model',
@@ -55,7 +60,6 @@ TYPEDEFS_NEW_METADATA = {
         'GFS_tbd_type' : 'physics%Tbd',
         'GFS_sfcprop_type' : 'physics%Sfcprop',
         'GFS_coupling_type' : 'physics%Coupling',
-        'GFS_interstitial_type' : 'physics%Interstitial',
         'GFS_statein_type' : 'physics%Statein',
         'GFS_radtend_type' : 'physics%Radtend',
         'GFS_grid_type' : 'physics%Grid',

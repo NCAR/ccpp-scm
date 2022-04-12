@@ -18,10 +18,10 @@ module scm_type_defs
                             GFS_cldprop_type,      &
                             GFS_radtend_type,      &
                             GFS_diag_type,         &
-                            GFS_interstitial_type, &
                             GFS_init_type
+  use CCPP_typedefs,  only: GFS_interstitial_type
   use machine,        only: kind_phys
-  use ccpp_api,       only: ccpp_t
+  use ccpp_types,     only: ccpp_t
 
   implicit none
 
