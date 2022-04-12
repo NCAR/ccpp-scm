@@ -969,6 +969,13 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+[rca]
+  standard_name = aerodynamic_resistance_in_canopy
+  long_name = canopy resistance
+  units = s m-1
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
 [tprcp]
   standard_name = nonnegative_lwe_thickness_of_precipitation_amount_on_dynamics_timestep
   long_name = total precipitation amount in each time step
@@ -1392,7 +1399,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme .or. (control_for_land_surface_scheme == identifier_for_ruc_land_surface_scheme .and. flag_for_reading_leaf_area_index_from_input))
+  active = (control_for_land_surface_scheme == identifier_for_noah_land_surface_scheme .or. control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme .or. (control_for_land_surface_scheme == identifier_for_ruc_land_surface_scheme .and. flag_for_reading_leaf_area_index_from_input))
 [xsaixy]
   standard_name = stem_area_index
   long_name = stem area index
@@ -2091,7 +2098,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
 [dqsfci_cpl]
   standard_name = surface_upward_latent_heat_flux_for_coupling
   long_name = instantaneous sfc latent heat flux
@@ -2099,7 +2106,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
 [dlwsfci_cpl]
   standard_name = surface_downwelling_longwave_flux_for_coupling
   long_name = instantaneous sfc downward lw flux
@@ -2163,7 +2170,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
 [nnirbmi_cpl]
   standard_name = surface_net_downwelling_direct_nir_shortwave_flux_for_coupling
   long_name = instantaneous net nir beam sfc downward sw flux
@@ -2203,7 +2210,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
 [q2mi_cpl]
   standard_name = specific_humidity_at_2m_for_coupling
   long_name = instantaneous Q2m
@@ -2211,7 +2218,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
 [u10mi_cpl]
   standard_name = x_wind_at_10m_for_coupling
   long_name = instantaneous U10m
@@ -2243,7 +2250,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
 [ulwsfcin_cpl]
   standard_name = surface_upwelling_longwave_flux_from_coupled_process
   long_name = surface upwelling LW flux for coupling
@@ -2563,6 +2570,7 @@
   dimensions = (number_of_lines_in_internal_namelist)
   type = character
   kind = len=256
+  active = (number_of_lines_in_internal_namelist > 0)
 [logunit]
   standard_name = iounit_of_log
   long_name = fortran unit number for logfile
@@ -2758,6 +2766,12 @@
 [cplwav2atm]
   standard_name = flag_for_one_way_ocean_wave_coupling_to_atmosphere
   long_name = flag controlling ocean wave coupling to the atmosphere (default off)
+  units = flag
+  dimensions = ()
+  type = logical
+[cplaqm]
+  standard_name = flag_for_air_quality_coupling
+  long_name = flag controlling cplaqm collection (default off)
   units = flag
   dimensions = ()
   type = logical
@@ -3147,6 +3161,24 @@
   units = flag
   dimensions = ()
   type = logical
+[doGP_sgs_cnv]
+  standard_name = flag_to_include_sgs_convective_cloud_in_RRTMGP
+  long_name = logical flag to control sgs convective cloud in RRTMGP
+  units = flag
+  dimensions = ()
+  type = logical
+[doGP_sgs_mynn]
+  standard_name = flag_to_include_sgs_MYNN_EDMF_cloud_in_RRTMGP
+  long_name = logical flag to control MYNN-EDMF PBL cloud in RRTMGP
+  units = flag
+  dimensions = ()
+  type = logical
+[iovr_convcld]
+  standard_name = flag_for_convective_cloud_overlap_method_for_radiation
+  long_name = flag for convective cloud overlap method
+  units = flag
+  dimensions = ()
+  type = integer
 [rrtmgp_nrghice]
   standard_name = number_of_ice_roughness_categories
   long_name = number of ice-roughness categories in RRTMGP calculation (Model%rrtmgp_nrghice)
@@ -10417,6 +10449,22 @@
   type = real
   kind = kind_phys
   active = (flag_for_rrtmgp_radiation_scheme)
+[deltaZc]
+  standard_name = layer_thickness_from_layer_center
+  long_name = layer_thickness
+  units = m
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[deltaP]
+  standard_name = layer_thickness_in_Pa
+  long_name = layer_thickness_in_Pa
+  units = Pa
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
 [tracer]
   standard_name = chemical_tracers
   long_name = chemical tracers
@@ -10585,6 +10633,86 @@
   type = real
   kind = kind_phys
   active = (flag_for_rrtmgp_radiation_scheme)
+[cnv_cloud_overlap_param]
+  standard_name = convective_cloud_overlap_param
+  long_name = convective cloud overlap parameter
+  units = km
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_cnv_frac]
+  standard_name = convective_cloud_fraction_for_RRTMGP
+  long_name = layer convective cloud fraction
+  units = frac
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_cnv_lwp]
+  standard_name = convective_cloud_liquid_water_path
+  long_name = layer convective cloud liquid water path
+  units = g m-2
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_cnv_iwp]
+  standard_name = convective_cloud_ice_water_path
+  long_name = layer convective cloud ice water path
+  units = g m-2
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_cnv_reliq]
+  standard_name = mean_effective_radius_for_liquid_convective_cloud
+  long_name = mean effective radius for liquid convective cloud
+  units = um
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_cnv_reice]
+  standard_name = mean_effective_radius_for_ice_convective_cloud
+  long_name = mean effective radius for ice convective cloud
+  units = um
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_pbl_lwp]
+  standard_name = MYNN_SGS_cloud_liquid_water_path
+  long_name = layer convective cloud liquid water path
+  units = g m-2
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_pbl_iwp]
+  standard_name = MYNN_SGS_cloud_ice_water_path
+  long_name = layer convective cloud ice water path
+  units = g m-2
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_pbl_reliq]
+  standard_name = mean_effective_radius_for_liquid_MYNN_SGS_cloud
+  long_name = mean effective radius for liquid MYNN_SGS cloud
+  units = um
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
+[cld_pbl_reice]
+  standard_name = mean_effective_radius_for_ice_MYNN_SGS_cloud
+  long_name = mean effective radius for ice MYNN_SGS cloud
+  units = um
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_rrtmgp_radiation_scheme)
 [sw_optical_props_clrsky]
   standard_name = shortwave_optical_properties_for_clear_sky
   long_name = Fortran DDT containing RRTMGP optical properties
@@ -10598,6 +10726,27 @@
   units = DDT
   dimensions = ()
   type = ty_optical_props_2str
+  active = (flag_for_rrtmgp_radiation_scheme)
+[sw_optical_props_cnvcloudsByBand]
+  standard_name = shortwave_optical_properties_for_convective_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+[sw_optical_props_MYNNcloudsByBand]
+  standard_name = shortwave_optical_properties_for_MYNN_EDMF_PBL_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  active = (flag_for_rrtmgp_radiation_scheme)
+[sw_optical_props_cnvclouds]
+  standard_name = shortwave_optical_properties_for_convective_cloudy_atmosphere
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  active = (flag_for_rrtmgp_radiation_scheme)
   active = (flag_for_rrtmgp_radiation_scheme)
 [sw_optical_props_precipByBand]
   standard_name = shortwave_optical_properties_for_precipitation_by_band
@@ -10664,6 +10813,27 @@
   active = (flag_for_rrtmgp_radiation_scheme)
 [lw_optical_props_cloudsByBand]
   standard_name = longwave_optical_properties_for_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  active = (flag_for_rrtmgp_radiation_scheme)
+[lw_optical_props_cnvcloudsByBand]
+  standard_name = longwave_optical_properties_for_convective_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  active = (flag_for_rrtmgp_radiation_scheme)
+[lw_optical_props_MYNNcloudsByBand]
+  standard_name = longwave_optical_properties_for_MYNN_EDMF_PBL_cloudy_atmosphere_by_band
+  long_name = Fortran DDT containing RRTMGP optical properties
+  units = DDT
+  dimensions = ()
+  type = ty_optical_props_2str
+  active = (flag_for_rrtmgp_radiation_scheme)
+[lw_optical_props_cnvclouds]
+  standard_name = longwave_optical_properties_for_convective_cloudy_atmosphere
   long_name = Fortran DDT containing RRTMGP optical properties
   units = DDT
   dimensions = ()

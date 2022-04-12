@@ -34,7 +34,7 @@ message (STATUS "Running ccpp_prebuild.py for CCPP")
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug
+    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
     OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
     ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
