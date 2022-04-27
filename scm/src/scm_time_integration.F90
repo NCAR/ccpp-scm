@@ -6,7 +6,7 @@ module scm_time_integration
 use scm_kinds, only: sp, dp, qp
 use scm_forcing
 
-use ccpp_api,        only: ccpp_t
+use ccpp_types,        only: ccpp_t
 use :: ccpp_static_api,                      &
        only: ccpp_physics_timestep_init,     &
              ccpp_physics_run,               &
