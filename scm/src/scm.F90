@@ -30,7 +30,7 @@ subroutine scm_main_sub()
   type(scm_input_type), target :: scm_input_instance
   type(scm_reference_type), target :: scm_reference
 
-  integer      :: i, j, grid_error, kdt_rad, idtend, itrac
+  integer      :: i, j, kdt_rad, idtend, itrac
   real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer      :: jdat(1:8)
 
@@ -53,25 +53,7 @@ subroutine scm_main_sub()
   
   call get_reference_profile(scm_state, scm_reference)
 
-  select case(trim(adjustl(scm_state%model_name)))
-    case("GFS")
-      !>  - Call get_GFS_grid in \ref vgrid to read in the necessary coefficients and calculate the pressure-related variables on the grid.
-      call get_GFS_vgrid(scm_input_instance, scm_state, grid_error)
-      !>  - Exit if an unsupported number of levels is specified or the file with grid coefficients cannot be opened.
-      if (grid_error == 1) then
-        write(*,*) 'When using the GFS host model, only 28, 42, 60, 64, and 91 levels are currently supported. Exiting...'
-        stop
-      end if
-      if (grid_error == 2) then
-        write(*,*) 'The grid coefficient file could not be opened. Exiting...'
-        stop
-      end if
-    case("FV3")
-      call get_FV3_vgrid(scm_input_instance, scm_state)
-    case default
-      write(*,*) 'Only the GFS (GSM) and FV3 vertical coordinates are currently supported. Exiting...'
-      stop
-  end select
+  call get_FV3_vgrid(scm_input_instance, scm_state)
 
   !allocate(cdata_cols(scm_state%n_cols))
 

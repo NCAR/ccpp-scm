@@ -2,6 +2,8 @@
 
 echo "Setting environment variables for CCPP-SCM on Desktop (MacOS) with gcc/gfortran"
 
+export SCM_ROOT=$PWD
+
 echo "Setting CC/CXX/FC environment variables"
 export CC=/opt/local/bin/gcc-mp-10
 export CXX=/opt/local/bin/g++-mp-10

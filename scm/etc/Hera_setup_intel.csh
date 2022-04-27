@@ -2,6 +2,8 @@
 
 echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
+setenv SCM_ROOT $PWD
+
 #load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
 module purge

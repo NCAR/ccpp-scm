@@ -34,7 +34,8 @@ subroutine get_config_nml(scm_state)
   type(scm_state_type), target, intent(inout) :: scm_state
 
   character(len=character_length)    :: experiment_name !< name of the experiment configuration file (usually case name)
-  character(len=character_length)    :: model_name !< name of the host model (currently only GFS supported)
+  character(len=character_length)    :: npz_type !< used for generating different FV3 vertical grids
+  character(len=character_length)    :: vert_coord_file !< file containing FV3 vertical grid coefficients
   character(len=character_length)    :: case_name !< name of case initialization and forcing dataset
   real(kind=dp)        :: dt !< time step in seconds
   real(kind=dp)        :: runtime !< total runtime in seconds
@@ -48,9 +49,6 @@ subroutine get_config_nml(scm_state)
   integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
   character(len=character_length)    :: output_dir !< name of the output directory
   character(len=character_length)    :: output_file !< name of the output file (without the file extension)
-  character(len=character_length)    :: case_data_dir !< path to the directory containing case initialization and forcing data
-  character(len=character_length)    :: vert_coord_data_dir !< path to the directory containing vertical coordinate data
-  character(len=character_length)    :: reference_profile_dir !< path to the directory containing the reference profile
   integer              :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: mom_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
   integer              :: C_RES            !< reference "C" resoltiion of FV3 grid (needed for GWD and mountain blocking)
@@ -77,10 +75,10 @@ subroutine get_config_nml(scm_state)
 
   CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
 
-  NAMELIST /case_config/ model_name, n_columns, case_name, dt, time_scheme, runtime, n_itt_out, n_itt_diag, &
-    n_levels, output_dir, output_file, case_data_dir, vert_coord_data_dir, thermo_forcing_type, model_ics, &
+  NAMELIST /case_config/ npz_type, vert_coord_file, case_name, dt, runtime, n_itt_out, n_itt_diag, &
+    n_levels, output_dir, thermo_forcing_type, model_ics, &
     lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
-    sfc_roughness_length_cm, reference_profile_choice, reference_profile_dir, year, month, day, hour, min, &
+    sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, &
     column_area, input_type
     
   NAMELIST /physics_config/ physics_suite, physics_nml
@@ -89,21 +87,20 @@ subroutine get_config_nml(scm_state)
   !!  @{
 
   !> Define default values for experiment configuration (to be overridden by external namelist file or command line arguments)
-  model_name = 'GFS'
+  npz_type = ''
+  vert_coord_file = ''
   n_columns = 1
   case_name = 'twpice'
   dt = 600.0
-  time_scheme = 2
+  time_scheme = 1
   runtime = 2138400.0
   n_itt_out = 1
   n_itt_diag = -999
-  n_levels = 64
+  n_levels = 127
   n_soil   = 4
   n_snow   = 3
   output_dir = 'output'
   output_file = 'output'
-  case_data_dir = '../data/processed_case_input'
-  vert_coord_data_dir = '../data/vert_coord_data'
   thermo_forcing_type = 2
   mom_forcing_type = 3
   C_RES = 384
@@ -116,7 +113,6 @@ subroutine get_config_nml(scm_state)
   lsm_ics = .false.
   do_spinup = .false.
   reference_profile_choice = 1
-  reference_profile_dir = case_data_dir
   year = 2006
   month = 1
   day = 19
@@ -166,11 +162,9 @@ subroutine get_config_nml(scm_state)
   call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels, tracer_names, tracer_types)
 
   scm_state%experiment_name = experiment_name
-  scm_state%model_name = model_name
+  scm_state%npz_type = npz_type
+  scm_state%vert_coord_file = vert_coord_file
   scm_state%output_dir = output_dir
-  scm_state%case_data_dir = case_data_dir
-  scm_state%vert_coord_data_dir = vert_coord_data_dir
-  scm_state%reference_profile_dir = reference_profile_dir
   scm_state%output_file = output_file
   scm_state%case_name = case_name
   scm_state%physics_suite_name = physics_suite
@@ -429,7 +423,7 @@ subroutine get_case_init(scm_state, scm_input)
   !!  @{
 
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
-  call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
   
   !> - Read in missing value from file (replace module variable if present)
   ierr = NF90_GET_ATT(ncid, NF90_GLOBAL, 'missing_value', nc_missing_value)
@@ -1018,7 +1012,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   missing_value_eps = missing_value + 0.01
   
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
-  call check(NF90_OPEN(trim(adjustl(scm_state%case_data_dir))//'/'//trim(adjustl(scm_state%case_name))//'_SCM_driver.nc',nf90_nowrite,ncid))
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'_SCM_driver.nc',nf90_nowrite,ncid))
   
   !> - Get the dimensions.
   
@@ -2050,7 +2044,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
 
   select case (scm_state%reference_profile_choice)
     case (1)
-      open(unit=1, file=trim(adjustl(scm_state%reference_profile_dir))//'/'//'McCProfiles.dat', status='old', action='read', iostat=ioerror)
+      open(unit=1, file='McCProfiles.dat', status='old', action='read', iostat=ioerror)
       if(ioerror /= 0) then
         write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
           Error code = ',ioerror
@@ -2075,7 +2069,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
       END DO
       close(1)
     case (2)
-      call check(NF90_OPEN(trim(adjustl(scm_state%reference_profile_dir))//'/'//'mid_lat_summer_std.nc',nf90_nowrite,ncid))
+      call check(NF90_OPEN('mid_lat_summer_std.nc',nf90_nowrite,ncid))
 
       call check(NF90_INQ_DIMID(ncid,"height",varID))
       call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, nlev))
