@@ -120,6 +120,7 @@ parser.add_argument('-l', '--levels',     help='number of vertical levels', requ
 parser.add_argument('--npz_type',         help='type of FV3 vertical grid to produce (see scm_vgrid.F90 for valid values)', required=False)
 parser.add_argument('--vert_coord_file',  help='filename with coefficients to produce a vertical grid', required=False)
 parser.add_argument('--run_dir',          help='path for the run directory', required=False)
+parser.add_argument('--bin_dir',          help='path for the bin directory', required=False)
 parser.add_argument('--case_data_dir',    help='directory containing the case input data netCDF file', required=False)
 parser.add_argument('--n_itt_out',        help='period of instantaneous output (number of timesteps)', required=False, type=int)
 parser.add_argument('--n_itt_diag',       help='period of diagnostic output (number of timesteps)', required=False, type=int)
@@ -201,9 +202,10 @@ def parse_arguments():
     n_itt_out = args.n_itt_out
     n_itt_diag = args.n_itt_diag
     run_dir = args.run_dir
+    bin_dir = args.bin_dir
     timestep = args.timestep
     
-    return (multirun, file, case, suite, namelist, tracers, gdb, runtime, runtime_mult, docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep)
+    return (multirun, file, case, suite, namelist, tracers, gdb, runtime, runtime_mult, docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -757,7 +759,7 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (multirun, file, case, suite_name, namelist, tracers, use_gdb, runtime, runtime_mult,  docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, timestep) = parse_arguments()
+    (multirun, file, case, suite_name, namelist, tracers, use_gdb, runtime, runtime_mult,  docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep) = parse_arguments()
     
     global SCM_ROOT
     SCM_ROOT = os.getenv('SCM_ROOT')
@@ -767,7 +769,10 @@ def main():
         raise Exception(message)
     
     global SCM_BIN
-    SCM_BIN = os.path.join(SCM_ROOT, DEFAULT_BIN_DIR)
+    if bin_dir:
+        SCM_BIN = bin_dir
+    else:
+        SCM_BIN = os.path.join(SCM_ROOT, DEFAULT_BIN_DIR)
     
     global SCM_RUN
     if run_dir:
@@ -890,7 +895,7 @@ def main():
                                     logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                                 if docker:
                                     copy_outdir(exp_dir)
-                                
+                                 
                     else:
                         message = 'The number of suites and namelists specified in {0} is incompatible. Either use one '\
                             'suite with many namelists or the number of suites must match the number of namelists '\

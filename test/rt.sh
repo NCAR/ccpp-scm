@@ -229,9 +229,9 @@ for compiler in "${compilers[@]}"; do
     BUILD_OUTPUT=${BIN_DIR}/build.out
     if [ "${build_type}" == "Debug" ] ; then
       # Add --runtime ${runtime} to run_scm.py to reduce runtime for tests
-      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -vv --runtime_mult 0.1 --run_dir ${RUN_DIR}"
+      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -vv --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}"
     else
-      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -v --runtime_mult 0.1 --run_dir ${RUN_DIR}"
+      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -v --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}"
     fi
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh
