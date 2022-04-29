@@ -818,12 +818,12 @@ def main():
                 scm_runs = importlib.import_module(module_name)
                 sys.path.pop()
             except ImportError:
-                message = 'There was a problem loading {0}. Please check that the path exists.'.format(args.file)
+                message = 'There was a problem loading {0}. Please check that the path exists.'.format(file)
                 logging.critical(message)
                 raise Exception(message)
             
             if not scm_runs.cases:
-                message = 'The cases list in {0} must not be empty'.format(args.file)
+                message = 'The cases list in {0} must not be empty'.format(file)
                 logging.critical(message)
                 raise Exception(message)
             
@@ -899,7 +899,7 @@ def main():
                     else:
                         message = 'The number of suites and namelists specified in {0} is incompatible. Either use one '\
                             'suite with many namelists or the number of suites must match the number of namelists '\
-                            'provided.'.format(args.file)
+                            'provided.'.format(file)
                         logging.critical(message)
                         raise Exception(message)
                 else:
