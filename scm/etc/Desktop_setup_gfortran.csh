@@ -2,7 +2,11 @@
 
 echo "Setting environment variables for CCPP-SCM on Desktop (MacOS) with gcc/gfortran"
 
-setenv SCM_ROOT $PWD
+set MYSCRIPT=`readlink -f -n '$0'`
+set MYDIR=`dirname $MYSCRIPT`
+set MYDIR=`cd $MYDIR && pwd -P`
+
+setenv SCM_ROOT $MYDIR/../..
 
 echo "Setting CC/CXX/FC environment variables"
 setenv CC /opt/local/bin/gcc-mp-10

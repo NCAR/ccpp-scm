@@ -838,8 +838,8 @@ def main():
                         break
                 
                 for i, case in enumerate(scm_runs.cases,1):
-                    logging.warning('Executing process {0} of {1}: case={2}, suite={3}'.format(
-                        i, len(cases), case, active_suite._name))
+                    logging.warning('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
+                        i, len(cases), case, active_suite._name, active_suite.namelist))
                     exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                     exp_dir = exp.setup_rundir()
                     time_elapsed = launch_executable(use_gdb, gdb)
@@ -862,9 +862,9 @@ def main():
                         
                         for i, case in enumerate(scm_runs.cases):
                             for j, namelist in enumerate(scm_runs.namelists,1):
-                                logging.warning('Executing process {0} of {1}: case={2}, suite={3}'.format(
-                                    len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), case, active_suite._name))
                                 active_suite.namelist = namelist
+                                logging.warning('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
+                                    len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), case, active_suite._name, active_suite.namelist))
                                 exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                                 exp_dir = exp.setup_rundir()
                                 time_elapsed = launch_executable(use_gdb, gdb)
@@ -885,9 +885,9 @@ def main():
                                         active_suite = s
                                         break
                                 
-                                logging.warning('Executing process {0} of {1}: case={2}, suite={3}'.format(
-                                    len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.suites), case, active_suite._name))
                                 active_suite.namelist = scm_runs.namelists[j-1]
+                                logging.warning('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
+                                    len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.suites), case, active_suite._name, active_suite.namelist))
                                 exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                                 exp_dir = exp.setup_rundir()
                                 time_elapsed = launch_executable(use_gdb, gdb)
@@ -914,8 +914,8 @@ def main():
                                     active_suite = s
                                     break                            
                             
-                            logging.warning('Executing process {0} of {1}: case={2}, suite={3}'.format(
-                                len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.suites), case, active_suite._name))
+                            logging.warning('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
+                                len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.suites), case, active_suite._name, active_suite.namelist))
                             exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                             exp_dir = exp.setup_rundir()
                             time_elapsed = launch_executable(use_gdb, gdb)
@@ -936,8 +936,8 @@ def main():
                 
                 for i, case in enumerate(scm_runs.cases):
                     for j, namelist in enumerate(scm_runs.namelists,1):
-                        logging.warning('Executing process {0} of {1}: case={2}, suite={3}'.format(
-                            len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), case, active_suite._name))
+                        logging.warning('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
+                            len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), case, active_suite._name, active_suite.namelist))
                         active_suite.namelist = namelist
                         exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                         exp_dir = exp.setup_rundir()
@@ -962,8 +962,8 @@ def main():
             
             for i, case in enumerate(cases):
                 for j, suite in enumerate(active_suite_list,1):
-                    logging.warning('Executing process {0} of {1}: case={2}, suite={3}'.format(
-                        len(active_suite_list)*i+j, len(cases)*len(active_suite_list), case, suite._name))
+                    logging.warning('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
+                        len(active_suite_list)*i+j, len(cases)*len(active_suite_list), case, suite._name, suite.namelist))
                     exp = Experiment(case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                     exp_dir = exp.setup_rundir()
                     time_elapsed = launch_executable(use_gdb, gdb)
@@ -971,6 +971,8 @@ def main():
                         logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                     if docker:
                         copy_outdir(exp_dir)
+        logging.warning('Done.')
+        
     else:
         # Single experiment
         active_suite = None
