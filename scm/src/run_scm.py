@@ -38,7 +38,7 @@ DEFAULT_BIN_DIR = 'scm/bin'
 COPY_EXECUTABLE = False
 
 # Default output periods
-DEFAULT_OUTPUT_PERIOD = 1
+DEFAULT_OUTPUT_PERIOD = 6
 DEFAULT_DIAG_PERIOD = 6
 
 # which suites in suite_info to use when running through suites
