@@ -2,7 +2,13 @@
 
 echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
-set MYSCRIPT=`readlink -f -n '$0'`
+set called=($_)
+
+if ( "$called" != "") then  ### called by source
+    set MYSCRIPT=`readlink -f -n $called[2]`
+else                        ### called by direct execution of the script
+    set MYSCRIPT=`readlink -f -n '$0'`
+endif
 set MYDIR=`dirname $MYSCRIPT`
 set MYDIR=`cd $MYDIR && pwd -P`
 
