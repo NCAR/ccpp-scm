@@ -2,7 +2,13 @@
 
 echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
-export SCM_ROOT=$PWD
+if [[ $(uname -s) == Darwin ]]; then
+  MYDIR=$(cd "$(dirname "$(greadlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
+else
+  MYDIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
+fi
+
+export SCM_ROOT=$MYDIR/../..
 
 #load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
