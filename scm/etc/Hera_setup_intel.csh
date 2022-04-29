@@ -2,7 +2,11 @@
 
 echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
-setenv SCM_ROOT $PWD
+set MYSCRIPT=`readlink -f -n '$0'`
+set MYDIR=`dirname $MYSCRIPT`
+set MYDIR=`cd $MYDIR && pwd -P`
+
+setenv SCM_ROOT $MYDIR/../..
 
 #load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."
