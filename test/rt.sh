@@ -228,10 +228,10 @@ for compiler in "${compilers[@]}"; do
     RUN_DIR=$TOP_DIR/scm/run_${compiler}_${build_type_lc}       # for each build/run in test
     BUILD_OUTPUT=${BIN_DIR}/build.out
     if [ "${build_type}" == "Debug" ] ; then
-      # Add --runtime ${runtime} to multi_run_scm.py to reduce runtime for tests
-      test_run_cmd="${BIN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --runtime_mult 0.1 --run_dir ${RUN_DIR}"
+      # Add --runtime ${runtime} to run_scm.py to reduce runtime for tests
+      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -vv --runtime_mult 0.1 --run_dir ${RUN_DIR}"
     else
-      test_run_cmd="${BIN_DIR}/multi_run_scm.py -f ${TEST_DIR}/rt_test_cases.py -v --timer --runtime_mult 0.1 --run_dir ${RUN_DIR}"
+      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -v --runtime_mult 0.1 --run_dir ${RUN_DIR}"
     fi
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh

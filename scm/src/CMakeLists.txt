@@ -261,8 +261,3 @@ ADD_CUSTOM_COMMAND(
                 ${CMAKE_SOURCE_DIR}/run_scm.py
                 ${CMAKE_CURRENT_BINARY_DIR}/run_scm.py)
 
-ADD_CUSTOM_COMMAND(
-        TARGET scm POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/multi_run_scm.py
-                ${CMAKE_CURRENT_BINARY_DIR}/multi_run_scm.py)
