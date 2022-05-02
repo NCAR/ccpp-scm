@@ -37,6 +37,9 @@ DEFAULT_BIN_DIR = 'scm/bin'
 # Copy executable to run directory if true (otherwise it will be linked)
 COPY_EXECUTABLE = False
 
+# Ignore errors in the execute subroutine (so that all multirun processes are attempted)
+MULTIRUN_IGNORE_ERROR = True
+
 # Default output periods
 DEFAULT_OUTPUT_PERIOD = 6
 DEFAULT_DIAG_PERIOD = 6
@@ -721,7 +724,7 @@ class Experiment(object):
         
         return output_dir
 
-def launch_executable(use_gdb, gdb):
+def launch_executable(use_gdb, gdb, ignore_error = False):
     """Configure model run command and pass control to shell/gdb"""
     if use_gdb:
         cmd = '(cd {scm_run} && {gdb} {executable})'.format(scm_run=SCM_RUN, gdb=gdb, executable=EXECUTABLE)
@@ -729,8 +732,8 @@ def launch_executable(use_gdb, gdb):
         cmd = '(cd {scm_run} && time {executable})'.format(scm_run=SCM_RUN, executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(1)
-    # This will abort in 'execute' in the event of an error
-    (status, stdout, stderr) = execute(cmd)
+    # This will abort in 'execute' in the event of an error if ignore_error = False
+    (status, stdout, stderr) = execute(cmd, ignore_error = ignore_error)
     logging.info('Process "{0}" returned with status {1}'.format(cmd, status))
     # Get timing info if not using gdb
     time_elapsed = None
@@ -749,7 +752,7 @@ def launch_executable(use_gdb, gdb):
             logging.warning('Unable to get timing information from {0} stderr'.format(cmd))
         else:
             time_elapsed = int(minutes)*60 + float(seconds)
-    return time_elapsed
+    return (status, time_elapsed)
     
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""
@@ -842,7 +845,11 @@ def main():
                         i, len(cases), case, active_suite._name, active_suite.namelist))
                     exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                     exp_dir = exp.setup_rundir()
-                    time_elapsed = launch_executable(use_gdb, gdb)
+                    (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+                    if status == 0:
+                        logging.warning('Process "(case={0}, suite={1}, namelist={2}" completed successfully'.format(case, active_suite._name, active_suite.namelist))
+                    else:
+                        logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'.format(case, active_suite._name, active_suite.namelist, status))
                     if time_elapsed:
                         logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                     if docker:
@@ -867,7 +874,11 @@ def main():
                                     len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.namelists), case, active_suite._name, active_suite.namelist))
                                 exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                                 exp_dir = exp.setup_rundir()
-                                time_elapsed = launch_executable(use_gdb, gdb)
+                                (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+                                if status == 0:
+                                    logging.warning('Process "(case={0}, suite={1}, namelist={2}" completed successfully'.format(case, active_suite._name, active_suite.namelist))
+                                else:
+                                    logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'.format(case, active_suite._name, active_suite.namelist, status))
                                 if time_elapsed:
                                     logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                                 if docker:
@@ -890,7 +901,11 @@ def main():
                                     len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.suites), case, active_suite._name, active_suite.namelist))
                                 exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                                 exp_dir = exp.setup_rundir()
-                                time_elapsed = launch_executable(use_gdb, gdb)
+                                (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+                                if status == 0:
+                                    logging.warning('Process "(case={0}, suite={1}, namelist={2}" completed successfully'.format(case, active_suite._name, active_suite.namelist))
+                                else:
+                                    logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'.format(case, active_suite._name, active_suite.namelist, status))
                                 if time_elapsed:
                                     logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                                 if docker:
@@ -918,7 +933,11 @@ def main():
                                 len(scm_runs.cases)*i+j, len(scm_runs.cases)*len(scm_runs.suites), case, active_suite._name, active_suite.namelist))
                             exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                             exp_dir = exp.setup_rundir()
-                            time_elapsed = launch_executable(use_gdb, gdb)
+                            (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+                            if status == 0:
+                                logging.warning('Process "(case={0}, suite={1}, namelist={2}" completed successfully'.format(case, active_suite._name, active_suite.namelist))
+                            else:
+                                logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'.format(case, active_suite._name, active_suite.namelist, status))
                             if time_elapsed:
                                 logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                             if docker:
@@ -941,7 +960,11 @@ def main():
                         active_suite.namelist = namelist
                         exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                         exp_dir = exp.setup_rundir()
-                        time_elapsed = launch_executable(use_gdb, gdb)
+                        (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+                        if status == 0:
+                            logging.warning('Process "(case={0}, suite={1}, namelist={2}" completed successfully'.format(case, active_suite._name, active_suite.namelist))
+                        else:
+                            logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'.format(case, active_suite._name, active_suite.namelist, status))
                         if time_elapsed:
                             logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                         if docker:
@@ -966,7 +989,11 @@ def main():
                         len(active_suite_list)*i+j, len(cases)*len(active_suite_list), case, suite._name, suite.namelist))
                     exp = Experiment(case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                     exp_dir = exp.setup_rundir()
-                    time_elapsed = launch_executable(use_gdb, gdb)
+                    (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+                    if status == 0:
+                        logging.warning('Process "(case={0}, suite={1}, namelist={2}" completed successfully'.format(case, active_suite._name, active_suite.namelist))
+                    else:
+                        logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'.format(case, active_suite._name, active_suite.namelist, status))
                     if time_elapsed:
                         logging.warning('    Elapsed time: {0}s'.format(time_elapsed))
                     if docker:
