@@ -68,10 +68,10 @@ fi
 num_output_nc_files=$(ls -l ${run_dir}/output_*/output.nc | wc -l)
 echo "Number of processes with output.nc files = ${num_output_nc_files}" >> ${TEST_OUTPUT}
 
-if [ ${num_output_nc_files} -eq ${num_tests} ] ; then
-  echo "PASS: Number output.nc files ${num_output_nc_files} = ${num_tests}" >> ${TEST_OUTPUT}
-else
+if [ ${num_output_nc_files} -lt ${num_tests} ] ; then
   echo "FAIL: Number output.nc files ${num_output_nc_files} /= ${num_tests}" >> ${TEST_OUTPUT}
+else
+  echo "PASS: Number output.nc files ${num_output_nc_files} = ${num_tests}" >> ${TEST_OUTPUT}
 fi
 
 #-----------------------------------------------------------------------
