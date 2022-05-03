@@ -984,10 +984,10 @@ def main():
                 active_suite_list = suite_list
             
             for i, case in enumerate(cases):
-                for j, suite in enumerate(active_suite_list,1):
+                for j, active_suite in enumerate(active_suite_list,1):
                     logging.warning('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
-                        len(active_suite_list)*i+j, len(cases)*len(active_suite_list), case, suite._name, suite.namelist))
-                    exp = Experiment(case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
+                        len(active_suite_list)*i+j, len(cases)*len(active_suite_list), case, active_suite._name, active_suite.namelist))
+                    exp = Experiment(case, active_suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                     exp_dir = exp.setup_rundir()
                     (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
                     if status == 0:
