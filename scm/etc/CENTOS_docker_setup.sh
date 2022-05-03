@@ -2,11 +2,7 @@
 
 echo "Setting environment variables for SCM-CCPP on CENTOS with gcc/gfortran"
 
-if [[ $(uname -s) == Darwin ]]; then
-  MYDIR=$(cd "$(dirname "$(greadlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
-else
-  MYDIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
-fi
+MYDIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
 
 export SCM_ROOT=$MYDIR/../..
 
