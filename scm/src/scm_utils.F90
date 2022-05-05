@@ -150,18 +150,21 @@ subroutine w_to_omega(n_col, n_lev, w, p, T, omega)
 end subroutine w_to_omega
 
 integer function lcm(a,b)
-    integer:: a,b
+    integer, intent(in) :: a,b
         lcm = a*b / gcd(a,b)
 end function lcm
  
 integer function gcd(a,b)
-    integer :: a,b,t
-    do while (b/=0)
-      t = b
-      b = mod(a,b)
-      a = t
+    integer, intent(in) :: a,b
+    integer :: c,d,t
+    c = a
+    d = b
+    do while (d/=0)
+      t = d
+      d = mod(c,d)
+      c = t
     end do
-    gcd = abs(a)
+    gcd = abs(c)
 end function gcd
 
 !> @}

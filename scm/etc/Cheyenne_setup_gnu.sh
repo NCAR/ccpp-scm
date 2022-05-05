@@ -2,7 +2,9 @@
 
 echo "Setting environment variables for CCPP-SCM on Cheyenne with gcc/gfortran"
 
-export SCM_ROOT=$PWD
+MYDIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
+
+export SCM_ROOT=$MYDIR/../..
 
 #start with a "clean" environment; activate and deactivate ncar_pylib in order to successfully deactivate previously activated environment without errors
 module load ncarenv/1.3

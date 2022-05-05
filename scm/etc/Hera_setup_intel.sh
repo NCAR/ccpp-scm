@@ -2,7 +2,9 @@
 
 echo "Setting environment variables for CCPP-SCM on Hera with icc/ifort"
 
-export SCM_ROOT=$PWD
+MYDIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
+
+export SCM_ROOT=$MYDIR/../..
 
 #load the modules in order to compile the CCPP SCM
 echo "Loading intel and netcdf modules..."

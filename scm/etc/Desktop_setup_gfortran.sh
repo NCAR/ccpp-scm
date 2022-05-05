@@ -2,7 +2,13 @@
 
 echo "Setting environment variables for CCPP-SCM on Desktop (MacOS) with gcc/gfortran"
 
-export SCM_ROOT=$PWD
+if [[ $(uname -s) == Darwin ]]; then
+  MYDIR=$(cd "$(dirname "$(greadlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
+else
+  MYDIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
+fi
+
+export SCM_ROOT=$MYDIR/../..
 
 echo "Setting CC/CXX/FC environment variables"
 export CC=/opt/local/bin/gcc-mp-10

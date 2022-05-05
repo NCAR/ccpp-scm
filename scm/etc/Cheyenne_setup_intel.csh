@@ -2,7 +2,17 @@
 
 echo "Setting environment variables for CCPP-SCM on Cheyenne with icc/ifort"
 
-setenv SCM_ROOT $PWD
+set called=($_)
+
+if ( "$called" != "") then  ### called by source
+    set MYSCRIPT=`readlink -f -n $called[2]`
+else                        ### called by direct execution of the script
+    set MYSCRIPT=`readlink -f -n '$0'`
+endif
+set MYDIR=`dirname $MYSCRIPT`
+set MYDIR=`cd $MYDIR && pwd -P`
+
+setenv SCM_ROOT $MYDIR/../..
 
 #start with a "clean" environment; activate and deactivate ncar_pylib in order to successfully deactivate previously activated environment without errors
 module load ncarenv/1.3
