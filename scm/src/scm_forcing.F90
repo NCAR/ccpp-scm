@@ -258,69 +258,70 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_T_nudge(scm_input%input_ntimes,:), &
               scm_state%pres_l(i,:), scm_state%n_levels, T_nudge_bracket(1,:), top_index, 1)
+            if (top_index < scm_state%n_levels .and. top_index > 0) then
+              T_nudge_bracket(1,top_index+1:scm_state%n_levels) = T_nudge_bracket(1,top_index)
+            end if
+            scm_state%T_nudge(i,:) = T_nudge_bracket(1,:)
+            call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_T_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_T_k(i))
           end do
-          if (top_index < scm_state%n_levels .and. top_index > 0) then
-            T_nudge_bracket(1,top_index+1:scm_state%n_levels) = T_nudge_bracket(1,top_index)
-          end if
-          scm_state%T_nudge(i,:) = T_nudge_bracket(1,:)
-          call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_T_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_T_k(i))
+          
         else if (scm_state%force_nudging_T == 2 .or. scm_state%force_nudging_T == 3) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_thil_nudge(scm_input%input_ntimes,:), &
               scm_state%pres_l(i,:), scm_state%n_levels, thil_nudge_bracket(1,:), top_index, 1)
+            if (top_index < scm_state%n_levels .and. top_index > 0) then
+              thil_nudge_bracket(1,top_index+1:scm_state%n_levels) = thil_nudge_bracket(1,top_index)
+            end if
+            scm_state%thil_nudge(i,:) = thil_nudge_bracket(1,:)
+            call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_thil_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_T_k(i))
           end do
-          if (top_index < scm_state%n_levels .and. top_index > 0) then
-            thil_nudge_bracket(1,top_index+1:scm_state%n_levels) = thil_nudge_bracket(1,top_index)
-          end if
-          scm_state%thil_nudge(i,:) = thil_nudge_bracket(1,:)
-          call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_thil_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_T_k(i))
         end if
         
         if (scm_state%force_nudging_qv) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_qt_nudge(scm_input%input_ntimes,:), &
               scm_state%pres_l(i,:), scm_state%n_levels, qt_nudge_bracket(1,:), top_index, 1)
+            if (top_index < scm_state%n_levels .and. top_index > 0) then
+              qt_nudge_bracket(1,top_index+1:scm_state%n_levels) = qt_nudge_bracket(1,top_index)
+            end if
+            scm_state%qt_nudge(i,:) = qt_nudge_bracket(1,:)
+            call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_qt_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_qv_k(i))
           end do
-          if (top_index < scm_state%n_levels .and. top_index > 0) then
-            qt_nudge_bracket(1,top_index+1:scm_state%n_levels) = qt_nudge_bracket(1,top_index)
-          end if
-          scm_state%qt_nudge(i,:) = qt_nudge_bracket(1,:)
-          call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_qt_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_qv_k(i))
         end if
         
         if (scm_state%force_nudging_u) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_u_nudge(scm_input%input_ntimes,:), &
               scm_state%pres_l(i,:), scm_state%n_levels, u_nudge_bracket(1,:), top_index, 1)
+            if (top_index < scm_state%n_levels .and. top_index > 0) then
+              u_nudge_bracket(1,top_index+1:scm_state%n_levels) = u_nudge_bracket(1,top_index)
+            end if
+            scm_state%u_nudge(i,:) = u_nudge_bracket(1,:)
+            call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_u_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_u_k(i))
           end do
-          if (top_index < scm_state%n_levels .and. top_index > 0) then
-            u_nudge_bracket(1,top_index+1:scm_state%n_levels) = u_nudge_bracket(1,top_index)
-          end if
-          scm_state%u_nudge(i,:) = u_nudge_bracket(1,:)
-          call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_u_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_u_k(i))
         end if
         
         if (scm_state%force_nudging_v) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_v_nudge(scm_input%input_ntimes,:), &
               scm_state%pres_l(i,:), scm_state%n_levels, v_nudge_bracket(1,:), top_index, 1)
+            if (top_index < scm_state%n_levels .and. top_index > 0) then
+              v_nudge_bracket(1,top_index+1:scm_state%n_levels) = v_nudge_bracket(1,top_index)
+            end if
+            scm_state%v_nudge(i,:) = v_nudge_bracket(1,:)
+            call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_v_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_v_k(i))
           end do
-          if (top_index < scm_state%n_levels .and. top_index > 0) then
-            v_nudge_bracket(1,top_index+1:scm_state%n_levels) = v_nudge_bracket(1,top_index)
-          end if
-          scm_state%v_nudge(i,:) = v_nudge_bracket(1,:)
-          call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_v_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_v_k(i))
         end if
         
         if (scm_state%force_rad_T == 1 .or. scm_state%force_rad_T == 2 .or. scm_state%force_rad_T == 3) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_dT_dt_rad(scm_input%input_ntimes,:), &
               scm_state%pres_l(i,:), scm_state%n_levels, dT_dt_rad_bracket(1,:), top_index, 3)
+            if (top_index < scm_state%n_levels .and. top_index > 0) then
+              dT_dt_rad_bracket(1,top_index+1:scm_state%n_levels) = dT_dt_rad_bracket(1,top_index)
+            end if
+            scm_state%dT_dt_rad(i,:) = dT_dt_rad_bracket(1,:)
           end do
-          if (top_index < scm_state%n_levels .and. top_index > 0) then
-            dT_dt_rad_bracket(1,top_index+1:scm_state%n_levels) = dT_dt_rad_bracket(1,top_index)
-          end if
-          scm_state%dT_dt_rad(i,:) = dT_dt_rad_bracket(1,:)
         end if
         
         if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2) then
@@ -344,7 +345,9 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           end do
         end if
         
-        scm_state%pres_surf(i) = scm_input%input_pres_surf(scm_input%input_ntimes)
+        do i=1, scm_state%n_cols
+          scm_state%pres_surf(i) = scm_input%input_pres_surf(scm_input%input_ntimes)
+        end do
         
       end if
   else
