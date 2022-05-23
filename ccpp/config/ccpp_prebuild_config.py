@@ -181,6 +181,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/ysuvdif.F90'                      ,
     'ccpp/physics/physics/mynnedmf_wrapper.F90'             ,
     'ccpp/physics/physics/mynnsfc_wrapper.F90'              ,
+    'ccpp/physics/physics/fix_sys_bias_sfc.F90'             ,
     'ccpp/physics/physics/sgscloud_radpre.F90'              ,
     'ccpp/physics/physics/sgscloud_radpost.F90'             ,
     'ccpp/physics/physics/myjsfc_wrapper.F90'               ,
