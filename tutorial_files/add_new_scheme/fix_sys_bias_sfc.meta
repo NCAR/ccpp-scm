@@ -23,7 +23,7 @@
   kind = kind_phys
   intent = in
 [con_rd]
-  standard_name = gas_constant_dry_air
+  standard_name = gas_constant_of_dry_air
   long_name = ideal gas constant for dry air
   units = J kg-1 K-1
   dimensions = ()
@@ -39,33 +39,33 @@
   kind = kind_phys
   intent = in
 [p1]
-  standard_name = air_pressure_at_lowest_model_layer
-  long_name = mean pressure at lowest model layer
+  standard_name = surface_air_pressure
+  long_name = surface pressure
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
   intent = in
 [t1]
-  standard_name = air_temperature_at_lowest_model_layer
+  standard_name = air_temperature_at_surface_adjacent_layer
   long_name = mean temperature at lowest model layer
   units = K
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
   intent = in
-[hflx_r]
-  standard_name = kinematic_surface_upward_sensible_heat_flux_reduced_by_surface_roughness
-  long_name = kinematic surface upward sensible heat flux reduced by surface roughness
-  units = K m s-1
+[qflx_r]
+  standard_name = surface_upward_specific_humidity_flux
+  long_name = kinematic surface upward latent heat flux
+  units = kg kg-1 m s-1
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
   intent = inout
-[qflx_r]
-  standard_name = kinematic_surface_upward_latent_heat_flux_reduced_by_surface_roughness
-  long_name = kinematic surface upward latent heat flux reduced by surface roughness
-  units = kg kg-1 m s-1
+[hflx_r]
+  standard_name = surface_upward_temperature_flux
+  long_name = kinematic surface upward sensible heat flux
+  units = K m s-1
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
