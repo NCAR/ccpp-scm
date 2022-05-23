@@ -59,6 +59,6 @@ suite_list.append(suite('HAFS_v0_hwrf',          'tracers_HAFS_v0_hwrf.txt',    
 suite_list.append(suite('HAFS_v0_hwrf_thompson', 'tracers_HAFS_v0_hwrf_thompson.txt',    'input_HAFS_v0_hwrf_thompson.nml',   600.0, 600.0 , False))
 suite_list.append(suite('SCM_GSD_v1nssl',        'tracers_gsd_nssl.txt',                 'input_GSD_v1nssl.nml',              600.0, 600.0 , False))
 suite_list.append(suite('SCM_RRFS_v1nssl',       'tracers_RRFS_v1nssl_nohail_noccn.txt', 'input_RRFS_v1nssl_nohailnoccn.nml', 600.0, 600.0 , False))
-  
+suite_list.append(suite('SCM_RRFS_v1alpha_sas_sfcmod', 'tracers_RRFS_v1alpha.txt',       'input_RRFS_v1alpha.nml',            600.0, 600.0 , False))  
   
  
