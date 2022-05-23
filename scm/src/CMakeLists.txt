@@ -8,33 +8,31 @@ set(PROJECT "CCPP-SCM")
 ####################################################################
 # Begin CCPP prebuild step                                         #
 ####################################################################
-# Start with empty list of suites
-message (STATUS "Generating list of suites to compile for CCPP")
-set(SUITES "")
-# Get list of all suite definition files (with full path)
-file(GLOB SUITE_DEFINITION_FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp/suites/suite_*.xml"
-)
-# Extract file name and suite name and append to SUITES
-foreach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
-  get_filename_component(suite_definition_filename ${suite_definition_filepath} NAME)
-  string(REGEX REPLACE "^suite_(.+)\\.xml$" "\\1" suite_name ${suite_definition_filename})
-  set(SUITES ${SUITES}${suite_name},)
-  message (STATUS "  adding suite ${suite_name}")
-endforeach(suite_definition_filepath IN LISTS SUITE_DEFINITION_FILES)
-# Abort if no suites found
-if ("${SUITES}" STREQUAL "")
-  message(FATAL_ERROR "No suites found to compile for CCPP")
-endif("${SUITES}" STREQUAL "")
-# Remove trailing comma from list of suites
-string(REGEX REPLACE "(.+),$" "\\1" SUITES ${SUITES})
+if(DEFINED CCPP_SUITES)
+  if (${CCPP_SUITES} MATCHES "ALL")
+    message("Calling CCPP code generator (ccpp_prebuild.py) for all available suites ...")
+  else()
+    set(_ccpp_suites_arg "--suites=${CCPP_SUITES}")
+    message("Calling CCPP code generator (ccpp_prebuild.py) for suites ${_ccpp_suites_arg} ...")
+  endif()
+  unset(CCPP_SUITES CACHE)
+else()
+  execute_process(
+    COMMAND scm/src/suite_info.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    OUTPUT_VARIABLE suite_string
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(_ccpp_suites_arg "--suites=${suite_string}")
+    message("Calling CCPP code generator (ccpp_prebuild.py) for SUPPORTED suites ${_ccpp_suites_arg} ...")
+endif()
 # Run CCPP prebuild.py
 message (STATUS "Running ccpp_prebuild.py for CCPP")
 # Make the directories where the ccpp_prebuild.py script wants to write caps and make snippets
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
+    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py ${_ccpp_suites_arg} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
     OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
     ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
@@ -42,7 +40,7 @@ if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
     )
 else()
   execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py --suites=${SUITES} --builddir=${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py ${_ccpp_suites_arg} --builddir=${CMAKE_CURRENT_BINARY_DIR}
     OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
     ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
