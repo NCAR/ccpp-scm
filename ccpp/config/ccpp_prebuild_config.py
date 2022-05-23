@@ -179,9 +179,8 @@ SCHEME_FILES = [
     'ccpp/physics/physics/satmedmfvdifq.F'                  ,
     'ccpp/physics/physics/shinhongvdif.F90'                 ,
     'ccpp/physics/physics/ysuvdif.F90'                      ,
-    'ccpp/physics/physics/mynnedmf_wrapper.F90'             ,
+    'ccpp/physics/physics/mynnpbl_wrapper.F90'              ,
     'ccpp/physics/physics/mynnsfc_wrapper.F90'              ,
-    'ccpp/physics/physics/fix_sys_bias_sfc.F90'             ,
     'ccpp/physics/physics/sgscloud_radpre.F90'              ,
     'ccpp/physics/physics/sgscloud_radpost.F90'             ,
     'ccpp/physics/physics/myjsfc_wrapper.F90'               ,
@@ -234,11 +233,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GFS_cloud_diagnostics.F90'        ,
     'ccpp/physics/physics/GFS_rrtmgp_cloud_mp.F90'          ,
     'ccpp/physics/physics/GFS_rrtmgp_cloud_overlap.F90'     ,
-    'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'           ,
-    # SMOKE
-    'ccpp/physics/smoke/rrfs_smoke_wrapper.F90',
-    'ccpp/physics/smoke/rrfs_smoke_postpbl.F90',
-    'ccpp/physics/smoke/rrfs_smoke_lsdep_wrapper.F90'
+    'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'
     ]
 
 # Default build dir, relative to current working directory,
