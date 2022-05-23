@@ -592,7 +592,7 @@ subroutine output_append_interstitial_inst(ncid, scm_state, physics)
     
     call NetCDF_put_var(ncid, "tau_u",   physics%Interstitial%dusfc1(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "tau_v",   physics%Interstitial%dvsfc1(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "upd_mf",  physics%Interstitial%ud_mf(:,:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "upd_mf",  physics%Tbd%ud_mf(:,:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "dwn_mf",  physics%Interstitial%dd_mf(:,:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "det_mf",  physics%Interstitial%dt_mf(:,:), scm_state%itt_out)
     
