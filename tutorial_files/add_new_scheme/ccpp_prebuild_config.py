@@ -216,6 +216,10 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_ocean.F'                      ,
     'ccpp/physics/physics/sfc_sice.f'                       ,
     'ccpp/physics/physics/mp_fer_hires.F90'                 ,
+    # SMOKE
+    'ccpp/physics/smoke/rrfs_smoke_wrapper.F90'             ,
+    'ccpp/physics/smoke/rrfs_smoke_postpbl.F90'             ,
+    'ccpp/physics/smoke/rrfs_smoke_lsdep_wrapper.F90'       ,
     'ccpp/physics/physics/scm_sfc_flux_spec.F90'            ,
     # RRTMGP
     'ccpp/physics/physics/rrtmgp_lw_gas_optics.F90'         ,
@@ -234,11 +238,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GFS_cloud_diagnostics.F90'        ,
     'ccpp/physics/physics/GFS_rrtmgp_cloud_mp.F90'          ,
     'ccpp/physics/physics/GFS_rrtmgp_cloud_overlap.F90'     ,
-    'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'           ,
-    # SMOKE
-    'ccpp/physics/smoke/rrfs_smoke_wrapper.F90',
-    'ccpp/physics/smoke/rrfs_smoke_postpbl.F90',
-    'ccpp/physics/smoke/rrfs_smoke_lsdep_wrapper.F90'
+    'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'
     ]
 
 # Default build dir, relative to current working directory,
@@ -265,81 +265,6 @@ CAPS_DIR = '{build_dir}/ccpp/physics/physics'
 
 # Directory where the suite definition files are stored
 SUITES_DIR = 'ccpp/suites'
-
-# Optional arguments - only required for schemes that use
-# optional arguments. ccpp_prebuild.py will throw an exception
-# if it encounters a scheme subroutine with optional arguments
-# if no entry is made here. Possible values are: 'all', 'none',
-# or a list of standard_names: [ 'var1', 'var3' ].
-OPTIONAL_ARGUMENTS = {
-    'rrtmg_sw' : {
-        'rrtmg_sw_run' : [
-            'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
-            'components_of_surface_downward_shortwave_fluxes',
-            'cloud_liquid_water_path',
-            'mean_effective_radius_for_liquid_cloud',
-            'cloud_ice_water_path',
-            'mean_effective_radius_for_ice_cloud',
-            'cloud_rain_water_path',
-            'mean_effective_radius_for_rain_drop',
-            'cloud_snow_water_path',
-            'mean_effective_radius_for_snow_flake',
-            ],
-        },
-    'rrtmg_lw' : {
-        'rrtmg_lw_run' : [
-            'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_time_step_and_radiation_levels',
-            'cloud_liquid_water_path',
-            'mean_effective_radius_for_liquid_cloud',
-            'cloud_ice_water_path',
-            'mean_effective_radius_for_ice_cloud',
-            'cloud_rain_water_path',
-            'mean_effective_radius_for_rain_drop',
-            'cloud_snow_water_path',
-            'mean_effective_radius_for_snow_flake',
-            ],
-        },
-    'mp_thompson' : {
-        'mp_thompson_init' : [
-            'mass_number_concentration_of_cloud_liquid_water_particles_in_air',
-            'mass_number_concentration_of_hygroscopic_aerosols',
-            'mass_number_concentration_of_nonhygroscopic_ice_nucleating_aerosols',
-            'tendency_of_hygroscopic_aerosols_at_surface_adjacent_layer',
-            'tendency_of_nonhygroscopic_ice_nucleating_aerosols_at_surface_adjacent_layer',
-            # DH* 2020-06-01: turn off calculation of effective radii, now done in GFS_rrtmg_pre
-            #'effective_radius_of_stratiform_cloud_liquid_water_particle',
-            #'effective_radius_of_stratiform_cloud_ice_particle',
-            #'effective_radius_of_stratiform_cloud_snow_particle',
-            # *DH 2020-06-01
-            ],
-        'mp_thompson_run' : [
-            'mass_number_concentration_of_cloud_liquid_water_particles_in_air_of_new_state',
-            'mass_number_concentration_of_hygroscopic_aerosols_of_new_state',
-            'mass_number_concentration_of_nonhygroscopic_ice_nucleating_aerosols_of_new_state',
-            'tendency_of_hygroscopic_aerosols_at_surface_adjacent_layer',
-            'tendency_of_nonhygroscopic_ice_nucleating_aerosols_at_surface_adjacent_layer',
-            ],
-        },
-    'rrtmgp_sw_rte' : {
-         'rrtmgp_sw_rte_run' : [
-             'components_of_surface_downward_shortwave_fluxes',
-             ],
-         },
-    'GFS_rrtmgp_sw_post' : {
-         'GFS_rrtmgp_sw_post_run' : [
-             'tendency_of_air_temperature_due_to_shortwave_heating_assuming_clear_sky_on_radiation_timestep',
-             'components_of_surface_downward_shortwave_fluxes',
-             ],
-         },
-    'GFS_rrtmgp_lw_post' : {
-         'GFS_rrtmgp_lw_post_run' : [
-             'tendency_of_air_temperature_due_to_longwave_heating_assuming_clear_sky_on_radiation_timestep',
-             ],
-         },
-    #'subroutine_name_1' : 'all',
-    #'subroutine_name_2' : 'none',
-    #'subroutine_name_2' : [ 'var1', 'var3'],
-    }
 
 # Directory where to write static API to
 STATIC_API_DIR = 'scm/src/'
