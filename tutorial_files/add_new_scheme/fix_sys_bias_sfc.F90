@@ -7,12 +7,6 @@
       use machine , only : kind_phys
       
       contains
-
-      subroutine fix_sys_bias_sfc_init()
-      end subroutine fix_sys_bias_sfc_init
-      
-      subroutine fix_sys_bias_sfc_finalize()
-      end subroutine fix_sys_bias_sfc_finalize
       
 !>  \brief  This subroutine contains all of the logic for the
 !! fix_sys_bias_sfc scheme used in the CCPP-SCM online tutorial.
