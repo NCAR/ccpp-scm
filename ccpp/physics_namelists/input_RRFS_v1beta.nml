@@ -53,7 +53,6 @@
     ivegsrc = 1
     ldiag3d = .true.
     lheatstrg = .false.
-    lndp_each_step = .true.
     lndp_type = 0
     lradar = .true.
     lsm = 2

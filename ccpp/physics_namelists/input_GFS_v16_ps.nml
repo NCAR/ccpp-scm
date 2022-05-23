@@ -50,7 +50,6 @@
     ldiag_ugwp = .false.
     lgfdlmprad = .true.
     lheatstrg = .false.
-    lndp_each_step = .true.
     lndp_type = 0
     lsm = 1
     lsoil = 4

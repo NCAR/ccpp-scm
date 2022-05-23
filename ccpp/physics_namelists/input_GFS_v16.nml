@@ -1,3 +1,4 @@
+
 &gfs_physics_nml
     cal_pre = .false.
     cdmbgwd = 4.0, 0.15, 1.0, 1.0
@@ -50,7 +51,6 @@
     ldiag_ugwp = .false.
     lgfdlmprad = .true.
     lheatstrg = .true.
-    lndp_each_step = .true.
     lndp_type = 0
     lsm = 1
     lsoil = 4
