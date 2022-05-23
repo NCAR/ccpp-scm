@@ -52,7 +52,7 @@ def setup_logging(verbose):
         LOG_LEVEL = logging.INFO
     else:
         LOG_LEVEL = logging.WARNING
-    LOG_FILE = 'multi_run_scm.log'
+    LOG_FILE = 'mod_forcing.log'
     LOG_FORMAT = '%(levelname)s: %(message)s'
 
     logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
