@@ -5974,12 +5974,18 @@
   units = flag
   dimensions = ()
   type = logical
+[grav_settling]
+  standard_name = control_for_gravitational_settling_of_cloud_droplets
+  long_name = flag to activate gravitational setting of fog
+  units = flag
+  dimensions = ()
+  type = integer
 [bl_mynn_tkebudget]
   standard_name = control_for_tke_budget_output
   long_name = flag for activating TKE budget
   units = flag
   dimensions = ()
-  type = logical
+  type = integer
 [bl_mynn_tkeadvect]
   standard_name = flag_for_tke_advection
   long_name = flag for activating TKE advection
@@ -8023,7 +8029,7 @@
   type = integer
   active = (flag_for_mellor_yamada_nakanishi_niino_pbl_scheme)
 [exch_h]
-  standard_name = atmosphere_heat_diffusivity_for_mynnedmf
+  standard_name = atmosphere_heat_diffusivity_for_mynnpbl
   long_name = diffusivity for heat for MYNN PBL (defined for all mass levels)
   units = m2 s-1
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
@@ -8031,7 +8037,7 @@
   kind = kind_phys
   active = (flag_for_mellor_yamada_nakanishi_niino_pbl_scheme)
 [exch_m]
-  standard_name = atmosphere_momentum_diffusivity_for_mynnedmf
+  standard_name = atmosphere_momentum_diffusivity_for_mynnpbl
   long_name = diffusivity for momentum for MYNN PBL (defined for all mass levels)
   units = m2 s-1
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)

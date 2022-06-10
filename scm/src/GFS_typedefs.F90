@@ -1056,13 +1056,15 @@ module GFS_typedefs
     logical              :: do_mynnedmf
     logical              :: do_mynnsfclay
     ! DH* TODO - move this to MYNN namelist section
-    logical              :: bl_mynn_tkebudget  !< flag for activating TKE budget
+    integer              :: grav_settling
+    integer              :: bl_mynn_tkebudget  !< flag for activating TKE budget
     logical              :: bl_mynn_tkeadvect  !< activate computation of TKE advection (not yet in use for FV3)
     integer              :: bl_mynn_cloudpdf   !< flag to determine which cloud PDF to use
     integer              :: bl_mynn_mixlength  !< flag for different version of mixing length formulation
     integer              :: bl_mynn_edmf       !< flag to activate the mass-flux scheme
     integer              :: bl_mynn_edmf_mom   !< flag to activate the transport of momentum
     integer              :: bl_mynn_edmf_tke   !< flag to activate the transport of TKE
+    integer              :: bl_mynn_edmf_part
     integer              :: bl_mynn_cloudmix   !< flag to activate mixing of cloud species
     integer              :: bl_mynn_mixqt      !< flag to mix total water or individual species
     integer              :: bl_mynn_output     !< flag to initialize and write out extra 3D arrays
@@ -3133,13 +3135,15 @@ module GFS_typedefs
     logical              :: do_mynnedmf       = .false.               !< flag for MYNN-EDMF
     logical              :: do_mynnsfclay     = .false.               !< flag for MYNN Surface Layer Scheme
     ! DH* TODO - move to MYNN namelist section
-    logical              :: bl_mynn_tkebudget = .false.
+    integer              :: grav_settling     = 0
+    integer              :: bl_mynn_tkebudget = 0
     logical              :: bl_mynn_tkeadvect = .false.
     integer              :: bl_mynn_cloudpdf  = 2
-    integer              :: bl_mynn_mixlength = 1
-    integer              :: bl_mynn_edmf      = 1
+    integer              :: bl_mynn_mixlength = 2
+    integer              :: bl_mynn_edmf      = 0
     integer              :: bl_mynn_edmf_mom  = 1
     integer              :: bl_mynn_edmf_tke  = 0
+    integer              :: bl_mynn_edmf_part = 0
     integer              :: bl_mynn_cloudmix  = 1
     integer              :: bl_mynn_mixqt     = 0
     integer              :: bl_mynn_output    = 0
@@ -3421,7 +3425,7 @@ module GFS_typedefs
                                do_mynnedmf, do_mynnsfclay,                                  &
                                ! DH* TODO - move to MYNN namelist section
                                bl_mynn_cloudpdf, bl_mynn_edmf, bl_mynn_edmf_mom,            &
-                               bl_mynn_edmf_tke, bl_mynn_mixlength, bl_mynn_cloudmix,       &
+                               bl_mynn_edmf_tke, bl_mynn_edmf_part, bl_mynn_cloudmix,       &
                                bl_mynn_mixqt, bl_mynn_output, icloud_bl, bl_mynn_tkeadvect, &
                                bl_mynn_closure, bl_mynn_tkebudget,                          &
                                isftcflx, iz0tlnd, sfclay_compute_flux, sfclay_compute_diag, &
@@ -4169,7 +4173,9 @@ module GFS_typedefs
     Model%bl_mynn_cloudmix  = bl_mynn_cloudmix
     Model%bl_mynn_mixqt     = bl_mynn_mixqt
     Model%bl_mynn_output    = bl_mynn_output
+    Model%bl_mynn_edmf_part = bl_mynn_edmf_part
     Model%bl_mynn_tkeadvect = bl_mynn_tkeadvect
+    Model%grav_settling     = grav_settling
     Model%bl_mynn_closure   = bl_mynn_closure
     Model%bl_mynn_tkebudget = bl_mynn_tkebudget
     Model%icloud_bl         = icloud_bl
@@ -6834,7 +6840,7 @@ module GFS_typedefs
         allocate (Diag%det_thl   (IM,Model%levs))
         allocate (Diag%det_sqv   (IM,Model%levs))
       endif
-      if (Model%bl_mynn_tkebudget) then
+      if (Model%bl_mynn_tkebudget .ne. 0) then
         allocate (Diag%dqke      (IM,Model%levs))
         allocate (Diag%qwt       (IM,Model%levs))
         allocate (Diag%qshear    (IM,Model%levs))
@@ -6858,7 +6864,7 @@ module GFS_typedefs
         Diag%det_thl       = clear_val
         Diag%det_sqv       = clear_val
       endif
-      if (Model%bl_mynn_tkebudget) then
+      if (Model%bl_mynn_tkebudget .ne. 0) then
         Diag%dqke          = clear_val
         Diag%qwt           = clear_val
         Diag%qshear        = clear_val
