@@ -305,6 +305,7 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: tsurf_ice(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_land(:)      => null()  !<
     real (kind=kind_phys), pointer      :: tsurf_water(:)     => null()  !<
+    real (kind=kind_phys), pointer      :: ud_mf(:,:)         => null()  !<
     real (kind=kind_phys), pointer      :: uustar_ice(:)      => null()  !<
     real (kind=kind_phys), pointer      :: uustar_land(:)     => null()  !<
     real (kind=kind_phys), pointer      :: uustar_water(:)    => null()  !<
@@ -660,6 +661,7 @@ contains
     allocate (Interstitial%tsurf_ice       (IM))
     allocate (Interstitial%tsurf_land      (IM))
     allocate (Interstitial%tsurf_water     (IM))
+    allocate (Interstitial%ud_mf           (IM,Model%levs))
     allocate (Interstitial%uustar_ice      (IM))
     allocate (Interstitial%uustar_land     (IM))
     allocate (Interstitial%uustar_water    (IM))
@@ -1069,8 +1071,12 @@ contains
     if (Model%ntke > 0) Interstitial%ntkev = Interstitial%nvdiff
 
     if (Model%ntiw > 0) then
-      if (Model%ntclamt > 0) then
+      if (Model%ntclamt > 0 .and. Model%ntsigma <= 0) then
         Interstitial%nn = Model%ntrac - 2
+      elseif (Model%ntclamt <= 0 .and. Model%ntsigma > 0) then
+        Interstitial%nn = Model%ntrac - 2
+      elseif  (Model%ntclamt > 0 .and. Model%ntsigma > 0) then
+        Interstitial%nn = Model%ntrac - 3
       else
         Interstitial%nn = Model%ntrac - 1
       endif
@@ -1090,7 +1096,8 @@ contains
              n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
              n /= Model%ntsnc .and. n /= Model%ntgl  .and. n /= Model%ntgnc   .and. &
              n /= Model%nthl  .and. n /= Model%nthnc .and. n /= Model%ntgv    .and. &
-             n /= Model%nthv  .and. n /= Model%ntccn .and. n /= Model%ntccna )
+             n /= Model%nthv  .and. n /= Model%ntccn .and. n /= Model%ntccna .and.  &
+             n /= Model%ntsigma)
         Interstitial%otsptflag(n) = ltest
         if ( ltest ) then
           tracers = tracers + 1
@@ -1436,6 +1443,7 @@ contains
     Interstitial%tsurf_ice       = Model%huge
     Interstitial%tsurf_land      = Model%huge
     Interstitial%tsurf_water     = Model%huge
+    Interstitial%ud_mf           = clear_val
     Interstitial%uustar_ice      = Model%huge
     Interstitial%uustar_land     = Model%huge
     Interstitial%uustar_water    = Model%huge
