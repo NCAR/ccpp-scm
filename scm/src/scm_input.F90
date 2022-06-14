@@ -999,7 +999,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_vegfrac(:,:,:)  !< vegetation fraction
   real(kind=dp), allocatable  :: input_shdmin(:,:,:)  !< minimun vegetation fraction
   real(kind=dp), allocatable  :: input_shdmax(:,:,:)  !< maximun vegetation fraction
-  real(kind=dp), allocatable  :: input_zorlo(:,:,:)    !< surfce roughness length over ocean [cm]
   real(kind=dp), allocatable  :: input_slmsk(:,:,:)   !< sea land ice mask [0,1,2]
   real(kind=dp), allocatable  :: input_canopy(:,:,:)  !< amount of water stored in canopy (kg m-2)
   real(kind=dp), allocatable  :: input_hice(:,:,:)    !< sea ice thickness (m)
@@ -1099,11 +1098,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_qrain(:,:,:) !< sensible heat due to rainfall for NSST (W)
   
   real(kind=dp), allocatable  :: input_wetness(:,:,:) !< normalized soil wetness for RUC LSM
-  real(kind=dp), allocatable  :: input_clw_surf(:,:,:) !< cloud condensed water mixing ratio at surface for RUC LSM (kg kg-1)
-  real(kind=dp), allocatable  :: input_qwv_surf(:,:,:) !< water vapor mixing ratio at surface for RUC LSM (kg kg-1)
-  real(kind=dp), allocatable  :: input_tsnow(:,:,:) !< snow temperature at the bottom of the first snow layer for RUC LSM (K)
-  real(kind=dp), allocatable  :: input_snowfallac(:,:,:) !< run-total snow accumulation on the ground for RUC LSM (kg m-2)
-  real(kind=dp), allocatable  :: input_acsnow(:,:,:) !< snow water equivalent of run-total frozen precip for RUC LSM (kg m-2)
   real(kind=dp), allocatable  :: input_lai(:,:,:) !< leaf area index for RUC LSM
   
   ! forcing variables
@@ -1341,7 +1335,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_vegfrac   (input_n_lon, input_n_lat,           input_n_init_times), &
              input_shdmin    (input_n_lon, input_n_lat,           input_n_init_times), &
              input_shdmax    (input_n_lon, input_n_lat,           input_n_init_times), &
-             input_zorlo     (input_n_lon, input_n_lat,           input_n_init_times), &
              input_slmsk     (input_n_lon, input_n_lat,           input_n_init_times), &
              input_canopy    (input_n_lon, input_n_lat,           input_n_init_times), &
              input_hice      (input_n_lon, input_n_lat,           input_n_init_times), &
@@ -1441,11 +1434,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_qrain     (input_n_lon, input_n_lat,           input_n_init_times), &
              stat=allocate_status)
     allocate(input_wetness   (input_n_lon, input_n_lat,           input_n_init_times), &
-             input_clw_surf  (input_n_lon, input_n_lat,           input_n_init_times), &
-             input_qwv_surf  (input_n_lon, input_n_lat,           input_n_init_times), &
-             input_tsnow     (input_n_lon, input_n_lat,           input_n_init_times), &
-             input_snowfallac(input_n_lon, input_n_lat,           input_n_init_times), &
-             input_acsnow    (input_n_lon, input_n_lat,           input_n_init_times), &
              input_lai       (input_n_lon, input_n_lat,           input_n_init_times), &
              stat=allocate_status)
   end if
@@ -1644,7 +1632,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       call NetCDF_read_var(ncid, "vegfrac",  .True., input_vegfrac)
       call NetCDF_read_var(ncid, "shdmin",   .True., input_shdmin)
       call NetCDF_read_var(ncid, "shdmax",   .True., input_shdmax)
-      call NetCDF_read_var(ncid, "zorlo",    .True., input_zorlo)
       call NetCDF_read_var(ncid, "slmsk",    .True., input_slmsk)
       call NetCDF_read_var(ncid, "canopy",   .True., input_canopy)
       call NetCDF_read_var(ncid, "hice",     .True., input_hice)
@@ -1707,11 +1694,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       
       !RUC LSM variables
       call NetCDF_read_var(ncid, "wetness",          .False., input_wetness)
-      call NetCDF_read_var(ncid, "clw_surf",         .False., input_clw_surf)
-      call NetCDF_read_var(ncid, "qwv_surf",         .False., input_qwv_surf)
-      call NetCDF_read_var(ncid, "tsnow",            .False., input_tsnow)
-      call NetCDF_read_var(ncid, "snowfall_acc",     .False., input_snowfallac)
-      call NetCDF_read_var(ncid, "swe_snowfall_acc", .False., input_acsnow)
       call NetCDF_read_var(ncid, "lai",              .False., input_lai)
     else
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that an LSM should be used, but the required initial conditions are missing. Stopping ...'
@@ -2148,7 +2130,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_vegfrac  = input_vegfrac(active_lon,active_lat,active_init_time)
     scm_input%input_shdmin   = input_shdmin(active_lon,active_lat,active_init_time)
     scm_input%input_shdmax   = input_shdmax(active_lon,active_lat,active_init_time)
-    scm_input%input_zorlo    = input_zorlo(active_lon,active_lat,active_init_time)
     scm_input%input_slmsk    = input_slmsk(active_lon,active_lat,active_init_time)
     scm_input%input_canopy   = input_canopy(active_lon,active_lat,active_init_time)
     scm_input%input_hice     = input_hice(active_lon,active_lat,active_init_time)
@@ -2207,13 +2188,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_deeprechxy = input_deeprechxy(active_lon,active_lat,active_init_time)
     scm_input%input_rechxy   = input_rechxy(active_lon,active_lat,active_init_time)
     scm_input%input_snowxy   = input_snowxy(active_lon,active_lat,active_init_time)
-    
     scm_input%input_wetness    = input_wetness(active_lon,active_lat,active_init_time)
-    scm_input%input_clw_surf   = input_clw_surf(active_lon,active_lat,active_init_time)
-    scm_input%input_qwv_surf   = input_qwv_surf(active_lon,active_lat,active_init_time)
-    scm_input%input_tsnow      = input_tsnow(active_lon,active_lat,active_init_time)
-    scm_input%input_snowfallac = input_snowfallac(active_lon,active_lat,active_init_time)
-    scm_input%input_acsnow     = input_acsnow(active_lon,active_lat,active_init_time)
     scm_input%input_lai        = input_lai(active_lon,active_lat,active_init_time)
   end if
   
