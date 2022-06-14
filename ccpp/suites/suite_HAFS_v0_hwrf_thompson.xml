@@ -15,10 +15,11 @@
       <scheme>GFS_suite_interstitial_rad_reset</scheme>
       <!-- <scheme>sgscloud_radpre</scheme> -->
       <scheme>GFS_rrtmg_pre</scheme>
+      <scheme>GFS_radiation_surface</scheme>
       <scheme>rrtmg_lw_pre</scheme>
       <scheme>rrtmg_lw</scheme>
       <scheme>rrtmg_lw_post</scheme>
-      <scheme>rrtmg_sw_pre</scheme>
+      <scheme>rad_sw_pre</scheme>
       <scheme>rrtmg_sw</scheme>
       <scheme>rrtmg_sw_post</scheme>
       <scheme>GFS_rrtmg_post</scheme>
@@ -44,9 +45,7 @@
       <scheme>sfc_nst_pre</scheme>
       <scheme>sfc_nst</scheme>
       <scheme>sfc_nst_post</scheme>
-      <scheme>sfc_noah_wrfv4_pre</scheme>
-      <scheme>sfc_noah_wrfv4</scheme>
-      <scheme>sfc_noah_wrfv4_post</scheme>
+      <scheme>noahmpdrv</scheme>
       <scheme>sfc_sice</scheme>
       <scheme>GFS_surface_loop_control_part2</scheme>
     </subcycle>
@@ -63,7 +62,6 @@
       <scheme>cires_ugwp</scheme>
       <scheme>cires_ugwp_post</scheme>
       <scheme>GFS_GWD_generic_post</scheme>
-      <scheme>rayleigh_damp</scheme>
       <scheme>GFS_suite_stateout_update</scheme>
       <scheme>ozphys_2015</scheme>
       <scheme>h2ophys</scheme>

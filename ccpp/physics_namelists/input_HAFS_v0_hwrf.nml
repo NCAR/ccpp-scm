@@ -7,7 +7,6 @@
       nst_anl        = .true.
       use_ufo        = .true.
       pre_rad        = .false.
-      ncld           = 5
       imp_physics    = 15
       spec_adv       = .true.        ! HWRF F-A
       RHGRD          = 0.98          ! HWRF F-A
@@ -49,9 +48,8 @@
       prslrd0        = 0.
       ivegsrc        = 1
       isot           = 1
-      lsm            = 4               !HWRF set to 4
-      sfc_z0_type    = 4               !HWRF set to 4
-      iopt_dveg      = 2
+      lsm            = 2
+      iopt_dveg      = 1
       iopt_crs       = 1
       iopt_btr       = 1
       iopt_run       = 1

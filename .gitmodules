@@ -1,8 +1,12 @@
 [submodule "ccpp-framework"]
 	path = ccpp/framework
 	url = https://github.com/NCAR/ccpp-framework
-	branch = master
+	branch = main
 [submodule "ccpp-physics"]
 	path = ccpp/physics
 	url = https://github.com/NCAR/ccpp-physics
-	branch = master
+	branch = main
+[submodule "CMakeModules"]
+	path = CMakeModules
+	url = https://github.com/noaa-emc/CMakeModules
+	branch = develop

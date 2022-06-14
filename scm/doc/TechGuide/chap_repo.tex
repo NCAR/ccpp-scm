@@ -2,11 +2,11 @@
 \label{chapter: repository}
 
 \section{What is included in the repository?}
-The repository contains all code and data required to run the CCPP SCM (with the exception of large initialization tables for the Thompson microphysics scheme discussed in subsection \ref{subsection: singlerunscript}). It is functionally separated into 3 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp/framework} directory), and the CCPP physics schemes (\execout{ccpp/physics} directory). The entire \execout{gmtb-scm} repository resides on Github's NCAR space, and the \execout{ccpp/framework} and \execout{ccpp/physics} directories are git submodules that point to repositories \execout{ccpp-framework} and \execout{ccpp-physics} on the same space. The structure of the entire repository is represented below. Note that the \execout{ccpp-physics} repository also contains files needed for using the CCPP with the UFS Atmosphere host model that uses the Finite-Volume Cubed-Sphere (FV3) dynamical core.
+The repository contains all code and data required to run the CCPP SCM (with the exception of large initialization tables for the Thompson and Morrison-Gettelman microphysics schemes discussed in subsection \ref{subsection: singlerunscript}). It is functionally separated into 3 subdirectories representing the SCM model infrastructure (\execout{scm} directory), the CCPP infrastructure (\execout{ccpp/framework} directory), and the CCPP physics schemes (\execout{ccpp/physics} directory). The entire \execout{ccpp-scm} repository resides on Github's NCAR space, and the \execout{ccpp/framework} and \execout{ccpp/physics} directories are git submodules that point to repositories \execout{ccpp-framework} and \execout{ccpp-physics} on the same space. The structure of the entire repository is represented below. Note that the \execout{ccpp-physics} repository also contains files needed for using the CCPP with the UFS Atmosphere host model that uses the Finite-Volume Cubed-Sphere (FV3) dynamical core.
 
 {\small\justify
 \dirtree{%
-	.1 gmtb-scm/.
+	.1 ccpp-scm/.
 	.2 ccpp/.
 	.3 config/\DTcomment{contains the CCPP prebuild configuration file}.
 	.3 framework/.
@@ -25,16 +25,17 @@ The repository contains all code and data required to run the CCPP SCM (with the
 	.4 CMakeLists.txt\DTcomment{cmake configuration file for ccpp-physics}.
 	.4 CODEOWNERS\DTcomment{list of GitHub users with permission to merge}.
 	.4 LICENSE.
-	.4 pgifix.py.
 	.4 physics/\DTcomment{contains all CCPP physics and interstitial schemes}.
 	.5 docs/\DTcomment{contains CCPP physics doxygen documentation}.
 	.4 README.md.
+	.4 tools/\DTcomment{tools for checking physics source code}.
 	.3 physics\_namelists\DTcomment{contains physics namelist files associated with suites}.
 	.3 suites/\DTcomment{contains suite definition files}.
 	.2 CODEOWNERS\DTcomment{list of GitHub users with permission to merge}.
 	.2 contrib/.
 	.3 build\_nceplibs.sh\DTcomment{script for installing prerequisite NCEPLIBS locally}.
 	.3 get\_thompson\_tables.sh\DTcomment{script for downloading/extracting the Thompson lookup tables}.
+	.3 get\_mg\_inccn\_data.sh\DTcomment{script for downloading/extracting the Morrison-Gettelman data}.
 	.2 docker/.
 	.3 Dockerfile\DTcomment{contains Docker instructions for building the CCPP SCM image}.
 	.2 README.md.
@@ -55,13 +56,12 @@ The repository contains all code and data required to run the CCPP SCM (with the
 	.4 Cheyenne\_setup\_gnu.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
 	.4 Cheyenne\_setup\_intel.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
 	.4 Cheyenne\_setup\_intel.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
-	.4 gmtb\_scm\_slurm\_example.py\DTcomment{example QSUB run script}.
+	.4 scm\_slurm\_example.py\DTcomment{example QSUB run script}.
 	.4 Hera\_setup\_intel.csh\DTcomment{setup script for Theia HPC for csh, tcsh}.
 	.4 Hera\_setup\_intel.sh\DTcomment{setup script for Theia HPC for sh, bash}.
 	.4 scripts/\DTcomment{Python scripts for setting up cases and plotting}.
-	.5 f90nml.0.19/\DTcomment{f90nml Python package}.
-	.5 Shapely-1.7.0\DTcomment{Shapely Python package}.
 	.5 plot\_configs/\DTcomment{plot configuration files}.
+	.4 tracer\_config\DTcomment{tracer configuration files}.
 	.3 LICENSE.txt.
 	.3 src/\DTcomment{source code for SCM infrastructure and Python run scripts}.
 }}

@@ -1010,7 +1010,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     vfrac_in = read_NetCDF_surface_var(nc_file, 'vfrac', i, j, old_chgres, 0)
     shdmin_in = read_NetCDF_surface_var(nc_file, 'shdmin', i, j, old_chgres, 0)
     shdmax_in = read_NetCDF_surface_var(nc_file, 'shdmax', i, j, old_chgres, 0)
-    zorlo_in = read_NetCDF_surface_var(nc_file, 'zorl', i, j, old_chgres, 0)
+    zorlw_in = read_NetCDF_surface_var(nc_file, 'zorl', i, j, old_chgres, 0)
     slmsk_in = read_NetCDF_surface_var(nc_file, 'slmsk', i, j, old_chgres, 0)
     canopy_in = read_NetCDF_surface_var(nc_file, 'canopy', i, j, old_chgres, 0)
     hice_in = read_NetCDF_surface_var(nc_file, 'hice', i, j, old_chgres, 0)
@@ -1032,7 +1032,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     zorli_in = read_NetCDF_surface_var(nc_file, 'zorli', i, j, old_chgres, 0)
     
     #present when cplwav = T
-    zorlw_in = read_NetCDF_surface_var(nc_file, 'zorlw', i, j, old_chgres, 0)
+    zorlwav_in = read_NetCDF_surface_var(nc_file, 'zorlwav', i, j, old_chgres, 0)
     
     #NSST variables that may be in the surface file
     tref_in = read_NetCDF_surface_var(nc_file, 'tref', i, j, old_chgres, 0)
@@ -1084,14 +1084,23 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     smcwtdxy_in = read_NetCDF_surface_var(nc_file, 'smcwtdxy', i, j, old_chgres, 0)
     deeprechxy_in = read_NetCDF_surface_var(nc_file, 'deeprechxy', i, j, old_chgres, 0)
     rechxy_in = read_NetCDF_surface_var(nc_file, 'rechxy', i, j, old_chgres, 0)
+    albdvis_in = read_NetCDF_surface_var(nc_file, 'albdvis', i, j, old_chgres, 0)
+    albdnir_in = read_NetCDF_surface_var(nc_file, 'albdnir', i, j, old_chgres, 0)
+    albivis_in = read_NetCDF_surface_var(nc_file, 'albivis', i, j, old_chgres, 0)
+    albinir_in = read_NetCDF_surface_var(nc_file, 'albinir', i, j, old_chgres, 0)
+    emiss_in = read_NetCDF_surface_var(nc_file, 'emiss', i, j, old_chgres, 0)
     
     #RUC LSM variables that may be in the surface file
     wetness_in = read_NetCDF_surface_var(nc_file, 'wetness', i, j, old_chgres, 0)
-    clw_surf_in = read_NetCDF_surface_var(nc_file, 'clw_surf', i, j, old_chgres, 0)
-    qwv_surf_in = read_NetCDF_surface_var(nc_file, 'qwv_surf', i, j, old_chgres, 0)
-    tsnow_in = read_NetCDF_surface_var(nc_file, 'tsnow', i, j, old_chgres, 0)
-    snowfall_acc_in = read_NetCDF_surface_var(nc_file, 'snowfall_acc', i, j, old_chgres, 0)
-    swe_snowfall_acc_in = read_NetCDF_surface_var(nc_file, 'swe_snowfall_acc', i, j, old_chgres, 0)
+    clw_surf_land_in = read_NetCDF_surface_var(nc_file, 'clw_surf_land', i, j, old_chgres, 0)
+    clw_surf_ice_in = read_NetCDF_surface_var(nc_file, 'clw_surf_ice', i, j, old_chgres, 0)
+    qwv_surf_land_in = read_NetCDF_surface_var(nc_file, 'qwv_surf_land', i, j, old_chgres, 0)
+    qwv_surf_ice_in = read_NetCDF_surface_var(nc_file, 'qwv_surf_ice', i, j, old_chgres, 0)
+    tsnow_land_in = read_NetCDF_surface_var(nc_file, 'tsnow_land', i, j, old_chgres, 0)
+    tsnow_ice_in = read_NetCDF_surface_var(nc_file, 'tsnow_ice', i, j, old_chgres, 0)
+    snowfall_acc_land_in = read_NetCDF_surface_var(nc_file, 'snowfall_acc_land', i, j, old_chgres, 0)
+    snowfall_acc_ice_in = read_NetCDF_surface_var(nc_file, 'snowfall_acc_ice', i, j, old_chgres, 0)
+    sncovr_ice_in = read_NetCDF_surface_var(nc_file, 'sncovr_ice', i, j, old_chgres, 0)
     lai_in = read_NetCDF_surface_var(nc_file, 'lai', i, j, old_chgres, 0)
     
     #read in profiles (would be 3D variables in a 3D model)
@@ -1118,7 +1127,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     #fractional grid 3D variables
     tiice_in = read_NetCDF_surface_var(nc_file, 'tiice', i, j, old_chgres, missing_variable_ice_layers)
 
-    #print("zorlw_in = {}".format(zorlw_in))
+    #print("zorlwav_in = {}".format(zorlwav_in))
     
     nc_file.close()
     
@@ -1140,7 +1149,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "vfrac": vfrac_in,
         "shdmin": shdmin_in,
         "shdmax": shdmax_in,
-        "zorlo": zorlo_in,
+        "zorlw": zorlw_in,
         "slmsk": slmsk_in,
         "canopy": canopy_in,
         "hice": hice_in,
@@ -1161,7 +1170,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "zorll": zorll_in,
         "zorli": zorli_in,
         #cplwav
-        "zorlw": zorlw_in,
+        "zorlwav": zorlwav_in,
         #NSST
         "tref": tref_in,
         "z_c": z_c_in,
@@ -1211,13 +1220,22 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "smcwtdxy": smcwtdxy_in,
         "deeprechxy": deeprechxy_in,
         "rechxy": rechxy_in,
+        "albdvis": albdvis_in,
+        "albdnir": albdnir_in,
+        "albivis": albivis_in,
+        "albinir": albinir_in,
+        "emiss": emiss_in,
         #RUC LSM
         "wetness": wetness_in,
-        "clw_surf": clw_surf_in,
-        "qwv_surf": qwv_surf_in,
-        "tsnow": tsnow_in,
-        "snowfall_acc": snowfall_acc_in,
-        "swe_snowfall_acc": swe_snowfall_acc_in,
+        "clw_surf_land": clw_surf_land_in,
+        "clw_surf_ice": clw_surf_ice_in,
+        "qwv_surf_land": qwv_surf_land_in,
+        "qwv_surf_ice": qwv_surf_ice_in,
+        "tsnow_land": tsnow_land_in,
+        "tsnow_ice": tsnow_ice_in,
+        "snowfall_acc_land": snowfall_acc_land_in,
+        "snowfall_acc_ice": snowfall_acc_ice_in,
+        "sncovr_ice": sncovr_ice_in,
         "lai": lai_in,
         #Noah LSM 3D
         "stc": stc_in,
@@ -2789,10 +2807,10 @@ def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     shdmax[:] = surface["shdmax"]
     shdmax.description = "maximum vegetation fraction"
     
-    zorlo = scalar_grp.createVariable('zorlo',real_type)
-    zorlo[:] = surface["zorlo"]
-    zorlo.units = "cm"
-    zorlo.description = "surface roughness length over ocean"
+    zorlw = scalar_grp.createVariable('zorlw',real_type)
+    zorlw[:] = surface["zorlw"]
+    zorlw.units = "cm"
+    zorlw.description = "surface roughness length over ocean"
     
     islmsk = scalar_grp.createVariable('slmsk',real_type)
     islmsk[:] = surface["slmsk"]
@@ -2926,10 +2944,10 @@ def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     zorli.units = "cm" 
     zorli.description = "surface roughness length over ice"
     
-    zorlw = scalar_grp.createVariable('zorlw',real_type)
-    zorlw[:] = surface["zorlw"]
-    zorlw.units = "cm" 
-    zorlw.description = "surface roughness length from wave model"
+    zorlwav = scalar_grp.createVariable('zorlwav',real_type)
+    zorlwav[:] = surface["zorlwav"]
+    zorlwav.units = "cm" 
+    zorlwav.description = "surface roughness length from wave model"
     
     #Orography initial parameters
     
@@ -3174,6 +3192,31 @@ def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     snowxy.units = ""
     snowxy.description = "number of snow layers"
     
+    albdvis = scalar_grp.createVariable('albdvis',real_type)
+    albdvis[:] = surface["albdvis"]
+    albdvis.units = ""
+    albdvis.description = "surface albedo direct visible"
+    
+    albdnir = scalar_grp.createVariable('albdnir',real_type)
+    albdnir[:] = surface["albdnir"]
+    albdnir.units = ""
+    albdnir.description = "surface albedo direct near-infrared"
+    
+    albivis = scalar_grp.createVariable('albivis',real_type)
+    albivis[:] = surface["albivis"]
+    albivis.units = ""
+    albivis.description = "surface albedo diffuse visible"
+    
+    albinir = scalar_grp.createVariable('albinir',real_type)
+    albinir[:] = surface["albinir"]
+    albinir.units = ""
+    albinir.description = "surface albedo diffuse near-infrared"
+    
+    emiss = scalar_grp.createVariable('emiss',real_type)
+    emiss[:] = surface["emiss"]
+    emiss.units = ""
+    emiss.description = "surface emissivity"
+    
     #NSST initial scalar parameters
     tref = scalar_grp.createVariable('tref',real_type)
     tref[:] = surface["tref"]
@@ -3271,30 +3314,50 @@ def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     wetness.units = ""
     wetness.description = "normalized soil wetness for RUC LSM"
     
-    clw_surf = scalar_grp.createVariable('clw_surf',real_type)
-    clw_surf[:] = surface["clw_surf"]
-    clw_surf.units = "kg kg-1"
-    clw_surf.description = "cloud condensed water mixing ratio at surface for RUC LSM"
+    clw_surf_land = scalar_grp.createVariable('clw_surf_land',real_type)
+    clw_surf_land[:] = surface["clw_surf_land"]
+    clw_surf_land.units = "kg kg-1"
+    clw_surf_land.description = "cloud condensed water mixing ratio at surface over land for RUC LSM"
     
-    qwv_surf = scalar_grp.createVariable('qwv_surf',real_type)
-    qwv_surf[:] = surface["qwv_surf"]
-    qwv_surf.units = "kg kg-1"
-    qwv_surf.description = "water vapor mixing ratio at surface for RUC LSM"
+    clw_surf_ice = scalar_grp.createVariable('clw_surf_ice',real_type)
+    clw_surf_ice[:] = surface["clw_surf_ice"]
+    clw_surf_ice.units = "kg kg-1"
+    clw_surf_ice.description = "cloud condensed water mixing ratio at surface over ice for RUC LSM"
     
-    tsnow = scalar_grp.createVariable('tsnow',real_type)
-    tsnow[:] = surface["tsnow"]
-    tsnow.units = "K"
-    tsnow.description = "snow temperature at the bottom of the first snow layer for RUC LSM"
+    qwv_surf_land = scalar_grp.createVariable('qwv_surf_land',real_type)
+    qwv_surf_land[:] = surface["qwv_surf_land"]
+    qwv_surf_land.units = "kg kg-1"
+    qwv_surf_land.description = "water vapor mixing ratio at surface over land for RUC LSM"
     
-    snowfall_acc = scalar_grp.createVariable('snowfall_acc',real_type)
-    snowfall_acc[:] = surface["snowfall_acc"]
-    snowfall_acc.units = "kg m-2"
-    snowfall_acc.description = "run-total snow accumulation on the ground for RUC LSM"
+    qwv_surf_ice = scalar_grp.createVariable('qwv_surf_ice',real_type)
+    qwv_surf_ice[:] = surface["qwv_surf_ice"]
+    qwv_surf_ice.units = "kg kg-1"
+    qwv_surf_ice.description = "water vapor mixing ratio at surface over ice for RUC LSM"
     
-    swe_snowfall_acc = scalar_grp.createVariable('swe_snowfall_acc',real_type)
-    swe_snowfall_acc[:] = surface["swe_snowfall_acc"]
-    swe_snowfall_acc.units = "kg m-2"
-    swe_snowfall_acc.description = "snow water equivalent of run-total frozen precip for RUC LSM"
+    tsnow_land = scalar_grp.createVariable('tsnow_land',real_type)
+    tsnow_land[:] = surface["tsnow_land"]
+    tsnow_land.units = "K"
+    tsnow_land.description = "snow temperature at the bottom of the first snow layer over land for RUC LSM"
+    
+    tsnow_ice = scalar_grp.createVariable('tsnow_ice',real_type)
+    tsnow_ice[:] = surface["tsnow_ice"]
+    tsnow_ice.units = "K"
+    tsnow_ice.description = "snow temperature at the bottom of the first snow layer over ice for RUC LSM"
+    
+    snowfall_acc_land = scalar_grp.createVariable('snowfall_acc_land',real_type)
+    snowfall_acc_land[:] = surface["snowfall_acc_land"]
+    snowfall_acc_land.units = "kg m-2"
+    snowfall_acc_land.description = "run-total snow accumulation on the ground over land for RUC LSM"
+    
+    snowfall_acc_ice = scalar_grp.createVariable('snowfall_acc_ice',real_type)
+    snowfall_acc_ice[:] = surface["snowfall_acc_ice"]
+    snowfall_acc_ice.units = "kg m-2"
+    snowfall_acc_ice.description = "run-total snow accumulation on the ground over ice for RUC LSM"
+    
+    sncovr_ice = scalar_grp.createVariable('sncovr_ice',real_type)
+    sncovr_ice[:] = surface["sncovr_ice"]
+    sncovr_ice.units = ""
+    sncovr_ice.description = "surface snow area fraction over ice for RUC LSM"
     
     lai = scalar_grp.createVariable('lai',real_type)
     lai[:] = surface["lai"]

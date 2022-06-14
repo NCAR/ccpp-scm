@@ -8,3 +8,5 @@ non-tracked_files/
 scm/data/physics_input_data/qr_acr*.dat
 scm/data/physics_input_data/freezeH2O.dat
 scm/data/physics_input_data/CCN_ACTIVATE.BIN
+scm/data/physics_input_data/cam5_4_143_NAAI_monclimo2.nc
+scm/data/physics_input_data/cam5_4_143_NPCCN_monclimo2.nc
