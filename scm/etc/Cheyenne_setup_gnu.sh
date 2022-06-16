@@ -17,6 +17,7 @@ module load ncarenv/1.3
 module load gnu/10.1.0
 module load mpt/2.22
 module load ncarcompilers/0.5.0
+module load netcdf
 
 echo "Setting up NCEPLIBS"
 module use /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/modulefiles/stack

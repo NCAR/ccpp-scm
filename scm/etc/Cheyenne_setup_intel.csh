@@ -25,6 +25,7 @@ module load ncarenv/1.3
 module load intel/2022.1
 module load mpt/2.25
 module load ncarcompilers/0.5.0
+module load netcdf
 
 echo "Setting up NCEPLIBS"
 module use /glade/work/epicufsrt/GMTB/tools/intel/2022.1/hpc-stack-v1.2.0_6eb6/modulefiles/stack
