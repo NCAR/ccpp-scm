@@ -216,10 +216,6 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_ocean.F'                      ,
     'ccpp/physics/physics/sfc_sice.f'                       ,
     'ccpp/physics/physics/mp_fer_hires.F90'                 ,
-    # SMOKE
-    'ccpp/physics/smoke/rrfs_smoke_wrapper.F90'             ,
-    'ccpp/physics/smoke/rrfs_smoke_postpbl.F90'             ,
-    'ccpp/physics/smoke/rrfs_smoke_lsdep_wrapper.F90'       ,
     'ccpp/physics/physics/scm_sfc_flux_spec.F90'            ,
     # RRTMGP
     'ccpp/physics/physics/rrtmgp_lw_gas_optics.F90'         ,
@@ -268,7 +264,9 @@ SUITES_DIR = 'ccpp/suites'
 
 # Directory where to write static API to
 STATIC_API_DIR = 'scm/src/'
-STATIC_API_SRCFILE = 'scm/src/CCPP_STATIC_API.sh'
+STATIC_API_CMAKEFILE = 'scm/src/CCPP_STATIC_API.cmake'
+STATIC_API_SOURCEFILE = 'scm/src/CCPP_STATIC_API.sh'
+
 
 # Directory for writing HTML pages generated from metadata files
 METADATA_HTML_OUTPUT_DIR = 'ccpp/physics/physics/docs'
