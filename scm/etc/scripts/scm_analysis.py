@@ -468,7 +468,12 @@ for i in range(len(scm_datasets)):
     tau_v.append(nc_fid.variables['tau_v'][:])
     inst_time_group.append('tau_v')
     
-    upd_mf.append(nc_fid.variables['upd_mf'][:])
+    try:
+        upd_mf.append(nc_fid.variables['upd_mf'][:])
+    except KeyError:
+        print('upd_mf is not in the output file {0}'.format(scm_datasets[i]))
+        print('Missing variables are replaced with {0}'.format(missing_value))
+        upd_mf.append(missing_value*np.ones((len(time_inst[-1]),pres_l[-1].shape[1],pres_l[-1].shape[2])))
     inst_time_group.append('upd_mf')
     
     dwn_mf.append(nc_fid.variables['dwn_mf'][:])
