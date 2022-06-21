@@ -722,7 +722,7 @@ class Experiment(object):
             cmd = 'ln -sf {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
             execute(cmd)
         
-        return output_dir
+        return os.path.join(SCM_RUN, output_dir)
 
 def launch_executable(use_gdb, gdb, ignore_error = False):
     """Configure model run command and pass control to shell/gdb"""
@@ -756,7 +756,8 @@ def launch_executable(use_gdb, gdb, ignore_error = False):
     
 def copy_outdir(exp_dir):
     """Copy output directory to /home for this experiment."""
-    home_output_dir = '/home/'+exp_dir
+    dir_name = os.path.basename(exp_dir)
+    home_output_dir = '/home/'+dir_name
     if os.path.isdir(home_output_dir):
         shutil.rmtree(home_output_dir)
     shutil.copytree(exp_dir, home_output_dir)
