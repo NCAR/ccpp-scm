@@ -12,7 +12,7 @@ MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu> o
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b release/public-v6 https://github.com/mkavulich/ccpp-scm
+  && git clone --recursive -b release/public-v6 https://github.com/NCAR/ccpp-scm
 
 # Obtain static data that was previously stored in repository
 RUN cd /comsoftware/ccpp-scm/ \
