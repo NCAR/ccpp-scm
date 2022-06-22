@@ -16,7 +16,7 @@ BASEDIR=$MYDIR/..
 
 # Change to directory containing the physics input data, download and extract archive
 cd $BASEDIR/scm/data/physics_input_data/
-wget https://github.com/NCAR/ccpp-scm/releases/download/v5.0.0-alpha/MG_INCCN_data.tar
+wget https://github.com/NCAR/ccpp-scm/releases/download/v6.0.0/MG_INCCN_data.tar
 tar -xvf MG_INCCN_data.tar
 rm -f MG_INCCN_data.tar
 cd $BASEDIR/
