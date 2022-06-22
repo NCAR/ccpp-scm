@@ -42,3 +42,6 @@ export CMAKE_Platform=cheyenne.intel
 
 echo "Setting up python environment for running and plotting."
 module load conda/latest
+
+conda activate /glade/p/ral/jntp/GMTB/CCPP_SCM/conda/ccpp-scm
+
