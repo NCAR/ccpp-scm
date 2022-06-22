@@ -57,7 +57,7 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
     plt.rc('text', usetex=latex_labels)
     
     if np.count_nonzero(values) == 0:
-        print('The plot for {} will not be created due to all zero values'.format(x_label))
+        print('The plot named {} will not be created due to all zero values'.format(filename))
         return
     
     fig = plt.figure()
@@ -296,7 +296,7 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
     plt.rc('text', usetex=latex_labels)
     
     if np.count_nonzero(values) == 0:
-        print('The plot for {} will not be created due to all zero values'.format(y_label))
+        print('The plot named {} will not be created due to all zero values'.format(filename))
         return
     
     fig = plt.figure()
@@ -410,11 +410,11 @@ def contour_plot_firl(x_dim, y_dim, values, min_val, max_val, title, x_label, y_
     plt.rc('text', usetex=latex_labels)
     
     if np.count_nonzero(values) == 0:
-        print('The plot for {} will not be created due to all zero values'.format(title))
+        print('The plot named {} will not be created due to all zero values'.format(filename))
         return
         
     if np.amax(values) == np.amin(values):
-        print('The plot for {} will not be created due to all values being equal'.format(title))
+        print('The plot named {} will not be created due to all values being equal'.format(filename))
         return
     
     if(min_val != -999 and max_val != -999):
