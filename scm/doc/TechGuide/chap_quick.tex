@@ -461,7 +461,7 @@ For bourne/bash shells,
 export OUT_DIR=/path/to/output
 \end{lstlisting}
 For Windows, the format that worked for us followed this example: \execout{/c/Users/my username/path/to/directory/to/mount}
-\item To run the SCM, you can run the Docker container that was just created and give it the same run commands as discussed in sections \ref{subsection: singlerunscript} and \ref{subsection: multirunscript}. \textbf{Be sure to remember to include the \execout{-d} option for all run commands}. For example,
+\item To run the SCM, you can run the Docker container that was just created and give it the same run commands as discussed in section \ref{subsection: singlerunscript}. \textbf{Be sure to remember to include the \execout{-d} option for all run commands}. For example,
 \begin{lstlisting}[language=bash]
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice -d
 \end{lstlisting}
