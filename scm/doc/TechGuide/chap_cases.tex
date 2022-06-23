@@ -8,37 +8,13 @@ Only two files are needed to set up and run a case with the SCM. The first is a 
 \label{subsection: case config}
 The \execout{case\_config} namelist expects the following parameters:
 \begin{itemize}
-\item \execout{vert\_coord\_file}
-        \begin{itemize}
-          \item File containing FV3 vertical grid coefficients.
-        \end{itemize}
 \item \execout{case\_name}
 	\begin{itemize}
 	\item Identifier for which dataset (initialization and forcing) to load. This string must correspond to a dataset included in the directory \execout{ccpp-scm/scm/data/processed\_case\_input/} (without the file extension).
 	\end{itemize}
-\item \execout{dt}
-	\begin{itemize}
-	\item Time step in seconds (floating point)
-	\end{itemize}
-\item \execout{time\_scheme}
-	\begin{itemize}
-	\item Specify 1 for the forward-Euler time-stepping scheme or 2 for the filtered leapfrog scheme.
-	\end{itemize}
 \item \execout{runtime}
 	\begin{itemize}
 	\item Specify the model runtime in seconds (integer). This should correspond with the forcing dataset used. If a runtime is specified that is longer than the supplied forcing, the forcing is held constant at the last specified values.
-	\end{itemize}
-\item \execout{output\_frequency}
-	\begin{itemize}
-	\item Specify the frequency of the model output in seconds (floating point). Currently, no averaging of the output fields is done if \execout{output\_frequency} $\neq$ \execout{dt}; only instantaneous output at the supplied frequency is implemented.
-	\end{itemize}
-\item \execout{n\_levels}
-	\begin{itemize}
-	\item Specify the integer number of vertical levels. If \execout{model\_name}=\exec{`GFS'}, only values of 28, 42, 60, 64, 91 are supported.
-	\end{itemize}
-\item \execout{output\_dir}
-	\begin{itemize}
-	\item A string representing the path (relative to the build directory) to which output should be written. (OPTIONAL)
 	\end{itemize}
 \item \execout{thermo\_forcing\_type}
 	\begin{itemize}
@@ -102,6 +78,30 @@ The \execout{case\_config} namelist expects the following parameters:
         \end{itemize}
 \end{itemize}
 
+Optional variables (that may be overridden via run script command line arguments) are:
+\begin{itemize}
+\item \execout{vert\_coord\_file}
+        \begin{itemize}
+          \item File containing FV3 vertical grid coefficients.
+        \end{itemize}
+\item \execout{dt}
+	\begin{itemize}
+	\item Time step in seconds (floating point)
+	\end{itemize}
+\item \execout{n\_itt\_out}
+	\begin{itemize}
+	\item Specify the period of the instantaneous model output in number of timesteps (integer). 
+	\end{itemize}
+\item \execout{n\_itt\_diag}
+	\begin{itemize}
+	\item Specify the period of the instantaneous and time-averaged diagnostic output in number of timesteps (integer). 
+	\end{itemize}
+\item \execout{n\_levels}
+	\begin{itemize}
+	\item Specify the integer number of vertical levels.
+	\end{itemize}
+\end{itemize}
+
 \subsection{Case input data file (CCPP-SCM format)}
 \label{subsection: case input}
 
@@ -115,7 +115,7 @@ The initialization and forcing data for each case is stored in a NetCDF (version
 
 \subsection{Case input data file (DEPHY format)}
 \label{subsection: case input dephy}
-The Development and Evaluation of Physics in atmospheric models (DEPHY) format is an internationally adopted data format intended for use by SCM and LESs. The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has four dimensions (\execout{time}, \execout{levels}, \execout{longitude}, \execout{latitude}) and contains the initial conditions and forcing data. Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases. More information on the DEPHY format requirements can be found at \href{https://github.com/GdR-DEPHY/DEPHY-SCM}{DEPHY}
+The Development and Evaluation of Physics in atmospheric models (DEPHY) format is an internationally-adopted data format intended for use by SCM and LESs. The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has four dimensions (\execout{time}, \execout{levels}, \execout{longitude}, \execout{latitude}) and contains the initial conditions and forcing data. Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases. More information on the DEPHY format requirements can be found at \href{https://github.com/GdR-DEPHY/DEPHY-SCM}{DEPHY}. Note that the DEPHY format was adopted by the CCPP SCM prior to the standard being finalized (and has not been updated). Testing with DEPHY cases requires grabbing the DEPHY-SCM repository mentioned above at a specific commit (\href{https://github.com/GdR-DEPHY/DEPHY-SCM/tree/f654162054f19f1fb6475f79c985b1a07cdffe4c}{f654162}).
 
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,
