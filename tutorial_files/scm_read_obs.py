@@ -3,7 +3,6 @@
 from netCDF4 import Dataset
 import datetime
 import numpy as np
-import sys
 import math
 import forcing_file_common as ffc
 
