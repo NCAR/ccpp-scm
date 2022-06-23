@@ -102,7 +102,7 @@ The \execout{case\_config} namelist expects the following parameters:
         \end{itemize}
 \end{itemize}
 
-\subsection{Case input data file}
+\subsection{Case input data file (CCPP-SCM format)}
 \label{subsection: case input}
 
 The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has two dimensions (\execout{time} and \execout{levels}) and is organized into 3 groups: scalars, initial, and forcing. Not all fields are required for all cases. For example the fields \execout{sh\_flux\_sfc} and \execout{lh\_flux\_sfc} are only needed if the variable \execout{sfc\_flx\_spec} $=$ \exec{.true.} in the case configuration file and state nudging variables are only required if \execout{thermo\_forcing\_type} $=$ \exec{3} or \execout{mom\_forcing\_type} $=$ \exec{3}. Using an active LSM (Noah, NoahMP, RUC) requires many more variables than are listed here. Example files for using with Noah and NoahMP LSMs are included in \execout{ccpp-scm/scm/data/processed\_case\_input/fv3\_model\_point\_noah[mp].nc}.
@@ -110,8 +110,18 @@ The initialization and forcing data for each case is stored in a NetCDF (version
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,
                  label=lst_case_input_netcdf_header,
-                 caption=example NetCDF file header for case initialization and forcing data
+                 caption=example NetCDF file (CCPP-SCM format) header for case initialization and forcing data
                  ]{./arm_case_header.txt}
+
+\subsection{Case input data file (DEPHY format)}
+\label{subsection: case input dephy}
+The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has four dimensions (\execout{time}, \execout{levels}, \execout{longitude}, \execout{latitude}) and contains the initial conditions and forcing data. Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases.
+
+\lstinputlisting[
+                 basicstyle=\scriptsize\ttfamily,
+                 label=lst_case_input_netcdf_header,
+                 caption=example NetCDF file (DEPHY format) header for case initialization and forcing data
+                 ]{./dephy_case_header.txt}
 
 \section{Included Cases}
 Several cases are included in the repository to serve as examples for users to create their own and for basic research. All case configuration namelist files for included cases can be found in \execout{ccpp-scm/scm/etc/case\_config} and represent the following observational field campaigns:
@@ -131,7 +141,7 @@ See \ref{sec:UFS ICs} for information on how to generate these files for other l
 
 \section{How to set up new cases}
 
-Setting up a new case involves preparing the two types of files listed above. For the case initialization and forcing data file, this typically involves writing a custom script or program to parse the data from its original format to the format that the SCM expects, listed above. An example of this type of script written in Python is included in \execout{/ccpp-scm/scm/etc/scripts/twpice\_forcing\_file\_generator.py}. The script reads in the data as supplied from its source, converts any necessary variables, and writes a NetCDF (version 4) file in the format described in subsection \ref{subsection: case input}. For reference, the following formulas are used:
+Setting up a new case involves preparing the two types of files listed above. For the case initialization and forcing data file, this typically involves writing a custom script or program to parse the data from its original format to the format that the SCM expects, listed above. An example of this type of script written in Python is included in \execout{/ccpp-scm/scm/etc/scripts/twpice\_forcing\_file\_generator.py}. The script reads in the data as supplied from its source, converts any necessary variables, and writes a NetCDF (version 4) file in the format described in subsections \ref{subsection: case input} and \ref{subsection: case input dephy}. For reference, the following formulas are used:
 \begin{equation}
 \theta_{il} = \theta - \frac{\theta}{T}\left(\frac{L_v}{c_p}q_l + \frac{L_s}{c_p}q_i\right)
 \end{equation}
