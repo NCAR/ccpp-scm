@@ -66,4 +66,4 @@ RUN cd /comsoftware/ccpp-scm/scm \
 # Set working directory
 WORKDIR /comsoftware/ccpp-scm/scm/bin
 ENV SCM_WORK=/comsoftware
-
+ENV SCM_ROOT=/comsoftware/ccpp-scm/
