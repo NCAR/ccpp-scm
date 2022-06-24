@@ -77,7 +77,7 @@ PHYSICS_NAMELIST_DIR = 'ccpp/physics_namelists'
 PHYSICS_SUITE_DIR = 'ccpp/suites'
 
 # Default suite to use if none is specified
-DEFAULT_SUITE = 'SCM_GFS_v15p2'
+DEFAULT_SUITE = 'SCM_GFS_v16'
 
 # Path to physics data files (relative to scm_root)
 PHYSICS_DATA_DIR = 'scm/data/physics_input_data'

@@ -105,7 +105,7 @@ Optional variables (that may be overridden via run script command line arguments
 \subsection{Case input data file (CCPP-SCM format)}
 \label{subsection: case input}
 
-The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has two dimensions (\execout{time} and \execout{levels}) and is organized into 3 groups: scalars, initial, and forcing. Not all fields are required for all cases. For example the fields \execout{sh\_flux\_sfc} and \execout{lh\_flux\_sfc} are only needed if the variable \execout{sfc\_flx\_spec} $=$ \exec{.true.} in the case configuration file and state nudging variables are only required if \execout{thermo\_forcing\_type} $=$ \exec{3} or \execout{mom\_forcing\_type} $=$ \exec{3}. Using an active LSM (Noah, NoahMP, RUC) requires many more variables than are listed here. Example files for using with Noah and NoahMP LSMs are included in \execout{ccpp-scm/scm/data/processed\_case\_input/fv3\_model\_point\_noah[mp].nc}.
+The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has at least two dimensions (\execout{time} and \execout{levels}, potentially with additions for vertical snow and soil levels) and is organized into 3 groups: scalars, initial, and forcing. Not all fields are required for all cases. For example the fields \execout{sh\_flux\_sfc} and \execout{lh\_flux\_sfc} are only needed if the variable \execout{sfc\_flx\_spec} $=$ \exec{.true.} in the case configuration file and state nudging variables are only required if \execout{thermo\_forcing\_type} $=$ \exec{3} or \execout{mom\_forcing\_type} $=$ \exec{3}. Using an active LSM (Noah, NoahMP, RUC) requires many more variables than are listed here. Example files for using with Noah and NoahMP LSMs are included in \execout{ccpp-scm/scm/data/processed\_case\_input/fv3\_model\_point\_noah[mp].nc}.
 
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,
@@ -115,7 +115,16 @@ The initialization and forcing data for each case is stored in a NetCDF (version
 
 \subsection{Case input data file (DEPHY format)}
 \label{subsection: case input dephy}
-The Development and Evaluation of Physics in atmospheric models (DEPHY) format is an internationally-adopted data format intended for use by SCM and LESs. The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has four dimensions (\execout{time}, \execout{levels}, \execout{longitude}, \execout{latitude}) and contains the initial conditions and forcing data. Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases. More information on the DEPHY format requirements can be found at \href{https://github.com/GdR-DEPHY/DEPHY-SCM}{DEPHY}. Note that the DEPHY format was adopted by the CCPP SCM prior to the standard being finalized (and has not been updated). Testing with DEPHY cases requires grabbing the DEPHY-SCM repository mentioned above at a specific commit (\href{https://github.com/GdR-DEPHY/DEPHY-SCM/tree/f654162054f19f1fb6475f79c985b1a07cdffe4c}{f654162}).
+The Development and Evaluation of Physics in atmospheric models (DEPHY) format is an internationally-adopted data format intended for use by SCM and LESs. The initialization and forcing data for each case is stored in a NetCDF (version 4) file, although these files are not by default included in the CCPP SCM repository. Note that the DEPHY format was adopted by the CCPP SCM prior to the standard being finalized (and has not been updated). Testing with DEPHY cases requires cloning the DEPHY-SCM repository mentioned above at a specific commit (\href{https://github.com/GdR-DEPHY/DEPHY-SCM/tree/f654162054f19f1fb6475f79c985b1a07cdffe4c}{f654162}) into the \execout{scm/data} directory and using the \execout{-{}-case\_data\_dir} argument with the run script. For example:
+\begin{lstlisting}[language=bash]
+cd [...]/ccpp-scm/scm/data
+git clone https://https://github.com/GdR-DEPHY/DEPHY-SCM
+cd DEPHY-SCM
+git checkout f654162
+cd [...]/ccpp-scm/scm/bin
+./run_scm.py -c ARMCU_REF --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/ARMCU/REF -v
+\end{lstlisting}
+Each DEPHY file has four dimensions (\execout{time}, \execout{levels}, \execout{longitude}, \execout{latitude}) and contains the initial conditions and forcing data. Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases. More information on the DEPHY format requirements can be found at \href{https://github.com/GdR-DEPHY/DEPHY-SCM}{DEPHY}. 
 
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,
