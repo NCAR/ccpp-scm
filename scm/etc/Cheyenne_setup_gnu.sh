@@ -24,9 +24,9 @@ module use /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/modulefi
 module load hpc/1.2.0
 module load hpc-gnu/10.1.0
 module load hpc-mpt/2.22
-export bacio_ROOT= /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/bacio/2.4.1
-export sp_ROOT= /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/sp/2.3.3
-export w3nco_ROOT= /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/w3nco/2.4.1
+export bacio_ROOT=/glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/bacio/2.4.1
+export sp_ROOT=/glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/sp/2.3.3
+export w3nco_ROOT=/glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/w3nco/2.4.1
 
 echo "Setting CC/CXX/FC environment variables"
 export CC=gcc
