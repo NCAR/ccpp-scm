@@ -158,7 +158,6 @@ From the top-level code directory (\execout{ccpp-scm} by default), execute the f
 \begin{lstlisting}[language=bash]
 ./contrib/get_all_static_data.sh
 ./contrib/get_thompson_tables.sh
-./contrib/get_mg_inccn_data.sh
 \end{lstlisting}
 If the download step fails, make sure that your system's firewall does not block access to GitHub. If it does, download the files \execout{comparison\_data.tar.gz}, \execout{phyiscs\_input\_data.tar.gz}, \execout{processed\_case\_input.tar.gz}, \execout{raw\_case\_input.tar.gz} from the GitHub release website using your browser and manually extract its contents in the directory \execout{scm/data}. Similarly, do the same for \execout{thompson\_tables.tar.gz}  and \execout{MG\_INCCN\_data.tar.gz} and extract to \execout{scm/data/physics\_input\_data/}. 
 
@@ -286,7 +285,7 @@ Running a case requires four pieces of information: the case to run (consisting 
 	\begin{itemize}
 	\item Use this to override the runtime provided in the case configuration namelist by multiplying the runtime by the given value. This is used, for example, in regression testing to reduce total runtimes.
 	\end{itemize}
-\item \execout{-{}-levels [-l}
+\item \execout{-{}-levels [-l]}
 	\begin{itemize}
 	\item Use this to change the number of vertical levels.
 	\end{itemize}
