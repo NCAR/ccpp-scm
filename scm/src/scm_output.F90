@@ -107,7 +107,7 @@ subroutine output_init(scm_state, physics)
   
   !> - Define all diagnostic/physics variables
   CALL output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id, scm_state, physics)
-  CALL output_init_interstitial(ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
+  CALL output_init_interstitial(ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id, physics)
   CALL output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, vert_dim_id)
   CALL output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_dim_id, vert_dim_id, physics)
   
@@ -247,16 +247,20 @@ subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id,
   
 end subroutine output_init_sfcprop
 
-subroutine output_init_interstitial(ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id)
+subroutine output_init_interstitial(ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id, physics)
+  use scm_type_defs, only: physics_type
   use NetCDF_def, only : NetCDF_def_var
   
   integer, intent(in) :: ncid, time_inst_id, time_rad_id, hor_dim_id, vert_dim_id, vert_dim_rad_id
+  type(physics_type), intent(in) :: physics
   
   integer :: dummy_id
   
   call NetCDF_def_var(ncid, 'tau_u',  NF90_FLOAT, "surface x-wind stress", "Pa",         dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'tau_v',  NF90_FLOAT, "surface y-wind stress", "Pa",         dummy_id, (/ hor_dim_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'upd_mf', NF90_FLOAT, "updraft mass flux",     "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  if (physics%model%imfdeepcnv >= 0 .or. physics%model%imfshalcnv >= 0) then
+    call NetCDF_def_var(ncid, 'upd_mf', NF90_FLOAT, "updraft mass flux",     "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+  end if
   call NetCDF_def_var(ncid, 'dwn_mf', NF90_FLOAT, "downdraft mass flux",   "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'det_mf', NF90_FLOAT, "detrainment mass flux", "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
   
@@ -312,47 +316,47 @@ subroutine output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_d
   
   call NetCDF_def_var(ncid, 'pwat',            NF90_FLOAT, "column precipitable water", "kg m-2", dummy_id, (/ hor_dim_id, time_inst_id /)) !the variable is reset every timestep in GFS_MP_generic
   
-  call NetCDF_def_var(ncid, 'dT_dt_lwrad',     NF90_FLOAT, "temperature tendency due to longwave radiation scheme",           "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_swrad',     NF90_FLOAT, "temperature tendency due to shortwave radiation scheme",          "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_pbl',       NF90_FLOAT, "temperature tendency due to PBL scheme",                          "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_deepconv',  NF90_FLOAT, "temperature tendency due to deep convection scheme",              "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_shalconv',  NF90_FLOAT, "temperature tendency due to shallow convection scheme",           "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_micro',     NF90_FLOAT, "temperature tendency due to deep microphysics scheme",            "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_ogwd',      NF90_FLOAT, "temperature tendency due to orographic gravity wave drag scheme", "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_rayleigh',  NF90_FLOAT, "temperature tendency due to rayleigh damping scheme",             "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_cgwd',      NF90_FLOAT, "temperature tendency due to convective gravity wave drag scheme", "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_phys',      NF90_FLOAT, "temperature tendency due to all physics schemes",                 "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dT_dt_nonphys',   NF90_FLOAT, "temperature tendency due to all processes other than physics",    "K s-1",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dq_dt_pbl',       NF90_FLOAT, "moisture tendency due to PBL scheme",                             "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dq_dt_deepconv',  NF90_FLOAT, "moisture tendency due to deep convection scheme",                 "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dq_dt_shalconv',  NF90_FLOAT, "moisture tendency due to shallow convection scheme",              "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dq_dt_micro',     NF90_FLOAT, "moisture tendency due to microphysics scheme",                    "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dq_dt_phys',      NF90_FLOAT, "moisture tendency due to all physics schemes",                    "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dq_dt_nonphys',   NF90_FLOAT, "moisture tendency due to all processes other than physics",       "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'doz_dt_pbl',      NF90_FLOAT, "ozone tendency due to PBL scheme",                                "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'doz_dt_prodloss', NF90_FLOAT, "ozone tendency due to ozone production/loss",                     "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'doz_dt_oz',       NF90_FLOAT, "ozone tendency due to ozone",                                     "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'doz_dt_T',        NF90_FLOAT, "ozone tendency due to temperature",                               "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'doz_dt_ovhd',     NF90_FLOAT, "ozone tendency due to overhead ozone column",                     "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'doz_dt_phys',     NF90_FLOAT, "ozone tendency due to all physics schemes",                       "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'doz_dt_nonphys',  NF90_FLOAT, "ozone tendency due to all processes other than physics",          "kg kg-1 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_pbl',       NF90_FLOAT, "x-wind tendency due to PBL scheme",                               "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_ogwd',      NF90_FLOAT, "x-wind tendency due to orographic GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_deepconv',  NF90_FLOAT, "x-wind tendency due to deep convection scheme",                   "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_cgwd',      NF90_FLOAT, "x-wind tendency due to convective GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_rayleigh',  NF90_FLOAT, "x-wind tendency due to rayleigh damping scheme",                  "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_shalconv',  NF90_FLOAT, "x-wind tendency due to shallow convection scheme",                "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_phys',      NF90_FLOAT, "x-wind tendency due to all physics schemes",                      "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'du_dt_nonphys',   NF90_FLOAT, "x-wind tendency due to all processes other than physics",         "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_pbl',       NF90_FLOAT, "y-wind tendency due to PBL scheme",                               "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_ogwd',      NF90_FLOAT, "y-wind tendency due to orographic GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_deepconv',  NF90_FLOAT, "y-wind tendency due to deep convection scheme",                   "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_cgwd',      NF90_FLOAT, "y-wind tendency due to convective GWD scheme",                    "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_rayleigh',  NF90_FLOAT, "y-wind tendency due to rayleigh damping scheme",                  "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_shalconv',  NF90_FLOAT, "y-wind tendency due to shallow convection scheme",                "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_phys',      NF90_FLOAT, "y-wind tendency due to all physics schemes",                      "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  call NetCDF_def_var(ncid, 'dv_dt_nonphys',   NF90_FLOAT, "y-wind tendency due to all processes other than physics",         "m s-2",       dummy_id, (/ hor_dim_id, vert_dim_id, time_diag_id /))
-  
+  call output_init_tendency(ncid, 'dT_dt_lwrad',     "temperature tendency due to longwave radiation scheme",        "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_longwave))
+  call output_init_tendency(ncid, 'dT_dt_swrad',     "temperature tendency due to shortwave radiation scheme",       "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_shortwave))
+  call output_init_tendency(ncid, 'dT_dt_pbl',       "temperature tendency due to PBL scheme",                       "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_pbl))
+  call output_init_tendency(ncid, 'dT_dt_deepconv',  "temperature tendency due to deep convection scheme",           "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_dcnv))
+  call output_init_tendency(ncid, 'dT_dt_shalconv',  "temperature tendency due to shallow convection scheme",        "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_scnv))
+  call output_init_tendency(ncid, 'dT_dt_micro',     "temperature tendency due to microphysics scheme",              "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_mp))
+  call output_init_tendency(ncid, 'dT_dt_ogwd',      "temperature tendency due to orographic GWD scheme",            "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_orographic_gwd))
+  call output_init_tendency(ncid, 'dT_dt_rayleigh',  "temperature tendency due to rayleigh damping scheme",          "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_rayleigh_damping))
+  call output_init_tendency(ncid, 'dT_dt_cgwd',      "temperature tendency due to convective GWD scheme",            "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_nonorographic_gwd))
+  call output_init_tendency(ncid, 'dT_dt_phys',      "temperature tendency due to all physics schemes",              "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_physics))
+  call output_init_tendency(ncid, 'dT_dt_nonphys',   "temperature tendency due to all processes other than physics", "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics))
+  call output_init_tendency(ncid, 'dq_dt_pbl',       "moisture tendency due to PBL scheme",                       "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_pbl))
+  call output_init_tendency(ncid, 'dq_dt_deepconv',  "moisture tendency due to deep convection scheme",           "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_dcnv))
+  call output_init_tendency(ncid, 'dq_dt_shalconv',  "moisture tendency due to shallow convection scheme",        "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_scnv))
+  call output_init_tendency(ncid, 'dq_dt_micro',     "moisture tendency due to microphysics scheme",              "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_mp))
+  call output_init_tendency(ncid, 'dq_dt_phys',      "moisture tendency due to all physics schemes",              "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_physics))
+  call output_init_tendency(ncid, 'dq_dt_nonphys',   "moisture tendency due to all processes other than physics", "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_non_physics))
+  call output_init_tendency(ncid, 'doz_dt_pbl',      "ozone tendency due to PBL scheme",                          "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_pbl))
+  call output_init_tendency(ncid, 'doz_dt_prodloss', "ozone tendency due to ozone production/loss",               "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_prod_loss))
+  call output_init_tendency(ncid, 'doz_dt_oz',       "ozone tendency due to ozone",                               "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_ozmix))
+  call output_init_tendency(ncid, 'doz_dt_T',        "ozone tendency due to temperature",                         "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_temp))
+  call output_init_tendency(ncid, 'doz_dt_ovhd',     "ozone tendency due to overhead ozone column",               "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_overhead_ozone))
+  call output_init_tendency(ncid, 'doz_dt_phys',     "ozone tendency due to all physics schemes",                 "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_physics))
+  call output_init_tendency(ncid, 'doz_dt_nonphys',  "ozone tendency due to all processes other than physics",    "kg kg-1 s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_non_physics))
+  call output_init_tendency(ncid, 'du_dt_pbl',       "x-wind tendency due to PBL scheme",                       "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_pbl))
+  call output_init_tendency(ncid, 'du_dt_ogwd',      "x-wind tendency due to orographic GWD scheme",            "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_orographic_gwd))
+  call output_init_tendency(ncid, 'du_dt_deepconv',  "x-wind tendency due to deep convection scheme",           "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_dcnv))
+  call output_init_tendency(ncid, 'du_dt_cgwd',      "x-wind tendency due to convective GWD scheme",            "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_nonorographic_gwd))
+  call output_init_tendency(ncid, 'du_dt_rayleigh',  "x-wind tendency due to rayleigh damping scheme",          "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_rayleigh_damping))
+  call output_init_tendency(ncid, 'du_dt_shalconv',  "x-wind tendency due to shallow convection scheme",        "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_scnv))
+  call output_init_tendency(ncid, 'du_dt_phys',      "x-wind tendency due to all physics schemes",              "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_physics))
+  call output_init_tendency(ncid, 'du_dt_nonphys',   "x-wind tendency due to all processes other than physics", "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_non_physics))
+  call output_init_tendency(ncid, 'dv_dt_pbl',       "y-wind tendency due to PBL scheme",                       "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_pbl))
+  call output_init_tendency(ncid, 'dv_dt_ogwd',      "y-wind tendency due to orographic GWD scheme",            "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_orographic_gwd))
+  call output_init_tendency(ncid, 'dv_dt_deepconv',  "y-wind tendency due to deep convection scheme",           "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_dcnv))
+  call output_init_tendency(ncid, 'dv_dt_cgwd',      "y-wind tendency due to convective GWD scheme",            "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_nonorographic_gwd))
+  call output_init_tendency(ncid, 'dv_dt_rayleigh',  "y-wind tendency due to rayleigh damping scheme",          "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_rayleigh_damping))
+  call output_init_tendency(ncid, 'dv_dt_shalconv',  "y-wind tendency due to shallow convection scheme",        "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_scnv))
+  call output_init_tendency(ncid, 'dv_dt_phys',      "y-wind tendency due to all physics schemes",              "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_physics))
+  call output_init_tendency(ncid, 'dv_dt_nonphys',   "y-wind tendency due to all processes other than physics", "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics))
+
   call NetCDF_def_var(ncid, 'sfc_dwn_sw',      NF90_FLOAT, "surface downwelling shortwave flux (valid all timesteps)",                   "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_up_sw',       NF90_FLOAT, "surface upwelling shortwave flux (valid all timesteps)",                     "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_net_sw',      NF90_FLOAT, "surface net shortwave flux (downwelling - upwelling) (valid all timesteps)", "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
@@ -433,13 +437,11 @@ subroutine output_append(scm_state, physics, force)
     
     CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_inst",VARID=var_id))
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_out /)))
-
+    
     call output_append_state(ncid, scm_state, physics)
     call output_append_forcing(ncid, scm_state)
-  
     call output_append_sfcprop(ncid, scm_state, physics)
     call output_append_interstitial_inst(ncid, scm_state, physics)
-    
     call output_append_diag_inst(ncid, scm_state, physics)
   end if
   
@@ -592,7 +594,9 @@ subroutine output_append_interstitial_inst(ncid, scm_state, physics)
     
     call NetCDF_put_var(ncid, "tau_u",   physics%Interstitial%dusfc1(:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "tau_v",   physics%Interstitial%dvsfc1(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "upd_mf",  physics%Tbd%ud_mf(:,:), scm_state%itt_out)
+    if (physics%model%imfdeepcnv >= 0 .or. physics%model%imfshalcnv >= 0) then
+      call NetCDF_put_var(ncid, "upd_mf",  physics%Tbd%ud_mf(:,:), scm_state%itt_out)
+    end if
     call NetCDF_put_var(ncid, "dwn_mf",  physics%Interstitial%dd_mf(:,:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "det_mf",  physics%Interstitial%dt_mf(:,:), scm_state%itt_out)
     
@@ -726,49 +730,49 @@ subroutine output_append_diag_avg(ncid, scm_state, physics)
     inverse_n_diag = 1.0/physics%Model%nszero
     inverse_dt = 1.0/scm_state%dt
     
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_longwave),          "dT_dt_lwrad",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_shortwave),         "dT_dt_swrad",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_pbl),               "dT_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_dcnv),              "dT_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_scnv),              "dT_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_mp),                "dT_dt_micro",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_orographic_gwd),    "dT_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_rayleigh_damping),  "dT_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_nonorographic_gwd), "dT_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_physics),           "dT_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics),       "dT_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_longwave),          "dT_dt_lwrad",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_shortwave),         "dT_dt_swrad",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_pbl),               "dT_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_dcnv),              "dT_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_scnv),              "dT_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_mp),                "dT_dt_micro",    scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_orographic_gwd),    "dT_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_rayleigh_damping),  "dT_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_nonorographic_gwd), "dT_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_physics),           "dT_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics),       "dT_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_pbl),            "dq_dt_pbl",       scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_dcnv),           "dq_dt_deepconv",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_scnv),           "dq_dt_shalconv",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_mp),             "dq_dt_micro",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_physics),        "dq_dt_phys",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_non_physics),    "dq_dt_nonphys",   scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_pbl),            "doz_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_prod_loss),      "doz_dt_prodloss", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_ozmix),          "doz_dt_oz",       scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_temp),           "doz_dt_T",        scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_overhead_ozone), "doz_dt_ovhd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_physics),        "doz_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_non_physics),    "doz_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_pbl),            "dq_dt_pbl",       scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_dcnv),           "dq_dt_deepconv",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_scnv),           "dq_dt_shalconv",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_mp),             "dq_dt_micro",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_physics),        "dq_dt_phys",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntqv,physics%Model%index_of_process_non_physics),    "dq_dt_nonphys",   scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_pbl),            "doz_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_prod_loss),      "doz_dt_prodloss", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_ozmix),          "doz_dt_oz",       scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_temp),           "doz_dt_T",        scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_overhead_ozone), "doz_dt_ovhd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_physics),        "doz_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(100+physics%Model%ntoz,physics%Model%index_of_process_non_physics),    "doz_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_pbl),               "du_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_orographic_gwd),    "du_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_dcnv),              "du_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_nonorographic_gwd), "du_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_rayleigh_damping),  "du_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_scnv),              "du_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_physics),           "du_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_non_physics),       "du_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_pbl),               "du_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_orographic_gwd),    "du_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_dcnv),              "du_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_nonorographic_gwd), "du_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_rayleigh_damping),  "du_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_scnv),              "du_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_physics),           "du_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_non_physics),       "du_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
 
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_pbl),               "dv_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_orographic_gwd),    "dv_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_dcnv),              "dv_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_nonorographic_gwd), "dv_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_rayleigh_damping),  "dv_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_scnv),              "dv_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_physics),           "dv_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call output_append_tendency(ncid, scm_state, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics),       "dv_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_pbl),               "dv_dt_pbl",      scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_orographic_gwd),    "dv_dt_ogwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_dcnv),              "dv_dt_deepconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_nonorographic_gwd), "dv_dt_cgwd",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_rayleigh_damping),  "dv_dt_rayleigh", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_scnv),              "dv_dt_shalconv", scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_physics),           "dv_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics),       "dv_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
     call NetCDF_put_var(ncid, "tprcp_accum",          physics%Diag%totprcpb(:), scm_state%itt_diag, inverse_n_diag)
     call NetCDF_put_var(ncid, "ice_accum",            physics%Diag%toticeb(:),  scm_state%itt_diag, inverse_n_diag)
@@ -800,12 +804,25 @@ subroutine output_append_diag_rad(ncid, scm_state, physics)
     
 end subroutine output_append_diag_rad
 
-subroutine output_append_tendency(ncid, scm_state, physics, idtend, label, itt, mult_const)
+subroutine output_init_tendency(ncid, label, desc, units, hor_id, vert_id, time_id, idtend)
+  use NetCDF_def, only: NetCDF_def_var
+  
+  integer, intent(in) :: ncid, hor_id, vert_id, time_id, idtend
+  character(len=*), intent(in) :: label, desc, units
+  
+  integer :: dummy_id
+  
+  if(idtend >=1) then
+    call NetCDF_def_var(ncid, label, NF90_FLOAT, desc, units, dummy_id, (/ hor_id, vert_id, time_id /))
+  end if
+  
+end subroutine output_init_tendency
+
+subroutine output_append_tendency(ncid, physics, idtend, label, itt, mult_const)
   use scm_type_defs, only: scm_state_type, physics_type
   use NetCDF_put, only: NetCDF_put_var
   
   integer, intent(in) :: ncid, idtend, itt
-  type(scm_state_type), intent(in) :: scm_state
   type(physics_type), intent(in) :: physics
   character(len=*), intent(in) :: label
   real(kind=dp), intent(in), optional :: mult_const
