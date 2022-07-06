@@ -719,6 +719,10 @@ class Experiment(object):
             cmd = 'ln -sf {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
             execute(cmd)
         
+        #Inform user of timestep and output intervals
+        logging.info('Using {0}s as the timestep with an instantaneous output period of {1}s and a diagnostic output period of {2}s'.format(
+            case_nml['case_config']['dt'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_out'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_diag']))
+        
         return os.path.join(SCM_RUN, output_dir)
 
 def launch_executable(use_gdb, gdb, ignore_error = False):
@@ -1011,7 +1015,7 @@ def main():
                 if timestep:
                     active_suite = suite(suite_name, tracers, namelist, timestep, -1, False)
                 else:
-                    active_sutie = suite(suite_name, tracers, namelist, -1, -1, False)
+                    active_suite = suite(suite_name, tracers, namelist, -1, -1, False)
             else:
                 message = 'The given suite ({0}), does not have defaults set in suite_info.py and either the tracers file or physics namelist file (or both) were not provided.'.format(suite_name)
                 logging.critical(message)
