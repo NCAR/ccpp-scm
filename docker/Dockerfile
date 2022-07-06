@@ -1,6 +1,6 @@
 FROM dtcenter/common-community-container:gnu9
 
-MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
+MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu> or Michael Kavulich <kavulich@ucar.edu>
 
 #
 # Dockerfile for building CCPP SCM container
@@ -12,19 +12,30 @@ MAINTAINER Michelle Harrold <harrold@ucar.edu> or Grant Firl <grantf@ucar.edu>
 
 # Obtain CCPP SCM source code
 RUN cd /comsoftware \
-  && git clone --recursive -b v5.0.0 https://github.com/NCAR/ccpp-scm
+  && git clone --recursive -b release/public-v6 https://github.com/NCAR/ccpp-scm
+
+# Obtain static data that was previously stored in repository
+RUN cd /comsoftware/ccpp-scm/ \
+  && . contrib/get_all_static_data.sh
 
 # Obtain the pre-computed look-up tables for running with Thompson microphysics
 RUN cd /comsoftware/ccpp-scm/ \
   && . contrib/get_thompson_tables.sh
   
-# Obtain the IN-CCN data for use with Morrison-Gettelman microphysics
-RUN cd /comsoftware/ccpp-scm/ \
-  && . contrib/get_mg_inccn_data.sh
-
 # Run the machine setup script to set environment variables
-RUN cd /comsoftware/ccpp-scm/scm/ \
-  && . etc/CENTOS_docker_setup.sh
+ENV CC=/opt/rh/devtoolset-9/root/usr/bin/gcc
+ENV CXX=/opt/rh/devtoolset-9/root/usr/bin/g++
+ENV F77=/opt/rh/devtoolset-9/root/usr/bin/gfortran
+ENV F90=/opt/rh/devtoolset-9/root/usr/bin/gfortran
+ENV FC=/opt/rh/devtoolset-9/root/usr/bin/gfortran
+
+ENV NETCDF=/comsoftware/libs/netcdf
+
+RUN cd /comsoftware/ccpp-scm/contrib \
+  && wget https://raw.githubusercontent.com/NCAR/ccpp-scm/3f501aa8af0fb00ff124d8301c932292d1d0abf3/contrib/build_nceplibs.sh \
+  && chmod +x build_nceplibs.sh \
+  && cd .. \
+  && ./contrib/build_nceplibs.sh $PWD/nceplibs
 
 ENV bacio_ROOT /comsoftware/ccpp-scm/nceplibs
 ENV sp_ROOT /comsoftware/ccpp-scm/nceplibs
@@ -54,3 +65,5 @@ RUN cd /comsoftware/ccpp-scm/scm \
 
 # Set working directory
 WORKDIR /comsoftware/ccpp-scm/scm/bin
+ENV SCM_WORK=/comsoftware
+ENV SCM_ROOT=/comsoftware/ccpp-scm/
