@@ -31,6 +31,7 @@ Minor
 This release bundle has some known limitations:
 
 \begin{itemize}
+\item In the output file, temperature tendency variables all mistakenly have the same description, although their variable names are correct. This has been fixed in the development code.
 \item Using the RRFS\_v1beta, HRRR, and WoFS\_v0 suites for cases where deep convection is expected to be active will likely produce strange/unreliable results, unless the forcing has been modified to account for the deep convection. This is because forcing for existing cases assumes a horizontal scale for which deep convection is subgrid-scale and is expected to be parameterized. The  suites without convection are intended for use with regional UFS simulations with horizontal scale small enough not to need a deep convection parameterization active, and it does not contain a deep convective scheme. Nevertheless, these suites are included with the SCM as-is for research purposes.
 \item The provided cases over land points cannot use an LSM at this time due to the lack of initialization data for the LSMs. Therefore, for the provided cases over land points (ARM\_SGP\_summer\_1997\_* and LASSO\_*, where sfc\_type = 1 is set in the case configuration file), prescribed surface fluxes must be used:
 \begin{itemize}
