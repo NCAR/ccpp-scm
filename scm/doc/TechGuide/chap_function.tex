@@ -17,46 +17,50 @@ In this chapter, it will briefly be described how each of these tasks is perform
 The following steps are performed at the beginning of program execution:
 \begin{enumerate}
 \item Call \execout{get\_config\_nml()} in the \execout{scm\_input} module to read in the \hyperref[subsection: case config]{\execout{case\_config}} and \hyperref[subsection: physics config]{\execout{physics\_config}} namelists. This subroutine also sets some variables within the \execout{scm\_state} derived type from the data that was read.
-\item Call \execout{get\_case\_init()} in the \execout{scm\_input} module to read in the \hyperref[subsection: case input]{case input data file}. This subroutine also sets some variables within the \execout{scm\_input} derived type from the data that was read.
+\item Call \execout{get\_case\_init()} (or \execout{get\_case\_init\_DEPHY()} if using the DEPHY format) in the \execout{scm\_input} module to read in the \hyperref[subsection: case input]{case input data file}. This subroutine also sets some variables within the \execout{scm\_input} derived type from the data that was read.
 \item Call \execout{get\_reference\_profile()} in the \execout{scm\_input} module to read in the reference profile data. This subroutine also sets some variables within the \execout{scm\_reference} derived type from the data that was read. At this time, there is no ``standard'' format for the reference profile data file. There is a \execout{select case} statement within the \execout{get\_reference\_profile()} subroutine that reads in differently-formatted data. If adding a new reference profile, it will be required to add a section that reads its data in this subroutine.
 \end{enumerate}
 
 \section{Setting up vertical grid and interpolating input data}
-The CCPP SCM uses pressure for the vertical coordinate (lowest index is the surface). There are two choices for generating the vertical coordinate corresponding to a) the 2017 operational GFS v14 based on the Global Spectral Model (GSM) (set \execout{model\_name} $=$ \exec{`GFS'} in the \execout{case\_config} file), and b) the FV3-based GFS v15 (set \execout{model\_name} $=$ \exec{`FV3'} in the \execout{case\_config} file). For both methods, the pressure levels are calculated using the surface pressure and coefficients ($a_k$ and $b_k$). For the GSM-based vertical coordinate, the coefficient data is read from an external file. Only 28, 42, 60, 64, and 91 levels are supported. If using the FV3-based vertical coordinate, it is possible to use potentially any (integer) number of vertical levels. Depending on the vertical levels specified, however, the method of specification of the coefficients may change. Please see the subroutine \execout{get\_FV3\_vgrid} in the source file \execout{ccpp-scm/scm/src/scm\_vgrid.F90} for details. This subroutine was minimally adapted from the source file \execout{fv\_eta.F90} from the v0 release version of the FV3GFS model.
+The CCPP SCM uses pressure for the vertical coordinate (lowest index is the surface). The pressure levels are calculated using the surface pressure and coefficients ($a_k$ and $b_k$), which are taken directly from FV3 code (\execout{fv\_eta.h}). For vertical grid options, inspect \execout{scm/src/scm\_vgrid.F90} for valid values of \execout{npz\_type}. The default vertical coordinate uses 127 levels and sets \execout{npz\_type} to the empty string. Alternatively, one can specify the ($a_k$ and $b_k$) coefficients via an external file in the \execout{scm/data/vert\_coord\_data} directory and pass it in to the SCM via the \execout{-{}-vert\_coord\_file} argument of the run script. If changing the number of vertical levels or the algorithm via the \execout{-{}-levels}  or \execout{-{}-npz\_type} run script arguments, be sure to check \execout{src/scm/scm\_vgrid.F90} and \execout{fv\_eta.h} that the vertical coordinate is as inteneded.
 
 After the vertical grid has been set up, the state variable profiles stored in the \execout{scm\_state} derived data type are interpolated from the input and reference profiles in the \execout{set\_state} subroutine of the \execout{scm\_setup} module.
 
 \section{Physics suite initialization}
 \label{section: physics init}
-With the CCPP framework, initializing a physics suite is a 5-step process:
+With the CCPP framework, initializing a physics suite is a 3-step process:
 \begin{enumerate}
-\item Call \execout{ccpp\_init()} with the name of the suite and the CCPP derived data type (\execout{cdata}) as arguments. This call will read and parse the suite definition file and initialize the \execout{cdata} derived data type.
 \item Initialize variables needed for the suite initialization routine. For suites originating from the GFS model, this involves setting some values in a derived data type used in the initialization subroutine. Call the suite initialization subroutine to perform suite initialization tasks that are not already performed in the \execout{init} routines of the CCPP-compliant schemes (or associated initialization stages for groups or suites listed in the suite definition file). Note: As of this release, this step will require another suite intialization subroutine to be coded for a non-GFS-based suite to handle any initialization that is not already performed within CCPP-compliant scheme initialization routines.
-\item Associate the \execout{scm\_state} variables with the appropriate pointers in the \execout{physics} derived data type. Note: It is important that this step be performed before the next step to avoid segmentation faults.
-\item Execute the \execout{ccpp\_field\_add()} calls for the remaining variables to be used by the physics schemes. This step makes all physics variables that are exposed by the host application available to all physics schemes in the suite. This is done through an inclusion of an external file, \execout{ccpp\_fields.inc} that is automatically generated from the \execout{ccpp\_prebuild.py} script using the metadata contained in the host application cap (\execout{ccpp-scm/scm/src/scm\_type\_defs.f90} in the current implementation).
+\item Associate the \execout{scm\_state} variables with the appropriate pointers in the \execout{physics} derived data type.
 \item Call \execout{ccpp\_physics\_init} with the \execout{cdata} derived data type as input. This call executes the initialization stages of all schemes, groups, and suites that are defined in the suite definition file.
 \end{enumerate}
 
 \section{Time integration}
 \label{section: time integration}
-Two time-stepping schemes have been implemented within the CCPP SCM: forward Euler (\execout{time\_scheme} $=$ \exec{1} in the \execout{case\_config} namelist) and filtered leapfrog (\execout{time\_scheme} $=$ \exec{2} in the \execout{case\_config} namelist). If the leapfrog scheme is chosen, two time levels of state variables are saved and the first time step is implemented as forward time step over $\sfrac{\Delta t}{2}$.
+The CCPP SCM uses the simple forward Euler scheme for time-stepping.
 
 During each step of the time integration, the following sequence occurs:
 \begin{enumerate}
 \item Update the elapsed model time.
 \item Calculate the current date and time given the initial date and time and the elapsed time.
-\item If the leapfrog scheme is used, save the unfiltered model state from the previous time step.
 \item Call the \execout{interpolate\_forcing()} subroutine in the \execout{scm\_forcing} module to interpolate the forcing data in space and time.
 \item Recalculate the pressure variables (pressure, Exner function, geopotential) in case the surface pressure has changed.
 \item Call \execout{do\_time\_step()} in the \execout{scm\_time\_integration} module. Within this subroutine:
 \begin{itemize}
 \item Call the appropriate \execout{apply\_forcing\_*} subroutine from the \execout{scm\_forcing} module.
-\item If using the leapfrog scheme, transfer the model state from one memory slot to the other.
 \item For each column, call \execout{ccpp\_physics\_run()} to call all physics schemes within the suite (this assumes that all suite parts are called sequentially without intervening code execution)
 \end{itemize}
-\item If using the leapfrog scheme, call \execout{filter()} in the \execout{scm\_time\_integration} module to time filter the model state.
 \item Check to see if output should be written during the current time step and call \execout{output\_append()} in the \execout{scm\_output} module if necessary.
 \end{enumerate}
 
 \section{Writing output}
-As of this release, the SCM output is only instantaneous. Specifying an \execout{output\_frequency} in the case configuration file greater than the timestep will result in data loss. Prior to the physics suite being initialized, the \execout{output\_init()} subroutine in the \execout{scm\_output} module is called to create the NetCDF output file and define all dimensions and variables. Immediately after the physics suite initialization and at the defined frequency within the time integration loop, the \execout{output\_append()} subroutine is called and instantaneous data values are appended to the NetCDF file. Any variables defined in the \execout{scm\_state} and/or \execout{physics} derived data types are accessible to the output subroutines. Writing new variables to the output involves hard-coding lines in the \execout{output\_init()} and \execout{output\_append()} subroutines.
+Output is accomplished via writing to a NetCDF file. If not in the initial spin-up period, a subroutine is called to determine whether data needs to be added to the output file during every timestep. Variables can be written out as instantaneous or time-averaged and there are 5 output periods:
+\begin{enumerate}
+\item one associated with how often instantaneous variables should be written out (controlled by the \execout{-{}- n\_itt\_out} run script variable).
+\item one associated with how often diagnostic (either instantaneous or time-averaged) should be written out (controlled by the \execout{-{}- n\_itt\_diag} run script variable)
+\item one associated with the shortwave radiation period (controlled by \execout{fhswr} variable in the physics namelist)
+\item one associated with the longwave radiation period (controlled by the \execout{fhlwr} variable in the physics namelist)
+\item one associated with the minimum of the shortwave and longwave radiation intervals (for writing output if any radiation is called)
+\end{enumerate}
+
+Further, which variables are output and on each interval are controlled via the \execout{scm/src/scm\_output.F90} source file. Of course, any changes to this file must result in a recompilation to take effect. There are several subroutines for initializing the output file (\execout{output\_init\_*}) and for appending to it (\execout{output\_append\_*}) that are organized according to their membership in physics derived data types. See the \execout{scm/src/scm\_output.F90} source file to understand how to change output variables.

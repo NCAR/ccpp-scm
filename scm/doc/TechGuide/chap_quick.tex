@@ -14,7 +14,7 @@ The source code for the CCPP and SCM is provided through GitHub.com.  This relea
 
 Clone the source using
 \begin{lstlisting}[language=bash]
-git clone --recursive -b v5.0.0 https://github.com/NCAR/ccpp-scm
+git clone --recursive -b v6.0.0 https://github.com/NCAR/ccpp-scm
 \end{lstlisting}
              Recall that the \execout{recursive} option in this command clones the main ccpp-scm repository and all subrepositories (ccpp-physics and ccpp-framework). Using this option, there is no need to execute \exec{git submodule init} and \exec{git submodule update}.
 
@@ -37,7 +37,7 @@ By using the \execout{recursive} option, it guarantees that you are checking out
 \begin{lstlisting}[language=bash]
 git submodule update --init --recursive
 \end{lstlisting}
-You can try to use the latest commits of the ccpp-physics and ccpp-framework submodules if you wish, but this may not have been tested. To do so:
+You can try to use the latest commits of the ccpp-physics and ccpp-framework submodules if you wish, but this may not have been tested (i.e. SCM development may lag ccpp-physics and/or ccpp-framework development). To do so:
 \begin{enumerate}
 \item Navigate to the ccpp-physics directory.
 \begin{lstlisting}[language=bash]
@@ -69,36 +69,25 @@ cd ../..
 
 The source code for the SCM and CCPP components is in the form of programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O relies on the NetCDF libraries. Beyond the standard scripts, the build system relies on use of the Python scripting language, along with cmake, GNU make and date.
 
-The basic requirements for building and running the CCPP and SCM bundle are listed below. The versions listed reflect successful tests and there is no guarantee that the code will work with different versions.
+The following software stacks have been tested with this code. Other versions of various components will likely still work, however.
+
 \begin{itemize}
-    \item FORTRAN 90+ compiler
-    	\begin{itemize}
-   	 \item ifort 18.0.5.274, 19.0.2 and 19.0.5
-	 \item gfortran 6.2, 8.3, 9.1, 9.2, and 10.1
-	 \end{itemize}
-    \item C compiler
-    	\begin{itemize}
-	\item icc 18.0.5.274, 19.0.2 and 19.0.5
-	\item gcc 6.2, 8.3, 9.1, 9.2 and 10.1
-	\item Apple clang 11.0.0.11000033, LLVM clang 9.0.0 and 10.0.0
-	\end{itemize}
-    \item cmake 3.14+
-    	\begin{itemize}
-	\item NOTE: Version 3.15+ is required if installing NCEPLIBS
-	\end{itemize}
-   	 \item NetCDF 4.3.0, 4.4.0, 4.4.1.1, 4.5.0, 4.6.1, 4.6.3, 4.7.0, 4.7.3. 4.7.4 (not 3.x) with HDF5 and ZLIB
-    \item Python 2.7.5, 2.7.9, 2.7.13, 2.7.16, 3.6.1, 3.7.5, and 3.8.5 with f90nml module (and Shapely if using the \execout{UFS\_IC\_generator.py} script)
+	\item gfortran 12.1.0, gcc 12.1.0, cmake 3.23.2, NetCDF 4.7.4, Python 3.9.12
+	\item GNU compilers 10.1.0, cmake 3.16.4, NetCDF 4.8.1, Python 3.7.12
+	\item GNU compilers 11.1.0, cmake 3.18.2, NetCDF 4.8.1, Python 3.8.5
+	\item Intel compilers 2022.0.2, cmake 3.20.1, NetCDF 4.7.4, Python 3.7.11
+	\item Intel compilers 2022.1.0, cmake 3.22.0, NetCDF 4.8.1, Python 3.7.12	
 \end{itemize}
+	
+Because these tools are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) Short-Range Weather Application release v1.0.0 of March 2021 provides software packages and detailed instructions to install these prerequisites and the hpc-stack on supported platforms (see section~\ref{section: setup_supported_platforms}).
 
-Because these tools and libraries are typically the purview of system administrators to install and maintain, they are considered  part of the basic system requirements. The Unified Forecast System (UFS) Short-Range Weather Application release v1.0.0 of March 2021 provides software packages and detailed instructions to install these prerequisites and the NCEPLIBS on supported platforms (see section~\ref{section: setup_supported_platforms}).
-
-Further, there are several utility libraries as part of the NCEPLIBS package that must be installed with environment variables pointing to their locations prior to building the SCM.
+Further, there are several utility libraries as part of the hpc-stack package that must be installed with environment variables pointing to their locations prior to building the SCM.
 \begin{itemize}
     \item bacio - Binary I/O Library
     \item sp - Spectral Transformation Library
     \item w3nco - GRIB decoder and encoder library
 \end{itemize}
-The following environment variables are used by the build system to properly link these libraries: \execout{BACIO\_LIB4}, \execout{SP\_LIBd}, and \execout{W3NCO\_LIBd}. Computational platforms in which the NCEPLIBS are prebuilt and installed in a central location are referred to as preconfigured platforms. Examples of preconfigured platforms are most NOAA high-performance computing machines (using the Intel compiler) and the NCAR Cheyenne system (using the Intel and GNU compilers). The machine setup scripts mentioned in section \ref{section: compiling} load these libraries (which are identical to those used by the UFS Short and Medium Range Weather Applications on those machines) and set these environment variables for the user automatically. For installing the libraries and its prerequisites on supported platforms, existing UFS packages can be used (see section~\ref{section: setup_supported_platforms}).
+The following environment variables are used by the build system to properly link these libraries: \execout{bacio\_ROOT}, \execout{sp\_ROOT}, and \execout{w3nco\_ROOT}. Computational platforms in which these libraries are prebuilt and installed in a central location are referred to as preconfigured platforms. Examples of preconfigured platforms are most NOAA high-performance computing machines (using the Intel compiler) and the NCAR Cheyenne system (using the Intel and GNU compilers). The machine setup scripts mentioned in section \ref{section: compiling} load these libraries (which are identical to those used by the UFS Short and Medium Range Weather Applications on those machines) and set these environment variables for the user automatically. For installing the libraries and its prerequisites on supported platforms, existing UFS packages can be used (see section~\ref{section: setup_supported_platforms}).
 
 \subsection{Compilers}
 The CCPP and SCM have been tested on a variety of
@@ -110,7 +99,7 @@ most recent version of a compiler. If you have problems with compilers, please c
 release website (\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/download}).
 
 \subsection{Using Existing Libraries on Preconfigured Platforms}\label{section: use_preconfigured_platforms}
-Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms. These scripts load compiler modules (Fortran 2008-compliant), the NetCDF module, Python environment, etc. and set compiler and NCEPLIBS environment variables. From the top-level code directory (\execout{ccpp-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
+Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms. These scripts load compiler modules (Fortran 2008-compliant), the NetCDF module, Python environment, etc. and set compiler and environment variables. From the top-level code directory (\execout{ccpp-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
 \begin{lstlisting}[language=csh]
 source scm/etc/Hera_setup_intel.csh
 source scm/etc/Cheyenne_setup_gnu.csh
@@ -125,31 +114,9 @@ For bourne/bash shells,
 
 
 \subsection{Installing Libraries on Non-preconfigured Platforms}\label{section: setup_supported_platforms}
-For users on supported platforms such as generic Linux or macOS systems that have not been preconfigured, the UFS Short-Range Weather Application v1.0.0 release provides software packages and detailed setup instructions at \url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0} and \url{https://github.com/NOAA-EMC/NCEPLIBS/releases/tag/ufs-v2.0.0}. UFS users who already installed the \execout{NCEPLIBS} package only need to set the compiler environment variables as indicated in the relevant \execout{README\_*.txt} file in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0/doc} and source the shell script that is created by the \execout{NCEPLIBS} install process to set the required environment variables for compiling the SCM.
+For users on supported platforms such as generic Linux or macOS systems that have not been preconfigured, the \execout{hpc-stack} project is suggested for installing prerequisite libraries. Visit \url{https://github.com/NOAA-EMC/hpc-stack} for instructions for installing prerequisite libraries via \execout{hpc-stack} in their docs directory. UFS users who already installed libraries via the \execout{hpc-stack} package only need to set the compiler (\execout{CC, CXX, FC}), NetCDF (\execout{NetCDF\_ROOT}), and \execout{bacio},  \execout{sp} and \execout{w3nco} (\execout{bacio\_ROOT}, \execout{sp\_ROOT}, \execout{w3nco\_ROOT}) environment variables to point to their installation paths in order to compile the SCM. 
 
-The SCM uses only a small part of the UFS \execout{NCEPLIBS} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can follow the machine setup instructions in the relevant \execout{README*.txt} files in \url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0/doc} and, instead of installing \execout{NCEPLIBS-external} and \execout{NCEPLIBS}, install only NetCDF/NetCDF-Fortran manually or using the software package manager (\execout{apt}, \execout{yum}, \execout{brew}).
-
-Users need to set the compiler enviroment variables \execout{CC},  \execout{CXX}, \execout{FC} and the environment variable \execout{NETCDF} for compiling the three NCEP libraries (instead of the \execout{NCEPLIBS} umbrella build referred to in the \execout{NCEPLIBS-external} instructions) and the SCM.
-
-Installing the NCEP libraries: The SCM repository contains a bash installation script in \execout{ccpp-scm/contrib/build\_nceplibs.sh} that will fetch the source code of the three required NCEP libraries from their authoritative repositories on GitHub and install them locally for the SCM to use. To execute this script, perform the following step from the top level directory (\execout{ccpp-scm}).
-\begin{lstlisting}
-./contrib/build_nceplibs.sh /path/to/nceplibs
-\end{lstlisting}
-
-Following successful execution of this script, the commands to set the proper environment variables mentioned above will be written to the terminal as output. One must execute the correct set for the active shell to finish the installation, e.g., for bash
-\begin{lstlisting}
-export bacio_ROOT=/path/to/nceplibs/
-export sp_ROOT=/path/to/nceplibs/
-export w3nco_ROOT=/path/to/nceplibs/
-\end{lstlisting}
-and for t/csh
-\begin{lstlisting}
-setenv bacio_ROOT /path/to/nceplibs/
-setenv sp_ROOT /path/to/nceplibs/
-setenv w3nco_ROOT /path/to/nceplibs/
-\end{lstlisting}
-
-The installation of NCEPLIBS requires \execout{cmake} v3.15+. There are many ways to obtain the required version, either by following instructions provided by \execout{cmake} (\url{https://cmake.org/install/}), or by following the instructions provided for the UFS Short-Range Weather Application release (\url{https://github.com/NOAA-EMC/NCEPLIBS-external/releases/tag/ufs-v2.0.0}). Prepend this installation directory of \execout{cmake} to your path environment variable to use it for building the NCEPLIBS.
+The SCM uses only a small part of the UFS \execout{hpc-stack} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can install only NetCDF/NetCDF-Fortran manually or using the software package manager (\execout{apt}, \execout{yum}, \execout{brew}).
 
 The Python environment must provide the \execout{f90nml} module for the SCM scripts to function. Users can test if f90nml is installed using this command in the shell:
 \begin{lstlisting}
@@ -186,15 +153,15 @@ The directory \execout{/my/install/directory} must exist and its subdirectory \e
 
 \section{Compiling SCM with CCPP}
 \label{section: compiling}
-The first step in compiling the CCPP and SCM is to properly setup your user environment as described in sections~\ref{section: use_preconfigured_platforms} and~\ref{section: setup_supported_platforms}. The second step is to download the lookup tables and other large datasets (large binaries, $~$324\,MB) needed by the physics schemes and place them in the correct directory:
+The first step in compiling the CCPP and SCM is to properly setup your user environment as described in sections~\ref{section: use_preconfigured_platforms} and~\ref{section: setup_supported_platforms}. The second step is to download the lookup tables and other large datasets (large binaries, $<$1 GB) needed by the physics schemes and place them in the correct directory:
 From the top-level code directory (\execout{ccpp-scm} by default), execute the following scripts:
 \begin{lstlisting}[language=bash]
+./contrib/get_all_static_data.sh
 ./contrib/get_thompson_tables.sh
-./contrib/get_mg_inccn_data.sh
 \end{lstlisting}
-If the download step fails, make sure that your system's firewall does not block access to GitHub. If it does, download the files \execout{thompson\_tables.tar}  and \execout{MG\_INCCN\_data.tar} from the GitHub release website using your browser and manually extract its contents in the directory \execout{scm/data/physics\_input\_data/}.
+If the download step fails, make sure that your system's firewall does not block access to GitHub. If it does, download the files \execout{comparison\_data.tar.gz}, \execout{phyiscs\_input\_data.tar.gz}, \execout{processed\_case\_input.tar.gz}, \execout{raw\_case\_input.tar.gz} from the GitHub release website using your browser and manually extract its contents in the directory \execout{scm/data}. Similarly, do the same for \execout{thompson\_tables.tar.gz}  and \execout{MG\_INCCN\_data.tar.gz} and extract to \execout{scm/data/physics\_input\_data/}. 
 
-Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components.
+Following this step, the top level build system will use \execout{cmake} to query system parameters, execute the CCPP prebuild script to match the physics variables (between what the host model -- SCM -- can provide and what is needed by physics schemes in the CCPP for the chosen suites), and build the physics caps needed to use them. Finally, \execout{make} is used to compile the components.
 \begin{enumerate}
  \item From the top-level code directory (\execout{ccpp-scm} by default), change directory to the top-level SCM directory.
 \begin{lstlisting}[language=bash]
@@ -204,12 +171,25 @@ cd scm
 \begin{lstlisting}[language=bash]
 mkdir bin && cd bin
 \end{lstlisting}
-\item Invoke \exec{cmake} on the source code to build using one of the options below.
+\item Invoke \exec{cmake} on the source code to build using one of the options below. This step is used to identify for which suites the ccpp-framework will build caps and which suites can be run in the SCM without recompiling.
 \begin{itemize}
 \item Default mode
 \begin{lstlisting}[language=bash]
 cmake ../src
 \end{lstlisting}
+By default, this option uses all supported suites. The list of supported suites is controlled by \execout{scm/src/suite\_info.py}.
+\item All suites mode
+\begin{lstlisting}[language=bash]
+cmake -DCCPP_SUITES=ALL ../src
+\end{lstlisting}
+All suites in \execout{scm/src/suite\_info.py}, regardless of whether they're supported, will be used. This list is typically longer for the development version of the code than for releases.
+\item Selected suites mode
+\begin{lstlisting}[language=bash]
+cmake -DCCPP_SUITES=SCM_GFS_v16,SCM_RAP ../src
+\end{lstlisting}
+This only compiles the listed subset of suites (which should still have a corresponding entry in \execout{scm/src/suite\_info.py}
+
+
 \item The statements above can be modified with the following options (put before \execout{../src}):
 \begin{itemize}
 \item Use threading with openmp (not for macOS with clang+gfortran)
@@ -227,12 +207,11 @@ cmake [-DCMAKE_BUILD_TYPE ...] ../src 2>&1 | tee log.cmake
 \end{lstlisting}
 \end{itemize}
 
-
-CMake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. It generates software caps for each physics group defined in the supplied Suite Definition Files (SDFs) and generates a static library that becomes part of the SCM executable. Appropriate software caps \textbf{will be generated for all suites defined in the \execout{ccpp-scm/ccpp/suites} directory automatically.}
+CMake automatically runs the CCPP prebuild script to match required physics variables with those available from the dycore (SCM) and to generate physics caps and makefile segments. It generates software caps for each physics group defined in the supplied Suite Definition Files (SDFs) and generates a static library that becomes part of the SCM executable.
 
 If necessary, the CCPP prebuild script can be executed manually from the top level directory (\execout{ccpp-scm}). The basic syntax is
 \begin{lstlisting}[language=bash]
-./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --suites=SCM_GFS_v15p2,SCM_GFS_v16beta,SCM_GSD_v1[...] --builddir=./scm/bin [--debug]
+./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --suites=SCM_GFS_v16,SCM_RAP[...] --builddir=./scm/bin [--debug]
 \end{lstlisting}
 where the argument supplied via the \execout{-{}-suites} variable is a comma-separated list of suite names that exist in the \execout{./ccpp/suites} directory. Note that suite names are the suite definition filenames minus the \exec{suite\_} prefix and \exec{.xml} suffix.
 
@@ -250,7 +229,7 @@ make -j4 2>&1 | tee log.make
 
 The resulting executable may be found at \execout{./scm} (Full path of \execout{ccpp-scm/scm/bin/scm}).
 
-Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build/run directory is (from the \execout{bin} directory)
+Although \execout{make clean} is not currently implemented, an out-of-source build is used, so all that is required to clean the build directory is (from the \execout{bin} directory)
 \begin{lstlisting}[language=bash]
 pwd #confirm that you are in the ccpp-scm/scm/bin directory before deleting files
 rm -rfd *
@@ -260,25 +239,105 @@ Note: This command can be dangerous (deletes files without confirming), so make 
 If you encounter errors, please capture a log file from all of the steps, and start a thread on the support forum at: \url{https://dtcenter.org/forum/ccpp-user-support/ccpp-single-column-model}
 
 \section{Run the SCM with a supplied case}
-There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through one of two Python run scripts that are pre-staged into the \execout{bin} directory: \execout{run\_scm.py} or \execout{multi\_run\_scm.py}. The first sets up and runs one integration while the latter will set up and run several integrations serially.
+There are several test cases provided with this version of the SCM. For all cases, the SCM will go through the time steps, applying forcing and calling the physics defined in the chosen suite definition file using physics configuration options from an associated namelist. The model is executed through a Python run script that is pre-staged into the \execout{bin} directory: \execout{run\_scm.py}. It can be used to run one integration or several integrations serially, depending on the command line arguments supplied.
 
-\subsection{Single Run Script Usage} \label{subsection: singlerunscript}
-Running a case requires four pieces of information: the case to run (consisting of initial conditions, geolocation, forcing data, etc.), the physics suite to use (through a CCPP suite definition file), a physics namelist (that specifies configurable physics options to use), and a tracer configuration file. As discussed in chapter \ref{chapter: cases}, cases are set up via their own namelists in \execout{../etc/case\_config}. A default physics suite is provided as a user-editable variable in the script and default namelists and tracer configurations are associated with each physics suite (through \execout{../src/default\_namelists.py} and \execout{../src/default\_tracers.py}), so, technically, one must only specify a case to run with the SCM. The single run script's interface is described below.
+\subsection{Run Script Usage} \label{subsection: singlerunscript}
+Running a case requires four pieces of information: the case to run (consisting of initial conditions, geolocation, forcing data, etc.), the physics suite to use (through a CCPP suite definition file), a physics namelist (that specifies configurable physics options to use), and a tracer configuration file. As discussed in chapter \ref{chapter: cases}, cases are set up via their own namelists in \execout{../etc/case\_config}. A default physics suite is provided as a user-editable variable in the script and default namelists and tracer configurations are associated with each physics suite (through \execout{../src/suite\_info.py}), so, technically, one must only specify a case to run with the SCM when running just one integration. For running multiple integrations at once, one need only specify one argument (\execout{-m}) which runs through all permutations of supported suites from \execout{../src/suite\_info.py} and cases from \execout{../src/supported\_cases.py}. The run script's options are described below where option abbreviations are included in brackets.
 
-\begin{lstlisting}[language=bash]
-./run_scm.py -c CASE_NAME [-s SUITE_NAME] [-n PHYSICS_NAMELIST.nml] [-t TRACER_CONFIGURATION.txt] [-g] [-d]
-\end{lstlisting}
+\begin{itemize}
+\item \execout{-{}-case [-c]}
+	\begin{itemize}
+	\item \textbf{This or the \execout{-{}-multirun} option are the minimum required arguments.} The case should correspond to the name of a case in \execout{../etc/case\_config} (without the \execout{.nml} extension).
+	\end{itemize}
+\item \execout{-{}-suite [-s]}
+	\begin{itemize}
+	\item The suite should correspond to the name of a suite in \execout{../ccpp/suites} (without the \execout{.xml}) extension that was supplied in the \execout{cmake} or \execout{ccpp\_prebuild} step.
+	\end{itemize}
+\item \execout{-{}-namelist [-n]}
+	\begin{itemize}
+	\item The namelist should correspond to the name of a file in \execout{../ccpp/physics\_namelists} (WITH the \execout{.nml} extension). If this argument is omitted, the default namelist for the given suite in \execout{../src/suite\_info.py} will be used.
+	\end{itemize}
+\item \execout{-{}-tracers [-t]}
+	\begin{itemize}
+	\item The tracers file should correspond to the name of a file in \execout{../etc/tracer\_config} (WITH the \execout{.txt} extension). If this argument is omitted, the default tracer configuration for the given suite in \execout{../src/suite\_info.py} will be used.
+	\end{itemize}
+\item \execout{-{}-multirun [-m]}
+	\begin{itemize}
+	\item \textbf{This or the \execout{-{}-case} option are the minimum required arguments.} When used alone, this option runs through all permutations of supported suites from \execout{../src/suite\_info.py} and cases from \execout{../src/supported\_cases.py}. When used in conjunction with the \execout{-{}- file} option, only the runs configured in the file will be run.
+	\end{itemize}
+\item \execout{-{}-file [-f]}
+	\begin{itemize}
+	\item This option may be used in conjunction with the \execout{-{}-multirun} argument. It specifies a path and filename to a python file where multiple runs are configured.
+	\end{itemize}
+\item \execout{-{}-gdb [-g]}
+	\begin{itemize}
+	\item Use this to run the executable through the \execout{gdb} debugger (if it is installed on the system).
+	\end{itemize}
+\item \execout{-{}-docker [-d]}
+	\begin{itemize}
+	\item Use this argument when running in a docker container in order to successfully mount a volume between the host machine and the Docker container instance and to share the output and plots with the host machine.
+	\end{itemize}
+\item \execout{-{}-runtime}
+	\begin{itemize}
+	\item Use this to override the runtime provided in the case configuration namelist.
+	\end{itemize}
+\item \execout{-{}-runtime\_mult}
+	\begin{itemize}
+	\item Use this to override the runtime provided in the case configuration namelist by multiplying the runtime by the given value. This is used, for example, in regression testing to reduce total runtimes.
+	\end{itemize}
+\item \execout{-{}-levels [-l]}
+	\begin{itemize}
+	\item Use this to change the number of vertical levels.
+	\end{itemize}
+\item \execout{-{}-npz\_type}
+	\begin{itemize}
+	\item Use this to change the type of FV3 vertical grid to produce (see \execout{src/scm\_vgrid.F90} for valid values).
+	\end{itemize}
+\item \execout{-{}-vert\_coord\_file}
+	\begin{itemize}
+	\item Use this to specify the path/filename of a file containing the a\_k and b\_k coefficients for the vertical grid generation code to use.
+	\end{itemize}
+\item \execout{-{}-bin\_dir}
+	\begin{itemize}
+	\item Use this to specify the path to the build directory.
+	\end{itemize}
+\item \execout{-{}-run\_dir}
+	\begin{itemize}
+	\item Use this to specify the path to the run directory.
+	\end{itemize}
+\item \execout{-{}-case\_data\_dir}
+	\begin{itemize}
+	\item Use this to specify the path to the directory containing the case data file (useful for using the DEPHY case repository).
+	\end{itemize}
+\item \execout{-{}-n\_itt\_out}
+	\begin{itemize}
+	\item Use this to specify the period of writing instantaneous output in timesteps (if different than the default specified in the script).
+	\end{itemize}
+\item \execout{-{}-n\_itt\_diag}
+	\begin{itemize}
+	\item Use this to specify the period of writing instantaneous and time-averaged diagnostic output in timesteps (if different than the default specified in the script).
+	\end{itemize}
+\item \execout{-{}-timestep [-dt]}
+	\begin{itemize}
+	\item Use this to specify the timestep to use (if different than the default specified in \execout{../src/suite\_info.py}).
+	\end{itemize}
+\item \execout{-{}-verbose [-v]}
+	\begin{itemize}
+	\item Use this option to see additional debugging output from the run script and screen output from the executable.
+	\end{itemize}
+\end{itemize}
 
-When invoking the run script, the only required argument is the name of the case to run. The case name used must match one of the case configuration files located in \execout{../etc/case\_config} (\emph{without the .nml extension!}). If specifying a suite other than the default, the suite name used must match the value of the suite name in one of the suite definition files located in \execout{../../ccpp/suites} (Note: not the filename of the suite definition file). As part of the fifth CCPP release, the following suite names are valid:
+When invoking the run script, the only required argument is the name of the case to run. The case name used must match one of the case configuration files located in \execout{../etc/case\_config} (\emph{without the .nml extension!}). If specifying a suite other than the default, the suite name used must match the value of the suite name in one of the suite definition files located in \execout{../../ccpp/suites} (Note: not the filename of the suite definition file). As part of the sixth CCPP release, the following suite names are valid:
 \begin{enumerate}
-\item SCM\_GFS\_v15p2
-\item SCM\_GFS\_v16beta
-\item SCM\_csawmg
-\item SCM\_GSD\_v1
-\item SCM\_RRFS\_v1alpha
+\item SCM\_GFS\_v16
+\item SCM\_GFS\_v17p8
+\item SCM\_RAP
+\item SCM\_HRRR
+\item SCM\_RRFS\_v1beta
+\item SCM\_WoFS\_v0
 \end{enumerate}
 
-Note that using the Thompson microphysics scheme (as in SCM\_GSD\_v1) requires the computation of look-up tables during its initialization phase. As of the release, this process has been prohibitively slow with this model, so it is HIGHLY suggested that these look-up tables are downloaded and staged to use this scheme (and the SCM\_GSD\_v1 suite) as described in section~\ref{section: compiling}.
+Note that using the Thompson microphysics scheme requires the computation of look-up tables during its initialization phase. As of the release, this process has been prohibitively slow with this model, so it is HIGHLY suggested that these look-up tables are downloaded and staged to use this scheme as described in section~\ref{section: compiling}. The issue appears to be machine/compiler-specific, so you may be able to produce the tables with the SCM, especially when invoking \execout{cmake} with the \execout{-DOPENMP=ON} option.
 
 Also note that some cases require specified surface fluxes. Special suite definition files that correspond to the suites listed above have been created and use the \execout{*\_prescribed\_surface} decoration. It is not necessary to specify this filename decoration when specifying the suite name. If the \execout{spec\_sfc\_flux} variable in the configuration file of the case being run is set to \execout{.true.}, the run script will automatically use the special suite definition file that corresponds to the chosen suite from the list above.
 
@@ -292,35 +351,25 @@ If specifying a namelist other than the default, the value must be an entire fil
 \item rainwat
 \item snowwat
 \item graupel
+\item hailwat
 \item cld\_amt
 \item water\_nc
 \item ice\_nc
 \item rain\_nc
 \item snow\_nc
 \item graupel\_nc
+\item hail\_nc
+\item graupel\_vol
+\item hail\_vol
+\item ccn\_nc
 \item sgs\_tke
 \item liq\_aero
 \item ice\_aero
 \item q\_rimef
 \end{enumerate}
 
-Lastly, the \execout{-g} flag can be used to run the executable through the \exec{gdb} debugger (assuming it is installed on the system), and the \execout{-d} flag is required when running this command in a Docker container in order to successfully mount a volume between the host machine and the Docker container instance and to share the output and plots with the host machine.
-
-A NetCDF output file is generated in the location specified in the case
-configuration file, if the \execout{output\_dir} variable exists in that file. Otherwise an output directory is constructed from the case, suite, and namelist used (if different from the default). All output directories are placed in the \execout{bin} directory. If using a Docker container, all output is copied to the \execout{/home} directory in container space for volume-mounting purposes. Any standard NetCDF file viewing or analysis tools may be used to
+A NetCDF output file is generated in an output directory located named with the case and suite within the run directory. If using a Docker container, all output is copied to the \execout{/home} directory in container space for volume-mounting purposes. Any standard NetCDF file viewing or analysis tools may be used to
 examine the output file (ncdump, ncview, NCL, etc).
-
-\subsection{Multiple Run Script Usage}\label{subsection: multirunscript}
-
-A second Python script is provided for automating the execution of multiple integrations through repeated calling of the single run script. From the run directory, one may use this script through the following interface.
-
-\begin{lstlisting}[language=bash]
-./multi_run_scm.py {[-c CASE_NAME] [-s SUITE_NAME] [-f PATH_TO_FILE]} [-v{v}] [-t] [-d]
-\end{lstlisting}
-
-No arguments are required for this script. The \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options form a mutually-exclusive group, so exactly one of these is allowed at one time. If \execout{--c} is specified with a case name, the script will run a set of integrations for all supported suites (defined in \execout{../src/supported\_suites.py}) for that case. If \execout{-s} is specified with a suite name, the script will run a set of integrations for all supported cases (defined in \execout{../src/supported\_cases.py}) for that that suite. If \execout{-f} is specified with the path to a filename, it will read in lists of cases, suites, and namelists to use from that file. An example for this file's syntax can be found in \execout{../src/example\_multi\_run.py}. If multiple namelists are specified in the file, there either must be one suite specified \emph{or} the number of suites must match the number of namelists. If none of the \execout{-c or --case}, \execout{-s or --suite}, or \execout{-f or --file} options group is specified, the script will run through all permutations of supported cases and suites (as defined in the files previously mentioned). For this script, all runs are assumed to use default tracer configurations for all suites.
-
-In addition to the main options, some helper options can also be used with any of those above. The \execout{-v{v} or --verbose} option can be used to output more information from the script to the console and to a log file. If this option is not used, only completion progress messages are written out. If one \execout{-v} is used, the script will write out completion progress messages and all messages and output from the single run script. If two \execout{-vv} are used, the script will also write out all messages and single run script output to a log file (\execout{multi\_run\_scm.log}) in the \execout{bin} directory. The option, \execout{-t or --timer}, can be used to output the elapsed time for each integration executed by the script. Note that the execution time includes file operations performed by the single run script in addition to the execution of the underlying (Fortran) SCM executable. By default, this option will execute one integration of each subprocess. Since some variability is expected for each model run, if greater precision is required, the number of integrations for timing averaging can be set through the internal script variable \execout{timer\_iterations}. This option can be useful, for example, for getting a rough idea of relative computational expense of different physics suites. Finally, the \execout{-d} flag is required when running this command in a Docker container in order to successfully mount a volume between the host machine and the Docker container instance and to share the output and plots with the host machine.
 
 \subsection{Batch Run Script}
 
@@ -330,7 +379,7 @@ If using the model on HPC resources and significant amounts of processor time is
 \end{lstlisting}
 from the \execout{bin} directory.
 
-Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Technical Documentation available at \url{https://ccpp-techdoc.readthedocs.io/en/v5.0.0/}.
+Additional details regarding the SCM may be found in the remainder of this guide. More information on the CCPP can be found in the CCPP Technical Documentation available at \url{https://ccpp-techdoc.readthedocs.io/en/v6.0.0/}.
 
 \section{Creating and Using a Docker Container with SCM and CCPP}
 \label{docker}
@@ -350,7 +399,7 @@ docker-machine create default --virtualbox-no-vtx-check
 
 \subsection{Building the Docker image}
 
-The Dockerfile builds CCPP SCM v5.0.0 from source using the GNU compiler. A number of required codes are built and installed via the DTC-supported common community container. For reference, the common community container repository can be accessed here: \url{https://github.com/NCAR/Common-Community-Container}.
+The Dockerfile builds CCPP SCM v6.0.0 from source using the GNU compiler. A number of required codes are built and installed via the DTC-supported common community container. For reference, the common community container repository can be accessed here: \url{https://github.com/NCAR/Common-Community-Container}.
 
 The CCPP SCM has a number of system requirements and necessary libraries and tools. Below is a list, including versions, used to create the the GNU-based Docker image:
 \begin{itemize}
@@ -375,7 +424,7 @@ NOTE: Windows users can execute these steps in the terminal application that was
 \begin{lstlisting}[language=bash]
 docker build -t ccpp-scm .
 \end{lstlisting}
-Inspect the Dockerfile if you would like to see details for how the image is built. The image will contain SCM prerequisite software from DTC, the SCM and CCPP code, and a pre-compiled executable for the SCM with the 5 supported suites for the SCM. A successful build will show two images: dtcenter/common-community-container, and ccpp-scm. To list images, type:
+Inspect the Dockerfile if you would like to see details for how the image is built. The image will contain SCM prerequisite software from DTC, the SCM and CCPP code, and a pre-compiled executable for the SCM with the 6 supported suites for the SCM. A successful build will show two images: dtcenter/common-community-container, and ccpp-scm. To list images, type:
 \begin{lstlisting}[language=bash]
 docker images
 \end{lstlisting}
@@ -385,7 +434,7 @@ docker images
 
 A prebuilt Docker image for this release is available on Dockerhub if it is not desired to build from source. In order to use this, execute the following from the terminal where Docker is run:
 \begin{lstlisting}[language=bash]
-docker pull dtcenter/ccpp-scm:v5.0.0
+docker pull dtcenter/ccpp-scm:v6.0.0
 \end{lstlisting}
 To verify that it exists afterward, run
 \begin{lstlisting}[language=bash]
@@ -411,13 +460,13 @@ For bourne/bash shells,
 export OUT_DIR=/path/to/output
 \end{lstlisting}
 For Windows, the format that worked for us followed this example: \execout{/c/Users/my username/path/to/directory/to/mount}
-\item To run the SCM, you can run the Docker container that was just created and give it the same run commands as discussed in sections \ref{subsection: singlerunscript} and \ref{subsection: multirunscript}. \textbf{Be sure to remember to include the \execout{-d} option for all run commands}. For example,
+\item To run the SCM, you can run the Docker container that was just created and give it the same run commands as discussed in section \ref{subsection: singlerunscript}. \textbf{Be sure to remember to include the \execout{-d} option for all run commands}. For example,
 \begin{lstlisting}[language=bash]
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice -d
 \end{lstlisting}
 will run through the TWPICE case using the default suite and namelist and put the output in the shared directory. NOTE: Windows users may need to omit the curly braces around environment variables: use \execout{\$OUT\_DIR} instead of \execout{\$\{OUT\_DIR\}}. For running through all supported cases and suites, use
 \begin{lstlisting}[language=bash]
-docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./multi_run_scm.py -d
+docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -m -d
 \end{lstlisting}
 The options included in the above \execout{run} commands are the following:
 \begin{itemize}
@@ -426,7 +475,7 @@ The options included in the above \execout{run} commands are the following:
 \item \execout{-v} specifies the volume mount from host directory (outside container) to inside the container. Using volumes allows you to share data between the host machine and container. For running the SCM, the output is being mounted from \execout{/home} inside the container to the \execout{OUT\_DIR} on the host machine. Upon exiting the container, data mounted to the host machine will still be accessible.
 \item \execout{$--$name} names the container. If no name is provided, the daemon will autogenerate a random string name.
 \end{itemize}
-NOTE: If you are using a prebuilt image from Dockerhub, substitute the name of the image that was pulled from Dockerhub in the commands above; i.e. instead of \execout{ccpp-scm} above, one would have \execout{dtcenter/ccpp-scm:v5.0.0}.
+NOTE: If you are using a prebuilt image from Dockerhub, substitute the name of the image that was pulled from Dockerhub in the commands above; i.e. instead of \execout{ccpp-scm} above, one would have \execout{dtcenter/ccpp-scm:v6.0.0}.
 \item To use the SCM interactively, run non-default configurations, create plots, or even develop code, issue the following command:
 \begin{lstlisting}[language=bash]
 docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm /bin/bash

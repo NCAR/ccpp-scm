@@ -8,53 +8,13 @@ Only two files are needed to set up and run a case with the SCM. The first is a 
 \label{subsection: case config}
 The \execout{case\_config} namelist expects the following parameters:
 \begin{itemize}
-\item \execout{model\_name}
-	\begin{itemize}
-	\item This controls which vertical coordinates to use. Valid values are \exec{'FV3'} or \exec{`GFS'}. Here, \exec{`GFS'} refers to vertical coordinates used in the GSM.
-	\end{itemize}
-\item \execout{n\_columns}
-	\begin{itemize}
-	\item The code can be used to run a single column or multiple \emph{independent} columns using the same or different physics suites. Specify an integer, \exec{n}. NOTE: As of this release, only \execout{n\_columns} $= 1$ is supported.
-	\end{itemize}
 \item \execout{case\_name}
 	\begin{itemize}
 	\item Identifier for which dataset (initialization and forcing) to load. This string must correspond to a dataset included in the directory \execout{ccpp-scm/scm/data/processed\_case\_input/} (without the file extension).
 	\end{itemize}
-\item \execout{dt}
-	\begin{itemize}
-	\item Time step in seconds (floating point)
-	\end{itemize}
-\item \execout{time\_scheme}
-	\begin{itemize}
-	\item Specify 1 for the forward-Euler time-stepping scheme or 2 for the filtered leapfrog scheme.
-	\end{itemize}
 \item \execout{runtime}
 	\begin{itemize}
 	\item Specify the model runtime in seconds (integer). This should correspond with the forcing dataset used. If a runtime is specified that is longer than the supplied forcing, the forcing is held constant at the last specified values.
-	\end{itemize}
-\item \execout{output\_frequency}
-	\begin{itemize}
-	\item Specify the frequency of the model output in seconds (floating point). Currently, no averaging of the output fields is done if \execout{output\_frequency} $\neq$ \execout{dt}; only instantaneous output at the supplied frequency is implemented.
-	\end{itemize}
-\item \execout{n\_levels}
-	\begin{itemize}
-	\item Specify the integer number of vertical levels. If \execout{model\_name}=\exec{`GFS'}, only values of 28, 42, 60, 64, 91 are supported.
-	\end{itemize}
-\item \execout{output\_dir}
-	\begin{itemize}
-	\item A string representing the path (relative to the build directory) to which output should be written. (OPTIONAL)
-	\end{itemize}
-\item \execout{output\_file}
-	\begin{itemize}
-	\item A string representing the name of the NetCDF output file to be written (no \exec{.nc} extension expected).
-	\end{itemize}
-\item \execout{case\_data\_dir}
-	\begin{itemize}
-	\item A string representing the path (relative to the build directory) where case initialization and forcing data files can be found.
-	\end{itemize}
-\item \execout{vert\_coord\_data\_dir}
-	\begin{itemize}
-	\item A string representing the path (relative to the build directory) where vertical coordinate data files can be found (for \execout{model\_name}=\exec{`GFS'} only).
 	\end{itemize}
 \item \execout{thermo\_forcing\_type}
 	\begin{itemize}
@@ -112,18 +72,53 @@ The \execout{case\_config} namelist expects the following parameters:
 	\begin{itemize}
 	\item An integer representing the grid size of the UFS atmosphere initial conditions; the integer represents the number of grid points in each horizontal direction of each cube tile
 	\end{itemize}
+\item \execout{input\_type}
+        \begin{itemize}
+        \item  0 => original DTC format, 1 => DEPHY-SCM format.
+        \end{itemize}
 \end{itemize}
 
-\subsection{Case input data file}
+Optional variables (that may be overridden via run script command line arguments) are:
+\begin{itemize}
+\item \execout{vert\_coord\_file}
+        \begin{itemize}
+          \item File containing FV3 vertical grid coefficients.
+        \end{itemize}
+\item \execout{n\_levels}
+	\begin{itemize}
+	\item Specify the integer number of vertical levels.
+	\end{itemize}
+\end{itemize}
+
+\subsection{Case input data file (CCPP-SCM format)}
 \label{subsection: case input}
 
-The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has two dimensions (\execout{time} and \execout{levels}) and is organized into 3 groups: scalars, initial, and forcing. Not all fields are required for all cases. For example the fields \execout{sh\_flux\_sfc} and \execout{lh\_flux\_sfc} are only needed if the variable \execout{sfc\_flx\_spec} $=$ \exec{.true.} in the case configuration file and state nudging variables are only required if \execout{thermo\_forcing\_type} $=$ \exec{3} or \execout{mom\_forcing\_type} $=$ \exec{3}. Using an active LSM (Noah, NoahMP, RUC) requires many more variables than are listed here. Example files for using with Noah and NoahMP LSMs are included in \execout{ccpp-scm/scm/data/processed\_case\_input/fv3\_model\_point\_noah[mp].nc}.
+The initialization and forcing data for each case is stored in a NetCDF (version 4) file within the \execout{ccpp-scm/scm/data/processed\_case\_input} directory. Each file has at least two dimensions (\execout{time} and \execout{levels}, potentially with additions for vertical snow and soil levels) and is organized into 3 groups: scalars, initial, and forcing. Not all fields are required for all cases. For example the fields \execout{sh\_flux\_sfc} and \execout{lh\_flux\_sfc} are only needed if the variable \execout{sfc\_flx\_spec} $=$ \exec{.true.} in the case configuration file and state nudging variables are only required if \execout{thermo\_forcing\_type} $=$ \exec{3} or \execout{mom\_forcing\_type} $=$ \exec{3}. Using an active LSM (Noah, NoahMP, RUC) requires many more variables than are listed here. Example files for using with Noah and NoahMP LSMs are included in \execout{ccpp-scm/scm/data/processed\_case\_input/fv3\_model\_point\_noah[mp].nc}.
 
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,
                  label=lst_case_input_netcdf_header,
-                 caption=example NetCDF file header for case initialization and forcing data
+                 caption=example NetCDF file (CCPP-SCM format) header for case initialization and forcing data
                  ]{./arm_case_header.txt}
+
+\subsection{Case input data file (DEPHY format)}
+\label{subsection: case input dephy}
+The Development and Evaluation of Physics in atmospheric models (DEPHY) format is an internationally-adopted data format intended for use by SCM and LESs. The initialization and forcing data for each case is stored in a NetCDF (version 4) file, although these files are not by default included in the CCPP SCM repository. Note that the DEPHY format was adopted by the CCPP SCM prior to the standard being finalized (and has not been updated). Testing with DEPHY cases requires cloning the DEPHY-SCM repository mentioned above at a specific commit (\href{https://github.com/GdR-DEPHY/DEPHY-SCM/tree/f654162054f19f1fb6475f79c985b1a07cdffe4c}{f654162}) into the \execout{scm/data} directory and using the \execout{-{}-case\_data\_dir} argument with the run script. For example:
+\begin{lstlisting}[language=bash]
+cd [...]/ccpp-scm/scm/data
+git clone https://https://github.com/GdR-DEPHY/DEPHY-SCM
+cd DEPHY-SCM
+git checkout f654162
+cd [...]/ccpp-scm/scm/bin
+./run_scm.py -c ARMCU_REF --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/ARMCU/REF -v
+\end{lstlisting}
+Each DEPHY file has four dimensions (\execout{time}, \execout{levels}, \execout{longitude}, \execout{latitude}) and contains the initial conditions and forcing data. Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases. More information on the DEPHY format requirements can be found at \href{https://github.com/GdR-DEPHY/DEPHY-SCM}{DEPHY}. 
+
+\lstinputlisting[
+                 basicstyle=\scriptsize\ttfamily,
+                 label=lst_case_input_netcdf_header,
+                 caption=example NetCDF file (DEPHY format) header for case initialization and forcing data
+                 ]{./dephy_case_header.txt}
 
 \section{Included Cases}
 Several cases are included in the repository to serve as examples for users to create their own and for basic research. All case configuration namelist files for included cases can be found in \execout{ccpp-scm/scm/etc/case\_config} and represent the following observational field campaigns:
@@ -143,7 +138,7 @@ See \ref{sec:UFS ICs} for information on how to generate these files for other l
 
 \section{How to set up new cases}
 
-Setting up a new case involves preparing the two types of files listed above. For the case initialization and forcing data file, this typically involves writing a custom script or program to parse the data from its original format to the format that the SCM expects, listed above. An example of this type of script written in Python is included in \execout{/ccpp-scm/scm/etc/scripts/twpice\_forcing\_file\_generator.py}. The script reads in the data as supplied from its source, converts any necessary variables, and writes a NetCDF (version 4) file in the format described in subsection \ref{subsection: case input}. For reference, the following formulas are used:
+Setting up a new case involves preparing the two types of files listed above. For the case initialization and forcing data file, this typically involves writing a custom script or program to parse the data from its original format to the format that the SCM expects, listed above. An example of this type of script written in Python is included in \execout{/ccpp-scm/scm/etc/scripts/twpice\_forcing\_file\_generator.py}. The script reads in the data as supplied from its source, converts any necessary variables, and writes a NetCDF (version 4) file in the format described in subsections \ref{subsection: case input} and \ref{subsection: case input dephy}. For reference, the following formulas are used:
 \begin{equation}
 \theta_{il} = \theta - \frac{\theta}{T}\left(\frac{L_v}{c_p}q_l + \frac{L_s}{c_p}q_i\right)
 \end{equation}
@@ -187,7 +182,7 @@ Although it is expected that all variables are in the NetCDF file, only those th
 
 For the case configuration file, it is most efficient to copy an existing file in \execout{ccpp-scm/scm/etc/case\_config} and edit it to suit one's case. Recall from subsection \ref{subsection: case config} that this file is used to configure the SCM framework parameters for a given case. Be sure to check that model timing parameters such as the time step and output frequency are appropriate for the physics suite being used. There is likely some stability criterion that governs the maximum time step based on the chosen parameterizations and number of vertical levels (grid spacing). The \execout{case\_name} parameter should match the name of the case input data file that was configured for the case (without the file extension). The \execout{runtime} parameter should be less than or equal to the length of the forcing data unless the desired behavior of the simulation is to proceed with the last specified forcing values after the length of the forcing data has been surpassed. The initial date and time should fall within the forcing period specified in the case input data file. If the case input data is specified to a lower altitude than the vertical domain, the remainder of the column will be filled in with values from a reference profile. There is a tropical profile and mid-latitude summer profile provided, although one may add more choices by adding a data file to \execout{ccpp-scm/scm/data/processed\_case\_input} and adding a parser section to the subroutine \execout{get\_reference\_profile} in \execout{-scm/scm/src/scm\_input.f90}. Surface fluxes can either be specified in the case input data file or calculated using a surface scheme using surface properties. If surface fluxes are specified from data, set \execout{sfc\_flux\_spec} to \exec{.true.} and specify \execout{sfc\_roughness\_length\_cm} for the surface over which the column resides. Otherwise, specify a \execout{sfc\_type}. In addition, one must specify a \execout{column\_area} for each column.
 
-To control the forcing method, one must choose how the momentum and scalar variable forcing are applied. The three methods of Randall and Cripe (1999, JGR) have been implemented: ``revealed forcing'' where total (horizontal $+$ vertical) advective tendencies are applied (type 1), ``horizontal advective forcing'' where horizontal advective tendencies are applied and vertical advective tendencies are calculated from a prescribed vertical velocity and the calculated (modeled) profiles (type 2), and ``relaxation forcing'' where nudging to observed profiles replaces horizontal advective forcing combined with vertical advective forcing from prescribed vertical velocity (type 3). If relaxation forcing is chosen, a \execout{relaxation\_time} that represents the timescale over which the profile would return to the nudging profiles must be specified.
+To control the forcing method, one must choose how the momentum and scalar variable forcing are applied. The three methods of Randall and Cripe (1999, JGR) have been implemented: ``revealed forcing'' where total (horizontal $+$ vertical) advective tendencies are applied (type 1), ``horizontal advective forcing'' where horizontal advective tendencies are applied and vertical advective tendencies are calculated from a prescribed vertical velocity and the calculated (modeled) profiles (type 2), and ``relaxation forcing'' where nudging to observed profiles replaces horizontal advective forcing combined with vertical advective forcing from prescribed vertical velocity (type 3). If relaxation forcing is chosen, a \execout{relax\_time} that represents the timescale over which the profile would return to the nudging profiles must be specified.
 
 \section{Using other LASSO cases}
 \label{sec:lasso}
@@ -207,16 +202,6 @@ In order to use other LASSO cases than the one provided, perform the following s
 \label{sec:UFS ICs}
 
 A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS Atmosphere cold start initial conditions and generate a case input data file that the SCM can use. Note that the script requires a few python packages that may not be found by default in all python installations: \exec{argparse}, \exec{fnmatch}, \exec{logging}, \exec{NetCDF4}, \exec{numpy}, \exec{shapely}, \exec{f90nml}, and \exec{re}. 
-
-NOTE: If using NOAA's Hera HPC, the \execout{shapely} python package does not seem to be installed with the version of Anaconda used by the rest of this software package by default so it is installed when users execute \execout{scm/etc/Hera\_setup\_intel.[csh/sh]}. 
-
-Users on other systems can test if \execout{shapely} is installed using this command in the shell:
-\begin{lstlisting}
-python -c "import shapely"
-\end{lstlisting}
-If \execout{shapely} is installed, this command will succeed silently, otherwise an \execout{ImportError: No module named shapely} will be printed to screen. To install the \execout{shapely} Python module, use the install method preferred for your Python environment (\execout{easy\_install}, \execout{pip}, \execout{conda}, \dots).
-
-The \execout{UFS\_IC\_generator.py} script usage is as follows:
 
 \begin{lstlisting}[language=bash]
 ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
@@ -255,5 +240,5 @@ In addition to the case input files generated by this script, one will need appr
 
 Running the model is the same as for observational field campaign cases:
 \begin{lstlisting}[language=bash]
-./run_scm.py -c fv3_model_point_noah -s SCM_GFS_v15p2
+./run_scm.py -c fv3_model_point_noah -s SCM_GFS_v16
 \end{lstlisting}
