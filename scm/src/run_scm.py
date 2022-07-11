@@ -508,7 +508,7 @@ class Experiment(object):
             if input_type == 1:
                 #open the case data file and read the surfaceForcing global attribute
                 case_data_dir = case_nml['case_config']['case_data_dir']
-                nc_fid = Dataset(os.path.join(SCM_ROOT, case_data_dir) + '/' + self._case + '_SCM_driver.nc' , 'r')
+                nc_fid = Dataset(os.path.join(SCM_ROOT, case_data_dir) + '/' + self._case + '.nc' , 'r')
                 surfaceForcing = nc_fid.getncattr('surfaceForcing')
                 nc_fid.close()
                 if (surfaceForcing.lower() == 'flux' or surfaceForcing.lower() == 'surfaceflux'):
@@ -579,7 +579,7 @@ class Experiment(object):
         try:
             input_type = case_nml['case_config']['input_type']
             if input_type == 1:
-                case_data_netcdf_file = self._case + '_SCM_driver.nc'
+                case_data_netcdf_file = self._case + '.nc'
             else:
                 case_data_netcdf_file = self._case + '.nc'
         except KeyError:

@@ -718,7 +718,8 @@ def map_scalar(km, pe1, q1, qs, kn, pe2, i1, i2, iv, kord, q_min):
     #real   q4(4,i1:i2,km)
     #real    pl, pr, qsum, dp, esl
     #integer i, k, l, m, k0
-    
+    qsum = 0.
+
     for k in range(0,km):
         for i in range(0,im):
             dp1[i,k] = pe1[i,k+1] - pe1[i,k]
@@ -803,7 +804,7 @@ def map1_q2 (km, pe1, q1, kn, pe2, dp2, i1, i2, iv, kord, q_min):
     #real   q4(4,i1:i2,km)
     #real   pl, pr, qsum, dp, esl
     #integer i, k, l, m, k0
-
+    qsum = 0.
     for k in range(0,km):
         for i in range(0,im):
             dp1[i,k] = pe1[i,k+1] - pe1[i,k]
@@ -1246,7 +1247,7 @@ def mappm (km, pe1, q1, kn, pe2, i1, i2, iv, kord, ptop):
   #           a4(4,i,km) = 0.
   #    enddo
   #endif
-
+  qsum = 0.
   for i in range(0,im):
       k0 = 0
       for k in range(0,kn):
@@ -1350,7 +1351,7 @@ def map1_ppm(km, pe1, q1, qs, kn, pe2, i1, i2, iv, kord):
   qs = np.zeros([im])
   dp1 = np.zeros([im,km])
   q4 = np.zeros([4,im,km])
-  
+  qsum = 0.
   for k in range(0,km):
       for i in range(i1-1,i2):
           dp1[i,k] = pe1[i,k+1] - pe1[i,k]
