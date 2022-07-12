@@ -1023,7 +1023,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
                     {"name": "q2m",               "dim":0}, {"name": "ffmm",             "dim":0}, \
                     {"name": "ffhh",              "dim":0}, {"name": "tprcp",            "dim":0}, \
                     {"name": "srflag",            "dim":0}, {"name": "sncovr",           "dim":0}, \
-                    {"name": "tsfcl",             "dim":0}, \
+                    {"name": "tsfcl",             "dim":0}, {"name": "zorlwav",          "dim":0}, \
                     #{"name": "zorlo",            "dim":0}, {"name": "zorll" ,            "dim":0}, \
                     #{"name": "zorli",            "dim":0}, {"name": "zorlw" ,            "dim":0}, \
                     {"name": "tref",              "dim":0}, {"name": "z_c",              "dim":0}, \
@@ -2443,10 +2443,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     lon_var.description        = "Longitude"
     lon_var[:]                 = surface["lon"]
     #
-    zorlo_var                  = nc_file.createVariable('zorlo', real_type, ('t0', 'lat', 'lon'))
-    zorlo_var.units            = "cm"
-    zorlo_var.description      = "surface roughness length over ocean"
-    zorlo_var[:]               = missing_value
+    zorlw_var                  = nc_file.createVariable('zorlw', real_type, ('t0', 'lat', 'lon'))
+    zorlw_var.units            = "cm"
+    zorlw_var.description      = "surface roughness length over ocean"
+    zorlw_var[:]               = missing_value
     #
     zorll_var                  = nc_file.createVariable('zorll', real_type, ('t0', 'lat', 'lon'))
     zorll_var.units            = "cm"
@@ -2464,7 +2464,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     elif (surface_string == "land"):
         zorll_var[:] = surface["zorl"]
     else:
-        zorlo_var[:] = surface["zorl"]
+        zorlw_var[:] = surface["zorl"]
 
     #
     # Variables to be output to SCM input file. Only fields that come directly from forcing, 
@@ -2595,11 +2595,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                    {"name": "tprcp",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "instantaneous total precipitation amount"}, \
                    {"name": "srflag",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "snow/rain flag for precipitation"}, \
                    {"name": "tsfcl",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "surface skin temperature over land"}, \
-                   #{"name": "zorlo",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "cm",      "description": "surface roughness length over ocean"}, \
-                   #{"name": "zorll",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "cm",      "description": "surface roughness length over land"}, \
-                   #{"name": "zorli",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "cm",      "description": "surface roughness length over ice"}, \
-                   {"name": "zorlw",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "cm",      "description": "surface roughness length from wave model"}, \
-                   {"name": "zorl",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "cm",      "description": "surface roughness length"}, \
                    # NoahMP
                    {"name": "tvxy",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "vegetation temperature for NoahMP"}, \
                    {"name": "tgxy",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "ground temperature for NoahMP"}, \
