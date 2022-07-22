@@ -1153,7 +1153,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   missing_value_eps = missing_value + 0.01
   
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
-  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'_SCM_driver.nc',nf90_nowrite,ncid))
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
   
   !> - Get the dimensions.
   

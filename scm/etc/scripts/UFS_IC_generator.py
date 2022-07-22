@@ -1260,9 +1260,6 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         logging.critical(message)
         raise Exception(message)
 
-    #atm_filenames = atm_filenames[0:2]
-    #sfc_filenames = sfc_filenames[0:2]
-
     kord_tm = -9
     kord_mt = 9
     kord_tr = 9
@@ -1429,15 +1426,15 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
     vars_comp_nophys = [{"name":"dtend_temp_nophys"      , "values":[], "dims":[nsfcf,nlevs]},\
                         {"name":"dtend_qv_nophys"        , "values":[], "dims":[nsfcf,nlevs]},\
                         {"name":"dtend_u_nophys"         , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_v_nophys"         , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_cld_amt_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_graupel_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_ice_wat_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_liq_wat_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_o3_nophys"        , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_rainwat_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_sgs_tke_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_snowwat_nophys"   , "values":[], "dims":[nsfcf,nlevs]}]
+                        {"name":"dtend_v_nophys"         , "values":[], "dims":[nsfcf,nlevs]}]
+                        #{"name":"dtend_cld_amt_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
+                        #{"name":"dtend_graupel_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
+                        #{"name":"dtend_ice_wat_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
+                        #{"name":"dtend_liq_wat_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
+                        #{"name":"dtend_o3_nophys"        , "values":[], "dims":[nsfcf,nlevs]},\
+                        #{"name":"dtend_rainwat_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
+                        #{"name":"dtend_sgs_tke_nophys"   , "values":[], "dims":[nsfcf,nlevs]},\
+                        #{"name":"dtend_snowwat_nophys"   , "values":[], "dims":[nsfcf,nlevs]}]
     #
     # Physics tendency dictionaries (Saved to comparision file, alogng with "ufs_state")
     #
@@ -1487,26 +1484,26 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
     vars_comp_phys   = [{"name":"dtend_temp_phys"        , "values":[], "dims":[nsfcf,nlevs]},\
                         {"name":"dtend_u_phys"           , "values":[], "dims":[nsfcf,nlevs]},\
                         {"name":"dtend_v_phys"           , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_qv_phys"          , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_snowwat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_sgs_tke_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_rainwat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_o3_phys"          , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_liq_wat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_ice_wat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_graupel_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
-                        {"name":"dtend_cld_amt_phys"     , "values":[], "dims":[nsfcf,nlevs]}]
+                        {"name":"dtend_qv_phys"          , "values":[], "dims":[nsfcf,nlevs]}]
+#                        {"name":"dtend_snowwat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
+#                        {"name":"dtend_sgs_tke_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
+#                        {"name":"dtend_rainwat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
+#                        {"name":"dtend_o3_phys"          , "values":[], "dims":[nsfcf,nlevs]},\
+#                        {"name":"dtend_liq_wat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
+#                        {"name":"dtend_ice_wat_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
+#                        {"name":"dtend_graupel_phys"     , "values":[], "dims":[nsfcf,nlevs]},\
+#                        {"name":"dtend_cld_amt_phys"     , "values":[], "dims":[nsfcf,nlevs]}]
 
     vars_comp = []
-    vars_comp.extend(vars_comp_pbl)
+    #vars_comp.extend(vars_comp_pbl)
     #vars_comp.extend(vars_comp_dpcnv)
     #vars_comp.extend(vars_comp_shlcnv)
-    #vars_comp.extend(vars_comp_rad)
+    vars_comp.extend(vars_comp_rad)
     #vars_comp.extend(vars_comp_mp)
     #vars_comp.extend(vars_comp_gwd)
     #vars_comp.extend(vars_comp_totcld)
     #vars_comp.extend(vars_comp_o3)
-    #vars_comp.extend(vars_comp_phys)
+    vars_comp.extend(vars_comp_phys)
 
     #
     # Loop through all sfc_filenames...
@@ -1647,10 +1644,16 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
     # @ time > 0
     #
     for t in range(natmf-1):
-        #dtdt_adv[t+1,:]  = vars_comp_nophys[0]["values"][t+1,:]
-        #dqvdt_adv[t+1,:] = vars_comp_nophys[1]["values"][t+1,:]
-        #dudt_adv[t+1,:]  = vars_comp_nophys[2]["values"][t+1,:]
-        #dvdt_adv[t+1,:]  = vars_comp_nophys[3]["values"][t+1,:]
+        #
+        # Use dynamic tendencies from sfcf* files
+        #
+        dtdt_adv[t+1,:]  = vars_comp_nophys[0]["values"][t+1,:]
+        dqvdt_adv[t+1,:] = vars_comp_nophys[1]["values"][t+1,:]
+        dudt_adv[t+1,:]  = vars_comp_nophys[2]["values"][t+1,:]
+        dvdt_adv[t+1,:]  = vars_comp_nophys[3]["values"][t+1,:]
+        #
+        # Compute tendencies on IC level
+        #
         dt = secinhr*(ufs_state_remap["time"][t+1] - ufs_state_remap["time"][t])
         dqvdt_adv[t+1,:] = (ufs_state_remap["qv"][t+1,:] - ufs_state_remap["qv"][t,:]) / dt
         dtdt_adv[t+1,:]  = (ufs_state_remap["T"][t+1,:]  - ufs_state_remap["T"][t,:])  / dt
@@ -1693,20 +1696,23 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         comp_v[t,:]  = ufs_state["v"][t,:]
     
     #
-    # Store in dictionary
+    # Store in comparision state data in dictionary
     #
     state_comp = {"pres": comp_p,    "qv":comp_qv, "T": comp_T,\
                   "time": comp_time, "u": comp_u,  "v": comp_v}
 
-    #if we had dynf,phyf files at every timestep (and the SCM timestep is made to match the UFS), then dqvdt_adv should be
-    #applied uninterpolated for each time step. If dynf and phyf files represent time averages over the previous diagnostic period,
-    #and if forcing terms are interpolatd in time in the SCM, then dqvdt_adv should represent the forcing values in the 
-    #middle of time[t] and time[t+1] from dynf/phyf. That way, the time-averaged applied forcing from time[t] to time[t+1] in the SCM will 
-    #be equal to what is derived from dynf/phyf. (preference should be to have option to remove time-interpolation of forcing such
-    #that the constant forcing applied converged to time-step values as the diag interval approaches the time step)    
+    ##################################################################################################################
+    # if we had dynf,phyf files at every timestep (and the SCM timestep is made to match the UFS), then dqvdt_adv 
+    # should be applied uninterpolated for each time step. If dynf and phyf files represent time averages over the
+    # previous diagnostic period, and if forcing terms are interpolatd in time in the SCM, then dqvdt_adv should 
+    # represent the forcing values in the middle of time[t] and time[t+1] from dynf/phyf. That way, the time-averaged 
+    # applied forcing from time[t] to time[t+1] in the SCM will be equal to what is derived from dynf/phyf. (preference
+    # should be to have option to remove time-interpolation of forcing such that the constant forcing applied converged
+    # to time-step values as the diag interval approaches the time step)   
+    ################################################################################################################## 
     
-    time_method = 'constant_simple' #this is not implemented in the SCM code yet
-    #time_method = 'constant_interp'
+    #time_method = 'constant_simple' #this is not implemented in the SCM code yet
+    time_method = 'constant_interp'
     #time_method = 'gradient' #this produced wonky results in the SCM; avoid until investigated more
     
     ##################################################################################################################
@@ -1743,8 +1749,12 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         #
         for t in range(1,natmf):
             time[t]            = secinhr*time_dyn_hours[t]
-            p_s[t]             = ufs_state["ps"][t]
-            pressure_forc[:,t] = ufs_state["pres"][t,:]
+            # Using dynamic tendencies provided in sfcf*.nc files
+            #p_s[t]             = ufs_state["ps"][t]
+            #pressure_forc[:,t] = ufs_state["pres"][t,:]
+            # Using tendecies interpolated to IC levels
+            p_s[t]             = ic_state["p_surf"]
+            pressure_forc[:,t] = ic_state["pres"][:]
             tot_advec_T[:,t]   = dtdt_adv[t,:]
             tot_advec_qv[:,t]  = dqvdt_adv[t,:]
             tot_advec_u[:,t]   = dudt_adv[t,:]
@@ -1785,10 +1795,11 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         #
         # @ time > 0
         #
-        time[1] = 3600.0*time_dyn_hours[1] - time_setback
+        time[1] = comp_time[1] - time_setback
         for t in range(1,natmf):
-            time[2*t]   = secinhr*time_dyn_hours[t]
-            time[2*t+1] = secinhr*(time_dyn_hours[t]+1) - time_setback
+            dt = comp_time[t] - comp_time[t-1]
+            time[2*t]   = time[2*(t-1)] + dt
+            time[2*t+1] = time[2*t] + dt - time_setback
             p_s[2*t]    = ps[t]
             p_s[2*t+1]  = p_s[2*t]
             pressure_forc[:,2*t]   = ufs_state["pres"][t,:]
@@ -1873,11 +1884,11 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
                "h_advec_v":     np.zeros((nlevs,ntimes),dtype=float),
                #"ps_forc": p_s, #uncomment when SCM switches to semi-Lagrangian vertical coordinate
                "ps_forc":       np.ones(ntimes)*ufs_state_remap["ps"][0],
-               "tot_advec_T":   tot_advec_T,
-               "tot_advec_qv":  tot_advec_qv,
-               "tot_advec_u":   tot_advec_u,
-               "tot_advec_v":   tot_advec_v,
-               "pressure_forc": pressure_forc}
+               "tot_advec_T":   tot_advec_T.swapaxes(0,1),
+               "tot_advec_qv":  tot_advec_qv.swapaxes(0,1),
+               "tot_advec_u":   tot_advec_u.swapaxes(0,1),
+               "tot_advec_v":   tot_advec_v.swapaxes(0,1),
+               "pressure_forc": pressure_forc.swapaxes(0,1)}
 
     return (forcing, vars_comp, state_comp)
 
@@ -2231,12 +2242,12 @@ def write_comparison_file(vars_comp, state_comp, case_name, date, surface, add_U
                 {"dict": date,       "name": "hour",   "type":int_type,  "dimd": ( ),                         "units": "hour",          "description": "hour at time of initial values", "alias": "init_hour"}, \
                 {"dict": date,       "name": "minute", "type":int_type,  "dimd": ( ),                         "units": "minute",        "description": "minute at time of initial values", "alias": "init_minute"}, \
                 {"dict": date,       "name": "second", "type":int_type,  "dimd": ( ),                         "units": "second",        "description": "second at time of initial values", "alias": "init_second"}, \
-                {"dict": state_comp, "name": "time",   "type":real_type, "dimd": ('t0'),                      "units": 'seconds since ' + str(start_date), "description": "history file time"}, 
-                {"dict": state_comp, "name": "pres",   "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": 'Pa', "description": "pressure"}, \
-                {"dict": state_comp, "name": "v",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "meridional wind"},\
-                {"dict": state_comp, "name": "u",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "zonal wind"},\
-                {"dict": state_comp, "name": "qv",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "specific humidity"},\
-                {"dict": state_comp, "name": "T",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "K",             "description": "Temperature"}]
+                {"dict": state_comp, "name": "time",   "type":real_type, "dimd": ('t0'),                      "units": "second",  "description": "history file time"},\
+                {"dict": state_comp, "name": "pres",   "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": 'Pa',      "description": "pressure"}, \
+                {"dict": state_comp, "name": "v",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m s-1",   "description": "meridional wind"},\
+                {"dict": state_comp, "name": "u",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m s-1",   "description": "zonal wind"},\
+                {"dict": state_comp, "name": "qv",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "specific humidity"},\
+                {"dict": state_comp, "name": "T",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "K",       "description": "Temperature"}]
 
     # Write dictionaries to output...
 
@@ -2260,6 +2271,17 @@ def write_comparison_file(vars_comp, state_comp, case_name, date, surface, add_U
             var_temp.units       = var["units"]
             var_temp.description = var["long_name"]
             var_temp[:]          = var["values"]
+
+    #
+    lat_var                    = nc_file.createVariable('lat', real_type, ('lat',)) 
+    lat_var.units              = "degrees_north"
+    lat_var.description        = "Latitude"
+    lat_var[:]                 = surface["lat"]
+    #                                                                                                                                                                                        
+    lon_var                    = nc_file.createVariable('lon', real_type, ('lon',))
+    lon_var.units              = "degrees_east"
+    lon_var.description        = "Longitude"
+    lon_var[:]                 = surface["lon"]
 
     #
     # Close file
@@ -2291,7 +2313,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     if (add_UFS_dyn_tend):
         nc_file.description = "FV3GFS model profile input (UFS dynamic tendencies, SCM-UFS replay mode.)"
     elif (add_UFS_NOAH_lsm):
-        nc_file.description = "FV3GFS model profile input (With NOAH Land surface moodel surface forcings)"
+        nc_file.description = "FV3GFS model profile input (With NOAH Land surface moodel surface forcings.)"
     else:
         nc_file.description = "FV3GFS model profile input (no forcings)"
 
@@ -2652,14 +2674,14 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     #
     # Include dynamic forcing tendencies?
     #
-    if (add_UFS_dyn_tend):
-        var_dict.extend(var_forcing)
+    #if (add_UFS_dyn_tend):
+    var_dict.extend(var_forcing)
 
     #
     # Include surface forcing from NOAH LSM?
     #
-    if (add_UFS_NOAH_lsm):
-        var_dict.extend(var_lsm_ics)
+    #if (add_UFS_NOAH_lsm):
+    var_dict.extend(var_lsm_ics)
 
     #
     # Write all fields in "var_dict" to SCM input file.
@@ -2780,8 +2802,11 @@ def main():
     #
     (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, forcing_dir, tile, tile_i, tile_j, old_chgres, lam)
     
+    #
+    # This causes problems for UFS IC only cases, where there are no atmf*.nc files available
+    #
     if not date:
-        #date was not included on command line; look in atmf* file for initial date
+        # date was not included on command line; look in atmf* file for initial date
         date = find_date(forcing_dir, lam)
     
     #
@@ -2809,6 +2834,27 @@ def main():
         forcing_data["ps_forc"]       = state_data["p_surf"]
         forcing_data["pressure_forc"] = state_data["pres"][:]
         forcing_data["height_forc"]   = 1
+        forcing_data["tot_advec_T"]   = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["tot_advec_qv"]  = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["tot_advec_u"]   = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["tot_advec_v"]   = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["w_ls"]          = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["omega"]         = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["u_g"]           = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["v_g"]           = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["u_nudge"]       = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["v_nudge"]       = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["T_nudge"]       = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["thil_nudge"]    = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["qt_nudge"]      = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["rad_heating"]   = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["h_advec_thil"]  = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["v_advec_thil"]  = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["h_advec_qt"]    = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["v_advec_qt"]    = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["h_advec_u"]     = np.zeros((state_data["nlevs"],1),dtype=float)
+        forcing_data["h_advec_v"]     = np.zeros((state_data["nlevs"],1),dtype=float)
+        #
         vars_comp    = {}
         state_comp   = state_data
 
@@ -2822,12 +2868,6 @@ def main():
     #
     if (save_comp):
         fileOUT = write_comparison_file(vars_comp, state_comp, case_name, date, surface_data, add_UFS_dyn_tend, add_UFS_NOAH_lsm)
-
-        # Write name of output file to text file (used by ensemble wrapper)
-        fileID  = open("nameout.txt", 'w')
-        fileID.write(fileOUT)
-        fileID.write('\n')
-        fileID.close()
 
 if __name__ == '__main__':
     main()

@@ -40,7 +40,7 @@ def read_UFScomp(fileIN,dephy):
 
 ################################################################
 DEPHY = True
-case_name = "fv3_SCM_ensmeble"
+case_name = "fv3_SCM_ensemble_12hr_UFSforcing"
 namelist  = "SCM_GFS_v16"
 ensmember = 0
 
@@ -56,7 +56,7 @@ fileUFSref = "../../data/comparison_data/"+case_name+"_n"+str(ensmember).zfill(3
 stateSCM   = read_SCMout(fileSCMout)
 stateUFS   = read_UFScomp(fileUFSref,DEPHY)
 
-time = 40
+time = 0
 #
 # Make some plots
 #
@@ -65,7 +65,7 @@ for ij in range(0,stateUFS["T"].shape[1]):
     print(ij,stateUFS["pres"][time,ij],stateSCM["pres"][time,ij])
 
 # Plot State variables (T, qv, u, v)
-for time in range(0,10):
+for time in range(1,7):
     fig = plt.figure(figsize=(10,8))
     #
     plt.subplot(1,4,1)
@@ -95,7 +95,7 @@ for time in range(0,10):
     plt.plot(stateSCM["v"][time,:],stateUFS["pres"][time,:]*0.01,color='green')
     plt.ylim(1000,0)
     plt.xlabel("m/s")
-    plt.title("Merisional-wind")
+    plt.title("Meridional-wind")
     #
     plt.show()
 
