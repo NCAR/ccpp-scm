@@ -150,8 +150,11 @@ module scm_type_defs
     real(kind=dp), allocatable              :: area(:) !< area over which the column represents a mean (analogous to grid size or observational array area)
 
     real(kind=dp), allocatable              :: state_T(:,:,:) !< model state absolute temperature at grid centers (K)
+    real(kind=dp), allocatable              :: state_Tpert(:,:,:) !< model state (perturbed) )absolute temperature at grid centers (K) 
     real(kind=dp), allocatable              :: state_u(:,:,:), state_v(:,:,:) !< model state horizontal winds at grid centers (m/s)
+    real(kind=dp), allocatable              :: state_upert(:,:,:), state_vpert(:,:,:) !< model state (perturbed) horizontal winds at grid centers (m/s) 
     real(kind=dp), allocatable              :: state_tracer(:,:,:,:) !< model state tracer at grid centers
+    real(kind=dp), allocatable              :: state_tracerpert(:,:,:,:) !< model state (perturbed) tracer at grid centers
     real(kind=dp), allocatable              :: temp_T(:,:,:), temp_u(:,:,:), temp_v(:,:,:), temp_tracer(:,:,:,:) !< used for time-filtering
 
     !> - Define forcing-related variables (indexing is (horizontal, vertical)).
@@ -589,6 +592,14 @@ module scm_type_defs
     scm_state%state_v = real_zero
     scm_state%state_tracer = real_zero
 
+    allocate(scm_state%state_Tpert(n_columns, n_levels, n_time_levels), &
+      scm_state%state_upert(n_columns, n_levels, n_time_levels), scm_state%state_vpert(n_columns, n_levels, n_time_levels), &
+      scm_state%state_tracerpert(n_columns, n_levels, scm_state%n_tracers, n_time_levels))
+    scm_state%state_Tpert = real_zero
+    scm_state%state_upert = real_zero
+    scm_state%state_vpert = real_zero
+    scm_state%state_tracerpert = real_zero
+
     allocate(scm_state%temp_tracer(n_columns, n_levels, scm_state%n_tracers, n_time_levels), &
       scm_state%temp_T(n_columns, n_levels, n_time_levels), &
       scm_state%temp_u(n_columns, n_levels, n_time_levels), scm_state%temp_v(n_columns, n_levels, n_time_levels))
@@ -1012,10 +1023,10 @@ module scm_type_defs
       physics%Stateout%gt0 => scm_state%state_T(:,:,2)
       physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,2)
     else
-      physics%Stateout%gu0 => scm_state%state_u(:,:,1)
-      physics%Stateout%gv0 => scm_state%state_v(:,:,1)
-      physics%Stateout%gt0 => scm_state%state_T(:,:,1)
-      physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,1)
+      physics%Stateout%gu0 => scm_state%state_upert(:,:,1)
+      physics%Stateout%gv0 => scm_state%state_vpert(:,:,1)
+      physics%Stateout%gt0 => scm_state%state_Tpert(:,:,1)
+      physics%Stateout%gq0 => scm_state%state_tracerpert(:,:,:,1)
     endif
 
     if(scm_state%sfc_flux_spec) then
