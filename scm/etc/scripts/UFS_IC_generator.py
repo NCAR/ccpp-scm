@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 # Global settings                                                             #
 ###############################################################################
 
-#Physical constants
+# Physical constants
 earth_radius = 6371000.0 #m
 rdgas        = 287.05
 rvgas        = 461.50
@@ -31,13 +31,11 @@ deg_to_rad   = math.pi/180.0
 kappa        = rdgas/cp
 p0           = 100000.0
 
-missing_value = -9999.0 #9.99e20
-
-n_lam_halo_points = 3
-
+# Default missing values
+missing_value                = -9999.0 #9.99e20
 missing_variable_snow_layers = 3
 missing_variable_soil_layers = 4
-missing_variable_ice_layers = 2
+missing_variable_ice_layers  = 2
 
 # Path to the directory containing processed case input files
 PROCESSED_CASE_DIR = '../../data/processed_case_input'
@@ -55,50 +53,41 @@ LOGLEVEL = logging.INFO
 ###############################################################################
 # Command line arguments                                                      #
 ###############################################################################
-
 parser = argparse.ArgumentParser()
 group1 = parser.add_mutually_exclusive_group(required=True)
-group1.add_argument('-l',   '--location',   help='longitude and latitude in degress E and N, respectively, separated by a space', nargs=2, type=float)
-group1.add_argument('-ij',  '--index',      help='i,j indices within the tile (if known - bypasses search for closest model point to lon/lat location)', nargs=2, type=int)
-parser.add_argument('-d',   '--date',       help='date corresponding to initial conditions in YYYYMMDDHHMMSS format', required=False)
-parser.add_argument('-i',   '--in_dir',     help='input directory path containing FV3 input files', required=True)
-parser.add_argument('-g',   '--grid_dir',   help='directory path containing FV3 tile supergrid files', required=True)
-parser.add_argument('-f',   '--forcing_dir',help='directory path containing physics diag files')
-parser.add_argument('-t',   '--tile',       help='tile of desired point (if known - bypasses tile search if present)', type=int, choices=range(1,8))
-parser.add_argument('-a',   '--area',       help='area of grid cell in m^2', type=float)
-parser.add_argument('-mp',  '--noahmp',     help='flag to generate cold-start ICs for NoahMP LSM from Noah LSM ICs', action='store_true')
-parser.add_argument('-lam', '--lam',        help='flag to signal that the ICs and forcing is from a limited-area model run', action='store_true')
-parser.add_argument('-lami','--lam_ic',     help='flag to signal that the ICs are from a limited-area model run', action='store_true')
-parser.add_argument('-lamf','--lam_frc',    help='flag to signal that the forcings are from a limited-area model run', action='store_true')
-parser.add_argument('-n',   '--case_name',  help='name of case', required=True)
-parser.add_argument('-oc',  '--old_chgres', help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
-parser.add_argument('-sc',  '--save_comp',       help='flag to save and write out a file with UFS output data to compare SCM simulations with', action='store_true')
+group1.add_argument('-l',   '--location',         help='longitude and latitude in degress E and N, respectively, separated by a space', nargs=2, type=float)
+group1.add_argument('-ij',  '--index',            help='i,j indices within the tile (if known - bypasses search for closest model point to lon/lat location)', nargs=2, type=int)
+parser.add_argument('-i',   '--in_dir',           help='input directory path containing FV3 input files', required=True)
+parser.add_argument('-g',   '--grid_dir',         help='directory path containing FV3 tile supergrid files', required=True)
+parser.add_argument('-f',   '--forcing_dir',      help='directory path containing physics diag files')
+parser.add_argument('-t',   '--tile',             help='tile of desired point (if known - bypasses tile search if present)', type=int, choices=range(1,8))
+parser.add_argument('-a',   '--area',             help='area of grid cell in m^2', type=float)
+parser.add_argument('-mp',  '--noahmp',           help='flag to generate cold-start ICs for NoahMP LSM from Noah LSM ICs', action='store_true')
+parser.add_argument('-n',   '--case_name',        help='name of case', required=True)
+parser.add_argument('-sc',  '--save_comp',        help='flag to save and write out a file with UFS output data to compare SCM simulations with', action='store_true')
 parser.add_argument('-lsm', '--add_UFS_NOAH_lsm', help='flag to include UFS NOAH LSM surface forcing', action='store_true')
+parser.add_argument('-ufsf','--add_UFS_dyn_tend', help='flag to include UFS dynamic tendencies for SCM forcing', action='store_true')
+
 ###############################################################################
 # Functions and subroutines                                                   #
 ###############################################################################
-
 def parse_arguments():
-    """Parse command line arguments"""
-    args = parser.parse_args()
-    location = args.location
-    index = args.index
-    date = args.date
-    in_dir = args.in_dir
-    grid_dir = args.grid_dir
-    forcing_dir = args.forcing_dir
-    tile = args.tile
-    area = args.area
-    case_name = args.case_name
-    noahmp = args.noahmp
-    old_chgres = args.old_chgres
-    lam = args.lam
-    lami = args.lam_ic
-    lamf = args.lam_frc
-    save_comp = args.save_comp
+    #
+    args             = parser.parse_args()
+    location         = args.location
+    index            = args.index
+    in_dir           = args.in_dir
+    grid_dir         = args.grid_dir
+    forcing_dir      = args.forcing_dir
+    tile             = args.tile
+    area             = args.area
+    case_name        = args.case_name
+    noahmp           = args.noahmp
+    save_comp        = args.save_comp
     add_UFS_NOAH_lsm = args.add_UFS_NOAH_lsm
+    add_UFS_dyn_tend = args.add_UFS_dyn_tend
 
-    #validate args
+    # Validate args
     if not os.path.exists(in_dir):
         message = 'The directory {0} does not exist'.format(in_dir)
         logging.critical(message)
@@ -115,40 +104,37 @@ def parse_arguments():
             logging.critical(message)
             raise Exception(message)
     
-    date_dict = {}
-    if date:
-        if len(date) != 14:
-            message = 'The entered date {0} does not have the 14 characters expected in the format YYYYMMDDHHMMSS'.format(date)
-            logging.critical(message)
-            raise Exception(message)
-        else:
-            date_dict["year"] = int(date[0:4])
-            date_dict["month"] = int(date[4:6])
-            date_dict["day"] = int(date[6:8])
-            date_dict["hour"] = int(date[8:10])
-            date_dict["minute"] = int(date[10:12])
-            date_dict["second"] = int(date[12:])
+    #date_dict = {}
+    #if date:
+    #    if len(date) != 14:
+    #        message = 'The entered date {0} does not have the 14 characters expected in the format YYYYMMDDHHMMSS'.format(date)
+    #        logging.critical(message)
+    #        raise Exception(message)
+    #    else:
+    #        date_dict["year"]   = int(date[0:4])
+    #        date_dict["month"]  = int(date[4:6])
+    #        date_dict["day"]    = int(date[6:8])
+    #        date_dict["hour"]   = int(date[8:10])
+    #        date_dict["minute"] = int(date[10:12])
+    #        date_dict["second"] = int(date[12:])
     
     if tile:
-        if (not lam and tile > 6):
+        if (tile > 6):
             message = 'The entered tile {0} is not compatibile with the global cubed-sphere grid'.format(date)
             logging.critical(message)
             raise Exception(message)
     
-    return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam, lami, lamf, save_comp, add_UFS_NOAH_lsm)
+    return (location, index, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend)
 
 def setup_logging():
     """Sets up the logging module."""
     logging.basicConfig(format='%(levelname)s: %(message)s', level=LOGLEVEL)
     
-def find_tile(loc, dir, lam):
-    """Find the FV3 tile with the given lon/lat"""
-    #returns the integer tile number
-    
-    # should be looking in the directory with supergrid data (probably "fix" directory)
+def find_tile(loc, dir):
+    # 
     filename_pattern = '*grid.tile*.nc'
     
-    #find all supergrid files in the directory
+    # find all supergrid(?) files in the directory
     grid_fnames = []
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
@@ -210,10 +196,7 @@ def find_tile(loc, dir, lam):
                 loc_point = Point(temp_loc)
                 if tile_polygon.contains(loc_point):
                     found_tile = True
-                    if (lam):
-                        return f_name.split('tile')[1].split('.halo')[0] 
-                    else:
-                        return f_name.split('tile')[1].split('.nc')[0] 
+                    return f_name.split('tile')[1].split('.nc')[0] 
             else:
                 polar_tile_filenames.append(f_name)
                 
@@ -226,21 +209,12 @@ def find_tile(loc, dir, lam):
         #if the sign of the mean latitude of the tile is the same as that of the point, the tile has been found
         if np.sign(np.mean(latitude)) == np.sign(loc[1]):
             found_tile = True
-            if (lam):
-                return f_name.split('tile')[1].split('.halo')[0] 
-            else:
-                return f_name.split('tile')[1].split('.nc')[0]        
+            return f_name.split('tile')[1].split('.nc')[0]        
     return -1
 
-def find_loc_indices(loc, dir, tile, lam):
-    """Find the nearest neighbor FV3 grid point given a lon/lat pair and the tile number"""
-    #returns the indices of the nearest neighbor point in the given tile, the lon/lat of the nearest neighbor, 
-    #and the distance (m) from the given point to the nearest neighbor grid cell
-    
-    if (lam):
-        filename_pattern = '*grid.tile7.halo{}.nc'.format(n_lam_halo_points)
-    else:
-        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+def find_loc_indices(loc, dir, tile):
+    #
+    filename_pattern = '*grid.tile{0}.nc'.format(tile)
     
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
@@ -255,20 +229,11 @@ def find_loc_indices(loc, dir, tile, lam):
     #read in supergrid longitude and latitude
     lon_super = np.asarray(nc_file['x'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    if (lam):
-        #strip ghost/halo points and return central (A-grid) points
-        #assuming n_lam_halo_points
-        lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
-        lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super_no_halo[1::2,1::2]
-        latitude = lat_super_no_halo[1::2,1::2]
-    else:
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super[1::2,1::2]
-        latitude = lat_super[1::2,1::2]
+
+    #get the longitude and latitude data for the grid centers by slicing the supergrid 
+    #and taking only odd-indexed values
+    longitude = lon_super[1::2,1::2]
+    latitude = lat_super[1::2,1::2]
     
     nc_file.close()
     
@@ -302,14 +267,11 @@ def find_loc_indices(loc, dir, tile, lam):
     
     return (i,j,longitude[i,j]%360.0, latitude[i,j], eucl_dist[i,j])
 
-def find_lon_lat_of_indices(indices, dir, tile, lam):
-    """Find the longitude and latitude of the given indices within the given tile."""
-    
-    if (lam):
-        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
-    else:
-        filename_pattern = '*grid.tile{0}.nc'.format(tile)
-    
+def find_lon_lat_of_indices(indices, dir, tile):
+    #
+    filename_pattern = '*grid.tile{0}.nc'.format(tile)
+
+    #
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
           filename = f_name
@@ -323,30 +285,19 @@ def find_lon_lat_of_indices(indices, dir, tile, lam):
     #read in supergrid longitude and latitude
     lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
     lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    if (lam):
-        #strip ghost/halo points and return central (A-grid) points
-        #assuming n_lam_halo_points
-        lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
-        lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super_no_halo[1::2,1::2]
-        latitude = lat_super_no_halo[1::2,1::2]
-    else:
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super[1::2,1::2]
-        latitude = lat_super[1::2,1::2]
+
+    #get the longitude and latitude data for the grid centers by slicing the supergrid 
+    #and taking only odd-indexed values
+    longitude = lon_super[1::2,1::2]
+    latitude = lat_super[1::2,1::2]
     
     nc_file.close()
     
     return (longitude[indices[1],indices[0]], latitude[indices[1],indices[0]])
 
-def get_initial_lon_lat_grid(dir, tile, lam):
-    if (lam):
-        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
-    else:
-        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+def get_initial_lon_lat_grid(dir, tile):
+    #
+    filename_pattern = '*grid.tile{0}.nc'.format(tile)
     
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
@@ -361,20 +312,10 @@ def get_initial_lon_lat_grid(dir, tile, lam):
     #read in supergrid longitude and latitude
     lon_super = np.asarray(nc_file['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
     lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    if (lam):
-        #strip ghost/halo points and return central (A-grid) points
-        #assuming n_lam_halo_points
-        lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
-        lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super_no_halo[1::2,1::2]
-        latitude = lat_super_no_halo[1::2,1::2]
-    else:
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super[1::2,1::2]
-        latitude = lat_super[1::2,1::2]
+    #get the longitude and latitude data for the grid centers by slicing the supergrid 
+    #and taking only odd-indexed values
+    longitude = lon_super[1::2,1::2]
+    latitude = lat_super[1::2,1::2]
     
     nc_file.close()
     
@@ -399,58 +340,37 @@ def read_NetCDF_var(nc_file, var_name, i, j):
         var = missing_value
     return var
 
-def read_NetCDF_surface_var(nc_file, var_name, i, j, old_chgres, vert_dim):
-    if old_chgres:
-        if vert_dim > 0:
-            try:
-                var = nc_file[var_name][:,j,i]
-            except (KeyError, IndexError):
-                message = "Variable {0} is not found in {1}. Filling with array of size {2} with missing value.".format(var_name,nc_file.filepath(),vert_dim)
-                logging.debug(message)
-                var = missing_value*np.ma.ones(vert_dim)
-        else:
-            try:
-                var = nc_file[var_name][j,i]
-            except (KeyError, IndexError):
-                message = "Variable {0} is not found in {1}. Filling with missing value.".format(var_name,nc_file.filepath())
-                logging.debug(message)
-                var = missing_value
+def read_NetCDF_surface_var(nc_file, var_name, i, j, vert_dim):
+    if vert_dim > 0:
+        try:
+            var = nc_file[var_name][0,:,j,i]
+        except (KeyError, IndexError):
+            message = "Variable {0} is not found in {1}. Filling with array of size {2} with missing value.".format(var_name,nc_file.filepath(),vert_dim)
+            logging.debug(message)
+            var = missing_value*np.ma.ones(vert_dim)
     else:
-        #the sfc_data.tileX.nc files created from chgres_cube have an extra time dimension in front compared to those created from global_chgres
-        if vert_dim > 0:
-            try:
-                var = nc_file[var_name][0,:,j,i]
-            except (KeyError, IndexError):
-                message = "Variable {0} is not found in {1}. Filling with array of size {2} with missing value.".format(var_name,nc_file.filepath(),vert_dim)
-                logging.debug(message)
-                var = missing_value*np.ma.ones(vert_dim)
-        else:
-            try:
-                var = nc_file[var_name][0,j,i]
-            except (KeyError, IndexError):
-                message = "Variable {0} is not found in {1}. Filling with missing value.".format(var_name,nc_file.filepath())
-                logging.debug(message)
-                var = missing_value
+        try:
+            var = nc_file[var_name][0,j,i]
+        except (KeyError, IndexError):
+            message = "Variable {0} is not found in {1}. Filling with missing value.".format(var_name,nc_file.filepath())
+            logging.debug(message)
+            var = missing_value
     return var
 
-def get_UFS_IC_data(dir, grid_dir, forcing_dir, tile, i, j, old_chgres, lam):
+def get_UFS_IC_data(dir, grid_dir, forcing_dir, tile, i, j):
     """Get the state, surface, and orographic data for the given tile and indices"""
     #returns dictionaries with the data
     
     vgrid_data = get_UFS_vgrid_data(grid_dir) #only needed for ak, bk to calculate pressure
-    state_data = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres, lam)
-    surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres, lam)
-    oro_data = get_UFS_oro_data(dir, tile, i, j, lam)
+    state_data = get_UFS_state_data(vgrid_data, dir, tile, i, j)
+    surface_data = get_UFS_surface_data(dir, tile, i, j)
+    oro_data = get_UFS_oro_data(dir, tile, i, j)
     
     return (state_data, surface_data, oro_data)
     
-def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
-    """Get the state data for the given tile and indices"""
-    
-    if lam:
-        nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.nc'))
-    else:
-        nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.tile{0}.nc'.format(tile)))
+def get_UFS_state_data(vgrid, dir, tile, i, j):
+    #
+    nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.tile{0}.nc'.format(tile)))
     
     # get nlevs from the gfs_ctrl.nc data
     nlevs_model=vgrid["nlevs"]
@@ -525,24 +445,8 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     liqwat_model_rev_3d = fv3_remap.fillz(1, nlevs_model, 1, np.expand_dims(liqwat_model_rev, axis=2), pressure_thickness_model_rev[np.newaxis, :])
     liqwat_model_rev = liqwat_model_rev_3d[:,:,0]
     
-    if old_chgres:
-        gz_fv = np.zeros(nlevs_model+1)
-        gz_fv[-1] = phis
-        m = 0
-        for k in range(0,nlevs_model):
-            for l in range(m, levp_data+k2-1):
-                if ( (log_pressure_model_interfaces_rev[k] <= pn_rev[l+1]) and (log_pressure_model_interfaces_rev[k] >= pn_rev[l]) ):
-                    gz_fv[k] = gz_rev[l] + (gz_rev[l+1]-gz_rev[l])*(log_pressure_model_interfaces_rev[k]-pn_rev[l])/(pn_rev[l+1]-pn_rev[l])
-                    break
-            m = l
-        
-        temp_model_rev = np.zeros((1,nlevs_model))
-        for k in range(0, nlevs_model):
-            temp_model_rev[0,k] = (gz_fv[k]-gz_fv[k+1])/(rdgas*(log_pressure_model_interfaces_rev[k+1]-log_pressure_model_interfaces_rev[k])*(1.+zvir*sphum_model_rev[0,k]) )
-    else:
-        temp_rev = nc_file_data['t'][:,j,i]
-        
-        temp_model_rev = fv3_remap.mappm(levp_data, pressure_from_data_rev[np.newaxis, :], temp_rev[np.newaxis, :], nlevs_model, pressure_model_interfaces_rev[np.newaxis, :], 1, 1, 2, 4, ptop_data)
+    temp_rev = nc_file_data['t'][:,j,i]
+    temp_model_rev = fv3_remap.mappm(levp_data, pressure_from_data_rev[np.newaxis, :], temp_rev[np.newaxis, :], nlevs_model, pressure_model_interfaces_rev[np.newaxis, :], 1, 1, 2, 4, ptop_data)
         
     
     icewat_model_rev = np.zeros(nlevs_model)
@@ -571,7 +475,7 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
                     icewat_model_rev[k] = cloud_water - liqwat_model_rev[0,k]
         (liqwat_model_rev[0,k], dummy_rain, icewat_model_rev[k], dummy_snow) = fv3_remap.mp_auto_conversion(liqwat_model_rev[0,k], icewat_model_rev[k])
     
-    [u_s, u_n, v_w, v_e] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam)
+    [u_s, u_n, v_w, v_e] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data)
     
     #put C/D grid zonal/meridional winds on model pressure levels
     u_s_model_rev = fv3_remap.mappm(levp_data, pressure_from_data_rev[np.newaxis, :], u_s[np.newaxis, :], nlevs_model, pressure_model_interfaces_rev[np.newaxis, :], 1, 1, -1, 8, ptop_data)
@@ -614,39 +518,24 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
         
     return state
 
-def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam):
-    if lam:
-        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
-    else:
-        filename_pattern = '*grid.tile{0}.nc'.format(tile)
-        
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
-    
+def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data):
+    #
+    filename_pattern = '*grid.tile{0}.nc'.format(tile)
+
+    #
+    for f_name in os.listdir(dir):
+        if fnmatch.fnmatch(f_name, filename_pattern):
+            filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
+    #
     nc_file_grid = Dataset('{0}/{1}'.format(dir,filename))
-    
-    if (lam):
-        #strip ghost/halo points and return supergrid
-        lon_super_data = np.asarray(nc_file_grid['x'])
-        lat_super_data = np.asarray(nc_file_grid['y'])
-        #assuming n_lam_halo_points
-        lon_super = lon_super_data[2*n_lam_halo_points:lon_super_data.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super_data.shape[1]-2*n_lam_halo_points]
-        lat_super = lat_super_data[2*n_lam_halo_points:lat_super_data.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super_data.shape[1]-2*n_lam_halo_points]
-    else:
-        lon_super = np.asarray(nc_file_grid['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
-        lat_super = np.asarray(nc_file_grid['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+
+    #
+    lon_super = np.asarray(nc_file_grid['x'])   #[lat,lon] or [y,x]   #.swapaxes(0,1)
+    lat_super = np.asarray(nc_file_grid['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
     
     num_agrid_x = int(0.5*(lon_super.shape[1]-1))
     num_agrid_y = int(0.5*(lon_super.shape[0]-1))
@@ -993,20 +882,15 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
     
     return [u_s, u_n, v_w, v_e]
 
-def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
-    """Get the surface data for the given tile and indices"""
-    
-    if lam:
-        nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.nc'))
-    else:
-        nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.tile{0}.nc'.format(tile)))
+def get_UFS_surface_data(dir, tile, i, j):
+    #
+    nc_file = Dataset('{0}/{1}'.format(dir,'sfc_data.tile{0}.nc'.format(tile)))
 
+    # Get list of variable present in file
     vars_in_sfc_data = nc_file.variables.keys()
-
-    #FV3/io/FV3GFS_io.F90/sfc_prop_restart_read was used as reference for variables that can be read in    
     
-    #read in scalars (would be 2D variables in a 3D model)
-    #{"name": "", "dim":}
+    # Read in scalars (would be 2D variables in a 3D model)
+    # Dictonary format: {"name": "", "dim":}
     surface_vars = [{"name": "tsea",              "dim":0}, {"name": "tg3",              "dim":0}, \
                     {"name": "uustar",            "dim":0}, {"name": "alvsf",            "dim":0}, \
                     {"name": "alvwf",             "dim":0}, {"name": "alnsf",            "dim":0}, \
@@ -1078,7 +962,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     surface = {}
     for var in surface_vars:
         if var["name"] in vars_in_sfc_data:
-            surface[var["name"]] = read_NetCDF_surface_var(nc_file, var["name"], i, j, old_chgres, var["dim"])
+            surface[var["name"]] = read_NetCDF_surface_var(nc_file, var["name"], i, j, var["dim"])
         else:
             if var["dim"] == 0:
                 surface[var["name"]] = 0.0
@@ -1088,18 +972,13 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
 
     return surface
 
-def get_UFS_oro_data(dir, tile, i, j, lam):
-    """Get the orographic data for the given tile and indices"""
-    
-    if lam:
-        nc_file = Dataset('{0}/{1}'.format(dir,'oro_data.nc'))
-    else:
-        filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-              
-        nc_file = Dataset('{0}/{1}'.format(dir,filename))
+def get_UFS_oro_data(dir, tile, i, j):
+    #
+    filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
+    for f_name in os.listdir(dir):
+        if fnmatch.fnmatch(f_name, filename_pattern):
+            filename = f_name
+    nc_file = Dataset('{0}/{1}'.format(dir,filename))
 
     # orographic properties
     stddev_in     = read_NetCDF_var(nc_file, "stddev",     i, j)
@@ -1170,30 +1049,21 @@ def get_UFS_vgrid_data(dir):
     
     return vgrid    
 
-def get_UFS_grid_area(dir, tile, i, j, lam):
+def get_UFS_grid_area(dir, tile, i, j):
     """Get the horizontal grid cell area for the given tile and indices"""
     #this information is in the supergrid files
     
-    if lam:
-        filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
-    else:
-        filename_pattern = '*grid.tile{0}.nc'.format(tile)
-        
-        for f_name in os.listdir(dir):
-           if fnmatch.fnmatch(f_name, filename_pattern):
-              filename = f_name
-        if not filename:
-            message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
-            logging.critical(message)
-            raise Exception(message)
-        
+    #
+    filename_pattern = '*grid.tile{0}.nc'.format(tile)
+
+    #
+    for f_name in os.listdir(dir):
+        if fnmatch.fnmatch(f_name, filename_pattern):
+            filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
     
@@ -1203,39 +1073,20 @@ def get_UFS_grid_area(dir, tile, i, j, lam):
     jpt2 = j*2+1
     ipt2 = i*2+1
     
-    #from Phil Pegion: the area is calculated by adding up the 4 components of the contained supergrid cells
-    if lam:
-        area_data = nc_file['area'][:,:]
-        area_data_no_halo = area_data[2*n_lam_halo_points:area_data.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:area_data.shape[1]-2*n_lam_halo_points]
-        area_in = area_data_no_halo[jpt2-1:jpt2+1,ipt2-1:ipt2+1]
-    else:
-        area_in=nc_file['area'][jpt2-1:jpt2+1,ipt2-1:ipt2+1]
+    #
+    area_in=nc_file['area'][jpt2-1:jpt2+1,ipt2-1:ipt2+1]
     
     return area_in.sum()
 
-def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, lam, lami, lamf, save_comp_data):
+def get_UFS_forcing_data(ic_state, forcing_dir, grid_dir, tile, i, j, save_comp_data):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
 
-    regrid_output = 'point'
-    #regrid_output = 'all'
+    # Number of levels
+    nlevs = ic_state["nlevs"]
 
-    if lamf:
-        atm_filename_pattern = 'atmf*.tile{0}.nc'.format(tile)
-        sfc_filename_pattern = 'sfcf*.tile{0}.nc'.format(tile)
-    else:
-        atm_filename_pattern = 'atmf*.nc'
-        sfc_filename_pattern = 'sfcf*.nc'
-
-    if lami:
-        print("Initial Conditions are on limited area model grid")
-    else:
-        print("Initial Conditions are NOT on limited area model grid")
-    if lamf:
-        print("Forcing data are on limited area model grid")
-    else:
-        print("Forcing data are NOT on limited area model grid")
-    if lami == lamf:
-        print("Both the initial conditions and forcings are on the same grids")
+    #
+    atm_filename_pattern = 'atmf*.nc'
+    sfc_filename_pattern = 'sfcf*.nc'
 
     # Create list of input forcing files
     atm_filenames = []
@@ -1282,19 +1133,15 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
     u_layers       = []
     v_layers       = []
     time_atm_hours = []
-    (ic_grid_lon, ic_grid_lat) = get_initial_lon_lat_grid(grid_dir, tile, lam)
+    (ic_grid_lon, ic_grid_lat) = get_initial_lon_lat_grid(grid_dir, tile)
     for count, filename in enumerate(atm_filenames, start=1):
         # Open file
         nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
         nc_file.set_always_mask(False)
 
-        #check if output grid is different than initial (native) grid
-        if lam:
-            data_grid_lon = nc_file['grid_xt'][:,:]
-            data_grid_lat = nc_file['grid_yt'][:,:]
-        else:
-            data_grid_lon = nc_file['lon'][:,:]
-            data_grid_lat = nc_file['lat'][:,:]
+        #
+        data_grid_lon = nc_file['lon'][:,:]
+        data_grid_lat = nc_file['lat'][:,:]
 
         equal_grids = False
         if (ic_grid_lon.shape == data_grid_lon.shape and ic_grid_lat.shape == ic_grid_lat.shape):
@@ -1303,17 +1150,9 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         
         if (not equal_grids):
             grid_in = {'lon': data_grid_lon, 'lat': data_grid_lat}
-            if regrid_output == 'all':
-                grid_out = {'lon': ic_grid_lon, 'lat': ic_grid_lat}
-                i_get = i
-                j_get = j
-            elif regrid_output == 'point':
-                grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
-                i_get = 0
-                j_get = 0
-            else:
-                print('Unrecognized regrid_output variable. Exiting...')
-                exit()
+            grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
+            i_get = 0
+            j_get = 0
             
             print('Regridding {} onto native grid: regridding progress = {}%'.format(filename, 100.0*count/(len(atm_filenames) + len(sfc_filenames))))
             regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
@@ -1544,12 +1383,8 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         #
         # Read in output grid
         #
-        if lam:
-            data_grid_lon = nc_file['grid_xt'][:,:]
-            data_grid_lat = nc_file['grid_yt'][:,:]
-        else:
-            data_grid_lon = nc_file['lon'][:,:]
-            data_grid_lat = nc_file['lat'][:,:]
+        data_grid_lon = nc_file['lon'][:,:]
+        data_grid_lat = nc_file['lat'][:,:]
 
         # Check if output grid is different than initial (native) grid.
         # If grids are different, regrid output grid to IC grid
@@ -1560,17 +1395,9 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         
         if (not equal_grids):
             # Save point indices
-            if regrid_output == 'all':
-                grid_out = {'lon': ic_grid_lon, 'lat': ic_grid_lat}
-                i_get = i
-                j_get = j
-            elif regrid_output == 'point':
-                grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
-                i_get = 0
-                j_get = 0
-            else:
-                print('Unrecognized regrid_output variable. Exiting...')
-                exit()
+            grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
+            i_get = 0
+            j_get = 0
             
             #
             # Regrid to requested UFS grid-point..
@@ -1654,11 +1481,11 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         #
         # Compute tendencies on IC level
         #
-        dt = secinhr*(ufs_state_remap["time"][t+1] - ufs_state_remap["time"][t])
-        dqvdt_adv[t+1,:] = (ufs_state_remap["qv"][t+1,:] - ufs_state_remap["qv"][t,:]) / dt
-        dtdt_adv[t+1,:]  = (ufs_state_remap["T"][t+1,:]  - ufs_state_remap["T"][t,:])  / dt
-        dudt_adv[t+1,:]  = (ufs_state_remap["u"][t+1,:]  - ufs_state_remap["u"][t,:])  / dt
-        dvdt_adv[t+1,:]  = (ufs_state_remap["v"][t+1,:]  - ufs_state_remap["v"][t,:])  / dt
+        #dt = secinhr*(ufs_state_remap["time"][t+1] - ufs_state_remap["time"][t])
+        #dqvdt_adv[t+1,:] = (ufs_state_remap["qv"][t+1,:] - ufs_state_remap["qv"][t,:]) / dt
+        #dtdt_adv[t+1,:]  = (ufs_state_remap["T"][t+1,:]  - ufs_state_remap["T"][t,:])  / dt
+        #dudt_adv[t+1,:]  = (ufs_state_remap["u"][t+1,:]  - ufs_state_remap["u"][t,:])  / dt
+        #dvdt_adv[t+1,:]  = (ufs_state_remap["v"][t+1,:]  - ufs_state_remap["v"][t,:])  / dt
 
     ##################################################################################################################
     #
@@ -1750,11 +1577,11 @@ def get_UFS_forcing_data2(nlevs, ic_state, forcing_dir, grid_dir, tile, i, j, la
         for t in range(1,natmf):
             time[t]            = secinhr*time_dyn_hours[t]
             # Using dynamic tendencies provided in sfcf*.nc files
-            #p_s[t]             = ufs_state["ps"][t]
-            #pressure_forc[:,t] = ufs_state["pres"][t,:]
+            p_s[t]             = ufs_state["ps"][t]
+            pressure_forc[:,t] = ufs_state["pres"][t,:]
             # Using tendecies interpolated to IC levels
-            p_s[t]             = ic_state["p_surf"]
-            pressure_forc[:,t] = ic_state["pres"][:]
+            #p_s[t]             = ic_state["p_surf"]
+            #pressure_forc[:,t] = ic_state["pres"][:]
             tot_advec_T[:,t]   = dtdt_adv[t,:]
             tot_advec_qv[:,t]  = dqvdt_adv[t,:]
             tot_advec_u[:,t]   = dudt_adv[t,:]
@@ -2010,10 +1837,10 @@ def add_noahmp_coldstart(surface, date):
             
             surface["rtmassxy"] = 500.0      
 
-            surface["woodxy"] = 500.0       
+            seurface["woodxy"] = 500.0       
             surface["stblcpxy"] = 1000.0      
             surface["fastcpxy"] = 1000.0
-            
+            m
         if ( vegtyp == mptable_nml_active['ISSNOW'] ):
             for k in range(n_soil_layers):
                 surface["stc"][k] = np.amin([surface["stc"][k],np.amin([surface["tg3"],263.15])])
@@ -2200,7 +2027,7 @@ def read_noahmp_soil_table():
     
     return soilparm
 
-def write_comparison_file(vars_comp, state_comp, case_name, date, surface, add_UFS_dyn_tend, add_UFS_NOAH_lsm):
+def write_comparison_file(vars_comp, state_comp, case_name, date, surface):
     """Write UFS history file data to netCDF file for comparison"""
     
     #
@@ -2228,12 +2055,8 @@ def write_comparison_file(vars_comp, state_comp, case_name, date, surface, add_U
     #
     lon_dim  = nc_file.createDimension('lon', 1)
     lat_dim  = nc_file.createDimension('lat', 1)
-    if (add_UFS_dyn_tend):
-        lev_dim  = nc_file.createDimension('lev', state_comp["pres"].shape[1])
-        time_dim = nc_file.createDimension('t0',  state_comp["time"].shape[0])
-    else:
-        lev_dim  = nc_file.createDimension('lev', state_comp["pres"].shape[0])
-        time_dim = nc_file.createDimension('t0',  1)
+    lev_dim  = nc_file.createDimension('lev', state_comp["pres"].shape[1])
+    time_dim = nc_file.createDimension('t0',  state_comp["time"].shape[0])
 
     # Variable dictionary to create netcdf file (DEPHY format).
     var_dict = [{"dict": date,       "name": "year",   "type":int_type,  "dimd": ( ),                         "units": "year",          "description":"year at time of initial values", "alias": "init_year"}, \
@@ -2263,7 +2086,7 @@ def write_comparison_file(vars_comp, state_comp, case_name, date, surface, add_U
         var_temp[:]          = var["dict"][var["name"]]
 
     #
-    # vars_comp (input; created in get_UFS_forcing_data2)
+    # vars_comp (input; created in get_UFS_forcing_data)
     #
     for var in vars_comp:
         if var["active"]:
@@ -2308,12 +2131,20 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     forcing_off = 0
 
     # Output file
-    fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '.nc')
+    if (add_UFS_dyn_tend): 
+        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '.nc')
+    else:
+        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_zeroforce.nc')
+
     nc_file = Dataset(fileOUT, 'w', format='NETCDF4')
     if (add_UFS_dyn_tend):
         nc_file.description = "FV3GFS model profile input (UFS dynamic tendencies, SCM-UFS replay mode.)"
+        nc_file.modifications = 'contains dynamic forcing from UFS'
     elif (add_UFS_NOAH_lsm):
-        nc_file.description = "FV3GFS model profile input (With NOAH Land surface moodel surface forcings.)"
+        nc_file.description   = "FV3GFS model profile input (With NOAH Land surface moodel surface forcings.)"
+        nc_file.modifications = 'contains initial conditions for Noah LSM' 
+    elif (add_UFS_dyn_tend and add_UFS_NOAH_lsm):
+        nc_file.description = "FV3GFS model profile input (UFS dynamic tendencies and NOAH Land surface moodel surface forcings)"
     else:
         nc_file.description = "FV3GFS model profile input (no forcings)"
 
@@ -2336,11 +2167,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     #
     # Global file attributes.
     #
-    if (add_UFS_dyn_tend): 
-        runtime = timedelta(seconds=forcing['time'][-1])
-    else:
-        runtime = timedelta(seconds=0) 
-    end_date   = start_date + runtime
+    runtime           = timedelta(seconds=forcing['time'][-1])
+    end_date          = start_date + runtime
     start_date_string = start_date.strftime("%Y%m%d%H%M%S")
     #
     loc_string  = str(round(surface["lon"],2)) + "E" + str(round(surface["lat"],2)) + "N"
@@ -2352,7 +2180,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     nc_file.author         = 'Grant J. Firl and Dustin Swales'
     nc_file.version        = 'Created on ' + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
     nc_file.format_version = '1.0'
-    #nc_file.modifications  = 'contains initial conditions for Noah LSM'
     nc_file.script         = os.path.basename(__file__)
     nc_file.comment        = ''
     nc_file.startDate      = start_date_string
@@ -2402,25 +2229,16 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     nc_file.adv_u            = forcing_off
     nc_file.adv_v            = forcing_off
     #
-    nc_file.zorog              = oro['orog_filt']
-    nc_file.z0                 = surface['zorl']
-    nc_file.surfaceType        = surface_string
-
+    nc_file.zorog            = oro['orog_filt']
+    nc_file.z0               = surface['zorl']
+    nc_file.surfaceType      = surface_string
+    #
     if (add_UFS_dyn_tend):
-        nc_file.adv_temp = forcing_on
-        nc_file.adv_qv   = forcing_on
-        nc_file.adv_u    = forcing_on
-        nc_file.adv_v    = forcing_on
-        #
-        time_dim                   = nc_file.createDimension('time', len(forcing['time']))
-        time_var                   = nc_file.createVariable('time', real_type, ('time',))
-        time_var.units             = 'seconds since ' + str(start_date)
-        time_var.long_name         = 'Forcing time'
-        time_var[:]                = forcing['time']
-    else:
-        time_dim                   = nc_file.createDimension('time', 1)
-        time_var                   = nc_file.createVariable('time', real_type, ('time',))
-        time_var[:]                = 0.
+        nc_file.adv_temp     = forcing_on
+        nc_file.adv_qv       = forcing_on
+        nc_file.adv_u        = forcing_on
+        nc_file.adv_v        = forcing_on
+    #
     if (add_UFS_NOAH_lsm):
         nc_file.surfaceForcing     = 'lsm'
         nc_file.surfaceForcingWind = 'lsm'
@@ -2429,6 +2247,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
         nc_file.surfaceForcingWind = 'none'
 
     # Set file dimension
+    time_dim         = nc_file.createDimension('time', len(forcing['time']))
     initial_time_dim = nc_file.createDimension('t0',    1)
     lev_dim          = nc_file.createDimension('lev',   nlevs)
     lon_dim          = nc_file.createDimension('lon',   1)
@@ -2444,6 +2263,12 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     init_time_var.description  = 'Initial time'
     init_time_var.calendar     = 'gregorian'
     init_time_var[:]           = 0.0
+    #
+    time_var                   = nc_file.createVariable('time', real_type, ('time',))
+    time_var.units             = 'seconds since ' + str(start_date)
+    time_var.long_name         = 'Forcing time'
+    time_var[:]                = forcing['time']
+
     #
     lev_var                    = nc_file.createVariable('lev', real_type, ('lev',))
     lev_var.units              = 'Pa'
@@ -2509,63 +2334,63 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 #
                 # Required SCM inputs
                 #
-                {"name": "p_surf", "type":real_type, "dimd": ('t0', 'lat', 'lon'),        "units": "Pa",            "description": "inital surface pressure", "alias":"ps"}, \
-                {"name": "T",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "K",             "description": "Temperature", "alias":"temp"}, \
-                {"name": "u",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "Zonal wind"}, \
-                {"name": "v",      "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "Meridional wind"}, \
-                {"name": "pres",   "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "Pa",            "description": "Pressure", "alias": "pressure"}, \
-                {"name": "qt",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "Total water content"}, \
-                {"name": "qv",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "Total pecific humidity"}, \
-                {"name": "ql",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "Liquid water specific humidity"}, \
-                {"name": "qi",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "Ice water specific humidity", "default_value": 0.0}, \
-                {"name": "rv",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "Water vapor mixing ratio"}, \
-                {"name": "rt",     "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "Total water mixing ratio"}, \
-                {"name": "tke",    "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m2 s-2",        "description": "Turbulen kinetic energy", "default_value": 0.0}, \
-                {"name": "height", "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "m",             "description": "Height above ground"},\
-                {"name": "theta",  "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "K",             "description": "Potential temperature"},\
-                {"name": "thetal", "type":real_type, "dimd": ('t0', 'lev', 'lat', 'lon'), "units": "K",             "description": "Liquid potential temperature"}, \
-                {"name": "o3",         "type":real_type, "dimd": ('t0', 'lev', 'lat','lon'), "units": "kg kg-1", "description": "initial profile of ozone mass mixing ratio", "alias": "ozone"}, \
-                {"name": "area",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m^2",     "description": "grid cell area"}, \
-                {"name": "stddev",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "standard deviation of subgrid orography"}, \
-                {"name": "convexity",  "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "convexity of subgrid orography"}, \
-                {"name": "oa1",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "assymetry of subgrid orography 1"}, \
-                {"name": "oa2",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "assymetry of subgrid orography 2"}, \
-                {"name": "oa3",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "assymetry of subgrid orography 3"}, \
-                {"name": "oa4",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "assymetry of subgrid orography 4"}, \
-                {"name": "ol1",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 1"}, \
-                {"name": "ol2",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 2"}, \
-                {"name": "ol3",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 3"}, \
-                {"name": "ol4",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 4"}, \
-                {"name": "sigma",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "slope of subgrid orography"}, \
-                {"name": "theta_oro",  "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "deg",     "description": "angle with respect to east of maximum subgrid orographic variations"}, \
-                {"name": "gamma",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "anisotropy of subgrid orography"}, \
-                {"name": "elvmax",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "maximum of subgrid orography"}, \
-                {"name": "orog_filt",  "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "orography", "alias": "oro"}, \
-                {"name": "orog_raw",   "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "unfiltered orography", "alias": "oro_uf"}, \
-                {"name": "land_frac",  "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "fraction of horizontal grid area occupied by land", "alias": "landfrac"}, \
-                {"name": "lake_frac" , "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "fraction of horizontal grid area occupied by lake", "alias": "lakefrac", "default_value":0}, \
-                {"name": "lake_depth", "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "lake depth", "alias": "lakedepth", "default_value":0}, \
-                {"name": "tref",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "K",       "description": "sea surface reference temperature for NSST"}, \
-                {"name": "z_c",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "sub-layer cooling thickness for NSST"}, \
-                {"name": "c_0",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "coefficient 1 to calculate d(Tz)/d(Ts) for NSST"}, \
-                {"name": "c_d",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "nonw",    "description": "coefficient 2 to calculate d(Tz)/d(Ts) for NSST"}, \
-                {"name": "w_0",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "coefficient 3 to calculate d(Tz)/d(Ts) for NSST"}, \
-                {"name": "w_d",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "coefficient 4 to calculate d(Tz)/d(Ts) for NSST"}, \
-                {"name": "xt",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "K m",     "description": "heat content in diurnal thermocline layer for NSST"}, \
-                {"name": "xs",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "ppt m",   "description": "salinity content in diurnal thermocline layer for NSST"}, \
-                {"name": "xu",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m2 s-1",  "description": "u-current in diurnal thermocline layer for NSST"}, \
-                {"name": "xv",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m2 s-1",  "description": "v-current in diurnal thermocline layer for NSST"}, \
-                {"name": "xz",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "thickness of diurnal thermocline layer for NSST"}, \
-                {"name": "zm"   ,      "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "thickness of ocean mixed layer for NSST"}, \
-                {"name": "xtts",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "sensitivity of diurnal thermocline layer heat content to surface temperature [d(xt)/d(ts)] for NSST"}, \
-                {"name": "xzts",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m K-1",   "description": "sensitivity of diurnal thermocline layer thickness to surface temperature [d(xz)/d(ts)] for NSST"}, \
-                {"name": "d_conv",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "m",       "description": "thickness of free convection layer for NSST"}, \
-                {"name": "ifd",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "none",    "description": "index to start DTM run for NSST"}, \
-                {"name": "dt_cool",    "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "K",       "description": "sub-layer cooling amount for NSST"}, \
-                {"name": "qrain",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),       "units": "W m-2",   "description": "sensible heat due to rainfall for NSST"},\
-                {"name": "ps_forc",       "type":real_type, "dimd": ('time',        'lat', 'lon'),       "units": 'Pa',      "description": 'Surface pressure for forcing'},\
-                {"name": "pressure_forc", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),       "units": 'Pa',      "description": 'Pressure for forcing'},\
-                {"name": "height_forc",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),       "units": 'm',       "description": 'Height above the ground for forcing',"default_value": 1.}]
+                {"name": "p_surf",        "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "Pa",      "description": "inital surface pressure", "alias":"ps"}, \
+                {"name": "T",             "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "K",       "description": "Temperature", "alias":"temp"}, \
+                {"name": "u",             "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m s-1",   "description": "Zonal wind"}, \
+                {"name": "v",             "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m s-1",   "description": "Meridional wind"}, \
+                {"name": "pres",          "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "Pa",      "description": "Pressure", "alias": "pressure"}, \
+                {"name": "qt",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "Total water content"}, \
+                {"name": "qv",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "Total pecific humidity"}, \
+                {"name": "ql",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "Liquid water specific humidity"}, \
+                {"name": "qi",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "Ice water specific humidity", "default_value": 0.0}, \
+                {"name": "rv",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "Water vapor mixing ratio"}, \
+                {"name": "rt",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "Total water mixing ratio"}, \
+                {"name": "tke",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m2 s-2",  "description": "Turbulen kinetic energy", "default_value": 0.0}, \
+                {"name": "height",        "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m",       "description": "Height above ground"},\
+                {"name": "theta",         "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "K",       "description": "Potential temperature"},\
+                {"name": "thetal",        "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "K",       "description": "Liquid potential temperature"}, \
+                {"name": "o3",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1", "description": "initial profile of ozone mass mixing ratio", "alias": "ozone"}, \
+                {"name": "area",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m^2",     "description": "grid cell area"}, \
+                {"name": "stddev",        "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "standard deviation of subgrid orography"}, \
+                {"name": "convexity",     "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "convexity of subgrid orography"}, \
+                {"name": "oa1",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "assymetry of subgrid orography 1"}, \
+                {"name": "oa2",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "assymetry of subgrid orography 2"}, \
+                {"name": "oa3",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "assymetry of subgrid orography 3"}, \
+                {"name": "oa4",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "assymetry of subgrid orography 4"}, \
+                {"name": "ol1",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 1"}, \
+                {"name": "ol2",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 2"}, \
+                {"name": "ol3",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 3"}, \
+                {"name": "ol4",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "fraction of grid box with subgrid orography higher than critical height 4"}, \
+                {"name": "sigma",         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "slope of subgrid orography"}, \
+                {"name": "theta_oro",     "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "deg",     "description": "angle with respect to east of maximum subgrid orographic variations"}, \
+                {"name": "gamma",         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "anisotropy of subgrid orography"}, \
+                {"name": "elvmax",        "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "maximum of subgrid orography"}, \
+                {"name": "orog_filt",     "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "orography", "alias": "oro"}, \
+                {"name": "orog_raw",      "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "unfiltered orography", "alias": "oro_uf"}, \
+                {"name": "land_frac",     "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "fraction of horizontal grid area occupied by land", "alias": "landfrac"}, \
+                {"name": "lake_frac" ,    "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "fraction of horizontal grid area occupied by lake", "alias": "lakefrac", "default_value":0}, \
+                {"name": "lake_depth",    "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "lake depth", "alias": "lakedepth", "default_value":0}, \
+                {"name": "tref",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "K",       "description": "sea surface reference temperature for NSST"}, \
+                {"name": "z_c",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "sub-layer cooling thickness for NSST"}, \
+                {"name": "c_0",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "coefficient 1 to calculate d(Tz)/d(Ts) for NSST"}, \
+                {"name": "c_d",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "nonw",    "description": "coefficient 2 to calculate d(Tz)/d(Ts) for NSST"}, \
+                {"name": "w_0",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "coefficient 3 to calculate d(Tz)/d(Ts) for NSST"}, \
+                {"name": "w_d",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "coefficient 4 to calculate d(Tz)/d(Ts) for NSST"}, \
+                {"name": "xt",            "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "K m",     "description": "heat content in diurnal thermocline layer for NSST"}, \
+                {"name": "xs",            "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "ppt m",   "description": "salinity content in diurnal thermocline layer for NSST"}, \
+                {"name": "xu",            "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m2 s-1",  "description": "u-current in diurnal thermocline layer for NSST"}, \
+                {"name": "xv",            "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m2 s-1",  "description": "v-current in diurnal thermocline layer for NSST"}, \
+                {"name": "xz",            "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "thickness of diurnal thermocline layer for NSST"}, \
+                {"name": "zm"   ,         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "thickness of ocean mixed layer for NSST"}, \
+                {"name": "xtts",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "sensitivity of diurnal thermocline layer heat content to surface temperature [d(xt)/d(ts)] for NSST"}, \
+                {"name": "xzts",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m K-1",   "description": "sensitivity of diurnal thermocline layer thickness to surface temperature [d(xz)/d(ts)] for NSST"}, \
+                {"name": "d_conv",        "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",       "description": "thickness of free convection layer for NSST"}, \
+                {"name": "ifd",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "none",    "description": "index to start DTM run for NSST"}, \
+                {"name": "dt_cool",       "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "K",       "description": "sub-layer cooling amount for NSST"}, \
+                {"name": "qrain",         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "W m-2",   "description": "sensible heat due to rainfall for NSST"},\
+                {"name": "ps_forc",       "type":real_type, "dimd": ('time',        'lat', 'lon'), "units": 'Pa',      "description": 'Surface pressure for forcing'},\
+                {"name": "pressure_forc", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": 'Pa',      "description": 'Pressure for forcing'},\
+                {"name": "height_forc",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": 'm',       "description": 'Height above the ground for forcing',"default_value": 1.}]
     var_lsm_ics = [\
                    #
                    # Fields needed if model_ics = True AND input_surfaceForcing == "lsm"
@@ -2680,8 +2505,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     #
     # Include surface forcing from NOAH LSM?
     #
-    #if (add_UFS_NOAH_lsm):
-    var_dict.extend(var_lsm_ics)
+    if (add_UFS_NOAH_lsm):
+        var_dict.extend(var_lsm_ics)
 
     #
     # Write all fields in "var_dict" to SCM input file.
@@ -2721,7 +2546,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
 
     return
 
-def find_date(forcing_dir, lam):
+def find_date(forcing_dir):
     
     dyn_filename_pattern = 'atmf*.nc'
     
@@ -2744,10 +2569,10 @@ def find_date(forcing_dir, lam):
     nc_file.close()
     
     date_dict = {}
-    date_dict["year"] = int(date_string[0:4])
-    date_dict["month"] = int(date_string[5:7])
-    date_dict["day"] = int(date_string[8:10])
-    date_dict["hour"] = int(date_string[11:13])
+    date_dict["year"]   = int(date_string[0:4])
+    date_dict["month"]  = int(date_string[5:7])
+    date_dict["day"]    = int(date_string[8:10])
+    date_dict["hour"]   = int(date_string[11:13])
     date_dict["minute"] = int(date_string[14:16])
     date_dict["second"] = int(date_string[17:])
     
@@ -2759,33 +2584,24 @@ def main():
     #
     # Read in arguments
     #
-    (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam, lami, lamf, save_comp, add_UFS_NOAH_lsm) = parse_arguments()
-    
-    #
-    # Are we provided forcing data?
-    #
-    add_UFS_dyn_tend  = False
-    forcing_data = {}
-    if forcing_dir: 
-        print("Forcing data directory provided. Adding dyanmic tendencies to SCM input file.")
-        add_UFS_dyn_tend = True
+    (location, indices, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend) = parse_arguments()
     
     #
     # Find tile containing the point using the supergrid if no tile is specified 
     #
     if not tile:
-        tile = int(find_tile(location, grid_dir, lam))
+        tile = int(find_tile(location, grid_dir))
         if tile < 0:
             message = 'No tile was found for location {0}'.format(location)
             logging.critical(message)
             raise Exception(message)
         print('Tile found: {0}'.format(tile))
-    
+
     #
     # Find index of closest point in the tile if indices are not specified
     #
     if not indices:
-        (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile, lam)
+        (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile)
         print('The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j))
         print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
         print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
@@ -2793,21 +2609,19 @@ def main():
         tile_i = indices[0]
         tile_j = indices[1]
         #still need to grab the lon/lat if the tile and indices are supplied
-        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile, lam)
+        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile)
         
         print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
     
     #
-    # Get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement different file reads)
+    # Get UFS IC data
     #
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, forcing_dir, tile, tile_i, tile_j, old_chgres, lam)
+    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, forcing_dir, tile, tile_i, tile_j)
     
     #
-    # This causes problems for UFS IC only cases, where there are no atmf*.nc files available
+    # Look in atmf* file for initial date
     #
-    if not date:
-        # date was not included on command line; look in atmf* file for initial date
-        date = find_date(forcing_dir, lam)
+    date = find_date(forcing_dir)
     
     #
     # Cold start NoahMP variables (shouldn't be necessary to use this anymore, since same capability exists in SCM code if given Noah ICs only)
@@ -2819,7 +2633,7 @@ def main():
     # Get grid cell area if not given
     #
     if not area:
-        area = get_UFS_grid_area(grid_dir, tile, tile_i, tile_j, lam)
+        area = get_UFS_grid_area(grid_dir, tile, tile_i, tile_j)
     surface_data["area"] = area
     surface_data["lon"]  = point_lon
     surface_data["lat"]  = point_lat
@@ -2827,47 +2641,27 @@ def main():
     #
     # Get UFS forcing data
     #
-    if (add_UFS_dyn_tend):
-        (forcing_data, vars_comp, state_comp) = get_UFS_forcing_data2(state_data["nlevs"], state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, lam, lami, lamf, save_comp)
-    else:
-        forcing_data = {}
-        forcing_data["ps_forc"]       = state_data["p_surf"]
-        forcing_data["pressure_forc"] = state_data["pres"][:]
-        forcing_data["height_forc"]   = 1
-        forcing_data["tot_advec_T"]   = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["tot_advec_qv"]  = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["tot_advec_u"]   = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["tot_advec_v"]   = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["w_ls"]          = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["omega"]         = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["u_g"]           = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["v_g"]           = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["u_nudge"]       = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["v_nudge"]       = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["T_nudge"]       = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["thil_nudge"]    = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["qt_nudge"]      = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["rad_heating"]   = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["h_advec_thil"]  = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["v_advec_thil"]  = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["h_advec_qt"]    = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["v_advec_qt"]    = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["h_advec_u"]     = np.zeros((state_data["nlevs"],1),dtype=float)
-        forcing_data["h_advec_v"]     = np.zeros((state_data["nlevs"],1),dtype=float)
-        #
-        vars_comp    = {}
-        state_comp   = state_data
-
+    (forcing_data, vars_comp, state_comp) = get_UFS_forcing_data(state_data, forcing_dir, grid_dir, tile, tile_i, tile_j, save_comp)
+    
     #
     # Write SCM case file
     #
     write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, add_UFS_dyn_tend, add_UFS_NOAH_lsm)
 
     #
+    # Write SCM case file (set forcing to zero). Used for sensitivity study.
+    #
+    forcing_data["tot_advec_T"][:,:]  = 0.
+    forcing_data["tot_advec_qv"][:,:] = 0.
+    forcing_data["tot_advec_u"][:,:]  = 0.
+    forcing_data["tot_advec_v"][:,:]  = 0.
+    write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, False, add_UFS_NOAH_lsm)
+
+    #
     # Create comparison file for UFS/SCM diagnostic scripts.
     #
     if (save_comp):
-        fileOUT = write_comparison_file(vars_comp, state_comp, case_name, date, surface_data, add_UFS_dyn_tend, add_UFS_NOAH_lsm)
+        fileOUT = write_comparison_file(vars_comp, state_comp, case_name, date, surface_data)
 
 if __name__ == '__main__':
     main()

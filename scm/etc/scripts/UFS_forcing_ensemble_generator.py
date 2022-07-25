@@ -13,51 +13,51 @@ import random
 
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-lon', '--lon_limits', help='longitude range for ensemble, separated by a space', nargs=2, type=float, required=False)
-parser.add_argument('-lat', '--lat_limits', help='latitude range for ensemble, separated by a space', nargs=2, type=float, required=False)
-parser.add_argument('-n',   '--case_name',  help='name of case', required=True)
-parser.add_argument('-i',   '--dir_ic',     help='input directory path containing FV3 input files', required=True)
-parser.add_argument('-g',   '--dir_grid',   help='directory path containing FV3 tile supergrid files', required=True)
-parser.add_argument('-f',   '--dir_forcing',help='directory path containing physics diag files', required=True)
-parser.add_argument('-lami','--lam_ic',     help='flag to signal that the ICs are from a limited-area model run', action='store_true')
-parser.add_argument('-nens','--nemsmembers',help='number of SCM UFS ensemble memeber to create', type=int,default=1)
-parser.add_argument('-cfg', '--configID',   help='Tag name used to create case configuration name',required=False)
-parser.add_argument('-sdf', '--suite',      help='CCPP suite definition file to use for ensemble',default='SCM_GFS_v16')
-parser.add_argument('-dt',  '--deltatime',  help='', type=float, default=3600.0)
-parser.add_argument('-nio', '--n_itt_out',  help='',type=int, default=1)
-parser.add_argument('-nid', '--n_itt_diag', help='',type=int, default=-999)
-parser.add_argument('-rr',  '--rerun',      help='Use when building additional cases for previously created case',action='store_true')
-parser.add_argument('-rrid','--rerun_ID',   help='suffix to be attached when using rerun',required=False)
+parser.add_argument('-lon', '--lon_limits',       help='longitude range for ensemble, separated by a space', nargs=2, type=float, required=False)
+parser.add_argument('-lat', '--lat_limits',       help='latitude range for ensemble, separated by a space', nargs=2, type=float, required=False)
+parser.add_argument('-n',   '--case_name',        help='name of case', required=True)
+parser.add_argument('-i',   '--dir_ic',           help='input directory path containing FV3 input files', required=True)
+parser.add_argument('-g',   '--dir_grid',         help='directory path containing FV3 tile supergrid files', required=True)
+parser.add_argument('-f',   '--dir_forcing',      help='directory path containing physics diag files', required=True)
+parser.add_argument('-sc',  '--save_comp',        help='flag to save and write out a file with UFS output data to compare SCM simulations with', action='store_true')
+parser.add_argument('-lsm', '--add_UFS_NOAH_lsm', help='flag to include UFS NOAH LSM surface forcing', action='store_true')
+parser.add_argument('-ufsf','--add_UFS_dyn_tend', help='flag to include UFS dynamic tendencies for SCm forcing', action='store_true')
+parser.add_argument('-nens','--nemsmembers',      help='number of SCM UFS ensemble memeber to create', type=int,default=1)
+parser.add_argument('-cfg', '--configID',         help='Tag name used to create case configuration name',required=False)
+parser.add_argument('-sdf', '--suite',            help='CCPP suite definition file to use for ensemble',default='SCM_GFS_v16')
+parser.add_argument('-dt',  '--timestep',         help='SCM timestep', type=float, default=3600.0)
+parser.add_argument('-nio', '--n_itt_out',        help='SCM instantaneous output timestep',type=int, default=1)
+parser.add_argument('-nid', '--n_itt_diag',       help='SCM diagnostic bucket clearing interval (in timesteps)',type=int, default=-999)
 
 ###############################################################################
 ###############################################################################
 def parse_arguments():
-    args           = parser.parse_args()
-    lon_range      = args.lon_limits
-    lat_range      = args.lat_limits
-    case_name_root = args.case_name
-    dirIC          = args.dir_ic
-    dirGRID        = args.dir_grid
-    dirFORCING     = args.dir_forcing
-    lami           = args.lam_ic
-    npts           = args.nemsmembers
-    suite          = args.suite
-    dt             = args.deltatime
-    n_itt_out      = args.n_itt_out
-    n_itt_diag     = args.n_itt_diag
-    rerun          = args.rerun
-    rerun_ID       = ''
-    if (args.rerun_ID != None): rerun_ID = '_'+args.rerun_ID
+    args             = parser.parse_args()
+    lon_range        = args.lon_limits
+    lat_range        = args.lat_limits
+    case_name_root   = args.case_name
+    dirIC            = args.dir_ic
+    dirGRID          = args.dir_grid
+    dirFORCING       = args.dir_forcing
+    npts             = args.nemsmembers
+    suite            = args.suite
+    dt               = args.timestep
+    n_itt_out        = args.n_itt_out
+    n_itt_diag       = args.n_itt_diag
+    save_comp        = args.save_comp
+    add_UFS_NOAH_lsm = args.add_UFS_NOAH_lsm
+    add_UFS_dyn_tend = args.add_UFS_dyn_tend
+
     configID       = ''
     if (args.configID != None): configID = '_'+args.configID
 
-    return (lon_range, lat_range, case_name_root, lami, npts, configID, suite, dt, n_itt_out, n_itt_diag, rerun, rerun_ID, dirIC, dirGRID, dirFORCING)
+    return (lon_range, lat_range, case_name_root, npts, configID, suite, dt, n_itt_out, n_itt_diag, dirIC, dirGRID, dirFORCING, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend)
 
 ###############################################################################
 ###############################################################################
 def main():
     #
-    (lon_range, lat_range, case_name_root, lami, npts, configID, suite, dt, n_itt_out, n_itt_diag, rerun, rerun_ID, dirIC, dirGRID, dirFORCING) = parse_arguments()
+    (lon_range, lat_range, case_name_root, npts, configID, suite, dt, n_itt_out, n_itt_diag, dirIC, dirGRID, dirFORCING, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend) = parse_arguments()
 
     #
     fileLOG  = open('UFS_forcing_ensemble_generator.log', 'w')
@@ -101,7 +101,15 @@ def main():
                    {"name": "C_RES",                    "values": str(C_RES)}, \
                    {"name": "n_itt_out",                "values": str(n_itt_out)},  \
                    {"name": "n_itt_diag",               "values": str(n_itt_diag)}]
-    
+
+    #
+    # What, if any, options neeed to be passsed to UFS_IC_generator.py?
+    #
+    com_config = ''
+    if save_comp:        com_config=com_config+' -sc'
+    if add_UFS_NOAH_lsm: com_config=com_config+' -lsm'
+    if add_UFS_dyn_tend: com_config=com_config+' -ufsf'
+
     #
     # Create inputs to SCM
     # (Call UFS_IC_generator and create case_config files for each case)
@@ -116,8 +124,8 @@ def main():
         file_scminput = dir_scm+"scm/data/processed_case_input/"+case_name+".nc"
 
         com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
-              " -i " + dirIC + " -g " + dirGRID + " -f " + dirFORCING + " -n " + case_name + " -lami -sc -lsm"
-        if (not rerun): os.system(com)
+              " -i " + dirIC + " -g " + dirGRID + " -f " + dirFORCING + " -n " + case_name + com_config
+        os.system(com)
 
         print(file_scminput)
         #
@@ -166,7 +174,6 @@ def main():
     #
     os.system("mkdir -p "+dir_scm+"scm/run/")
     fileOUT = dir_scm+"scm/run/scm_ufsens"+configID+".py"
-    if rerun: fileOUT = dir_scm+"scm/run/scm_ufsens"+configID+rerun_ID+".py"
     fileID  = open(fileOUT, 'w')
     fileID.write('cases      = ['+case_list+']')
     fileID.write('\n')
