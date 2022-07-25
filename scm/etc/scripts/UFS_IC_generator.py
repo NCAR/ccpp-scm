@@ -87,7 +87,7 @@ def parse_arguments():
     add_UFS_NOAH_lsm = args.add_UFS_NOAH_lsm
     add_UFS_dyn_tend = args.add_UFS_dyn_tend
 
-    # Validate args
+    # Validate input arguments
     if not os.path.exists(in_dir):
         message = 'The directory {0} does not exist'.format(in_dir)
         logging.critical(message)
@@ -97,26 +97,11 @@ def parse_arguments():
         if not 0 <= location[0] <= 360 :
             message = 'The longitude {0} is outside of the range {1}'.format(location[0], '[0,360]')
             logging.critical(message)
-            raise Exception(message)
-        
+            raise Exception(message)        
         if not -90 <= location[1] <= 90:
             message = 'The latitude {0} is outside of the range {1}'.format(location[1], '[-90,90]')
             logging.critical(message)
             raise Exception(message)
-    
-    #date_dict = {}
-    #if date:
-    #    if len(date) != 14:
-    #        message = 'The entered date {0} does not have the 14 characters expected in the format YYYYMMDDHHMMSS'.format(date)
-    #        logging.critical(message)
-    #        raise Exception(message)
-    #    else:
-    #        date_dict["year"]   = int(date[0:4])
-    #        date_dict["month"]  = int(date[4:6])
-    #        date_dict["day"]    = int(date[6:8])
-    #        date_dict["hour"]   = int(date[8:10])
-    #        date_dict["minute"] = int(date[10:12])
-    #        date_dict["second"] = int(date[12:])
     
     if tile:
         if (tile > 6):
@@ -1027,7 +1012,8 @@ def get_UFS_oro_data(dir, tile, i, j):
 
 def get_UFS_vgrid_data(dir):
     """Get the vertical grid data for resolution of the data within the IC directory"""
-    
+
+    #
     nc_file = Dataset('{0}/{1}'.format(dir,'gfs_ctrl.nc'))
     
     # vertical coordinate definition
@@ -1051,7 +1037,6 @@ def get_UFS_vgrid_data(dir):
 
 def get_UFS_grid_area(dir, tile, i, j):
     """Get the horizontal grid cell area for the given tile and indices"""
-    #this information is in the supergrid files
     
     #
     filename_pattern = '*grid.tile{0}.nc'.format(tile)
@@ -1529,11 +1514,11 @@ def get_UFS_forcing_data(ic_state, forcing_dir, grid_dir, tile, i, j, save_comp_
                   "time": comp_time, "u": comp_u,  "v": comp_v}
 
     ##################################################################################################################
-    # if we had dynf,phyf files at every timestep (and the SCM timestep is made to match the UFS), then dqvdt_adv 
-    # should be applied uninterpolated for each time step. If dynf and phyf files represent time averages over the
+    # if we had atmf,sfcf files at every timestep (and the SCM timestep is made to match the UFS), then dqvdt_adv 
+    # should be applied uninterpolated for each time step. If atmf and phyf files represent time averages over the
     # previous diagnostic period, and if forcing terms are interpolatd in time in the SCM, then dqvdt_adv should 
-    # represent the forcing values in the middle of time[t] and time[t+1] from dynf/phyf. That way, the time-averaged 
-    # applied forcing from time[t] to time[t+1] in the SCM will be equal to what is derived from dynf/phyf. (preference
+    # represent the forcing values in the middle of time[t] and time[t+1] from atmf/sfcf. That way, the time-averaged 
+    # applied forcing from time[t] to time[t+1] in the SCM will be equal to what is derived from atmf/sfcf. (preference
     # should be to have option to remove time-interpolation of forcing such that the constant forcing applied converged
     # to time-step values as the diag interval approaches the time step)   
     ################################################################################################################## 
