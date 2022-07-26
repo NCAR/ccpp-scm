@@ -55,11 +55,11 @@ def read_UFScomp(fileIN):
     return (state)
 
 #################################################################################################
-cases = [6]#,6,3,1]
+cases = [12]#,6,3,1]
 case_names = []
 for case in cases:
     #case_names.append("fv3_SCM_ensemble_trop_"+str(case).zfill(2)+"hr_UFSforcing")
-    case_names.append("fv3_SCM_ensemble_Atlantic_"+str(case).zfill(2)+"hr_UFSforcing")
+    case_names.append("fv3_SCM_ensemble_"+str(case).zfill(2)+"hr_UFSforcing")
 
 namelist   = "SCM_GFS_v16"
 nens       = 1
@@ -290,7 +290,7 @@ for ic, case_name in enumerate(case_names):
     elif (cases[ic] == 6):
         hrs2plt = [6,12,18,24,36,48,60,72]
     elif (cases[ic] == 12):
-        hrs2plt = [12,24]
+        hrs2plt = [12,24,36,48,60,72]
     elif (cases[ic] == 1):
         hrs2plt = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
         hrs2plt = [1,3,6,9,12,15,18,21,24,36,48,60,72]
