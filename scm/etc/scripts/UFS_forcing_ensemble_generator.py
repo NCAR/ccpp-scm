@@ -13,28 +13,27 @@ import random
 
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-lon', '--lon_limits',       help='longitude range for ensemble, separated by a space', nargs=2, type=float, required=False)
-parser.add_argument('-lat', '--lat_limits',       help='latitude range for ensemble, separated by a space', nargs=2, type=float, required=False)
-parser.add_argument('-n',   '--case_name',        help='name of case', required=True)
-parser.add_argument('-i',   '--dir_ic',           help='input directory path containing FV3 input files', required=True)
-parser.add_argument('-g',   '--dir_grid',         help='directory path containing FV3 tile supergrid files', required=True)
-parser.add_argument('-f',   '--dir_forcing',      help='directory path containing physics diag files', required=True)
-parser.add_argument('-sc',  '--save_comp',        help='flag to save and write out a file with UFS output data to compare SCM simulations with', action='store_true')
-parser.add_argument('-lsm', '--add_UFS_NOAH_lsm', help='flag to include UFS NOAH LSM surface forcing', action='store_true')
-parser.add_argument('-ufsf','--add_UFS_dyn_tend', help='flag to include UFS dynamic tendencies for SCm forcing', action='store_true')
-parser.add_argument('-nens','--nemsmembers',      help='number of SCM UFS ensemble memeber to create', type=int,default=1)
-parser.add_argument('-cfg', '--configID',         help='Tag name used to create case configuration name',required=False)
-parser.add_argument('-sdf', '--suite',            help='CCPP suite definition file to use for ensemble',default='SCM_GFS_v16')
-parser.add_argument('-dt',  '--timestep',         help='SCM timestep', type=float, default=3600.0)
-parser.add_argument('-nio', '--n_itt_out',        help='SCM instantaneous output timestep',type=int, default=1)
-parser.add_argument('-nid', '--n_itt_diag',       help='SCM diagnostic bucket clearing interval (in timesteps)',type=int, default=-999)
+parser.add_argument('-i',   '--dir_ic',           help='Directory path containing FV3 input files',                               required=True)
+parser.add_argument('-g',   '--dir_grid',         help='directory path containing FV3 tile supergrid files',                      required=True)
+parser.add_argument('-f',   '--dir_forcing',      help='Directory path containing physics diag files',                            required=True)
+parser.add_argument('-n',   '--case_name',        help='Name of case',                                                            required=True)
+parser.add_argument('-lon', '--lon_limits',       help='Longitude range for ensemble, separated by a space', nargs=2, type=float, required=False)
+parser.add_argument('-lat', '--lat_limits',       help='Latitude range for ensemble, separated by a space',  nargs=2, type=float, required=False)
+parser.add_argument('-nens','--nemsmembers',      help='Number of SCM UFS ensemble memebers to create',               type=int,   default = 1)
+parser.add_argument('-dt',  '--timestep',         help='SCM timestep, in seconds',                                    type=int,   default = 3600)
+parser.add_argument('-fhz', '--fhzero',           help='UFS frequency, in hours, for emptying diagnostic buckets.',   type=int,   default = 1)
+parser.add_argument('-cres','--UFS_resolution',   help='UFS spatial resolution',                                      type=int,   default = 96)
+parser.add_argument('-sdf', '--suite',            help='CCPP suite definition file to use for ensemble',                          default = 'SCM_GFS_v16')
+parser.add_argument('-sc',  '--save_comp',        help='Flag to save a file with UFS data for comparisons',                       action='store_true')
+parser.add_argument('-lsm', '--add_UFS_NOAH_lsm', help='Flag to include UFS NOAH LSM surface forcing',                            action='store_true')
+parser.add_argument('-ufsf','--add_UFS_dyn_tend', help='Flag to include UFS dynamic tendencies for SCM forcing',                  action='store_true')
 
 ###############################################################################
 ###############################################################################
 def parse_arguments():
     args             = parser.parse_args()
-    lon_range        = args.lon_limits
-    lat_range        = args.lat_limits
+    lon_limits       = args.lon_limits
+    lat_limits       = args.lat_limits
     case_name_root   = args.case_name
     dirIC            = args.dir_ic
     dirGRID          = args.dir_grid
@@ -42,32 +41,39 @@ def parse_arguments():
     npts             = args.nemsmembers
     suite            = args.suite
     dt               = args.timestep
-    n_itt_out        = args.n_itt_out
-    n_itt_diag       = args.n_itt_diag
+    fhzero           = args.fhzero
+    C_RES            = args.UFS_resolution
     save_comp        = args.save_comp
     add_UFS_NOAH_lsm = args.add_UFS_NOAH_lsm
     add_UFS_dyn_tend = args.add_UFS_dyn_tend
 
-    configID       = ''
-    if (args.configID != None): configID = '_'+args.configID
-
-    return (lon_range, lat_range, case_name_root, npts, configID, suite, dt, n_itt_out, n_itt_diag, dirIC, dirGRID, dirFORCING, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend)
+    return (lon_limits, lat_limits, case_name_root, npts, suite, dt, fhzero, C_RES, dirIC, dirGRID, dirFORCING, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend)
 
 ###############################################################################
 ###############################################################################
 def main():
-    #
-    (lon_range, lat_range, case_name_root, npts, configID, suite, dt, n_itt_out, n_itt_diag, dirIC, dirGRID, dirFORCING, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend) = parse_arguments()
 
     #
-    fileLOG  = open('UFS_forcing_ensemble_generator.log', 'w')
+    # Get command line arguments
+    #
+    (lon_limits, lat_limits, case_name_root, npts, suite, dt, fhzero, C_RES, dirIC, dirGRID, dirFORCING, save_comp, add_UFS_NOAH_lsm, add_UFS_dyn_tend) = parse_arguments()
 
     #
-    dir_scm = "/glade/u/home/dswales/Projects/SCM/grantfirl/ccpp-scm/"
+    # Make sure that SCM_WORK has been set.
+    #
+    try:
+        dir_scm = os.getenv('SCM_WORK') + "/ccpp-scm/"
+        print(dir_scm)
+    except:
+        print("Environment variable SCM_WORK not set. Stopping.")
+        exit()
 
+
+    ###########################################################################
     #
     # Generate random points for SCM ensemble
     #
+    ###########################################################################
     rng1 = np.zeros((npts), dtype=float)
     rng2 = np.zeros((npts), dtype=float)
     lons = np.zeros((npts), dtype=float)
@@ -78,37 +84,53 @@ def main():
         rng1[ipt] = random.randint(1,1000)*0.001
         rng2[ipt] = random.randint(2,1000)*0.001
         #
-        if lat_range:
-            lats[ipt] = lat_range[0] + (lat_range[1]-lat_range[0])*rng1[ipt]
+        if lat_limits:
+            lats[ipt] = lat_limits[0] + (lat_limits[1]-lat_limits[0])*rng1[ipt]
         else:
             lats[ipt] = rng1[ipt]*180-90
-        if lon_range:
-            lons[ipt] = lon_range[0] + (lon_range[1]-lon_range[0])*rng2[ipt]
+        if lon_limits:
+            lons[ipt] = lon_limits[0] + (lon_limits[1]-lon_limits[0])*rng2[ipt]
         else:
             lons[ipt] = rng2[ipt]*360
 
-    model_ics           = ".true."
-    input_type          = 1
-    sfc_flux_spec       = ".false."
-    ref_profile_choice  = 2
-    C_RES               = 96
-    case_config =[ \
-                   {"name": "model_ics",                "values": model_ics}, \
-                   {"name": "input_type",               "values": str(input_type)}, \
-                   {"name": "sfc_flux_spec",            "values": sfc_flux_spec}, \
-                   {"name": "reference_profile_choice", "values": str(ref_profile_choice)}, \
-                   {"name": "dt",                       "values": str(dt)}, \
-                   {"name": "C_RES",                    "values": str(C_RES)}, \
-                   {"name": "n_itt_out",                "values": str(n_itt_out)},  \
-                   {"name": "n_itt_diag",               "values": str(n_itt_diag)}]
+    ###########################################################################
+    #
+    # Use longitude and latitude provided (TODO)
+    #
+    ###########################################################################
+
+
+    ###########################################################################
+    #
+    # Create SCM case configuration (etc/case_config) file.
+    #
+    ###########################################################################
+
+    # Are we providing ICs to the SCM?
+    model_ics     = ".false."
+    if add_UFS_NOAH_lsm or add_UFS_dyn_tend:
+        model_ics = ".true."
+
+    # How many timesteps between clearing the diagnostic buckets?
+    n_itt_diag = fhzero*3600/dt
+
+    # For DEPHY format, this does not change.
+    input_type = 1
+
+    #
+    case_config =[{"name": "model_ics",   "values": model_ics},       \
+                  {"name": "input_type",  "values": str(input_type)}, \
+                  {"name": "dt",          "values": str(dt)},         \
+                  {"name": "C_RES",       "values": str(C_RES)},      \
+                  {"name": "n_itt_diag",  "values": str(n_itt_diag)}  ]
 
     #
     # What, if any, options neeed to be passsed to UFS_IC_generator.py?
     #
     com_config = ''
-    if save_comp:        com_config=com_config+' -sc'
-    if add_UFS_NOAH_lsm: com_config=com_config+' -lsm'
-    if add_UFS_dyn_tend: com_config=com_config+' -ufsf'
+    if save_comp:        com_config = com_config + ' -sc'
+    if add_UFS_NOAH_lsm: com_config = com_config + ' -lsm'
+    if add_UFS_dyn_tend: com_config = com_config + ' -ufsf'
 
     #
     # Create inputs to SCM
@@ -127,7 +149,6 @@ def main():
               " -i " + dirIC + " -g " + dirGRID + " -f " + dirFORCING + " -n " + case_name + com_config
         os.system(com)
 
-        print(file_scminput)
         #
         # In case there are errors in UFS_IC_generator and the input is not generated.
         #
@@ -144,9 +165,6 @@ def main():
             #
             dataset  = xr.open_dataset(file_scminput)
             sfc_type = int(np.round_(dataset.slmsk.values[0][0][0]))
-
-            fileLOG.write("Writing SCM UFS inputs at "+str(lons[pt]).zfill(6)+" "+str(lats[pt]).zfill(6)+" surface_type="+str(sfc_type))
-            fileLOG.write('\n')
 
             #
             # Create case_config file
@@ -173,7 +191,7 @@ def main():
     # Create "multirun file list" needed by run_scm.py
     #
     os.system("mkdir -p "+dir_scm+"scm/run/")
-    fileOUT = dir_scm+"scm/run/scm_ufsens"+configID+".py"
+    fileOUT = dir_scm+"scm/run/scm_ufsens.py"
     fileID  = open(fileOUT, 'w')
     fileID.write('cases      = ['+case_list+']')
     fileID.write('\n')
@@ -182,9 +200,6 @@ def main():
     fileID.write('namelists  = []')
     fileID.write('\n')
     fileID.close()
-
-    #
-    fileLOG.close()
 
 if __name__ == '__main__':
     main()
