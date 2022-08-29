@@ -802,18 +802,11 @@ def main():
         # For maximum flexibility, run the SCM as specified from an external file where cases, suites, and physics namelists
         # are all specified. This file must contain python lists called 'cases','suites', and 'namelists'. The suites and
         # namelists lists can be empty ([]) if necessary.
-        #The following rules apply:
-        # 1. The case list in the file must not be empty.
-        # 2. If only a case list is specified, the cases are run with the default suite specified in run_scm.py with
-        #       the default namelists specified in default_namelists.py.
-        # 3. If a case list and suite list is provided without a namelist list, all permutations of cases and suites will
-        #       be run using default namelists specified in default_namelists.py.
-        # 4. If a case list and suite list is provided with a namelist:
-        # 4a. If only one suite is specified, it can be run with any number of namelists.
-        # 4b. If more than one suite is specified, the number of namelists must match, and each case is run with each
-        #       (suite,namelist) pair, by order specified in the lists.
-        # 5. If a case list and namelist list are specified without a suite list, each case is run with the default suite
-        #       specified in run_scm.py using the supplied namelists.
+        #
+        # The following rules apply:
+        # 1. If the file contains an equal number of cases, suites, and namelists. Then step through and run each configuration
+        #    sequentially (e.g. config[i] = {case[i],suite[i],namelist[i]})
+        # 2. Otherwise, all permutations of cases, suites, and namelist will be run.
         if file:
             logging.info('Multi-run: Using {} to loop through defined runs'.format(file))
             try:
@@ -831,12 +824,6 @@ def main():
                 message = 'The cases list in {0} must not be empty'.format(file)
                 logging.critical(message)
                 raise Exception(message)
-
-            # 
-            ncases  = len(scm_runs.cases)
-            nsuites = len(scm_runs.suites)
-            nnmls   = len(scm_runs.namelists)
-            print(ncases,nsuites,nnmls)
 
             # If no SDF provided, use default
             if not scm_runs.suites:
@@ -856,8 +843,8 @@ def main():
             run_dict = {"cases":[],"suites":[],"namelists":[]}
 
             # A) Do all permutations of input configuration
-            if (nsuites != ncases or nnmls != ncases):
-                if (nsuites != nnmls) and  (nsuites > 1 and nnmls > 0):
+            if (len(scm_runs.suites) != len(run_dict["cases"]) or len(scm_runs.namelists) != len(run_dict["cases"])):
+                if (len(scm_runs.suites) != len(scm_runs.namelists)) and  (len(scm_runs.suites) > 1 and len(scm_runs.namelists) > 0):
                     message = 'The number of namelists and SDFs requested in {0} are not consistent.'.format(file)
                     logging.critical(message)
                     raise Exception(message)
@@ -875,8 +862,7 @@ def main():
                     run_dict["namelists"].append(scm_runs.namelists[ij])
 
             # Run cases
-            ncases = len(run_dict["cases"])
-            for icase in range(0,ncases):
+            for icase in range(0,len(run_dict["cases"])):
                 #
                 active_suite = None
                 for s in suite_list:
@@ -885,7 +871,7 @@ def main():
                         break
                 #
                 logging.info('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
-                    icase, ncases, run_dict["cases"][icase], run_dict["suites"][icase], run_dict["namelists"][icase]))
+                    icase, len(run_dict["cases"]), run_dict["cases"][icase], run_dict["suites"][icase], run_dict["namelists"][icase]))
                 exp = Experiment(run_dict["cases"][icase], active_suite, runtime, runtime_mult, levels, \
                                  npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                 exp_dir = exp.setup_rundir()
