@@ -63,7 +63,6 @@ def main():
     #
     try:
         dir_scm = os.getenv('SCM_WORK') + "/ccpp-scm/"
-        print(dir_scm)
     except:
         print("Environment variable SCM_WORK not set. Stopping.")
         exit()
@@ -107,30 +106,34 @@ def main():
     ###########################################################################
 
     # Are we providing ICs to the SCM?
-    model_ics     = ".false."
-    if add_UFS_NOAH_lsm or add_UFS_dyn_tend:
-        model_ics = ".true."
+    #model_ics     = ".false."
+    #if add_UFS_NOAH_lsm or add_UFS_dyn_tend:
+    model_ics = ".true."
 
     # How many timesteps between clearing the diagnostic buckets?
     n_itt_diag = fhzero*3600/dt
 
-    # For DEPHY format, this does not change.
-    input_type = 1
+    # 
+    n_itt_out = n_itt_diag/fhzero
+
+    # For DEPHY format, these do not change.
+    input_type  = 1
 
     #
     case_config =[{"name": "model_ics",   "values": model_ics},       \
                   {"name": "input_type",  "values": str(input_type)}, \
                   {"name": "dt",          "values": str(dt)},         \
                   {"name": "C_RES",       "values": str(C_RES)},      \
-                  {"name": "n_itt_diag",  "values": str(n_itt_diag)}  ]
+                  {"name": "n_itt_diag",  "values": str(n_itt_diag)}, \
+                  {"name": "n_itt_out",   "values": str(n_itt_out)}]
 
     #
     # What, if any, options neeed to be passsed to UFS_IC_generator.py?
     #
     com_config = ''
     if save_comp:        com_config = com_config + ' -sc'
-    if add_UFS_NOAH_lsm: com_config = com_config + ' -lsm'
-    if add_UFS_dyn_tend: com_config = com_config + ' -ufsf'
+    #if add_UFS_NOAH_lsm: com_config = com_config + ' -lsm'
+    #if add_UFS_dyn_tend: com_config = com_config + ' -ufsf'
 
     #
     # Create inputs to SCM
@@ -147,6 +150,7 @@ def main():
 
         com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
               " -i " + dirIC + " -g " + dirGRID + " -f " + dirFORCING + " -n " + case_name + com_config
+        print(com)
         os.system(com)
 
         #
@@ -170,7 +174,6 @@ def main():
             # Create case_config file
             #
             fileOUT = dir_scm+"scm/etc/case_config/"+case_name+".nml"
-            print(fileOUT)
             fileID  = open(fileOUT, 'w')
             fileID.write('$case_config')
             fileID.write('\n')

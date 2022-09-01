@@ -423,7 +423,7 @@ subroutine get_case_init(scm_state, scm_input)
   !!  @{
 
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
-  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid),"nf90_open()")
   
   !> - Read in missing value from file (replace module variable if present)
   ierr = NF90_GET_ATT(ncid, NF90_GLOBAL, 'missing_value', nc_missing_value)
@@ -434,29 +434,29 @@ subroutine get_case_init(scm_state, scm_input)
   !> - Get the dimensions (global group).
   
   !required dimensions
-  call check(NF90_INQ_DIMID(ncid,"levels",varID))
-  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nlev))
-  call check(NF90_INQ_DIMID(ncid,"time",varID))
-  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_ntimes))
+  call check(NF90_INQ_DIMID(ncid,"levels",varID),"nf90_inq_dimid(levels)")
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nlev),"nf90_inq_dim(levels)")
+  call check(NF90_INQ_DIMID(ncid,"time",varID),"inq_dimid(time)")
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_ntimes),"nf90_inq_dim(time)")
   
   !possible dimensions (if using model ICs)
   ierr = NF90_INQ_DIMID(ncid,"nsoil",varID)
   if(ierr /= NF90_NOERR) then
     input_nsoil = missing_soil_layers
   else
-    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsoil))
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsoil),"nf90_inq_dim(nsoil)")
   end if
   ierr = NF90_INQ_DIMID(ncid,"nsnow",varID)
   if(ierr /= NF90_NOERR) then
     input_nsnow = missing_snow_layers
   else
-    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsnow))
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsnow),"nf90_inq_dim(nsnow)")
   end if
   ierr = NF90_INQ_DIMID(ncid,"nice",varID)
   if(ierr /= NF90_NOERR) then
     input_nice = missing_ice_layers
   else
-    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nice))
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nice),"nf90_inq_dim(nice)")
   end if  
   
   !> - Allocate the dimension variables.
@@ -469,7 +469,7 @@ subroutine get_case_init(scm_state, scm_input)
   !> - Read in the initial conditions.
 
   !>  - Find group ncid for initial group.
-  call check(NF90_INQ_GRP_NCID(ncid,"initial",grp_ncid))
+  call check(NF90_INQ_GRP_NCID(ncid,"initial",grp_ncid),"nf90_inq_grp_ncid(initial)")
 
   !>  - Allocate the initial profiles (required). One of thetail or temp is required.
   allocate(input_thetail(input_nlev), input_temp(input_nlev), input_qt(input_nlev), input_ql(input_nlev), input_qi(input_nlev), &
@@ -523,7 +523,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "flfr",  .False., input_flfr )
   
   !>  - Find group ncid for scalar group.
-  call check(NF90_INQ_GRP_NCID(ncid,"scalars",grp_ncid))
+  call check(NF90_INQ_GRP_NCID(ncid,"scalars",grp_ncid),"nf90_inq_grp_ncid(scalars)")
   
   !required
   call NetCDF_read_var(grp_ncid, "lat", .True., input_lat)
@@ -675,7 +675,7 @@ subroutine get_case_init(scm_state, scm_input)
   !> - Read in the forcing data.
 
   !>  - Find group ncid for forcing group.
-  call check(NF90_INQ_GRP_NCID(ncid,"forcing",grp_ncid))
+  call check(NF90_INQ_GRP_NCID(ncid,"forcing",grp_ncid),"nf90_inq_grp_ncid(forcing)")
 
   !>  - (Recall that multidimensional arrays need to be read in with the order of dimensions reversed from the netCDF file).
 
@@ -710,7 +710,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "v_advec_thetail", .True., input_v_advec_thetail)
   call NetCDF_read_var(grp_ncid, "v_advec_qt", .True., input_v_advec_qt)
 
-  call check(NF90_CLOSE(NCID=ncid))
+  call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
 
   call scm_input%create(input_ntimes, input_nlev, input_nsoil, input_nsnow, input_nice)
     
@@ -1153,23 +1153,23 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   missing_value_eps = missing_value + 0.01
   
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
-  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid))
+  call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid),"nf90_open()")
   
   !> - Get the dimensions.
   
   !required dimensions
-  call check(NF90_INQ_DIMID(ncid,"t0",varID))
-  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_init_times))
-  call check(NF90_INQ_DIMID(ncid,"time",varID))
-  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_forcing_times))
-  call check(NF90_INQ_DIMID(ncid,"lev",varID))
-  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lev))
+  call check(NF90_INQ_DIMID(ncid,"t0",varID),"nf90_inq_dimid(t0)")
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_init_times),"nf90_inq_dim(t0)")
+  call check(NF90_INQ_DIMID(ncid,"time",varID),"nf90_inq_dimid(time)")
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_forcing_times),"nf90_inq_dim(time)")
+  call check(NF90_INQ_DIMID(ncid,"lev",varID),"nf90_inq_dimid(lev)")
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lev),"nf90_inq_dim(lev)")
   !Check whether long_name = 'altitude', units='m' OR long_name = 'pressure', units='Pa'?
   !It may not matter, because 'lev' may not be needed when the IC pressure and height are BOTH already provided
-  call check(NF90_INQ_DIMID(ncid,"lat",varID))
-  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lat))
-  call check(NF90_INQ_DIMID(ncid,"lon",varID))
-  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lon))
+  call check(NF90_INQ_DIMID(ncid,"lat",varID),"nf90_inq_dimid(lat)")
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lat),"nf90_inq_dim(lat)")
+  call check(NF90_INQ_DIMID(ncid,"lon",varID),"nf90_inq_dimid(lon)")
+  call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lon),"nf90_inq_dim(lon)")
   
   !### TO BE USED IF DEPHY-SCM can be extended to include model ICs ###
   !possible dimensions (if using model ICs)
@@ -1177,19 +1177,19 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   if(ierr /= NF90_NOERR) then
     input_n_soil = missing_soil_layers
   else
-    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_soil))
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_soil),"nf90_inq_dim(nsoil)")
   end if
   ierr = NF90_INQ_DIMID(ncid,"nsnow",varID)
   if(ierr /= NF90_NOERR) then
     input_n_snow = missing_snow_layers
   else
-    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_snow))
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_snow),"nf90_inq_dim(nsnow)")
   end if
   ierr = NF90_INQ_DIMID(ncid,"nice",varID)
   if(ierr /= NF90_NOERR) then
     input_n_ice = missing_ice_layers
   else
-    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_ice))
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_ice),"nf90_inq_dim(nice)")
   end if  
   
   if(input_n_soil > 0) then
@@ -1711,7 +1711,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     call NetCDF_read_var(ncid, "ustar", .False., input_force_ustar)
   end if
   
-  call check(NF90_CLOSE(NCID=ncid))
+  call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
   
   call scm_input%create(input_n_forcing_times, input_n_lev, input_n_soil, input_n_snow, input_n_ice)
   
@@ -2619,24 +2619,24 @@ subroutine get_reference_profile(scm_state, scm_reference)
       END DO
       close(1)
     case (2)
-      call check(NF90_OPEN('mid_lat_summer_std.nc',nf90_nowrite,ncid))
+      call check(NF90_OPEN('mid_lat_summer_std.nc',nf90_nowrite,ncid),"nf90_open()")
 
-      call check(NF90_INQ_DIMID(ncid,"height",varID))
-      call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, nlev))
+      call check(NF90_INQ_DIMID(ncid,"height",varID),"nf90_inq_dimid(height)")
+      call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, nlev),"nf90_inq_dim(height)")
 
       !> - Allocate the dimension variables.
       allocate(pres(nlev), T(nlev), qv(nlev), ozone(nlev), stat=allocate_status)
 
-      call check(NF90_INQ_VARID(ncid,"pressure",varID))
-      call check(NF90_GET_VAR(ncid,varID,pres))
-      call check(NF90_INQ_VARID(ncid,"temperature",varID))
-      call check(NF90_GET_VAR(ncid,varID,T))
-      call check(NF90_INQ_VARID(ncid,"q_v",varID))
-      call check(NF90_GET_VAR(ncid,varID,qv))
-      call check(NF90_INQ_VARID(ncid,"o3",varID))
-      call check(NF90_GET_VAR(ncid,varID,ozone))
+      call check(NF90_INQ_VARID(ncid,"pressure",varID),"nf90_inq_varid(pressure)")
+      call check(NF90_GET_VAR(ncid,varID,pres),"nf90_get_var(pressure)")
+      call check(NF90_INQ_VARID(ncid,"temperature",varID),"nf90_inq_varid(temperature)")
+      call check(NF90_GET_VAR(ncid,varID,T),"nf90_get_var(temperature)")
+      call check(NF90_INQ_VARID(ncid,"q_v",varID),"nf90_inq_varid(q_v)")
+      call check(NF90_GET_VAR(ncid,varID,qv),"nf90_get_var(q_v)")
+      call check(NF90_INQ_VARID(ncid,"o3",varID),"nf90_inq_varid(o3)")
+      call check(NF90_GET_VAR(ncid,varID,ozone),"nf90_get_var(o3)")
 
-      call check(NF90_CLOSE(NCID=ncid))
+      call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
 
   end select
 

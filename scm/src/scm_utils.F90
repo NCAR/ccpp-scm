@@ -222,14 +222,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -245,14 +245,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -268,14 +268,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -291,14 +291,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -314,14 +314,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -337,14 +337,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -360,14 +360,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -383,14 +383,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -406,14 +406,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -429,14 +429,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -452,14 +452,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -475,14 +475,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -498,14 +498,14 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
@@ -521,25 +521,26 @@ module NetCDF_read
     integer :: varID, ierr
     
     if (req) then
-      call check(NF90_INQ_VARID(ncid,var_name,varID))
-      call check(NF90_GET_VAR(ncid,varID,var_data))
+      call check(NF90_INQ_VARID(ncid,var_name,varID),var_name)
+      call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
     else
       ierr = NF90_INQ_VARID(ncid,var_name,varID)
       if (ierr /= NF90_NOERR) then
         var_data = missing_value
       else
-        call check(NF90_GET_VAR(ncid,varID,var_data))
+        call check(NF90_GET_VAR(ncid,varID,var_data),var_name)
       end if
     end if
     
   end subroutine NetCDF_read_var_4d_dp
   
   !Generic subroutine to check for netCDF I/O errors
-  subroutine check(status)
+  subroutine check(status, var_name)
     integer, intent ( in) :: status
+    character(*), intent(in) :: var_name
 
     if(status /= NF90_NOERR) then
-      print *, trim(nf90_strerror(status))
+      print *, trim(nf90_strerror(status)),' ',var_name
       stop "stopped"
     end if
   end subroutine check
@@ -559,14 +560,14 @@ module NetCDF_read
         write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         stop
       else
-        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
       end if
     else
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
       if (ierr /= NF90_NOERR) then
         att_data = missing_value_int
       else
-        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
       end if
     end if
     
@@ -587,14 +588,14 @@ module NetCDF_read
         write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         stop
       else
-        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
       end if
     else
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
       if (ierr /= NF90_NOERR) then
         att_data = missing_value
       else
-        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
       end if
     end if
     
@@ -615,14 +616,14 @@ module NetCDF_read
         write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         stop
       else
-        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
       end if
     else
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
       if (ierr /= NF90_NOERR) then
         att_data = missing_value_char
       else
-        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+        call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
       end if
     end if
     
@@ -645,10 +646,10 @@ module NetCDF_read
         stop
       else
         if (type == NF90_CHAR) then
-          call check(NF90_GET_ATT(ncid, var_id, att_name, char_att_data))
+          call check(NF90_GET_ATT(ncid, var_id, att_name, char_att_data),att_name)
           att_data = missing_value_int
         else if (type == NF90_INT) then
-          call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+          call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
           char_att_data = missing_value_char
         else
           att_data = missing_value_int
@@ -662,10 +663,10 @@ module NetCDF_read
         att_data = missing_value_int
       else
         if (type == NF90_CHAR) then
-          call check(NF90_GET_ATT(ncid, var_id, att_name, char_att_data))
+          call check(NF90_GET_ATT(ncid, var_id, att_name, char_att_data),att_name)
           att_data = missing_value_int
         else if (type == NF90_INT) then
-          call check(NF90_GET_ATT(ncid, var_id, att_name, att_data))
+          call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
           char_att_data = missing_value_char
         else
           att_data = missing_value_int
@@ -735,17 +736,17 @@ module NetCDF_def
     integer, intent(out) :: varid
     
     if (present(dims)) then
-      call CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,DIMIDS=dims,VARID=varid))
+      call CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,DIMIDS=dims,VARID=varid),var_name)
     else
-      call CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,VARID=varid))
+      call CHECK(NF90_DEF_VAR(NCID=ncid,NAME=var_name,XTYPE=var_type,VARID=varid),var_name)
     end if
-    call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="description",VALUES=desc))
-    call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="units",VALUES=unit))
+    call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="description",VALUES=desc),var_name)
+    call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="units",VALUES=unit),var_name)
     
     if (var_type == NF90_FLOAT) then
-      call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value))
+      call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value),var_name)
     elseif (var_type == NF90_INT) then
-      call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value_int))
+      call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value_int),var_name)
     else
       write(0,'(a,i0,a)') "The variable '" // var_name // "' is defined as a type other than NF90_FLOAT or NF90_INT. Stopping..."
       STOP
@@ -779,10 +780,10 @@ module NetCDF_put
     
     !write(*,*) 'Putting variable: ',var_name
     if (present(known_varid)) then
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=known_varid,VALUES=var))
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=known_varid,VALUES=var),var_name)
     else
-      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id))
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var))
+      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id),var_name)
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var),var_name)
     end if
     
   end subroutine NetCDF_put_var_int_0d
@@ -796,11 +797,11 @@ module NetCDF_put
     integer :: var_id
     
     !write(*,*) 'Putting variable: ',var_name
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id),var_name)
     if (present(mult_const)) then
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var*mult_const,START=(/1,itt /)))
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var*mult_const,START=(/1,itt /)),var_name)
     else
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,itt /)))
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,itt /)),var_name)
     end if
     
   end subroutine NetCDF_put_var_1d
@@ -814,11 +815,11 @@ module NetCDF_put
     integer :: var_id
     
     !write(*,*) 'Putting variable: ',var_name
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME=var_name,VARID=var_id),var_name)
     if (present(mult_const)) then
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var*mult_const,START=(/1,1,itt /)))
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var*mult_const,START=(/1,1,itt /)),var_name)
     else
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,1,itt /)))
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=var,START=(/1,1,itt /)),var_name)
     end if
     
   end subroutine NetCDF_put_var_2d
