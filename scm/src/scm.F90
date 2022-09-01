@@ -29,6 +29,7 @@ subroutine scm_main_sub()
   type(scm_state_type), target :: scm_state
   type(scm_input_type), target :: scm_input_instance
   type(scm_reference_type), target :: scm_reference
+  type(ufs_replay_tend_type), target :: ufs_replay_tend
 
   integer      :: i, j, kdt_rad, idtend, itrac
   real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
@@ -73,7 +74,9 @@ subroutine scm_main_sub()
   call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
   call physics%create(scm_state%n_cols)
-  
+
+  call ufs_replay_tend%create(scm_state%n_cols, scm_state%n_levels)
+
   !physics initialization section
 
   !set the array index of the time level of the state variables that the cdata

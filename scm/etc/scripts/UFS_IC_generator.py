@@ -1597,7 +1597,8 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
                     dtend["units"]     = nc_file[dtend["name"]].getncattr(name="units")
                     dtend["long_name"] = nc_file[dtend["name"]].getncattr(name="long_name")
                 except:
-                    logging.debug(dtend["name"] + ' not found in ' + filename)
+                    logging.info(dtend["name"] + ' not found in ' + filename)
+                    exit()
 
             if (save_comp_data):
                 for dtend in vars_comp:
