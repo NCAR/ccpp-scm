@@ -1637,9 +1637,6 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
         # Save 
         time_phys_hours.append(nc_file['time'][0])
 
-        # Save dimensions
-        nlevs = len(nc_file.dimensions['pfull'])
-
         # Close file
         nc_file.close()
 
@@ -1664,6 +1661,7 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
     # Handle forcing from initialization to the first history file
     #
     ####################################################################################
+    nlevs           = len(p_lay[0,:])
     dummy           = np.zeros(1)
     tv_temp         = np.zeros([1,nlevs])
     qv_temp         = np.zeros([1,nlevs])
