@@ -1097,8 +1097,21 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_dt_cool(:,:,:) !< sub-layer cooling amount for NSST (K)
   real(kind=dp), allocatable  :: input_qrain(:,:,:) !< sensible heat due to rainfall for NSST (W)
   
-  real(kind=dp), allocatable  :: input_wetness(:,:,:) !< normalized soil wetness for RUC LSM
-  real(kind=dp), allocatable  :: input_lai(:,:,:) !< leaf area index for RUC LSM
+  real(kind=dp), allocatable  :: input_wetness(:,:,:)         !< normalized soil wetness for RUC LSM
+  real(kind=dp), allocatable  :: input_lai(:,:,:)             !< leaf area index for RUC LSM
+  real(kind=dp), allocatable  :: input_clw_surf_land(:,:,:)   !< cloud condensed water mixing ratio at surface over land for RUC LSM 
+  real(kind=dp), allocatable  :: input_clw_surf_ice(:,:,:)    !< cloud condensed water mixing ratio at surface over ice for RUC LSM
+  real(kind=dp), allocatable  :: input_qwv_surf_land(:,:,:)   !< water vapor mixing ratio at surface over land for RUC LSM 
+  real(kind=dp), allocatable  :: input_qwv_surf_ice(:,:,:)    !< water vapor mixing ratio at surface over ice for RUC LSM 
+  real(kind=dp), allocatable  :: input_tsnow_land(:,:,:)      !< snow temperature at the bottom of the first snow layer over land for RUC LSM 
+  real(kind=dp), allocatable  :: input_tsnow_ice(:,:,:)       !< snow temperature at the bottom of the first snow layer over ice for RUC LSM 
+  real(kind=dp), allocatable  :: input_snowfallac_land(:,:,:) !< run-total snow accumulation on the ground over land for RUC LSM 
+  real(kind=dp), allocatable  :: input_snowfallac_ice(:,:,:)  !< run-total snow accumulation on the ground over ice for RUC LSM 
+  real(kind=dp), allocatable  :: input_sncovr_ice(:,:,:)      !<
+  real(kind=dp), allocatable  :: input_sfalb_lnd(:,:,:)       !<
+  real(kind=dp), allocatable  :: input_sfalb_lnd_bck(:,:,:)   !<
+  real(kind=dp), allocatable  :: input_sfalb_ice(:,:,:)       !<
+  real(kind=dp), allocatable  :: input_emis_ice(:,:,:)        !<
   
   ! forcing variables
   real(kind=sp), allocatable :: input_force_pres_surf(:,:,:) !< forcing surface pressure (Pa)
@@ -1433,8 +1446,21 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_dt_cool   (input_n_lon, input_n_lat,           input_n_init_times), &
              input_qrain     (input_n_lon, input_n_lat,           input_n_init_times), &
              stat=allocate_status)
-    allocate(input_wetness   (input_n_lon, input_n_lat,           input_n_init_times), &
-             input_lai       (input_n_lon, input_n_lat,           input_n_init_times), &
+    allocate(input_wetness         (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_lai             (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_clw_surf_land   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_clw_surf_ice    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_qwv_surf_land   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_qwv_surf_ice    (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tsnow_land      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_tsnow_ice       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_snowfallac_land (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_snowfallac_ice  (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_sncovr_ice      (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_sfalb_lnd       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_sfalb_lnd_bck   (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_sfalb_ice       (input_n_lon, input_n_lat,           input_n_init_times), &
+             input_emis_ice        (input_n_lon, input_n_lat,           input_n_init_times), &
              stat=allocate_status)
   end if
   
@@ -1691,9 +1717,20 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       call NetCDF_read_var(ncid, "deeprechxy",.False., input_deeprechxy)
       call NetCDF_read_var(ncid, "rechxy",    .False., input_rechxy)
       call NetCDF_read_var(ncid, "snowxy",    .False., input_snowxy)
-      
       !RUC LSM variables
       call NetCDF_read_var(ncid, "wetness",          .False., input_wetness)
+      call NetCDF_read_var(ncid, "clw_surf_land",    .False., input_clw_surf_land)
+      call NetCDF_read_var(ncid, "clw_surf_ice",     .False., input_clw_surf_ice)
+      call NetCDF_read_var(ncid, "qwv_surf_land",    .False., input_qwv_surf_land)
+      call NetCDF_read_var(ncid, "qwv_surf_ice",     .False., input_qwv_surf_ice)
+      call NetCDF_read_var(ncid, "tsnow_land",       .False., input_tsnow_land)
+      call NetCDF_read_var(ncid, "tsnow_ice",        .False., input_tsnow_ice)
+      call NetCDF_read_var(ncid, "snowfallac_land",  .False., input_snowfallac_land)
+      call NetCDF_read_var(ncid, "snowfallac_ice",   .False., input_snowfallac_ice)
+      call NetCDF_read_var(ncid, "sncovr_ice",       .False., input_sncovr_ice)
+      call NetCDF_read_var(ncid, "sfalb_lnd",        .False., input_sfalb_lnd)
+      call NetCDF_read_var(ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
+      call NetCDF_read_var(ncid, "emis_ice",         .False., input_emis_ice)
       call NetCDF_read_var(ncid, "lai",              .False., input_lai)
     else
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that an LSM should be used, but the required initial conditions are missing. Stopping ...'
@@ -2190,6 +2227,18 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_snowxy   = input_snowxy(active_lon,active_lat,active_init_time)
     scm_input%input_wetness    = input_wetness(active_lon,active_lat,active_init_time)
     scm_input%input_lai        = input_lai(active_lon,active_lat,active_init_time)
+    scm_input%input_clw_surf_land   = input_clw_surf_land(active_lon,active_lat,active_init_time)
+    scm_input%input_clw_surf_ice    = input_clw_surf_ice(active_lon,active_lat,active_init_time)
+    scm_input%input_qwv_surf_land   = input_qwv_surf_land(active_lon,active_lat,active_init_time)
+    scm_input%input_qwv_surf_ice    = input_qwv_surf_ice(active_lon,active_lat,active_init_time)
+    scm_input%input_tsnow_land      = input_tsnow_land(active_lon,active_lat,active_init_time)
+    scm_input%input_tsnow_ice       = input_tsnow_ice(active_lon,active_lat,active_init_time)
+    scm_input%input_snowfallac_land = input_snowfallac_land(active_lon,active_lat,active_init_time)
+    scm_input%input_snowfallac_ice  = input_snowfallac_ice(active_lon,active_lat,active_init_time)
+    scm_input%input_sncovr_ice      = input_sncovr_ice(active_lon,active_lat,active_init_time)
+    scm_input%input_sfalb_lnd       = input_sfalb_lnd(active_lon,active_lat,active_init_time)
+    scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck(active_lon,active_lat,active_init_time)
+    scm_input%input_emis_ice        = input_emis_ice(active_lon,active_lat,active_init_time)
   end if
   
   if (input_surfaceForcingWind == 'z0') then

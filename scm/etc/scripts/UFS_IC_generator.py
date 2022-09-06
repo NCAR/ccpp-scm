@@ -1028,7 +1028,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     srflag_in = read_NetCDF_surface_var(nc_file, 'srflag', i, j, old_chgres, 0)
     sncovr_in = read_NetCDF_surface_var(nc_file, 'sncovr', i, j, old_chgres, 0)
     tsfcl_in = read_NetCDF_surface_var(nc_file, 'tsfcl', i, j, old_chgres, 0)
-    zorll_in = read_NetCDF_surface_var(nc_file, 'zorll', i, j, old_chgres, 0)
+    zorll_in = read_NetCDF_surface_var(nc_file, 'zorll', i, j, old_chgres, 0)   
     zorli_in = read_NetCDF_surface_var(nc_file, 'zorli', i, j, old_chgres, 0)
     
     #present when cplwav = T
@@ -1085,14 +1085,26 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     deeprechxy_in = read_NetCDF_surface_var(nc_file, 'deeprechxy', i, j, old_chgres, 0)
     rechxy_in = read_NetCDF_surface_var(nc_file, 'rechxy', i, j, old_chgres, 0)
     
-    #RUC LSM variables that may be in the surface file
-    wetness_in = read_NetCDF_surface_var(nc_file, 'wetness', i, j, old_chgres, 0)
-    clw_surf_in = read_NetCDF_surface_var(nc_file, 'clw_surf', i, j, old_chgres, 0)
-    qwv_surf_in = read_NetCDF_surface_var(nc_file, 'qwv_surf', i, j, old_chgres, 0)
-    tsnow_in = read_NetCDF_surface_var(nc_file, 'tsnow', i, j, old_chgres, 0)
-    snowfall_acc_in = read_NetCDF_surface_var(nc_file, 'snowfall_acc', i, j, old_chgres, 0)
-    swe_snowfall_acc_in = read_NetCDF_surface_var(nc_file, 'swe_snowfall_acc', i, j, old_chgres, 0)
-    lai_in = read_NetCDF_surface_var(nc_file, 'lai', i, j, old_chgres, 0)
+    # RUC LSM variables
+    wetness_in           = read_NetCDF_surface_var(nc_file, 'wetness',           i, j, old_chgres, 0)
+    clw_surf_land_in     = read_NetCDF_surface_var(nc_file, 'clw_surf_land',     i, j, old_chgres, 0)
+    clw_surf_ice_in      = read_NetCDF_surface_var(nc_file, 'clw_surf_ice',      i, j, old_chgres, 0)
+    qwv_surf_land_in     = read_NetCDF_surface_var(nc_file, 'qwv_surf_land',     i, j, old_chgres, 0)
+    qwv_surf_ice_in      = read_NetCDF_surface_var(nc_file, 'qwv_surf_ice',      i, j, old_chgres, 0)
+    tsnow_land_in        = read_NetCDF_surface_var(nc_file, 'tsnow_land',        i, j, old_chgres, 0)
+    tsnow_ice_in         = read_NetCDF_surface_var(nc_file, 'tsnow_ice',         i, j, old_chgres, 0)
+    snowfall_acc_land_in = read_NetCDF_surface_var(nc_file, 'snowfall_acc_land', i, j, old_chgres, 0)
+    snowfall_acc_ice_in  = read_NetCDF_surface_var(nc_file, 'snowfall_acc_ice',  i, j, old_chgres, 0)
+    sfalb_lnd_in         = read_NetCDF_surface_var(nc_file, 'sfalb_lnd',         i, j, old_chgres, 0)
+    sfalb_lnd_bck_in     = read_NetCDF_surface_var(nc_file, 'sfalb_lnd_bck',     i, j, old_chgres, 0)
+    sfalb_ice_in         = read_NetCDF_surface_var(nc_file, 'sfalb_ice',         i, j, old_chgres, 0)
+    lai_in               = read_NetCDF_surface_var(nc_file, 'lai',               i, j, old_chgres, 0)
+    albdirvis_ice_in     = read_NetCDF_surface_var(nc_file, 'albdirvis_ice',     i, j, old_chgres, 0)
+    albdirnir_ice_in     = read_NetCDF_surface_var(nc_file, 'albdirnir_ice',     i, j, old_chgres, 0)
+    albdifvis_ice_in     = read_NetCDF_surface_var(nc_file, 'albdifvis_ice',     i, j, old_chgres, 0)
+    albdifnir_ice_in     = read_NetCDF_surface_var(nc_file, 'albdifnir_ice',     i, j, old_chgres, 0)
+    emis_lnd_in          = read_NetCDF_surface_var(nc_file, 'emis_lnd',          i, j, old_chgres, 0)
+    emis_ice_in          = read_NetCDF_surface_var(nc_file, 'emis_ice',          i, j, old_chgres, 0)
     
     #read in profiles (would be 3D variables in a 3D model)
     
@@ -1211,14 +1223,26 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "smcwtdxy": smcwtdxy_in,
         "deeprechxy": deeprechxy_in,
         "rechxy": rechxy_in,
-        #RUC LSM
+        # RUC LSM 2D
         "wetness": wetness_in,
-        "clw_surf": clw_surf_in,
-        "qwv_surf": qwv_surf_in,
-        "tsnow": tsnow_in,
-        "snowfall_acc": snowfall_acc_in,
-        "swe_snowfall_acc": swe_snowfall_acc_in,
+        "clw_surf_land": clw_surf_land_in,
+        "clw_surf_ice": clw_surf_ice_in,
+        "qwv_surf_land": qwv_surf_land_in,
+        "qwv_surf_ice": qwv_surf_ice_in,
+        "tsnow_land": tsnow_land_in,
+        "tsnow_ice": tsnow_ice_in,
+        "snowfall_acc_land": snowfall_acc_land_in,
+        "snowfall_acc_ice": snowfall_acc_ice_in,
+        "sfalb_lnd": sfalb_lnd_in,
+        "sfalb_lnd_bck": sfalb_lnd_bck_in,
+        "sfalb_ice": sfalb_ice_in,
         "lai": lai_in,
+        "albdirvis_ice": albdirvis_ice_in,
+        "albdirnir_ice": albdirnir_ice_in,
+        "albdifvis_ice": albdifvis_ice_in,
+        "albdifnir_ice": albdifnir_ice_in,
+        "emis_lnd": emis_lnd_in,
+        "emis_ice": emis_ice_in,
         #Noah LSM 3D
         "stc": stc_in,
         "smc": smc_in,
@@ -1273,7 +1297,7 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
     orog_raw_in = read_NetCDF_var(nc_file, "orog_raw", i, j)
     #fractional landmask variables
     land_frac_in = read_NetCDF_var(nc_file, "land_frac", i, j)
-    #lake variables
+    #lake variables (optional)
     lake_frac_in = read_NetCDF_var(nc_file, "lake_frac", i, j)
     lake_depth_in = read_NetCDF_var(nc_file, "lake_depth", i, j)
     
@@ -4421,28 +4445,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
 
 #    call NetCDF_read_var(grp_ncid, "snodl",   .False., input_snodl)
 #    call NetCDF_read_var(grp_ncid, "weasdl",  .False., input_weasdl)
-#    call NetCDF_read_var(grp_ncid, "albdirvis_lnd", .False., input_albdirvis_lnd)
-#    call NetCDF_read_var(grp_ncid, "albdirnir_lnd", .False., input_albdirnir_lnd)
-#    call NetCDF_read_var(grp_ncid, "albdifvis_lnd", .False., input_albdifvis_lnd)
-#    call NetCDF_read_var(grp_ncid, "albdifnir_lnd", .False., input_albdifnir_lnd)
-#    call NetCDF_read_var(grp_ncid, "emis_lnd",      .False., input_emis_lnd)
-#    call NetCDF_read_var(grp_ncid, "albdirvis_ice", .False., input_albdirvis_ice)
-#    call NetCDF_read_var(grp_ncid, "albdirnir_ice", .False., input_albdirnir_ice)
-#    call NetCDF_read_var(grp_ncid, "albdifvis_ice", .False., input_albdifvis_ice)
-#    call NetCDF_read_var(grp_ncid, "albdifnir_ice", .False., input_albdifnir_ice)
-
-#  call NetCDF_read_var(grp_ncid, "clw_surf_land",    .False., input_clw_surf_land)
-#  call NetCDF_read_var(grp_ncid, "clw_surf_ice",     .False., input_clw_surf_ice)
-#  call NetCDF_read_var(grp_ncid, "qwv_surf_land",    .False., input_qwv_surf_land)
-#  call NetCDF_read_var(grp_ncid, "qwv_surf_ice",     .False., input_qwv_surf_ice)
-#  call NetCDF_read_var(grp_ncid, "tsnow_land",       .False., input_tsnow_land)
-#  call NetCDF_read_var(grp_ncid, "tsnow_ice",        .False., input_tsnow_ice)
-#  call NetCDF_read_var(grp_ncid, "snowfallac_land",  .False., input_snowfallac_land)
-#  call NetCDF_read_var(grp_ncid, "snowfallac_ice",   .False., input_snowfallac_ice)
-#  call NetCDF_read_var(grp_ncid, "sncovr_ice",       .False., input_sncovr_ice)
-#  call NetCDF_read_var(grp_ncid, "sfalb_lnd",        .False., input_sfalb_lnd)
-#  call NetCDF_read_var(grp_ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
-#  call NetCDF_read_var(grp_ncid, "emis_ice",         .False., input_emis_ice)
 
     #
     if (surface_string == "ice"):
@@ -4523,7 +4525,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "dt_cool",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "sub-layer cooling amount for NSST"}, \
                 {"name": "qrain",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "W m-2",   "description": "sensible heat due to rainfall for NSST"}]
     var_lsm =  [{"name": "tiice",        "type":real_type, "dimd": ('t0','nice', 'lat','lon'),            "units": "K",       "description": "sea ice internal temperature"}]
-    var_noah = [{"name": "vegsrc",       "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "vegetation soure (1-2)", "default_value": 1}, \
+    var_noah = [{"name": "vegsrc",       "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "vegetation source (1-2)", "default_value": 1}, \
                 {"name": "slmsk",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "land-sea-ice mask"}, \
                 {"name": "tsfco",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "sea/skin/ice surface temperature"}, \
                 {"name": "sheleg",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "mm",      "description": "water equivalent accumulated snow depth", "alias": "weasd"}, \
@@ -4593,13 +4595,26 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "tsnoxy",       "type":real_type, "dimd": ('t0','nsnow','lat','lon'),            "units": "K",       "description": "initial profile of snow layer temperature"}, \
                 {"name": "smoiseq",      "type":real_type, "dimd": ('t0','nsoil','lat','lon'),            "units": "m3 m-3",  "description": "initial profile of equilibrium soil water content"}, \
                 {"name": "zsnsoxy",      "type":real_type, "dimd": ('t0','nsoil_plus_nsnow','lat','lon'), "units": "m",       "description": "layer bottom depth from snow surface"}]
-    var_ruc  = [{"name": "wetness",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "normalized soil wetness for RUC LSM"}, \
-                {"name": "lai",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "leaf area index for RUC LSM"}, \
-                {"name": "tslb",         "type":real_type, "dimd": ('t0','nsoil','lat','lon',),           "units": "K",       "description": "soil temperature for RUC LSM"}, \
-                {"name": "smois",        "type":real_type, "dimd": ('t0','nsoil','lat','lon',),           "units": "none",    "description": "volume fraction of soil moisture for RUC LSM"}, \
-                {"name": "sh2o",         "type":real_type, "dimd": ('t0','nsoil','lat','lon',),           "units": "none",    "description": "volume fraction of unfrozen soil moisture for RUC LSM"}, \
-                {"name": "smfr",         "type":real_type, "dimd": ('t0','nsoil','lat','lon',),           "units": "none",    "description": "volume fraction of frozen soil moisture for RUC LSM"}, \
-                {"name": "flfr",         "type":real_type, "dimd": ('t0','nsoil','lat','lon',),           "units": "none",    "description": "flag for frozen soil physics for RUC LSM"}]
+    var_ruc  = [{"name": "wetness",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "none",    "description": "normalized soil wetness for RUC LSM"}, \
+                {"name": "lai",              "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "none",    "description": "leaf area index for RUC LSM"}, \
+                {"name": "clw_surf_land",    "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "kg kg-1", "description": "cloud condensed water mixing ratio at surface over land for RUC LSM"},\
+                {"name": "clw_surf_ice",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "kg kg-1", "description": "cloud condensed water mixing ratio at surface over ice for RUC LSM"},\
+                {"name": "qwv_surf_land",    "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "kg kg-1", "description": "water vapor mixing ratio at surface over land for RUC LSM"},\
+                {"name": "qwv_surf_ice",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "kg kg-1", "description": "water vapor mixing ratio at surface over ice for RUC LSM"},\
+                {"name": "tsnow_land",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "K",       "description": "snow temperature at the bottom of the first snow layer over land for RUC LSM"},\
+                {"name": "tsnow_ice",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "K",       "description": "snow temperature at the bottom of the first snow layer over ice for RUC LSM"},\
+                {"name": "snowfall_acc_land","type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "kg m-2",  "description": "run-total snow accumulation on the ground over land for RUC LSM"},\
+                {"name": "snowfall_acc_ice", "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "kg m-2",  "description": "run-total snow accumulation on the ground over ice for RUC LSM"},\
+                {"name": "sfalb_lnd",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "none",    "description": "surface albedo over land for RUC LSM"},\
+                {"name": "sfalb_lnd_bck",    "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "none",    "description": "surface snow-free albedo over land for RUC LSM"},\
+                {"name": "sfalb_ice",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "none",    "description": "surface albedo over ice for RUC LSM"},\
+                {"name": "emis_lnd",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "none",    "description": "surface emissivity over land for RUC LSM"},\
+                {"name": "emis_ice",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),              "units": "none",    "description": "surface emissivity over ice for RUC LSM"}, \
+                {"name": "tslb",             "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "K",       "description": "soil temperature for RUC LSM"}, \
+                {"name": "smois",            "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "none",    "description": "volume fraction of soil moisture for RUC LSM"}, \
+                {"name": "sh2o",             "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "none",    "description": "volume fraction of unfrozen soil moisture for RUC LSM"}, \
+                {"name": "smfr",             "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "none",    "description": "volume fraction of frozen soil moisture for RUC LSM"}, \
+                {"name": "flfr",             "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "none",    "description": "flag for frozen soil physics for RUC LSM"}]
     var_frc  = [{"name": "w_ls",         "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-1",       "description": "large scale vertical velocity"}, \
                 {"name": "omega",        "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "Pa s-1",      "description": "large scale pressure vertical velocity"}, \
                 {"name": "u_g",          "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-1",       "description": "large scale geostrophic E-W wind"}, \
@@ -4614,33 +4629,23 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "v_advec_thil", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K s-1",       "description": "prescribed theta_il tendency due to vertical advection",   "alias": "v_advec_thetail"}, \
                 {"name": "h_advec_qt",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "kg kg-1 s-1", "description": "prescribed q_t tendency due to horizontal advection"}, \
                 {"name": "v_advec_qt",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "kg kg-1 s-1", "description": "prescribed q_t tendency due to vertical advection"}, \
-                {"name":'tot_advec_T',   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": 'K s-1',       "description": 'Temperature large-scale advection', "alias": "temp_adv"},\
-                {"name":'tot_advec_qv',  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": 'kg kg-1 s-1', "description": 'Specific humidity large-scale advection', "alias": "qv_adv"},\
-                {"name":'tot_advec_u',   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": 'm s-2',       "description": 'Zonal wind large-scale advection', "alias": "u_adv"},\
-                {"name":'tot_advec_v',   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": 'm s-2',       "description": 'Meridional wind large-scale advection', "alias": "v_adv"}, \
+                {"name": "tot_advec_T",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K s-1",       "description": "Temperature large-scale advection", "alias": "temp_adv"},\
+                {"name": "tot_advec_qv", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "kg kg-1 s-1", "description": "Specific humidity large-scale advection", "alias": "qv_adv"},\
+                {"name": "tot_advec_u",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-2",       "description": "Zonal wind large-scale advection", "alias": "u_adv"},\
+                {"name": "tot_advec_v",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-2",       "description": "Meridional wind large-scale advection", "alias": "v_adv"}, \
                 {"name": "T_surf",       "type":real_type, "dimd": ('time',        'lat', 'lon'),         "units": "K",           "description": "surface temperature"},\
-                {"name": "ps_forc",      "type":real_type, "dimd": ('time',        'lat', 'lon'),         "units": 'Pa',          "description": 'Surface pressure for forcing'},\
-                {"name": "pressure_forc","type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": 'Pa',          "description": 'Pressure for forcing'},\
-                {"name": "height_forc",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": 'm',           "description": 'Height above the ground for forcing',"default_value": 1.}]
+                {"name": "ps_forc",      "type":real_type, "dimd": ('time',        'lat', 'lon'),         "units": "Pa",          "description": "Surface pressure for forcing"},\
+                {"name": "pressure_forc","type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "Pa",          "description": "Pressure for forcing"},\
+                {"name": "height_forc",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m",           "description": "Height above the ground for forcing","default_value": 1.}]
     
     #
     var_dict.extend(var_oro)
     var_dict.extend(var_nsst)
-
-    #
-    # Include dynamic forcing tendencies?
-    #
-    if (add_UFS_dyn_tend):
-        var_dict.extend(var_frc)
-
-    #
-    # Include surface forcing from NOAH LSM?
-    # (Currently the SCM needs all of these fields. Revisit)
-    if (add_UFS_NOAH_lsm):
-        var_dict.extend(var_lsm)
-        var_dict.extend(var_ruc)
-        var_dict.extend(var_noah)
-        var_dict.extend(var_noahmp)
+    var_dict.extend(var_frc)
+    var_dict.extend(var_lsm)
+    var_dict.extend(var_ruc)
+    var_dict.extend(var_noah)
+    var_dict.extend(var_noahmp)
 
     #
     # Write all fields in "var_dict" to SCM input file.
