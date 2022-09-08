@@ -871,6 +871,9 @@ def main():
                         active_suite = s
                         break
                 #
+                if timestep:
+                    active_suite.timestep = timestep
+                #
                 logging.info('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
                     icase, len(run_dict["cases"]), run_dict["cases"][icase], run_dict["suites"][icase], run_dict["namelists"][icase]))
                 exp = Experiment(run_dict["cases"][icase], active_suite, runtime, runtime_mult, levels, \
