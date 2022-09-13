@@ -1,6 +1,6 @@
 module GFS_typedefs
 
-   use machine,                  only: kind_phys, kind_dbl_prec
+   use machine,                  only: kind_phys, kind_dbl_prec, kind_sngl_prec
      
    use module_radsw_parameters,  only: topfsw_type, sfcfsw_type
    use module_radlw_parameters,  only: topflw_type, sfcflw_type
@@ -750,6 +750,9 @@ module GFS_typedefs
     logical              :: norad_precip    !< radiation precip flag for Ferrier/Moorthi
     logical              :: lwhtr           !< flag to output lw heating rate (Radtend%lwhc)
     logical              :: swhtr           !< flag to output sw heating rate (Radtend%swhc)
+    logical              :: lrseeds         !< flag to use host-provided random seeds
+    integer              :: nrstreams       !< number of random number streams in host-provided random seed array
+    logical              :: lextop          !< flag for using an extra top layer for radiation
 
     ! RRTMGP
     logical              :: do_RRTMGP               !< Use RRTMGP
@@ -1495,6 +1498,7 @@ module GFS_typedefs
     integer,               pointer :: icsdlw   (:)     => null()  !< (rad. only) radiations. if isubcsw/isubclw (input to init)
                                                                   !< (rad. only) are set to 2, the arrays contains provided
                                                                   !< (rad. only) random seeds for sub-column clouds generators
+    integer,               pointer :: rseeds   (:,:)   => null()  !< (rad. only) random seeds provided by host
 
 !--- In
     real (kind=kind_phys), pointer :: ozpl     (:,:,:) => null()  !< ozone forcing data
@@ -2871,6 +2875,8 @@ module GFS_typedefs
     logical :: exists
     real(kind=kind_phys) :: tem
     real(kind=kind_phys) :: rinc(5)
+    real(kind=kind_sngl_prec) :: rinc4(5)
+    real(kind=kind_dbl_prec) :: rinc8(5)
     real(kind=kind_phys) :: wrk(1)
     real(kind=kind_phys), parameter :: con_hr = 3600.
 
@@ -2957,6 +2963,9 @@ module GFS_typedefs
     logical              :: norad_precip      = .false.      !< radiation precip flag for Ferrier/Moorthi
     logical              :: lwhtr             = .true.       !< flag to output lw heating rate (Radtend%lwhc)
     logical              :: swhtr             = .true.       !< flag to output sw heating rate (Radtend%swhc)
+    logical              :: lrseeds           = .false.      !< flag to use host-provided random seeds
+    integer              :: nrstreams         = 2            !< number of random number streams in host-provided random seed array
+    logical              :: lextop            = .false.      !< flag for using an extra top layer for radiation
     ! RRTMGP
     logical              :: do_RRTMGP           = .false.    !< Use RRTMGP?
     character(len=128)   :: active_gases        = ''         !< Character list of active gases used in RRTMGP
@@ -3362,7 +3371,11 @@ module GFS_typedefs
 !  max and min lon and lat for critical relative humidity
     integer :: max_lon=5000, max_lat=2000, min_lon=192, min_lat=94
     real(kind=kind_phys) :: rhcmax = 0.9999999               !< max critical rel. hum.
+#ifdef SINGLE_PREC
+    real(kind=kind_phys) :: huge   = 9.9692099683868690E30  !  NetCDF float FillValue
+#else
     real(kind=kind_phys) :: huge   = 9.9692099683868690E36  !  NetCDF float FillValue
+#endif
 
 
 !--- stochastic physics control parameters
@@ -3406,6 +3419,7 @@ module GFS_typedefs
 
     real(kind=kind_phys) :: radar_tten_limits(2) = (/ limit_unspecified, limit_unspecified /)
     integer :: itime
+    integer :: w3kindreal,w3kindint
     
 !--- END NAMELIST VARIABLES
 
@@ -3861,6 +3875,9 @@ module GFS_typedefs
     Model%ccnorm           = ccnorm
     Model%lwhtr            = lwhtr
     Model%swhtr            = swhtr
+    Model%lrseeds          = lrseeds
+    Model%nrstreams        = nrstreams
+    Model%lextop           = (ltp > 0)
 
     ! RRTMGP
     Model%do_RRTMGP           = do_RRTMGP
@@ -4868,7 +4885,19 @@ module GFS_typedefs
     Model%cdec             = -9999.
     Model%clstp            = -9999
     rinc(1:5)              = 0
-    call w3difdat(jdat,idat,4,rinc)
+    call w3kind(w3kindreal,w3kindint)
+    if (w3kindreal == 8) then
+       rinc8(1:5) = 0
+       call w3difdat(jdat,idat,4,rinc8)
+       rinc = rinc8
+    else if (w3kindreal == 4) then
+       rinc4(1:5) = 0
+       call w3difdat(jdat,idat,4,rinc4)
+       rinc = rinc4
+    else
+       write(0,*)' FATAL ERROR: Invalid w3kindreal'
+       call abort
+    endif
     Model%phour            = rinc(4)/con_hr
     Model%fhour            = (rinc(4) + Model%dtp)/con_hr
     Model%zhour            = mod(Model%phour,Model%fhzero)
@@ -5728,6 +5757,9 @@ module GFS_typedefs
       print *, ' norad_precip      : ', Model%norad_precip
       print *, ' lwhtr             : ', Model%lwhtr
       print *, ' swhtr             : ', Model%swhtr
+      print *, ' lrseeds           : ', Model%lrseeds
+      print *, ' nrstreams         : ', Model%nrstreams
+      print *, ' lextop            : ', Model%lextop
       if (Model%do_RRTMGP) then
         print *, ' rrtmgp_nrghice     : ', Model%rrtmgp_nrghice
         print *, ' do_GPsw_Glw        : ', Model%do_GPsw_Glw
@@ -6218,6 +6250,10 @@ module GFS_typedefs
       allocate (Tbd%icsdlw (IM))
       Tbd%icsdsw = zero
       Tbd%icsdlw = zero
+      if (Model%lrseeds) then
+        allocate (Tbd%rseeds(IM,Model%nrstreams))
+        Tbd%rseeds = zero
+      endif
     endif
 
 !--- DFI radar forcing
