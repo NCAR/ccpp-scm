@@ -820,49 +820,10 @@ def main():
                 logging.critical(message)
                 raise Exception(message)
             
-            if not scm_runs.cases:
-                message = 'The cases list in {0} must not be empty'.format(file)
-                logging.critical(message)
-                raise Exception(message)
-
-            # If no SDF provided, use default
-            if not scm_runs.suites:
-                for s in suite_list:
-                    if suite_name == s._name:
-                        scm_runs.suites.append(s._name)
-                        break
-
-            # If no namelist provided, use default defined in default_namelist.py
-            if not scm_runs.namelists:
-                for s in suite_list:
-                    if suite_name == s._name:
-                        scm_runs.namelists.append(s.namelist)
-                        break
-
-            # Create dictonary with  SCM case info.
-            run_dict = {"cases":[],"suites":[],"namelists":[]}
-
-            # A) Do all permutations of input configuration
-            if (len(scm_runs.suites) != len(run_dict["cases"]) or len(scm_runs.namelists) != len(run_dict["cases"])):
-                if (len(scm_runs.suites) != len(scm_runs.namelists)) and  (len(scm_runs.suites) > 1 and len(scm_runs.namelists) > 0):
-                    message = 'The number of namelists and SDFs requested in {0} are not consistent.'.format(file)
-                    logging.critical(message)
-                    raise Exception(message)
-                for cases in scm_runs.cases:
-                    for sdfs in scm_runs.suites:
-                        for nmls in scm_runs.namelists:
-                            run_dict["cases"].append(cases)
-                            run_dict["suites"].append(sdfs)
-                            run_dict["namelists"].append(nmls)
-            # B) Step through input configurations sequentially.
-            else:
-                for ij in range(0,len(scm_runs.cases)):
-                    run_dict["cases"].append(scm_runs.cases[ij])
-                    run_dict["suites"].append(scm_runs.suites[ij])
-                    run_dict["namelists"].append(scm_runs.namelists[ij])
-
             # Run cases
-            for icase in range(0,len(run_dict["cases"])):
+            irun = 0
+            for run in scm_runs.run_list:
+
                 #
                 active_suite = None
                 for s in suite_list:
@@ -870,19 +831,20 @@ def main():
                         active_suite = s
                         break
                 #
+                irun = irun+1
                 logging.info('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
-                    icase, len(run_dict["cases"]), run_dict["cases"][icase], run_dict["suites"][icase], run_dict["namelists"][icase]))
-                exp = Experiment(run_dict["cases"][icase], active_suite, runtime, runtime_mult, levels, \
+                    irun, nrun = len(scm_runs.run_list), run["case"], run["suite"], run["namelist"]))
+                exp = Experiment(run["case"], active_suite, runtime, runtime_mult, levels, \
                                  npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
                 exp_dir = exp.setup_rundir()
                 (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
                 #
                 if status == 0:
                     logging.info('Process "(case={0}, suite={1}, namelist={2}" completed successfully'. \
-                                 format(run_dict["cases"][icase], run_dict["suites"][icase], run_dict["namelists"][icase]))
+                                 format(run["case"], run["suite"], run["namelist"]))
                 else:
                     logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'. \
-                                    format( run_dict["cases"][icase], run_dict["suites"][icase], run_dict["namelists"][icase], status))
+                                    format( run["case"], run["suite"], run["namelist"], status))
                 if time_elapsed:
                     logging.info('    Elapsed time: {0}s'.format(time_elapsed))
                 if docker:
