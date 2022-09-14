@@ -12,8 +12,6 @@ import sys
 import time
 from suite_info import suite, suite_list
 from netCDF4 import Dataset
-# multi-run
-from supported_cases import cases
 import importlib
 
 ###############################################################################
@@ -833,7 +831,7 @@ def main():
                 if timestep: 
                     active_suite = suite(run["suite"], run["tracer"], run["namelist"], timestep, -1, False)
                 else:
-                    active_suite = suite(run["suite"], run["tracer"], 600., -1, -1, False)
+                    active_suite = suite(run["suite"], run["tracer"], run["namelist"], 600, -1, False)
                     #active_suite = suite(run["suite"], run["tracer"], run["namelist"], -1, -1, False) NOT WORKING without timestep defined
             else:
                 message = 'The given suite {0}, does not have defaults set in suite_info.py and either the tracers file or physics namelist file (or both) were not provided.'.format(run["suite"])
