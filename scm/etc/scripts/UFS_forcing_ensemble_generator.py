@@ -105,16 +105,16 @@ def main():
     #
     ###########################################################################
 
-    # Are we providing ICs to the SCM?
-    #model_ics     = ".false."
-    #if add_UFS_NOAH_lsm or add_UFS_dyn_tend:
-    model_ics = ".true."
+    # Are we providing LSM ICs to the SCM?
+    model_ics     = ".false."
+    if add_UFS_NOAH_lsm:
+        model_ics = ".true."
 
     # How many timesteps between clearing the diagnostic buckets?
-    n_itt_diag = fhzero*3600/dt
+    n_itt_diag = int(fhzero*3600/dt)
 
     # 
-    n_itt_out = n_itt_diag/fhzero
+    n_itt_out = int(n_itt_diag/fhzero)
 
     # For DEPHY format, these do not change.
     input_type  = 1
@@ -122,24 +122,25 @@ def main():
     #
     case_config =[{"name": "model_ics",   "values": model_ics},       \
                   {"name": "input_type",  "values": str(input_type)}, \
-                  {"name": "dt",          "values": str(dt)},         \
-                  {"name": "C_RES",       "values": str(C_RES)},      \
-                  {"name": "n_itt_diag",  "values": str(n_itt_diag)}, \
-                  {"name": "n_itt_out",   "values": str(n_itt_out)}]
+                  #{"name": "dt",          "values": str(dt)},         \
+                  {"name": "C_RES",       "values": str(C_RES)}]
+                  #{"name": "n_itt_diag",  "values": str(n_itt_diag)}, \
+                  #{"name": "n_itt_out",   "values": str(n_itt_out)}]
 
     #
     # What, if any, options neeed to be passsed to UFS_IC_generator.py?
     #
     com_config = ''
     if save_comp:        com_config = com_config + ' -sc'
-    #if add_UFS_NOAH_lsm: com_config = com_config + ' -lsm'
-    #if add_UFS_dyn_tend: com_config = com_config + ' -ufsf'
+    if add_UFS_NOAH_lsm: com_config = com_config + ' -lsm'
+    if add_UFS_dyn_tend: com_config = com_config + ' -ufsf'
 
     #
     # Create inputs to SCM
     # (Call UFS_IC_generator and create case_config files for each case)
     #
-    case_list = ""
+    case_list    = ""
+    case_list_nf = ""
     count = 0
     for pt in range(0,npts):
         #
@@ -147,7 +148,10 @@ def main():
         #
         case_name     = case_name_root +"_n" + str(pt).zfill(3)
         file_scminput = dir_scm+"scm/data/processed_case_input/"+case_name+".nc"
-
+        if add_UFS_dyn_tend:
+            case_name_nf      = case_name_root +"_n" + str(pt).zfill(3)+"_noforce"
+            file_scm_nf_input = dir_scm+"scm/data/processed_case_input/"+case_name+"_noforce.nc"
+        #
         com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
               " -i " + dirIC + " -g " + dirGRID + " -f " + dirFORCING + " -n " + case_name + com_config
         print(com)
@@ -161,8 +165,12 @@ def main():
             # Add case to ensemble list.
             #
             case_list     = case_list + '"'+case_name+'"'
-
             if (count != npts-1): case_list = case_list + ', '
+            #
+            if add_UFS_dyn_tend:
+                case_list_nf = case_list_nf + '"'+case_name_nf+'"'
+                if (count != npts-1): case_list_nf = case_list_nf + ', '
+
 
             #
             # What is the surface type? (get from SCM input file)
@@ -171,7 +179,7 @@ def main():
             sfc_type = int(np.round_(dataset.slmsk.values[0][0][0]))
 
             #
-            # Create case_config file
+            # Create case_config file(s)
             #
             fileOUT = dir_scm+"scm/etc/case_config/"+case_name+".nml"
             fileID  = open(fileOUT, 'w')
@@ -188,14 +196,31 @@ def main():
             fileID.write('\n')
             fileID.close()
             #
+            if add_UFS_dyn_tend:
+                fileOUT = dir_scm+"scm/etc/case_config/"+case_name_nf+".nml"
+                fileID  = open(fileOUT, 'w')
+                fileID.write('$case_config')
+                fileID.write('\n')
+                fileID.write('case_name = ' + "'" + case_name_nf + "',")
+                fileID.write('\n')
+                fileID.write('sfc_type = ' + str(sfc_type) + ",")
+                fileID.write('\n')
+                for opts in case_config:
+                    fileID.write(opts["name"] + ' = ' + opts["values"] + ",")
+                    fileID.write('\n')
+                fileID.write('$end')
+                fileID.write('\n')
+                fileID.close()
+
+            #
             count = count + 1
 
     #
     # Create "multirun file list" needed by run_scm.py
     #
     os.system("mkdir -p "+dir_scm+"scm/run/")
-    fileOUT = dir_scm+"scm/run/scm_ufsens.py"
-    fileID  = open(fileOUT, 'w')
+    fileOUT = "scm_ufsens.py"
+    fileID  = open(dir_scm+"scm/run/"+fileOUT, 'w')
     fileID.write('cases      = ['+case_list+']')
     fileID.write('\n')
     fileID.write('suites     = ["'+suite+'"]')
@@ -203,6 +228,31 @@ def main():
     fileID.write('namelists  = []')
     fileID.write('\n')
     fileID.close()
+    #
+    if add_UFS_dyn_tend:
+        fileOUT_nf = "scm_nf_ufsens.py"
+        fileID     = open(dir_scm+"scm/run/"+fileOUT_nf, 'w')
+        fileID.write('cases      = ['+case_list_nf+']')
+        fileID.write('\n')
+        fileID.write('suites     = ["'+suite+'"]')
+        fileID.write('\n')
+        fileID.write('namelists  = []')
+        fileID.write('\n')
+        fileID.close()
+
+    print("-------------------------------------------------------------------------------------------")
+    print("Command(s) to execute in ccpp-scm/scm/bin/: ")
+    print(" ")
+    print("./run_scm.py --multirun --file ../run/" + fileOUT + " --n_itt_diag " + \
+          str(n_itt_diag) + " --n_itt_out " + str(n_itt_out) + " --timestep "   + \
+          str(dt))
+    if add_UFS_dyn_tend:
+        print("")
+        print("./run_scm.py --multirun --file ../run/" + fileOUT_nf + " --n_itt_diag " + \
+              str(n_itt_diag) + " --n_itt_out " + str(n_itt_out)    + " --timestep "   + \
+              str(dt))
+    print("")
+    print("-------------------------------------------------------------------------------------------")
 
 if __name__ == '__main__':
     main()

@@ -72,6 +72,8 @@ parser.add_argument('-n', '--case_name',  help='name of case', required=True)
 parser.add_argument('-oc','--old_chgres', help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
 parser.add_argument('-nf','--no_force',   help='flag to additionally write out a case data file with forcing turned off', action='store_true')
 parser.add_argument('-sc','--save_comp',  help='flag to save and write out a file with UFS output data to compare SCM simulations with', action='store_true')
+parser.add_argument('-lsm', '--add_UFS_NOAH_lsm', help='flag to include UFS NOAH LSM surface forcing', action='store_true')
+parser.add_argument('-ufsf','--add_UFS_dyn_tend', help='flag to include UFS dynamic tendencies for SCM forcing', action='store_true')
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -94,6 +96,8 @@ def parse_arguments():
     lam = args.lam
     no_force = args.no_force
     save_comp = args.save_comp
+    add_UFS_NOAH_lsm = args.add_UFS_NOAH_lsm
+    add_UFS_dyn_tend = args.add_UFS_dyn_tend
     
     #validate args
     if not os.path.exists(in_dir):
@@ -132,7 +136,9 @@ def parse_arguments():
             logging.critical(message)
             raise Exception(message)
     
-    return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam, no_force, save_comp)
+    return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, \
+            area, noahmp, case_name, old_chgres, lam, no_force, save_comp,   \
+            add_UFS_NOAH_lsm, add_UFS_dyn_tend)
 
 def setup_logging():
     """Sets up the logging module."""
@@ -4267,7 +4273,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     if (add_UFS_dyn_tend): 
         fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '.nc')
     else:
-        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_zeroforce.nc')
+        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_noforce.nc')
 
     nc_file = Dataset(fileOUT, 'w', format='NETCDF4')
     if (add_UFS_dyn_tend):
@@ -4819,7 +4825,9 @@ def main():
     setup_logging()
     
     #read in arguments
-    (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, case_name, old_chgres, lam, no_force, save_comp) = parse_arguments()
+    (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, \
+     case_name, old_chgres, lam, no_force, save_comp, add_UFS_NOAH_lsm,          \
+     add_UFS_dyn_tend) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     #if not tile and not lam:
@@ -4854,8 +4862,8 @@ def main():
         # date was not included on command line; look in atmf* file for initial date
         date = find_date(forcing_dir)
     
-    # Cold start NoahMP variables (shouldn't be necessary to use this anymore, since same capability 
-    # exists in SCM code if given Noah ICs only)
+    # Cold start NoahMP variables (shouldn't be necessary to use this anymore, since same 
+    # capability exists in SCM code if given Noah ICs only)
     if (noahmp):
         surface_data = add_noahmp_coldstart(surface_data, date)
     
@@ -4867,16 +4875,23 @@ def main():
     surface_data["lon"] = point_lon
     surface_data["lat"] = point_lat
     
-    #get UFS forcing data (zeros for now; only placeholder)
-    (forcing_data, comp_data) = get_UFS_forcing_data(state_data["nlevs"], state_data, forcing_dir,     \
-                                                     grid_dir, tile, tile_i, tile_j, lam, save_comp)
+    # Get UFS forcing data
+    (forcing_data, comp_data) = get_UFS_forcing_data(state_data["nlevs"], state_data,      \
+                                                     forcing_dir, grid_dir, tile, tile_i,  \
+                                                     tile_j, lam, save_comp)
     
-    #write SCM case file
-    write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, True, True)
-    write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, False, True)
+    # Write SCM case file
+    write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, \
+                        add_UFS_dyn_tend, add_UFS_NOAH_lsm)
 
-    # read in and remap the state variables to the first history file pressure profile and write them out
-    # to compare SCM output to (atmf for state variables and sfcf for physics tendencies)
+    # Create file w/o forcings for testing (only if forcings are being used)
+    if (add_UFS_dyn_tend):
+        write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name,   \
+                            date, False, add_UFS_NOAH_lsm)
+
+    # read in and remap the state variables to the first history file pressure profile and 
+    # write them out to compare SCM output to (atmf for state variables and sfcf for physics 
+    # tendencies)
     if (save_comp):
         write_comparison_file(comp_data, case_name, date, surface_data)
     
