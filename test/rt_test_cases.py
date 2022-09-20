@@ -1,4 +1,70 @@
-cases = ["arm_sgp_summer_1997_A", "astex", "bomex", "LASSO_2016051812", "twpice"]
-suites = ["SCM_GFS_v15p2", "SCM_GFS_v16", "SCM_csawmg", "SCM_GSD_v1", "SCM_RRFS_v1alpha"]
-namelists = ["input_GFS_v15p2.nml", "input_GFS_v16.nml", "input_csawmg.nml", \
-             "input_GSD_v1.nml", "input_RRFS_v1alpha.nml"]
+run_list = [\
+            #----------------------------------------------------------------------------------------------------------------------------------------------
+            # CCPP-SCM v5 suites
+            #----------------------------------------------------------------------------------------------------------------------------------------------
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v15p2"},                                                                                 \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_csawmg"},                                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GSD_v1"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v15p2"},                                                                                 \
+            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16"},                                                                                   \
+            {"case": "LASSO_2016051812",      "suite": "SCM_csawmg"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_GSD_v1"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_GFS_v15p2"},                                                                                 \
+            {"case": "astex",                 "suite": "SCM_csawmg"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_GSD_v1"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_GFS_v15p2"},                                                                                 \
+            {"case": "bomex",                 "suite": "SCM_csawmg"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_GSD_v1"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_GFS_v15p2"},                                                                                 \
+            {"case": "twpice",                "suite": "SCM_csawmg"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_GSD_v1"},                                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RRFS_v1alpha", "namelist": "input_RRFS_v1alpha.nml", "tracer": "tracers_RRFS_v1alpha.txt"},  \
+            {"case": "LASSO_2016051812",      "suite": "SCM_RRFS_v1alpha", "namelist": "input_RRFS_v1alpha.nml", "tracer": "tracers_RRFS_v1alpha.txt"},  \
+            {"case": "astex",                 "suite": "SCM_RRFS_v1alpha", "namelist": "input_RRFS_v1alpha.nml", "tracer": "tracers_RRFS_v1alpha.txt"},  \
+            {"case": "bomex",                 "suite": "SCM_RRFS_v1alpha", "namelist": "input_RRFS_v1alpha.nml", "tracer": "tracers_RRFS_v1alpha.txt"},  \
+            {"case": "twpice",                "suite": "SCM_RRFS_v1alpha", "namelist": "input_RRFS_v1alpha.nml", "tracer": "tracers_RRFS_v1alpha.txt"},  \
+            #----------------------------------------------------------------------------------------------------------------------------------------------
+            # CCPP-SCM v6 supported suites 
+            #----------------------------------------------------------------------------------------------------------------------------------------------
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16"},                                                                                   \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8"},                                                                                \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR"},                                                                                      \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RRFS_v1beta"},                                                                               \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RAP"},                                                                                       \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_WoFS_v0"},                                                                                   \
+            {"case": "twpice",                "suite": "SCM_GFS_v16"},                                                                                   \
+            {"case": "twpice",                "suite": "SCM_GFS_v17_p8"},                                                                                \
+            {"case": "twpice",                "suite": "SCM_HRRR"},                                                                                      \
+            {"case": "twpice",                "suite": "SCM_RRFS_v1beta"},                                                                               \
+            {"case": "twpice",                "suite": "SCM_RAP"},                                                                                       \
+            {"case": "twpice",                "suite": "SCM_WoFS_v0"},                                                                                   \
+            {"case": "bomex",                 "suite": "SCM_GFS_v16"},                                                                                   \
+            {"case": "bomex",                 "suite": "SCM_GFS_v17_p8"},                                                                                \
+            {"case": "bomex",                 "suite": "SCM_HRRR"},                                                                                      \
+            {"case": "bomex",                 "suite": "SCM_RRFS_v1beta"},                                                                               \
+            {"case": "bomex",                 "suite": "SCM_RAP"},                                                                                       \
+            {"case": "bomex",                 "suite": "SCM_WoFS_v0"},                                                                                   \
+            {"case": "astex",                 "suite": "SCM_GFS_v16"},                                                                                   \
+            {"case": "astex",                 "suite": "SCM_GFS_v17_p8"},                                                                                \
+            {"case": "astex",                 "suite": "SCM_HRRR"},                                                                                      \
+            {"case": "astex",                 "suite": "SCM_RRFS_v1beta"},                                                                               \
+            {"case": "astex",                 "suite": "SCM_RAP"},                                                                                       \
+            {"case": "astex",                 "suite": "SCM_WoFS_v0"},                                                                                   \
+            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16"},                                                                                   \
+            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_p8"},                                                                                \
+            {"case": "LASSO_2016051812",      "suite": "SCM_HRRR"},                                                                                      \
+            {"case": "LASSO_2016051812",      "suite": "SCM_RRFS_v1beta"},                                                                               \
+            {"case": "LASSO_2016051812",      "suite": "SCM_RAP"},                                                                                       \
+            {"case": "LASSO_2016051812",      "suite": "SCM_WoFS_v0"},                                                                                   \
+            #---------------------------------------------------------------------------------------------------------------------------------------------------
+            # Unsupported suites
+            #--------------------------------------------------------------------------------------------------------------------------------------------------- 
+            {"case": "gabls3",                "suite": "SCM_GFS_v16"},                                                                                          \
+            {"case": "gabls3_noahmp",         "suite": "SCM_GFS_v17_p8"},                                                                                       \
+            {"case": "gabls3_ruc",            "suite": "SCM_RAP"},                                                                                              \
+#            {"case": "ARMCU_REF",             "suite": "SCM_GFS_v16"},                                                                                          \
+            {"case": "fv3_model_point_noah",  "suite": "SCM_GFS_v16"},                                                                                          \
+            {"case": "twpice",                "suite": "SCM_GFS_v15p2_RRTMGP",  "namelist": "input_GFS_v15p2_RRTMGP.nml",  "tracer": "tracers_GFS_v15p2.txt"},  \
+            {"case": "twpice",                "suite": "SCM_GFS_v16_RRTMGP",    "namelist": "input_GFS_v16_RRTMGP.nml",    "tracer": "tracers_GFS_v16.txt"},    \
+            {"case": "twpice",                "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"}, \
+            {"case": "twpice",                "suite": "SCM_RAP_RRTMGP",        "namelist": "input_RAP_RRTMGP.nml",        "tracer": "tracers_RAP.txt"}]
