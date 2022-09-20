@@ -142,6 +142,8 @@ def main():
     case_list    = ""
     case_list_nf = ""
     count = 0
+    run_list = []
+    run_list_nf = []
     for pt in range(0,npts):
         #
         # Call UFS_IC_generator.py
@@ -170,7 +172,6 @@ def main():
             if add_UFS_dyn_tend:
                 case_list_nf = case_list_nf + '"'+case_name_nf+'"'
                 if (count != npts-1): case_list_nf = case_list_nf + ', '
-
 
             #
             # What is the surface type? (get from SCM input file)
@@ -212,6 +213,11 @@ def main():
                 fileID.write('\n')
                 fileID.close()
 
+            # Add case to dictionary to be used by run_scm.py
+            run_list.append({"case": case_name, "suite": suite})
+            if add_UFS_dyn_tend:
+                run_list_nf.append({"case": case_name_nf, "suite": suite})
+            
             #
             count = count + 1
 
@@ -221,35 +227,36 @@ def main():
     os.system("mkdir -p "+dir_scm+"scm/bin/")
     fileOUT = "scm_ufsens.py"
     fileID  = open(dir_scm+"scm/bin/"+fileOUT, 'w')
-    fileID.write('cases      = ['+case_list+']')
+    fileID.write('run_list = [')
     fileID.write('\n')
-    fileID.write('suites     = ["'+suite+'"]')
-    fileID.write('\n')
-    fileID.write('namelists  = []')
-    fileID.write('\n')
+    for run in run_list:
+        fileID.write('            {"case": "' + run["case"] + '", "suite": "' + run["suite"] + '"},')
+        fileID.write('\n')
+    fileID.write('            ]')
     fileID.close()
     #
     if add_UFS_dyn_tend:
-        fileOUT_nf = "scm_nf_ufsens.py"
-        fileID     = open(dir_scm+"scm/bin/"+fileOUT_nf, 'w')
-        fileID.write('cases      = ['+case_list_nf+']')
+        os.system("mkdir -p "+dir_scm+"scm/bin/")
+        fileOUT_nf = "scm_ufsens_nf.py"
+        fileID  = open(dir_scm+"scm/bin/"+fileOUT_nf, 'w')
+        fileID.write('run_list = [')
         fileID.write('\n')
-        fileID.write('suites     = ["'+suite+'"]')
-        fileID.write('\n')
-        fileID.write('namelists  = []')
-        fileID.write('\n')
+        for run in run_list_nf:
+            fileID.write('            {"case": "' + run["case"] + '", "suite": "' + run["suite"] + '"},')
+            fileID.write('\n')
+        fileID.write('            ]')
         fileID.close()
 
     print("-------------------------------------------------------------------------------------------")
     print("Command(s) to execute in ccpp-scm/scm/bin/: ")
     print(" ")
-    print("./run_scm.py --multirun --file " + fileOUT + " --n_itt_diag " + \
+    print("./run_scm.py --file " + fileOUT + " --n_itt_diag " + \
           str(n_itt_diag) + " --n_itt_out " + str(n_itt_out) + " --timestep "   + \
           str(dt))
     print("")
     if add_UFS_dyn_tend:
         print("")
-        print("./run_scm.py --multirun --file " + fileOUT_nf + " --n_itt_diag " + \
+        print("./run_scm.py --file " + fileOUT_nf + " --n_itt_diag " + \
               str(n_itt_diag) + " --n_itt_out " + str(n_itt_out)    + " --timestep "   + \
               str(dt))
     print("")
