@@ -218,9 +218,9 @@ def main():
     #
     # Create "multirun file list" needed by run_scm.py
     #
-    os.system("mkdir -p "+dir_scm+"scm/run/")
+    os.system("mkdir -p "+dir_scm+"scm/bin/")
     fileOUT = "scm_ufsens.py"
-    fileID  = open(dir_scm+"scm/run/"+fileOUT, 'w')
+    fileID  = open(dir_scm+"scm/bin/"+fileOUT, 'w')
     fileID.write('cases      = ['+case_list+']')
     fileID.write('\n')
     fileID.write('suites     = ["'+suite+'"]')
@@ -231,7 +231,7 @@ def main():
     #
     if add_UFS_dyn_tend:
         fileOUT_nf = "scm_nf_ufsens.py"
-        fileID     = open(dir_scm+"scm/run/"+fileOUT_nf, 'w')
+        fileID     = open(dir_scm+"scm/bin/"+fileOUT_nf, 'w')
         fileID.write('cases      = ['+case_list_nf+']')
         fileID.write('\n')
         fileID.write('suites     = ["'+suite+'"]')
@@ -243,12 +243,13 @@ def main():
     print("-------------------------------------------------------------------------------------------")
     print("Command(s) to execute in ccpp-scm/scm/bin/: ")
     print(" ")
-    print("./run_scm.py --multirun --file ../run/" + fileOUT + " --n_itt_diag " + \
+    print("./run_scm.py --multirun --file " + fileOUT + " --n_itt_diag " + \
           str(n_itt_diag) + " --n_itt_out " + str(n_itt_out) + " --timestep "   + \
           str(dt))
+    print("")
     if add_UFS_dyn_tend:
         print("")
-        print("./run_scm.py --multirun --file ../run/" + fileOUT_nf + " --n_itt_diag " + \
+        print("./run_scm.py --multirun --file " + fileOUT_nf + " --n_itt_diag " + \
               str(n_itt_diag) + " --n_itt_out " + str(n_itt_out)    + " --timestep "   + \
               str(dt))
     print("")
