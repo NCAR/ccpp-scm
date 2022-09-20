@@ -402,26 +402,6 @@ module scm_type_defs
 
   end type scm_reference_type
 
-  type ufs_replay_tend_type
-     real(kind=dp), allocatable, dimension(:,:) :: &
-          dtend_temp_pbl,     &
-          dtend_qv_pbl,       &
-          dtend_u_pbl,        &
-          dtend_v_pbl,        &
-          dtend_temp_shalcnv, &
-          dtend_qv_shalcnv,   &
-          dtend_u_shalcnv,    &
-          dtend_v_shalcnv,    &
-          dtend_temp_deepcnv, &
-          dtend_qv_deepcnv,   &
-          dtend_u_deepcnv,    &
-          dtend_v_deepcnv,    &
-          dtend_temp_lw,      &
-          dtend_temp_sw
-     contains
-       procedure :: create => create_replay_tend
-  end type ufs_replay_tend_type
-
 !> \section arg_table_physics_type
 !! \htmlinclude physics_type.html
 !!
@@ -1639,39 +1619,4 @@ module scm_type_defs
     return
   end function get_tracer_index
 
-  subroutine create_replay_tend(ufs_phys_tend, n_columns, n_levels)
-    class(ufs_replay_tend_type) :: ufs_phys_tend
-    integer, intent(in)         :: n_columns, n_levels
-    
-    allocate(ufs_phys_tend%dtend_temp_pbl(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_qv_pbl(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_u_pbl(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_v_pbl(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_temp_shalcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_qv_shalcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_u_shalcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_v_shalcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_temp_deepcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_qv_deepcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_u_deepcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_v_deepcnv(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_temp_lw(n_columns, n_levels))
-    allocate(ufs_phys_tend%dtend_temp_sw(n_columns, n_levels))
-    
-    ufs_phys_tend%dtend_temp_pbl     = real_zero
-    ufs_phys_tend%dtend_qv_pbl       = real_zero
-    ufs_phys_tend%dtend_u_pbl        = real_zero
-    ufs_phys_tend%dtend_v_pbl        = real_zero
-    ufs_phys_tend%dtend_temp_shalcnv = real_zero
-    ufs_phys_tend%dtend_qv_shalcnv   = real_zero
-    ufs_phys_tend%dtend_u_shalcnv    = real_zero
-    ufs_phys_tend%dtend_v_shalcnv    = real_zero
-    ufs_phys_tend%dtend_temp_deepcnv = real_zero
-    ufs_phys_tend%dtend_qv_deepcnv   = real_zero
-    ufs_phys_tend%dtend_u_deepcnv    = real_zero
-    ufs_phys_tend%dtend_v_deepcnv    = real_zero
-    ufs_phys_tend%dtend_temp_lw      = real_zero
-    ufs_phys_tend%dtend_temp_sw      = real_zero
-    
-  end subroutine create_replay_tend
 end module scm_type_defs
