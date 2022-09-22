@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 from suite_info import suite, suite_list
+from supported_cases import cases
 from netCDF4 import Dataset
 import importlib
 
@@ -104,6 +105,11 @@ TAU_LINK             = 'ugwp_limb_tau.nc'
 ###############################################################################
 
 parser = argparse.ArgumentParser()
+sgroup = parser.add_argument_group('Single experiment')
+sgroup.add_argument('-c', '--case',       help='name of case to run')
+sgroup.add_argument('-s', '--suite',      help='name of suite to use')
+sgroup.add_argument('-n', '--namelist',   help='physics namelist to use')
+sgroup.add_argument('-t', '--tracers',    help='tracer configuration to use')
 parser.add_argument('-g', '--gdb',        help='invoke scm through gdb', action='store_true', default=False)
 parser.add_argument('--runtime',          help='set the runtime in the namelists', action='store', type=int, required=False)
 parser.add_argument('--runtime_mult',     help='multiply the existing runtime in the namelist by some factor', action='store', type=float, required=False)
@@ -118,7 +124,7 @@ parser.add_argument('--n_itt_out',        help='period of instantaneous output (
 parser.add_argument('--n_itt_diag',       help='period of diagnostic output (number of timesteps)', required=False, type=int)
 parser.add_argument('-dt', '--timestep',  help='timestep (s)', required=False, type=float)
 parser.add_argument('-v', '--verbose',    help='set logging level to debug and write log to file', action='count', default=0)
-parser.add_argument('-f', '--file',       help='name of file where SCM runs are defined',required=True)
+parser.add_argument('-f', '--file',       help='name of file where SCM runs are defined')
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -167,6 +173,10 @@ def parse_arguments():
     """Parse command line arguments"""
     args = parser.parse_args()
     file = args.file
+    case = args.case
+    suite = args.suite
+    namelist = args.namelist
+    tracers = args.tracers
     gdb = args.gdb
     runtime = args.runtime
     runtime_mult = args.runtime_mult
@@ -181,8 +191,10 @@ def parse_arguments():
     run_dir = args.run_dir
     bin_dir = args.bin_dir
     timestep = args.timestep
-    
-    return (file, gdb, runtime, runtime_mult, docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep)
+    if not suite:
+        suite = DEFAULT_SUITE    
+
+    return (file, case, suite, namelist, tracers, gdb, runtime, runtime_mult, docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -742,7 +754,7 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (file, use_gdb, runtime, runtime_mult,  docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep) = parse_arguments()
+    (file, case, suite, namelist, tracers, use_gdb, runtime, runtime_mult,  docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep) = parse_arguments()
     
     global SCM_ROOT
     SCM_ROOT = os.getenv('SCM_ROOT')
@@ -776,21 +788,36 @@ def main():
     else:
         gdb = None
 
-    logging.info('SCM-run: Using {} to loop through defined runs'.format(file))
-    try:
-        dirname, basename = os.path.split(file)
-        sys.path.append(dirname)
-        module_name = os.path.splitext(basename)[0]
-        scm_runs = importlib.import_module(module_name)
-        sys.path.pop()
-    except ImportError:
-        message = 'There was a problem loading {0}. Please check that the path exists.'.format(file)
-        logging.critical(message)
-        raise Exception(message)
+    ncases = len(cases)
+    if file:
+        logging.info('SCM-run: Using {} to loop through defined runs'.format(file))
+        try:
+            dirname, basename = os.path.split(file)
+            sys.path.append(dirname)
+            module_name = os.path.splitext(basename)[0]
+            scm_runs = importlib.import_module(module_name)
+            run_list = scm_runs.run_list
+            ncases   = len(scm_runs.run_list)
+            sys.path.pop()
+        except ImportError:
+            message = 'There was a problem loading {0}. Please check that the path exists.'.format(file)
+            logging.critical(message)
+            raise Exception(message)
+    else:
+        logging.info('SCM-run: Using configuration provided via command line')
+        if case:
+            run_list = [{"case":case,    "suite":suite}]
+        else:
+            run_list = [{"case":cases[0],"suite":suite}]
+        if namelist:
+            run_list[0]["namelist"] = namelist
+        if (tracers):
+            run_list[0]["tracer"]   = tracers
+
             
     # Loop through all input "run dictionaires"
     irun = 0
-    for run in scm_runs.run_list:
+    for run in run_list:
 
         #
         # Is this a "supported" SCM configuration?
@@ -843,7 +870,7 @@ def main():
         # Run the SCM case
         #
         logging.info('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
-            irun, len(scm_runs.run_list), run["case"], run["suite"], active_suite.namelist))
+            irun, ncases, run["case"], run["suite"], active_suite.namelist))
         #
         exp = Experiment(run["case"], active_suite, runtime, runtime_mult, levels, \
                          npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
