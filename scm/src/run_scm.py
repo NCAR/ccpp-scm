@@ -788,7 +788,7 @@ def main():
     else:
         gdb = None
 
-    ncases = len(cases)
+    ncases = 1
     if file:
         logging.info('SCM-run: Using {} to loop through defined runs'.format(file))
         try:
