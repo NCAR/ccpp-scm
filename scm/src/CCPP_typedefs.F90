@@ -435,6 +435,22 @@ module CCPP_typedefs
     !-- 3D diagnostics
     integer :: rtg_ozone_index, rtg_tke_index
 
+    !-- Physics tendencies from individual schemes
+    real (kind=kind_phys), pointer      :: dTdt_pbl(:,:)           => null()  !<
+    real (kind=kind_phys), pointer      :: dqdt_pbl(:,:)           => null()  !<
+    real (kind=kind_phys), pointer      :: dudt_pbl(:,:)           => null()  !<
+    real (kind=kind_phys), pointer      :: dvdt_pbl(:,:)           => null()  !<
+    real (kind=kind_phys), pointer      :: dTdt_DCNV(:,:)          => null()  !<
+    real (kind=kind_phys), pointer      :: dqdt_DCNV(:,:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: dudt_DCNV(:,:)          => null()  !<
+    real (kind=kind_phys), pointer      :: dvdt_DCNV(:,:)          => null()  !<
+    real (kind=kind_phys), pointer      :: dTdt_SCNV(:,:)          => null()  !<
+    real (kind=kind_phys), pointer      :: dqdt_SCNV(:,:,:)        => null()  !<
+    real (kind=kind_phys), pointer      :: dudt_SCNV(:,:)          => null()  !<
+    real (kind=kind_phys), pointer      :: dvdt_SCNV(:,:)          => null()  !<
+    real (kind=kind_phys), pointer      :: dTdt_cldMP(:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: dqdt_cldMP(:,:,:)       => null()  !<
+
     contains
 
       procedure :: create      => gfs_interstitial_create     !<   allocate array data
@@ -904,6 +920,22 @@ contains
        allocate (Interstitial%t2mmp (IM))
        allocate (Interstitial%q2mp  (IM))
     end if
+
+    ! Physics tendencies for each scheme.
+    allocate (Interstitial%dTdt_pbl   (IM,Model%levs))
+    allocate (Interstitial%dqdt_pbl   (IM,Model%levs))
+    allocate (Interstitial%dudt_pbl   (IM,Model%levs))
+    allocate (Interstitial%dvdt_pbl   (IM,Model%levs))
+    allocate (Interstitial%dTdt_DCNV  (IM,Model%levs))
+    allocate (Interstitial%dqdt_DCNV  (IM,Model%levs,Model%ntrac))
+    allocate (Interstitial%dudt_DCNV  (IM,Model%levs))
+    allocate (Interstitial%dvdt_DCNV  (IM,Model%levs))
+    allocate (Interstitial%dTdt_SCNV  (IM,Model%levs))
+    allocate (Interstitial%dqdt_SCNV  (IM,Model%levs,Model%ntrac))
+    allocate (Interstitial%dudt_SCNV  (IM,Model%levs))
+    allocate (Interstitial%dvdt_SCNV  (IM,Model%levs))
+    allocate (Interstitial%dTdt_cldMP (IM,Model%levs))
+    allocate (Interstitial%dqdt_cldMP (IM,Model%levs,Model%ntrac))
     !
     ! Set components that do not change
     Interstitial%frain            = Model%dtf/Model%dtp
@@ -1530,6 +1562,22 @@ contains
        Interstitial%t2mmp     = clear_val
        Interstitial%q2mp      = clear_val
     end if
+
+    Interstitial%dTdt_pbl   = clear_val
+    Interstitial%dqdt_pbl   = clear_val
+    Interstitial%dudt_pbl   = clear_val
+    Interstitial%dvdt_pbl   = clear_val
+    Interstitial%dTdt_DCNV  = clear_val 
+    Interstitial%dqdt_DCNV  = clear_val
+    Interstitial%dudt_DCNV  = clear_val
+    Interstitial%dvdt_DCNV  = clear_val
+    Interstitial%dTdt_SCNV  = clear_val
+    Interstitial%dqdt_SCNV  = clear_val
+    Interstitial%dudt_SCNV  = clear_val
+    Interstitial%dvdt_SCNV  = clear_val
+    Interstitial%dTdt_cldMP = clear_val
+    Interstitial%dqdt_cldMP = clear_val
+
     !
     ! Set flag for resetting maximum hourly output fields
     Interstitial%max_hourly_reset = mod(Model%kdt-1, nint(Model%avg_max_length/Model%dtp)) == 0

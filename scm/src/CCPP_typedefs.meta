@@ -2959,6 +2959,104 @@
   units = count
   dimensions = ()
   type = integer
+[dTdt_pbl]
+  standard_name = tendency_of_air_temperature_due_to_PBL_scheme
+  long_name = tendency of air temperature due to the PBL scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dqdt_pbl]
+  standard_name = tendency_of_moisture_due_to_PBL_scheme
+  long_name = tendency of moisture  due to the PBL scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dudt_pbl]
+  standard_name = tendency_of_zondal_wind_due_to_PBL_scheme
+  long_name = tendency of zonal wind  due to the PBL scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dvdt_pbl]
+  standard_name = tendency_of_meridional_wind_due_to_PBL_scheme
+  long_name = tendency of meridional wind  due to the PBL scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dTdt_DCNV]
+  standard_name = tendency_of_air_temperature_due_to_DCNV_scheme
+  long_name = tendency of air temperature due to the DCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dqdt_DCNV]
+  standard_name = tendency_of_moisture_due_to_DCNV_scheme
+  long_name = tendency of moisture  due to the DCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_tracers)
+  type = real
+  kind = kind_phys
+[dudt_DCNV]
+  standard_name = tendency_of_zondal_wind_due_to_DCNV_scheme
+  long_name = tendency of zonal wind  due to the DCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dvdt_DCNV]
+  standard_name = tendency_of_meridional_wind_due_to_DCNV_scheme
+  long_name = tendency of meridional wind  due to the DCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dTdt_SCNV]
+  standard_name = tendency_of_air_temperature_due_to_SCNV_scheme
+  long_name = tendency of air temperature due to the SCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dqdt_SCNV]
+  standard_name = tendency_of_moisture_due_to_SCNV_scheme
+  long_name = tendency of moisture  due to the SCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_tracers)
+  type = real
+  kind = kind_phys
+[dudt_SCNV]
+  standard_name = tendency_of_zondal_wind_due_to_SCNV_scheme
+  long_name = tendency of zonal wind  due to the SCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dvdt_SCNV]
+  standard_name = tendency_of_meridional_wind_due_to_SCNV_scheme
+  long_name = tendency of meridional wind  due to the SCNV scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dTdt_cldMP]
+  standard_name = tendency_of_air_temperature_due_to_cloud_mp_scheme
+  long_name = tendency of air temperature due to the cloud microphysics scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dqdt_cldMP]
+  standard_name = tendency_of_moisture_due_to_cloud_mp_scheme
+  long_name = tendency of moisture  due to the cloud microphysics scheme
+  units = K s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_tracers)
+  type = real
+  kind = kind_phys
 
 ########################################################################
 [ccpp-table-properties]
