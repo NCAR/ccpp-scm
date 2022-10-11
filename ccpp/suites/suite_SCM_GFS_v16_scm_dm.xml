@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_GFS_v16" version="1">
+<suite name="SCM_GFS_v16_scm_dm" version="1">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>
@@ -77,6 +77,7 @@
       <scheme>GFS_MP_generic_post</scheme>
       <scheme>maximum_hourly_diagnostics</scheme>
       <scheme>phys_tend</scheme>
+      <scheme>scm_phys_tend_adj</scheme>
     </subcycle>
   </group>
 </suite>
