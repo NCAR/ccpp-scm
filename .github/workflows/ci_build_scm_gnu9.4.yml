@@ -1,0 +1,113 @@
+name: CI test to build SCM
+
+on: [push, pull_request]
+
+jobs:
+  build-linux:
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+
+    # Environmental variables
+    env:
+      NFHOME:     /home/runner/netcdf-fortran
+      bacio_ROOT: /home/runner/bacio
+      sp_ROOT:    /home/runner/NCEPLIBS-sp
+      w3emc_ROOT: /home/runner/myw3emc
+
+    # Workflow steps
+    steps:
+
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v3
+
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+    
+    - name: Set up Python 3.8.5
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8.5
+
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Install python libraries
+      run: |
+        conda install --yes -c conda-forge f90nml
+        conda install --yes -c conda-forge netCDF4
+
+    - name: Set compilers
+      run: |
+        echo "FC=gfortran-9" >> $GITHUB_ENV
+        echo "CC=gcc-9"      >> $GITHUB_ENV
+
+    - name: Install bacio library v2.4.1
+      run: |
+        git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
+        cd bacio && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${bacio_ROOT} ../
+        make -j2
+        make install
+        echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
+
+    - name: Install SP-library v2.3.3
+      run: |
+        git clone --branch v2.3.3 https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp
+        cd NCEPLIBS-sp && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${sp_ROOT} ../
+        make -j2
+        make install
+        echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
+
+    - name: Install w3emc library v2.9.2
+      run: |
+        git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
+        cd NCEPLIBS-w3emc && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${w3emc_ROOT} ../
+        make -j2
+        make install
+        echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
+
+    - name: Install NetCDF C library
+      run: sudo apt-get install libnetcdf-dev
+
+    - name: Install NetCDF Fortran library v4.4.4
+      run: |
+        git clone --branch v4.4.4 https://github.com/Unidata/netcdf-fortran.git
+        cd netcdf-fortran
+        ./configure
+        make -j
+        sudo make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+
+    - name: Install cmake v3.24.1
+      run: pip3 install cmake ninja fypp
+
+    - name: Set SCM_ROOT
+      run: |
+        echo "SCM_ROOT=/home/runner/work/ccpp-scm/ccpp-scm/" >> $GITHUB_ENV
+
+    - name: Download data for SCM
+      run: |
+        cd /home/runner/work/ccpp-scm/ccpp-scm/
+        ./contrib/get_all_static_data.sh
+        ./contrib/get_thompson_tables.sh
+
+    - name: Configure build with CMake
+      run: |
+        cd /home/runner/work/ccpp-scm/ccpp-scm/scm
+        mkdir bin && cd bin
+        cmake ../src
+
+    - name: Build SCM
+      run: |
+        cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
+        make -j4
+
+    - name: Run SCM RTs
+      run: |
+        cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py
