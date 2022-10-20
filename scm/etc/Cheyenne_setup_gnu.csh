@@ -34,7 +34,7 @@ module load hpc-gnu/10.1.0
 module load hpc-mpt/2.22
 setenv bacio_ROOT /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/bacio/2.4.1
 setenv sp_ROOT /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/sp/2.3.3
-setenv w3nco_ROOT /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/w3nco/2.4.1
+setenv w3emc_ROOT  /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/w3emc/2.9.2
 
 echo "Setting CC/CXX/FC environment variables"
 setenv CC gcc

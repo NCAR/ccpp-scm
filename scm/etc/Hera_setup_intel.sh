@@ -18,7 +18,7 @@ module load netcdf
 echo "Setting up NCEPLIBS"
 export bacio_ROOT=/scratch2/NCEPDEV/nwprod/hpc-stack/libs/hpc-stack/intel-2022.1.2/bacio/2.4.1
 export sp_ROOT=/scratch2/NCEPDEV/nwprod/hpc-stack/libs/hpc-stack/intel-2022.1.2/sp/2.3.3
-export w3nco_ROOT=/scratch2/NCEPDEV/nwprod/hpc-stack/libs/hpc-stack/intel-2022.1.2/w3nco/2.4.1
+export w3emc_ROOT=/scratch2/NCEPDEV/nwprod/hpc-stack/libs/hpc-stack/intel-2022.1.2/w3emc/2.9.2
 
 echo "Setting CC/CXX/FC environment variables"
 export CC=icc
