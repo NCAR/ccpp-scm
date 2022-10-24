@@ -596,21 +596,20 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     for k in range(0,nlevs_model):
         #from gmtb_scm_vgrid
         pressure_model[k] = ((1.0/(rocp+1.0))*(pressure_model_interfaces[k]**(rocp+1.0) - pressure_model_interfaces[k+1]**(rocp+1.0))/(pressure_model_interfaces[k] - pressure_model_interfaces[k+1]))**(1.0/rocp)
-    
     #put data in a dictionary
     state = {
         "nlevs": nlevs_model,
-        "z": zh_rev[::-1],
-        "u": u_model_rev[0][::-1],
-        "v": v_model_rev[0][::-1],
+        "zh": zh_rev[nlevs_model:0:-1],
+        "ua": u_model_rev[0][::-1],
+        "va": v_model_rev[0][::-1],
         "qv": sphum_model_rev[0][::-1],
         "o3": o3_model_rev[0][::-1],
         "ql": liqwat_model_rev[0][::-1],
         "qi": icewat_model_rev[::-1],
-        "p_surf": ps_calc,
-        "T": temp_model_rev[0,::-1],
-        "pres": pressure_model,
-        "pres_i": pressure_model_interfaces
+        "ps": ps_calc,
+        "ta": temp_model_rev[0,::-1],
+        "pa": pressure_model,
+        "pa_i": pressure_model_interfaces
     }
         
     return state
@@ -1145,17 +1144,17 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         #Noah LSM
         "tsfco": tsfco_in,  
         "tg3": tg3_in,
-        "uustar": uustar_in,
+        "ustar": uustar_in,
         "alvsf": alvsf_in,
         "alvwf": alvwf_in,
         "alnsf": alnsf_in,
         "alnwf": alnwf_in,
         "facsf": facsf_in,
         "facwf": facwf_in,
-        "styp": styp_in,
-        "slope": slope_in,
-        "vtyp": vtyp_in,
-        "vfrac": vfrac_in,
+        "soiltyp": styp_in,
+        "slopetyp": slope_in,
+        "vegtyp": vtyp_in,
+        "vegfrac": vfrac_in,
         "shdmin": shdmin_in,
         "shdmax": shdmax_in,
         "zorlo": zorlo_in,
@@ -1166,7 +1165,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "tisfc": tisfc_in,
         "snwdph": snwdph_in,
         "snoalb": snoalb_in,
-        "sheleg": sheleg_in,
+        "weasd": sheleg_in,
         "f10m": f10m_in,
         "t2m": t2m_in,
         "q2m": q2m_in,
@@ -1325,11 +1324,11 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
         "gamma": gamma_in,
         "sigma": sigma_in,
         "elvmax": elvmax_in,
-        "orog_filt": orog_filt_in,
-        "orog_raw": orog_raw_in,
-        "land_frac": land_frac_in,
-        "lake_frac": lake_frac_in,
-        "lake_depth": lake_depth_in
+        "oro": orog_filt_in,
+        "oro_uf": orog_raw_in,
+        "landfrac": land_frac_in,
+        "lakefrac": lake_frac_in,
+        "lakedepth": lake_depth_in
     }
     return oro
 
@@ -1723,13 +1722,13 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
     valid_pres_i_adv= np.zeros([n_files,nlevs+1])
 
     # Interpolation range
-    from_p[0,:]     = state_IC["pres_i"][::-1]
+    from_p[0,:]     = state_IC["pa_i"][::-1]
     to_p[0,:]       = p_lev[0,::-1]
-    log_from_p[0,:] = np.log(state_IC["pres_i"][::-1])
+    log_from_p[0,:] = np.log(state_IC["pa_i"][::-1])
     log_to_p[0,:]   = np.log(p_lev[0,::-1])
 
     # Virtual Temperature @ time = 0
-    tv_init      = state_IC["T"]*(1.0 + zvir*state_IC["qv"])
+    tv_init      = state_IC["ta"]*(1.0 + zvir*state_IC["qv"])
     tv_init_rev  = tv_init[::-1]
     tv_rev_new   = fv3_remap.map_scalar(nlevs, log_from_p, tv_init_rev[np.newaxis, :], dummy, \
                                         nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
@@ -1746,35 +1745,35 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
     t_temp = tv_temp/(1.0 + zvir*qv_temp)
 
     # Zonal wind @ time = 0
-    u_init_rev  = state_IC["u"][::-1]
+    u_init_rev  = state_IC["ua"][::-1]
     u_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, u_init_rev[np.newaxis, :], 0.0,           \
                                      nlevs, to_p, 0, 0, -1, kord_tm )
     u_temp[0,:] = u_rev_new[0,::-1]
 
     # Meridional wind @ time = 0
-    v_init_rev  = state_IC["v"][::-1]
+    v_init_rev  = state_IC["va"][::-1]
     v_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, v_init_rev[np.newaxis, :], 0.0,           \
                                      nlevs, to_p, 0, 0, -1, kord_tm )
     v_temp[0,:] = v_rev_new[0,::-1]
 
     # Pressure advection @ time = 0
-    valid_pres_adv[0,:]   = state_IC["pres"]
-    valid_pres_i_adv[0,:] = state_IC["pres_i"]
+    valid_pres_adv[0,:]   = state_IC["pa"]
+    valid_pres_i_adv[0,:] = state_IC["pa_i"]
 
     # Moisture advection @ time = 0
     dqvdt_temp[0,:] = (qv_temp[0,:] - state_IC["qv"][:])/(3600.0*(time_dyn_hours[0]))
     dqvdt_adv[0,:]  = vars_dyn[iqv]["values"][0,:] - dqvdt_temp[0,:]
 
     # Temperature advection @ time = 0
-    dtdt_temp[0,:]  = (t_temp[0,:] - state_IC["T"][:])/(3600.0*(time_dyn_hours[0]))
+    dtdt_temp[0,:]  = (t_temp[0,:] - state_IC["ta"][:])/(3600.0*(time_dyn_hours[0]))
     dtdt_adv[0,:]   = vars_dyn[itemp]["values"][0,:] - dtdt_temp[0,:]
 
     # u-momentum advection @ time = 0
-    dudt_temp[0,:]  = (u_temp[0,:] - state_IC["u"][:])/(3600.0*(time_dyn_hours[0]))
+    dudt_temp[0,:]  = (u_temp[0,:] - state_IC["ua"][:])/(3600.0*(time_dyn_hours[0]))
     dudt_adv[0,:]   = vars_dyn[iu]["values"][0,:] - dudt_temp[0,:]
 
     # v-momentum advection @ time = 0
-    dvdt_temp[0,:]  = (v_temp[0,:] - state_IC["v"][:])/(3600.0*(time_dyn_hours[0]))
+    dvdt_temp[0,:]  = (v_temp[0,:] - state_IC["va"][:])/(3600.0*(time_dyn_hours[0]))
     dvdt_adv[0,:]   = vars_dyn[iv]["values"][0,:] - dvdt_temp[0,:]
 
     # @ time > 0
@@ -1975,7 +1974,7 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
         if orig_SCM_format:
             h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
             for k in range(nlevs):
-                h_advec_thil[k,0] = (p0/state_IC["pres"][k])**kappa*dtdt_adv_at_init_pres[0,k]
+                h_advec_thil[k,0] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[0,k]
             h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
             h_advec_v[:,0] = dvdt_adv_at_init_pres[0,:]
         else:
@@ -1992,7 +1991,7 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
             if orig_SCM_format:
                 h_advec_qt[:,t] = dqvdt_adv_at_init_pres[t,:]
                 for k in range(nlevs):
-                    h_advec_thil[k,t] = (p0/state_IC["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
+                    h_advec_thil[k,t] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[t,k]
                 h_advec_u[:,t] = dudt_adv_at_init_pres[t,:]
                 h_advec_v[:,t] = dvdt_adv_at_init_pres[t,:]
             else:
@@ -2030,7 +2029,7 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
             h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
             h_advec_qt[:,1] = h_advec_qt[:,0]
             for k in range(nlevs):
-                h_advec_thil[k,0] = (p0/state_IC["pres"][k])**kappa*dtdt_adv_at_init_pres[0,k]
+                h_advec_thil[k,0] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[0,k]
             h_advec_thil[:,1] = h_advec_thil[:,0]
             h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
             h_advec_u[:,1] = h_advec_u[:,0]
@@ -2058,7 +2057,7 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
                 h_advec_qt[:,2*t] = dqvdt_adv_at_init_pres[t,:]
                 h_advec_qt[:,2*t+1] = h_advec_qt[:,2*t]
                 for k in range(nlevs):
-                    h_advec_thil[k,2*t] = (p0/state_IC["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
+                    h_advec_thil[k,2*t] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[t,k]
                 h_advec_thil[:,2*t+1] = h_advec_thil[:,2*t]
                 h_advec_u[:,2*t] = dudt_adv_at_init_pres[t,:]
                 h_advec_u[:,2*t+1] = h_advec_u[:,2*t]
@@ -2103,8 +2102,8 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
             h_advec_u[:,0] = 0.0
             h_advec_v[:,0] = 0.0
         else:
-            p_s[0] = state_IC['p_surf']
-            pressure_forc[:,0] = state_IC['pres']
+            p_s[0] = state_IC['ps']
+            pressure_forc[:,0] = state_IC['pa']
             tot_advec_T[:,0] = 0.0
             tot_advec_qv[:,0] = 0.0
             tot_advec_u[:,0] = 0.0
@@ -2117,7 +2116,7 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
             if orig_SCM_format:
                 h_advec_qt[:,2*t + 1] = dqvdt_adv_at_init_pres[t,:]
                 for k in range(nlevs):
-                    h_advec_thil[k,2*t + 1] = (p0/state_IC["pres"][k])**kappa*dtdt_adv_at_init_pres[t,k]
+                    h_advec_thil[k,2*t + 1] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[t,k]
                 h_advec_u[:,2*t + 1] = dudt_adv_at_init_pres[t,:]
                 h_advec_v[:,2*t + 1] = dvdt_adv_at_init_pres[t,:]
             else:
@@ -2192,40 +2191,26 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
         h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
 
     forcing = {
-        "time": time,
-        "w_ls": w_ls,
-        "omega": omega,
-        "u_g": u_g,
-        "v_g": v_g,
-        "u_nudge": u_nudge,
-        "v_nudge": v_nudge,
-        "T_nudge": T_nudge,
-        "thil_nudge": thil_nudge,
-        "qt_nudge": qt_nudge,
-        "rad_heating": rad_heating,
-        "h_advec_thil": h_advec_thil,
-        "v_advec_thil": v_advec_thil,
-        "h_advec_qt": h_advec_qt,
-        "v_advec_qt": v_advec_qt,
-        "h_advec_u": h_advec_u,
-        "h_advec_v": h_advec_v,
-        #"ps_forc": p_s, #uncomment when SCM switches to semi-Lagrangian vertical coordinate
-        "ps_forc": np.ones(ntimes)*ps[0],
-        "pressure_forc": pressure_forc.swapaxes(0,1),
-        "tot_advec_T": tot_advec_T.swapaxes(0,1),
-        "tot_advec_qv": tot_advec_qv.swapaxes(0,1),
-        "tot_advec_u": tot_advec_u.swapaxes(0,1),
-        "tot_advec_v": tot_advec_v.swapaxes(0,1)
+        "time":     time,
+        "wa":       w_ls,
+        "wap":      omega,
+        "tnta_rad": rad_heating,
+        "ps_forc":  np.ones(ntimes)*ps[0],
+        "pa_forc":  pressure_forc.swapaxes(0,1),
+        "tnta_adv": tot_advec_T.swapaxes(0,1),
+        "tnqv_adv": tot_advec_qv.swapaxes(0,1),
+        "tnua_adv": tot_advec_u.swapaxes(0,1),
+        "tnva_adv": tot_advec_v.swapaxes(0,1)
     }
     
     if (save_comp_data):
         comp_data = {
             "time": time_dyn_hours*3600.0,
-            "pressure": p_lay[0,:],
-            "temperature" : t_layr[:,0,::-1], #(time,nlevs)
+            "pa": p_lay[0,:],
+            "ta" : t_layr[:,0,::-1], #(time,nlevs)
             "qv" : qv_layr[:,0,::-1],
-            "u" : u_layr[:,0,::-1],
-            "v" : v_layr[:,0,::-1],
+            "ua" : u_layr[:,0,::-1],
+            "va" : v_layr[:,0,::-1],
             "vars_comp": vars_comp
         }
     else:
@@ -2311,7 +2296,7 @@ def add_noahmp_coldstart(surface, date):
         surface["cmxy"]     = 0.0
         surface["chxy"]     = 0.0
         surface["fwetxy"]   = 0.0
-        surface["sneqvoxy"] = surface["sheleg"]     # mm
+        surface["sneqvoxy"] = surface["weasd"]     # mm
         surface["alboldxy"] = 0.65
         surface["qsnowxy"]  = 0.0
         
@@ -2321,7 +2306,7 @@ def add_noahmp_coldstart(surface, date):
         surface["wtxy"]     = surface["waxy"]
         surface["zwtxy"]    = (25.0 + 2.0) - surface["waxy"] / 1000.0 /0.2
         
-        vegtyp = int(surface['vtyp'])
+        vegtyp = int(surface['vegtyp'])
         if (vegtyp == 0):
             vegtyp = 7
         if ((vegtyp == mptable_nml_active['ISBARREN']) or (vegtyp == mptable_nml_active['ISSNOW']) or  (vegtyp == mptable_nml_active['ISURBAN']) or (vegtyp == mptable_nml_active['ISWATER'])) :
@@ -2363,12 +2348,12 @@ def add_noahmp_coldstart(surface, date):
         
         snd = surface["snwdph"]/1000.0  # go to m from snwdph
         
-        if (surface["sheleg"] != 0.0 and snd == 0.0 ):
-            snd = surface["sheleg"]/1000.0
+        if (surface["weasd"] != 0.0 and snd == 0.0 ):
+            snd = surface["weasd"]/1000.0
             
         if (vegtyp == 15):                       # land ice in MODIS/IGBP
-            if ( surface["sheleg"] < 0.1):
-                surface["sheleg"] = 0.1
+            if ( surface["weasd"] < 0.1):
+                surface["weasd"] = 0.1
                 snd = 0.01
         
         dzsno = np.zeros(n_snow_layers)
@@ -2411,7 +2396,7 @@ def add_noahmp_coldstart(surface, date):
         for k in range(isnow, n_snow_layers):
             surface["tsnoxy"][k]  = surface["tgxy"]
             surface["snliqxy"][k] = 0.0
-            surface["snicexy"][k] = 1.00 * dzsno[k] * surface["sheleg"]/snd  #this line causes a warning
+            surface["snicexy"][k] = 1.00 * dzsno[k] * surface["weasd"]/snd  #this line causes a warning
             
             dzsnso[k] = -dzsno[k]
         
@@ -2424,7 +2409,7 @@ def add_noahmp_coldstart(surface, date):
         
         soilparm = read_noahmp_soil_table()
         
-        soiltyp  = int(surface["styp"])
+        soiltyp  = int(surface["soiltyp"])
         if (soiltyp != 0):
             #find the index of the soiltype from the "index" field
             index = soilparm["index"].index(soiltyp)
@@ -2839,7 +2824,7 @@ def write_SCM_case_file_orig(state, surface, oro, forcing, case, date):
     vegsrc.description = "vegetation soure (1-2)"
     
     vegtyp  = scalar_grp.createVariable('vegtyp',int_type)
-    vegtyp[:] = surface["vtyp"]
+    vegtyp[:] = surface["vegtyp"]
     vegtyp.description = "vegetation type (1-12)"
 
     soiltyp = scalar_grp.createVariable('soiltyp',int_type)
@@ -3432,7 +3417,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     #
     runtime           = timedelta(seconds=forcing['time'][-1])
     end_date          = start_date + runtime
-    start_date_string = start_date.strftime("%Y%m%d%H%M%S")
+    end_date_string   = end_date.strftime("%Y-%m-%d %H:%M:%S")
+    start_date_string = start_date.strftime("%Y-%m-%d %H:%M:%S")
     #
     loc_string  = str(round(surface["lon"],2)) + "E" + str(round(surface["lat"],2)) + "N"
     case_string = 'UFS_' + start_date_string + '_' + loc_string
@@ -3441,73 +3427,70 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     nc_file.title          = 'Forcing and Initial Conditions for ' + case_string
     nc_file.reference      = ''
     nc_file.author         = 'Grant J. Firl and Dustin Swales'
-    nc_file.version        = 'Created on ' + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+    nc_file.version        = 'Created on ' + datetime.today().strftime('%Y-%m-%d %H:%M:%S')
     nc_file.format_version = '1.0'
+    nc_file.modifications  = ''
     nc_file.script         = os.path.basename(__file__)
     nc_file.comment        = ''
-    nc_file.startDate      = start_date_string
-    nc_file.endDate        = end_date.strftime("%Y%m%d%H%M%S")
+    nc_file.start_date     = start_date_string
+    nc_file.end_date       = end_date_string
 
     # Start with all forcing switches OFF
-    nc_file.adv_theta        = forcing_off
-    nc_file.adv_thetal       = forcing_off
-    nc_file.rad_temp         = forcing_off
-    nc_file.rad_theta        = forcing_off
-    nc_file.rad_thetal       = forcing_off
-    nc_file.adv_qt           = forcing_off
-    nc_file.adv_rv           = forcing_off
-    nc_file.adv_rt           = forcing_off
-    nc_file.forc_w           = forcing_off
-    nc_file.forc_omega       = forcing_off
-    nc_file.forc_geo         = forcing_off
-    nc_file.nudging_u        = forcing_off
-    nc_file.nudging_v        = forcing_off
-    nc_file.nudging_temp     = forcing_off
-    nc_file.nudging_theta    = forcing_off
-    nc_file.nudging_thetal   = forcing_off
-    nc_file.nudging_qv       = forcing_off
-    nc_file.nudging_qt       = forcing_off
-    nc_file.nudging_rv       = forcing_off
-    nc_file.nudging_rt       = forcing_off
-    nc_file.z_nudging_temp   = forcing_off
-    nc_file.z_nudging_theta  = forcing_off
-    nc_file.z_nudging_thetal = forcing_off
-    nc_file.z_nudging_qv     = forcing_off
-    nc_file.z_nudging_qt     = forcing_off
-    nc_file.z_nudging_rv     = forcing_off
-    nc_file.z_nudging_rt     = forcing_off
-    nc_file.z_nudging_u      = forcing_off
-    nc_file.z_nudging_v      = forcing_off
-    nc_file.p_nudging_temp   = forcing_off
-    nc_file.p_nudging_theta  = forcing_off
-    nc_file.p_nudging_thetal = forcing_off
-    nc_file.p_nudging_qv     = forcing_off
-    nc_file.p_nudging_qt     = forcing_off
-    nc_file.p_nudging_rv     = forcing_off
-    nc_file.p_nudging_rt     = forcing_off
-    nc_file.p_nudging_u      = forcing_off
-    nc_file.p_nudging_v      = forcing_off
-    nc_file.adv_temp         = forcing_off
-    nc_file.adv_qv           = forcing_off
-    nc_file.adv_u            = forcing_off
-    nc_file.adv_v            = forcing_off
+    nc_file.adv_ta            = forcing_off
+    nc_file.adv_qv            = forcing_off
+    nc_file.adv_ua            = forcing_off
+    nc_file.adv_va            = forcing_off
+    nc_file.adv_theta         = forcing_off
+    nc_file.adv_thetal        = forcing_off
+    nc_file.adv_qt            = forcing_off
+    nc_file.adv_rv            = forcing_off
+    nc_file.adv_rt            = forcing_off
+    nc_file.radiation         = forcing_off
+    nc_file.forc_wa           = forcing_off
+    nc_file.forc_wap          = forcing_off
+    nc_file.forc_geo          = forcing_off
+    nc_file.nudging_ua        = forcing_off
+    nc_file.nudging_va        = forcing_off
+    nc_file.nudging_ta        = forcing_off
+    nc_file.nudging_theta     = forcing_off
+    nc_file.nudging_thetal    = forcing_off
+    nc_file.nudging_qv        = forcing_off
+    nc_file.nudging_qt        = forcing_off
+    nc_file.nudging_rv        = forcing_off
+    nc_file.nudging_rt        = forcing_off
+    nc_file.zh_nudging_ta     = forcing_off
+    nc_file.zh_nudging_theta  = forcing_off
+    nc_file.zh_nudging_thetal = forcing_off
+    nc_file.zh_nudging_qv     = forcing_off
+    nc_file.zh_nudging_qt     = forcing_off
+    nc_file.zh_nudging_rv     = forcing_off
+    nc_file.zh_nudging_rt     = forcing_off
+    nc_file.zh_nudging_ua     = forcing_off
+    nc_file.zh_nudging_va     = forcing_off
+    nc_file.pa_nudging_ta     = forcing_off
+    nc_file.pa_nudging_theta  = forcing_off
+    nc_file.pa_nudging_thetal = forcing_off
+    nc_file.pa_nudging_qv     = forcing_off
+    nc_file.pa_nudging_qt     = forcing_off
+    nc_file.pa_nudging_rv     = forcing_off
+    nc_file.pa_nudging_rt     = forcing_off
+    nc_file.pa_nudging_ua     = forcing_off
+    nc_file.pa_nudging_va     = forcing_off
     #
-    nc_file.zorog            = oro['orog_filt']
+    #nc_file.zorog            = oro['orog_filt']
     nc_file.z0               = surface['zorlo']
-    nc_file.surfaceType      = surface_string
+    nc_file.surface_type      = surface_string
     #
     if (add_UFS_dyn_tend):
-        nc_file.adv_temp     = forcing_on
-        nc_file.adv_qv       = forcing_on
-        nc_file.adv_u        = forcing_on
-        nc_file.adv_v        = forcing_on
+        nc_file.adv_ta = forcing_on
+        nc_file.adv_qv = forcing_on
+        nc_file.adv_ua = forcing_on
+        nc_file.adv_va = forcing_on
     #
-    if (add_UFS_NOAH_lsm):
-        nc_file.surfaceForcing     = 'lsm'
-        nc_file.surfaceForcingWind = 'lsm'
-    else:
-        nc_file.surfaceForcing     = 'none'
-        nc_file.surfaceForcingWind = 'none'
+    nc_file.surface_forcing_temp     = 'none'
+    nc_file.surface_forcing_moisture = 'none'
+    nc_file.surface_forcing_wind     = 'none'
+    nc_file.surface_forcing_lsm      = 'noah' #'noahmp' #'ruc'
 
     # Set file dimension
     time_dim         = nc_file.createDimension('time', len(forcing['time']))
@@ -3521,60 +3504,42 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     ice_dim          = nc_file.createDimension('nice',  nice)
     
     #
-    init_time_var              = nc_file.createVariable('t0', real_type, ('t0',))
-    init_time_var.units        = 'seconds since ' + str(start_date)
-    init_time_var.description  = 'Initial time'
-    init_time_var.calendar     = 'gregorian'
-    init_time_var[:]           = 0.0
+    init_time_var               = nc_file.createVariable('t0', real_type, ('t0',))
+    init_time_var.units         = 'seconds since ' + start_date_string
+    init_time_var.standard_name = 'Initial time'
+    init_time_var.calendar      = 'gregorian'
+    init_time_var[:]            = 0.0
     #
     time_var                   = nc_file.createVariable('time', real_type, ('time',))
-    time_var.units             = 'seconds since ' + str(start_date)
-    time_var.long_name         = 'Forcing time'
+    time_var.units             = 'seconds since ' + start_date_string
+    time_var.standard_name     = 'Forcing time'
+    time_var.calendar          = 'gregorian'
     time_var[:]                = forcing['time']
-
     #
-    lev_var                    = nc_file.createVariable('lev', real_type, ('lev',))
-    lev_var.units              = 'Pa'
-    lev_var.long_name          = 'pressure'
-    lev_var[:]                 = state["pres"]
-    #
-    soil_depth_var             = nc_file.createVariable('soil_depth', real_type, ('nsoil',))
-    soil_depth_var.units       = 'm'
-    soil_depth_var.long_name   = 'depth of bottom of soil layers'
-    soil_depth_var[:]          = [0.1,0.4,1.0,2.0]
-    #    
-    lat_var                    = nc_file.createVariable('lat', real_type, ('lat',))
-    lat_var.units              = 'degrees_north'
-    lat_var.long_name          = "Latitude"
-    lat_var[:]                 = surface["lat"]
-    #
-    lon_var                    = nc_file.createVariable('lon', real_type, ('lon',))
-    lon_var.units              = 'degrees_east'
-    lon_var.long_name          = "Longitude"
-    lon_var[:]                 = surface["lon"]
+    soil_depth_var               = nc_file.createVariable('soil_depth', real_type, ('nsoil',))
+    soil_depth_var.units         = 'm'
+    soil_depth_var.standard_name = 'depth of bottom of soil layers'
+    soil_depth_var[:]            = [0.1,0.4,1.0,2.0]
     #
     zorlw_var                  = nc_file.createVariable('zorlw', real_type, ('t0', 'lat', 'lon'))
     zorlw_var.units            = "cm"
-    zorlw_var.long_name        = "surface roughness length over ocean"
+    zorlw_var.standard_name    = "surface roughness length over ocean"
     zorlw_var[:]               = missing_value
     #
     zorll_var                  = nc_file.createVariable('zorll', real_type, ('t0', 'lat', 'lon'))
     zorll_var.units            = "cm"
-    zorll_var.long_name        = "surface roughness length over land"
+    zorll_var.standard_name    = "surface roughness length over land"
     zorll_var[:]               = missing_value
     #
     zorli_var                  = nc_file.createVariable('zorli', real_type, ('t0', 'lat', 'lon'))
     zorli_var.units            = "cm"
-    zorli_var.long_name        = "surface roughness length over ice"
+    zorli_var.standard_name    = "surface roughness length over ice"
     zorli_var[:]               = missing_value
 
     theta_oro                 = nc_file.createVariable('theta_oro',real_type, ('t0','lat','lon',))
-    theta_oro[:]              = oro["theta"]
     theta_oro.units           = "deg"
-    theta_oro.long_name       = "angle with respect to east of maximum subgrid orographic variations"
-
-#    call NetCDF_read_var(grp_ncid, "snodl",   .False., input_snodl)
-#    call NetCDF_read_var(grp_ncid, "weasdl",  .False., input_weasdl)
+    theta_oro.standard_name   = "angle with respect to east of maximum subgrid orographic variations"
+    theta_oro[:]              = oro["theta"]
 
     #
     if (surface_string == "ice"):
@@ -3598,27 +3563,82 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     ########################################################################################
     #
     # Dictonary format:
-    # {"name": "", "type", "dimd": (), "units": "", "description": "", "alias": ""}
+    # {"name": "", "type", "dimd": (), "units": "", "description": ""}
     #
     ######################################################################################## 
-    var_dict = [{"name": "p_surf",       "type":real_type, "dimd": ('t0',          'lat', 'lon'),         "units": "Pa",      "description": "inital surface pressure", "alias":"ps"}, \
-                {"name": "T",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "K",       "description": "Temperature", "alias":"temp"}, \
-                {"name": "u",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "m s-1",   "description": "Zonal wind"}, \
-                {"name": "v",            "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "m s-1",   "description": "Meridional wind"}, \
-                {"name": "pres",         "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "Pa",      "description": "Pressure", "alias": "pressure"}, \
-                {"name": "qt",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "kg kg-1", "description": "Total water content"}, \
-                {"name": "qv",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "kg kg-1", "description": "Total pecific humidity"}, \
-                {"name": "ql",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "kg kg-1", "description": "Liquid water specific humidity"}, \
-                {"name": "qi",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "kg kg-1", "description": "Ice water specific humidity", "default_value": 0.0}, \
-                {"name": "rv",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "kg kg-1", "description": "Water vapor mixing ratio"}, \
-                {"name": "rt",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "kg kg-1", "description": "Total water mixing ratio"}, \
-                {"name": "tke",          "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "m2 s-2",  "description": "Turbulen kinetic energy", "default_value": 0.0}, \
-                {"name": "height",       "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "m",       "description": "Height above ground"},\
-                {"name": "theta",        "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "K",       "description": "Potential temperature"},\
-                {"name": "thetal",       "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "K",       "description": "Liquid potential temperature"}, \
-                {"name": "o3",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'),         "units": "kg kg-1", "description": "initial profile of ozone mass mixing ratio", "alias": "ozone"}, \
-                {"name": "area",         "type":real_type, "dimd": ('t0',          'lat', 'lon'),         "units": "m^2",     "description": "grid cell area"}]
-    var_oro  = [{"name": "stddev",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "standard deviation of subgrid orography"}, \
+    var_dict = [{"name": "lat",          "type":real_type, "dimd": ('t0'                     ),   "units": "degrees_north", "description": "latitude"},\
+                {"name": "lon",          "type":real_type, "dimd": ('t0'                     ),   "units": "degrees_east",  "description": "longitude"},\
+                {"name": "orog",         "type":real_type, "dimd": ('t0'                     ),   "units": "m",             "description": "surface_altitude"},\
+                {"name": "zh",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m",             "description": "height"},\
+                {"name": "pa",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "Pa",            "description": "air_ressure"}, \
+                {"name": "zh_forc",      "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m",             "description": "height_forcing","default_value": 1.},\
+                {"name": "pa_forc",      "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "Pa",            "description": "air_pressure_forcing"}, \
+                {"name": "ta",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "K",             "description": "air_temperature"}, \
+                {"name": "theta",        "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "K",             "description": "air_potential_temperature"}, \
+                {"name": "thetal",       "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "K",             "description": "air_liquid_potential_temperature"}, \
+                {"name": "rv",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "humidity_mixing_ratio"}, \
+                {"name": "rl",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "cloud_liquid_water_mixing_ratio"}, \
+                {"name": "ri",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "cloud_ice_water_mixing_ratio"}, \
+                {"name": "rt",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "water_mixing_ratio"}, \
+                {"name": "qv",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "specific_humidity"}, \
+                {"name": "ql",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "mass_fraction_of_cloud_liquid_water_in_air"}, \
+                {"name": "qi",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "mass_fraction_of_cloud_ice_water_in_air", "default_value": 0.0}, \
+                {"name": "qt",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "mass_fraction_of_water_in_air"}, \
+                {"name": "hur",          "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "%",             "description": "relative_humidity"}, \
+                {"name": "tke",          "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m2 s-2",        "description": "specific_turbulen_kinetic_energy", "default_value": 0.0}, \
+                {"name": "ua",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m s-1",         "description": "eastward_wind"}, \
+                {"name": "va",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m s-1",         "description": "northward_wind"}, \
+                {"name": "wa",           "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "upward_air_velocity"}, \
+                {"name": "wap",          "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "Pa s-1",        "description": "lagrangian_tendency_of_air_pressure"}, \
+                {"name": "ug",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m s-1",         "description": "geostrophic_eastward_wind"}, \
+                {"name": "vg",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "m s-1",         "description": "geostrophic_northward_wind"}, \
+                {"name": "tnua_adv",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m s-2",         "description": "tendency_of_eastward_wind_due_to_advection"},\
+                {"name": "tnva_adv",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m s-2",         "description": "tendency_of_northward_wind_due_to_advection"}, \
+                {"name": "tnta_adv",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K s-1",         "description": "tendency_of_air_temperature_due_to_advection"}, \
+                {"name": "tntheta_adv",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K s-1",         "description": "tendency_of_air_potential_temperature_due_to_advection"}, \
+                {"name": "tnthetal_adv", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K s-1",         "description": "tendency_of_air_liquid_potential_temperature_due_to_advection"}, \
+                {"name": "tnqv_adv",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "kg kg-1 s-1",   "description": "tendency_of_specific_humidity_due_to_advection"},\
+                {"name": "tnqt_adv",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "kg kg-1 s-1",   "description": "tendency_of_mass_fraction_of_water_in_air_due_to_advection"},\
+                {"name": "tnrv_adv",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "kg kg-1 s-1",   "description": "tendency_of_humidity_mixing_ratio_due_to_advection"},\
+                {"name": "tnrt_adv",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "kg kg-1 s-1",   "description": "tendency_of_water_mixing_ratio_due_to_advection"},\
+                {"name": "tnta_rad",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K s-1",         "description": "tendency_of_air_temperature_due_to_radiative_heating"}, \
+                {"name": "tntheta_rad",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K s-1",         "description": "tendency_of_potential_air_temperature_due_to_radiative_heating"}, \
+                {"name": "tnthetal_rad", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K s-1",         "description": "tendency_of_air_liquid_potential_temperature_due_to_radiative_heating"}, \
+                {"name": "ta_nud",       "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K",             "description": "nudging_air_temperature"}, \
+                {"name": "theta_nud",    "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K",             "description": "nudging_air_potential_temperature"}, \
+                {"name": "thetal_nud",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "K",             "description": "nudging_air_liquid_potential_temperature"}, \
+                {"name": "qt_nud",       "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "nudging_mass_fraction_of_water_in_air"}, \
+                {"name": "rv_nud",       "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "nudging_humidity_mixing_ratio"}, \
+                {"name": "rt_nud",       "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "nudging_water_mixing_ratio"}, \
+                {"name": "ua_nud",       "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "nudging_eastward_wind"}, \
+                {"name": "va_nud",       "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'), "units": "m s-1",         "description": "nudging_northward_wind"}, \
+                {"name": "hfss",         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "W m-2",         "description": "surface_upward_sensible_heat_flux"}, \
+                {"name": "hfls",         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "W m-2",         "description": "surface_upward_latent_heat_flux"}, \
+                {"name": "wpthetap_s",   "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "K m s-1",       "description": "surface_upward_potential_temperature_flux"}, \
+                {"name": "wpqvp_s",      "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m s-1",         "description": "surface_upward_specific_humidity_flux"}, \
+                {"name": "wpqtp_s",      "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m s-1",         "description": "surface_upward_water_mass_fraction_flux"}, \
+                {"name": "wprvp_s",      "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m s-1",         "description": "surface_upward_humidity_mixing_ratio_flux"}, \
+                {"name": "wprtp_s",      "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m s-1",         "description": "surface_upward_water_mixing_ratio_flux"}, \
+                {"name": "ts",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "K",             "description": "surface_temperature"},\
+                {"name": "ts_forc",      "type":real_type, "dimd": ('time',        'lat', 'lon'), "units": "K",             "description": "forcing_surface_temperature"},\
+                {"name": "tskin",        "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "K",             "description": "surface_skin_pressure"}, \
+                {"name": "ps",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "Pa",            "description": "surface_air_pressure"}, \
+                {"name": "ps_forc",      "type":real_type, "dimd": ('time',        'lat', 'lon'), "units": "Pa",            "description": "forcing_surface_air_pressure"},\
+                {"name": "ustar",        "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m s-1",         "description": "surface_friction_velocity"}, \
+                {"name": "z0",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",             "description": "surface_roughness_length_for_momentum_in_air"}, \
+                {"name": "z0h",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",             "description": "surface_roughness_length_for_heat_in_air"}, \
+                {"name": "z0q",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",             "description": "surface_roughness_length_for_humidity_in_air"}, \
+                {"name": "beta",         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "m",             "description": "soil_water_stress_factor"}, \
+                {"name": "mrsos",        "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "kg m-2",        "description": "mass_content_of_water_in_soil_layer"}, \
+                {"name": "mrsos_forc",   "type":real_type, "dimd": ('time',        'lat', 'lon'), "units": "kg m-2",        "description": "forcing_mass_content_of_water_in_soil_layer"}, \
+                {"name": "o3",           "type":real_type, "dimd": ('t0',   'lev', 'lat', 'lon'), "units": "kg kg-1",       "description": "mole_fraction_of_ozone_in_air"}, \
+                {"name": "sza",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "degree",        "description": "solar_zenith_angle"}, \
+                {"name": "io",           "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "W m-2",         "description": "solar_irradiance"}, \
+                {"name": "alb",          "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "1",             "description": "surface_albedo"}, \
+                {"name": "emis",         "type":real_type, "dimd": ('t0',          'lat', 'lon'), "units": "1",             "description": "surface_longwave_emissivity"}]
+
+    var_oro  = [{"name": "area",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m 2-1",   "description": "grid_cell_area"},\
+                {"name": "stddev",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "standard deviation of subgrid orography"}, \
                 {"name": "convexity",    "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "convexity of subgrid orography"}, \
                 {"name": "oa1",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "assymetry of subgrid orography 1"}, \
                 {"name": "oa2",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "assymetry of subgrid orography 2"}, \
@@ -3631,11 +3651,11 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "sigma",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "slope of subgrid orography"}, \
                 {"name": "gamma",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "anisotropy of subgrid orography"}, \
                 {"name": "elvmax",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "maximum of subgrid orography"}, \
-                {"name": "orog_filt",    "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "orography", "alias": "oro"}, \
-                {"name": "orog_raw",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "unfiltered orography", "alias": "oro_uf"}, \
-                {"name": "land_frac",    "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "fraction of horizontal grid area occupied by land", "alias": "landfrac"}, \
-                {"name": "lake_frac" ,   "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "fraction of horizontal grid area occupied by lake", "alias": "lakefrac", "default_value":0}, \
-                {"name": "lake_depth",   "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "lake depth", "alias": "lakedepth", "default_value":0}]
+                {"name": "oro",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "orography"}, \
+                {"name": "oro_uf",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "unfiltered orography"}, \
+                {"name": "landfrac",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "fraction of horizontal grid area occupied by land"}, \
+                {"name": "lakefrac",     "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "fraction of horizontal grid area occupied by lake", "default_value":0}, \
+                {"name": "lakedepth",   "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "lake depth", "default_value":0}]
     var_nsst = [{"name": "tref",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "sea surface reference temperature for NSST"}, \
                 {"name": "z_c",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "sub-layer cooling thickness for NSST"}, \
                 {"name": "c_0",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "coefficient 1 to calculate d(Tz)/d(Ts) for NSST"}, \
@@ -3658,7 +3678,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     var_noah = [{"name": "vegsrc",       "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "vegetation source (1-2)", "default_value": 1}, \
                 {"name": "slmsk",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "land-sea-ice mask"}, \
                 {"name": "tsfco",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "sea/skin/ice surface temperature"}, \
-                {"name": "sheleg",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "mm",      "description": "water equivalent accumulated snow depth", "alias": "weasd"}, \
+                {"name": "weasd",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "mm",      "description": "water equivalent accumulated snow depth"}, \
                 {"name": "tg3",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "deep soil temperature"}, \
                 {"name": "alvsf",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "60 degree vis albedo with strong cosz dependency"}, \
                 {"name": "alnsf",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "60 degree nir albedo with strong cosz dependency"}, \
@@ -3666,14 +3686,13 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "alnwf",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "60 degree nir albedo with weak cosz dependency"}, \
                 {"name": "facsf",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "fractional coverage with strong cosz dependency"}, \
                 {"name": "facwf",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "fractional coverage with weak cosz dependency"}, \
-                {"name": "vfrac",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "vegetation fraction", "alias":"vegfrac"}, \
+                {"name": "vegfrac",      "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "vegetation fraction"}, \
                 {"name": "canopy",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "kg m-2",  "description": "amount of water stored in canopy"}, \
                 {"name": "f10m",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "ratio of sigma level 1 wind and 10m wind"}, \
                 {"name": "t2m",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "2-meter absolute temperature"}, \
                 {"name": "q2m",          "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "kg kg-1", "description": "2-meter specific humidity"}, \
-                {"name": "vtyp",         "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "vegetation type (1-12)", "alias": "vegtyp"}, \
-                {"name": "styp",         "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "soil type (1-12)", "alias":"soiltyp"}, \
-                {"name": "uustar",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m s-1",   "description": "friction velocity"}, \
+                {"name": "vegtyp",         "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "vegetation type (1-12)"}, \
+                {"name": "soiltyp",         "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "soil type (1-12)"}, \
                 {"name": "ffmm",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "Monin-Obukhov similarity function for momentum"}, \
                 {"name": "ffhh",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "Monin-Obukhov similarity function for heat"}, \
                 {"name": "hice",         "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "m",       "description": "sea ice thickness"}, \
@@ -3684,7 +3703,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "snwdph",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "mm",      "description": "water equivalent snow depth"}, \
                 {"name": "shdmin",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "minimum vegetation fraction"}, \
                 {"name": "shdmax",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "maximum vegetation fraction"}, \
-                {"name": "slope",        "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "slope type (1-9)", "alias":"slopetyp"}, \
+                {"name": "slopetyp",     "type":int_type,  "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "slope type (1-9)"}, \
                 {"name": "snoalb",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "maximum snow albedo"}, \
                 {"name": "sncovr",       "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "none",    "description": "surface snow area fraction"}, \
                 {"name": "tsfcl",        "type":real_type, "dimd": ('t0', 'lat', 'lon'),                  "units": "K",       "description": "surface skin temperature over land"}, \
@@ -3745,33 +3764,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "sh2o",             "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "none",    "description": "volume fraction of unfrozen soil moisture for RUC LSM"}, \
                 {"name": "smfr",             "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "none",    "description": "volume fraction of frozen soil moisture for RUC LSM"}, \
                 {"name": "flfr",             "type":real_type, "dimd": ('t0','nsoil','lat','lon',),       "units": "none",    "description": "flag for frozen soil physics for RUC LSM"}]
-    var_frc  = [{"name": "w_ls",         "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-1",       "description": "large scale vertical velocity"}, \
-                {"name": "omega",        "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "Pa s-1",      "description": "large scale pressure vertical velocity"}, \
-                {"name": "u_g",          "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-1",       "description": "large scale geostrophic E-W wind"}, \
-                {"name": "v_g",          "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-1",       "description": "large scale geostrophic N-S wind"}, \
-                {"name": "u_nudge",      "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-1",       "description": "E-W wind to nudge toward"}, \
-                {"name": "v_nudge",      "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-1",       "description": "N-S wind to nudge toward"}, \
-                {"name": "T_nudge",      "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K",           "description": "absolute temperature to nudge toward"}, \
-                {"name": "thil_nudge",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K",           "description": "potential temperature to nudge toward"}, \
-                {"name": "qt_nudge",     "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "kg kg-1",     "description": "total water content to nudge toward"}, \
-                {"name": "rad_heating",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K s-1",       "description": "prescribed radiative heating rate", "alias": "dT_dt_rad"}, \
-                {"name": "h_advec_thil", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K s-1",       "description": "prescribed theta_il tendency due to horizontal advection", "alias": "h_advec_thetail"}, \
-                {"name": "v_advec_thil", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K s-1",       "description": "prescribed theta_il tendency due to vertical advection",   "alias": "v_advec_thetail"}, \
-                {"name": "h_advec_qt",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "kg kg-1 s-1", "description": "prescribed q_t tendency due to horizontal advection"}, \
-                {"name": "v_advec_qt",   "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "kg kg-1 s-1", "description": "prescribed q_t tendency due to vertical advection"}, \
-                {"name": "tot_advec_T",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "K s-1",       "description": "Temperature large-scale advection", "alias": "temp_adv"},\
-                {"name": "tot_advec_qv", "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "kg kg-1 s-1", "description": "Specific humidity large-scale advection", "alias": "qv_adv"},\
-                {"name": "tot_advec_u",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-2",       "description": "Zonal wind large-scale advection", "alias": "u_adv"},\
-                {"name": "tot_advec_v",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m s-2",       "description": "Meridional wind large-scale advection", "alias": "v_adv"}, \
-                {"name": "T_surf",       "type":real_type, "dimd": ('time',        'lat', 'lon'),         "units": "K",           "description": "surface temperature"},\
-                {"name": "ps_forc",      "type":real_type, "dimd": ('time',        'lat', 'lon'),         "units": "Pa",          "description": "Surface pressure for forcing"},\
-                {"name": "pressure_forc","type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "Pa",          "description": "Pressure for forcing"},\
-                {"name": "height_forc",  "type":real_type, "dimd": ('time', 'lev', 'lat', 'lon'),         "units": "m",           "description": "Height above the ground for forcing","default_value": 1.}]
     
     #
     var_dict.extend(var_oro)
     var_dict.extend(var_nsst)
-    var_dict.extend(var_frc)
     var_dict.extend(var_lsm)
     var_dict.extend(var_ruc)
     var_dict.extend(var_noah)
@@ -3781,33 +3777,30 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     # Write all fields in "var_dict" to SCM input file.
     #
     for var in var_dict:
-        #
-        # Do we need to rename this variable? (e.g does it have an alias in variable dictionary)
-        #
-        var_name = var["name"]
-        if "alias" in var: var_name = var["alias"]
+        if (var["name"] in dict):
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["description"]
+            var_temp[:]            = dict[var["name"]]
+        elif "default_value" in var: 
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["description"]
+            var_temp[:]            = var["default_value"]
 
-        #
-        # Create variable
-        #
-        var_temp = nc_file.createVariable(var_name, var["type"], var["dimd"])
-
-        #
-        # Set variable attributes (copy from dictionary)
-        #
-        var_temp.units     = var["units"]
-        var_temp.long_name = var["description"]
-
-        #
-        # Set variable (copy from input dictionary? Set to default_value? Only if provided in dictionary. Otherwise, set to missing value)
-        #
-        if (var_name in dict) or ("alias" in var):
-            var_temp[:] = dict[var["name"]]
-        else:
-            # If field is not present, set to default_value if provided in dictionary, otherwise set to missing_value.
-            var_temp[:]     = missing_value 
-        if "default_value" in var: var_temp[:] = var["default_value"]
-
+#        # Create variable
+#        var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+#        var_temp.units         = var["units"]
+#        var_temp.standard_name = var["description"]
+#
+#        # Set variable (copy from input dictionary? Set to default_value? Only if provided in dictionary. Otherwise, set to missing value)
+#        if (var["name"] in dict):
+#            var_temp[:] = dict[var["name"]]
+#        else:
+#            # If field is not present, set to default_value if provided in dictionary, otherwise set to missing_value.
+#            var_temp[:]     = missing_value 
+#        if "default_value" in var: var_temp[:] = var["default_value"]
+#
     #
     # Close file
     #
@@ -3821,7 +3814,7 @@ def write_comparison_file(comp_data, case_name, date, surface):
     real_type = np.float64
     int_type = np.int32
 
-    nlevs = comp_data["pressure"].shape[0]
+    nlevs = comp_data["pa"].shape[0]
     ntime = comp_data["time"].shape[0]
 
     start_date = datetime(date["year"],date["month"],date["day"],date["hour"],date["minute"],date["second"])
@@ -3843,7 +3836,7 @@ def write_comparison_file(comp_data, case_name, date, surface):
     lev_var = nc_file.createVariable('lev', real_type, ('lev',))
     lev_var.units = 'Pa'
     lev_var.long_name = 'pressure'
-    lev_var[:] = comp_data["pressure"]
+    lev_var[:] = comp_data["pa"]
 
     time_dim = nc_file.createDimension('time', size=ntime)
     time_var = nc_file.createVariable('time', real_type, ('time',))
@@ -3884,7 +3877,7 @@ def write_comparison_file(comp_data, case_name, date, surface):
     temperature_var = nc_file.createVariable('temp', real_type, ('time', 'lev',))
     temperature_var.units = 'K'
     temperature_var.long_name = 'Temperature'
-    temperature_var[:] = comp_data["temperature"]
+    temperature_var[:] = comp_data["ta"]
 
     qv_var = nc_file.createVariable('qv', real_type, ('time', 'lev',))
     qv_var.units = 'kg kg-1'
@@ -3894,12 +3887,12 @@ def write_comparison_file(comp_data, case_name, date, surface):
     u_var = nc_file.createVariable('u', real_type, ('time', 'lev',))
     u_var.units = 'm s-1'
     u_var.long_name = 'zonal wind'
-    u_var[:] = comp_data["u"]
+    u_var[:] = comp_data["ua"]
 
     v_var = nc_file.createVariable('v', real_type, ('time', 'lev',))
     v_var.units = 'm s-1'
     v_var.long_name = 'meridional wind'
-    v_var[:] = comp_data["v"]
+    v_var[:] = comp_data["va"]
 
     for dtend in comp_data["vars_comp"]:
         try:

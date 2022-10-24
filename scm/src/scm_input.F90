@@ -940,7 +940,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable :: input_soil(:) !< soil depth
   
   ! global attributes
-  character(len=14)    :: char_startDate, char_endDate !format YYYYMMDDHHMMSS
+  character(len=19)    :: char_startDate, char_endDate !format YYYY-MM-DD HH:MM:SS
   integer :: init_year, init_month, init_day, init_hour, init_min, init_sec, end_year, end_month, end_day, end_hour, end_min, end_sec
   integer :: adv_u, adv_v, adv_temp, adv_theta, adv_thetal, adv_qv, adv_qt, adv_rv, adv_rt, forc_w, forc_omega, forc_geo
   integer :: rad_temp, rad_theta, rad_thetal
@@ -950,8 +950,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp) :: p_nudging_temp, p_nudging_theta, p_nudging_thetal, p_nudging_qv, p_nudging_qt, p_nudging_rv, p_nudging_rt, p_nudging_u, p_nudging_v
   real(kind=sp) :: input_zorog, input_z0
   character(len=5) :: input_surfaceType
-  character(len=11) :: input_surfaceForcing
-  character(len=5) :: input_surfaceForcingWind
+  character(len=11) :: input_surfaceForcingWind,input_surfaceForcingMoist,input_surfaceForcingLSM,input_surfaceForcingTemp
   
   ! initial variables (IC = Initial Condition)
   real(kind=sp), allocatable :: input_pres(:,:,:,:) !< IC pressure levels (Pa)
@@ -1221,80 +1220,81 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   !> - Read in the dimension variables (required).
   call NetCDF_read_var(ncid, "t0", .True., input_t0)
   call NetCDF_read_var(ncid, "time", .True., input_time)
-  call NetCDF_read_var(ncid, "lev", .True., input_lev)
   call NetCDF_read_var(ncid, "lat", .True., input_lat)
   call NetCDF_read_var(ncid, "lon", .True., input_lon)
   
   !> - Read in global attributes
 
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'startDate', .True., char_startDate)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'start_date', .True., char_startDate)
     
   read(char_startDate(1:4),'(i4)')   init_year
-  read(char_startDate(5:6),'(i2)')   init_month
-  read(char_startDate(7:8),'(i2)')   init_day
-  read(char_startDate(9:10),'(i2)')  init_hour
-  read(char_startDate(11:12),'(i2)') init_min
-  read(char_startDate(13:14),'(i2)') init_sec
+  read(char_startDate(6:7),'(i2)')   init_month
+  read(char_startDate(9:10),'(i2)')  init_day
+  read(char_startDate(12:13),'(i2)') init_hour
+  read(char_startDate(15:16),'(i2)') init_min
+  read(char_startDate(18:19),'(i2)') init_sec
   
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'endDate', .True., char_endDate)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'end_date', .True., char_endDate)
   
   read(char_endDate(1:4),'(i4)')   end_year
-  read(char_endDate(5:6),'(i2)')   end_month
-  read(char_endDate(7:8),'(i2)')   end_day
-  read(char_endDate(9:10),'(i2)')  end_hour
-  read(char_endDate(11:12),'(i2)') end_min
-  read(char_endDate(13:14),'(i2)') end_sec
+  read(char_endDate(6:7),'(i2)')   end_month
+  read(char_endDate(9:10),'(i2)')  end_day
+  read(char_endDate(12:13),'(i2)') end_hour
+  read(char_endDate(15:16),'(i2)') end_min
+  read(char_endDate(18:19),'(i2)') end_sec
   
   !compare init time to what was in case config file? replace?
-  
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_u',              .False., adv_u)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_v',              .False., adv_v)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_temp',           .False., adv_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_ua',             .False., adv_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_va',             .False., adv_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_ta',             .False., adv_temp)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_theta',          .False., adv_theta)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_thetal',         .False., adv_thetal)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'rad_temp',           .False., rad_temp, char_rad_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'rad_ta',             .False., rad_temp, char_rad_temp)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'rad_theta',          .False., rad_theta, char_rad_theta)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'rad_thetal',         .False., rad_thetal, char_rad_thetal)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_qv',             .False., adv_qv)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_qt',             .False., adv_qt)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_rv',             .False., adv_rv)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_rt',             .False., adv_rt)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_w',             .False., forc_w)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_omega',         .False., forc_omega)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_wa',            .False., forc_w)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_wap',           .False., forc_omega)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'forc_geo',           .False., forc_geo)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_temp',       .False., nudging_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_ta',         .False., nudging_temp)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_theta',      .False., nudging_theta)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_thetal',     .False., nudging_thetal)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_qv',         .False., nudging_qv)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_qt',         .False., nudging_qt)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_rv',         .False., nudging_rv)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_rt',         .False., nudging_rt)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_u',          .False., nudging_u)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_v',          .False., nudging_v)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_temp',     .False., z_nudging_temp)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_theta',    .False., z_nudging_theta)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_thetal',   .False., z_nudging_thetal)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_qv',       .False., z_nudging_qv)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_qt',       .False., z_nudging_qt)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_rv',       .False., z_nudging_rv)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_rt',       .False., z_nudging_rt)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_u',        .False., z_nudging_u)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'z_nudging_v',        .False., z_nudging_v)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_temp',     .False., p_nudging_temp)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_theta',    .False., p_nudging_theta)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_thetal',   .False., p_nudging_thetal)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_qv',       .False., p_nudging_qv)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_qt',       .False., p_nudging_qt)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_rv',       .False., p_nudging_rv)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_rt',       .False., p_nudging_rt)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_u',        .False., p_nudging_u)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'p_nudging_v',        .False., p_nudging_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_ua',         .False., nudging_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'nudging_va',         .False., nudging_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_ta',      .False., z_nudging_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_theta',   .False., z_nudging_theta)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_thetal',  .False., z_nudging_thetal)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_qv',      .False., z_nudging_qv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_qt',      .False., z_nudging_qt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_rv',      .False., z_nudging_rv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_rt',      .False., z_nudging_rt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_ua',      .False., z_nudging_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'zh_nudging_va',      .False., z_nudging_v)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_ta',      .False., p_nudging_temp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_theta',   .False., p_nudging_theta)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_thetal',  .False., p_nudging_thetal)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_qv',      .False., p_nudging_qv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_qt',      .False., p_nudging_qt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_rv',      .False., p_nudging_rv)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_rt',      .False., p_nudging_rt)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_ua',      .False., p_nudging_u)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'pa_nudging_va',      .False., p_nudging_v)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'zorog',              .False., input_zorog)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'z0',                 .False., input_z0)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surfaceType',        .False., input_surfaceType)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surfaceForcing',     .False., input_surfaceForcing)
-  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surfaceForcingWind', .False., input_surfaceForcingWind)
-  
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surface_type',       .False., input_surfaceType)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surface_forcing_temp',     .False., input_surfaceForcingTemp)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surface_forcing_moisture', .False., input_surfaceForcingMoist)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surface_forcing_wind',     .False., input_surfaceForcingWind)
+  call NetCDF_read_att(ncid, NF90_GLOBAL, 'surface_forcing_lsm',      .False., input_surfaceForcingLSM)
+
+
   !> - Allocate the initial variables.
   allocate(input_pres     (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
            input_height   (input_n_lon, input_n_lat, input_n_lev, input_n_init_times), &
@@ -1466,32 +1466,32 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   
   !>  - Read in the initial profiles.
   
-  call NetCDF_read_var(ncid, "pressure", .True., input_pres)
-  call NetCDF_read_var(ncid, "height", .True., input_height)
+  call NetCDF_read_var(ncid, "pa", .True., input_pres)
+  call NetCDF_read_var(ncid, "zh", .True., input_height)
   call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
-  call NetCDF_read_var(ncid, "u", .True., input_u)
-  call NetCDF_read_var(ncid, "v", .True., input_v)
+  call NetCDF_read_var(ncid, "ua", .True., input_u)
+  call NetCDF_read_var(ncid, "va", .True., input_v)
   
   !one of the following should be present, but not all, hence they are not requried
-  call NetCDF_read_var(ncid, "temp", .False., input_temp)
+  call NetCDF_read_var(ncid, "ta", .False., input_temp)
   call NetCDF_read_var(ncid, "theta", .False., input_theta)
   call NetCDF_read_var(ncid, "thetal", .False., input_thetal)
   
   !one or more of the following should be present, but not all, hence they are not requried
-  call NetCDF_read_var(ncid, "qv", .False., input_qv)
-  call NetCDF_read_var(ncid, "qt", .False., input_qt)
-  call NetCDF_read_var(ncid, "ql", .False., input_ql)
-  call NetCDF_read_var(ncid, "qi", .False., input_qi)
-  call NetCDF_read_var(ncid, "rv", .False., input_rv)
-  call NetCDF_read_var(ncid, "rt", .False., input_rt)
-  call NetCDF_read_var(ncid, "rl", .False., input_rl)
-  call NetCDF_read_var(ncid, "ri", .False., input_ri)
-  call NetCDF_read_var(ncid, "rh", .False., input_rh)
-  
+  call NetCDF_read_var(ncid, "qv",  .False., input_qv)
+  call NetCDF_read_var(ncid, "qt",  .False., input_qt)
+  call NetCDF_read_var(ncid, "ql",  .False., input_ql)
+  call NetCDF_read_var(ncid, "qi",  .False., input_qi)
+  call NetCDF_read_var(ncid, "rv",  .False., input_rv)
+  call NetCDF_read_var(ncid, "rt",  .False., input_rt)
+  call NetCDF_read_var(ncid, "rl",  .False., input_rl)
+  call NetCDF_read_var(ncid, "ri",  .False., input_ri)
+  call NetCDF_read_var(ncid, "hur", .False., input_rh)
+ 
   call NetCDF_read_var(ncid, "tke", .True., input_tke)
   
   if (model_ics) then
-    call NetCDF_read_var(ncid, "ozone",   .True.,  input_ozone)
+    call NetCDF_read_var(ncid, "o3",      .True.,  input_ozone)
     call NetCDF_read_var(ncid, "area",    .True.,  input_area)
     
     !orographic parameters
@@ -1580,60 +1580,59 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     stat=allocate_status)
   
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
-  call NetCDF_read_var(ncid, "height_forc", .True., input_force_height)
-  call NetCDF_read_var(ncid, "pressure_forc", .True., input_force_pres)
+  call NetCDF_read_var(ncid, "zh_forc", .True., input_force_height)
+  call NetCDF_read_var(ncid, "pa_forc", .True., input_force_pres)
   
   !conditionally read forcing vars (or set to missing); if the global attribute is set to expect a variable and it doesn't exist, stop the model
-  call NetCDF_conditionally_read_var(adv_u,      "adv_u",      "u_adv",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_adv)
-  call NetCDF_conditionally_read_var(adv_v,      "adv_v",      "v_adv",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_adv)
-  call NetCDF_conditionally_read_var(adv_temp,   "adv_temp",   "temp_adv",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_adv)
-  call NetCDF_conditionally_read_var(adv_theta,  "adv_theta",  "theta_adv",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_adv)
-  call NetCDF_conditionally_read_var(adv_thetal, "adv_thetal", "thetal_adv", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_adv)
-  call NetCDF_conditionally_read_var(adv_qt,     "adv_qt",     "qt_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qt_adv)
-  call NetCDF_conditionally_read_var(adv_qv,     "adv_qv",     "qv_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qv_adv)
-  call NetCDF_conditionally_read_var(adv_rt,     "adv_rt",     "rt_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rt_adv)
-  call NetCDF_conditionally_read_var(adv_rv,     "adv_rv",     "rv_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rv_adv)
-  
-  call NetCDF_conditionally_read_var(rad_temp,   "rad_temp",   "temp_rad",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_rad)
-  call NetCDF_conditionally_read_var(rad_theta,  "rad_theta",  "theta_rad",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_rad)
-  call NetCDF_conditionally_read_var(rad_thetal, "rad_thetal", "thetal_rad", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_rad)
+  call NetCDF_conditionally_read_var(adv_u,      "adv_ua",     "tnua_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_adv)
+  call NetCDF_conditionally_read_var(adv_v,      "adv_va",     "tnva_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_adv)
+  call NetCDF_conditionally_read_var(adv_temp,   "adv_ta",     "tnta_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_adv)
+  call NetCDF_conditionally_read_var(adv_theta,  "adv_theta",  "tntheta_adv",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_adv)
+  call NetCDF_conditionally_read_var(adv_thetal, "adv_thetal", "tnthetal_adv", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_adv)
+  call NetCDF_conditionally_read_var(adv_qt,     "adv_qt",     "tnqt_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qt_adv)
+  call NetCDF_conditionally_read_var(adv_qv,     "adv_qv",     "tnqv_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qv_adv)
+  call NetCDF_conditionally_read_var(adv_rt,     "adv_rt",     "tnrt_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rt_adv)
+  call NetCDF_conditionally_read_var(adv_rv,     "adv_rv",     "tnrv_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rv_adv)
+  call NetCDF_conditionally_read_var(rad_temp,   "rad_ta",     "tnta_rad",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_rad)
+  call NetCDF_conditionally_read_var(rad_theta,  "rad_theta",  "tntheta_rad",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_rad)
+  call NetCDF_conditionally_read_var(rad_thetal, "rad_thetal", "tnthetal_rad", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_rad)
   !need to also handle the case when rad_[temp,theta,thetal]_char = 'adv' (make sure [temp,theta,thetal]_adv is not missing)
   !need to also turn off radiation when radiation is being forced (put in a warning that this is not supported for now?)
   
-  call NetCDF_conditionally_read_var(forc_w,     "forc_w",   "w",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_w)
-  call NetCDF_conditionally_read_var(forc_omega, "forc_w",   "omega", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_omega)
+  call NetCDF_conditionally_read_var(forc_w,     "forc_w",   "wa",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_w)
+  call NetCDF_conditionally_read_var(forc_omega, "forc_wap", "wap",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_omega)
   call NetCDF_conditionally_read_var(forc_geo,   "forc_geo", "ug",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_g)
   call NetCDF_conditionally_read_var(forc_geo,   "forc_geo", "vg",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_g)
   
-  call NetCDF_conditionally_read_var(nudging_u,      "nudging_u",      "u_nudging",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_nudging)
-  call NetCDF_conditionally_read_var(nudging_v,      "nudging_v",      "v_nudging",      trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_nudging)
-  call NetCDF_conditionally_read_var(nudging_temp,   "nudging_temp",   "temp_nudging",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_nudging)
-  call NetCDF_conditionally_read_var(nudging_theta,  "nudging_theta",  "theta_nudging",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_nudging)
-  call NetCDF_conditionally_read_var(nudging_thetal, "nudging_thetal", "thetal_nudging", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_nudging)
-  call NetCDF_conditionally_read_var(nudging_qv,     "nudging_qv",     "qv_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qv_nudging)
-  call NetCDF_conditionally_read_var(nudging_qt,     "nudging_qt",     "qt_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qt_nudging)
-  call NetCDF_conditionally_read_var(nudging_rv,     "nudging_rv",     "rv_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rv_nudging)
-  call NetCDF_conditionally_read_var(nudging_rt,     "nudging_rt",     "rt_nudging",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rt_nudging)
-  
-  if (input_surfaceForcing == 'Flux') then
-    !read kinematic surface flux variables
-    call NetCDF_read_var(ncid, "wpthetap", .False., input_force_wpthetap)
-    call NetCDF_read_var(ncid, "wpqvp", .False., input_force_wpqvp)
-    call NetCDF_read_var(ncid, "wpqtp", .False., input_force_wpqtp)
-    call NetCDF_read_var(ncid, "wprvp", .False., input_force_wprvp)
-    call NetCDF_read_var(ncid, "wprtp", .False., input_force_wprtp)
-    !try to read in ts when surface fluxes are specified (needed for calculating bulk-Richardson number in specified surface flux scheme)
-    call NetCDF_read_var(ncid, "ts", .False., input_force_ts)
-  else if (input_surfaceForcing == 'surfaceFlux') then
-    !read W/m2 variables
-    call NetCDF_read_var(ncid, "sfc_sens_flx", .False., input_force_sfc_sens_flx)
-    call NetCDF_read_var(ncid, "sfc_lat_flx", .False., input_force_sfc_lat_flx)
-    !try to read in ts when surface fluxes are in W m-2 in order to be able to convert to kinematic (also needed for calculating bulk-Richardson number in specified surface flux scheme)
-    call NetCDF_read_var(ncid, "ts", .False., input_force_ts)
-  else if (input_surfaceForcing == 'ts') then
-    !read surface temperature
-    call NetCDF_read_var(ncid, "ts", .False., input_force_ts)
-  else if (input_surfaceForcing == "lsm") then
+  call NetCDF_conditionally_read_var(nudging_u,      "nudging_u",      "ua_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_nudging)
+  call NetCDF_conditionally_read_var(nudging_v,      "nudging_v",      "va_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_nudging)
+  call NetCDF_conditionally_read_var(nudging_temp,   "nudging_temp",   "ta_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_nudging)
+  call NetCDF_conditionally_read_var(nudging_theta,  "nudging_theta",  "theta_nud",  trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_theta_nudging)
+  call NetCDF_conditionally_read_var(nudging_thetal, "nudging_thetal", "thetal_nud", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_nudging)
+  call NetCDF_conditionally_read_var(nudging_qv,     "nudging_qv",     "qv_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qv_nudging)
+  call NetCDF_conditionally_read_var(nudging_qt,     "nudging_qt",     "qt_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_qt_nudging)
+  call NetCDF_conditionally_read_var(nudging_rv,     "nudging_rv",     "rv_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rv_nudging)
+  call NetCDF_conditionally_read_var(nudging_rt,     "nudging_rt",     "rt_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_rt_nudging)
+
+  if (trim(input_surfaceForcingTemp) == 'kinematic') then
+     call NetCDF_read_var(ncid, "wpthetap_s", .False., input_force_wpthetap)
+     call NetCDF_read_var(ncid, "ts_forc",    .False., input_force_ts)
+  else if (trim(input_surfaceForcingTemp) == 'surface_flux') then
+     call NetCDF_read_var(ncid, "hfss",       .False., input_force_sfc_sens_flx)
+     call NetCDF_read_var(ncid, "ts_forc",    .False., input_force_ts)
+  else if (trim(input_surfaceForcingTemp) == 'ts') then
+     call NetCDF_read_var(ncid, "ts_forc",    .False., input_force_ts)
+  endif
+  if (trim(input_surfaceForcingMoist) == 'kinematic') then
+     call NetCDF_read_var(ncid, "wpqvp_s",    .False., input_force_wpqvp)
+     call NetCDF_read_var(ncid, "wpqtp_s",    .False., input_force_wpqtp)
+     call NetCDF_read_var(ncid, "wprvp_s",    .False., input_force_wprvp)
+     call NetCDF_read_var(ncid, "wprtp_s",    .False., input_force_wprtp)
+  else if (trim(input_surfaceForcingMoist) == 'surface_flux') then
+     call NetCDF_read_var(ncid, "hfls",       .False., input_force_sfc_sens_flx)
+  endif
+
+  if (trim(input_surfaceForcingLSM) == "lsm") then
     if (model_ics) then
       call NetCDF_read_var(ncid, "stc",     .True., input_stc)
       call NetCDF_read_var(ncid, "smc",     .True., input_smc)
@@ -1738,13 +1737,13 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
   end if
   
-  if (input_surfaceForcingWind == 'z0') then
+  if (trim(input_surfaceForcingWind) == 'z0') then
     !check that z0 was not missing in the global attributes
     if (input_z0 < 0) then
       write(*,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the global attribute z0 should be present, but it is missing. Stopping ...'
       stop
     end if
-  else if (input_surfaceForcingWind == 'ustar') then
+  else if (trim(input_surfaceForcingWind) == 'ustar') then
     call NetCDF_read_var(ncid, "ustar", .False., input_force_ustar)
   end if
   
@@ -2030,7 +2029,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   end if
   !no sea ice type?
   
-  if (input_surfaceForcing == 'ts') then
+  if (input_surfaceForcingTemp == 'ts') then
     if (maxval(input_force_ts) < 0) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
       stop
@@ -2040,7 +2039,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_T_surf = input_force_ts(active_lon,active_lat,:)
       scm_state%surface_thermo_control = 2
     end if
-  else if (input_surfaceForcing == 'Flux') then
+  else if (input_surfaceForcingTemp == 'surface_flux') then
     !overwrite sfc_flux_spec
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 0
@@ -2104,7 +2103,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         scm_input%input_lh_flux_sfc_kin = input_force_wpqtp(active_lon,active_lat,:)
       end if
     end if
-  else if (input_surfaceForcing == 'surfaceFlux') then
+  else if (input_surfaceForcingTemp == 'surface_flux') then
     !overwrite sfc_flux_spec
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 1
@@ -2140,7 +2139,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     else
       scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(active_lon,active_lat,:)
     end if
-  else if (input_surfaceForcing == 'lsm') then
+  else if (trim(input_surfaceForcingLSM) == 'lsm') then
     !these were considered required variables above, so they should not need to be checked for missing
     scm_input%input_stc   = input_stc(active_lon,active_lat,:,active_init_time)
     scm_input%input_smc   = input_smc(active_lon,active_lat,:,active_init_time)  
