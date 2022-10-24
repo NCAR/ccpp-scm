@@ -2549,7 +2549,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     else:
         fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_noforce.nc')
 
-    nc_file = Dataset(fileOUT, 'w', format='NETCDF4')
+    nc_file = Dataset(fileOUT, 'w', format='NETCDF3_CLASSIC')
     if (add_UFS_dyn_tend):
         nc_file.description = "FV3GFS model profile input (UFS dynamic tendencies, SCM-UFS replay mode.)"
         nc_file.modifications = 'contains dynamic forcing from UFS'
@@ -2590,15 +2590,16 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     #
     nc_file.case           = case_string
     nc_file.title          = 'Forcing and Initial Conditions for ' + case_string
-    nc_file.reference      = ''
+    nc_file.reference      = 'https://dtcenter.org/sites/default/files/paragraph/scm-ccpp-guide-v6-0-0.pdf'
     nc_file.author         = 'Grant J. Firl and Dustin Swales'
     nc_file.version        = 'Created on ' + datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-    nc_file.format_version = '1.0'
+    nc_file.format_version = 'DEPHY SCM format version 1'
     nc_file.modifications  = ''
     nc_file.script         = os.path.basename(__file__)
     nc_file.comment        = ''
     nc_file.start_date     = start_date_string
     nc_file.end_date       = end_date_string
+    nc_file.forcing_scale  = -1
     nc_file.radiation      = "off"
     nc_file.adv_ta            = forcing_off
     nc_file.adv_qv            = forcing_off
@@ -2753,31 +2754,31 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "rt_nud",       "type":wp, "dimd": ('time', 'lev'),    "units": "m s-1",         "desc": "nudging_water_mixing_ratio"}, \
                 {"name": "ua_nud",       "type":wp, "dimd": ('time', 'lev'),    "units": "m s-1",         "desc": "nudging_eastward_wind"}, \
                 {"name": "va_nud",       "type":wp, "dimd": ('time', 'lev'),    "units": "m s-1",         "desc": "nudging_northward_wind"}, \
-                {"name": "hfss",         "type":wp, "dimd": ('time',      ),    "units": "W m-2",         "desc": "surface_upward_sensible_heat_flux"}, \
-                {"name": "hfls",         "type":wp, "dimd": ('time',      ),    "units": "W m-2",         "desc": "surface_upward_latent_heat_flux"}, \
-                {"name": "wpthetap_s",   "type":wp, "dimd": ('time',      ),    "units": "K m s-1",       "desc": "surface_upward_potential_temperature_flux"}, \
-                {"name": "wpqvp_s",      "type":wp, "dimd": ('time',      ),    "units": "m s-1",         "desc": "surface_upward_specific_humidity_flux"}, \
-                {"name": "wpqtp_s",      "type":wp, "dimd": ('time',      ),    "units": "m s-1",         "desc": "surface_upward_water_mass_fraction_flux"}, \
-                {"name": "wprvp_s",      "type":wp, "dimd": ('time',      ),    "units": "m s-1",         "desc": "surface_upward_humidity_mixing_ratio_flux"}, \
-                {"name": "wprtp_s",      "type":wp, "dimd": ('time',      ),    "units": "m s-1",         "desc": "surface_upward_water_mixing_ratio_flux"}, \
-                {"name": "ts",           "type":wp, "dimd": ('t0',        ),    "units": "K",             "desc": "surface_temperature"},\
-                {"name": "ts_forc",      "type":wp, "dimd": ('time',      ),    "units": "K",             "desc": "forcing_surface_temperature"},\
-                {"name": "tskin",        "type":wp, "dimd": ('t0',        ),    "units": "K",             "desc": "surface_skin_pressure"}, \
-                {"name": "ps",           "type":wp, "dimd": ('t0',        ),    "units": "Pa",            "desc": "surface_air_pressure"}, \
-                {"name": "ps_forc",      "type":wp, "dimd": ('time',      ),    "units": "Pa",            "desc": "forcing_surface_air_pressure"},\
-                {"name": "ustar",        "type":wp, "dimd": ('time',      ),    "units": "m s-1",         "desc": "surface_friction_velocity"}, \
-                #{"name": "z0",           "type":wp, "dimd": ('time',      ),    "units": "m",             "desc": "surface_roughness_length_for_momentum_in_air"}, \
-                {"name": "z0h",          "type":wp, "dimd": ('time',      ),    "units": "m",             "desc": "surface_roughness_length_for_heat_in_air"}, \
-                {"name": "z0q",          "type":wp, "dimd": ('time',      ),    "units": "m",             "desc": "surface_roughness_length_for_humidity_in_air"}, \
-                {"name": "beta",         "type":wp, "dimd": ('t0',        ),    "units": "m",             "desc": "soil_water_stress_factor"}, \
-                {"name": "mrsos",        "type":wp, "dimd": ('t0',        ),    "units": "kg m-2",        "desc": "mass_content_of_water_in_soil_layer"}, \
-                {"name": "mrsos_forc",   "type":wp, "dimd": ('time',      ),    "units": "kg m-2",        "desc": "forcing_mass_content_of_water_in_soil_layer"}, \
+                {"name": "hfss",         "type":wp, "dimd": ('time'       ),    "units": "W m-2",         "desc": "surface_upward_sensible_heat_flux"}, \
+                {"name": "hfls",         "type":wp, "dimd": ('time'       ),    "units": "W m-2",         "desc": "surface_upward_latent_heat_flux"}, \
+                {"name": "wpthetap_s",   "type":wp, "dimd": ('time'       ),    "units": "K m s-1",       "desc": "surface_upward_potential_temperature_flux"}, \
+                {"name": "wpqvp_s",      "type":wp, "dimd": ('time'       ),    "units": "m s-1",         "desc": "surface_upward_specific_humidity_flux"}, \
+                {"name": "wpqtp_s",      "type":wp, "dimd": ('time'       ),    "units": "m s-1",         "desc": "surface_upward_water_mass_fraction_flux"}, \
+                {"name": "wprvp_s",      "type":wp, "dimd": ('time'       ),    "units": "m s-1",         "desc": "surface_upward_humidity_mixing_ratio_flux"}, \
+                {"name": "wprtp_s",      "type":wp, "dimd": ('time'       ),    "units": "m s-1",         "desc": "surface_upward_water_mixing_ratio_flux"}, \
+                {"name": "ts",           "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_temperature"},\
+                {"name": "ts_forc",      "type":wp, "dimd": ('time'       ),    "units": "K",             "desc": "forcing_surface_temperature"},\
+                {"name": "tskin",        "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_skin_pressure"}, \
+                {"name": "ps",           "type":wp, "dimd": ('t0'         ),    "units": "Pa",            "desc": "surface_air_pressure"}, \
+                {"name": "ps_forc",      "type":wp, "dimd": ('time'       ),    "units": "Pa",            "desc": "forcing_surface_air_pressure"},\
+                {"name": "ustar",        "type":wp, "dimd": ('time'       ),    "units": "m s-1",         "desc": "surface_friction_velocity"}, \
+                #{"name": "z0",           "type":wp, "dimd": ('time'       ),    "units": "m",             "desc": "surface_roughness_length_for_momentum_in_air"}, \
+                {"name": "z0h",          "type":wp, "dimd": ('time'       ),    "units": "m",             "desc": "surface_roughness_length_for_heat_in_air"}, \
+                {"name": "z0q",          "type":wp, "dimd": ('time'       ),    "units": "m",             "desc": "surface_roughness_length_for_humidity_in_air"}, \
+                {"name": "beta",         "type":wp, "dimd": ('t0'         ),    "units": "m",             "desc": "soil_water_stress_factor"}, \
+                {"name": "mrsos",        "type":wp, "dimd": ('t0'         ),    "units": "kg m-2",        "desc": "mass_content_of_water_in_soil_layer"}, \
+                {"name": "mrsos_forc",   "type":wp, "dimd": ('time'       ),    "units": "kg m-2",        "desc": "forcing_mass_content_of_water_in_soil_layer"}, \
                 {"name": "o3",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mole_fraction_of_ozone_in_air"}, \
-                {"name": "sza",          "type":wp, "dimd": ('t0',        ),    "units": "degree",        "desc": "solar_zenith_angle"}, \
-                {"name": "io",           "type":wp, "dimd": ('t0',        ),    "units": "W m-2",         "desc": "solar_irradiance"}, \
-                {"name": "alb",          "type":wp, "dimd": ('t0',        ),    "units": "1",             "desc": "surface_albedo"}, \
-                {"name": "emis",         "type":wp, "dimd": ('t0',        ),    "units": "1",             "desc": "surface_longwave_emissivity"}]
-
+                {"name": "sza",          "type":wp, "dimd": ('t0'         ),    "units": "degree",        "desc": "solar_zenith_angle"}, \
+                {"name": "io",           "type":wp, "dimd": ('t0'         ),    "units": "W m-2",         "desc": "solar_irradiance"}, \
+                {"name": "alb",          "type":wp, "dimd": ('t0'         ),    "units": "1",             "desc": "surface_albedo"}, \
+                {"name": "emis",         "type":wp, "dimd": ('t0'         ),    "units": "1",             "desc": "surface_longwave_emissivity"}]
+    #
     var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m 2-1",   "desc": "grid_cell_area"},\
                 {"name": "stddev",       "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "standard deviation of subgrid orography"}, \
                 {"name": "convexity",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "convexity of subgrid orography"}, \
@@ -2797,6 +2798,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "landfrac",     "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "fraction of horizontal grid area occupied by land"}, \
                 {"name": "lakefrac",     "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "fraction of horizontal grid area occupied by lake", "default_value":0}, \
                 {"name": "lakedepth",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "lake depth", "default_value":0}]
+    #
     var_nsst = [{"name": "tref",         "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sea surface reference temperature for NSST"}, \
                 {"name": "z_c",          "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sub-layer cooling thickness for NSST"}, \
                 {"name": "c_0",          "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "coefficient 1 to calculate d(Tz)/d(Ts) for NSST"}, \
@@ -2815,8 +2817,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "ifd",          "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "index to start DTM run for NSST"}, \
                 {"name": "dt_cool",      "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sub-layer cooling amount for NSST"}, \
                 {"name": "qrain",        "type":wp, "dimd": ('t0'),             "units": "W m-2",   "desc": "sensible heat due to rainfall for NSST"}]
+    #
     var_lsm =  [{"name": "tiice",        "type":wp, "dimd": ('t0','nice'),      "units": "K",       "desc": "sea ice internal temperature"}]
-    var_noah = [{"name": "vegsrc",       "type":wi,  "dimd": ('t0'),             "units": "none",    "desc": "vegetation source (1-2)", "default_value": 1}, \
+    #
+    var_noah = [{"name": "vegsrc",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation source (1-2)", "default_value": 1}, \
                 {"name": "slmsk",        "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "land-sea-ice mask"}, \
                 {"name": "tsfco",        "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sea/skin/ice surface temperature"}, \
                 {"name": "weasd",        "type":wp, "dimd": ('t0'),             "units": "mm",      "desc": "water equivalent accumulated snow depth"}, \
@@ -2832,8 +2836,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "f10m",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "ratio of sigma level 1 wind and 10m wind"}, \
                 {"name": "t2m",          "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "2-meter absolute temperature"}, \
                 {"name": "q2m",          "type":wp, "dimd": ('t0'),             "units": "kg kg-1", "desc": "2-meter specific humidity"}, \
-                {"name": "vegtyp",       "type":wi,  "dimd": ('t0'),             "units": "none",    "desc": "vegetation type (1-12)"}, \
-                {"name": "soiltyp",      "type":wi,  "dimd": ('t0'),             "units": "none",    "desc": "soil type (1-12)"}, \
+                {"name": "vegtyp",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation type (1-12)"}, \
+                {"name": "soiltyp",      "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "soil type (1-12)"}, \
                 {"name": "ffmm",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for momentum"}, \
                 {"name": "ffhh",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for heat"}, \
                 {"name": "hice",         "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sea ice thickness"}, \
@@ -2844,13 +2848,14 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "snwdph",       "type":wp, "dimd": ('t0'),             "units": "mm",      "desc": "water equivalent snow depth"}, \
                 {"name": "shdmin",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "minimum vegetation fraction"}, \
                 {"name": "shdmax",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "maximum vegetation fraction"}, \
-                {"name": "slopetyp",     "type":wi,  "dimd": ('t0'),             "units": "none",    "desc": "slope type (1-9)"}, \
+                {"name": "slopetyp",     "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "slope type (1-9)"}, \
                 {"name": "snoalb",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "maximum snow albedo"}, \
                 {"name": "sncovr",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "surface snow area fraction"}, \
                 {"name": "tsfcl",        "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "surface skin temperature over land"}, \
                 {"name": "stc",          "type":wp, "dimd": ('t0','nsoil'),     "units": "K",       "desc": "initial profile of soil liquid moisture"}, \
                 {"name": "smc",          "type":wp, "dimd": ('t0','nsoil'),     "units": "kg",      "desc": "initial profile of soil moisture"}, \
                 {"name": "slc",          "type":wp, "dimd": ('t0','nsoil'),     "units": "kg",      "desc": "initial profile of soil temperature"}]
+    #
     var_noahmp=[{"name": "tvxy",         "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "vegetation temperature for NoahMP"}, \
                 {"name": "tgxy",         "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "ground temperature for NoahMP"}, \
                 {"name": "tahxy",        "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "canopy air temperature for NoahMP"}, \
@@ -2885,6 +2890,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "tsnoxy",       "type":wp, "dimd": ('t0','nsnow'),     "units": "K",       "desc": "initial profile of snow layer temperature"}, \
                 {"name": "smoiseq",      "type":wp, "dimd": ('t0','nsoil'),     "units": "m3 m-3",  "desc": "initial profile of equilibrium soil water content"}, \
                 {"name": "zsnsoxy",      "type":wp, "dimd": ('t0','nsoil_plus_nsnow'), "units": "m","desc": "layer bottom depth from snow surface"}]
+    #
     var_ruc  = [{"name": "wetness",          "type":wp, "dimd": ('t0'),         "units": "none",    "desc": "normalized soil wetness for RUC LSM"}, \
                 {"name": "lai",              "type":wp, "dimd": ('t0'),         "units": "none",    "desc": "leaf area index for RUC LSM"}, \
                 {"name": "clw_surf_land",    "type":wp, "dimd": ('t0'),         "units": "kg kg-1", "desc": "cloud condensed water mixing ratio at surface over land for RUC LSM"},\
@@ -2905,19 +2911,21 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "sh2o",             "type":wp, "dimd": ('t0','nsoil'), "units": "none",    "desc": "volume fraction of unfrozen soil moisture for RUC LSM"}, \
                 {"name": "smfr",             "type":wp, "dimd": ('t0','nsoil'), "units": "none",    "desc": "volume fraction of frozen soil moisture for RUC LSM"},
                 {"name": "flfr",             "type":wp, "dimd": ('t0','nsoil'), "units": "none",    "desc": "flag for frozen soil physics for RUC LSM"}]
-    
-    #
-    var_dict.extend(var_oro)
-    var_dict.extend(var_nsst)
-    var_dict.extend(var_lsm)
-    var_dict.extend(var_ruc)
-    var_dict.extend(var_noah)
-    var_dict.extend(var_noahmp)
 
     #
-    # Write all fields in "var_dict" to SCM input file.
-    #
     for var in var_dict:
+        if (var["name"] in dict):
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = dict[var["name"]]
+        elif "default_value" in var:
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = var["default_value"]
+    #
+    for var in var_oro:
         if (var["name"] in dict):
             var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
             var_temp.units         = var["units"]
@@ -2928,6 +2936,68 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
             var_temp.units         = var["units"]
             var_temp.standard_name = var["desc"]
             var_temp[:]            = var["default_value"]
+    #
+    for var in var_nsst:
+        if (var["name"] in dict):
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = dict[var["name"]]
+        elif "default_value" in var:
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = var["default_value"]
+    #
+    for var in var_lsm:
+        if (var["name"] in dict):
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = dict[var["name"]]
+        elif "default_value" in var:
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = var["default_value"]
+    #
+    for var in var_ruc:
+        if (var["name"] in dict):
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = dict[var["name"]]
+        elif "default_value" in var:
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = var["default_value"]
+    #
+    for var in var_noah:
+        if (var["name"] in dict):
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = dict[var["name"]]
+        elif "default_value" in var:
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = var["default_value"]
+
+    #
+    for var in var_noahmp:
+        if (var["name"] in dict):
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = dict[var["name"]]
+        elif "default_value" in var:
+            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
+            var_temp.units         = var["units"]
+            var_temp.standard_name = var["desc"]
+            var_temp[:]            = var["default_value"]
+
     #
     # Close file
     #
