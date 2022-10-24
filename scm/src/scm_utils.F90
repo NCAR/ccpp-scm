@@ -199,6 +199,8 @@ module NetCDF_read
   end interface
   
   interface NetCDF_conditionally_read_var
+    module procedure NetCDF_conditionally_read_var_1d_sp
+    module procedure NetCDF_conditionally_read_var_2d_sp
     module procedure NetCDF_conditionally_read_var_3d_sp
     module procedure NetCDF_conditionally_read_var_4d_sp
   end interface NetCDF_conditionally_read_var
@@ -676,7 +678,45 @@ module NetCDF_read
     end if
     
   end subroutine NetCDF_read_att_char_or_int
-  
+
+  subroutine NetCDF_conditionally_read_var_1d_sp(var_ctl, var_att, var_name, filename, ncid, var_data)
+    integer, intent(in) :: var_ctl, ncid
+    character (*), intent(in) :: var_att, var_name, filename
+    real(kind=sp), dimension(:), intent(out) :: var_data
+    real(kind=sp) :: missing_value_eps
+
+    missing_value_eps = missing_value + 0.01
+
+    if (var_ctl > 0) then
+      call NetCDF_read_var(ncid, var_name, .False., var_data)
+      if (maxval(var_data) < missing_value_eps) then
+        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        stop
+      end if
+    else
+      var_data = missing_value
+    end if
+  end subroutine NetCDF_conditionally_read_var_1d_sp
+
+  subroutine NetCDF_conditionally_read_var_2d_sp(var_ctl, var_att, var_name, filename, ncid, var_data)
+    integer, intent(in) :: var_ctl, ncid
+    character (*), intent(in) :: var_att, var_name, filename
+    real(kind=sp), dimension(:,:), intent(out) :: var_data
+    real(kind=sp) :: missing_value_eps
+
+    missing_value_eps = missing_value + 0.01
+
+    if (var_ctl > 0) then
+      call NetCDF_read_var(ncid, var_name, .False., var_data)
+      if (maxval(var_data) < missing_value_eps) then
+        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        stop
+      end if
+    else
+      var_data = missing_value
+    end if
+  end subroutine NetCDF_conditionally_read_var_2d_sp  
+
   subroutine NetCDF_conditionally_read_var_3d_sp(var_ctl, var_att, var_name, filename, ncid, var_data)
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
