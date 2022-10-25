@@ -211,7 +211,7 @@ def find_gdb():
 
 class Experiment(object):
 
-    def __init__(self, case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag):
+    def __init__(self, case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, timestep):
         """Initialize experiment. This routine does most of the work,
         including setting and checking the experiment configuration
         (namelist)."""
@@ -313,10 +313,10 @@ class Experiment(object):
         else:
             self._n_itt_diag = DEFAULT_DIAG_PERIOD
         
-        if suite.timestep is not None:
-            self._timestep = suite.timestep
+        if timestep:
+            self._timestep = timestep
         else:
-            self._timestep = None
+            self._timestep = 600.
         
     @property
     def name(self):
@@ -873,7 +873,7 @@ def main():
             irun, ncases, run["case"], run["suite"], active_suite.namelist))
         #
         exp = Experiment(run["case"], active_suite, runtime, runtime_mult, levels, \
-                         npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
+                         npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, timestep)
         #
         exp_dir = exp.setup_rundir()
         (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)

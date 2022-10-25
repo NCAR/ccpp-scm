@@ -2192,9 +2192,9 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
 
     forcing = {
         "time":     time,
-        "wa":       w_ls,
-        "wap":      omega,
-        "tnta_rad": rad_heating,
+        "wa":       w_ls.swapaxes(0,1),
+        "wap":      omega.swapaxes(0,1),
+        "tnta_rad": rad_heating.swapaxes(0,1),
         "ps_forc":  np.ones(ntimes)*ps[0],
         "pa_forc":  pressure_forc.swapaxes(0,1),
         "tnta_adv": tot_advec_T.swapaxes(0,1),
@@ -2532,12 +2532,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     # Working types
     wp = np.float64
     wi = np.int32
-    
-    # Dimensions
-    nlevs = state["nlevs"]
-    nsoil = len(surface["stc"])
-    nsnow = len(surface["snicexy"])
-    nice  = len(surface["tiice"])
 
     # Local switches
     forcing_on  = 1
@@ -2545,9 +2539,9 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
 
     # Output file
     if (add_UFS_dyn_tend): 
-        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '.nc')
+        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_SCM_driver.nc')
     else:
-        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_noforce.nc')
+        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '.nc')
 
     nc_file = Dataset(fileOUT, 'w', format='NETCDF3_CLASSIC')
     if (add_UFS_dyn_tend):
@@ -2588,19 +2582,19 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     loc_string  = str(round(surface["lon"],2)) + "E" + str(round(surface["lat"],2)) + "N"
     case_string = 'UFS_' + start_date_string + '_' + loc_string
     #
-    nc_file.case           = case_string
-    nc_file.title          = 'Forcing and Initial Conditions for ' + case_string
-    nc_file.reference      = 'https://dtcenter.org/sites/default/files/paragraph/scm-ccpp-guide-v6-0-0.pdf'
-    nc_file.author         = 'Grant J. Firl and Dustin Swales'
-    nc_file.version        = 'Created on ' + datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-    nc_file.format_version = 'DEPHY SCM format version 1'
-    nc_file.modifications  = ''
-    nc_file.script         = os.path.basename(__file__)
-    nc_file.comment        = ''
-    nc_file.start_date     = start_date_string
-    nc_file.end_date       = end_date_string
-    nc_file.forcing_scale  = -1
-    nc_file.radiation      = "off"
+    nc_file.case              = case_string
+    nc_file.title             = 'Forcing and Initial Conditions for ' + case_string
+    nc_file.reference         = 'https://dtcenter.org/sites/default/files/paragraph/scm-ccpp-guide-v6-0-0.pdf'
+    nc_file.author            = 'Grant J. Firl and Dustin Swales'
+    nc_file.version           = 'Created on ' + datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    nc_file.format_version    = 'DEPHY SCM format version 1'
+    nc_file.modifications     = ''
+    nc_file.script            = os.path.basename(__file__)
+    nc_file.comment           = ''
+    nc_file.start_date        = start_date_string
+    nc_file.end_date          = end_date_string
+    nc_file.forcing_scale     = -1
+    nc_file.radiation         = "off"
     nc_file.adv_ta            = forcing_off
     nc_file.adv_qv            = forcing_off
     nc_file.adv_ua            = forcing_off
@@ -2652,16 +2646,16 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     nc_file.surface_forcing_temp     = 'none'
     nc_file.surface_forcing_moisture = 'none'
     nc_file.surface_forcing_wind     = 'none'
-    nc_file.surface_forcing_lsm      = 'noah' #'noahmp' #'ruc'
+    nc_file.surface_forcing_lsm      = 'none' #'noah' #'noahmp' #'ruc'
 
     # Set file dimension
     time_dim   = nc_file.createDimension('time', len(forcing['time']))
     timei_dim  = nc_file.createDimension('t0',    1)
-    lev_dim    = nc_file.createDimension('lev',   nlevs)
-    soil_dim   = nc_file.createDimension('nsoil', nsoil)
-    snow_dim   = nc_file.createDimension('nsnow', nsnow)
-    nslsnw_dim = nc_file.createDimension('nsoil_plus_nsnow',nsnow + nsoil)
-    ice_dim    = nc_file.createDimension('nice',  nice)
+    lev_dim    = nc_file.createDimension('lev',   state["nlevs"])
+    soil_dim   = nc_file.createDimension('nsoil', len(surface["stc"]))
+    snow_dim   = nc_file.createDimension('nsnow', len(surface["snicexy"]))
+    nslsnw_dim = nc_file.createDimension('nsoil_plus_nsnow',len(surface["snicexy"]) + len(surface["stc"]))
+    ice_dim    = nc_file.createDimension('nice',  len(surface["tiice"]))
     
     #
     timei_var                    = nc_file.createVariable('t0', wp, ('t0'))
@@ -2676,12 +2670,17 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     timef_var.calendar           = 'gregorian'
     timef_var[:]                 = forcing['time']
     #
+    lev_var                      = nc_file.createVariable('lev', wp, ('lev'))
+    lev_var.units                = 'm'
+    lev_var.standard_name        = 'height'
+    lev_var[:]                   = 0.0
+    #
     soil_depth_var               = nc_file.createVariable('soil_depth', wp, ('nsoil'))
     soil_depth_var.units         = 'm'
     soil_depth_var.standard_name = 'depth of bottom of soil layers'
     soil_depth_var[:]            = [0.1,0.4,1.0,2.0]
     #
-    z0_var                       = nc_file.createVariable('z0', wp ('time'))
+    z0_var                       = nc_file.createVariable('z0', wp, ('time'))
     z0_var.units                 =  "m"
     z0_var.standard_name         = 'surface_roughness_length_for_momentum_in_air'
     z0_var[:]                    = surface["z0"]
@@ -2777,7 +2776,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "sza",          "type":wp, "dimd": ('t0'         ),    "units": "degree",        "desc": "solar_zenith_angle"}, \
                 {"name": "io",           "type":wp, "dimd": ('t0'         ),    "units": "W m-2",         "desc": "solar_irradiance"}, \
                 {"name": "alb",          "type":wp, "dimd": ('t0'         ),    "units": "1",             "desc": "surface_albedo"}, \
-                {"name": "emis",         "type":wp, "dimd": ('t0'         ),    "units": "1",             "desc": "surface_longwave_emissivity"}]
+                {"name": "emis",         "type":wp, "dimd": ('t0'         ),    "units": "1",             "desc": "surface_longwave_emissivity"}, \
+                {"name": "slmsk",        "type":wp, "dimd": ('t0'         ),    "units": "none",          "desc": "land_sea_ice_mask"}]
     #
     var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m 2-1",   "desc": "grid_cell_area"},\
                 {"name": "stddev",       "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "standard deviation of subgrid orography"}, \
@@ -2821,7 +2821,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     var_lsm =  [{"name": "tiice",        "type":wp, "dimd": ('t0','nice'),      "units": "K",       "desc": "sea ice internal temperature"}]
     #
     var_noah = [{"name": "vegsrc",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation source (1-2)", "default_value": 1}, \
-                {"name": "slmsk",        "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "land-sea-ice mask"}, \
+                #{"name": "slmsk",        "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "land-sea-ice mask"}, \
                 {"name": "tsfco",        "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sea/skin/ice surface temperature"}, \
                 {"name": "weasd",        "type":wp, "dimd": ('t0'),             "units": "mm",      "desc": "water equivalent accumulated snow depth"}, \
                 {"name": "tg3",          "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "deep soil temperature"}, \
@@ -2912,81 +2912,16 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "smfr",             "type":wp, "dimd": ('t0','nsoil'), "units": "none",    "desc": "volume fraction of frozen soil moisture for RUC LSM"},
                 {"name": "flfr",             "type":wp, "dimd": ('t0','nsoil'), "units": "none",    "desc": "flag for frozen soil physics for RUC LSM"}]
 
-    #
-    for var in var_dict:
-        if (var["name"] in dict):
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = dict[var["name"]]
-        elif "default_value" in var:
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = var["default_value"]
-    #
-    for var in var_oro:
-        if (var["name"] in dict):
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = dict[var["name"]]
-        elif "default_value" in var: 
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = var["default_value"]
-    #
-    for var in var_nsst:
-        if (var["name"] in dict):
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = dict[var["name"]]
-        elif "default_value" in var:
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = var["default_value"]
-    #
-    for var in var_lsm:
-        if (var["name"] in dict):
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = dict[var["name"]]
-        elif "default_value" in var:
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = var["default_value"]
-    #
-    for var in var_ruc:
-        if (var["name"] in dict):
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = dict[var["name"]]
-        elif "default_value" in var:
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = var["default_value"]
-    #
-    for var in var_noah:
-        if (var["name"] in dict):
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = dict[var["name"]]
-        elif "default_value" in var:
-            var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
-            var_temp.units         = var["units"]
-            var_temp.standard_name = var["desc"]
-            var_temp[:]            = var["default_value"]
+    if (add_UFS_NOAH_lsm):
+        var_dict.extend(var_oro)
+        var_dict.extend(var_nsst)
+        var_dict.extend(var_lsm)
+        var_dict.extend(var_ruc)
+        var_dict.extend(var_noah)
+        var_dict.extend(var_noahmp)
 
     #
-    for var in var_noahmp:
+    for var in var_dict:
         if (var["name"] in dict):
             var_temp               = nc_file.createVariable(var["name"], var["type"], var["dimd"])
             var_temp.units         = var["units"]

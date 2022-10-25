@@ -177,7 +177,7 @@ def main():
             # What is the surface type? (get from SCM input file)
             #
             dataset  = xr.open_dataset(file_scminput)
-            sfc_type = int(np.round_(dataset.slmsk.values[0][0][0]))
+            sfc_type = int(np.round_(dataset.slmsk.values[0]))
 
             #
             # Create case_config file(s)
