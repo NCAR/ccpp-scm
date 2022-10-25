@@ -1144,7 +1144,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         #Noah LSM
         "tsfco": tsfco_in,  
         "tg3": tg3_in,
-        "ustar": uustar_in,
+        "uustar": uustar_in,
         "alvsf": alvsf_in,
         "alvwf": alvwf_in,
         "alnsf": alnsf_in,
@@ -1163,7 +1163,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "hice": hice_in,
         "fice": fice_in,
         "tisfc": tisfc_in,
-        "snwdph": snwdph_in,
+        "snowd": snwdph_in,
         "snoalb": snoalb_in,
         "weasd": sheleg_in,
         "f10m": f10m_in,
@@ -2281,7 +2281,7 @@ def add_noahmp_coldstart(surface, date):
         surface["tgxy"] = surface["tsfco"]
         surface["tahxy"] = surface["tsfco"]
         
-        if (surface["snwdph"] > 0.01 and surface["tsfco"] > 273.15 ):
+        if (surface["snowd"] > 0.01 and surface["tsfco"] > 273.15 ):
             surface["tvxy"] = 273.15
             surface["tgxy"] = 273.15
             surface["tahxy"]= 273.15
@@ -2346,7 +2346,7 @@ def add_noahmp_coldstart(surface, date):
                 surface["smc"][k] = 1
                 surface["slc"][k] = 0
         
-        snd = surface["snwdph"]/1000.0  # go to m from snwdph
+        snd = surface["snowd"]/1000.0  # go to m from snwdph
         
         if (surface["weasd"] != 0.0 and snd == 0.0 ):
             snd = surface["weasd"]/1000.0
@@ -2690,6 +2690,22 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     theta_oro.standard_name      = "angle with respect to east of maximum subgrid orographic variations"
     theta_oro[:]                 = oro["theta"]
 
+    # For NOAH LSM
+    zorlw_var                  = nc_file.createVariable('zorlw', real_type, ('t0'))
+    zorlw_var.units            = "cm"
+    zorlw_var.standard_name    = "surface roughness length over ocean"
+    zorlw_var[:]               = surface["z0"]
+    #
+    zorll_var                  = nc_file.createVariable('zorll', real_type, ('t0'))
+    zorll_var.units            = "cm"
+    zorll_var.standard_name    = "surface roughness length over land"
+    zorll_var[:]               = surface["z0"]
+    #
+    zorli_var                  = nc_file.createVariable('zorli', real_type, ('t0'))
+    zorli_var.units            = "cm"
+    zorli_var.standard_name    = "surface roughness length over ice"
+    zorli_var[:]               = surface["z0"]
+
     #
     # Variables to be output to SCM input file. Only fields that come directly from forcing, 
     # surface, state, and oro. Fields that get renamed are done above.
@@ -2765,7 +2781,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "tskin",        "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_skin_pressure"}, \
                 {"name": "ps",           "type":wp, "dimd": ('t0'         ),    "units": "Pa",            "desc": "surface_air_pressure"}, \
                 {"name": "ps_forc",      "type":wp, "dimd": ('time'       ),    "units": "Pa",            "desc": "forcing_surface_air_pressure"},\
-                {"name": "ustar",        "type":wp, "dimd": ('time'       ),    "units": "m s-1",         "desc": "surface_friction_velocity"}, \
+                {"name": "uustar",       "type":wp, "dimd": ('time'       ),    "units": "m s-1",         "desc": "surface_friction_velocity"}, \
                 #{"name": "z0",           "type":wp, "dimd": ('time'       ),    "units": "m",             "desc": "surface_roughness_length_for_momentum_in_air"}, \
                 {"name": "z0h",          "type":wp, "dimd": ('time'       ),    "units": "m",             "desc": "surface_roughness_length_for_heat_in_air"}, \
                 {"name": "z0q",          "type":wp, "dimd": ('time'       ),    "units": "m",             "desc": "surface_roughness_length_for_humidity_in_air"}, \
@@ -2818,10 +2834,9 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "dt_cool",      "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sub-layer cooling amount for NSST"}, \
                 {"name": "qrain",        "type":wp, "dimd": ('t0'),             "units": "W m-2",   "desc": "sensible heat due to rainfall for NSST"}]
     #
-    var_lsm =  [{"name": "tiice",        "type":wp, "dimd": ('t0','nice'),      "units": "K",       "desc": "sea ice internal temperature"}]
+    var_frgd = [{"name": "tiice",        "type":wp, "dimd": ('t0','nice'),      "units": "K",       "desc": "sea ice internal temperature"}]
     #
     var_noah = [{"name": "vegsrc",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation source (1-2)", "default_value": 1}, \
-                #{"name": "slmsk",        "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "land-sea-ice mask"}, \
                 {"name": "tsfco",        "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sea/skin/ice surface temperature"}, \
                 {"name": "weasd",        "type":wp, "dimd": ('t0'),             "units": "mm",      "desc": "water equivalent accumulated snow depth"}, \
                 {"name": "tg3",          "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "deep soil temperature"}, \
@@ -2845,7 +2860,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "tisfc",        "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "ice surface temperature"}, \
                 {"name": "tprcp",        "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "instantaneous total precipitation amount"}, \
                 {"name": "srflag",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "snow/rain flag for precipitation"}, \
-                {"name": "snwdph",       "type":wp, "dimd": ('t0'),             "units": "mm",      "desc": "water equivalent snow depth"}, \
+                {"name": "snowd",        "type":wp, "dimd": ('t0'),             "units": "mm",      "desc": "water equivalent snow depth"}, \
                 {"name": "shdmin",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "minimum vegetation fraction"}, \
                 {"name": "shdmax",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "maximum vegetation fraction"}, \
                 {"name": "slopetyp",     "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "slope type (1-9)"}, \
@@ -2915,7 +2930,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     if (add_UFS_NOAH_lsm):
         var_dict.extend(var_oro)
         var_dict.extend(var_nsst)
-        var_dict.extend(var_lsm)
+        var_dict.extend(var_frgd)
         var_dict.extend(var_ruc)
         var_dict.extend(var_noah)
         var_dict.extend(var_noahmp)
