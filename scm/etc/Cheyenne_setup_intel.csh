@@ -34,7 +34,7 @@ module load hpc-intel/2022.1
 module load hpc-mpt/2.25
 setenv bacio_ROOT /glade/work/epicufsrt/GMTB/tools/intel/2022.1/hpc-stack-v1.2.0_6eb6/intel-2022.1/bacio/2.4.1
 setenv sp_ROOT /glade/work/epicufsrt/GMTB/tools/intel/2022.1/hpc-stack-v1.2.0_6eb6/intel-2022.1/sp/2.3.3
-setenv w3nco_ROOT /glade/work/epicufsrt/GMTB/tools/intel/2022.1/hpc-stack-v1.2.0_6eb6/intel-2022.1/w3nco/2.4.1
+setenv w3emc_ROOT /glade/work/epicufsrt/GMTB/tools/intel/2022.1/hpc-stack-v1.2.0/intel-2022.1/w3emc/2.9.2
 
 echo "Setting CC/CXX/FC environment variables"
 setenv CC icc
