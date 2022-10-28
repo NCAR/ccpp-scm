@@ -120,4 +120,4 @@ jobs:
     - name: Run SCM with ARMCU DEPHY reference case
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
-        ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_DIR}/ARMCU/REF
+        ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_DIR}/ARMCU/REF -v
