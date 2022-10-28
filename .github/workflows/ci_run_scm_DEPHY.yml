@@ -94,7 +94,11 @@ jobs:
         echo "SCM_ROOT=/home/runner/work/ccpp-scm/ccpp-scm/" >> $GITHUB_ENV
 
     - name: Clone GdR-DEPHY/DEPHY-SCM repository
-      run: git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
+      run: |
+        git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
+        cd DEPHY-SCM
+        pwd
+        echo "dephy_DIR=`pwd`" >> $GITHUB_ENV
 
     - name: Download data for SCM
       run: |
@@ -116,4 +120,4 @@ jobs:
     - name: Run SCM with ARMCU DEPHY reference case
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
-        ./run_scm.py -c ARMCU_REF --case_data_dir /home/runner/work/ccpp-scm/DEPHY-SCM/ARMCU/REF
+        ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_DIR}/ARMCU/REF
