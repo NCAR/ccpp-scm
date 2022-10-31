@@ -92,6 +92,7 @@ jobs:
 
     - name: Set SCM_ROOT
       run: |
+        echo "SCM_WORK=/home/runner/work/ccpp-scm/" >> $GITHUB_ENV
         echo "SCM_ROOT=/home/runner/work/ccpp-scm/ccpp-scm/" >> $GITHUB_ENV
 
     - name: Download data for SCM
