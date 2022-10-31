@@ -72,12 +72,6 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    - name: Clone GdR-DEPHY/DEPHY-SCM repository
-      run: |
-        cd /home/runner
-        git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
-        ls ${dephy_ROOT}/ARMCU/REF
-
     - name: Update system packages
       run: sudo apt-get update
 
@@ -103,8 +97,12 @@ jobs:
     - name: Download data for SCM
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/
-        ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
+
+    - name: Clone GdR-DEPHY/DEPHY-SCM repository
+      run: |
+        cd /home/runner
+	git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
 
     - name: Configure build with CMake
       run: |
@@ -120,5 +118,4 @@ jobs:
     - name: Run SCM with ARMCU DEPHY reference case
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
-        ls ${dephy_ROOT}/ARMCU/REF
         ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_ROOT}/ARMCU/REF -v
