@@ -86,10 +86,10 @@ jobs:
         make -j
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
-#
-#    - name: Install cmake v3.24.1
-#      run: pip3 install cmake ninja fypp
-#
+
+    - name: Install cmake v3.24.1
+      run: pip3 install cmake ninja fypp
+
     - name: Set SCM_ROOT
       run: |
         echo "SCM_ROOT=/home/runner/work/ccpp-scm/ccpp-scm/" >> $GITHUB_ENV
