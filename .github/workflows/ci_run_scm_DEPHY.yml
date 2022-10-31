@@ -14,6 +14,7 @@ jobs:
       bacio_ROOT: /home/runner/bacio
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
+      dephy_ROOT: /home/runner/DEPHY-SCM
 
     # Workflow steps
     steps:
@@ -71,6 +72,12 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
+    - name: Clone GdR-DEPHY/DEPHY-SCM repository
+      run: |
+        cd /home/runner
+        git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
+        ls ${dephy_ROOT}/ARMCU/REF
+
     - name: Update system packages
       run: sudo apt-get update
 
@@ -93,14 +100,6 @@ jobs:
       run: |
         echo "SCM_ROOT=/home/runner/work/ccpp-scm/ccpp-scm/" >> $GITHUB_ENV
 
-    - name: Clone GdR-DEPHY/DEPHY-SCM repository
-      run: |
-        git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
-        cd DEPHY-SCM
-        pwd
-        echo "dephy_DIR=`pwd`" >> $GITHUB_ENV
-        ls ${dephy_DIR}/ARMCU/REF
-
     - name: Download data for SCM
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/
@@ -121,5 +120,5 @@ jobs:
     - name: Run SCM with ARMCU DEPHY reference case
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
-        ls ${dephy_DIR}/ARMCU/REF
-        ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_DIR}/ARMCU/REF -v
+        ls ${dephy_ROOT}/ARMCU/REF
+        ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_ROOT}/ARMCU/REF -v
