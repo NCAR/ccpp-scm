@@ -947,7 +947,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp) :: z_nudging_temp, z_nudging_theta, z_nudging_thetal, z_nudging_qv, z_nudging_qt, z_nudging_rv, z_nudging_rt, z_nudging_u, z_nudging_v
   real(kind=sp) :: p_nudging_temp, p_nudging_theta, p_nudging_thetal, p_nudging_qv, p_nudging_qt, p_nudging_rv, p_nudging_rt, p_nudging_u, p_nudging_v
   character(len=5) :: input_surfaceType
-  character(len=11) :: input_surfaceForcingWind,input_surfaceForcingMoist,input_surfaceForcingLSM,input_surfaceForcingTemp
+  character(len=11) :: input_surfaceForcingWind='',input_surfaceForcingMoist='',input_surfaceForcingLSM='',input_surfaceForcingTemp=''
   
   ! initial variables (IC = Initial Condition)
   real(kind=dp), allocatable :: input_lat(:) !< column latitude (deg)
@@ -1201,6 +1201,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_ice),"nf90_inq_dim(nice)")
   end if  
   
+  model_ics=.false.
   !if(input_n_soil > 0) then
   !  model_ics = .true.
   !  scm_state%model_ics = .true.
@@ -1456,10 +1457,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              stat=allocate_status)
   end if
 
-  !>
-  call NetCDF_read_var(ncid, "lat", .True., input_lat)
-  call NetCDF_read_var(ncid, "lon", .True., input_lon)  
-
   !>  - Read in the initial profiles.
   call NetCDF_read_var(ncid, "pa", .True., input_pres)
   call NetCDF_read_var(ncid, "zh", .True., input_height)
@@ -1578,7 +1575,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
            input_force_rt_nudging     (input_n_lev, input_n_forcing_times), &
            input_force_rv_nudging     (input_n_lev, input_n_forcing_times), &
     stat=allocate_status)
-  
+
+  call NetCDF_read_var(ncid, "lat",     .True., input_lat)
+  call NetCDF_read_var(ncid, "lon",     .True., input_lon)  
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
   call NetCDF_read_var(ncid, "zh_forc", .True., input_force_height)
   call NetCDF_read_var(ncid, "pa_forc", .True., input_force_pres)
