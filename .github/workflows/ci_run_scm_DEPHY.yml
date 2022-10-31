@@ -102,7 +102,7 @@ jobs:
     - name: Clone GdR-DEPHY/DEPHY-SCM repository
       run: |
         cd /home/runner
-	git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
+        git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
 
     - name: Configure build with CMake
       run: |
