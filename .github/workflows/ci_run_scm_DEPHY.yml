@@ -98,6 +98,7 @@ jobs:
         git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
         cd DEPHY-SCM
         pwd
+        ls ${dephy_DIR}/ARMCU/REF
         echo "dephy_DIR=`pwd`" >> $GITHUB_ENV
 
     - name: Download data for SCM
@@ -120,4 +121,5 @@ jobs:
     - name: Run SCM with ARMCU DEPHY reference case
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
+        ls ${dephy_DIR}/ARMCU/REF
         ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_DIR}/ARMCU/REF -v
