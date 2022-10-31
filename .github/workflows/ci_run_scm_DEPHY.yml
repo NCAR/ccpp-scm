@@ -96,27 +96,27 @@ jobs:
 
     - name: Download data for SCM
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/
+        cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
 
     - name: Clone GdR-DEPHY/DEPHY-SCM repository
       run: |
-        cd /home/runner/work
+        cd /home/runner
         git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
 
     - name: Configure build with CMake
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/scm
+        cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake ../src
+        cmake ../src -DCMAKE_BUILD_TYPE=Debug
 
     - name: Build SCM
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
+        cd ${SCM_ROOT}/scm/bin
         make -j4
 
     - name: Run SCM with ARMCU DEPHY reference case
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
+        cd ${SCM_ROOT}/scm/bin
         ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_ROOT}/ARMCU/REF -v
