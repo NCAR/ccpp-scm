@@ -116,7 +116,7 @@ jobs:
         cd ${SCM_ROOT}/scm/bin
         make -j4
 
-    - name: Run SCM with ARMCU DEPHY reference case
+    - name: Run SCM with MAGIC_LEG04A DEPHY reference case
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py -c ARMCU_REF --case_data_dir ${dephy_ROOT}/ARMCU/REF -v
+        ./run_scm.py -c MAGIC_LEG04A --case_data_dir ${dephy_ROOT}/MAGIC/LEG04A -v
