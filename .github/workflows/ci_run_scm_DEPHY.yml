@@ -98,8 +98,8 @@ jobs:
         git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
         cd DEPHY-SCM
         pwd
-        ls ${dephy_DIR}/ARMCU/REF
         echo "dephy_DIR=`pwd`" >> $GITHUB_ENV
+        ls ${dephy_DIR}/ARMCU/REF
 
     - name: Download data for SCM
       run: |
