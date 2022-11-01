@@ -45,14 +45,14 @@ jobs:
         echo "CC=gcc-9"      >> $GITHUB_ENV
 
     - name: Cache bacio library v2.4.1
-      id: cache-bacio-v2.4.1
+      id: cache-bacio-lib
       uses: actions/cache@v3
       with:
         path: ${bacio_ROOT}
         key: bacio-2.4.1-${{ runner.os }}-gnu
 
     - name: Install bacio library v2.4.1
-      if: steps.cache-bacio-v2.4.1..outputs.cache-hit != 'true'
+      if: steps.cache-bacio-lib..outputs.cache-hit != 'true'
       run: |
         git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
         cd bacio && mkdir build && cd build
