@@ -52,7 +52,7 @@ jobs:
         key: bacio-2.4.1-${{ runner.os }}-gnu
 
     - name: Install bacio library v2.4.1
-      if: steps.cache-bacio-lib..outputs.cache-hit != 'true'
+      if: steps.cache-bacio-lib.outputs.cache-hit != 'true'
       run: |
         git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
         cd bacio && mkdir build && cd build
