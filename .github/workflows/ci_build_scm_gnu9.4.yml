@@ -61,7 +61,15 @@ jobs:
         make install
         echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
 
+    - name: Cache SP-library v2.3.3
+      id: cache-sp-lib
+      uses: actions/cache@v3
+      with:
+        path: ${sp_ROOT}
+        key: cache-sp-lib-key
+
     - name: Install SP-library v2.3.3
+      if: steps.cache-sp-lib.outputs.cache-hit != 'true'
       run: |
         git clone --branch v2.3.3 https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp
         cd NCEPLIBS-sp && mkdir build && cd build
@@ -70,7 +78,15 @@ jobs:
         make install
         echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
 
+    - name: Cache w3emc library v2.9.2
+      id: cache-w3emc-lib
+      uses: actions/cache@v3
+      with:
+        path: ${w3emc_ROOT}
+        key: cache-w3emc-lib-key
+
     - name: Install w3emc library v2.9.2
+      if: steps.cache-w3emc-lib.outputs.cache-hit != 'true'
       run: |
         git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
         cd NCEPLIBS-w3emc && mkdir build && cd build
@@ -94,8 +110,6 @@ jobs:
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
-    - name: Install cmake v3.24.1
-      run: pip3 install cmake ninja fypp
 
     - name: Set SCM_ROOT
       run: |
