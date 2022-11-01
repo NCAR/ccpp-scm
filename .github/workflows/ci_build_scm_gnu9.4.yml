@@ -29,15 +29,18 @@ jobs:
       with:
         python-version: 3.8.5
 
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
+#    - name: Add conda to system path
+#      run: |
+#        # $CONDA is an environment variable pointing to the root of the miniconda directory
+#        echo $CONDA/bin >> $GITHUB_PATH
 
     - name: Install python libraries
       run: |
         conda install --yes -c conda-forge f90nml
         conda install --yes -c conda-forge netCDF4
+
+    - name: Update system packages
+      run: sudo apt-get update
 
     - name: Set compilers
       run: |
@@ -94,9 +97,6 @@ jobs:
         make -j2
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
-
-    - name: Update system packages
-      run: sudo apt-get update
 
     - name: Install NetCDF C library
       run: sudo apt-get install libnetcdf-dev
