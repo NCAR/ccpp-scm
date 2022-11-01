@@ -48,7 +48,7 @@ jobs:
       run: sudo apt-get update
 
     #######################################################################################
-    # Instal FORTRAN dependencies
+    # Install FORTRAN dependencies
     #######################################################################################
     - name: Set compilers
       run: |
@@ -113,7 +113,7 @@ jobs:
       id: cache-netcdf-fortran-lib
       uses: actions/cache@v3
       with:
-        path: ${w3emc_ROOT}
+        path: ${NFHOME}
         key: cache-netcdf-fortran-lib-key
 
     - name: Install NetCDF Fortran library v4.4.4
@@ -126,6 +126,9 @@ jobs:
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
+    #######################################################################################
+    # Build SCM. Run regression tests.
+    #######################################################################################
 
     - name: Set SCM_ROOT
       run: |

@@ -39,9 +39,9 @@ run_list = [\
             {"case": "twpice",                "suite": "SCM_GFS_v15p2"},                                                                                 \
             {"case": "bomex",                 "suite": "SCM_GFS_v15p2"},                                                                                 \
             {"case": "astex",                 "suite": "SCM_GFS_v15p2"},                                                                                 \
-            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v15p2"},                                                                                 \
-            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
-            {"case": "twpice",                "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
-            {"case": "bomex",                 "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
-            {"case": "astex",                 "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
-            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"}]
+            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v15p2"}]#,                                                                                 \
+#            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
+#            {"case": "twpice",                "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
+#            {"case": "bomex",                 "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
+#            {"case": "astex",                 "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"},\
+#            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_p8_RRTMGP", "namelist": "input_GFS_v17_p8_RRTMGP.nml", "tracer": "tracers_GFS_v17_p8.txt"}]
