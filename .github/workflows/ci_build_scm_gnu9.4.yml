@@ -17,22 +17,27 @@ jobs:
 
     # Workflow steps
     steps:
-
+    #######################################################################################
+    # Initial
+    #######################################################################################
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
       uses: actions/checkout@v3
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
-    
+
+    #######################################################################################
+    # Python setup
+    #######################################################################################    
     - name: Set up Python 3.8.5
       uses: actions/setup-python@v3
       with:
         python-version: 3.8.5
 
-#    - name: Add conda to system path
-#      run: |
-#        # $CONDA is an environment variable pointing to the root of the miniconda directory
-#        echo $CONDA/bin >> $GITHUB_PATH
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
 
     - name: Install python libraries
       run: |
@@ -42,6 +47,9 @@ jobs:
     - name: Update system packages
       run: sudo apt-get update
 
+    #######################################################################################
+    # Instal FORTRAN dependencies
+    #######################################################################################
     - name: Set compilers
       run: |
         echo "FC=gfortran-9" >> $GITHUB_ENV
@@ -101,7 +109,15 @@ jobs:
     - name: Install NetCDF C library
       run: sudo apt-get install libnetcdf-dev
 
+    - name: Cache NetCDF Fortran library v4.4.4
+      id: cache-netcdf-fortran-lib
+      uses: actions/cache@v3
+      with:
+        path: ${w3emc_ROOT}
+        key: cache-netcdf-fortran-lib-key
+
     - name: Install NetCDF Fortran library v4.4.4
+      if: steps.cache-netcdf-fortran-lib.outputs.cache-hit != 'true'
       run: |
         git clone --branch v4.4.4 https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
