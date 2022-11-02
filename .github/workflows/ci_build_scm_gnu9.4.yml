@@ -163,6 +163,7 @@ jobs:
     - name: Run SCM RTs
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
-        echo "SCM_RUN_DIR=${SCM_ROOT}/scm/bin_${compiler}_${build_type_lc}" >> $GITHUB_ENV
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}
+        echo "SCM_BIN_DIR=${SCM_ROOT}/scm/bin_${compiler}_${build_type_lc}" >> $GITHUB_ENV
+        echo "SCM_RUN_DIR=${SCM_ROOT}/scm/run_${compiler}_${build_type_lc}" >> $GITHUB_ENV
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 --run_dir ${SCM_RUN_DIR} --bin_dir ${SCM_BIN_DIR}
 
