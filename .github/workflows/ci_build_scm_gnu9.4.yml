@@ -59,7 +59,7 @@ jobs:
       id: cache-bacio-lib
       uses: actions/cache@v3
       with:
-        path: ${bacio_ROOT}
+        path: /home/runner/bacio
         key: cache-bacio-lib-key
 
     - name: Install bacio library v2.4.1
@@ -76,7 +76,7 @@ jobs:
       id: cache-sp-lib
       uses: actions/cache@v3
       with:
-        path: ${sp_ROOT}
+        path: /home/runner/NCEPLIBS-sp
         key: cache-sp-lib-key
 
     - name: Install SP-library v2.3.3
@@ -93,7 +93,7 @@ jobs:
       id: cache-w3emc-lib
       uses: actions/cache@v3
       with:
-        path: ${w3emc_ROOT}
+        path: /home/runner/myw3emc
         key: cache-w3emc-lib-key
 
     - name: Install w3emc library v2.9.2
@@ -113,7 +113,7 @@ jobs:
       id: cache-netcdf-fortran-lib
       uses: actions/cache@v3
       with:
-        path: ${NFHOME}
+        path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-lib-key
 
     - name: Install NetCDF Fortran library v4.4.4
