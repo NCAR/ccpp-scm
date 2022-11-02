@@ -21,6 +21,7 @@ jobs:
       w3emc_ROOT: /home/runner/myw3emc
       suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
       build_type_lc: Release
+      SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
 
     # Workflow steps
     steps:
@@ -64,15 +65,22 @@ jobs:
         echo "CC=gcc-9"      >> $GITHUB_ENV
         echo "compiler=gnu"  >> $GITHUB_ENV
 
+    - name: Environment for ifort compiler
+      if: contains(matrix.fortran-compiler, 'ifort')
+      run: |
+        echo "CC=icx"          >> $GITHUB_ENV
+        echo "FC=ifort"        >> $GITHUB_ENV
+        echo "compiler=intel"  >> $GITHUB_ENV
+
     - name: Cache bacio library v2.4.1
-      id: cache-bacio-lib
+      id: cache-bacio-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/bacio
-        key: cache-bacio-lib-key
+        key: cache-bacio-fortran-${{ matrix.fortran-compiler }}-key
 
     - name: Install bacio library v2.4.1
-      if: steps.cache-bacio-lib.outputs.cache-hit != 'true'
+      if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
       run: |
         git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
         cd bacio && mkdir build && cd build
@@ -82,14 +90,14 @@ jobs:
         echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
 
     - name: Cache SP-library v2.3.3
-      id: cache-sp-lib
+      id: cache-sp-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/NCEPLIBS-sp
-        key: cache-sp-lib-key
+        key: cache-sp-fortran-${{ matrix.fortran-compiler }}-key
 
     - name: Install SP-library v2.3.3
-      if: steps.cache-sp-lib.outputs.cache-hit != 'true'
+      if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
       run: |
         git clone --branch v2.3.3 https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp
         cd NCEPLIBS-sp && mkdir build && cd build
@@ -99,14 +107,14 @@ jobs:
         echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
 
     - name: Cache w3emc library v2.9.2
-      id: cache-w3emc-lib
+      id: cache-w3emc-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/myw3emc
-        key: cache-w3emc-lib-key
+        key: cache-w3emc-fortran-${{ matrix.fortran-compiler }}-key
 
     - name: Install w3emc library v2.9.2
-      if: steps.cache-w3emc-lib.outputs.cache-hit != 'true'
+      if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
       run: |
         git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
         cd NCEPLIBS-w3emc && mkdir build && cd build
@@ -119,14 +127,14 @@ jobs:
       run: sudo apt-get install libnetcdf-dev
 
     - name: Cache NetCDF Fortran library v4.4.4
-      id: cache-netcdf-fortran-lib
+      id: cache-netcdf-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-lib-key
+        key: cache-netcdf-fortran-${{ matrix.fortran-compiler }}-key
 
     - name: Install NetCDF Fortran library v4.4.4
-      if: steps.cache-netcdf-fortran-lib.outputs.cache-hit != 'true'
+      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
         git clone --branch v4.4.4 https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
@@ -139,31 +147,25 @@ jobs:
     # Build SCM. Run regression tests.
     #######################################################################################
 
-    - name: Set SCM_ROOT
-      run: |
-        echo "SCM_ROOT=/home/runner/work/ccpp-scm/ccpp-scm/" >> $GITHUB_ENV
-
     - name: Download data for SCM
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/
+        cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
 
     - name: Configure build with CMake
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/scm
+        cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake  -DCCPP_SUITES=${suites} ../src
 
     - name: Build SCM
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
+        cd ${SCM_ROOT}/scm/bin
         make -j4
 
     - name: Run SCM RTs
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
-        echo "SCM_BIN_DIR=${SCM_ROOT}/scm/bin_${compiler}_${build_type_lc}" >> $GITHUB_ENV
-        echo "SCM_RUN_DIR=${SCM_ROOT}/scm/run_${compiler}_${build_type_lc}" >> $GITHUB_ENV
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 --run_dir ${SCM_RUN_DIR} --bin_dir ${SCM_BIN_DIR}
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file ${SCM_ROOT}/test/rt_test_cases.py --runtime_mult 0.1
 
