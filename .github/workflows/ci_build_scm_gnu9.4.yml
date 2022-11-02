@@ -20,6 +20,8 @@ jobs:
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
       suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
+      RUN_DIR:    ${SCM_ROOT}/scm/run_${{matrix.fortran-compiler}}_${{matrix.build-type}}
+      BIN_DIR:    ${SCM_ROOT}/scm/bin_${{matrix.fortran-compiler}}_${{matrix.build-type}}
 
     # Workflow steps
     steps:
@@ -169,7 +171,5 @@ jobs:
     - name: Run SCM RTs
       run: |
         cd ${SCM_ROOT}/scm/bin
-        mkdir ${SCM_ROOT}/scm/run_${{matrix.fortran-compiler}}_${{matrix.build-type}}
-        mkdir ${SCM_ROOT}/scm/bin_${{matrix.fortran-compiler}}_${{matrix.build-type}}
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 --run_dir /home/runner/work/ccpp-scm/ccpp-scm/scm/run_${{matrix.fortran-compiler}}_${{matrix.build-type}} --bin_dir /home/runner/work/ccpp-scm/ccpp-scm/scm/run_${{matrix.fortran-compiler}}_${{matrix.build-type}}
-
+        mkdir ${RUN_DIR} && mkdir ${BIN_DIR}
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
