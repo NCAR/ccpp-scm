@@ -167,5 +167,5 @@ jobs:
     - name: Run SCM RTs
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file ${SCM_ROOT}/test/rt_test_cases.py --runtime_mult 0.1
+        ./run_scm.py --file ${SCM_ROOT}/test/rt_test_cases.py
 
