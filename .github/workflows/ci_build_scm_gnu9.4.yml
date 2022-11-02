@@ -14,8 +14,8 @@ jobs:
 
     # Environmental variables
     env:
-      F90:        ${{ matrix.fortran-compiler }}
-      FC:         ${{ matrix.fortran-compiler }}
+      build_type: ${{matrix.build-type}}
+      compiler:   ${{matrix.fortran-compiler}}
       NFHOME:     /home/runner/netcdf-fortran
       bacio_ROOT: /home/runner/bacio
       sp_ROOT:    /home/runner/NCEPLIBS-sp
@@ -75,7 +75,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /home/runner/bacio
-        key: cache-bacio-fortran-${{ matrix.fortran-compiler }}-key
+        key: cache-bacio-fortran-${compiler}-key
 
     - name: Install bacio library v2.4.1
       if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
@@ -92,7 +92,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /home/runner/NCEPLIBS-sp
-        key: cache-sp-fortran-${{ matrix.fortran-compiler }}-key
+        key: cache-sp-fortran-${compiler}-key
 
     - name: Install SP-library v2.3.3
       if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
@@ -109,7 +109,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /home/runner/myw3emc
-        key: cache-w3emc-fortran-${{ matrix.fortran-compiler }}-key
+        key: cache-w3emc-fortran-${compiler}-key
 
     - name: Install w3emc library v2.9.2
       if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
@@ -129,7 +129,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{ matrix.fortran-compiler }}-key
+        key: cache-netcdf-fortran-${compiler}-key
 
     - name: Install NetCDF Fortran library v4.4.4
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
@@ -155,7 +155,7 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ../src
+        cmake -DCMAKE_BUILD_TYPE=${build_type} ../src
 
     - name: Build SCM
       run: |
@@ -165,5 +165,5 @@ jobs:
     - name: Run SCM RTs
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file ${SCM_ROOT}/test/rt_test_cases.py --runtime_mult 0.1 --run_dir $SCM_ROOT/scm/run_${{ matrix.fortran-compiler }}_${{ matrix.build_type }} --bin_dir $SCM_ROOT/scm/run_${{ matrix.fortran-compiler }}_${{ matrix.build_type }}
+        ./run_scm.py --file ${SCM_ROOT}/test/rt_test_cases.py --runtime_mult 0.1 --run_dir $SCM_ROOT/scm/run_${compiler}_${build_type} --bin_dir $SCM_ROOT/scm/run_${compiler}_${build_type}
 
