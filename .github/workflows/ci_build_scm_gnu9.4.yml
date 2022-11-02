@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        fortran-compiler: [gnu,intel]
-        build-type: [Release, Debug]
+        fortran-compiler: [gnu]
+        build-type:       [Release, Debug]
 
     # Environmental variables
     env:
