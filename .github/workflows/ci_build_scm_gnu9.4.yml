@@ -58,21 +58,23 @@ jobs:
     - name: Environment for gfortran compiler
       if: contains(matrix.fortran-compiler, 'gfortran-9')
       run: |
-        echo "FC=gfortran-9" >> $GITHUB_ENV
-        echo "CC=gcc-9"      >> $GITHUB_ENV
+        echo "FC=gfortran-9"  >> $GITHUB_ENV
+        echo "CC=gcc-9"       >> $GITHUB_ENV
+        echo "compuler=gnu"   >> $GITHUB_ENV
 
     - name: Environment for ifort compiler
       if: contains(matrix.fortran-compiler, 'ifort')
       run: |
-        echo "CC=icx"          >> $GITHUB_ENV
-        echo "FC=ifort"        >> $GITHUB_ENV
+        echo "CC=icx"         >> $GITHUB_ENV
+        echo "FC=ifort"       >> $GITHUB_ENV
+        echo "compuler=intel" >> $GITHUB_ENV
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/bacio
-        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-bacio-fortran-${compiler}-key
 
     - name: Install bacio library v2.4.1
       if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
@@ -89,7 +91,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /home/runner/NCEPLIBS-sp
-        key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-sp-fortran-${compiler}-key
 
     - name: Install SP-library v2.3.3
       if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
@@ -106,7 +108,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /home/runner/myw3emc
-        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-w3emc-fortran-${compiler}-key
 
     - name: Install w3emc library v2.9.2
       if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
@@ -126,7 +128,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-netcdf-fortran-${compiler}-key
 
     - name: Install NetCDF Fortran library v4.4.4
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
@@ -161,5 +163,5 @@ jobs:
     - name: Run SCM RTs
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file ${SCM_ROOT}/test/rt_test_cases.py --runtime_mult 0.1 --run_dir $SCM_ROOT/scm/run_${{matrix.fortran-compiler}}_${{matrix.build-type}} --bin_dir $SCM_ROOT/scm/run_${{matrix.fortran-compiler}}_${{matrix.build-type}}
+        ./run_scm.py --file ${SCM_ROOT}/test/rt_test_cases.py --runtime_mult 0.1 --run_dir ${SCM_ROOT}/scm/run_${compiler}_${{matrix.build-type}} --bin_dir ${SCM_ROOT}/scm/run_${compiler}_${{matrix.build-type}}
 
