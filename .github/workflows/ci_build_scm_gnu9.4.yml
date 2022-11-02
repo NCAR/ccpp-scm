@@ -7,14 +7,20 @@ jobs:
 
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        fortran-compiler: [gfortran-9]
 
     # Environmental variables
     env:
+      F90:        ${{ matrix.fortran-compiler }}
+      FC:         ${{ matrix.fortran-compiler }}
       NFHOME:     /home/runner/netcdf-fortran
       bacio_ROOT: /home/runner/bacio
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
-      suites:     'SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0'
+      suites:     [SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0]
+      build_type_lc: Release
 
     # Workflow steps
     steps:
@@ -37,7 +43,6 @@ jobs:
 
     - name: Add conda to system path
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
 
     - name: Install python libraries
@@ -51,10 +56,13 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
-    - name: Set compilers
+
+    - name: Environment for gfortran compiler
+      if: contains(matrix.fortran-compiler, 'gfortran-9')
       run: |
         echo "FC=gfortran-9" >> $GITHUB_ENV
         echo "CC=gcc-9"      >> $GITHUB_ENV
+        echo "compiler=gnu"  >> $GITHUB_ENV
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-lib
@@ -155,4 +163,6 @@ jobs:
     - name: Run SCM RTs
       run: |
         cd /home/runner/work/ccpp-scm/ccpp-scm/scm/bin
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py
+        echo "SCM_RUN_DIR=${SCM_ROOT}/scm/bin_${compiler}_${build_type_lc}" >> $GITHUB_ENV
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}
+
