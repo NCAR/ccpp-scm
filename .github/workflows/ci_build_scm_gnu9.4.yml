@@ -60,14 +60,14 @@ jobs:
       run: |
         echo "FC=gfortran-9"  >> $GITHUB_ENV
         echo "CC=gcc-9"       >> $GITHUB_ENV
-        echo "compuler=gnu"   >> $GITHUB_ENV
+        echo "compiler=gnu"   >> $GITHUB_ENV
 
     - name: Environment for ifort compiler
       if: contains(matrix.fortran-compiler, 'ifort')
       run: |
         echo "CC=icx"         >> $GITHUB_ENV
         echo "FC=ifort"       >> $GITHUB_ENV
-        echo "compuler=intel" >> $GITHUB_ENV
+        echo "compiler=intel" >> $GITHUB_ENV
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
