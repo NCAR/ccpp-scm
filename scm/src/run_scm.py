@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-import atexit
 import f90nml
 import logging
 import os
@@ -41,10 +40,6 @@ MULTIRUN_IGNORE_ERROR = True
 # Default output periods
 DEFAULT_OUTPUT_PERIOD = 6
 DEFAULT_DIAG_PERIOD = 6
-
-# which suites in suite_info to use when running through suites
-SUITE_CHOICE = 'supported'
-#SUITE_CHOIE = 'all'
 
 # Path to the directory containing experiment namelists (relative to scm_root)
 CASE_NAMELIST_DIR = 'scm/etc/case_config'
@@ -190,6 +185,9 @@ def parse_arguments():
     run_dir = args.run_dir
     bin_dir = args.bin_dir
     timestep = args.timestep
+    
+    if not sdf:
+        sdf = DEFAULT_SUITE
     
     return (file, case, sdf, namelist, tracers, gdb, runtime, runtime_mult, docker, \
             verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,   \
@@ -708,8 +706,12 @@ class Experiment(object):
             execute(cmd)
         
         #Inform user of timestep and output intervals
-        logging.info('Using {0}s as the timestep with an instantaneous output period of {1}s and a diagnostic output period of {2}s'.format(
-            case_nml['case_config']['dt'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_out'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_diag']))
+        if self._timestep:
+            logging.info('Using {0}s as the timestep with an instantaneous output period of {1}s and a diagnostic output period of {2}s'.format(
+                case_nml['case_config']['dt'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_out'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_diag']))
+        else:
+            logging.info('Using the default timestep in src/scm_input.F90 with an instantaneous output period of {0}*dt and a diagnostic output period of {1}*dt'.format(
+                case_nml['case_config']['n_itt_out'],case_nml['case_config']['n_itt_diag']))
         
         return os.path.join(SCM_RUN, output_dir)
 
@@ -836,7 +838,7 @@ def main():
                 
             # If tracer file provided, use. Otherwise use default tracer file for this suite
             try: 
-                active_suite.tracers = run["tracer"]
+                active_suite.tracers = run["tracers"]
                 logging.info('Using provided tracer file for suite={0}'.format(run["suite"]))
             except:
                 logging.info('Using default tracer file for suite={0}'.format(run["suite"]))
@@ -846,13 +848,12 @@ def main():
         else:
             logging.info('Suite provided, {0}, does not have default namelist and tracer information'.format(run["suite"]))
             # If namelist and tracer file provided, use. Otherwise error.
-            if ("namelist" in run) and ("tracer" in run):
+            if ("namelist" in run) and ("tracers" in run):
                 irun = irun + 1
                 if timestep: 
-                    active_suite = suite(run["suite"], run["tracer"], run["namelist"], timestep, -1, False)
+                    active_suite = suite(run["suite"], run["tracers"], run["namelist"], timestep, -1, False)
                 else:
-                    active_suite = suite(run["suite"], run["tracer"], run["namelist"], 600, -1, False)
-                    #active_suite = suite(run["suite"], run["tracer"], run["namelist"], -1, -1, False) NOT WORKING without timestep defined
+                    active_suite = suite(run["suite"], run["tracers"], run["namelist"], -1, -1, False)
             else:
                 message = 'The given suite {0}, does not have defaults set in suite_info.py and either the tracers file or physics namelist file (or both) were not provided.'.format(run["suite"])
                 logging.critical(message)
@@ -868,7 +869,11 @@ def main():
                          npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
         #
         exp_dir = exp.setup_rundir()
-        (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+        if len(run_list) > 1:
+            l_ignore_error = MULTIRUN_IGNORE_ERROR
+        else:
+            l_ignore_error = False
+        (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = l_ignore_error)
         #
         if status == 0:
             logging.info('Process "(case={0}, suite={1}, namelist={2}" completed successfully'. \
