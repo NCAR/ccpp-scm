@@ -174,3 +174,15 @@ jobs:
         cd ${SCM_ROOT}/scm/bin
         mkdir ${RUN_DIR} && mkdir ${BIN_DIR}
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
+
+    - name: Create temporary directory with SCM RT output
+      run: |
+        cd ${SCM_ROOT}/test
+        mkdir artifact
+        ./rt_ci.py
+
+    - name: Upload SCM RTs as GitHub Artifact
+      uses: actions/upload-artifact@v2
+      with: 
+        name: rt-baselines
+        path: artifact
