@@ -178,11 +178,11 @@ jobs:
     - name: Create temporary directory with SCM RT output
       run: |
         cd ${SCM_ROOT}/test
-        mkdir artifact
+        mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact
         ./rt_ci.py
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v2
       with: 
         name: rt-baselines
-        path: artifact
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact
