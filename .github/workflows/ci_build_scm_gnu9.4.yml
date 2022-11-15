@@ -174,14 +174,26 @@ jobs:
         cd ${SCM_ROOT}/scm/bin
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
 
-    - name: Create directory for SCM RT output
+    - name: Gather SCM RT output
       run: |
         cd ${SCM_ROOT}/test
         mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
         ./ci_util.py -b ${{matrix.build-type}}
 
-    - name: Create directoriy for SCM RT baselines
+    - name: Create directory for SCM RT baselines
       run: mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+
+    - name: Upload SCM RTs as GitHub Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: rt-baselines-${{matrix.build-type}}
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
+
+    - name: Upload SCM RTs as GitHub Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: rt-baselines-${{matrix.build-type}}
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
 
     - name: Download GitHub workflow artifact containing SCM RT baselines
       uses: actions/download-artifact@v3
@@ -199,4 +211,3 @@ jobs:
       with: 
         name: rt-baselines-${{matrix.build-type}}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
-
