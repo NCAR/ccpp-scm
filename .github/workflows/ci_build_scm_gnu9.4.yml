@@ -181,7 +181,7 @@ jobs:
         ./ci_util.py -b ${{matrix.build-type}}
 
     - name: Create directoriy for SCM RT baselines
-        run: mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      run: mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
 
     - name: Download GitHub workflow artifact containing SCM RT baselines
       uses: actions/download-artifact@v3
