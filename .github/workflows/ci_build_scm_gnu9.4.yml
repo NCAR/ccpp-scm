@@ -179,7 +179,7 @@ jobs:
       run: |
         cd ${SCM_ROOT}/test
         mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
-        ./rt_ci.py
+        ./rt_ci.py -b ${{matrix.build-type}}
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v2
