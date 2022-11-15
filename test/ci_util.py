@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+##############################################################################
+#
+# This script gathers the output from the $SCM_ROOT/ccpp-scm/scm/run directory
+# for the SCM CI Regression Tests. 
+#
+##############################################################################
 import os
 import sys
 from rt_test_cases import run_list
