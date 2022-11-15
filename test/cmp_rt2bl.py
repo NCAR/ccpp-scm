@@ -55,6 +55,7 @@ def main():
         print("ALL TESTS PASSED, OUTPUT IS IDENTICAL.")
     else:
         print("ALL TESTS PASSED, BUT OUTPUT DIFFERS FROM BASELINE.")
+        1/0
 
 #
 if __name__ == '__main__':
