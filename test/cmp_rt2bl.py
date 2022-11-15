@@ -31,20 +31,28 @@ def main():
     (build_type, dir_rt, dir_bl) = parse_args()
 
     #
+    error_count = 0
     for run in run_list:
         file_rt = dir_rt + "/" + run["case"]+"_"+run["suite"]+"/output.nc"
         file_bl = dir_bl + "/" + run["case"]+"_"+run["suite"]+"/output.nc"
-        print(file_rt)
-        print(file_bl)
         if exists(file_rt) and exists(file_bl):
-            com = "cmp "+file_rt+" "+file_bl
+            com = "cmp "+file_rt+" "+file_bl+" > logfile.txt"
             result = os.system(com)
-            print(com)
             if (result != 0):
-                print("ERROR: Results do not agree with baselines for"+run["case"]+"_"+run["suite"])
+                print("Output for "+run["case"]+"_"+run["suite"]+ " DIFFERS from baseline")
+                error_count = error_count + 1
+            else:
+                print("Output for "+run["case"]+"_"+run["suite"]+ " is IDENTICAL to baseline")
         else:
             print("FAIL: "+file_rt+" "+file_bl)
             exit()
+
+    if error_count == 0:
+        print("ALL TESTS PASSED, OUTPUT IS IDENTICAL.")
+        msg="PASS"
+    else:
+        print("ALL TESTS PASSED, BUT OUTPUT DIFFERS FROM BASELINE.")
+        msg="FAIL"
 
 #
 if __name__ == '__main__':
