@@ -44,15 +44,17 @@ def main():
             else:
                 print("Output for "+run["case"]+"_"+run["suite"]+ " is IDENTICAL to baseline")
         else:
-            print("FAIL: "+file_rt+" "+file_bl)
-            exit()
+            if not exists(file_rt):
+                print("Output for "+run["case"]+"_"+run["suite"]+ " is MISSING from output")
+            if not exists(file_bl):
+                print("Output for "+run["case"]+"_"+run["suite"]+ " is MISSING from baseline")
+            error_count = error_count + 1
 
+    #
     if error_count == 0:
         print("ALL TESTS PASSED, OUTPUT IS IDENTICAL.")
-        msg="PASS"
     else:
         print("ALL TESTS PASSED, BUT OUTPUT DIFFERS FROM BASELINE.")
-        msg="FAIL"
 
 #
 if __name__ == '__main__':
