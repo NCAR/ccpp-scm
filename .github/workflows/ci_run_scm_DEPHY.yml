@@ -7,6 +7,9 @@ jobs:
 
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        fortran-compiler: [gnu]
 
     # Environmental variables
     env:
@@ -54,11 +57,13 @@ jobs:
       run: |
         echo "FC=gfortran-9"  >> $GITHUB_ENV
         echo "CC=gcc-9"       >> $GITHUB_ENV
+
     - name: Environment for ifort compiler
       if: contains(matrix.fortran-compiler, 'intel')
       run: |
         echo "CC=icx"         >> $GITHUB_ENV
         echo "FC=ifort"       >> $GITHUB_ENV
+
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v3
@@ -75,6 +80,7 @@ jobs:
         make -j2
         make install
         echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
+
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
       uses: actions/cache@v3
@@ -91,6 +97,7 @@ jobs:
         make -j2
         make install
         echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
+
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
       uses: actions/cache@v3
@@ -107,6 +114,7 @@ jobs:
         make -j2
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
+
     - name: Install NetCDF C library
       run: sudo apt-get install libnetcdf-dev
 
