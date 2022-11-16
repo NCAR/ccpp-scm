@@ -22,19 +22,19 @@ module purge
 #load the modules in order to compile the CCPP SCM
 echo "Loading gnu and netcdf modules..."
 module load ncarenv/1.3
-module load gnu/10.1.0
-module load mpt/2.22
+module load gnu/11.2.0
+module load mpt/2.25
 module load ncarcompilers/0.5.0
 module load netcdf
 
 echo "Setting up NCEPLIBS"
-module use /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/modulefiles/stack
+module use /glade/work/epicufsrt/contrib/hpc-stack/gnu11.2.0/modulefiles/stack
 module load hpc/1.2.0
-module load hpc-gnu/10.1.0
-module load hpc-mpt/2.22
-setenv bacio_ROOT /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/bacio/2.4.1
-setenv sp_ROOT /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/sp/2.3.3
-setenv w3emc_ROOT  /glade/work/epicufsrt/GMTB/tools/gnu/10.1.0/hpc-stack-v1.2.0/gnu-10.1.0/w3emc/2.9.2
+module load hpc-gnu/11.2.0
+module load hpc-mpt/2.25
+setenv bacio_ROOT /glade/work/epicufsrt/contrib/hpc-stack/gnu11.2.0/gnu-11.2.0/bacio/2.4.1
+setenv sp_ROOT /glade/work/epicufsrt/contrib/hpc-stack/gnu11.2.0/gnu-11.2.0/sp/2.3.3
+setenv w3emc_ROOT /glade/work/epicufsrt/contrib/hpc-stack/gnu11.2.0/gnu-11.2.0/w3emc/2.9.2
 
 echo "Setting CC/CXX/FC environment variables"
 setenv CC gcc

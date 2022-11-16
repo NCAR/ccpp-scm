@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-import atexit
 import f90nml
 import logging
 import os
@@ -11,7 +10,6 @@ import subprocess
 import sys
 import time
 from suite_info import suite, suite_list
-from supported_cases import cases
 from netCDF4 import Dataset
 import importlib
 
@@ -42,10 +40,6 @@ MULTIRUN_IGNORE_ERROR = True
 # Default output periods
 DEFAULT_OUTPUT_PERIOD = 6
 DEFAULT_DIAG_PERIOD = 6
-
-# which suites in suite_info to use when running through suites
-SUITE_CHOICE = 'supported'
-#SUITE_CHOIE = 'all'
 
 # Path to the directory containing experiment namelists (relative to scm_root)
 CASE_NAMELIST_DIR = 'scm/etc/case_config'
@@ -174,7 +168,7 @@ def parse_arguments():
     args = parser.parse_args()
     file = args.file
     case = args.case
-    suite = args.suite
+    sdf = args.suite
     namelist = args.namelist
     tracers = args.tracers
     gdb = args.gdb
@@ -191,10 +185,13 @@ def parse_arguments():
     run_dir = args.run_dir
     bin_dir = args.bin_dir
     timestep = args.timestep
-    if not suite:
-        suite = DEFAULT_SUITE    
-
-    return (file, case, suite, namelist, tracers, gdb, runtime, runtime_mult, docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep)
+    
+    if not sdf:
+        sdf = DEFAULT_SUITE
+    
+    return (file, case, sdf, namelist, tracers, gdb, runtime, runtime_mult, docker, \
+            verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,   \
+            n_itt_diag, run_dir, bin_dir, timestep)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -211,7 +208,7 @@ def find_gdb():
 
 class Experiment(object):
 
-    def __init__(self, case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, timestep):
+    def __init__(self, case, suite, runtime, runtime_mult, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag):
         """Initialize experiment. This routine does most of the work,
         including setting and checking the experiment configuration
         (namelist)."""
@@ -313,10 +310,10 @@ class Experiment(object):
         else:
             self._n_itt_diag = DEFAULT_DIAG_PERIOD
         
-        if timestep:
-            self._timestep = timestep
+        if suite.timestep is not None:
+            self._timestep = suite.timestep
         else:
-            self._timestep = 600.
+            self._timestep = None
         
     @property
     def name(self):
@@ -488,7 +485,6 @@ class Experiment(object):
             custom_output_dir = False
         
         #if using the DEPHY format, need to also check the case data file for the surfaceForcing global attribute for 'Flux' or 'surfaceFlux', which denotes prescribed surface fluxes
-        surface_flux_spec = False
         try:
             input_type = case_nml['case_config']['input_type']
             if input_type == 1:
@@ -710,8 +706,12 @@ class Experiment(object):
             execute(cmd)
         
         #Inform user of timestep and output intervals
-        logging.info('Using {0}s as the timestep with an instantaneous output period of {1}s and a diagnostic output period of {2}s'.format(
-            case_nml['case_config']['dt'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_out'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_diag']))
+        if self._timestep:
+            logging.info('Using {0}s as the timestep with an instantaneous output period of {1}s and a diagnostic output period of {2}s'.format(
+                case_nml['case_config']['dt'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_out'],case_nml['case_config']['dt']*case_nml['case_config']['n_itt_diag']))
+        else:
+            logging.info('Using the default timestep in src/scm_input.F90 with an instantaneous output period of {0}*dt and a diagnostic output period of {1}*dt'.format(
+                case_nml['case_config']['n_itt_out'],case_nml['case_config']['n_itt_diag']))
         
         return os.path.join(SCM_RUN, output_dir)
 
@@ -754,7 +754,9 @@ def copy_outdir(exp_dir):
     shutil.copytree(exp_dir, home_output_dir)
 
 def main():
-    (file, case, suite, namelist, tracers, use_gdb, runtime, runtime_mult,  docker, verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, run_dir, bin_dir, timestep) = parse_arguments()
+    (file, case, sdf, namelist, tracers, use_gdb, runtime, runtime_mult, docker, \
+     verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,       \
+     n_itt_diag, run_dir, bin_dir, timestep) = parse_arguments()
     
     global SCM_ROOT
     SCM_ROOT = os.getenv('SCM_ROOT')
@@ -788,8 +790,7 @@ def main():
     else:
         gdb = None
 
-    ncases = 1
-    if file:
+    if (file != None):
         logging.info('SCM-run: Using {} to loop through defined runs'.format(file))
         try:
             dirname, basename = os.path.split(file)
@@ -797,24 +798,17 @@ def main():
             module_name = os.path.splitext(basename)[0]
             scm_runs = importlib.import_module(module_name)
             run_list = scm_runs.run_list
-            ncases   = len(scm_runs.run_list)
             sys.path.pop()
         except ImportError:
             message = 'There was a problem loading {0}. Please check that the path exists.'.format(file)
             logging.critical(message)
             raise Exception(message)
     else:
-        logging.info('SCM-run: Using configuration provided via command line')
-        if case:
-            run_list = [{"case":case,    "suite":suite}]
-        else:
-            run_list = [{"case":cases[0],"suite":suite}]
-        if namelist:
-            run_list[0]["namelist"] = namelist
-        if (tracers):
-            run_list[0]["tracer"]   = tracers
+        logging.info('SCM-run: Using single provided case')
+        run_list = [{"case": case, "suite": sdf}]
+        if (namelist != None): run_list[0]["namelist"] = namelist
+        if (tracers  != None): run_list[0]["tracers"]  = tracers
 
-            
     # Loop through all input "run dictionaires"
     irun = 0
     for run in run_list:
@@ -844,7 +838,7 @@ def main():
                 
             # If tracer file provided, use. Otherwise use default tracer file for this suite
             try: 
-                active_suite.tracers = run["tracer"]
+                active_suite.tracers = run["tracers"]
                 logging.info('Using provided tracer file for suite={0}'.format(run["suite"]))
             except:
                 logging.info('Using default tracer file for suite={0}'.format(run["suite"]))
@@ -854,13 +848,12 @@ def main():
         else:
             logging.info('Suite provided, {0}, does not have default namelist and tracer information'.format(run["suite"]))
             # If namelist and tracer file provided, use. Otherwise error.
-            if ("namelist" in run) and ("tracer" in run):
+            if ("namelist" in run) and ("tracers" in run):
                 irun = irun + 1
                 if timestep: 
-                    active_suite = suite(run["suite"], run["tracer"], run["namelist"], timestep, -1, False)
+                    active_suite = suite(run["suite"], run["tracers"], run["namelist"], timestep, -1, False)
                 else:
-                    active_suite = suite(run["suite"], run["tracer"], run["namelist"], 600, -1, False)
-                    #active_suite = suite(run["suite"], run["tracer"], run["namelist"], -1, -1, False) NOT WORKING without timestep defined
+                    active_suite = suite(run["suite"], run["tracers"], run["namelist"], -1, -1, False)
             else:
                 message = 'The given suite {0}, does not have defaults set in suite_info.py and either the tracers file or physics namelist file (or both) were not provided.'.format(run["suite"])
                 logging.critical(message)
@@ -870,13 +863,17 @@ def main():
         # Run the SCM case
         #
         logging.info('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
-            irun, ncases, run["case"], run["suite"], active_suite.namelist))
+            irun, len(run_list), run["case"], run["suite"], active_suite.namelist))
         #
         exp = Experiment(run["case"], active_suite, runtime, runtime_mult, levels, \
-                         npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag, timestep)
+                         npz_type, vert_coord_file, case_data_dir, n_itt_out, n_itt_diag)
         #
         exp_dir = exp.setup_rundir()
-        (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = MULTIRUN_IGNORE_ERROR)
+        if len(run_list) > 1:
+            l_ignore_error = MULTIRUN_IGNORE_ERROR
+        else:
+            l_ignore_error = False
+        (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = l_ignore_error)
         #
         if status == 0:
             logging.info('Process "(case={0}, suite={1}, namelist={2}" completed successfully'. \

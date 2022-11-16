@@ -180,6 +180,7 @@ PHYS_DATA_DIR=$TOP_DIR/scm/data/physics_input_data
 phys_data_files=( CCN_ACTIVATE.BIN freezeH2O.dat qr_acr_qgV2.dat qr_acr_qsV2.dat )
 mg_inccn_data_files=( cam5_4_143_NAAI_monclimo2.nc cam5_4_143_NPCCN_monclimo2.nc )
 job_prefix=test_job             # Batch job and std out file prefix
+suites_for_RTs="SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0"
 
 #-----------------------------------------------------------------------
 # Create the output and log files if they doesn't exist
@@ -229,9 +230,9 @@ for compiler in "${compilers[@]}"; do
     BUILD_OUTPUT=${BIN_DIR}/build.out
     if [ "${build_type}" == "Debug" ] ; then
       # Add --runtime ${runtime} to run_scm.py to reduce runtime for tests
-      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -vv --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}"
+      test_run_cmd="${BIN_DIR}/run_scm.py --file ${TEST_DIR}/rt_test_cases.py -v --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}"
     else
-      test_run_cmd="${BIN_DIR}/run_scm.py -m -f ${TEST_DIR}/rt_test_cases.py -v --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}"
+      test_run_cmd="${BIN_DIR}/run_scm.py --file ${TEST_DIR}/rt_test_cases.py --runtime_mult 0.1 --run_dir ${RUN_DIR} --bin_dir ${BIN_DIR}"
     fi
 
     . ${ETC_DIR}/${machine}_setup_${compiler}.sh
@@ -243,7 +244,7 @@ for compiler in "${compilers[@]}"; do
       if [ -d "${BIN_DIR}" ] ; then rm -rf ${BIN_DIR}; fi
       mkdir ${BIN_DIR}
       cd ${BIN_DIR}
-      cmake -DCMAKE_BUILD_TYPE=${build_type} ../src >& log.cmake || fail "cmake FAILED, see ${BIN_DIR}/log.cmake"
+      cmake -DCMAKE_BUILD_TYPE=${build_type} -DCCPP_SUITES=${suites_for_RTs} ../src >& log.cmake || fail "cmake FAILED, see ${BIN_DIR}/log.cmake"
       make -j4 >& ${BUILD_OUTPUT} || fail "Build ${machine} ${compiler} FAILED, see ${BUILD_OUTPUT}"
     fi    # End of skip build for testing
 
