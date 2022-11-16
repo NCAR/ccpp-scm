@@ -5,6 +5,7 @@ class suite(object):
     DEFAULT_MAX_TIMESTEP = 1800.0
   
     def __init__(self, name, tracers, namelist, timestep, max_timestep, supported):
+        DEFAULT_MAX_TIMESTEP = 1800.0
         self._name = name                     #should remain unchanged after init
         self._default_tracers = tracers       #should remain unchanged after init
         self._default_namelist = namelist     #should remain unchanged after init
