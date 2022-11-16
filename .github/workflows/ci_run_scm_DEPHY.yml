@@ -163,4 +163,4 @@ jobs:
     - name: Run SCM with MAGIC_LEG04A DEPHY reference case
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py -c MAGIC_LEG04A --case_data_dir ${dephy_ROOT}/MAGIC/LEG04A -v
+        ./run_scm.py -c MAGIC_LEG04A --case_data_dir /home/runner/DEPHY-SCM/MAGIC/LEG04A --runtime_mult 0.1 -v
