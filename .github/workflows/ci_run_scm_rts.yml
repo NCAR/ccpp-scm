@@ -1,4 +1,4 @@
-name: CI test to build SCM
+name: CI test to build and run SCM regression tests
 
 on: [push, pull_request]
 
