@@ -55,6 +55,16 @@ jobs:
     - name: Update system packages
       run: sudo apt-get update
 
+
+    - name: Create directory for SCM RT baselines
+      run: mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+
+    - name: Download SCM RT baselines
+      run: |
+        cd /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      	wget ftp://ftp.rap.ucar.edu:/incoming/irap/met_help/ccpp-scm/rt-baselines-${{matrix.build-type}}.zip
+      	unzip rt-baselines-${{matrix.build-type}}.zip
+
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
@@ -183,25 +193,19 @@ jobs:
     - name: Create directory for SCM RT baselines
       run: mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
 
-    - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: rt-baselines-${{matrix.build-type}}
-        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
-
-    - name: Download GitHub workflow artifact containing SCM RT baselines
-      uses: actions/download-artifact@v3
-      with:
-        name: rt-baselines-${{matrix.build-type}}
-        path: /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+    - name: Download SCM RT baselines
+      run: |
+        cd /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+        wget ftp://ftp.rap.ucar.edu:/incoming/irap/met_help/ccpp-scm/rt-baselines-${{matrix.build-type}}.zip
+        unzip rt-baselines-${{matrix.build-type}}.zip
 
     - name: Compare SCM RT output to baselines
       run: |
         cd ${SCM_ROOT}/test
         ./cmp_rt2bl.py --build_type ${{matrix.build-type}} --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
-#    - name: Upload SCM RTs as GitHub Artifact
-#      uses: actions/upload-artifact@v2
-#      with: 
-#        name: rt-baselines-${{matrix.build-type}}
-#        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
+    - name: Upload SCM RTs as GitHub Artifact
+      uses: actions/upload-artifact@v2
+      with: 
+        name: rt-baselines-${{matrix.build-type}}
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
