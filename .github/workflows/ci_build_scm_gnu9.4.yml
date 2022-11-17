@@ -55,16 +55,6 @@ jobs:
     - name: Update system packages
       run: sudo apt-get update
 
-
-    - name: Create directory for SCM RT baselines
-      run: mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
-
-    - name: Download SCM RT baselines
-      run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
-        wget ftp://ftp.rap.ucar.edu:/incoming/irap/met_help/ccpp-scm/rt-baselines-${{matrix.build-type}}.zip
-        unzip rt-baselines-${{matrix.build-type}}.zip
-
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
