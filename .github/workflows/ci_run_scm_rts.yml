@@ -1,9 +1,9 @@
 name: CI test to build SCM
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
-  build-linux:
+  run_scm_rts:
 
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
