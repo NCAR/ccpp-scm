@@ -26,13 +26,14 @@ def main():
     (build_type) = parse_args()
 
     #
+    case_tag = run["case"]+"_"+run["suite"]
     for run in run_list:
-        file_out = "../scm/run/" + "output_"+run["case"]+"_"+run["suite"]+"/output.nc"
+        file_out = "../scm/run/" + "output_"+case_tag+"/output.nc"
         if exists(file_out):
-            os.system("mkdir -p artifact-"+build_type+"/"+run["case"]+"_"+run["suite"]+"/")
-            os.system("cp " + file_out + " artifact-"+build_type+"/"+run["case"]+"_"+run["suite"]+"/output.nc")
+            os.system("mkdir -p artifact-"+build_type+"/"+case_tag+"/")
+            os.system("cp " + file_out + " artifact-"+build_type+"/"+case_tag+"/output.nc")
         else:
-            print("FAIL: Could not copy output to for baseline generation")
+            print("FAIL: Could not copy output for baseline generation")
             exit()
 
 if __name__ == '__main__':

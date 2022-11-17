@@ -177,15 +177,15 @@ jobs:
     - name: Gather SCM RT output
       run: |
         cd ${SCM_ROOT}/test
-        mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
+        mkdir ${dir_rt}
         ./ci_util.py -b ${{matrix.build-type}}
 
     - name: Create directory for SCM RT baselines
-      run: mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      run: mkdir ${dir_bl}
 
     - name: Download SCM RT baselines
       run: |
-        cd /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+        cd ${dir_bl}
         wget ftp://ftp.rap.ucar.edu:/incoming/irap/met_help/ccpp-scm/rt-baselines-${{matrix.build-type}}.zip
         unzip rt-baselines-${{matrix.build-type}}.zip
 
@@ -198,4 +198,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with: 
         name: rt-baselines-${{matrix.build-type}}
-        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
+        path: ${dir_rt}
