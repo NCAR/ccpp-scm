@@ -26,8 +26,8 @@ def main():
     (build_type) = parse_args()
 
     #
-    case_tag = run["case"]+"_"+run["suite"]
     for run in run_list:
+        case_tag = run["case"]+"_"+run["suite"]
         file_out = "../scm/run/" + "output_"+case_tag+"/output.nc"
         if exists(file_out):
             os.system("mkdir -p artifact-"+build_type+"/"+case_tag+"/")
