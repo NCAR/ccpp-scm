@@ -177,7 +177,7 @@ jobs:
     - name: Gather SCM RT output
       run: |
         cd ${SCM_ROOT}/test
-        mkdir ${dir_rt}
+        mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
         ./ci_util.py -b ${{matrix.build-type}}
 
     - name: Create directory for SCM RT baselines
@@ -198,4 +198,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with: 
         name: rt-baselines-${{matrix.build-type}}
-        path: ${dir_rt}
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
