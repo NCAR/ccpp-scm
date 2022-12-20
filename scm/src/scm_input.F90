@@ -1202,10 +1202,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   end if  
   
   model_ics=.false.
-  !if(input_n_soil > 0) then
-  !  model_ics = .true.
-  !  scm_state%model_ics = .true.
-  !end if
+  if(input_n_soil > 0) then
+    model_ics = .true.
+    scm_state%model_ics = .true.
+  end if
   
   !> - Allocate the dimension variables.
   allocate(input_t0    (input_n_init_times),                                        &
@@ -1483,7 +1483,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "tke", .True., input_tke)
   
   if (model_ics) then
-     print*,"model_ics: ",model_ics
     call NetCDF_read_var(ncid, "o3",      .True.,  input_ozone)
     call NetCDF_read_var(ncid, "area",    .True.,  input_area)
     
@@ -1680,7 +1679,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       call NetCDF_read_var(ncid, "hice",     .True., input_hice)
       call NetCDF_read_var(ncid, "fice",     .True., input_fice)
       call NetCDF_read_var(ncid, "tisfc",    .True., input_tisfc)
-      call NetCDF_read_var(ncid, "snwdph",   .True., input_snwdph)
+      call NetCDF_read_var(ncid, "snowd",    .True., input_snwdph)
       call NetCDF_read_var(ncid, "snoalb",   .True., input_snoalb)
       call NetCDF_read_var(ncid, "tg3",      .True., input_tg3)
       call NetCDF_read_var(ncid, "uustar",   .True., input_uustar)

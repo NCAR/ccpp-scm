@@ -74,6 +74,7 @@ parser.add_argument('-nf','--no_force',   help='flag to additionally write out a
 parser.add_argument('-sc','--save_comp',  help='flag to save and write out a file with UFS output data to compare SCM simulations with', action='store_true')
 parser.add_argument('-lsm', '--add_UFS_NOAH_lsm', help='flag to include UFS NOAH LSM surface forcing', action='store_true')
 parser.add_argument('-ufsf','--add_UFS_dyn_tend', help='flag to include UFS dynamic tendencies for SCM forcing', action='store_true')
+parser.add_argument('-near','--use_nearest',      help='flag to indicate using the nearest FUS history file gridpoint, no regridding',action='store_true')
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -98,6 +99,7 @@ def parse_arguments():
     save_comp = args.save_comp
     add_UFS_NOAH_lsm = args.add_UFS_NOAH_lsm
     add_UFS_dyn_tend = args.add_UFS_dyn_tend
+    use_nearest      = args.use_nearest
     
     #validate args
     if not os.path.exists(in_dir):
@@ -138,7 +140,7 @@ def parse_arguments():
     
     return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, \
             area, noahmp, case_name, old_chgres, lam, no_force, save_comp,   \
-            add_UFS_NOAH_lsm, add_UFS_dyn_tend)
+            add_UFS_NOAH_lsm, add_UFS_dyn_tend, use_nearest)
 
 def setup_logging():
     """Sets up the logging module."""
@@ -240,10 +242,13 @@ def find_loc_indices(loc, dir, tile, lam):
     #returns the indices of the nearest neighbor point in the given tile, the lon/lat of the nearest neighbor, 
     #and the distance (m) from the given point to the nearest neighbor grid cell
     
-    if (lam):
-        filename_pattern = '*grid.tile7.halo{}.nc'.format(n_lam_halo_points)
+    if (tile >= 0):
+        if (lam):
+            filename_pattern = '*grid.tile7.halo{}.nc'.format(n_lam_halo_points)
+        else:
+            filename_pattern = '*grid.tile{0}.nc'.format(tile)
     else:
-        filename_pattern = '*grid.tile{0}.nc'.format(tile)
+        filename_pattern = 'atmf000.nc'
     
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
@@ -255,24 +260,28 @@ def find_loc_indices(loc, dir, tile, lam):
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
     
-    #read in supergrid longitude and latitude
-    lon_super = np.asarray(nc_file['x'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
-    if (lam):
-        #strip ghost/halo points and return central (A-grid) points
-        #assuming n_lam_halo_points
-        lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
-        lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super_no_halo[1::2,1::2]
-        latitude = lat_super_no_halo[1::2,1::2]
+    if (tile >= 0):
+        #read in supergrid longitude and latitude
+        lon_super = np.asarray(nc_file['x'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        lat_super = np.asarray(nc_file['y'])    #[lat,lon] or [y,x]   #.swapaxes(0,1)
+        if (lam):
+            #strip ghost/halo points and return central (A-grid) points
+            #assuming n_lam_halo_points
+            lon_super_no_halo = lon_super[2*n_lam_halo_points:lon_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lon_super.shape[1]-2*n_lam_halo_points]
+            lat_super_no_halo = lat_super[2*n_lam_halo_points:lat_super.shape[0]-2*n_lam_halo_points,2*n_lam_halo_points:lat_super.shape[1]-2*n_lam_halo_points]
+            #get the longitude and latitude data for the grid centers by slicing the supergrid 
+            #and taking only odd-indexed values
+            longitude = lon_super_no_halo[1::2,1::2]
+            latitude = lat_super_no_halo[1::2,1::2]
+        else:
+            #get the longitude and latitude data for the grid centers by slicing the supergrid 
+            #and taking only odd-indexed values
+            longitude = lon_super[1::2,1::2]
+            latitude = lat_super[1::2,1::2]
     else:
-        #get the longitude and latitude data for the grid centers by slicing the supergrid 
-        #and taking only odd-indexed values
-        longitude = lon_super[1::2,1::2]
-        latitude = lat_super[1::2,1::2]
-    
+        longitude = np.asarray(nc_file['lon'])
+        latitude  = np.asarray(nc_file['lat'])
+
     nc_file.close()
     
     adj_long = False        
@@ -436,7 +445,7 @@ def read_NetCDF_surface_var(nc_file, var_name, i, j, old_chgres, vert_dim):
                 var = missing_value
     return var
 
-def get_UFS_IC_data(dir, grid_dir, forcing_dir, tile, i, j, old_chgres, lam):
+def get_UFS_IC_data(dir, grid_dir, tile, i, j, old_chgres, lam):
     """Get the state, surface, and orographic data for the given tile and indices"""
     #returns dictionaries with the data
     
@@ -606,7 +615,7 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
         "o3": o3_model_rev[0][::-1],
         "ql": liqwat_model_rev[0][::-1],
         "qi": icewat_model_rev[::-1],
-        "ps": ps_calc,
+        "ps": np.asarray(ps_calc),
         "ta": temp_model_rev[0,::-1],
         "pa": pressure_model,
         "pa_i": pressure_model_interfaces
@@ -1404,322 +1413,227 @@ def search_in_dict(listin,name):
         if dictionary["name"] == name:
             return count
 
-def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam, save_comp_data):
+########################################################################################
+def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, grid_dir, tile, i, j, lam, save_comp_data):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
-    
-    regrid_output = 'point'
-    #regrid_output = 'all'
-    
-    orig_SCM_format = False
-    
-    #if lam:
-    dyn_filename_pattern = 'atmf*.nc'
-    phy_filename_pattern = 'sfcf*.nc'
-    #else:
-    #    dyn_filename_pattern = 'atmf*.tile{0}.nc'.format(tile)
-    #    phy_filename_pattern = 'sfcf*.tile{0}.nc'.format(tile)
-    
-    dyn_filenames = []
-    phy_filenames = []
+
+    # Determine UFS history file format (tiled/quilted)
+    if lam:
+        atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
+        sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
+    else:
+        atm_ftag = 'atmf*.nc'
+        sfc_ftag = 'sfcf*.nc'
+
+    # Get list of UFS history files with 3D ATMospheric state variables.
+    atm_filenames = []
     for f_name in os.listdir(forcing_dir):
-       if fnmatch.fnmatch(f_name, dyn_filename_pattern):
-          dyn_filenames.append(f_name)
-       if fnmatch.fnmatch(f_name, phy_filename_pattern):
-          phy_filenames.append(f_name)
-    if not dyn_filenames:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(dyn_filename_pattern,forcing_dir)
+       if fnmatch.fnmatch(f_name, atm_ftag):
+          atm_filenames.append(f_name)
+    if not atm_filenames:
+        message = 'No filenames matching the pattern {0} found in {1}'.                \
+                  format(atm_ftag,forcing_dir)
         logging.critical(message)
         raise Exception(message)
-    if not phy_filenames:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(phy_filename_pattern,forcing_dir)
-        logging.critical(message)
-        raise Exception(message)
-    dyn_filenames = sorted(dyn_filenames)
-    phy_filenames = sorted(phy_filenames)
+    atm_filenames = sorted(atm_filenames)
+    #atm_filenames = atm_filenames[1::]
+    n_files       = len(atm_filenames)
     
-    if (len(dyn_filenames) != len(phy_filenames)):
-        message = 'The number of dyn files and phy files in {0} matching the patterns does not match.'.format(forcing_dir)
-        logging.critical(message)
-        raise Exception(message)
-    
-    n_files = len(dyn_filenames)
-    
+    # Physical constants (used by FV3 remapping functions)
     kord_tm = -9
-    kord_mt = 9
     kord_tr = 9
     t_min = 184.0
     q_min = 0.0
+    sec_in_hr = 3600.
     
     ####################################################################################
     #
-    # Read in atmospheric state_UFS (atmf*.nc)
+    # Read in atmospheric state, atmf*.nc history files.
     #
     ####################################################################################
-    ps     = []
-    p_lev  = []
-    p_lay  = []
-    t_lay  = []
-    qv_lay = []
-    u_lay  = []
-    v_lay  = []
-    time_dyn_hours = []
+
+    # Find nearest point on UFS history file (quilted) grid.
+    if use_nearest:
+        (tile_jj, tile_ii, point_lon, point_lat, dist_min) = find_loc_indices(location, forcing_dir, -999, lam)
+        print('The closest point has indices [{0},{1}]'.format(tile_ii,tile_jj))
+        print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
+        print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
+
+    #
+    ps      = []
+    p_lev   = []
+    p_lay   = []
+    t_lay   = []
+    qv_lay  = []
+    u_lay   = []
+    v_lay   = []
+    time_hr = []
+
+    # Get grid from UFS IC data
     (ic_grid_lon, ic_grid_lat) = get_initial_lon_lat_grid(grid_dir, tile, lam)
-    for count, filename in enumerate(dyn_filenames, start=1):
+
+    for count, filename in enumerate(atm_filenames, start=1):
         nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
         nc_file.set_always_mask(False)
         
-        #check if output grid is different than initial (native) grid
-        try:
-            data_grid_lon = nc_file['lon'][:,:]
-            data_grid_lat = nc_file['lat'][:,:]
-        except:
-            data_grid_lon = nc_file['grid_xt'][:,:]
-            data_grid_lat = nc_file['grid_yt'][:,:]
-        
-        equal_grids = False
-        if (ic_grid_lon.shape == data_grid_lon.shape and ic_grid_lat.shape == ic_grid_lat.shape):
-            if (np.equal(ic_grid_lon,data_grid_lon).all() and np.equal(ic_grid_lat,data_grid_lat).all()):
-                equal_grids = True
-        
-        if (not equal_grids):
-            grid_in = {'lon': data_grid_lon, 'lat': data_grid_lat}
-            if regrid_output == 'all':
-                grid_out = {'lon': ic_grid_lon, 'lat': ic_grid_lat}
-                i_get = i
-                j_get = j
-            elif regrid_output == 'point':
-                grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
-                i_get = 0
-                j_get = 0
+        # Check if UFS history file grid is different than UFS initial-condition grid.
+        if not use_nearest:
+            try:
+                data_grid_lon = nc_file['lon'][:,:]
+                data_grid_lat = nc_file['lat'][:,:]
+            except:
+                data_grid_lon = nc_file['grid_xt'][:,:]
+                data_grid_lat = nc_file['grid_yt'][:,:]
+            equal_grids = False
+            if (ic_grid_lon.shape == data_grid_lon.shape and                               \
+                ic_grid_lat.shape == ic_grid_lat.shape):
+                if (np.equal(ic_grid_lon,data_grid_lon).all() and                          \
+                    np.equal(ic_grid_lat,data_grid_lat).all()):
+                    equal_grids = True
+
+            # If necessary, remap history file (data_grid) to IC file (ic_grid).
+            if (not equal_grids):
+                print('Regridding {} onto native grid: regridding progress = {}%'.         \
+                      format(filename, 100.0*count/(n_files)))
+
+                grid_in   = {'lon': data_grid_lon, 'lat': data_grid_lat}
+                grid_out  = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat':            \
+                             np.reshape(ic_grid_lat[j,i],(-1,1))}
+                regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
+                ps_data   = regridder(nc_file['pressfc'][0,:,:])
+                t_data    = regridder(nc_file['tmp'][0,::-1,:,:])
+                qv_data   = regridder(nc_file['spfh'][0,::-1,:,:])
+                u_data    = regridder(nc_file['ugrd'][0,::-1,:,:])
+                v_data    = regridder(nc_file['vgrd'][0,::-1,:,:])
+                i_get     = 0
+                j_get     = 0
+            # Same grids for history file (data_grid) to IC file (ic_grid).
             else:
-                print('Unrecognized regrid_output variable. Exiting...')
-                exit()
-            
-            print('Regridding {} onto native grid: regridding progress = {}%'.format(filename, 100.0*count/(len(dyn_filenames) + len(phy_filenames))))
-            regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
-            #print(regridder.weights)            
-            
-            ps_data = regridder(nc_file['pressfc'][0,:,:])
-            
-            t_data = regridder(nc_file['tmp'][0,::-1,:,:])
-            qv_data = regridder(nc_file['spfh'][0,::-1,:,:])
-            u_data = regridder(nc_file['ugrd'][0,::-1,:,:])
-            v_data = regridder(nc_file['vgrd'][0,::-1,:,:])
+                ps_data   = nc_file['pressfc'][0,:,:]
+                t_data    = nc_file['tmp'][0,::-1,:,:]
+                qv_data   = nc_file['spfh'][0,::-1,:,:]
+                u_data    = nc_file['ugrd'][0,::-1,:,:]
+                v_data    = nc_file['vgrd'][0,::-1,:,:]
+                i_get     = i
+                j_get     = j
         else:
             ps_data = nc_file['pressfc'][0,:,:]
-            t_data = nc_file['tmp'][0,::-1,:,:]
+            t_data  = nc_file['tmp'][0,::-1,:,:]
             qv_data = nc_file['spfh'][0,::-1,:,:]
-            u_data = nc_file['ugrd'][0,::-1,:,:]
-            v_data = nc_file['vgrd'][0,::-1,:,:]
-            i_get = i
-            j_get = j
-        
-        nlevs=len(nc_file.dimensions['pfull'])
-        
+            u_data  = nc_file['ugrd'][0,::-1,:,:]
+            v_data  = nc_file['vgrd'][0,::-1,:,:]
+            j_get   = tile_jj
+            i_get   = tile_ii
+
+        # Compute and store vertical grid information.
         ak = getattr(nc_file, "ak")[::-1]
         bk = getattr(nc_file, "bk")[::-1]
-    
         ps.append(ps_data[j_get,i_get])
-        
+        nlevs = len(nc_file.dimensions['pfull'])
         p_interface = np.zeros(nlevs+1)
         for k in range(nlevs+1):
             p_interface[k]=ak[k]+ps[-1]*bk[k]
-        
         p_lev.append(p_interface)
-        
         p_layer = np.zeros(nlevs)
         for k in range(nlevs):
-            p_layer[k] = ((1.0/(rocp+1.0))*(p_interface[k]**(rocp+1.0) - p_interface[k+1]**(rocp+1.0))/(p_interface[k] - p_interface[k+1]))**(1.0/rocp)
-        
+            p_layer[k] = ((1.0/(rocp+1.0))*(p_interface[k]**(rocp+1.0) -               \
+                            p_interface[k+1]**(rocp+1.0))/(p_interface[k] -            \
+                            p_interface[k+1]))**(1.0/rocp)
         p_lay.append(p_layer)
-        
+
+        # Store state variables.
         t_lay.append(t_data[:,j_get,i_get])
         qv_lay.append(qv_data[:,j_get,i_get])
         u_lay.append(u_data[:,j_get,i_get])
         v_lay.append(v_data[:,j_get,i_get])
-            
-        time_dyn_hours.append(nc_file['time'][0])
+        time_hr.append(nc_file['time'][0])
         
-        nc_file.close()
-    ps = np.asarray(ps)
-    p_lev = np.asarray(p_lev)
-    p_lay = np.asarray(p_lay)
-    t_lay = np.asarray(t_lay)
-    qv_lay = np.asarray(qv_lay)
-    u_lay = np.asarray(u_lay)
-    v_lay = np.asarray(v_lay)
-    time_dyn_hours = np.asarray(time_dyn_hours)
-    tv_lay = t_lay*(1.0 + zvir*qv_lay)
-
-    ####################################################################################
-    #
-    # Read in tendencies (sfcf*.nc)
-    #
-    ####################################################################################
-
-    # Dictionary containing dynamic tendency names.
-    vars_dyn  =[{"name":"dtend_qv_nophys"},  {"name":"dtend_temp_nophys"}, \
-                {"name":"dtend_u_nophys"},   {"name":"dtend_v_nophys"}]
-
-    # Dictionary of diagnostics to save for compariaion to SCM output.
-    vars_comp= [{"name":"dtend_qv_pbl"},     {"name":"dtend_temp_pbl"},    \
-                {"name":"dtend_u_pbl"},      {"name":"dtend_v_pbl"},       \
-                {"name":"dtend_qv_deepcnv"}, {"name":"dtend_temp_deepcnv"},\
-                {"name":"dtend_u_deepcnv"},  {"name":"dtend_v_deepcnv"},   \
-                {"name":"dtend_qv_shalcnv"}, {"name":"dtend_temp_shalcnv"},\
-                {"name":"dtend_u_shalcnv"},  {"name":"dtend_v_shalcnv"},   \
-                {"name":"dtend_temp_lw"},    {"name":"dtend_temp_sw"},     \
-                {"name":"dtend_qv_mp"},      {"name":"dtend_temp_mp"},     \
-                {"name":"dtend_qv_cnvgwd"},  {"name":"dtend_temp_cnvgwd"}, \
-                {"name":"dtend_u_cnvgwd"},   {"name":"dtend_v_cnvgwd"},    \
-                {"name":"dtend_qv_phys"},    {"name":"dtend_temp_phys"},   \
-                {"name":"dtend_u_phys"},     {"name":"dtend_v_phys"}]
-
-    # Initialize dictionary "values" to empty list.
-    for vars in vars_dyn: vars["values"] = []
-    for vars in vars_comp: vars["values"] = []
-
-    # Read in each sfcf***.nc
-    time_phys_hours = []
-    for count, filename in enumerate(phy_filenames, start=1):
-        # Open file
-        nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
-        nc_file.set_always_mask(False)
-        
-        # check if output grid is different than initial (native) grid
-        try:
-            data_grid_lon = nc_file['lon'][:,:]
-            data_grid_lat = nc_file['lat'][:,:]
-        except:
-            data_grid_lon = nc_file['grid_xt'][:,:]
-            data_grid_lat = nc_file['grid_yt'][:,:]
-        
-        equal_grids = False
-        if (ic_grid_lon.shape == data_grid_lon.shape and ic_grid_lat.shape == ic_grid_lat.shape):
-            if (np.equal(ic_grid_lon,data_grid_lon).all() and np.equal(ic_grid_lat,data_grid_lat).all()):
-                equal_grids = True
-        
-        if (not equal_grids):
-            grid_in = {'lon': data_grid_lon, 'lat': data_grid_lat}
-            if regrid_output == 'all':
-                grid_out = {'lon': ic_grid_lon, 'lat': ic_grid_lat}
-                i_get = i
-                j_get = j
-            elif regrid_output == 'point':
-                grid_out = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat': np.reshape(ic_grid_lat[j,i],(-1,1))}
-                i_get = 0
-                j_get = 0
-            else:
-                print('Unrecognized regrid_output variable. Exiting...')
-                exit()
-            
-            print('Regridding {} onto native grid: regridding progress = {}%'.\
-                  format(filename, 100.0*(count + len(dyn_filenames))/(len(dyn_filenames) + len(phy_filenames))))
-            regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
-            
-            # Read in each available fields in dictionaries. Copy variable attributes to dictionaries (use
-            # for output).
-            for dtend in vars_dyn:
-                try:
-                    data = regridder(nc_file[dtend["name"]][0,::-1,:,:])
-                    dtend["values"].append(data[:,j_get,i_get])
-                    dtend["units"]     = nc_file[dtend["name"]].getncattr(name="units")
-                    dtend["long_name"] = nc_file[dtend["name"]].getncattr(name="long_name")
-                except:
-                    logging.info(dtend["name"] + ' not found in ' + filename)
-                    exit()
-
-            if (save_comp_data):
-                for dtend in vars_comp:
-                    try:
-                        data = regridder(nc_file[dtend["name"]][0,::-1,:,:])
-                        dtend["values"].append(data[:,j_get,i_get])
-                        dtend["units"]     = nc_file[dtend["name"]].getncattr(name="units")
-                        dtend["long_name"] = nc_file[dtend["name"]].getncattr(name="long_name")
-                    except:
-                        logging.debug(dtend["name"] + ' not found in ' + filename)
-        #
-        # Regridding not necessary
-        #
-        else:
-            i_get = i
-            j_get = j
-            # Read in fields. Copy variable attributes
-            for dtend in vars_dyn:
-                try:
-                    data = nc_file[dtend["name"]][0,::-1,:,:]
-                    dtend["values"].append(data[:,j_get,i_get])
-                    dtend["units"]     = nc_file[dtend["name"]].getncattr(name="units")
-                    dtend["long_name"] = nc_file[dtend["name"]].getncattr(name="long_name")
-                except:
-                    logging.debug(dtend["name"] + ' not found in ' + filename)
-            #
-            if (save_comp_data):
-                for dtend in vars_comp:
-                    try:
-                        data = nc_file[dtend["name"]][0,::-1,:,:]
-                        dtend["values"].append(data[:,j_get,i_get])
-                        dtend["units"]     = nc_file[dtend["name"]].getncattr(name="units")
-                        dtend["long_name"] = nc_file[dtend["name"]].getncattr(name="long_name")
-                    except:
-                        logging.debug(dtend["name"] + ' not available in ' + filename)
-        
-        # Save 
-        time_phys_hours.append(nc_file['time'][0])
-
         # Close file
         nc_file.close()
 
-    # Convert to numpy arrays
-    for dtend in vars_dyn:
-        try:    dtend["values"] = np.asarray(dtend["values"])
-        except: logging.debug(dtend["name"] + ' not available')
-    if (save_comp_data):
-        for dtend in vars_comp:
-            try:    dtend["values"] = np.asarray(dtend["values"])
-            except: logging.debug(dtend["name"] + ' not available')
-    time_phys_hours = np.asarray(time_phys_hours)
+    # Convert from python list to numpy array
+    ps      = np.asarray(ps)
+    p_lev   = np.asarray(p_lev)
+    p_lay   = np.asarray(p_lay)
+    t_lay   = np.asarray(t_lay)
+    qv_lay  = np.asarray(qv_lay)
+    u_lay   = np.asarray(u_lay)
+    v_lay   = np.asarray(v_lay)
+    tv_lay  = t_lay*(1.0 + zvir*qv_lay)
+    time_hr = np.asarray(time_hr)
 
-    # Indices for dynamic tendencies in dictionary (used when referencing vars_dyn dict)
-    itemp = search_in_dict(vars_dyn,"dtend_temp_nophys")
-    iqv   = search_in_dict(vars_dyn,"dtend_qv_nophys")
-    iu    = search_in_dict(vars_dyn,"dtend_u_nophys")
-    iv    = search_in_dict(vars_dyn,"dtend_v_nophys")
+    #
+    # Create dictionary with full "Native" state (IC@t=0,ATMF*@t>0)
+    #
+    ps_IC      = np.zeros([1])
+    ps_IC[0]   = state_IC["ps"]
+    pi_IC      = np.zeros([1,nlevs+1])
+    pi_IC[0,:] = state_IC["pa_i"]
+    p_IC       = np.zeros([1,nlevs])
+    p_IC[0,:]  = state_IC["pa"]
+    t_IC       = np.zeros([1,nlevs])
+    t_IC[0,:]  = state_IC["ta"]
+    qv_IC      = np.zeros([1,nlevs])
+    qv_IC[0,:] = state_IC["qv"]
+    u_IC       = np.zeros([1,nlevs])
+    u_IC[0,:]  = state_IC["ua"]
+    v_IC       = np.zeros([1,nlevs])
+    v_IC[0,:]  = state_IC["va"]
+    tv_IC      = t_IC*(1.0 + zvir*qv_IC)
+    stateNATIVE = {"time":   np.concatenate((np.asarray([0.]), time_hr[:])),           \
+                   "ps":     np.concatenate((ps_IC,  ps),      axis=0),                \
+                   "p_lev":  np.concatenate((pi_IC,  p_lev),   axis=0),                \
+                   "p_lay":  np.concatenate((p_IC,   p_lay),   axis=0),                \
+                   "t_lay":  np.concatenate((t_IC,   t_lay),   axis=0),                \
+                   "qv_lay": np.concatenate((qv_IC,  qv_lay),  axis=0),                \
+                   "u_lay":  np.concatenate((u_IC,   u_lay),   axis=0),                \
+                   "v_lay":  np.concatenate((v_IC,   v_lay),   axis=0),                \
+                   "tv_lay": np.concatenate((tv_IC,  tv_lay),  axis=0)}
 
     ####################################################################################
     #
-    # Handle forcing from initialization to the first history file
+    # The "total" advection, where "total" = "advective + remapping", can be computed 
+    # directly by taking the difference across time. 
+    # The advective part is the piece needed to force the SCM, which we can "back-out"
+    # by computing the "remapping" component, and removing it from the total.
+    # 
+    # At initial-time (ICs)
+    # - Remap IC state to vertical grid of first UFS history file.
+    #
+    # At subsequent time(s)
+    # - Remap UFS state at current time-step to vertical grid of subsequent time-step 
+    #   (used for differencing)
+    #
+    # This "REGRID"ed state is used to remove the impact vertical remapping on the 
+    # change of state.
+    #
+    # *NOTE* The first UFS history file is AFTER the first physics timestep. Subsequent
+    #        history files are controlled by "output_fh" in the UFS.
     #
     ####################################################################################
-    nlevs           = len(p_lay[0,:])
-    dummy           = np.zeros(1)
-    tv_temp         = np.zeros([1,nlevs])
-    qv_temp         = np.zeros([1,nlevs])
-    u_temp          = np.zeros([1,nlevs])
-    v_temp          = np.zeros([1,nlevs])
-    dtdt_temp       = np.zeros([1,nlevs])
-    dqvdt_temp      = np.zeros([1,nlevs])
-    dudt_temp       = np.zeros([1,nlevs])
-    dvdt_temp       = np.zeros([1,nlevs])
-    from_p          = np.zeros([1,nlevs+1])
-    to_p            = np.zeros([1,nlevs+1])
-    log_from_p      = np.zeros([1,nlevs+1])
-    log_to_p        = np.zeros([1,nlevs+1])
-    tv_rev          = np.zeros([1,nlevs])
-    qv_rev          = np.zeros([1,nlevs])
-    dp2             = np.zeros([1,nlevs])
-    u_rev           = np.zeros([1,nlevs])
-    v_rev           = np.zeros([1,nlevs])
-    tv_layers_remap = np.zeros([n_files,nlevs])
-    qv_layers_remap = np.zeros([n_files,nlevs])
-    u_layers_remap  = np.zeros([n_files,nlevs])
-    v_layers_remap  = np.zeros([n_files,nlevs])
-    dtdt_adv        = np.zeros([n_files,nlevs])
-    dqvdt_adv       = np.zeros([n_files,nlevs])
-    dudt_adv        = np.zeros([n_files,nlevs])
-    dvdt_adv        = np.zeros([n_files,nlevs])
-    valid_pres_adv  = np.zeros([n_files,nlevs])
-    valid_pres_i_adv= np.zeros([n_files,nlevs+1])
+
+    #
+    nlevs      = len(p_lay[0,:])
+    dummy      = np.zeros(1)
+    from_p     = np.zeros([1,nlevs+1])
+    to_p       = np.zeros([1,nlevs+1])
+    log_from_p = np.zeros([1,nlevs+1])
+    log_to_p   = np.zeros([1,nlevs+1])
+    dp2        = np.zeros([1,nlevs])
+    tv_rev     = np.zeros([1,nlevs])
+    qv_rev     = np.zeros([1,nlevs])
+    u_rev      = np.zeros([1,nlevs])
+    v_rev      = np.zeros([1,nlevs])
+    tv_layr    = np.zeros([n_files+1,nlevs])
+    qv_layr    = np.zeros([n_files+1,nlevs])
+    u_layr     = np.zeros([n_files+1,nlevs])
+    v_layr     = np.zeros([n_files+1,nlevs])
+    p_layr     = np.zeros([n_files+1,nlevs])
+    p_levr     = np.zeros([n_files+1,nlevs+1])
+
+    #
+    # First timestep...
+    #
 
     # Interpolation range
     from_p[0,:]     = state_IC["pa_i"][::-1]
@@ -1727,56 +1641,43 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
     log_from_p[0,:] = np.log(state_IC["pa_i"][::-1])
     log_to_p[0,:]   = np.log(p_lev[0,::-1])
 
-    # Virtual Temperature @ time = 0
+    # IC Virtual Temperature on vertical-grid of first UFS history file.
     tv_init      = state_IC["ta"]*(1.0 + zvir*state_IC["qv"])
     tv_init_rev  = tv_init[::-1]
-    tv_rev_new   = fv3_remap.map_scalar(nlevs, log_from_p, tv_init_rev[np.newaxis, :], dummy, \
-                                        nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
-    tv_temp[0,:] = tv_rev_new[0,::-1]
+    tv_rev_new   = fv3_remap.map_scalar(nlevs, log_from_p, tv_init_rev[np.newaxis, :], \
+                                        dummy, nlevs, log_to_p, 0, 0, 1,               \
+                                        np.abs(kord_tm), t_min)
 
-    # Specific humidity @ time = 0
+    # IC Specific humidity on vertical-grid of first UFS history file.
     qv_init_rev  = state_IC["qv"][::-1]
     for k in range(0,nlevs): dp2[0,k] = from_p[0,k+1] - from_p[0,k]
-    qv_rev_new   = fv3_remap.map1_q2(nlevs, from_p, qv_init_rev[np.newaxis, :],               \
+    qv_rev_new   = fv3_remap.map1_q2(nlevs, from_p, qv_init_rev[np.newaxis, :],        \
                                      nlevs, to_p, dp2, 0, 0, 0, kord_tr, q_min)
-    qv_temp[0,:] = qv_rev_new[0,::-1]
 
-    # Temperature @ time = 0
-    t_temp = tv_temp/(1.0 + zvir*qv_temp)
-
-    # Zonal wind @ time = 0
+    # IC Zonal wind on vertical-grid of first UFS history file.
     u_init_rev  = state_IC["ua"][::-1]
-    u_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, u_init_rev[np.newaxis, :], 0.0,           \
+    u_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, u_init_rev[np.newaxis, :], 0.0,    \
                                      nlevs, to_p, 0, 0, -1, kord_tm )
-    u_temp[0,:] = u_rev_new[0,::-1]
 
-    # Meridional wind @ time = 0
+    # IC Meridional wind on vertical-grid of first UFS history file.
     v_init_rev  = state_IC["va"][::-1]
-    v_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, v_init_rev[np.newaxis, :], 0.0,           \
+    v_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, v_init_rev[np.newaxis, :], 0.0,    \
                                      nlevs, to_p, 0, 0, -1, kord_tm )
-    v_temp[0,:] = v_rev_new[0,::-1]
 
-    # Pressure advection @ time = 0
-    valid_pres_adv[0,:]   = state_IC["pa"]
-    valid_pres_i_adv[0,:] = state_IC["pa_i"]
+    # Store
+    p_layr[0,:]  = p_lay[0,:]
+    p_levr[0,:]  = p_lev[0,:]
+    v_layr[0,:]  = v_rev_new[0,::-1]
+    u_layr[0,:]  = u_rev_new[0,::-1]
+    tv_layr[0,:] = tv_rev_new[0,::-1]
+    qv_layr[0,:] = qv_rev_new[0,::-1]
 
-    # Moisture advection @ time = 0
-    dqvdt_temp[0,:] = (qv_temp[0,:] - state_IC["qv"][:])/(3600.0*(time_dyn_hours[0]))
-    dqvdt_adv[0,:]  = vars_dyn[iqv]["values"][0,:] - dqvdt_temp[0,:]
+    #
+    # Subsequent timestep(s)...
+    # (current state on vertical grid of subsequent time-step(s). Used for differencing)
+    #
 
-    # Temperature advection @ time = 0
-    dtdt_temp[0,:]  = (t_temp[0,:] - state_IC["ta"][:])/(3600.0*(time_dyn_hours[0]))
-    dtdt_adv[0,:]   = vars_dyn[itemp]["values"][0,:] - dtdt_temp[0,:]
-
-    # u-momentum advection @ time = 0
-    dudt_temp[0,:]  = (u_temp[0,:] - state_IC["ua"][:])/(3600.0*(time_dyn_hours[0]))
-    dudt_adv[0,:]   = vars_dyn[iu]["values"][0,:] - dudt_temp[0,:]
-
-    # v-momentum advection @ time = 0
-    dvdt_temp[0,:]  = (v_temp[0,:] - state_IC["va"][:])/(3600.0*(time_dyn_hours[0]))
-    dvdt_adv[0,:]   = vars_dyn[iv]["values"][0,:] - dvdt_temp[0,:]
-
-    # @ time > 0
+    #
     for t in range(n_files-1):
         #
         from_p[0,:]     = p_lev[t,::-1]
@@ -1785,159 +1686,132 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
         log_to_p[0,:]   = np.log(p_lev[t+1,::-1])
 
         # Virtual Temperature @ time > 0
-        tv_rev      = np.zeros([1,nlevs])
         tv_rev[0,:] = tv_lay[t,::-1]
-        tv_rev_new  = fv3_remap.map_scalar(nlevs, log_from_p, tv_rev, dummy, nlevs,     \
+        tv_rev_new  = fv3_remap.map_scalar(nlevs, log_from_p, tv_rev, dummy, nlevs,    \
                                            log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
-
         # Specific humidity @ time > 0
         qv_rev[0,:] = qv_lay[t,::-1]
         for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
-        qv_rev_new = fv3_remap.map1_q2(nlevs, from_p, qv_rev, nlevs, to_p, dp2,         \
+        qv_rev_new = fv3_remap.map1_q2(nlevs, from_p, qv_rev, nlevs, to_p, dp2,        \
                                        0, 0, 0, kord_tr, q_min)
-
         # Zonal wind  @ time > 0
         u_rev[0,:] = u_lay[t,::-1]
-        u_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, u_rev, 0.0, nlevs, to_p,         \
+        u_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, u_rev, 0.0, nlevs, to_p,        \
                                         0, 0, -1, kord_tm )
-
         # Meridional wind @ time > 0
         v_rev[0,:] = v_lay[t,::-1]
-        v_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, v_rev, 0.0, nlevs, to_p,         \
+        v_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, v_rev, 0.0, nlevs, to_p,        \
                                         0, 0, -1, kord_tm )
 
         # Store
-        tv_layers_remap[t+1,:] = tv_rev_new[0,::-1]
-        qv_layers_remap[t+1,:] = qv_rev_new[0,::-1]
-        u_layers_remap[t+1,:]  = u_rev_new[0,::-1]
-        v_layers_remap[t+1,:]  = v_rev_new[0,::-1]
+        p_layr[t+1,:]  = p_lay[t+1,:]
+        p_levr[t+1,:]  = p_lev[t+1,:]
+        tv_layr[t+1,:] = tv_rev_new[0,::-1]
+        qv_layr[t+1,:] = qv_rev_new[0,::-1]
+        u_layr[t+1,:]  = u_rev_new[0,::-1]
+        v_layr[t+1,:]  = v_rev_new[0,::-1]
 
-    # Temperature at all times (using tv/qv at all times)
-    t_layers_remap = tv_layers_remap/(1.0 + zvir*qv_layers_remap)
+    #
+    p_layr[t+2,:]  = p_layr[t+1,:]
+    p_levr[t+2,:]  = p_levr[t+1,:]
+    tv_layr[t+2,:] = tv_layr[t+1,:]
+    qv_layr[t+2,:] = qv_layr[t+1,:]
+    u_layr[t+2,:]  = u_layr[t+1,:]
+    v_layr[t+2,:]  = v_layr[t+1,:]
 
-    # @ time > 0
-    for t in range(n_files-1):
-        dtime = 3600.0*(time_dyn_hours[t+1] - time_dyn_hours[t])
+    # Temperature
+    t_layr = tv_layr/(1.0 + zvir*qv_layr)
 
-        # Pressure advection @ time > 0
-        valid_pres_adv[t+1,:]   = p_lay[t]
-        valid_pres_i_adv[t+1,:] = p_lev[t]
-        
-        # Moisture advection @ time > 0
-        dqvdt_temp[0,:] = (qv_layers_remap[t+1,:] - qv_lay[t,:])/dtime
-        dqvdt_adv[t+1,:] = vars_dyn[iqv]["values"][t+1,:] - dqvdt_temp[0,:]
-        
-        # Temperature advection @ time > 0
-        dtdt_temp[0,:] = (t_layers_remap[t+1,:] - t_lay[t,:])/dtime
-        dtdt_adv[t+1,:] = vars_dyn[itemp]["values"][t+1,:] - dtdt_temp[0,:]
-
-        # u-momentum advection @ time > 0
-        dudt_temp[0,:] = (u_layers_remap[t+1,:] - u_lay[t,:])/dtime
-        dudt_adv[t+1,:] = vars_dyn[iu]["values"][t+1,:] - dudt_temp[0,:]
-        
-        # v-momentum advection @ time > 0
-        dvdt_temp[0,:] = (v_layers_remap[t+1,:] - v_lay[t,:])/dtime
-        dvdt_adv[t+1,:] = vars_dyn[iv]["values"][t+1,:] - dvdt_temp[0,:]
-
+    # Create dictionary with "Regridded" state
+    stateREGRID = {"time":   np.concatenate((np.asarray([0.]), time_hr[:])),           \
+                   "ps":     np.concatenate((ps[0:1], ps), axis=0),                    \
+                   "p_lev":  p_levr,  \
+                   "p_lay":  p_layr,  \
+                   "t_lay":  t_layr,  \
+                   "qv_lay": qv_layr, \
+                   "u_lay":  u_layr,  \
+                   "v_lay":  v_layr,  \
+                   "tv_lay": tv_layr  }
+    
     ####################################################################################
-    # for the original SCM forcing input file, all forcing terms should be valid on the
-    # initial pressure levels; one should be able to use fv3_remap.map_scalar to remap
-    # these forcing terms to the initial pressure profile, rather than resort to linear
-    # interpolation or something else. (this interpolation can be removed when using
-    # DEPHY, that allows for varying pressure levels for forcing)
+    #
+    # Compute tendencies advective = total - remapping
+    # 
     ####################################################################################
-    if orig_SCM_format:
-        dqvdt_adv_at_init_pres_rev = np.zeros([n_files,1,nlevs])
-        dtdt_adv_at_init_pres_rev  = np.zeros([n_files,1,nlevs])
-        dudt_adv_at_init_pres_rev  = np.zeros([n_files,1,nlevs])
-        dvdt_adv_at_init_pres_rev  = np.zeros([n_files,1,nlevs])
-        from_log_p = np.zeros([1,nlevs+1])
-        to_log_p   = np.zeros([1,nlevs+1])
 
-        # @ time = 0
-        # don't need to remap the first time interval because it is already valid at the
-        # initial pressure levels.
-        dqvdt_adv_at_init_pres_rev[0,0,:] = dqvdt_adv[0,::-1]
-        dtdt_adv_at_init_pres_rev[0,0,:]  = dtdt_adv[0,::-1]
-        dudt_adv_at_init_pres_rev[0,0,:]  = dudt_adv[0,::-1]
-        dvdt_adv_at_init_pres_rev[0,0,:]  = dvdt_adv[0,::-1]
+    #
+    dtdt_adv   = np.zeros([n_files+1,nlevs])
+    dqvdt_adv  = np.zeros([n_files+1,nlevs])
+    dudt_adv   = np.zeros([n_files+1,nlevs])
+    dvdt_adv   = np.zeros([n_files+1,nlevs])
+    pres_adv   = np.zeros([n_files+1,nlevs])
+    pres_i_adv = np.zeros([n_files+1,nlevs+1])
+    tend_remap = np.zeros([1,nlevs])
+    tend_total = np.zeros([1,nlevs])
 
-        # @ time > 0
-        for t in range(1,n_files):
-            from_log_p[0,:] = np.log(valid_pres_i_adv[t,::-1])
-            to_log_p[0,:] = np.log(valid_pres_i_adv[0,::-1])
-            dqvdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar(nlevs, from_log_p, \
-                dqvdt_adv[t,np.newaxis,::-1], dummy, nlevs, to_log_p, 0, 0, 1, 1, 0.0)
-            dtdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar( nlevs, from_log_p, \
-                dtdt_adv[t,np.newaxis,::-1], dummy, nlevs, to_log_p, 0, 0, 1, 1, 0.0)
-            dudt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar( nlevs, from_log_p, \
-                dudt_adv[t,np.newaxis,::-1], dummy, nlevs, to_log_p, 0, 0, 1, 1, 0.0)
-            dvdt_adv_at_init_pres_rev[t,:,:] = fv3_remap.map_scalar( nlevs, from_log_p, \
-                dvdt_adv[t,np.newaxis,::-1], dummy, nlevs, to_log_p, 0, 0, 1, 1, 0.0)
-        # Store
-        dtdt_adv_at_init_pres  = dtdt_adv_at_init_pres_rev[:,0,::-1]
-        dqvdt_adv_at_init_pres = dqvdt_adv_at_init_pres_rev[:,0,::-1]
-        dudt_adv_at_init_pres  = dudt_adv_at_init_pres_rev[:,0,::-1]
-        dvdt_adv_at_init_pres  = dvdt_adv_at_init_pres_rev[:,0,::-1]
+    #
+    for t in range(n_files):
+        #
+        dtime_sec = (stateNATIVE["time"][t+1] - stateNATIVE["time"][t])*sec_in_hr
+        #
+        pres_adv[t,:]   = stateNATIVE["p_lay"][t,:]
+        pres_i_adv[t,:] = stateNATIVE["p_lev"][t,:]
+        #
+        tend_total[0,:] = stateREGRID["t_lay"][t+1,:] - stateREGRID["t_lay"][t,:]
+        tend_remap[0,:] = stateREGRID["t_lay"][t,:]   - stateNATIVE["t_lay"][t,:]
+        dtdt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
+        #
+        tend_total[0,:] = stateREGRID["qv_lay"][t+1,:] - stateREGRID["qv_lay"][t,:]
+        tend_remap[0,:] = stateREGRID["qv_lay"][t,:]   - stateNATIVE["qv_lay"][t,:]
+        dqvdt_adv[t,:]  = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
+        #
+        tend_total[0,:] = stateREGRID["u_lay"][t+1,:] - stateREGRID["u_lay"][t,:]
+        tend_remap[0,:] = stateREGRID["u_lay"][t,:]   - stateNATIVE["u_lay"][t,:]
+        dudt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
+        #
+        tend_total[0,:] = stateREGRID["v_lay"][t+1,:] - stateREGRID["v_lay"][t,:]
+        tend_remap[0,:] = stateREGRID["v_lay"][t,:]   - stateNATIVE["v_lay"][t,:]
+        dvdt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
+
+    #
+    dtdt_adv[t+1,:]   = dtdt_adv[t,:]
+    dqvdt_adv[t+1,:]  = dqvdt_adv[t,:]
+    dudt_adv[t+1,:]   = dudt_adv[t,:]
+    dvdt_adv[t+1,:]   = dvdt_adv[t,:]
+    pres_adv[t+1,:]   = pres_adv[t,:] 
+    pres_i_adv[t+1,:] = pres_i_adv[t,:]
 
     if save_comp_data:
         #
-        # State variables
-        #
-        from_log_p = np.zeros([1,nlevs+1])
-        to_log_p   = np.zeros([1,nlevs+1])
-        from_p     = np.zeros([1,nlevs+1])
-        to_p       = np.zeros([1,nlevs+1])
-        t_layr     = np.zeros([n_files,1,nlevs])
-        qv_layr    = np.zeros([n_files,1,nlevs])
-        u_layr     = np.zeros([n_files,1,nlevs])
-        v_layr     = np.zeros([n_files,1,nlevs])
+        t_layr     = np.zeros([n_files,nlevs])
+        qv_layr    = np.zeros([n_files,nlevs])
+        u_layr     = np.zeros([n_files,nlevs])
+        v_layr     = np.zeros([n_files,nlevs])
 
         # @ time = 0
-        t_layr[0,0,:]  = t_lay[0,::-1]
-        qv_layr[0,0,:] = qv_lay[0,::-1]
-        u_layr[0,0,:]  = u_lay[0,::-1]
-        v_layr[0,0,:]  = v_lay[0,::-1]
+        t_layr[0,:]  = t_lay[0,::-1]
+        qv_layr[0,:] = qv_lay[0,::-1]
+        u_layr[0,:]  = u_lay[0,::-1]
+        v_layr[0,:]  = v_lay[0,::-1]
 
         # @ time > 0
         for t in range(1,n_files):
-            from_log_p[0,:] = np.log(p_lev[t,::-1])
-            to_log_p[0,:]   = np.log(p_lev[0,::-1])
+            log_from_p[0,:] = np.log(p_lev[t,::-1])
+            log_to_p[0,:]   = np.log(pi_IC[0,::-1])
             from_p[0,:]     = p_lev[t,::-1]
-            to_p[0,:]       = p_lev[0,::-1]
-            for k in range(0,nlevs): dp2[0,k]    = to_p[0,k+1] - to_p[0,k]
-            t_layr[t,:,:]   = fv3_remap.map_scalar(nlevs, from_log_p, t_lay[t,np.newaxis,::-1],  \
-                                                dummy, nlevs, to_log_p, 0, 0, 1, np.abs(kord_tm), t_min)
-            qv_layr[t,:,:]  = fv3_remap.map1_q2(nlevs,    from_p,     qv_lay[t,np.newaxis,::-1], \
-                                                nlevs, to_p, dp2, 0, 0, 0, kord_tr, q_min)
-            u_layr[t,:,:]   = fv3_remap.map1_ppm(nlevs,   from_p,     u_lay[t,np.newaxis,::-1],  \
-                                                 0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-            v_layr[t,:,:]   = fv3_remap.map1_ppm(nlevs,   from_p,     v_lay[t,np.newaxis,::-1],  \
-                                                 0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-        #
-        # Physics tendencies
-        #
-        to_tend   = np.zeros([n_files,1,nlevs])
-        from_tend = np.zeros([n_files,1,nlevs]) 
-        for diag in vars_comp:
-            try:
-                # @ time = 0
-                to_tend[0,0,:] = diag["values"][0,::-1]
-                # @ time > 0
-                for itime in range(1,n_files):
-                    from_log_p[0,:]  = np.log(p_lev[itime,::-1])
-                    to_log_p[0,:]    = np.log(p_lev[0,::-1])
-                    from_p[0,:]      = p_lev[itime,::-1]
-                    to_p[0,:]        = p_lev[0,::-1]
-                    from_tend[0,0,:] = diag["values"][itime,np.newaxis,::-1]
-                    to_tend[t,:,:]   = fv3_remap.map_scalar(nlevs, from_log_p, from_tend,\
-                                            dummy, nlevs, to_log_p, 0, 0, 1, 1, -9999.99)
-                # Store
-                diag["values_regrid"] = to_tend[:,0,::-1]
-            except:
-                logging.debug(dtend["name"] + ' not available for interpolation')
+            to_p[0,:]       = pi_IC[0,::-1]
+            for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
+            t_layr[t,:]  = fv3_remap.map_scalar(nlevs, log_from_p, t_lay[t:t+1,::-1],  \
+                                dummy, nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
+            qv_layr[t,:] = fv3_remap.map1_q2(nlevs, from_p, qv_lay[t:t+1,::-1],        \
+                                nlevs, to_p, dp2, 0, 0, 0, kord_tr, q_min)
+            u_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, u_lay[t:t+1,::-1],        \
+                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
+            v_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, v_lay[t:t+1,::-1],        \
+                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
 
     ####################################################################################
+    #
     # if we had atmf,sfcf files at every timestep (and the SCM timestep is made to match
     # the UFS), then dqvdt_adv should be applied uninterpolated for each time step. If
     # atmf and sfcf files represent time averages over the previous diagnostic period,
@@ -1948,6 +1822,7 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
     # option to remove time-interpolation of forcing such that the constant forcing
     # applied converged to time-step values as the diag interval approaches the time
     # step)
+    #
     ####################################################################################
     #time_method = 'constant_simple' #this is not implemented in the SCM code yet
     time_method = 'constant_interp'
@@ -1958,49 +1833,28 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
         ntimes = n_files
         time = np.zeros(ntimes)
         
-        if orig_SCM_format:
-            h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
-        else:
-            p_s = np.zeros((ntimes),dtype=float)
-            pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)        
+        p_s = np.zeros((ntimes),dtype=float)
+        pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)        
         
-        if orig_SCM_format:
-            h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
-            for k in range(nlevs):
-                h_advec_thil[k,0] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[0,k]
-            h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
-            h_advec_v[:,0] = dvdt_adv_at_init_pres[0,:]
-        else:
-            p_s[0] = ps[0]
-            pressure_forc[:,0] = valid_pres_adv[0,:]
-            tot_advec_T[:,0] = dtdt_adv[0,:]
-            tot_advec_qv[:,0] = dqvdt_adv[0,:]
-            tot_advec_u[:,0] = dudt_adv[0,:]
-            tot_advec_v[:,0] = dvdt_adv[0,:]
+        p_s[0] = ps[0]
+        pressure_forc[:,0] = pres_adv[0,:]
+        tot_advec_T[:,0] = dtdt_adv[0,:]
+        tot_advec_qv[:,0] = dqvdt_adv[0,:]
+        tot_advec_u[:,0] = dudt_adv[0,:]
+        tot_advec_v[:,0] = dvdt_adv[0,:]
         
         for t in range(1,n_files):
-            time[t] = 3600.0*time_dyn_hours[t-1]
-            
-            if orig_SCM_format:
-                h_advec_qt[:,t] = dqvdt_adv_at_init_pres[t,:]
-                for k in range(nlevs):
-                    h_advec_thil[k,t] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[t,k]
-                h_advec_u[:,t] = dudt_adv_at_init_pres[t,:]
-                h_advec_v[:,t] = dvdt_adv_at_init_pres[t,:]
-            else:
-                p_s[t] = ps[t]
-                pressure_forc[:,t] = valid_pres_adv[t,:]
-                tot_advec_T[:,t] = dtdt_adv[t,:]
-                tot_advec_qv[:,t] = dqvdt_adv[t,:]
-                tot_advec_u[:,t] = dudt_adv[t,:]
-                tot_advec_v[:,t] = dvdt_adv[t,:]
+            time[t] = sec_in_hr*time_hr[t-1]
+            p_s[t] = ps[t]
+            pressure_forc[:,t] = pres_adv[t,:]
+            tot_advec_T[:,t] = dtdt_adv[t,:]
+            tot_advec_qv[:,t] = dqvdt_adv[t,:]
+            tot_advec_u[:,t] = dudt_adv[t,:]
+            tot_advec_v[:,t] = dvdt_adv[t,:]
     elif (time_method == 'constant_interp'):
         print('Forcing can be interpolated in time, but the time values are chosen such that forcing will effectively be held consant during a diagnostic time interval.')
         ntimes = 2*n_files
@@ -2008,187 +1862,97 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
         time_setback = 1.0 #s
         
         time = np.zeros(ntimes)
-        
-        if orig_SCM_format:
-            h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
-        else:
-            p_s = np.zeros((ntimes),dtype=float)
-            pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
-            
-        time[0] = 0.0
-        time[1] = 3600.0*time_dyn_hours[0] - time_setback #forcing period should extend from beginning of diagnostic period to right BEFORE the next one
-        
-        if orig_SCM_format:
-            h_advec_qt[:,0] = dqvdt_adv_at_init_pres[0,:]
-            h_advec_qt[:,1] = h_advec_qt[:,0]
-            for k in range(nlevs):
-                h_advec_thil[k,0] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[0,k]
-            h_advec_thil[:,1] = h_advec_thil[:,0]
-            h_advec_u[:,0] = dudt_adv_at_init_pres[0,:]
-            h_advec_u[:,1] = h_advec_u[:,0]
-            h_advec_v[:,0] = dvdt_adv_at_init_pres[0,:]
-            h_advec_v[:,1] = h_advec_v[:,0]
-        else:
-            p_s[0] = ps[0]
-            p_s[1] = p_s[0]
-            pressure_forc[:,0] = valid_pres_adv[0,:]
-            pressure_forc[:,1] = pressure_forc[:,0]
-            tot_advec_T[:,0] = dtdt_adv[0,:]
-            tot_advec_T[:,1] = tot_advec_T[:,0]
-            tot_advec_qv[:,0] = dqvdt_adv[0,:]
-            tot_advec_qv[:,1] = tot_advec_qv[:,0]
-            tot_advec_u[:,0] = dudt_adv[0,:]
-            tot_advec_u[:,1] = tot_advec_u[:,0]
-            tot_advec_v[:,0] = dvdt_adv[0,:]
-            tot_advec_v[:,1] = tot_advec_v[:,0]
-        
-        for t in range(1,n_files):
-            time[2*t] = 3600.0*time_dyn_hours[t-1]
-            time[2*t+1] = 3600*time_dyn_hours[t] - time_setback
-            
-            if orig_SCM_format:
-                h_advec_qt[:,2*t] = dqvdt_adv_at_init_pres[t,:]
-                h_advec_qt[:,2*t+1] = h_advec_qt[:,2*t]
-                for k in range(nlevs):
-                    h_advec_thil[k,2*t] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[t,k]
-                h_advec_thil[:,2*t+1] = h_advec_thil[:,2*t]
-                h_advec_u[:,2*t] = dudt_adv_at_init_pres[t,:]
-                h_advec_u[:,2*t+1] = h_advec_u[:,2*t]
-                h_advec_v[:,2*t] = dvdt_adv_at_init_pres[t,:]
-                h_advec_v[:,2*t+1] = h_advec_v[:,2*t]
-            else:
-                p_s[2*t] = ps[t]
-                p_s[2*t+1] = p_s[2*t]
-                pressure_forc[:,2*t] = valid_pres_adv[t,:]
-                pressure_forc[:,2*t+1] = pressure_forc[:,2*t]
-                tot_advec_T[:,2*t] = dtdt_adv[t,:]
-                tot_advec_T[:,2*t+1] = tot_advec_T[:,2*t]
-                tot_advec_qv[:,2*t] = dqvdt_adv[t,:]
-                tot_advec_qv[:,2*t+1] = tot_advec_qv[:,2*t]
-                tot_advec_u[:,2*t] = dudt_adv[t,:]
-                tot_advec_u[:,2*t+1] = tot_advec_u[:,2*t]
-                tot_advec_v[:,2*t] = dvdt_adv[t,:]
-                tot_advec_v[:,2*t+1] = tot_advec_v[:,2*t]
-        
-    elif (time_method == 'gradient'): #this produced wonky results in the SCM; avoid until investigated more
-        print('Forcing can be interpolated in time since the forcing terms are assumed to follow a constant time-gradient.')
-        
-        ntimes = 2*n_files + 1
-        time = np.zeros(ntimes)
-        
-        if orig_SCM_format:
-            h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-            h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
-        else:
-            p_s = np.zeros((ntimes),dtype=float)
-            pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-            tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
-        
-        if orig_SCM_format:
-            h_advec_qt[:,0] = 0.0
-            h_advec_thil[:,0] = 0.0
-            h_advec_u[:,0] = 0.0
-            h_advec_v[:,0] = 0.0
-        else:
-            p_s[0] = state_IC['ps']
-            pressure_forc[:,0] = state_IC['pa']
-            tot_advec_T[:,0] = 0.0
-            tot_advec_qv[:,0] = 0.0
-            tot_advec_u[:,0] = 0.0
-            tot_advec_v[:,0] = 0.0
-        
-        for t in range(n_files):
-            time[2*t + 1] = time[2*t] + 0.5*(3600*time_dyn_hours[t] - time[2*t])
-            time[2*t + 2] = 3600.0*time_dyn_hours[t]
-            
-            if orig_SCM_format:
-                h_advec_qt[:,2*t + 1] = dqvdt_adv_at_init_pres[t,:]
-                for k in range(nlevs):
-                    h_advec_thil[k,2*t + 1] = (p0/state_IC["pa"][k])**kappa*dtdt_adv_at_init_pres[t,k]
-                h_advec_u[:,2*t + 1] = dudt_adv_at_init_pres[t,:]
-                h_advec_v[:,2*t + 1] = dvdt_adv_at_init_pres[t,:]
-            else:
-                p_s[2*t+1] = ps[t]
-                pressure_forc[:,2*t+1] = valid_pres_adv[t,:]
-                tot_advec_T[:,2*t+1] = dtdt_adv[t,:]
-                tot_advec_qv[:,2*t+1] = dqvdt_adv[t,:]
-                tot_advec_u[:,2*t+1] = dudt_adv[t,:]
-                tot_advec_v[:,2*t+1] = dvdt_adv[t,:]
-            
-            if orig_SCM_format:
-                #calculate gradient in time and extrapolate for time (2t + 2)
-                for k in range(nlevs):
-                    grad = (h_advec_qt[k,2*t + 1] - h_advec_qt[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    h_advec_qt[k,2*t + 2] = h_advec_qt[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                    
-                    grad = (h_advec_thil[k,2*t + 1] - h_advec_thil[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    h_advec_thil[k,2*t + 2] = h_advec_thil[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                    
-                    grad = (h_advec_u[k,2*t + 1] - h_advec_u[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    h_advec_u[k,2*t + 2] = h_advec_u[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                    
-                    grad = (h_advec_v[k,2*t + 1] - h_advec_v[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    h_advec_v[k,2*t + 2] = h_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-            else:
-                #calculate gradient in time and extrapolate for time (2t + 2)
-                grad = (p_s[2*t + 1] - p_s[2*t])/(time[2*t + 1] - time[2*t])
-                p_s[2*t + 2] = p_s[2*t + 1] + grad*(time[2*t + 2] - time[2*t + 1])
-                
-                for k in range(nlevs):
-                    grad = (pressure_forc[k,2*t + 1] - pressure_forc[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    pressure_forc[k,2*t + 2] = pressure_forc[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                    
-                    grad = (tot_advec_T[k,2*t + 1] - tot_advec_T[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    tot_advec_T[k,2*t + 2] = tot_advec_T[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                    
-                    grad = (tot_advec_qv[k,2*t + 1] - tot_advec_qv[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    tot_advec_qv[k,2*t + 2] = tot_advec_qv[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                    
-                    grad = (tot_advec_u[k,2*t + 1] - tot_advec_u[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    tot_advec_u[k,2*t + 2] = tot_advec_u[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-                    
-                    grad = (tot_advec_v[k,2*t + 1] - tot_advec_v[k, 2*t])/(time[2*t + 1] - time[2*t])
-                    tot_advec_v[k,2*t + 2] = tot_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
-    else:
-        print('Unrecognized forcing time method. Exiting.')
-        exit()
-        
-    w_ls = np.zeros((nlevs,ntimes),dtype=float)
-    omega = np.zeros((nlevs,ntimes),dtype=float)
-    u_g = np.zeros((nlevs,ntimes),dtype=float)
-    v_g = np.zeros((nlevs,ntimes),dtype=float)
-    u_nudge = np.zeros((nlevs,ntimes),dtype=float)
-    v_nudge = np.zeros((nlevs,ntimes),dtype=float)
-    T_nudge = np.zeros((nlevs,ntimes),dtype=float)
-    thil_nudge = np.zeros((nlevs,ntimes),dtype=float)
-    qt_nudge = np.zeros((nlevs,ntimes),dtype=float)
-    rad_heating = np.zeros((nlevs,ntimes),dtype=float)
-    v_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-    v_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-    if orig_SCM_format:
         p_s = np.zeros((ntimes),dtype=float)
         pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
         tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
         tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
         tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
         tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+            
+        time[0] = 0.0
+        time[1] = sec_in_hr*time_hr[0] - time_setback #forcing period should extend from beginning of diagnostic period to right BEFORE the next one
+        p_s[0] = ps[0]
+        p_s[1] = p_s[0]
+        pressure_forc[:,0] = pres_adv[0,:]
+        pressure_forc[:,1] = pressure_forc[:,0]
+        tot_advec_T[:,0] = dtdt_adv[0,:]
+        tot_advec_T[:,1] = tot_advec_T[:,0]
+        tot_advec_qv[:,0] = dqvdt_adv[0,:]
+        tot_advec_qv[:,1] = tot_advec_qv[:,0]
+        tot_advec_u[:,0] = dudt_adv[0,:]
+        tot_advec_u[:,1] = tot_advec_u[:,0]
+        tot_advec_v[:,0] = dvdt_adv[0,:]
+        tot_advec_v[:,1] = tot_advec_v[:,0]
+        
+        for t in range(1,n_files):
+            time[2*t] = sec_in_hr*time_hr[t-1]
+            time[2*t+1] = sec_in_hr*time_hr[t] - time_setback
+            p_s[2*t] = ps[t]
+            p_s[2*t+1] = p_s[2*t]
+            pressure_forc[:,2*t] = pres_adv[t,:]
+            pressure_forc[:,2*t+1] = pressure_forc[:,2*t]
+            tot_advec_T[:,2*t] = dtdt_adv[t,:]
+            tot_advec_T[:,2*t+1] = tot_advec_T[:,2*t]
+            tot_advec_qv[:,2*t] = dqvdt_adv[t,:]
+            tot_advec_qv[:,2*t+1] = tot_advec_qv[:,2*t]
+            tot_advec_u[:,2*t] = dudt_adv[t,:]
+            tot_advec_u[:,2*t+1] = tot_advec_u[:,2*t]
+            tot_advec_v[:,2*t] = dvdt_adv[t,:]
+            tot_advec_v[:,2*t+1] = tot_advec_v[:,2*t]
+        
+    elif (time_method == 'gradient'): #this produced wonky results in the SCM; avoid until investigated more
+        print('Forcing can be interpolated in time since the forcing terms are assumed to follow a constant time-gradient.')
+        
+        ntimes = 2*n_files + 1
+        time = np.zeros(ntimes)
+        p_s = np.zeros((ntimes),dtype=float)
+        pressure_forc = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_T = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
+        tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+        
+        p_s[0] = state_IC['ps']
+        pressure_forc[:,0] = state_IC['pa']
+        tot_advec_T[:,0] = 0.0
+        tot_advec_qv[:,0] = 0.0
+        tot_advec_u[:,0] = 0.0
+        tot_advec_v[:,0] = 0.0
+        
+        for t in range(n_files):
+            time[2*t + 1] = time[2*t] + 0.5*(sec_in_hr*time_hr[t] - time[2*t])
+            time[2*t + 2] = sec_in_hr*time_hr[t]
+            
+            p_s[2*t+1] = ps[t]
+            pressure_forc[:,2*t+1] = pres_adv[t,:]
+            tot_advec_T[:,2*t+1] = dtdt_adv[t,:]
+            tot_advec_qv[:,2*t+1] = dqvdt_adv[t,:]
+            tot_advec_u[:,2*t+1] = dudt_adv[t,:]
+            tot_advec_v[:,2*t+1] = dvdt_adv[t,:]
+            
+            #calculate gradient in time and extrapolate for time (2t + 2)
+            grad = (p_s[2*t + 1] - p_s[2*t])/(time[2*t + 1] - time[2*t])
+            p_s[2*t + 2] = p_s[2*t + 1] + grad*(time[2*t + 2] - time[2*t + 1])
+            
+            for k in range(nlevs):
+                grad = (pressure_forc[k,2*t + 1] - pressure_forc[k, 2*t])/(time[2*t + 1] - time[2*t])
+                pressure_forc[k,2*t + 2] = pressure_forc[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                grad = (tot_advec_T[k,2*t + 1] - tot_advec_T[k, 2*t])/(time[2*t + 1] - time[2*t])
+                tot_advec_T[k,2*t + 2] = tot_advec_T[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                grad = (tot_advec_qv[k,2*t + 1] - tot_advec_qv[k, 2*t])/(time[2*t + 1] - time[2*t])
+                tot_advec_qv[k,2*t + 2] = tot_advec_qv[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                grad = (tot_advec_u[k,2*t + 1] - tot_advec_u[k, 2*t])/(time[2*t + 1] - time[2*t])
+                tot_advec_u[k,2*t + 2] = tot_advec_u[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
+                grad = (tot_advec_v[k,2*t + 1] - tot_advec_v[k, 2*t])/(time[2*t + 1] - time[2*t])
+                tot_advec_v[k,2*t + 2] = tot_advec_v[k,2*t+1] + grad*(time[2*t + 2] - time[2*t + 1])
     else:
-        h_advec_thil = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_qt = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_u = np.zeros((nlevs,ntimes),dtype=float)
-        h_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+        print('Unrecognized forcing time method. Exiting.')
+        exit()
+
+    #
+    w_ls         = np.zeros((nlevs,ntimes),dtype=float)
+    omega        = np.zeros((nlevs,ntimes),dtype=float)
+    rad_heating  = np.zeros((nlevs,ntimes),dtype=float)
 
     forcing = {
         "time":     time,
@@ -2205,14 +1969,19 @@ def get_UFS_forcing_data(nlevs, state_IC, forcing_dir, grid_dir, tile, i, j, lam
     
     if (save_comp_data):
         comp_data = {
-            "time": time_dyn_hours*3600.0,
-            "pa": p_lay[0,:],
-            "ta" : t_layr[:,0,::-1], #(time,nlevs)
-            "qv" : qv_layr[:,0,::-1],
-            "ua" : u_layr[:,0,::-1],
-            "va" : v_layr[:,0,::-1],
-            "vars_comp": vars_comp
-        }
+            "time": time_hr*sec_in_hr,
+            "pa"  : p_lay[:,:],
+            "ta"  : t_layr[:,::-1],
+            "qv"  : qv_layr[:,::-1],
+            "ua"  : u_layr[:,::-1],
+            "va"  : v_layr[:,::-1]}
+        #comp_data = {
+        #    "time": stateNATIVE["time"][:]*sec_in_hr, \
+        #    "pa"  : stateNATIVE["p_lay"][:,:],          \
+        #    "ta"  : stateNATIVE["t_lay"][:,:],          \
+        #    "qv"  : stateNATIVE["qv_lay"][:,:],         \
+        #    "ua"  : stateNATIVE["u_lay"][:,:],          \
+        #    "va"  : stateNATIVE["v_lay"][:,:]}
     else:
         comp_data = {}
 
@@ -2541,7 +2310,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     if (add_UFS_dyn_tend): 
         fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_SCM_driver.nc')
     else:
-        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '.nc')
+        fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_noforce_SCM_driver.nc')
 
     nc_file = Dataset(fileOUT, 'w', format='NETCDF3_CLASSIC')
     if (add_UFS_dyn_tend):
@@ -2555,7 +2324,6 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     else:
         nc_file.description = "FV3GFS model profile input (no forcings)"
 
-    print("SCM case file created: ",fileOUT)
 
     nc_file.missing_value   = missing_value
 
@@ -2647,7 +2415,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     nc_file.surface_forcing_moisture = 'none'
     nc_file.surface_forcing_wind     = 'none'
     nc_file.surface_forcing_lsm      = 'none' #'noah' #'noahmp' #'ruc'
-
+    if (add_UFS_NOAH_lsm):
+        nc_file.surface_forcing_lsm  = 'lsm'
     # Set file dimension
     time_dim   = nc_file.createDimension('time', len(forcing['time']))
     timei_dim  = nc_file.createDimension('t0',    1)
@@ -2674,37 +2443,54 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     lev_var.units                = 'm'
     lev_var.standard_name        = 'height'
     lev_var[:]                   = 0.0
+
+    #
+    lon_var                      = nc_file.createVariable('lon', wp, ('time'))
+    lon_var.units                = 'degrees_east'
+    lon_var.standard_name        = 'longitude'
+    lon_var[:]                   = surface["lon"]
+
+    #
+    lat_var                      = nc_file.createVariable('lat', wp, ('time'))
+    lat_var.units                = 'degrees_north'
+    lat_var.standard_name        = 'latitude'
+    lat_var[:]                   = surface["lat"]
+
     #
     soil_depth_var               = nc_file.createVariable('soil_depth', wp, ('nsoil'))
     soil_depth_var.units         = 'm'
     soil_depth_var.standard_name = 'depth of bottom of soil layers'
     soil_depth_var[:]            = [0.1,0.4,1.0,2.0]
     #
-    z0_var                       = nc_file.createVariable('z0', wp, ('time'))
-    z0_var.units                 =  "m"
-    z0_var.standard_name         = 'surface_roughness_length_for_momentum_in_air'
-    z0_var[:]                    = surface["z0"]
-    #
     theta_oro                    = nc_file.createVariable('theta_oro',wp, ('t0'))
     theta_oro.units              = "deg"
     theta_oro.standard_name      = "angle with respect to east of maximum subgrid orographic variations"
     theta_oro[:]                 = oro["theta"]
-
-    # For NOAH LSM
-    zorlw_var                  = nc_file.createVariable('zorlw', real_type, ('t0'))
+    #
+    z0_var                       = nc_file.createVariable('zorl', wp, ('time'))
+    z0_var.units                 =  "cm"
+    z0_var.standard_name         = 'surface_roughness_length_for_momentum_in_air'
+    z0_var[:]                    = surface["z0"]
+    #
+    zorlw_var                  = nc_file.createVariable('zorlw', wp, ('t0'))
     zorlw_var.units            = "cm"
     zorlw_var.standard_name    = "surface roughness length over ocean"
     zorlw_var[:]               = surface["z0"]
     #
-    zorll_var                  = nc_file.createVariable('zorll', real_type, ('t0'))
+    zorll_var                  = nc_file.createVariable('zorll', wp, ('t0'))
     zorll_var.units            = "cm"
     zorll_var.standard_name    = "surface roughness length over land"
-    zorll_var[:]               = surface["z0"]
+    zorll_var[:]               = surface["zorll"]
     #
-    zorli_var                  = nc_file.createVariable('zorli', real_type, ('t0'))
+    zorli_var                  = nc_file.createVariable('zorli', wp, ('t0'))
     zorli_var.units            = "cm"
     zorli_var.standard_name    = "surface roughness length over ice"
-    zorli_var[:]               = surface["z0"]
+    zorli_var[:]               = surface["zorli"]
+    #
+    zorlwav_var                = nc_file.createVariable('zorlwav', wp, ('time'))
+    zorlwav_var.units          =  "cm"
+    zorlwav_var.standard_name  = 'surface_roughness_length_from_wave_model'
+    zorlwav_var[:]             = surface["zorlw"]
 
     #
     # Variables to be output to SCM input file. Only fields that come directly from forcing, 
@@ -2723,9 +2509,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
     # {"name": "", "type", "dimd": (), "units": "", "desc": ""}
     #
     ######################################################################################## 
-    var_dict = [{"name": "lat",          "type":wp, "dimd": ('t0'         ),    "units": "degrees_north", "desc": "latitude"},\
-                {"name": "lon",          "type":wp, "dimd": ('t0'         ),    "units": "degrees_east",  "desc": "longitude"},\
-                {"name": "orog",         "type":wp, "dimd": ('t0'         ),    "units": "m",             "desc": "surface_altitude"},\
+    var_dict = [{"name": "orog",         "type":wp, "dimd": ('t0'         ),    "units": "m",             "desc": "surface_altitude"},\
                 {"name": "zh",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m",             "desc": "height"},\
                 {"name": "pa",           "type":wp, "dimd": ('t0',   'lev'),    "units": "Pa",            "desc": "air_ressure"}, \
                 {"name": "zh_forc",      "type":wp, "dimd": ('time', 'lev'),    "units": "m",             "desc": "height_forcing","default_value": 1.},\
@@ -2961,8 +2745,8 @@ def write_comparison_file(comp_data, case_name, date, surface):
     wp = np.float64
     wi = np.int32
 
-    nlevs = comp_data["pa"].shape[0]
-    ntime = comp_data["time"].shape[0]
+    nlevs = comp_data["pa"].shape[1]
+    ntime = comp_data["pa"].shape[0]
 
     start_date = datetime(date["year"],date["month"],date["day"],date["hour"],date["minute"],date["second"])
     start_date_string = start_date.strftime("%Y%m%d%H%M%S")
@@ -2979,95 +2763,60 @@ def write_comparison_file(comp_data, case_name, date, surface):
     nc_file.script = os.path.basename(__file__)
     nc_file.startDate = start_date_string
 
+    # Dimensions
     lev_dim = nc_file.createDimension('lev', size=nlevs)
-    lev_var = nc_file.createVariable('lev', wp, ('lev',))
-    lev_var.units = 'Pa'
-    lev_var.long_name = 'pressure'
-    lev_var[:] = comp_data["pa"]
-
     time_dim = nc_file.createDimension('time', size=ntime)
+
+    # Varaibles
     time_var = nc_file.createVariable('time', wp, ('time',))
     time_var.units = 'second'# since ' + str(start_date)
     time_var.long_name = 'history file time'
     time_var[:] = comp_data['time']
 
-    init_year_var = nc_file.createVariable('init_year', wi)
-    init_year_var.units = 'year'
-    init_year_var.description = 'UFS initialization year'
-    init_year_var[:] = date["year"]
-
-    init_month_var = nc_file.createVariable('init_month', wi)
-    init_month_var.units = 'month'
-    init_month_var.description = 'UFS initialization month'
-    init_month_var[:] = date["month"]
-
-    init_day_var = nc_file.createVariable('init_day', wi)
-    init_day_var.units = 'day'
-    init_day_var.description = 'UFS initialization day'
-    init_day_var[:] = date["day"]
-
-    init_hour_var = nc_file.createVariable('init_hour', wi)
-    init_hour_var.units = 'hour'
-    init_hour_var.description = 'UFS initialization hour'
-    init_hour_var[:] = date["hour"]
-
-    init_minute_var = nc_file.createVariable('init_minute', wi)
-    init_minute_var.units = 'minute'
-    init_minute_var.description = 'UFS initialization minute'
-    init_minute_var[:] = date["minute"]
-
-    init_second_var = nc_file.createVariable('init_second', wi)
-    init_second_var.units = 'second'
-    init_second_var.description = 'UFS initialization second'
-    init_second_var[:] = date["second"]
+    lev_var = nc_file.createVariable('levs', wp, ('time','lev',))
+    lev_var.units = 'Pa'
+    lev_var.long_name = 'pressure'
+    lev_var[:,:] = comp_data["pa"]
 
     temperature_var = nc_file.createVariable('temp', wp, ('time', 'lev',))
     temperature_var.units = 'K'
     temperature_var.long_name = 'Temperature'
-    temperature_var[:] = comp_data["ta"]
+    temperature_var[:,:] = comp_data["ta"]
 
     qv_var = nc_file.createVariable('qv', wp, ('time', 'lev',))
     qv_var.units = 'kg kg-1'
     qv_var.long_name = 'specific humidity'
-    qv_var[:] = comp_data["qv"]
+    qv_var[:,:] = comp_data["qv"]
 
     u_var = nc_file.createVariable('u', wp, ('time', 'lev',))
     u_var.units = 'm s-1'
     u_var.long_name = 'zonal wind'
-    u_var[:] = comp_data["ua"]
+    u_var[:,:] = comp_data["ua"]
 
     v_var = nc_file.createVariable('v', wp, ('time', 'lev',))
     v_var.units = 'm s-1'
     v_var.long_name = 'meridional wind'
-    v_var[:] = comp_data["va"]
+    v_var[:,:] = comp_data["va"]
 
-    for dtend in comp_data["vars_comp"]:
-        try:
-            tempVar           = nc_file.createVariable(dtend["name"], wp, ('time', 'lev',))
-            tempVar.units     = dtend["units"]
-            tempVar.long_name = dtend["long_name"]
-            tempVar[:]        = dtend["values"]
-        except:
-            logging.debug(dtend["name"] + ' not available for output')
     nc_file.close()
 
     return
 
 def find_date(forcing_dir):
     
-    dyn_filename_pattern = 'atmf*.nc'
+    atm_ftag = 'atmf*.nc'
     
-    dyn_filenames = []
+    atm_filenames = []
     for f_name in os.listdir(forcing_dir):
-       if fnmatch.fnmatch(f_name, dyn_filename_pattern):
-          dyn_filenames.append(f_name)
-    if not dyn_filenames:
-        message = 'No filenames matching the pattern {0} found in {1}'.format(dyn_filename_pattern,forcing_dir)
+       if fnmatch.fnmatch(f_name, atm_ftag):
+          atm_filenames.append(f_name)
+    if not atm_filenames:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(atm_ftag,forcing_dir)
         logging.critical(message)
         raise Exception(message)
-    dyn_filenames = sorted(dyn_filenames)
+    atm_filenames = sorted(atm_filenames)
     
-    nc_file = Dataset('{0}/{1}'.format(forcing_dir,dyn_filenames[0]))
+    nc_file = Dataset('{0}/{1}'.format(forcing_dir,atm_filenames[0]))
     
     #starting date is in the units attribute of time
     
@@ -3091,7 +2840,7 @@ def main():
     #read in arguments
     (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, noahmp, \
      case_name, old_chgres, lam, no_force, save_comp, add_UFS_NOAH_lsm,          \
-     add_UFS_dyn_tend) = parse_arguments()
+     add_UFS_dyn_tend, use_nearest) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     #if not tile and not lam:
@@ -3119,9 +2868,9 @@ def main():
     
     # get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement
     # different file reads)
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, forcing_dir, \
-                                                    tile, tile_i, tile_j, old_chgres, lam)
-    
+    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
+                                                           tile_j, old_chgres, lam)
+
     if not date:
         # date was not included on command line; look in atmf* file for initial date
         date = find_date(forcing_dir)
@@ -3141,8 +2890,9 @@ def main():
     
     # Get UFS forcing data
     (forcing_data, comp_data) = get_UFS_forcing_data(state_data["nlevs"], state_data,      \
-                                                     forcing_dir, grid_dir, tile, tile_i,  \
-                                                     tile_j, lam, save_comp)
+                                                     location, use_nearest, forcing_dir,   \
+                                                     grid_dir, tile, tile_i, tile_j, lam,  \
+                                                     save_comp)
     
     # Write SCM case file
     write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, \
