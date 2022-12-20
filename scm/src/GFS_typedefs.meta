@@ -1984,7 +1984,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_stochastic_physics_perturbations .or. flag_for_chemistry_coupling .or. flag_for_global_cellular_automata)
+  active = (flag_for_surface_flux_coupling .or. flag_for_stochastic_physics_perturbations .or. flag_for_chemistry_coupling .or. flag_for_global_cellular_automata .or. flag_for_land_coupling)
 [rainc_cpl]
   standard_name = cumulative_lwe_thickness_of_convective_precipitation_amount_for_coupling
   long_name = total convective precipitation
@@ -1992,7 +1992,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_chemistry_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_chemistry_coupling .or. flag_for_land_coupling)
 [snow_cpl]
   standard_name = cumulative_lwe_thickness_of_snow_amount_for_coupling
   long_name = total snow precipitation
@@ -2000,7 +2000,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_stochastic_physics_perturbations .or. flag_for_chemistry_coupling .or. flag_for_global_cellular_automata)
+  active = (flag_for_surface_flux_coupling .or. flag_for_stochastic_physics_perturbations .or. flag_for_chemistry_coupling .or. flag_for_global_cellular_automata .or. flag_for_land_coupling)
 [dusfc_cpl]
   standard_name = cumulative_surface_x_momentum_flux_for_coupling_multiplied_by_timestep
   long_name = cumulative sfc x momentum flux multiplied by timestep
@@ -2040,7 +2040,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [dswsfc_cpl]
   standard_name = cumulative_surface_downwelling_shortwave_flux_for_coupling_multiplied_by_timestep
   long_name = cumulative sfc downward sw flux multiplied by timestep
@@ -2048,7 +2048,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [dnirbm_cpl]
   standard_name = cumulative_surface_downwelling_direct_nir_shortwave_flux_for_coupling_multiplied_by_timestep
   long_name = cumulative sfc nir beam downward sw flux multiplied by timestep
@@ -2096,7 +2096,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [nnirbm_cpl]
   standard_name = cumulative_surface_net_downwelling_direct_nir_shortwave_flux_for_coupling_multiplied_by_timestep
   long_name = cumulative net nir beam downward sw flux multiplied by timestep
@@ -2104,7 +2104,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [nnirdf_cpl]
   standard_name = cumulative_surface_net_downwellling_diffuse_nir_shortwave_flux_for_coupling_multiplied_by_timestep
   long_name = cumulative net nir diff downward sw flux multiplied by timestep
@@ -2112,7 +2112,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [nvisbm_cpl]
   standard_name = cumulative_surface_net_downwelling_direct_uv_and_vis_shortwave_flux_for_coupling_multiplied_by_timestep
   long_name = cumulative net uv+vis beam downward sw rad flux multiplied by timestep
@@ -2120,7 +2120,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [nvisdf_cpl]
   standard_name = cumulative_surface_net_downwelling_diffuse_uv_and_vis_shortwave_flux_for_coupling_multiplied_by_timestep
   long_name = cumulative net uv+vis diff downward sw rad flux multiplied by timestep
@@ -2128,7 +2128,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [dusfci_cpl]
   standard_name = surface_x_momentum_flux_for_coupling
   long_name = instantaneous sfc x momentum flux
@@ -2224,7 +2224,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling .or. flag_for_land_coupling)
 [nnirbmi_cpl]
   standard_name = surface_net_downwelling_direct_nir_shortwave_flux_for_coupling
   long_name = instantaneous net nir beam sfc downward sw flux
@@ -2232,7 +2232,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [nnirdfi_cpl]
   standard_name = surface_net_downwelling_diffuse_nir_shortwave_flux_for_coupling
   long_name = instantaneous net nir diff sfc downward sw flux
@@ -2240,7 +2240,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [nvisbmi_cpl]
   standard_name = surface_net_downwelling_direct_uv_and_vis_shortwave_flux_for_coupling
   long_name = instantaneous net uv+vis beam downward sw flux
@@ -2248,7 +2248,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [nvisdfi_cpl]
   standard_name = surface_net_downwelling_diffuse_uv_and_vis_shortwave_flux_for_coupling
   long_name = instantaneous net uv+vis diff downward sw flux
@@ -2256,7 +2256,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling)
 [t2mi_cpl]
   standard_name = temperature_at_2m_for_coupling
   long_name = instantaneous T2m
@@ -2304,7 +2304,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_air_quality_coupling .or. flag_for_land_coupling)
 [ulwsfcin_cpl]
   standard_name = surface_upwelling_longwave_flux_from_coupled_process
   long_name = surface upwelling LW flux for coupling
@@ -3019,6 +3019,12 @@
   units = flag
   dimensions = ()
   type = logical
+[cpllnd]
+  standard_name = flag_for_land_coupling
+  long_name = flag controlling cpllnd collection (default off)
+  units = flag
+  dimensions = ()
+  type = logical
 [rrfs_smoke]
   standard_name = do_smoke_coupling
   long_name = flag controlling rrfs_smoke collection (default off)
@@ -3451,6 +3457,12 @@
 [doGP_sgs_mynn]
   standard_name = flag_to_include_sgs_MYNN_EDMF_cloud_in_RRTMGP
   long_name = logical flag to control MYNN-EDMF PBL cloud in RRTMGP
+  units = flag
+  dimensions = ()
+  type = logical
+[doGP_smearclds]
+  standard_name = flag_for_implicit_sgs_cloud_in_RRTMGP
+  long_name = logical flag to impicit SGS cloud in RRTMGP
   units = flag
   dimensions = ()
   type = logical
@@ -6783,7 +6795,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_chemistry_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_chemistry_coupling .or. flag_for_land_coupling)
 [dsnow_cpl]
   standard_name = tendency_of_lwe_thickness_of_snowfall_amount_on_dynamics_timestep_for_coupling
   long_name = change in show_cpl (coupling_type)
@@ -6791,7 +6803,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_chemistry_coupling)
+  active = (flag_for_surface_flux_coupling .or. flag_for_chemistry_coupling .or. flag_for_land_coupling)
 [phy_fctd]
   standard_name = atmosphere_updraft_convective_mass_flux_at_cloud_base_by_cloud_type
   long_name = cloud base mass flux for CS convection
