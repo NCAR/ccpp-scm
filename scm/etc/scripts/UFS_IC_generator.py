@@ -1436,7 +1436,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         logging.critical(message)
         raise Exception(message)
     atm_filenames = sorted(atm_filenames)
-    #atm_filenames = atm_filenames[1::]
+    atm_filenames = atm_filenames[1::]
     n_files       = len(atm_filenames)
     
     # Physical constants (used by FV3 remapping functions)
@@ -1787,27 +1787,21 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         qv_layr    = np.zeros([n_files,nlevs])
         u_layr     = np.zeros([n_files,nlevs])
         v_layr     = np.zeros([n_files,nlevs])
-
-        # @ time = 0
-        t_layr[0,:]  = t_lay[0,::-1]
-        qv_layr[0,:] = qv_lay[0,::-1]
-        u_layr[0,:]  = u_lay[0,::-1]
-        v_layr[0,:]  = v_lay[0,::-1]
-
-        # @ time > 0
-        for t in range(1,n_files):
-            log_from_p[0,:] = np.log(p_lev[t,::-1])
-            log_to_p[0,:]   = np.log(pi_IC[0,::-1])
-            from_p[0,:]     = p_lev[t,::-1]
-            to_p[0,:]       = pi_IC[0,::-1]
-            for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
-            t_layr[t,:]  = fv3_remap.map_scalar(nlevs, log_from_p, t_lay[t:t+1,::-1],  \
+        p_layr     = np.zeros([n_files,nlevs])
+        for t in range(0,n_files):
+            from_p[0,:]     = stateNATIVE["p_lev"][t,::-1]
+            to_p[0,:]       = stateNATIVE["p_lev"][1,::-1]
+            log_from_p[0,:] = np.log(from_p[0,:])
+            log_to_p[0,:]   = np.log(to_p[0,:])
+            p_layr[t,:]     = stateNATIVE["p_lay"][1,::-1]
+            for k in range (0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
+            t_layr[t,:]  = fv3_remap.map_scalar(nlevs, log_from_p, stateNATIVE["t_lay"][t:t+1,::-1],  \
                                 dummy, nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
-            qv_layr[t,:] = fv3_remap.map1_q2(nlevs, from_p, qv_lay[t:t+1,::-1],        \
+            qv_layr[t,:] = fv3_remap.map1_q2(nlevs, from_p, stateNATIVE["qv_lay"][t:t+1,::-1],        \
                                 nlevs, to_p, dp2, 0, 0, 0, kord_tr, q_min)
-            u_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, u_lay[t:t+1,::-1],        \
+            u_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["u_lay"][t:t+1,::-1],        \
                                 0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-            v_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, v_lay[t:t+1,::-1],        \
+            v_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["v_lay"][t:t+1,::-1],        \
                                 0.0, nlevs, to_p, 0, 0, -1, kord_tm)
 
     ####################################################################################
@@ -1970,7 +1964,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     if (save_comp_data):
         comp_data = {
             "time": time_hr*sec_in_hr,
-            "pa"  : p_lay[:,:],
+            "pa"  : p_layr[:,::-1],
             "ta"  : t_layr[:,::-1],
             "qv"  : qv_layr[:,::-1],
             "ua"  : u_layr[:,::-1],
