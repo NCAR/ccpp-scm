@@ -15,7 +15,7 @@ module use /scratch1/NCEPDEV/nems/role.epic/hpc-stack/libs/intel-2022.1.2/module
 module load hpc/1.2.0
 module load hpc-intel/2022.1.2
 module load hpc-impi/2022.1.2
-module load netcdfodule load netcdf
+module load netcdf
 
 echo "Setting up NCEPLIBS"
 export bacio_ROOT=/scratch1/NCEPDEV/nems/role.epic/hpc-stack/libs/intel-2022.1.2/intel-2022.1.2/bacio/2.4.1
