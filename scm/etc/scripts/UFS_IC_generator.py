@@ -1436,9 +1436,28 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         logging.critical(message)
         raise Exception(message)
     atm_filenames = sorted(atm_filenames)
-    atm_filenames = atm_filenames[1::]
-    n_files       = len(atm_filenames)
-    
+    n_filesA      = len(atm_filenames)
+
+    # Get list of UFS history files with 2D fields.
+    sfc_filenames = []
+    for f_name in os.listdir(forcing_dir):
+       if fnmatch.fnmatch(f_name, sfc_ftag):
+          sfc_filenames.append(f_name)
+    if not sfc_filenames:
+        message = 'No filenames matching the pattern {0} found in {1}'.                \
+                  format(sfc_ftag,forcing_dir)
+        logging.critical(message)
+        raise Exception(message)
+    sfc_filenames = sorted(sfc_filenames)
+    n_filesS      = len(sfc_filenames)
+
+    if (n_filesS == n_filesA):
+        n_files = n_filesA
+    else:
+        message = 'Number of UFS 2D/3D history files is inconsistent'
+        logging.critical(message)
+        raise Exception(message)
+
     # Physical constants (used by FV3 remapping functions)
     kord_tm = -9
     kord_tr = 9
@@ -1472,6 +1491,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     # Get grid from UFS IC data
     (ic_grid_lon, ic_grid_lat) = get_initial_lon_lat_grid(grid_dir, tile, lam)
 
+    # Read in 3D UFS history files
     for count, filename in enumerate(atm_filenames, start=1):
         nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
         nc_file.set_always_mask(False)
@@ -1494,7 +1514,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             # If necessary, remap history file (data_grid) to IC file (ic_grid).
             if (not equal_grids):
                 print('Regridding {} onto native grid: regridding progress = {}%'.         \
-                      format(filename, 100.0*count/(n_files)))
+                      format(filename, 100.0*count/(2*n_files)))
 
                 grid_in   = {'lon': data_grid_lon, 'lat': data_grid_lat}
                 grid_out  = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat':            \
@@ -1517,6 +1537,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                 i_get     = i
                 j_get     = j
         else:
+            print('Using nearest UFS point {} progress = {}%'.format(filename, 100.0*count/(2*n_files)))
             ps_data = nc_file['pressfc'][0,:,:]
             t_data  = nc_file['tmp'][0,::-1,:,:]
             qv_data = nc_file['spfh'][0,::-1,:,:]
@@ -1561,6 +1582,70 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     v_lay   = np.asarray(v_lay)
     tv_lay  = t_lay*(1.0 + zvir*qv_lay)
     time_hr = np.asarray(time_hr)
+
+    # Read in 2D UFS history files
+    vars2d  =[{"name":"spfh2m"},     {"name":"tmp2m"},    \
+              {"name":"dswrf_ave"},  {"name":"ulwrf_ave"},\
+              {"name":"lhtfl_ave"},  {"name":"shtfl_ave"},\
+              {"name":"dswrf"},      {"name":"ulwrf"},\
+              {"name":"lhtfl"},      {"name":"shtfl"},\
+              {"name":"pwat"},       {"name":"vgrd10m"},\
+              {"name":"ugrd10m"}]
+    for var2d in vars2d: var2d["values"] = []
+
+    for count, filename in enumerate(sfc_filenames, start=1):
+        nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
+        nc_file.set_always_mask(False)
+        
+        # Check if UFS history file grid is different than UFS initial-condition grid.
+        if not use_nearest:
+            try:
+                data_grid_lon = nc_file['lon'][:,:]
+                data_grid_lat = nc_file['lat'][:,:]
+            except:
+                data_grid_lon = nc_file['grid_xt'][:,:]
+                data_grid_lat = nc_file['grid_yt'][:,:]
+            equal_grids = False
+            if (ic_grid_lon.shape == data_grid_lon.shape and                               \
+                ic_grid_lat.shape == ic_grid_lat.shape):
+                if (np.equal(ic_grid_lon,data_grid_lon).all() and                          \
+                    np.equal(ic_grid_lat,data_grid_lat).all()):
+                    equal_grids = True
+
+            # If necessary, remap history file (data_grid) to IC file (ic_grid).
+            if (not equal_grids):
+                print('Regridding {} onto native grid: regridding progress = {}%'.         \
+                      format(filename, 50+50.0*count/(n_files)))
+
+                grid_in   = {'lon': data_grid_lon, 'lat': data_grid_lat}
+                grid_out  = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat':            \
+                             np.reshape(ic_grid_lat[j,i],(-1,1))}
+                regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
+                i_get     = 0
+                j_get     = 0
+            # Same grids for history file (data_grid) to IC file (ic_grid).
+            else:
+                i_get     = i
+                j_get     = j
+        else:
+            print('Using nearest UFS point {} progress = {}%'.format(filename, 50+50.0*count/(n_files)))
+            j_get   = tile_jj
+            i_get   = tile_ii
+
+        for var2d in vars2d:
+            if not use_nearest:
+                data = regridder(nc_file[var2d["name"]][0,:,:])
+            else:
+                data = nc_file[var2d["name"]][0,:,:]
+            var2d["values"].append(data[j_get,i_get])
+            var2d["units"]     = nc_file[var2d["name"]].getncattr(name="units")
+            var2d["long_name"] = nc_file[var2d["name"]].getncattr(name="long_name")
+
+        nc_file.close()
+
+    # Convert to numpy arrays
+    for var2d in vars2d:
+        var2d["values"] = np.asarray(var2d["values"])
 
     #
     # Create dictionary with full "Native" state (IC@t=0,ATMF*@t>0)
@@ -1783,18 +1868,20 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
 
     if save_comp_data:
         #
-        t_layr     = np.zeros([n_files,nlevs])
-        qv_layr    = np.zeros([n_files,nlevs])
-        u_layr     = np.zeros([n_files,nlevs])
-        v_layr     = np.zeros([n_files,nlevs])
-        p_layr     = np.zeros([n_files,nlevs])
+        t_layr     = np.zeros([n_files+1,nlevs])
+        qv_layr    = np.zeros([n_files+1,nlevs])
+        u_layr     = np.zeros([n_files+1,nlevs])
+        v_layr     = np.zeros([n_files+1,nlevs])
+        p_layr     = np.zeros([n_files+1,nlevs])
+
+        #
         for t in range(0,n_files):
             from_p[0,:]     = stateNATIVE["p_lev"][t,::-1]
             to_p[0,:]       = stateNATIVE["p_lev"][1,::-1]
             log_from_p[0,:] = np.log(from_p[0,:])
             log_to_p[0,:]   = np.log(to_p[0,:])
             p_layr[t,:]     = stateNATIVE["p_lay"][1,::-1]
-            for k in range (0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
+            for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
             t_layr[t,:]  = fv3_remap.map_scalar(nlevs, log_from_p, stateNATIVE["t_lay"][t:t+1,::-1],  \
                                 dummy, nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
             qv_layr[t,:] = fv3_remap.map1_q2(nlevs, from_p, stateNATIVE["qv_lay"][t:t+1,::-1],        \
@@ -1803,6 +1890,12 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                                 0.0, nlevs, to_p, 0, 0, -1, kord_tm)
             v_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["v_lay"][t:t+1,::-1],        \
                                 0.0, nlevs, to_p, 0, 0, -1, kord_tm)
+
+        t_layr[t+1,:]  = t_layr[t,:]
+        qv_layr[t+1,:] = qv_layr[t,:]
+        u_layr[t+1,:]  = u_layr[t,:]
+        v_layr[t+1,:]  = v_layr[t,:]
+        p_layr[t+1,:]  = p_layr[t,:]
 
     ####################################################################################
     #
@@ -1818,8 +1911,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     # step)
     #
     ####################################################################################
-    #time_method = 'constant_simple' #this is not implemented in the SCM code yet
-    time_method = 'constant_interp'
+    time_method = 'constant_simple' #this is not implemented in the SCM code yet
+    #time_method = 'constant_interp'
     #time_method = 'gradient' #this produced wonky results in the SCM; avoid until investigated more
     
     if (time_method == 'constant_simple'):
@@ -1893,7 +1986,15 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             tot_advec_u[:,2*t+1] = tot_advec_u[:,2*t]
             tot_advec_v[:,2*t] = dvdt_adv[t,:]
             tot_advec_v[:,2*t+1] = tot_advec_v[:,2*t]
-        
+            #
+            #p_s[2*t-1]             = 0.5*(p_s[2*t]             + p_s[2*t-1])
+            #pressure_forc[:,2*t-1] = 0.5*(pressure_forc[:,2*t] + pressure_forc[:,2*t-1])
+            #tot_advec_T[:,2*t-1]   = 0.5*(tot_advec_T[:,2*t]   + tot_advec_T[:,2*t-1])
+            #tot_advec_qv[:,2*t-1]  = 0.5*(tot_advec_qv[:,2*t]  + tot_advec_qv[:,2*t-1])
+            #tot_advec_u[:,2*t-1]   = 0.5*(tot_advec_u[:,2*t]   + tot_advec_u[:,2*t-1])
+            #tot_advec_v[:,2*t-1]   = 0.5*(tot_advec_v[:,2*t]   + tot_advec_v[:,2*t-1])
+
+
     elif (time_method == 'gradient'): #this produced wonky results in the SCM; avoid until investigated more
         print('Forcing can be interpolated in time since the forcing terms are assumed to follow a constant time-gradient.')
         
@@ -1963,12 +2064,13 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     
     if (save_comp_data):
         comp_data = {
-            "time": time_hr*sec_in_hr,
+            "time": stateNATIVE["time"]*sec_in_hr,
             "pa"  : p_layr[:,::-1],
             "ta"  : t_layr[:,::-1],
             "qv"  : qv_layr[:,::-1],
             "ua"  : u_layr[:,::-1],
-            "va"  : v_layr[:,::-1]}
+            "va"  : v_layr[:,::-1],
+            "vars2d":vars2d}
         #comp_data = {
         #    "time": stateNATIVE["time"][:]*sec_in_hr, \
         #    "pa"  : stateNATIVE["p_lay"][:,:],          \
@@ -2760,12 +2862,18 @@ def write_comparison_file(comp_data, case_name, date, surface):
     # Dimensions
     lev_dim = nc_file.createDimension('lev', size=nlevs)
     time_dim = nc_file.createDimension('time', size=ntime)
+    time_ufs_history_dim = nc_file.createDimension('time_ufs_history', size=ntime-1)
 
     # Varaibles
     time_var = nc_file.createVariable('time', wp, ('time',))
-    time_var.units = 'second'# since ' + str(start_date)
+    time_var.units = 'second'
     time_var.long_name = 'history file time'
     time_var[:] = comp_data['time']
+
+    time2_var = nc_file.createVariable('time_ufs_history', wp, ('time_ufs_history',))
+    time2_var.units = 'second'
+    time2_var.long_name = 'UFS history file time'
+    time2_var[:] = comp_data['time'][1::]
 
     lev_var = nc_file.createVariable('levs', wp, ('time','lev',))
     lev_var.units = 'Pa'
@@ -2791,6 +2899,12 @@ def write_comparison_file(comp_data, case_name, date, surface):
     v_var.units = 'm s-1'
     v_var.long_name = 'meridional wind'
     v_var[:,:] = comp_data["va"]
+
+    for var2d in comp_data["vars2d"]:
+        tempVar           = nc_file.createVariable(var2d["name"], wp, ('time_ufs_history'))
+        tempVar.units     = var2d["units"]
+        tempVar.long_name = var2d["long_name"]
+        tempVar[:]        = var2d["values"]
 
     nc_file.close()
 

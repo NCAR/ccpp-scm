@@ -15,9 +15,10 @@ import random
 # Argument list
 ###############################################################################
 parser = argparse.ArgumentParser()
-parser.add_argument('-i',    '--dir_ic',           help='Directory path containing FV3 input files',                                 required=True)
-parser.add_argument('-g',    '--dir_grid',         help='directory path containing FV3 tile supergrid files',                        required=True)
-parser.add_argument('-f',    '--dir_forcing',      help='Directory path containing physics diag files',                              required=True)
+parser.add_argument('-d',    '--dir',              help='Directory path containing UFS output files',                                required=False)
+parser.add_argument('-i',    '--dir_ic',           help='Directory path containing FV3 input files',                                 required=False)
+parser.add_argument('-g',    '--dir_grid',         help='directory path containing FV3 tile supergrid files',                        required=False)
+parser.add_argument('-f',    '--dir_forcing',      help='Directory path containing physics diag files',                              required=False)
 parser.add_argument('-n',    '--case_name',        help='Name of case',                                                              required=True)
 parser.add_argument('-lonl', '--lon_limits',       help='Longitude range for ensemble, separated by a space', nargs=2,   type=float, required=False)
 parser.add_argument('-latl', '--lat_limits',       help='Latitude range for ensemble, separated by a space',  nargs=2,   type=float, required=False)
@@ -39,6 +40,11 @@ parser.add_argument('-near', '--use_nearest',      help='flag to indicate using 
 def main():
     # Get command line arguments
     args  = parser.parse_args()
+
+    if (args.dir):
+        if (not args.dir_ic):      args.dir_ic      = args.dir + "/INPUT/"
+        if (not args.dir_grid):    args.dir_grid    = args.dir + "/INPUT/"
+        if (not args.dir_forcing): args.dir_forcing = args.dir
 
     # Error checking
     if (args.lon_limits and args.lon_list):
@@ -139,14 +145,14 @@ def main():
     case_list_nf = ""
     count = 0
     run_list = []
-    run_list_nf = []
+    #run_list_nf = []
     for pt in range(0,npts):
         # Call UFS_IC_generator.py
         case_name     = args.case_name +"_n" + str(pt).zfill(3)
         file_scminput = dir_scm+"scm/data/processed_case_input/"+case_name+"_SCM_driver.nc"
-        if args.add_UFS_dyn_tend:
-            case_name_nf      = args.case_name +"_n" + str(pt).zfill(3)+"_noforce"
-            file_scm_nf_input = dir_scm+"scm/data/processed_case_input/"+case_name+"_noforce_SCM_driver.nc"
+        #if args.add_UFS_dyn_tend:
+        #    case_name_nf      = args.case_name +"_n" + str(pt).zfill(3)+"_noforce"
+        #    file_scm_nf_input = dir_scm+"scm/data/processed_case_input/"+case_name+"_noforce_SCM_driver.nc"
         #
         com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
               " -i " + args.dir_ic + " -g " + args.dir_grid + " -f " + args.dir_forcing + " -n " + case_name + com_config
@@ -159,9 +165,9 @@ def main():
             case_list     = case_list + '"'+case_name+'"'
             if (count != npts-1): case_list = case_list + ', '
             # Ditto if creating un-forced reference cases
-            if args.add_UFS_dyn_tend:
-                case_list_nf = case_list_nf + '"'+case_name_nf+'"'
-                if (count != npts-1): case_list_nf = case_list_nf + ', '
+            #if args.add_UFS_dyn_tend:
+            #    case_list_nf = case_list_nf + '"'+case_name_nf+'"'
+            #    if (count != npts-1): case_list_nf = case_list_nf + ', '
 
             # What is the surface type? (get from SCM input file)
             dataset  = xr.open_dataset(file_scminput)
@@ -183,26 +189,26 @@ def main():
             fileID.write('\n')
             fileID.close()
             #
-            if args.add_UFS_dyn_tend:
-                fileOUT = dir_scm+"scm/etc/case_config/"+case_name_nf+".nml"
-                fileID  = open(fileOUT, 'w')
-                fileID.write('$case_config')
-                fileID.write('\n')
-                fileID.write('case_name = ' + "'" + case_name_nf + "',")
-                fileID.write('\n')
-                fileID.write('sfc_type = ' + str(sfc_type) + ",")
-                fileID.write('\n')
-                for opts in case_config:
-                    fileID.write(opts["name"] + ' = ' + opts["values"] + ",")
-                    fileID.write('\n')
-                fileID.write('$end')
-                fileID.write('\n')
-                fileID.close()
+            #if args.add_UFS_dyn_tend:
+            #    fileOUT = dir_scm+"scm/etc/case_config/"+case_name_nf+".nml"
+            #    fileID  = open(fileOUT, 'w')
+            #    fileID.write('$case_config')
+            #    fileID.write('\n')
+            #    fileID.write('case_name = ' + "'" + case_name_nf + "',")
+            #    fileID.write('\n')
+            #    fileID.write('sfc_type = ' + str(sfc_type) + ",")
+            #    fileID.write('\n')
+            #    for opts in case_config:
+            #        fileID.write(opts["name"] + ' = ' + opts["values"] + ",")
+            #        fileID.write('\n')
+            #    fileID.write('$end')
+            #    fileID.write('\n')
+            #    fileID.close()
 
             # Add case to dictionary to be used by run_scm.py
             run_list.append({"case": case_name, "suite": args.suite})
-            if args.add_UFS_dyn_tend:
-                run_list_nf.append({"case": case_name_nf, "suite": args.suite})
+            #if args.add_UFS_dyn_tend:
+            #    run_list_nf.append({"case": case_name_nf, "suite": args.suite})
             
             #
             count = count + 1
@@ -227,17 +233,17 @@ def main():
     fileID.write('            ]')
     fileID.close()
     #
-    if args.add_UFS_dyn_tend:
-        os.system("mkdir -p "+dir_scm+"scm/bin/")
-        fileOUT_nf = "scm_ufsens_nf.py"
-        fileID  = open(dir_scm+"scm/bin/"+fileOUT_nf, 'w')
-        fileID.write('run_list = [')
-        fileID.write('\n')
-        for run in run_list_nf:
-            fileID.write('            {"case": "' + run["case"] + '", "suite": "' + run["suite"] + '"},')
-            fileID.write('\n')
-        fileID.write('            ]')
-        fileID.close()
+    #if args.add_UFS_dyn_tend:
+    #    os.system("mkdir -p "+dir_scm+"scm/bin/")
+    #    fileOUT_nf = "scm_ufsens_nf.py"
+    #    fileID  = open(dir_scm+"scm/bin/"+fileOUT_nf, 'w')
+    #    fileID.write('run_list = [')
+    #    fileID.write('\n')
+    #    for run in run_list_nf:
+    #        fileID.write('            {"case": "' + run["case"] + '", "suite": "' + run["suite"] + '"},')
+    #        fileID.write('\n')
+    #    fileID.write('            ]')
+    #    fileID.close()
 
     ###########################################################################
     #
@@ -247,15 +253,15 @@ def main():
     print("-------------------------------------------------------------------------------------------")
     print("Command(s) to execute in ccpp-scm/scm/bin/: ")
     print(" ")
-    print("./run_scm.py --file " + fileOUT + " --n_itt_diag " + \
+    print("./run_scm.py --npz_type gfs --file " + fileOUT + " --n_itt_diag " + \
           str(n_itt_diag) + " --n_itt_out " + str(n_itt_out) + " --timestep "   + \
           str(args.timestep))
     print("")
-    if args.add_UFS_dyn_tend:
-        print("")
-        print("./run_scm.py --file " + fileOUT_nf + " --n_itt_diag " + \
-              str(n_itt_diag) + " --n_itt_out " + str(n_itt_out)    + " --timestep "   + \
-              str(args.timestep))
+    #if args.add_UFS_dyn_tend:
+    #    print("")
+    #    print("./run_scm.py --npz_type gfs --file " + fileOUT_nf + " --n_itt_diag " + \
+    #          str(n_itt_diag) + " --n_itt_out " + str(n_itt_out)    + " --timestep "   + \
+    #          str(args.timestep))
     print("")
     print("-------------------------------------------------------------------------------------------")
 
