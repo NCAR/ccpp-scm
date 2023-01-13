@@ -122,17 +122,17 @@ jobs:
     - name: Install NetCDF library
       run: sudo apt-get install libnetcdf-dev
 
-    - name: Cache NetCDF Fortran library v4.4.4
+    - name: Cache NetCDF Fortran library v4.5.3
       id: cache-netcdf-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
-    - name: Install NetCDF Fortran library v4.4.4
+    - name: Install NetCDF Fortran library v4.5.3
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
-        git clone --branch v4.4.4 https://github.com/Unidata/netcdf-fortran.git
+        git clone --branch v4.5.3 https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
         ./configure
         make -j
