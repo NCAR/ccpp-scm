@@ -11,6 +11,7 @@ jobs:
       matrix:
         fortran-compiler: [gfortran-10, gfortran-11, gfortran-12]
         build-type:       [Release, Debug]
+	python:           [3.9]
 
     # Environmental variables
     env:
@@ -35,10 +36,10 @@ jobs:
     #######################################################################################
     # Python setup
     #######################################################################################    
-    - name: Set up Python 3.8.5
+    - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: 3.8.5
+        python-version: matrix.python
 
     - name: Add conda to system path
       run: |
