@@ -56,7 +56,7 @@ jobs:
     - name: Set netCDFF version for compiler (gfortran-9)
       if: contains(matrix.fortran-compiler, 'gfortran-9')
       run: |
-        echo "NETCDFF_VERSION=v4.2.2"  >> $GITHUB_ENV
+        echo "NETCDFF_VERSION=v4.4.2"  >> $GITHUB_ENV
 
     - name: Set netCDFF version for compiler (gfortran-10/11/12)
       if: contains(matrix.fortran-compiler, 'gfortran-1')
