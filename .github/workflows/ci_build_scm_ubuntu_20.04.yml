@@ -3,7 +3,7 @@ name: CI test to build the CCPP-SCM on ubuntu v20.04
 on: [push, pull_request,workflow_dispatch]
 
 jobs:
-  build_scm:
+  build_scm_old:
 
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
