@@ -1,9 +1,9 @@
-name: CI test to build the CCPP-SCM
+name: CI test to build the CCPP-SCM on ubuntu v22.04
 
 on: [push,pull_request,workflow_dispatch]
 
 jobs:
-  build_scm_:
+  build_scm:
 
     # The type of runner that the job will run on
     runs-on: ubuntu-22.04
@@ -52,16 +52,6 @@ jobs:
 
     - name: Update system packages
       run: sudo apt-get update
-
-    - name: Set netCDFF version for compiler (gfortran-9)
-      if: contains(matrix.fortran-compiler, 'gfortran-9')
-      run: |
-        echo "NETCDFF_VERSION=v4.4.4"  >> $GITHUB_ENV
-
-    - name: Set netCDFF version for compiler (gfortran-10/11/12)
-      if: contains(matrix.fortran-compiler, 'gfortran-1')
-      run: |
-        echo "NETCDFF_VERSION=v4.5.3"  >> $GITHUB_ENV
 
     #######################################################################################
     # Install FORTRAN dependencies
@@ -141,10 +131,10 @@ jobs:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
-    - name: Install NetCDF Fortran library
+    - name: Install NetCDF Fortran library (v4.5.3)
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
-        git clone --branch ${NETCDFF_VERSION} https://github.com/Unidata/netcdf-fortran.git
+        git clone --branch v4.5.3 https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
         ./configure
         make -j
