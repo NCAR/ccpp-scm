@@ -1,17 +1,17 @@
-name: CI test to build and run SCM regression tests
+name: CI test to build the CCPP-SCM on ubuntu v22.04
 
-on: [pull_request, workflow_dispatch]
+on: [pull_request,workflow_dispatch]
 
 jobs:
-  run_scm_rts:
+  build_scm:
 
     # The type of runner that the job will run on
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        fortran-compiler: [gfortran-11]
+        fortran-compiler: [gfortran-10, gfortran-11, gfortran-12]
         build-type:       [Release, Debug]
-        py-version:       [3.9.12]
+        py-version:       [3.7.13, 3.9.12]
 
     # Environmental variables
     env:
@@ -21,10 +21,8 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
-      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
-      dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
-      dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      intel_ROOT: /home/runner/intel
+      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
 
     # Workflow steps
     steps:
@@ -60,17 +58,33 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
-    - name: Environment for gfortran compiler
-      if: contains(matrix.fortran-compiler, 'gnu')
-      run: |
-        echo "FC=gfortran-11" >> $GITHUB_ENV
-        echo "CC=gcc-11"      >> $GITHUB_ENV
-
     - name: Environment for ifort compiler
-      if: contains(matrix.fortran-compiler, 'intel')
+      if: contains(matrix.fortran-compiler, 'ifort')
       run: |
-        echo "CC=icx"         >> $GITHUB_ENV
-        echo "FC=ifort"       >> $GITHUB_ENV
+        echo "CC=icx"   >> $GITHUB_ENV
+        echo "FC=ifort" >> $GITHUB_ENV
+        echo "NFVERSION=v4.4.4" >> $GITHUB_ENV
+
+    - name: Cache Intel compilers
+      id: cache-intel-compilers
+      if: contains(matrix.fortran-compiler, 'ifort')
+      uses: actions/cache@v2
+      with:
+        path: /home/runner/intel
+        key: intel-${{ runner.os }}-compilers-b
+
+    # https://software.intel.com/content/www/us/en/develop/articles/installing-intel-oneapi-toolkits-via-apt.html
+    # List of packages from Docker file at
+    #    https://github.com/intel/oneapi-containers/blob/master/images/docker/hpckit-devel-ubuntu18.04/Dockerfile
+    - name: Install Intel compilers and libraries
+      if: contains(matrix.fortran-compiler, 'ifort') && steps.cache-intel-compilers.outputs.cache-hit != 'true'
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
+        sudo apt-get update
+        sudo apt-get install intel-hpckit-getting-started intel-oneapi-clck intel-oneapi-common-licensing intel-oneapi-common-vars
+        sudo apt-get install intel-oneapi-dev-utilities  intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-compiler-fortran intel-oneapi-itac
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
@@ -124,7 +138,9 @@ jobs:
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
     - name: Install NetCDF C library
-      run: sudo apt-get install libnetcdf-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install libnetcdf-dev
 
     - name: Cache NetCDF Fortran library
       id: cache-netcdf-fortran
@@ -144,60 +160,24 @@ jobs:
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
     #######################################################################################
-    # Build SCM. Run regression tests.
+    # Build SCM.
     #######################################################################################
-    - name: Download data for SCM
-      run: |
-        cd ${SCM_ROOT}
-        ./contrib/get_all_static_data.sh
-        ./contrib/get_thompson_tables.sh
 
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites},${suites_ps} ../src
+        cmake -DCCPP_SUITES=${suites} ../src
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
+        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src
 
     - name: Build SCM
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
-
-    - name: Run SCM RTs
-      run: |
-        cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
-
-    - name: Gather SCM RT output
-      run: |
-        cd ${SCM_ROOT}/test
-        mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
-        ./ci_util.py -b ${{matrix.build-type}}
-
-    - name: Create directory for SCM RT baselines
-      run: mkdir ${dir_bl}
-
-    - name: Download SCM RT baselines
-      run: |
-        cd ${dir_bl}
-        wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/rt-baselines-${{matrix.build-type}}.zip
-        unzip rt-baselines-${{matrix.build-type}}.zip
-
-    - name: Compare SCM RT output to baselines
-      run: |
-        cd ${SCM_ROOT}/test
-        ./cmp_rt2bl.py --build_type ${{matrix.build-type}} --dir_rt ${dir_rt} --dir_bl ${dir_bl}
-
-    - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v2
-      with: 
-        name: rt-baselines-${{matrix.build-type}}
-        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
