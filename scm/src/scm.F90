@@ -34,7 +34,6 @@ subroutine scm_main_sub()
   real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer      :: jdat(1:8)
 
-  integer                           :: cdata_time_index
   integer                           :: ierr
   character(len=16) :: logfile_name
   logical                           :: in_spinup
@@ -75,16 +74,6 @@ subroutine scm_main_sub()
   call physics%create(scm_state%n_cols)
   
   !physics initialization section
-
-  !set the array index of the time level of the state variables that the cdata
-  !points to (this is the time level that will be updated during ipd_run;
-  !if suite returns tendencies, SCM must apply them to this time level)
-  select case(scm_state%time_scheme)
-    case(1)
-      cdata_time_index = 1
-    case default
-      cdata_time_index = 2
-  end select
   
   !open a logfile
   if (physics%Init_parm%me == physics%Init_parm%master .and. physics%Init_parm%logunit>=0) then

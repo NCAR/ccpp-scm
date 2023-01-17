@@ -339,7 +339,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
         else if (scm_state%surface_thermo_control == 1) then
           !convert from W m-2 to kinematic
           do i=1, scm_state%n_cols
-            rho = scm_state%pres_l(i,1)/(con_rd*scm_state%state_T(i,1,1))
+            rho = scm_state%pres_l(i,1)/(con_rd*scm_state%state_T(i,1))
             scm_state%sh_flux(i) = (1.0/(con_cp*rho))*scm_input%input_sh_flux_sfc(scm_input%input_ntimes)
             scm_state%lh_flux(i) = (1.0/(con_hvap*rho))*scm_input%input_lh_flux_sfc(scm_input%input_ntimes)
           end do
@@ -719,7 +719,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
       else if (scm_state%surface_thermo_control == 1) then
         !convert from W m-2 to kinematic
         do i=1, scm_state%n_cols
-          rho = scm_state%pres_l(i,1)/(con_rd*scm_state%state_T(i,1,1))
+          rho = scm_state%pres_l(i,1)/(con_rd*scm_state%state_T(i,1))
           scm_state%sh_flux(i) = (1.0/(con_cp*rho))*((1.0 - lifrac)*scm_input%input_sh_flux_sfc(low_t_index) + &
             lifrac*scm_input%input_sh_flux_sfc(low_t_index+1))
           scm_state%lh_flux(i) = (1.0/(con_hvap*rho))*((1.0 - lifrac)*scm_input%input_lh_flux_sfc(low_t_index) + &
@@ -762,10 +762,10 @@ subroutine apply_forcing_leapfrog(scm_state)
   g_over_cp = con_g/con_cp
 
   !> - Save old state variables (filtered from previous time step)
-  old_u = scm_state%state_u(:,:,1)
-  old_v = scm_state%state_v(:,:,1)
-  old_T = scm_state%state_T(:,:,1)
-  old_qv = scm_state%state_tracer(:,:,scm_state%water_vapor_index,1)
+  old_u = scm_state%state_u(:,:)
+  old_v = scm_state%state_v(:,:)
+  old_T = scm_state%state_T(:,:)
+  old_qv = scm_state%state_tracer(:,:,scm_state%water_vapor_index)
 
   theta = old_T/scm_state%exner_l(:,:)
 
@@ -908,13 +908,13 @@ subroutine apply_forcing_leapfrog(scm_state)
       !!   \f$\overline{x^{\tau - 1}}\f$ is the filtered value at the previous time step and \f$\frac{\partial x}{\partial t}|^\tau_{forcing}\f$ is the sum of forcing terms calculated in this time step.
       scm_state%state_u(i,k,1) = old_u(i,k) + 2.0*scm_state%dt*scm_state%u_force_tend(i,k)
       scm_state%state_v(i,k,1) = old_v(i,k) + 2.0*scm_state%dt*scm_state%v_force_tend(i,k)
-      scm_state%state_T(i,k,1) = scm_state%state_T(i,k,1) + 2.0*scm_state%dt*(scm_state%T_force_tend(i,k))
-      scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) = scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) + &
+      scm_state%state_T(i,k,1) = scm_state%state_T(i,k) + 2.0*scm_state%dt*(scm_state%T_force_tend(i,k))
+      scm_state%state_tracer(i,k,scm_state%water_vapor_index) = scm_state%state_tracer(i,k,scm_state%water_vapor_index) + &
         2.0*scm_state%dt*(scm_state%qv_force_tend(i,k))
-      ! scm_state%state_u(i,k,1) = old_u(i,k) + scm_state%dt*scm_state%u_force_tend(i,k)
-      ! scm_state%state_v(i,k,1) = old_v(i,k) + scm_state%dt*scm_state%v_force_tend(i,k)
-      ! scm_state%state_T(i,k,1) = scm_state%state_T(i,k,1) + scm_state%dt*(scm_state%T_force_tend(i,k))
-      ! scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) = scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) + scm_state%dt*(scm_state%qv_force_tend(i,k))
+      ! scm_state%state_u(i,k) = old_u(i,k) + scm_state%dt*scm_state%u_force_tend(i,k)
+      ! scm_state%state_v(i,k) = old_v(i,k) + scm_state%dt*scm_state%v_force_tend(i,k)
+      ! scm_state%state_T(i,k) = scm_state%state_T(i,k) + scm_state%dt*(scm_state%T_force_tend(i,k))
+      ! scm_state%state_tracer(i,k,scm_state%water_vapor_index) = scm_state%state_tracer(i,k,scm_state%water_vapor_index) + scm_state%dt*(scm_state%qv_force_tend(i,k))
     end do
   end do
   !> @}
@@ -945,10 +945,10 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
   g_over_cp = con_g/con_cp
 
   !> - Save old state variables (filtered from previous time step)
-  old_u = scm_state%state_u(:,:,1)
-  old_v = scm_state%state_v(:,:,1)
-  old_T = scm_state%state_T(:,:,1)
-  old_qv = scm_state%state_tracer(:,:,scm_state%water_vapor_index,1)
+  old_u = scm_state%state_u(:,:)
+  old_v = scm_state%state_v(:,:)
+  old_T = scm_state%state_T(:,:)
+  old_qv = scm_state%state_tracer(:,:,scm_state%water_vapor_index)
 
   theta = old_T/scm_state%exner_l(:,:)
 
@@ -1104,10 +1104,10 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
       !!   x^{\tau + 1} = x^{\tau} + \Delta t\frac{\partial x}{\partial t}|^\tau_{forcing}
       !!   \f]
       !!   \f$x^{\tau}\f$ is the value at the previous time step and \f$\frac{\partial x}{\partial t}|^\tau_{forcing}\f$ is the sum of forcing terms calculated in this time step.
-      scm_state%state_u(i,k,1) = old_u(i,k) + scm_state%dt*scm_state%u_force_tend(i,k)
-      scm_state%state_v(i,k,1) = old_v(i,k) + scm_state%dt*scm_state%v_force_tend(i,k)
-      scm_state%state_T(i,k,1) = scm_state%state_T(i,k,1) + scm_state%dt*(scm_state%T_force_tend(i,k))
-      scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) = scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) + &
+      scm_state%state_u(i,k) = old_u(i,k) + scm_state%dt*scm_state%u_force_tend(i,k)
+      scm_state%state_v(i,k) = old_v(i,k) + scm_state%dt*scm_state%v_force_tend(i,k)
+      scm_state%state_T(i,k) = scm_state%state_T(i,k) + scm_state%dt*(scm_state%T_force_tend(i,k))
+      scm_state%state_tracer(i,k,scm_state%water_vapor_index) = scm_state%state_tracer(i,k,scm_state%water_vapor_index) + &
         scm_state%dt*(scm_state%qv_force_tend(i,k))
     end do
   end do
@@ -1137,10 +1137,10 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
   spinup_relax_time = scm_state%dt
   
   !Save old state variables
-  old_u = scm_state%state_u(:,:,1)
-  old_v = scm_state%state_v(:,:,1)
-  old_T = scm_state%state_T(:,:,1)
-  old_qv = scm_state%state_tracer(:,:,scm_state%water_vapor_index,1)
+  old_u = scm_state%state_u(:,:)
+  old_v = scm_state%state_v(:,:)
+  old_T = scm_state%state_T(:,:)
+  old_qv = scm_state%state_tracer(:,:,scm_state%water_vapor_index)
   
   if (use_theta) then
     theta = old_T/scm_state%exner_l(:,:)
@@ -1417,10 +1417,10 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
       !!   x^{\tau + 1} = x^{\tau} + \Delta t\frac{\partial x}{\partial t}|^\tau_{forcing}
       !!   \f]
       !!   \f$x^{\tau}\f$ is the value at the previous time step and \f$\frac{\partial x}{\partial t}|^\tau_{forcing}\f$ is the sum of forcing terms calculated in this time step.
-      scm_state%state_u(i,k,1) = old_u(i,k) + scm_state%dt*scm_state%u_force_tend(i,k)
-      scm_state%state_v(i,k,1) = old_v(i,k) + scm_state%dt*scm_state%v_force_tend(i,k)
-      scm_state%state_T(i,k,1) = scm_state%state_T(i,k,1) + scm_state%dt*(scm_state%T_force_tend(i,k))
-      scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) = scm_state%state_tracer(i,k,scm_state%water_vapor_index,1) + &
+      scm_state%state_u(i,k) = old_u(i,k) + scm_state%dt*scm_state%u_force_tend(i,k)
+      scm_state%state_v(i,k) = old_v(i,k) + scm_state%dt*scm_state%v_force_tend(i,k)
+      scm_state%state_T(i,k) = scm_state%state_T(i,k) + scm_state%dt*(scm_state%T_force_tend(i,k))
+      scm_state%state_tracer(i,k,scm_state%water_vapor_index) = scm_state%state_tracer(i,k,scm_state%water_vapor_index) + &
         scm_state%dt*(scm_state%qv_force_tend(i,k))
     end do
   end do
@@ -1435,10 +1435,10 @@ subroutine set_spinup_nudging(scm_state)
   integer :: i
   
   do i=1, scm_state%n_cols
-    scm_state%u_nudge(i,:) = scm_state%state_u(i,:,1)
-    scm_state%v_nudge(i,:) = scm_state%state_v(i,:,1)
-    scm_state%T_nudge(i,:) = scm_state%state_T(i,:,1)
-    scm_state%qt_nudge(i,:) = scm_state%state_tracer(i,:,scm_state%water_vapor_index,1)
+    scm_state%u_nudge(i,:) = scm_state%state_u(i,:)
+    scm_state%v_nudge(i,:) = scm_state%state_v(i,:)
+    scm_state%T_nudge(i,:) = scm_state%state_T(i,:)
+    scm_state%qt_nudge(i,:) = scm_state%state_tracer(i,:,scm_state%water_vapor_index)
   end do
   
 end subroutine set_spinup_nudging

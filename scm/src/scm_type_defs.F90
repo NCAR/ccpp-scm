@@ -57,7 +57,6 @@ module scm_type_defs
     integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog (deprecated)
     integer                           :: n_cols !< number of columns
     integer                           :: n_timesteps !< number of timesteps needed to integrate over runtime
-    integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme (2 for leapfrog)
     integer                           :: n_itt_out !< number of iterations between calls to write the output
     integer                           :: n_itt_diag !< number of iterations between diagnostics resetting to zero
     integer                           :: n_levels_smooth !< the number of levels over which the input profiles are smoothed into the reference profiles
@@ -432,9 +431,9 @@ module scm_type_defs
 
   contains
 
-  subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels, tracers, tracer_types)
+  subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, tracers, tracer_types)
     class(scm_state_type)             :: scm_state
-    integer, intent(in)               :: n_columns, n_levels, n_soil, n_snow, n_time_levels
+    integer, intent(in)               :: n_columns, n_levels, n_soil, n_snow
     character(len=character_length), intent(in), dimension(:) :: tracers
     integer,                         intent(in), dimension(:) :: tracer_types
     
@@ -460,7 +459,6 @@ module scm_type_defs
     scm_state%time_scheme = int_zero
     scm_state%n_cols = n_columns
     scm_state%n_timesteps = int_zero
-    scm_state%n_time_levels = n_time_levels
     
     scm_state%n_tracers = size(tracers)
     allocate(scm_state%tracer_names(scm_state%n_tracers), scm_state%tracer_types(scm_state%n_tracers))
@@ -581,17 +579,17 @@ module scm_type_defs
     scm_state%lon = real_zero
     scm_state%area = real_one
 
-    allocate(scm_state%state_T(n_columns, n_levels, n_time_levels), &
-      scm_state%state_u(n_columns, n_levels, n_time_levels), scm_state%state_v(n_columns, n_levels, n_time_levels), &
-      scm_state%state_tracer(n_columns, n_levels, scm_state%n_tracers, n_time_levels))
+    allocate(scm_state%state_T(n_columns, n_levels), &
+      scm_state%state_u(n_columns, n_levels), scm_state%state_v(n_columns, n_levels), &
+      scm_state%state_tracer(n_columns, n_levels, scm_state%n_tracers))
     scm_state%state_T = real_zero
     scm_state%state_u = real_zero
     scm_state%state_v = real_zero
     scm_state%state_tracer = real_zero
 
-    allocate(scm_state%temp_tracer(n_columns, n_levels, scm_state%n_tracers, n_time_levels), &
-      scm_state%temp_T(n_columns, n_levels, n_time_levels), &
-      scm_state%temp_u(n_columns, n_levels, n_time_levels), scm_state%temp_v(n_columns, n_levels, n_time_levels))
+    allocate(scm_state%temp_tracer(n_columns, n_levels, scm_state%n_tracers), &
+      scm_state%temp_T(n_columns, n_levels), &
+      scm_state%temp_u(n_columns, n_levels), scm_state%temp_v(n_columns, n_levels))
     scm_state%temp_tracer = real_zero
     scm_state%temp_T = real_zero
     scm_state%temp_u = real_zero
@@ -982,11 +980,11 @@ module scm_type_defs
     physics%Statein%prslk => scm_state%exner_l
 
     physics%Statein%pgr => scm_state%pres_surf
-    physics%Statein%ugrs => scm_state%state_u(:,:,1)
-    physics%Statein%vgrs => scm_state%state_v(:,:,1)
+    physics%Statein%ugrs => scm_state%state_u(:,:)
+    physics%Statein%vgrs => scm_state%state_v(:,:)
     physics%Statein%vvl => scm_state%omega
-    physics%Statein%tgrs => scm_state%state_T(:,:,1)
-    physics%Statein%qgrs => scm_state%state_tracer(:,:,:,1)
+    physics%Statein%tgrs => scm_state%state_T(:,:)
+    physics%Statein%qgrs => scm_state%state_tracer(:,:,:)
     
     if (.not. (scm_state%model_ics .or. scm_state%lsm_ics) .and. .not. scm_state%sfc_flux_spec) then
       do i =1, physics%Model%ncols
@@ -1006,10 +1004,10 @@ module scm_type_defs
       end do
     end if
     
-    physics%Stateout%gu0 => scm_state%state_u(:,:,1)
-    physics%Stateout%gv0 => scm_state%state_v(:,:,1)
-    physics%Stateout%gt0 => scm_state%state_T(:,:,1)
-    physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,1)
+    physics%Stateout%gu0 => scm_state%state_u(:,:)
+    physics%Stateout%gv0 => scm_state%state_v(:,:)
+    physics%Stateout%gt0 => scm_state%state_T(:,:)
+    physics%Stateout%gq0 => scm_state%state_tracer(:,:,:)
 
     if(scm_state%sfc_flux_spec) then
       physics%Sfcprop%spec_sh_flux => scm_state%sh_flux

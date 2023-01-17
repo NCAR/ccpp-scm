@@ -45,7 +45,6 @@ subroutine get_config_nml(scm_state)
   integer              :: n_soil   !< number of model soil levels (currently only 4 supported)
   integer              :: n_snow   !< number of model snow levels (currently only 3 supported)
   integer              :: n_columns !< number of columns to use
-  integer              :: n_time_levels
   integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog (deprecated)
   character(len=character_length)    :: output_dir !< name of the output directory
   character(len=character_length)    :: output_file !< name of the output file (without the file extension)
@@ -148,16 +147,9 @@ subroutine get_config_nml(scm_state)
   read(10, NML=physics_config, iostat=ioerror)
   close(10)
 
-  select case(time_scheme)
-    case(1)
-      n_time_levels = 1
-    case default
-      n_time_levels = 2
-  end select
-  
   call get_tracers(tracer_names, tracer_types)
   
-  call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels, tracer_names, tracer_types)
+  call scm_state%create(n_columns, n_levels, n_soil, n_snow, tracer_names, tracer_types)
 
   scm_state%experiment_name = experiment_name
   scm_state%npz_type = npz_type
@@ -171,7 +163,6 @@ subroutine get_config_nml(scm_state)
 
   scm_state%n_cols = n_columns
   scm_state%n_levels = n_levels
-  scm_state%n_time_levels = n_time_levels
   scm_state%dt = dt
   scm_state%n_itt_out = n_itt_out
   scm_state%n_itt_diag = n_itt_diag
