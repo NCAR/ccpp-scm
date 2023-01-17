@@ -1,0 +1,56 @@
+name: CI test to build the CCPP-SCM on ubuntu v22.04 (intel)
+
+on: [push,pull_request,workflow_dispatch]
+
+jobs:
+  build_scm:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        fortran-compiler: [ifort, ifx, nvfortran]
+        build-type:       [Release, Debug]
+        py-version:       [3.9.12]
+        include:
+        - fortran-compiler: ifort
+          fcflags: "-m64 -g  -traceback -heap-arrays -assume realloc_lhs -extend-source 132 -check bounds,uninit,pointers,stack -stand f08"
+          image: "ncar/ccpp-scm-ci:ifort"
+        - fortran-compiler: ifx
+          fcflags: "-m64 -g  -traceback -heap-arrays -assume realloc_lhs -extend-source 132 -check bounds,uninit,pointers,stack -stand f08"
+          image: "ncar/ccpp-scm-ci:ifort"
+        - fortran-compiler: nvfortran
+          fcflags: "-Mallocatable=03 -Mstandard -Mbounds -Mchkptr -Kieee -Mchkstk"
+          image: "ncar/ccpp-scm-ci:nvfortran"
+    container:
+      image: ${{ matrix.image }}
+    env:
+      # Core variables:
+      FC: ${{ matrix.fortran-compiler }}
+      FCFLAGS: ${{ matrix.fcflags }}
+      # Make variables:
+      NFHOME: /home/runner/netcdf-fortran
+      RUN_CMD:
+    steps:
+
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v3
+
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{matrix.py-version}}
+
+    - name: Add conda to system path
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Install python libraries
+      run: |
+        conda install --yes -c conda-forge f90nml
+        conda install --yes -c conda-forge netCDF4
+
+    - name: Update system packages
+      run: sudo apt-get update
