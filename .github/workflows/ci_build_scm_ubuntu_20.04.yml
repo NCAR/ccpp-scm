@@ -1,6 +1,6 @@
 name: CI test to build the CCPP-SCM on ubuntu v20.04
 
-on: [push,pull_request,workflow_dispatch]
+on: [push, pull_request,workflow_dispatch]
 
 jobs:
   build_scm:
@@ -11,7 +11,6 @@ jobs:
       matrix:
         fortran-compiler: [gnu]
         build-type:       [Release, Debug]
-        py-version:       [3.8.5]
 
     # Environmental variables
     env:
@@ -21,7 +20,6 @@ jobs:
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
       suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
-
     # Workflow steps
     steps:
     #######################################################################################
@@ -36,10 +34,10 @@ jobs:
     #######################################################################################
     # Python setup
     #######################################################################################    
-    - name: Set up Python
+    - name: Set up Python 3.8.5
       uses: actions/setup-python@v3
       with:
-        python-version: ${{matrix.py-version}}
+        python-version: 3.8.5
 
     - name: Add conda to system path
       run: |
@@ -119,17 +117,17 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    - name: Install NetCDF library
+    - name: Install NetCDF C library
       run: sudo apt-get install libnetcdf-dev
 
-    - name: Cache NetCDF Fortran library
+    - name: Cache NetCDF Fortran library v4.4.4
       id: cache-netcdf-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
-    - name: Install NetCDF Fortran library  (v4.4.4)
+    - name: Install NetCDF Fortran library v4.4.4
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
         git clone --branch v4.4.4 https://github.com/Unidata/netcdf-fortran.git
@@ -139,23 +137,19 @@ jobs:
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
-    #######################################################################################
-    # Build SCM.
-    #######################################################################################
-
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} ../src
+        cmake -DCCPP_SUITES=${suites},${suites_ps} ../src
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src
+        cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
 
     - name: Build SCM
       run: |
