@@ -11,6 +11,7 @@ jobs:
       matrix:
         fortran-compiler: [gnu]
         build-type:       [Release, Debug]
+        py-version:       [3.8.5]
 
     # Environmental variables
     env:
@@ -20,6 +21,7 @@ jobs:
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
       suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
+
     # Workflow steps
     steps:
     #######################################################################################
@@ -34,10 +36,10 @@ jobs:
     #######################################################################################
     # Python setup
     #######################################################################################    
-    - name: Set up Python 3.8.5
+    - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: 3.8.5
+        python-version: ${{matrix.py-version}}
 
     - name: Add conda to system path
       run: |

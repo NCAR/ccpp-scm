@@ -68,7 +68,7 @@ jobs:
         echo "CC=icx"         >> $GITHUB_ENV
         echo "FC=ifort"       >> $GITHUB_ENV
 
-   - name: cache-intel-compilers
+   - name: Cache Intel compilers
       id: cache-intel-compilers
       if: contains(matrix.fortran-compiler, 'ifort')
       uses: actions/cache@v2
