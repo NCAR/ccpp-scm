@@ -120,9 +120,7 @@ jobs:
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
     - name: Install NetCDF library
-      run: |
-        sudo apt-get update
-        sudo apt-get install libnetcdf-dev
+      run: sudo apt-get install libnetcdf-dev
 
     - name: Cache NetCDF Fortran library
       id: cache-netcdf-fortran
