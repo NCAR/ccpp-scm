@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        fortran-compiler: [gfortran-10, gfortran-11, gfortran-12]
+        fortran-compiler: [ifort, gfortran-10, gfortran-11, gfortran-12]
         build-type:       [Release, Debug]
         py-version:       [2.7.18, 3.7.13, 3.9.12]
 
@@ -67,6 +67,27 @@ jobs:
       run: |
         echo "CC=icx"         >> $GITHUB_ENV
         echo "FC=ifort"       >> $GITHUB_ENV
+
+   - name: cache-intel-compilers
+      id: cache-intel-compilers
+      if: contains(matrix.fortran-compiler, 'ifort')
+      uses: actions/cache@v2
+      with:
+        path: /opt/intel
+        key: intel-${{ runner.os }}-compilers-b
+
+    # https://software.intel.com/content/www/us/en/develop/articles/installing-intel-oneapi-toolkits-via-apt.html
+    # List of packages from Docker file at
+    #    https://github.com/intel/oneapi-containers/blob/master/images/docker/hpckit-devel-ubuntu18.04/Dockerfile
+    - name: Install Intel compilers and libraries
+      if: contains(matrix.fortran-compiler, 'ifort') && steps.cache-intel-compilers.outputs.cache-hit != 'true'
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
+        sudo apt-get update
+        sudo apt-get install intel-hpckit-getting-started intel-oneapi-clck intel-oneapi-common-licensing intel-oneapi-common-vars
+        sudo apt-get install intel-oneapi-dev-utilities  intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-compiler-fortran intel-oneapi-itac
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
