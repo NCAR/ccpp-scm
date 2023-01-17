@@ -54,7 +54,7 @@ module scm_type_defs
     integer                           :: itt_lwrad  !< lw radiation iteration counter
     integer                           :: itt_rad !< radition (either LW or SW) counter
     integer                           :: itt_diag !< diagnostics iteration counter
-    integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
+    integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog (deprecated)
     integer                           :: n_cols !< number of columns
     integer                           :: n_timesteps !< number of timesteps needed to integrate over runtime
     integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme (2 for leapfrog)
@@ -1006,17 +1006,10 @@ module scm_type_defs
       end do
     end if
     
-    if(scm_state%time_scheme == 2) then
-      physics%Stateout%gu0 => scm_state%state_u(:,:,2)
-      physics%Stateout%gv0 => scm_state%state_v(:,:,2)
-      physics%Stateout%gt0 => scm_state%state_T(:,:,2)
-      physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,2)
-    else
-      physics%Stateout%gu0 => scm_state%state_u(:,:,1)
-      physics%Stateout%gv0 => scm_state%state_v(:,:,1)
-      physics%Stateout%gt0 => scm_state%state_T(:,:,1)
-      physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,1)
-    endif
+    physics%Stateout%gu0 => scm_state%state_u(:,:,1)
+    physics%Stateout%gv0 => scm_state%state_v(:,:,1)
+    physics%Stateout%gt0 => scm_state%state_T(:,:,1)
+    physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,1)
 
     if(scm_state%sfc_flux_spec) then
       physics%Sfcprop%spec_sh_flux => scm_state%sh_flux

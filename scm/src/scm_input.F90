@@ -46,7 +46,7 @@ subroutine get_config_nml(scm_state)
   integer              :: n_snow   !< number of model snow levels (currently only 3 supported)
   integer              :: n_columns !< number of columns to use
   integer              :: n_time_levels
-  integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
+  integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog (deprecated)
   character(len=character_length)    :: output_dir !< name of the output directory
   character(len=character_length)    :: output_file !< name of the output file (without the file extension)
   integer              :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
@@ -151,8 +151,6 @@ subroutine get_config_nml(scm_state)
   select case(time_scheme)
     case(1)
       n_time_levels = 1
-    case(2)
-      n_time_levels = 2
     case default
       n_time_levels = 2
   end select

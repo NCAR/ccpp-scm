@@ -74,13 +74,6 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
       else
         call apply_forcing_DEPHY(scm_state, in_spinup)
       end if
-    case(2)
-      if (scm_state%input_type == 0) then
-        call apply_forcing_leapfrog(scm_state)
-      else
-        write(*,*) 'The application of forcing terms from the DEPHY file format has not been implemented for the leapfrog time scheme.'
-        stop
-      end if
       
     case default
       if (scm_state%input_type == 0) then
@@ -89,14 +82,6 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
         call apply_forcing_DEPHY(scm_state, in_spinup)
       end if
   end select
-
-  if (scm_state%time_scheme == 2) then
-    !IPD cdata points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
-    scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
-    scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
-    scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
-    scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
-  end if
 
   ! Calculate total non-physics tendencies by substracting old Stateout
   ! variables from new/updated Statein variables (gives the tendencies
