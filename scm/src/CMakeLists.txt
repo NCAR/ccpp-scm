@@ -67,7 +67,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../../CMakeModule
 find_package(NetCDF REQUIRED COMPONENTS C Fortran)
 find_package(bacio REQUIRED)
 find_package(sp    REQUIRED)
-find_package(w3nco REQUIRED)
+find_package(w3emc REQUIRED)
 
 SET(CCPP_FRAMEWORK_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(CCPP_PHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -245,7 +245,7 @@ endif()
 TARGET_LINK_LIBRARIES(scm NetCDF::NetCDF_Fortran)
 TARGET_LINK_LIBRARIES(scm bacio::bacio_4)
 TARGET_LINK_LIBRARIES(scm sp::sp_d)
-TARGET_LINK_LIBRARIES(scm w3nco::w3nco_d)
+TARGET_LINK_LIBRARIES(scm w3emc::w3emc_d)
 TARGET_LINK_LIBRARIES(scm ccpp_framework)
 TARGET_LINK_LIBRARIES(scm ccpp_physics)
 

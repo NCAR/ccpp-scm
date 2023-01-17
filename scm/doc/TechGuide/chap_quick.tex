@@ -85,9 +85,9 @@ Further, there are several utility libraries as part of the hpc-stack package th
 \begin{itemize}
     \item bacio - Binary I/O Library
     \item sp - Spectral Transformation Library
-    \item w3nco - GRIB decoder and encoder library
+    \item w3emc - GRIB decoder and encoder library
 \end{itemize}
-The following environment variables are used by the build system to properly link these libraries: \execout{bacio\_ROOT}, \execout{sp\_ROOT}, and \execout{w3nco\_ROOT}. Computational platforms in which these libraries are prebuilt and installed in a central location are referred to as preconfigured platforms. Examples of preconfigured platforms are most NOAA high-performance computing machines (using the Intel compiler) and the NCAR Cheyenne system (using the Intel and GNU compilers). The machine setup scripts mentioned in section \ref{section: compiling} load these libraries (which are identical to those used by the UFS Short and Medium Range Weather Applications on those machines) and set these environment variables for the user automatically. For installing the libraries and its prerequisites on supported platforms, existing UFS packages can be used (see section~\ref{section: setup_supported_platforms}).
+The following environment variables are used by the build system to properly link these libraries: \execout{bacio\_ROOT}, \execout{sp\_ROOT}, and \execout{w3emc\_ROOT}. Computational platforms in which these libraries are prebuilt and installed in a central location are referred to as preconfigured platforms. Examples of preconfigured platforms are most NOAA high-performance computing machines (using the Intel compiler) and the NCAR Cheyenne system (using the Intel and GNU compilers). The machine setup scripts mentioned in section \ref{section: compiling} load these libraries (which are identical to those used by the UFS Short and Medium Range Weather Applications on those machines) and set these environment variables for the user automatically. For installing the libraries and its prerequisites on supported platforms, existing UFS packages can be used (see section~\ref{section: setup_supported_platforms}).
 
 \subsection{Compilers}
 The CCPP and SCM have been tested on a variety of
@@ -114,7 +114,7 @@ For bourne/bash shells,
 
 
 \subsection{Installing Libraries on Non-preconfigured Platforms}\label{section: setup_supported_platforms}
-For users on supported platforms such as generic Linux or macOS systems that have not been preconfigured, the \execout{hpc-stack} project is suggested for installing prerequisite libraries. Visit \url{https://github.com/NOAA-EMC/hpc-stack} for instructions for installing prerequisite libraries via \execout{hpc-stack} in their docs directory. UFS users who already installed libraries via the \execout{hpc-stack} package only need to set the compiler (\execout{CC, CXX, FC}), NetCDF (\execout{NetCDF\_ROOT}), and \execout{bacio},  \execout{sp} and \execout{w3nco} (\execout{bacio\_ROOT}, \execout{sp\_ROOT}, \execout{w3nco\_ROOT}) environment variables to point to their installation paths in order to compile the SCM. 
+For users on supported platforms such as generic Linux or macOS systems that have not been preconfigured, the \execout{hpc-stack} project is suggested for installing prerequisite libraries. Visit \url{https://github.com/NOAA-EMC/hpc-stack} for instructions for installing prerequisite libraries via \execout{hpc-stack} in their docs directory. UFS users who already installed libraries via the \execout{hpc-stack} package only need to set the compiler (\execout{CC, CXX, FC}), NetCDF (\execout{NetCDF\_ROOT}), and \execout{bacio},  \execout{sp} and \execout{w3emc} (\execout{bacio\_ROOT}, \execout{sp\_ROOT}, \execout{w3emc\_ROOT}) environment variables to point to their installation paths in order to compile the SCM. 
 
 The SCM uses only a small part of the UFS \execout{hpc-stack} package and has fewer prerequisites (i.e. no \execout{ESMF} or \execout{wgrib2} needed). Users who are not planning to use the UFS can install only NetCDF/NetCDF-Fortran manually or using the software package manager (\execout{apt}, \execout{yum}, \execout{brew}).
 
@@ -411,7 +411,7 @@ The CCPP SCM has a number of system requirements and necessary libraries and too
 \item ZLIB - 1.2.7
 \item SZIP - 2.1.1
 \item Python - 3
-\item NCEPLIBS subset: bacio v2.4.1\_4, sp v2.3.3\_d, w3nco v2.4.1\_d
+\item NCEPLIBS subset: bacio v2.4.1\_4, sp v2.3.3\_d, w3emc v2.9.2\_d
 \end{itemize}
 
 A Docker image containing the SCM, CCPP, and its software prerequisites can be generated from the code in the software repository obtained by following section \ref{obtaining_code} by executing the following steps:
