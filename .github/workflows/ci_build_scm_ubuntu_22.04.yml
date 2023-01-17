@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        fortran-compiler: [gfortran-10, gfortran-11, gfortran-12, ifort]
+        fortran-compiler: [ifort] #[ifort, gfortran-10, gfortran-11, gfortran-12, ]
         build-type:       [Release, Debug]
-        py-version:       [2.7.18, 3.7.13, 3.9.12]
+        py-version:       [3.9.12] #[2.7.18, 3.7.13, 3.9.12]
 
     # Environmental variables
     env:
@@ -20,6 +20,7 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
+      intel_ROOT: /home/runner/intel
       suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
 
     # Workflow steps
@@ -63,18 +64,18 @@ jobs:
         echo "CC=gcc-9"       >> $GITHUB_ENV
 
     - name: Environment for ifort compiler
-      if: contains(matrix.fortran-compiler, 'intel')
+      if: contains(matrix.fortran-compiler, 'ifort')
       run: |
         echo "CC=icx"         >> $GITHUB_ENV
         echo "FC=ifort"       >> $GITHUB_ENV
 
-#   - name: Cache Intel compilers
-#      id: cache-intel-compilers
-#      if: contains(matrix.fortran-compiler, 'ifort')
-#      uses: actions/cache@v2
-#      with:
-#        path: /opt/intel
-#        key: intel-${{ runner.os }}-compilers-b
+   - name: Cache Intel compilers
+      id: cache-intel-compilers
+      if: contains(matrix.fortran-compiler, 'ifort')
+      uses: actions/cache@v2
+      with:
+        path: /home/runner/intel
+        key: intel-${{ runner.os }}-compilers-b
 
     # https://software.intel.com/content/www/us/en/develop/articles/installing-intel-oneapi-toolkits-via-apt.html
     # List of packages from Docker file at
