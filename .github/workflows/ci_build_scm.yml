@@ -6,12 +6,12 @@ jobs:
   build_scm:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         fortran-compiler: [gfortran-9, gfortran-10, gfortran-11, gfortran-12]
         build-type:       [Release, Debug]
-        py-version:       [3.7, 3.8, 3.9]
+        py-version:       [3.8.5, 3.9]
 
     # Environmental variables
     env:
