@@ -57,11 +57,17 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
+    - name: Environment for gnu compilers
+      if: contains(matrix.fortran-compiler, 'gfortran')
+      run: |
+        echo "NFV=v4.5.3" >> $GITHUB_ENV
+
     - name: Environment for ifort compiler
       if: contains(matrix.fortran-compiler, 'ifort')
       run: |
         echo "CC=icx"   >> $GITHUB_ENV
         echo "FC=ifort" >> $GITHUB_ENV
+        echo "NFV=v4.4.4" >> $GITHUB_ENV
 
     - name: Cache Intel compilers
       id: cache-intel-compilers
@@ -135,7 +141,7 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    - name: Install NetCDF library
+    - name: Install NetCDF C library
       run: |
         sudo apt-get update
         sudo apt-get install libnetcdf-dev
@@ -147,10 +153,10 @@ jobs:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
-    - name: Install NetCDF Fortran library (v4.5.3)
+    - name: Install NetCDF Fortran library
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
-        git clone --branch v4.5.3 https://github.com/Unidata/netcdf-fortran.git
+        git clone --branch ${NFV} https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
         ./configure
         make -j
