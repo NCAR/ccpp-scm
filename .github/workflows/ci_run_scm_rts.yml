@@ -1,20 +1,22 @@
 name: CI test to build and run SCM regression tests
 
-on: [pull_request,workflow_dispatch]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   run_scm_rts:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        fortran-compiler: [gnu]
+        fortran-compiler: [gfortran-11]
         build-type:       [Release, Debug]
+        py-version:       [3.9.12]
 
     # Environmental variables
     env:
       NFHOME:     /home/runner/netcdf-fortran
+      NFVERSION:  v4.5.3
       bacio_ROOT: /home/runner/bacio
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
@@ -38,10 +40,10 @@ jobs:
     #######################################################################################
     # Python setup
     #######################################################################################    
-    - name: Set up Python 3.8.5
+    - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: 3.8.5
+        python-version: ${{matrix.py-version}}
 
     - name: Add conda to system path
       run: |
@@ -124,17 +126,17 @@ jobs:
     - name: Install NetCDF C library
       run: sudo apt-get install libnetcdf-dev
 
-    - name: Cache NetCDF Fortran library v4.4.4
+    - name: Cache NetCDF Fortran library
       id: cache-netcdf-fortran
       uses: actions/cache@v3
       with:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
-    - name: Install NetCDF Fortran library v4.4.4
+    - name: Install NetCDF Fortran library
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
-        git clone --branch v4.4.4 https://github.com/Unidata/netcdf-fortran.git
+        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
         ./configure
         make -j

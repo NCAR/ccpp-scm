@@ -9,13 +9,14 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        fortran-compiler: [ifort] #[ifort, gfortran-10, gfortran-11, gfortran-12, ]
+        fortran-compiler: [gfortran-10, gfortran-11, gfortran-12, ]
         build-type:       [Release, Debug]
-        py-version:       [3.9.12] #[2.7.18, 3.7.13, 3.9.12]
+        py-version:       [2.7.18, 3.7.13, 3.9.12]
 
     # Environmental variables
     env:
       NFHOME:     /home/runner/netcdf-fortran
+      NFVERSION:  v4.5.3
       bacio_ROOT: /home/runner/bacio
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
@@ -57,17 +58,12 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
-    - name: Environment for gnu compilers
-      if: contains(matrix.fortran-compiler, 'gfortran')
-      run: |
-        echo "NFV=v4.5.3" >> $GITHUB_ENV
-
     - name: Environment for ifort compiler
       if: contains(matrix.fortran-compiler, 'ifort')
       run: |
         echo "CC=icx"   >> $GITHUB_ENV
         echo "FC=ifort" >> $GITHUB_ENV
-        echo "NFV=v4.4.4" >> $GITHUB_ENV
+        echo "NFVERSION=v4.4.4" >> $GITHUB_ENV
 
     - name: Cache Intel compilers
       id: cache-intel-compilers
@@ -156,7 +152,7 @@ jobs:
     - name: Install NetCDF Fortran library
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
-        git clone --branch ${NFV} https://github.com/Unidata/netcdf-fortran.git
+        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
         ./configure
         make -j
