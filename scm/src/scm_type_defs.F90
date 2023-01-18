@@ -151,7 +151,6 @@ module scm_type_defs
     real(kind=dp), allocatable              :: state_T(:,:) !< model state absolute temperature at grid centers (K)
     real(kind=dp), allocatable              :: state_u(:,:), state_v(:,:) !< model state horizontal winds at grid centers (m/s)
     real(kind=dp), allocatable              :: state_tracer(:,:,:) !< model state tracer at grid centers
-    real(kind=dp), allocatable              :: temp_T(:,:,:), temp_u(:,:,:), temp_v(:,:,:), temp_tracer(:,:,:,:) !< used for time-filtering
 
     !> - Define forcing-related variables (indexing is (horizontal, vertical)).
     real(kind=dp), allocatable              :: u_force_tend(:,:), v_force_tend(:,:), T_force_tend(:,:), qv_force_tend(:,:) !< total u, v, T, q forcing (units/s) (horizontal, vertical)
@@ -587,14 +586,6 @@ module scm_type_defs
     scm_state%state_v = real_zero
     scm_state%state_tracer = real_zero
 
-    allocate(scm_state%temp_tracer(n_columns, n_levels, scm_state%n_tracers), &
-      scm_state%temp_T(n_columns, n_levels), &
-      scm_state%temp_u(n_columns, n_levels), scm_state%temp_v(n_columns, n_levels))
-    scm_state%temp_tracer = real_zero
-    scm_state%temp_T = real_zero
-    scm_state%temp_u = real_zero
-    scm_state%temp_v = real_zero
-
     allocate(scm_state%w_ls(n_columns, n_levels), scm_state%omega(n_columns, n_levels), scm_state%u_g(n_columns, n_levels), &
       scm_state%v_g(n_columns, n_levels), scm_state%dT_dt_rad(n_columns, n_levels), scm_state%h_advec_thil(n_columns, n_levels), &
       scm_state%h_advec_qt(n_columns, n_levels), scm_state%v_advec_thil(n_columns, n_levels), &
@@ -980,11 +971,11 @@ module scm_type_defs
     physics%Statein%prslk => scm_state%exner_l
 
     physics%Statein%pgr => scm_state%pres_surf
-    physics%Statein%ugrs(:,:,1:1) => scm_state%state_u(:,:)
-    physics%Statein%vgrs(:,:,1:1) => scm_state%state_v(:,:)
+    physics%Statein%ugrs => scm_state%state_u(:,:)
+    physics%Statein%vgrs => scm_state%state_v(:,:)
     physics%Statein%vvl => scm_state%omega
-    physics%Statein%tgrs(:,:,1:1) => scm_state%state_T(:,:)
-    physics%Statein%qgrs(:,:,:,1:1) => scm_state%state_tracer(:,:,:)
+    physics%Statein%tgrs => scm_state%state_T(:,:)
+    physics%Statein%qgrs => scm_state%state_tracer(:,:,:)
     
     if (.not. (scm_state%model_ics .or. scm_state%lsm_ics) .and. .not. scm_state%sfc_flux_spec) then
       do i =1, physics%Model%ncols
@@ -1004,10 +995,10 @@ module scm_type_defs
       end do
     end if
     
-    physics%Stateout%gu0(:,:,1:1) => scm_state%state_u(:,:)
-    physics%Stateout%gv0(:,:,1:1) => scm_state%state_v(:,:)
-    physics%Stateout%gt0(:,:,1:1) => scm_state%state_T(:,:)
-    physics%Stateout%gq0(:,:,:,1:1) => scm_state%state_tracer(:,:,:)
+    physics%Stateout%gu0 => scm_state%state_u(:,:)
+    physics%Stateout%gv0 => scm_state%state_v(:,:)
+    physics%Stateout%gt0 => scm_state%state_T(:,:)
+    physics%Stateout%gq0 => scm_state%state_tracer(:,:,:)
 
     if(scm_state%sfc_flux_spec) then
       physics%Sfcprop%spec_sh_flux => scm_state%sh_flux
