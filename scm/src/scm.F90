@@ -58,7 +58,7 @@ subroutine scm_main_sub()
 
   call set_state(scm_input_instance, scm_reference, scm_state)
 
-  call calc_geopotential(1, scm_state)
+  call calc_geopotential(scm_state)
 
   scm_state%model_time = 0.0
   scm_state%itt = 1
@@ -188,7 +188,7 @@ subroutine scm_main_sub()
   
   call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
   
-  if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
+  if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(scm_state)
   
   !pass in state variables to be modified by forcing and physics
   call do_time_step(scm_state, physics, cdata, in_spinup)
@@ -228,7 +228,7 @@ subroutine scm_main_sub()
 
     call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
     
-    call calc_pres_exner_geopotential(1, scm_state)
+    call calc_pres_exner_geopotential(scm_state)
 
     !zero out diagnostics output on EVERY time step - breaks diagnostics averaged over many timesteps
     !call physics%Diag%rad_zero(physics%Model)

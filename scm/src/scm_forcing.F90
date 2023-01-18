@@ -906,9 +906,9 @@ subroutine apply_forcing_leapfrog(scm_state)
       !!   x^{\tau + 1} = \overline{x^{\tau - 1}} + 2\Delta t\frac{\partial x}{\partial t}|^\tau_{forcing}
       !!   \f]
       !!   \f$\overline{x^{\tau - 1}}\f$ is the filtered value at the previous time step and \f$\frac{\partial x}{\partial t}|^\tau_{forcing}\f$ is the sum of forcing terms calculated in this time step.
-      scm_state%state_u(i,k,1) = old_u(i,k) + 2.0*scm_state%dt*scm_state%u_force_tend(i,k)
-      scm_state%state_v(i,k,1) = old_v(i,k) + 2.0*scm_state%dt*scm_state%v_force_tend(i,k)
-      scm_state%state_T(i,k,1) = scm_state%state_T(i,k) + 2.0*scm_state%dt*(scm_state%T_force_tend(i,k))
+      scm_state%state_u(i,k) = old_u(i,k) + 2.0*scm_state%dt*scm_state%u_force_tend(i,k)
+      scm_state%state_v(i,k) = old_v(i,k) + 2.0*scm_state%dt*scm_state%v_force_tend(i,k)
+      scm_state%state_T(i,k) = scm_state%state_T(i,k) + 2.0*scm_state%dt*(scm_state%T_force_tend(i,k))
       scm_state%state_tracer(i,k,scm_state%water_vapor_index) = scm_state%state_tracer(i,k,scm_state%water_vapor_index) + &
         2.0*scm_state%dt*(scm_state%qv_force_tend(i,k))
       ! scm_state%state_u(i,k) = old_u(i,k) + scm_state%dt*scm_state%u_force_tend(i,k)

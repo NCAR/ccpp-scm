@@ -1543,10 +1543,9 @@ end subroutine check_eta_levels
 
 !> This subroutine calculates the pressure and exner function at grid centers and interface levels given a surface pressure and interface-level GFS grid coefficients.
 !! This subroutine should be called to update the pressures of the model levels as the surface pressure of the column changes.
-subroutine calc_pres_exner_geopotential(time_level, scm_state)
+subroutine calc_pres_exner_geopotential(scm_state)
   use scm_type_defs, only: scm_state_type
 
-  integer, intent(in) :: time_level
   type(scm_state_type), intent(inout) :: scm_state
 
   real(kind=dp)               :: pres_sfc_inv, tem, dgeopotential_lower_half, dgeopotential_upper_half
@@ -1579,8 +1578,8 @@ subroutine calc_pres_exner_geopotential(time_level, scm_state)
 
   do i=1, scm_state%n_cols
     do k=1, scm_state%n_levels
-      tem = con_cp*scm_state%state_T(i,k,time_level)*&
-        (1.0 + con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,k)
+      tem = con_cp*scm_state%state_T(i,k)*&
+        (1.0 + con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index), 0.0))/scm_state%exner_l(i,k)
       dgeopotential_lower_half = (scm_state%exner_i(i,k) - scm_state%exner_l(i,k))*tem
       dgeopotential_upper_half = (scm_state%exner_l(i,k) - scm_state%exner_i(i,k+1))*tem
       scm_state%geopotential_l(i,k) = scm_state%geopotential_i(i,k) + dgeopotential_lower_half
@@ -1590,10 +1589,9 @@ subroutine calc_pres_exner_geopotential(time_level, scm_state)
 
 end subroutine calc_pres_exner_geopotential
 
-subroutine calc_geopotential(time_level, scm_state)
+subroutine calc_geopotential(scm_state)
   use scm_type_defs, only: scm_state_type
 
-  integer, intent(in) :: time_level
   type(scm_state_type), intent(inout) :: scm_state
 
   integer i,k
@@ -1605,8 +1603,8 @@ subroutine calc_geopotential(time_level, scm_state)
 
   do i=1, scm_state%n_cols
     do k=1, scm_state%n_levels
-      tem = con_cp*scm_state%state_T(i,k,time_level)*(1.0 + &
-        con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index,time_level), 0.0))/scm_state%exner_l(i,k)
+      tem = con_cp*scm_state%state_T(i,k)*(1.0 + &
+        con_fvirt*max(scm_state%state_tracer(i,k,scm_state%water_vapor_index), 0.0))/scm_state%exner_l(i,k)
       dgeopotential_lower_half = (scm_state%exner_i(i,k) - scm_state%exner_l(i,k))*tem
       dgeopotential_upper_half = (scm_state%exner_l(i,k) - scm_state%exner_i(i,k+1))*tem
       scm_state%geopotential_l(i,k) = scm_state%geopotential_i(i,k) + dgeopotential_lower_half
