@@ -2077,11 +2077,12 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         #    "ta"  : stateNATIVE["t_lay"][:,:],          \
         #    "qv"  : stateNATIVE["qv_lay"][:,:],         \
         #    "ua"  : stateNATIVE["u_lay"][:,:],          \
-        #    "va"  : stateNATIVE["v_lay"][:,:]}
+        #    "va"  : stateNATIVE["v_lay"][:,:],          \
+        #    "vars2d":vars2d}
     else:
         comp_data = {}
 
-    return (forcing, comp_data)
+    return (forcing, comp_data, stateREGRID)
     
 def add_noahmp_coldstart(surface, date):
     """Add cold-start ICs for the NoahMP LSM from Noah LSM variables"""
@@ -2391,7 +2392,7 @@ def read_noahmp_soil_table():
     
     return soilparm
 
-def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_tend, add_UFS_NOAH_lsm):
+def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_tend, add_UFS_NOAH_lsm, stateREGRID):
     """Write all data to a netCDF file in the DEPHY-SCM format"""
 
     # Working types
@@ -2610,21 +2611,21 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
                 {"name": "pa",           "type":wp, "dimd": ('t0',   'lev'),    "units": "Pa",            "desc": "air_ressure"}, \
                 {"name": "zh_forc",      "type":wp, "dimd": ('time', 'lev'),    "units": "m",             "desc": "height_forcing","default_value": 1.},\
                 {"name": "pa_forc",      "type":wp, "dimd": ('time', 'lev'),    "units": "Pa",            "desc": "air_pressure_forcing"}, \
-                {"name": "ta",           "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_temperature"}, \
+                {"name": "ta",           "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_temperature","default_value": stateREGRID["t_lay"][1,:], "override": True}, \
                 {"name": "theta",        "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_potential_temperature"}, \
                 {"name": "thetal",       "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_liquid_potential_temperature"}, \
                 {"name": "rv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "humidity_mixing_ratio"}, \
                 {"name": "rl",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "cloud_liquid_water_mixing_ratio"}, \
                 {"name": "ri",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "cloud_ice_water_mixing_ratio"}, \
                 {"name": "rt",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "water_mixing_ratio"}, \
-                {"name": "qv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "specific_humidity"}, \
+                {"name": "qv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "specific_humidity","default_value": stateREGRID["qv_lay"][1,:], "override": True}, \
                 {"name": "ql",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_cloud_liquid_water_in_air"}, \
                 {"name": "qi",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_cloud_ice_water_in_air", "default_value": 0.0}, \
                 {"name": "qt",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_water_in_air"}, \
                 {"name": "hur",          "type":wp, "dimd": ('t0',   'lev'),    "units": "%",             "desc": "relative_humidity"}, \
                 {"name": "tke",          "type":wp, "dimd": ('t0',   'lev'),    "units": "m2 s-2",        "desc": "specific_turbulen_kinetic_energy", "default_value": 0.0}, \
-                {"name": "ua",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "eastward_wind"}, \
-                {"name": "va",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "northward_wind"}, \
+                {"name": "ua",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "eastward_wind", "default_value": stateREGRID["u_lay"][1,:], "override": True}, \
+                {"name": "va",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "northward_wind", "default_value": stateREGRID["v_lay"][1,:], "override": True}, \
                 {"name": "wa",           "type":wp, "dimd": ('time', 'lev'),    "units": "m s-1",         "desc": "upward_air_velocity"}, \
                 {"name": "wap",          "type":wp, "dimd": ('time', 'lev'),    "units": "Pa s-1",        "desc": "lagrangian_tendency_of_air_pressure"}, \
                 {"name": "ug",           "type":wp, "dimd": ('time', 'lev'),    "units": "m s-1",         "desc": "geostrophic_eastward_wind"}, \
@@ -2827,7 +2828,8 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, add_UFS_dyn_te
             var_temp.units         = var["units"]
             var_temp.standard_name = var["desc"]
             var_temp[:]            = var["default_value"]
-
+        if "override" in var:
+            var_temp[:]            = var["default_value"]
     #
     # Close file
     #
@@ -2997,19 +2999,14 @@ def main():
     surface_data["lat"] = point_lat
     
     # Get UFS forcing data
-    (forcing_data, comp_data) = get_UFS_forcing_data(state_data["nlevs"], state_data,      \
+    (forcing_data, comp_data, stateREGRID) = get_UFS_forcing_data(state_data["nlevs"], state_data,      \
                                                      location, use_nearest, forcing_dir,   \
                                                      grid_dir, tile, tile_i, tile_j, lam,  \
                                                      save_comp)
     
     # Write SCM case file
     write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, \
-                        add_UFS_dyn_tend, add_UFS_NOAH_lsm)
-
-    # Create file w/o forcings for testing (only if forcings are being used)
-    if (add_UFS_dyn_tend):
-        write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name,   \
-                            date, False, add_UFS_NOAH_lsm)
+                        add_UFS_dyn_tend, add_UFS_NOAH_lsm, stateREGRID)
 
     # read in and remap the state variables to the first history file pressure profile and 
     # write them out to compare SCM output to (atmf for state variables and sfcf for physics 
