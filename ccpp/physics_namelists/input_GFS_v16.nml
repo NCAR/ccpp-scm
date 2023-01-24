@@ -142,3 +142,26 @@
     knob_ugwp_wvspec = 1, 25, 25, 25
     launch_level = 27
 /
+
+&scm_data_nml
+    fileIN = ''
+    use_dTdt_lwrad_data = .false.
+    use_dTdt_swrad_data = .false.
+    use_dTdt_pbl_data   = .false.
+    use_dqdt_pbl_data   = .false.
+    use_dudt_pbl_data   = .false.
+    use_dvdt_pbl_data   = .false.
+    use_dTdt_gwd_data   = .false.
+    use_dudt_gwd_data   = .false.
+    use_dvdt_gwd_data   = .false.
+    use_dTdt_SCNV_data  = .false.
+    use_dudt_SCNV_data  = .false.
+    use_dvdt_SCNV_data  = .false.
+    use_dqdt_SCNV_data  = .false.
+    use_dTdt_DCNV_data  = .false.
+    use_dudt_DCNV_data  = .false.
+    use_dvdt_DCNV_data  = .false.
+    use_dqdt_DCNV_data  = .false.
+    use_dTdt_cldMP_data = .false.
+    use_dqdt_cldMP_data = .false.
+/
