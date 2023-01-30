@@ -142,3 +142,13 @@
     knob_ugwp_wvspec = 1, 25, 25, 25
     launch_level = 27
 /
+
+&scm_data_nml
+    fileIN = ''
+    use_rad_scheme_sim   = .false.
+    use_PBL_scheme_sim   = .false.
+    use_GWD_scheme_sim   = .false.
+    use_SCNV_scheme_sim  = .false.
+    use_DCNV_scheme_sim  = .false.
+    use_cldMP_scheme_sim = .false.
+/
