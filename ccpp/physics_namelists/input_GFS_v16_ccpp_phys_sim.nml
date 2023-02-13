@@ -142,3 +142,15 @@
     knob_ugwp_wvspec = 1, 25, 25, 25
     launch_level = 27
 /
+
+&scm_data_nml
+    fileIN = '/glade/u/home/dswales/Projects/SCM/scheme_simulator/test.twpice.SCM_GFS_v16.nc'
+    nPhysProcess = 7
+    proc_LWRAD_config = 1, 0, 1
+    proc_SWRAD_config = 1, 0, 2
+    proc_PBL_config   = 1, 0, 3
+    proc_GWD_config   = 1, 0, 4
+    proc_SCNV_config  = 0, 1, 5
+    proc_DCNV_config  = 1, 1, 6
+    proc_cldMP_config = 1, 1, 7
+/

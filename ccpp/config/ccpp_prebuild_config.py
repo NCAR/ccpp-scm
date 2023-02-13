@@ -239,6 +239,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GFS_rrtmgp_cloud_overlap.F90'     ,
     'ccpp/physics/physics/GFS_rrtmgp_sw_post.F90'           ,
     # CCPP-SCM
+    'ccpp/physics/physics/load_ccpp_scheme_sim.F90'         ,
     'ccpp/physics/physics/ccpp_scheme_simulator.F90'
     ]
 
