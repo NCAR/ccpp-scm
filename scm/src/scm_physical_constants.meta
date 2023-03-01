@@ -230,3 +230,45 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_c]
+  standard_name = speed_of_light_in_vacuum
+  long_name = speed of light in vacuum
+  units = m s-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[con_plnk]
+  standard_name = planck_constant
+  long_name = Planck constant
+  units = J s-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[con_boltz]
+  standard_name = boltzmann_constant
+  long_name = Boltzmann constant
+  units = J K-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[con_solr_2008]
+  standard_name = solar_constant_2008
+  long_name = solar constant Tim 2008
+  units = W m-2
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[con_solr_2002]
+  standard_name = solar_constant_2002
+  long_name= solar constant Liu 2002
+  units = W m-2
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[con_thgni]
+  standard_name = temperature_ice_nucleation_starts
+  long_name = temperature the H.G.Nuc. ice starts
+  units = K
+  dimensions = ()
+  type = real
+  kind = kind_phys

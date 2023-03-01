@@ -49,4 +49,11 @@ public
   
   real(kind=dp),parameter:: rhowater   =1000._dp
 
+  real(kind=dp),parameter:: con_c         = 2.99792458e+8_dp !< speed of light (\f$m/s\f$)
+  real(kind=dp),parameter:: con_plnk      = 6.6260693e-34_dp !< planck constant (\f$J/s\f$)
+  real(kind=dp),parameter:: con_boltz     = 1.3806505e-23_dp !< boltzmann constant (\f$J/K\f$)
+  real(kind=dp),parameter:: con_solr_2002 = 1.3660e+3_dp     !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
+  real(kind=dp),parameter:: con_solr_2008 = 1.3608e+3_dp     !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
+  real(kind=dp),parameter:: con_thgni     = -38.15_dp        !< temperature the H.G.Nuc. ice starts
+
 end module scm_physical_constants
