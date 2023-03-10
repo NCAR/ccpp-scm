@@ -776,7 +776,7 @@ module GFS_typedefs
                                             !< 1: K day-1 - 2: K s-1
     logical              :: inc_minor_gas   !< Include minor trace gases in RRTMG radiation calculation?
     integer              :: ipsd0           !< initial permutaion seed for mcica radiation
-    integer              :: ipsdlim         !< limit initial permutaion seed for mcica radiation
+    integer              :: ipsdlim         !< limit initial permutaion seed for mcica radiation 
     logical              :: lrseeds         !< flag to use host-provided random seeds
     integer              :: nrstreams       !< number of random number streams in host-provided random seed array
     logical              :: lextop          !< flag for using an extra top layer for radiation
@@ -807,9 +807,11 @@ module GFS_typedefs
     real(kind_phys)      :: lfnc_k                  !<          Logistic function transition depth (Pa)
     real(kind_phys)      :: lfnc_p0                 !<          Logistic function transition level (Pa)
     logical              :: doGP_lwscat             !< If true, include scattering in longwave cloud-optics, only compatible w/ GP cloud-optics
-    logical              :: doGP_sgs_cnv            !< If true, include explicit SubGridScale convective cloud in RRTMGP
-    logical              :: doGP_sgs_mynn           !< If true, include explicit SubGridScale MYNN-EDMF cloud in RRTMGP 
-    logical              :: doGP_smearclds          !< If true, include implicit SubGridScale clouds in RRTMGP
+    logical              :: doGP_sgs_cnv            !< If true, include SubGridScale convective cloud in RRTMGP
+    logical              :: doGP_sgs_mynn           !< If true, include SubGridScale MYNN-EDMF cloud in RRTMGP 
+    integer              :: rrtmgp_lw_phys_blksz    !< Number of columns to pass to RRTMGP LW per block.
+    integer              :: rrtmgp_sw_phys_blksz    !< Number of columns to pass to RRTMGP SW per block.
+    logical              :: doGP_smearclds          !< If true, include implicit SubGridScale clouds in RRTMGP 
     real(kind_phys)      :: minGPpres               !< Minimum pressure allowed in RRTMGP.
     real(kind_phys)      :: maxGPpres               !< Maximum pressure allowed in RRTMGP.
     real(kind_phys)      :: minGPtemp               !< Minimum temperature allowed in RRTMGP.
@@ -845,7 +847,6 @@ module GFS_typedefs
     integer              :: idcor_con                 = 0  !< choice for decorrelation-length: Use constant value
     integer              :: idcor_hogan               = 1  !< choice for decorrelation-length: (https://rmets.onlinelibrary.wiley.com/doi/full/10.1002/qj.647)
     integer              :: idcor_oreopoulos          = 2  !< choice for decorrelation-length: (10.5194/acp-12-9097-2012)
-
     !--- Z-C microphysical parameters
     real(kind=kind_phys) :: psautco(2)         !< [in] auto conversion coeff from ice to snow
     real(kind=kind_phys) :: prautco(2)         !< [in] auto conversion coeff from cloud to rain
@@ -3074,6 +3075,8 @@ module GFS_typedefs
     logical              :: doGP_lwscat         = .false.    !< If true, include scattering in longwave cloud-optics, only compatible w/ GP cloud-optics
     logical              :: doGP_sgs_cnv        = .false.    !< If true, include SubGridScale convective cloud in RRTMGP
     logical              :: doGP_sgs_mynn       = .false.    !< If true, include SubGridScale MYNN-EDMF cloud in RRTMGP
+    integer              :: rrtmgp_lw_phys_blksz= 1          !< Number of columns for RRTMGP LW scheme to process at each instance.
+    integer              :: rrtmgp_sw_phys_blksz= 1          !< Number of columns for RRTMGP SW scheme to process at each instance.
     logical              :: doGP_smearclds      = .true.     !< If true, include implicit SubGridScale clouds in RRTMGP 
 !--- Z-C microphysical parameters
     integer              :: imp_physics       =  99                !< choice of cloud scheme
@@ -3537,6 +3540,7 @@ module GFS_typedefs
                                rrtmgp_nrghice, rrtmgp_nGauss_ang, do_GPsw_Glw,              &
                                use_LW_jacobian, doGP_lwscat, damp_LW_fluxadj, lfnc_k,       &
                                lfnc_p0, iovr_convcld, doGP_sgs_cnv, doGP_sgs_mynn,          &
+                               rrtmgp_lw_phys_blksz, rrtmgp_sw_phys_blksz,                  &
                           ! IN CCN forcing
                                iccn, mraerosol,                                             &
                           !--- microphysical parameterizations
@@ -3927,7 +3931,6 @@ module GFS_typedefs
     endif
     Model%levrp1           = Model%levr + 1
 
-
     if (isubc_sw < 0 .or. isubc_sw > 2) then
        write(0,'(a,i0)') 'ERROR: shortwave cloud-sampling (isubc_sw) scheme selected not valid: ',isubc_sw
        stop
@@ -3973,7 +3976,6 @@ module GFS_typedefs
     else
       ntrcaer = 1
     endif
-    Model%ntrcaer          = ntrcaer
     Model%lalw1bd          = lalw1bd
     Model%iaerflg          = iaerflg
     Model%iaermdl          = iaermdl
@@ -3984,6 +3986,7 @@ module GFS_typedefs
     Model%co2gbl_file      = co2gbl_file
     Model%co2usr_file      = co2usr_file
     Model%co2cyc_file      = co2cyc_file
+    Model%ntrcaer          = ntrcaer
     Model%idcor            = idcor
     Model%dcorr_con        = dcorr_con
     Model%icliq_sw         = icliq_sw
@@ -4041,6 +4044,8 @@ module GFS_typedefs
     Model%doGP_lwscat         = doGP_lwscat
     Model%doGP_sgs_cnv        = doGP_sgs_cnv
     Model%doGP_sgs_mynn       = doGP_sgs_mynn
+    Model%rrtmgp_lw_phys_blksz   = rrtmgp_lw_phys_blksz
+    Model%rrtmgp_sw_phys_blksz   = rrtmgp_sw_phys_blksz
     if (Model%do_RRTMGP) then
        ! RRTMGP incompatible with levr /= levs
        if (Model%levr /= Model%levs) then
@@ -5951,6 +5956,8 @@ module GFS_typedefs
         print *, ' doGP_sgs_mynn      : ', Model%doGP_sgs_cnv
         print *, ' doGP_smearclds     : ', Model%doGP_smearclds
         print *, ' iovr_convcld       : ', Model%iovr_convcld
+        print *, ' rrtmgp_sw_phys_blksz  : ', Model%rrtmgp_sw_phys_blksz
+        print *, ' rrtmgp_lw_phys_blksz  : ', Model%rrtmgp_lw_phys_blksz
       endif
       print *, ' '
       print *, 'microphysical switch'
