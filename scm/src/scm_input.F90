@@ -1202,10 +1202,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   end if  
   
   model_ics=.false.
-  if(input_n_soil > 0) then
-    model_ics = .true.
-    scm_state%model_ics = .true.
-  end if
+  !if(input_n_soil > 0) then
+  !  model_ics = .true.
+  !  scm_state%model_ics = .true.
+  !end if
   
   !> - Allocate the dimension variables.
   allocate(input_t0    (input_n_init_times),                                        &
