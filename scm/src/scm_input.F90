@@ -952,7 +952,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   ! initial variables (IC = Initial Condition)
   real(kind=dp), allocatable :: input_lat(:) !< column latitude (deg)
   real(kind=dp), allocatable :: input_lon(:) !< column longitude (deg)
-  !real(kind=dp), allocatable :: input_zorog(:)  ! surface forcing:
   real(kind=dp), allocatable :: input_z0 (:)    ! surfce_forcing: surface_roughness_length_for_momentum_in_air
   real(kind=sp), allocatable :: input_pres(:,:) !< IC pressure levels (Pa)
   real(kind=sp), allocatable :: input_height(:,:) !< IC height levels (m)
@@ -1535,7 +1534,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   allocate(input_lat                  (input_n_forcing_times),              &
            input_lon                  (input_n_forcing_times),              &
            input_z0                   (input_n_forcing_times),              &
-!           input_zorog,               (input_n_forcing_times),              &
            input_force_pres_surf      (input_n_forcing_times),              &
            input_force_pres           (input_n_lev, input_n_forcing_times), &
            input_force_height         (input_n_lev, input_n_forcing_times), &
