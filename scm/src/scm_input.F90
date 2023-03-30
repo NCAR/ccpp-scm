@@ -1158,8 +1158,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp) :: exner, exner_inv, rho, elapsed_sec, missing_value_eps
   real(kind=dp) :: rinc(5)
   integer :: jdat(1:8), idat(1:8) !(yr, mon, day, t-zone, hr, min, sec, mil-sec)
-  logical :: model_ics
-  
+
   integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_snow, input_n_ice, input_n_soil
   
   missing_value_eps = missing_value + 0.01
@@ -1199,12 +1198,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_ice),"nf90_inq_dim(nice)")
   end if  
-  
-  model_ics=.false.
-  !if(input_n_soil > 0) then
-  !  model_ics = .true.
-  !  scm_state%model_ics = .true.
-  !end if
   
   !> - Allocate the dimension variables.
   allocate(input_t0    (input_n_init_times),                                        &
@@ -1286,7 +1279,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'surface_forcing_wind',     .False., input_surfaceForcingWind)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'surface_forcing_lsm',      .False., input_surfaceForcingLSM)
 
-
   !> - Allocate the initial variables.
   allocate(input_pres     (input_n_lev, input_n_init_times), &
            input_height   (input_n_lev, input_n_init_times), &
@@ -1307,8 +1299,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
            input_rh       (input_n_lev, input_n_init_times), &
            input_tke      (input_n_lev, input_n_init_times), &
            stat=allocate_status)
-  
-  if (model_ics) then
+
+  if (trim(input_surfaceForcingLSM) == "lsm") then
     !if model ICs are included in the file
     
     !variables with vertical extent
@@ -1481,7 +1473,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
  
   call NetCDF_read_var(ncid, "tke", .True., input_tke)
   
-  if (model_ics) then
+  if (trim(input_surfaceForcingLSM) == "lsm") then
     call NetCDF_read_var(ncid, "o3",      .True.,  input_ozone)
     call NetCDF_read_var(ncid, "area",    .True.,  input_area)
     
@@ -1648,108 +1640,106 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   ! Surface forcing Model LSM ICs
   !
   if (trim(input_surfaceForcingLSM) == "lsm") then
-    if (model_ics) then
-      call NetCDF_read_var(ncid, "stc",     .True., input_stc)
-      call NetCDF_read_var(ncid, "smc",     .True., input_smc)
-      call NetCDF_read_var(ncid, "slc",     .True., input_slc)
-      call NetCDF_read_var(ncid, "snicexy", .True., input_snicexy)
-      call NetCDF_read_var(ncid, "snliqxy", .True., input_snliqxy)
-      call NetCDF_read_var(ncid, "tsnoxy",  .True., input_tsnoxy )
-      call NetCDF_read_var(ncid, "smoiseq", .True., input_smoiseq)
-      call NetCDF_read_var(ncid, "zsnsoxy", .True., input_zsnsoxy)
-      call NetCDF_read_var(ncid, "tiice",   .True., input_tiice)
-      call NetCDF_read_var(ncid, "tslb",    .True., input_tslb )
-      call NetCDF_read_var(ncid, "smois",   .True., input_smois)
-      call NetCDF_read_var(ncid, "sh2o",    .True., input_sh2o )
-      call NetCDF_read_var(ncid, "smfr",    .True., input_smfr )
-      call NetCDF_read_var(ncid, "flfr",    .True., input_flfr )
-      
-      call NetCDF_read_var(ncid, "vegsrc",   .True., input_vegsrc   )
-      call NetCDF_read_var(ncid, "vegtyp",   .True., input_vegtyp   )
-      call NetCDF_read_var(ncid, "soiltyp",  .True., input_soiltyp  )
-      call NetCDF_read_var(ncid, "slopetyp", .True., input_slopetype)
-      call NetCDF_read_var(ncid, "tsfco",    .True., input_tsfco)
-      call NetCDF_read_var(ncid, "vegfrac",  .True., input_vegfrac)
-      call NetCDF_read_var(ncid, "shdmin",   .True., input_shdmin)
-      call NetCDF_read_var(ncid, "shdmax",   .True., input_shdmax)
-      call NetCDF_read_var(ncid, "slmsk",    .True., input_slmsk)
-      call NetCDF_read_var(ncid, "canopy",   .True., input_canopy)
-      call NetCDF_read_var(ncid, "hice",     .True., input_hice)
-      call NetCDF_read_var(ncid, "fice",     .True., input_fice)
-      call NetCDF_read_var(ncid, "tisfc",    .True., input_tisfc)
-      call NetCDF_read_var(ncid, "snowd",    .True., input_snwdph)
-      call NetCDF_read_var(ncid, "snoalb",   .True., input_snoalb)
-      call NetCDF_read_var(ncid, "tg3",      .True., input_tg3)
-      call NetCDF_read_var(ncid, "uustar",   .True., input_uustar)
-      call NetCDF_read_var(ncid, "alvsf",    .True., input_alvsf)
-      call NetCDF_read_var(ncid, "alnsf",    .True., input_alnsf)
-      call NetCDF_read_var(ncid, "alvwf",    .True., input_alvwf)
-      call NetCDF_read_var(ncid, "alnwf",    .True., input_alnwf)
-      call NetCDF_read_var(ncid, "facsf",    .True., input_facsf)
-      call NetCDF_read_var(ncid, "facwf",    .True., input_facwf)
-      call NetCDF_read_var(ncid, "weasd",    .True., input_weasd)
-      call NetCDF_read_var(ncid, "f10m",     .True., input_f10m)
-      call NetCDF_read_var(ncid, "t2m",      .True., input_t2m)
-      call NetCDF_read_var(ncid, "q2m",      .True., input_q2m)
-      call NetCDF_read_var(ncid, "ffmm",     .True., input_ffmm)
-      call NetCDF_read_var(ncid, "ffhh",     .True., input_ffhh)
-      call NetCDF_read_var(ncid, "tprcp",    .True., input_tprcp)
-      call NetCDF_read_var(ncid, "srflag",   .True., input_srflag)
-      call NetCDF_read_var(ncid, "sncovr",   .True., input_sncovr)
-      call NetCDF_read_var(ncid, "tsfcl",    .True., input_tsfcl)
-      call NetCDF_read_var(ncid, "zorll",    .True., input_zorll)
-      call NetCDF_read_var(ncid, "zorli",    .True., input_zorli)
-      call NetCDF_read_var(ncid, "zorlw",    .True., input_zorlw)
-      
-      !NoahMP parameters
-      call NetCDF_read_var(ncid, "tvxy",      .False., input_tvxy)
-      call NetCDF_read_var(ncid, "tgxy",      .False., input_tgxy)
-      call NetCDF_read_var(ncid, "tahxy",     .False., input_tahxy)
-      call NetCDF_read_var(ncid, "canicexy",  .False., input_canicexy)
-      call NetCDF_read_var(ncid, "canliqxy",  .False., input_canliqxy)
-      call NetCDF_read_var(ncid, "eahxy",     .False., input_eahxy)
-      call NetCDF_read_var(ncid, "cmxy",      .False., input_cmxy)
-      call NetCDF_read_var(ncid, "chxy",      .False., input_chxy)
-      call NetCDF_read_var(ncid, "fwetxy",    .False., input_fwetxy)
-      call NetCDF_read_var(ncid, "sneqvoxy",  .False., input_sneqvoxy)
-      call NetCDF_read_var(ncid, "alboldxy",  .False., input_alboldxy)
-      call NetCDF_read_var(ncid, "qsnowxy",   .False., input_qsnowxy)
-      call NetCDF_read_var(ncid, "wslakexy",  .False., input_wslakexy)
-      call NetCDF_read_var(ncid, "taussxy",   .False., input_taussxy)
-      call NetCDF_read_var(ncid, "waxy",      .False., input_waxy)
-      call NetCDF_read_var(ncid, "wtxy",      .False., input_wtxy)
-      call NetCDF_read_var(ncid, "zwtxy",     .False., input_zwtxy)
-      call NetCDF_read_var(ncid, "xlaixy",    .False., input_xlaixy)
-      call NetCDF_read_var(ncid, "xsaixy",    .False., input_xsaixy)
-      call NetCDF_read_var(ncid, "lfmassxy",  .False., input_lfmassxy)
-      call NetCDF_read_var(ncid, "stmassxy",  .False., input_stmassxy)
-      call NetCDF_read_var(ncid, "rtmassxy",  .False., input_rtmassxy)
-      call NetCDF_read_var(ncid, "woodxy",    .False., input_woodxy)
-      call NetCDF_read_var(ncid, "stblcpxy",  .False., input_stblcpxy)
-      call NetCDF_read_var(ncid, "fastcpxy",  .False., input_fastcpxy)
-      call NetCDF_read_var(ncid, "smcwtdxy",  .False., input_smcwtdxy)
-      call NetCDF_read_var(ncid, "deeprechxy",.False., input_deeprechxy)
-      call NetCDF_read_var(ncid, "rechxy",    .False., input_rechxy)
-      call NetCDF_read_var(ncid, "snowxy",    .False., input_snowxy)
-      !RUC LSM variables
-      call NetCDF_read_var(ncid, "wetness",          .False., input_wetness)
-      call NetCDF_read_var(ncid, "clw_surf_land",    .False., input_clw_surf_land)
-      call NetCDF_read_var(ncid, "clw_surf_ice",     .False., input_clw_surf_ice)
-      call NetCDF_read_var(ncid, "qwv_surf_land",    .False., input_qwv_surf_land)
-      call NetCDF_read_var(ncid, "qwv_surf_ice",     .False., input_qwv_surf_ice)
-      call NetCDF_read_var(ncid, "tsnow_land",       .False., input_tsnow_land)
-      call NetCDF_read_var(ncid, "tsnow_ice",        .False., input_tsnow_ice)
-      call NetCDF_read_var(ncid, "snowfallac_land",  .False., input_snowfallac_land)
-      call NetCDF_read_var(ncid, "snowfallac_ice",   .False., input_snowfallac_ice)
-      call NetCDF_read_var(ncid, "sncovr_ice",       .False., input_sncovr_ice)
-      call NetCDF_read_var(ncid, "sfalb_lnd",        .False., input_sfalb_lnd)
-      call NetCDF_read_var(ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
-      call NetCDF_read_var(ncid, "emis_ice",         .False., input_emis_ice)
-      call NetCDF_read_var(ncid, "lai",              .False., input_lai)
-    else
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that an LSM should be used, but the required initial conditions are missing. Stopping ...'
-      stop
-    end if
+     call NetCDF_read_var(ncid, "stc",     .True., input_stc)
+     call NetCDF_read_var(ncid, "smc",     .True., input_smc)
+     call NetCDF_read_var(ncid, "slc",     .True., input_slc)
+     call NetCDF_read_var(ncid, "snicexy", .True., input_snicexy)
+     call NetCDF_read_var(ncid, "snliqxy", .True., input_snliqxy)
+     call NetCDF_read_var(ncid, "tsnoxy",  .True., input_tsnoxy )
+     call NetCDF_read_var(ncid, "smoiseq", .True., input_smoiseq)
+     call NetCDF_read_var(ncid, "zsnsoxy", .True., input_zsnsoxy)
+     call NetCDF_read_var(ncid, "tiice",   .True., input_tiice)
+     call NetCDF_read_var(ncid, "tslb",    .True., input_tslb )
+     call NetCDF_read_var(ncid, "smois",   .True., input_smois)
+     call NetCDF_read_var(ncid, "sh2o",    .True., input_sh2o )
+     call NetCDF_read_var(ncid, "smfr",    .True., input_smfr )
+     call NetCDF_read_var(ncid, "flfr",    .True., input_flfr )
+     
+     call NetCDF_read_var(ncid, "vegsrc",   .True., input_vegsrc   )
+     call NetCDF_read_var(ncid, "vegtyp",   .True., input_vegtyp   )
+     call NetCDF_read_var(ncid, "soiltyp",  .True., input_soiltyp  )
+     call NetCDF_read_var(ncid, "slopetyp", .True., input_slopetype)
+     call NetCDF_read_var(ncid, "tsfco",    .True., input_tsfco)
+     call NetCDF_read_var(ncid, "vegfrac",  .True., input_vegfrac)
+     call NetCDF_read_var(ncid, "shdmin",   .True., input_shdmin)
+     call NetCDF_read_var(ncid, "shdmax",   .True., input_shdmax)
+     call NetCDF_read_var(ncid, "slmsk",    .True., input_slmsk)
+     call NetCDF_read_var(ncid, "canopy",   .True., input_canopy)
+     call NetCDF_read_var(ncid, "hice",     .True., input_hice)
+     call NetCDF_read_var(ncid, "fice",     .True., input_fice)
+     call NetCDF_read_var(ncid, "tisfc",    .True., input_tisfc)
+     call NetCDF_read_var(ncid, "snowd",    .True., input_snwdph)
+     call NetCDF_read_var(ncid, "snoalb",   .True., input_snoalb)
+     call NetCDF_read_var(ncid, "tg3",      .True., input_tg3)
+     call NetCDF_read_var(ncid, "uustar",   .True., input_uustar)
+     call NetCDF_read_var(ncid, "alvsf",    .True., input_alvsf)
+     call NetCDF_read_var(ncid, "alnsf",    .True., input_alnsf)
+     call NetCDF_read_var(ncid, "alvwf",    .True., input_alvwf)
+     call NetCDF_read_var(ncid, "alnwf",    .True., input_alnwf)
+     call NetCDF_read_var(ncid, "facsf",    .True., input_facsf)
+     call NetCDF_read_var(ncid, "facwf",    .True., input_facwf)
+     call NetCDF_read_var(ncid, "weasd",    .True., input_weasd)
+     call NetCDF_read_var(ncid, "f10m",     .True., input_f10m)
+     call NetCDF_read_var(ncid, "t2m",      .True., input_t2m)
+     call NetCDF_read_var(ncid, "q2m",      .True., input_q2m)
+     call NetCDF_read_var(ncid, "ffmm",     .True., input_ffmm)
+     call NetCDF_read_var(ncid, "ffhh",     .True., input_ffhh)
+     call NetCDF_read_var(ncid, "tprcp",    .True., input_tprcp)
+     call NetCDF_read_var(ncid, "srflag",   .True., input_srflag)
+     call NetCDF_read_var(ncid, "sncovr",   .True., input_sncovr)
+     call NetCDF_read_var(ncid, "tsfcl",    .True., input_tsfcl)
+     call NetCDF_read_var(ncid, "zorll",    .True., input_zorll)
+     call NetCDF_read_var(ncid, "zorli",    .True., input_zorli)
+     call NetCDF_read_var(ncid, "zorlw",    .True., input_zorlw)
+ 
+     !NoahMP parameters
+     call NetCDF_read_var(ncid, "tvxy",      .False., input_tvxy)
+     call NetCDF_read_var(ncid, "tgxy",      .False., input_tgxy)
+     call NetCDF_read_var(ncid, "tahxy",     .False., input_tahxy)
+     call NetCDF_read_var(ncid, "canicexy",  .False., input_canicexy)
+     call NetCDF_read_var(ncid, "canliqxy",  .False., input_canliqxy)
+     call NetCDF_read_var(ncid, "eahxy",     .False., input_eahxy)
+     call NetCDF_read_var(ncid, "cmxy",      .False., input_cmxy)
+     call NetCDF_read_var(ncid, "chxy",      .False., input_chxy)
+     call NetCDF_read_var(ncid, "fwetxy",    .False., input_fwetxy)
+     call NetCDF_read_var(ncid, "sneqvoxy",  .False., input_sneqvoxy)
+     call NetCDF_read_var(ncid, "alboldxy",  .False., input_alboldxy)
+     call NetCDF_read_var(ncid, "qsnowxy",   .False., input_qsnowxy)
+     call NetCDF_read_var(ncid, "wslakexy",  .False., input_wslakexy)
+     call NetCDF_read_var(ncid, "taussxy",   .False., input_taussxy)
+     call NetCDF_read_var(ncid, "waxy",      .False., input_waxy)
+     call NetCDF_read_var(ncid, "wtxy",      .False., input_wtxy)
+     call NetCDF_read_var(ncid, "zwtxy",     .False., input_zwtxy)
+     call NetCDF_read_var(ncid, "xlaixy",    .False., input_xlaixy)
+     call NetCDF_read_var(ncid, "xsaixy",    .False., input_xsaixy)
+     call NetCDF_read_var(ncid, "lfmassxy",  .False., input_lfmassxy)
+     call NetCDF_read_var(ncid, "stmassxy",  .False., input_stmassxy)
+     call NetCDF_read_var(ncid, "rtmassxy",  .False., input_rtmassxy)
+     call NetCDF_read_var(ncid, "woodxy",    .False., input_woodxy)
+     call NetCDF_read_var(ncid, "stblcpxy",  .False., input_stblcpxy)
+     call NetCDF_read_var(ncid, "fastcpxy",  .False., input_fastcpxy)
+     call NetCDF_read_var(ncid, "smcwtdxy",  .False., input_smcwtdxy)
+     call NetCDF_read_var(ncid, "deeprechxy",.False., input_deeprechxy)
+     call NetCDF_read_var(ncid, "rechxy",    .False., input_rechxy)
+     call NetCDF_read_var(ncid, "snowxy",    .False., input_snowxy)
+     !RUC LSM variables
+     call NetCDF_read_var(ncid, "wetness",          .False., input_wetness)
+     call NetCDF_read_var(ncid, "clw_surf_land",    .False., input_clw_surf_land)
+     call NetCDF_read_var(ncid, "clw_surf_ice",     .False., input_clw_surf_ice)
+     call NetCDF_read_var(ncid, "qwv_surf_land",    .False., input_qwv_surf_land)
+     call NetCDF_read_var(ncid, "qwv_surf_ice",     .False., input_qwv_surf_ice)
+     call NetCDF_read_var(ncid, "tsnow_land",       .False., input_tsnow_land)
+     call NetCDF_read_var(ncid, "tsnow_ice",        .False., input_tsnow_ice)
+     call NetCDF_read_var(ncid, "snowfallac_land",  .False., input_snowfallac_land)
+     call NetCDF_read_var(ncid, "snowfallac_ice",   .False., input_snowfallac_ice)
+     call NetCDF_read_var(ncid, "sncovr_ice",       .False., input_sncovr_ice)
+     call NetCDF_read_var(ncid, "sfalb_lnd",        .False., input_sfalb_lnd)
+     call NetCDF_read_var(ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
+     call NetCDF_read_var(ncid, "emis_ice",         .False., input_emis_ice)
+     call NetCDF_read_var(ncid, "lai",              .False., input_lai)
+  else
+     write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that an LSM should be used, but the required initial conditions are missing. Stopping ...'
+     stop
   end if
   
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
@@ -1972,7 +1962,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     stop
   end if
 
-  if (model_ics) then
+  if (trim(input_surfaceForcingLSM) == "lsm") then
     scm_input%input_ozone = input_ozone(:,active_init_time)
     scm_input%input_area = input_area(active_init_time)
     
