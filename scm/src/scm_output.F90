@@ -40,7 +40,7 @@ subroutine output_init(scm_state, physics)
   !! @{
 
   !> - Create the output file in the output directory.
-  CALL CHECK(NF90_CREATE(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",CMODE=NF90_CLOBBER,NCID=ncid))
+  CALL CHECK(NF90_CREATE(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",CMODE=NF90_CLOBBER,NCID=ncid),'nf90_create()')
 
   !> - Define netCDF dimensions.
   n_timesteps = ceiling(scm_state%runtime/scm_state%dt)
@@ -82,16 +82,16 @@ subroutine output_init(scm_state, physics)
     end if
   end if
   
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_swrad_dim",LEN=n_swrad,DIMID=time_swrad_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_lwrad_dim",LEN=n_lwrad,DIMID=time_lwrad_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_rad_dim",LEN=n_rad,DIMID=time_rad_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="hor_dim_layer",LEN=scm_state%n_cols,DIMID=hor_dim_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_layer",LEN=scm_state%n_levels,DIMID=vert_dim_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_interface",LEN=scm_state%n_levels+1,DIMID=vert_dim_i_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_rad",LEN=physics%Interstitial%lmk,DIMID=vert_dim_rad_id))
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_soil",LEN=physics%Model%lsoil_lsm,DIMID=vert_dim_soil_id))
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id),"nf90_def_dim(time_inst_dim)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id),"nf90_def_dim(time_diag_dim)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_swrad_dim",LEN=n_swrad,DIMID=time_swrad_id),"nf90_def_dim(time_swrad_dim)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_lwrad_dim",LEN=n_lwrad,DIMID=time_lwrad_id),"nf90_def_dim(time_lwrad_dim)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_rad_dim",LEN=n_rad,DIMID=time_rad_id),"nf90_def_dim(time_rad_dim)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="hor_dim_layer",LEN=scm_state%n_cols,DIMID=hor_dim_id),"nf90_def_dim(hor_dim_layer)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_layer",LEN=scm_state%n_levels,DIMID=vert_dim_id),"nf90_def_dim(vert_dim_layer)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_interface",LEN=scm_state%n_levels+1,DIMID=vert_dim_i_id),"nf90_def_dim(vert_dim_interface)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_rad",LEN=physics%Interstitial%lmk,DIMID=vert_dim_rad_id),"nf90_def_dim(vert_dim_rad)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_soil",LEN=physics%Model%lsoil_lsm,DIMID=vert_dim_soil_id),"nf90_def_dim(vert_dim_soil)")
 
   !> - Define the dimension variables.
   call NetCDF_def_var(ncid, 'time_inst', NF90_FLOAT, "model elapsed time for instantaneous variables", "s", dummy_id, (/ time_inst_id /))
@@ -118,7 +118,7 @@ subroutine output_init(scm_state, physics)
   call NetCDF_def_var(ncid, 'init_minute', NF90_INT, "model initialization minute", "minute", min_id)
   
   !> - Close variable definition and the file.
-  CALL CHECK(NF90_ENDDEF(NCID=ncid))
+  CALL CHECK(NF90_ENDDEF(NCID=ncid),'nf90_enddef()')
   
   call NetCDF_put_var(ncid, "init_year",   scm_state%init_year,  year_id)
   call NetCDF_put_var(ncid, "init_month",  scm_state%init_month, month_id)
@@ -128,19 +128,19 @@ subroutine output_init(scm_state, physics)
   
   if (physics%Model%nsswr <= 0) then
     !write out missing values at the initial time
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_swrad_var_id,VALUES=0.0,START=(/ 1 /)))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_swrad_var_id,VALUES=0.0,START=(/ 1 /)),"nf90_put_var(time_swrad_var)")
     missing_value_2D = missing_value
     call NetCDF_put_var(ncid, "sw_rad_heating_rate",  missing_value_2D, 1)
   end if
   if (physics%Model%nslwr <= 0) then
     !write out missing values at the initial time
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_lwrad_var_id,VALUES=0.0,START=(/ 1 /)))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_lwrad_var_id,VALUES=0.0,START=(/ 1 /)),"nf90_put_var(time_lwrad_var)")
     missing_value_2D = missing_value
     call NetCDF_put_var(ncid, "lw_rad_heating_rate",  missing_value_2D, 1)
   end if
   if (physics%Model%nsswr <= 0 .and. physics%Model%nslwr <= 0) then
     !write out missing values at the initial time
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_rad_var_id,VALUES=0.0,START=(/ 1 /)))
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_rad_var_id,VALUES=0.0,START=(/ 1 /)),"nf90_put_var(time_rad_var)")
     missing_value_2D = missing_value
     missing_value_1D = missing_value
     call NetCDF_put_var(ncid, "rad_cloud_fraction", missing_value_2D, 1)
@@ -160,7 +160,7 @@ subroutine output_init(scm_state, physics)
     call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_1D, 1)
   end if
   
-  CALL CHECK(NF90_CLOSE(NCID=ncid))
+  CALL CHECK(NF90_CLOSE(NCID=ncid),"nf90_close()")
 
   !> @}
 end subroutine output_init
@@ -428,15 +428,15 @@ subroutine output_append(scm_state, physics, force)
     return
   end if
   !> - Open the file.
-  CALL CHECK(NF90_OPEN(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",MODE=NF90_WRITE,NCID=ncid))
+  CALL CHECK(NF90_OPEN(PATH=TRIM(scm_state%output_dir)//"/"//TRIM(scm_state%output_file)//".nc",MODE=NF90_WRITE,NCID=ncid),"nf90_open()")
   
   !> - Append all of the variables to the file.
   
   if (mod(scm_state%itt, scm_state%n_itt_out)==0 .or. force_inst) then
     scm_state%itt_out = scm_state%itt_out+1
     
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_inst",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_out /)))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_inst",VARID=var_id),"nf90_inq_varid(time_inst)")
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_out /)),"nf90_put_var(time_inst)")
     
     call output_append_state(ncid, scm_state, physics)
     call output_append_forcing(ncid, scm_state)
@@ -448,31 +448,31 @@ subroutine output_append(scm_state, physics, force)
   if(physics%Model%lslwr .or. physics%Model%lsswr) then
     if (physics%Model%lsswr) then
       scm_state%itt_swrad = scm_state%itt_swrad + 1
-      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_swrad",VARID=var_id))
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_swrad /)))
+      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_swrad",VARID=var_id),"nf90_inq_varid(time_swrad)")
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_swrad /)),"nf90_put_var(time_swrad)")
     end if
     if (physics%Model%lslwr) then
       scm_state%itt_lwrad = scm_state%itt_lwrad + 1
-      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_lwrad",VARID=var_id))
-      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_lwrad /)))
+      CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_lwrad",VARID=var_id),"nf90_inq_varid(time_lwrad)")
+      CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_lwrad /)),"nf90_put_var(time_lwrad)")
     end if
     call output_append_radtend(ncid, scm_state, physics)
     scm_state%itt_rad = scm_state%itt_rad + 1
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_rad",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_rad /)))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_rad",VARID=var_id),"nf90_inq_varid(time_rad)")
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_rad /)),"nf90_put_var(time_rad)")
     call output_append_interstitial_rad(ncid, scm_state, physics)
     call output_append_diag_rad(ncid, scm_state, physics)
   end if
   
   if(mod(scm_state%itt,physics%Model%nszero) == 0) then
     scm_state%itt_diag = scm_state%itt_diag + 1
-    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_diag",VARID=var_id))
-    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_diag /)))
+    CALL CHECK(NF90_INQ_VARID(NCID=ncid,NAME="time_diag",VARID=var_id),"nf90_inq_varid(time_diag)")
+    CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=var_id,VALUES=scm_state%model_time,START=(/ scm_state%itt_diag /)),"nf90_put_var(time_diag)")
     call output_append_diag_avg(ncid, scm_state, physics)
   end if
   
   !> - Close the file.
-  CALL CHECK(NF90_CLOSE(ncid))
+  CALL CHECK(NF90_CLOSE(ncid),"nf90_close()")
 
   !> @}
 end subroutine output_append
