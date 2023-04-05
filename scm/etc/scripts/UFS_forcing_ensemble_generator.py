@@ -23,7 +23,6 @@ parser.add_argument('-lons', '--lon_list',      help='longitudes, separated by a
 parser.add_argument('-lats', '--lat_list',      help='latitudes, separated by a space',       nargs='*', type=float, required=False)
 parser.add_argument('-nens', '--nensmembers',   help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
 parser.add_argument('-dt',   '--timestep',      help='SCM timestep, in seconds',                                      type=int,   default = 3600)
-parser.add_argument('-fhz',  '--fhzero',        help='UFS frequency, in hours, for emptying diagnostic buckets.',     type=int,   default = 1)
 parser.add_argument('-cres', '--C_RES',         help='UFS spatial resolution',                                        type=int,   default = 96)
 parser.add_argument('-sdf',  '--suite',         help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
 parser.add_argument('-sc',   '--save_comp',     help='flag to save a file with UFS data for comparisons',                         action='store_true')
@@ -113,12 +112,6 @@ def main():
     # Create SCM case configuration (etc/case_config) file.
     #
     ###########################################################################
-
-    # How many timesteps between clearing the diagnostic buckets?
-    n_itt_diag = int(args.fhzero*3600/args.timestep)
-    # 
-    n_itt_out = int(n_itt_diag/args.fhzero)
-
     #
     case_config =[{"name": "input_type",  "values": str(1)},             \
                   {"name": "dt",          "values": str(args.timestep)}, \
@@ -181,7 +174,7 @@ def main():
     com = "mkdir -p "+dir_scm+"scm/bin/"
     print(com)
     os.system(com)
-    fileOUT = "scm_ufsens_"+case_name+".py"
+    fileOUT = "scm_ufsens_"+args.case_name+".py"
     fileID  = open(dir_scm+"scm/bin/"+fileOUT, 'w')
     fileID.write('run_list = [')
     fileID.write('\n')
@@ -200,10 +193,7 @@ def main():
     print("-------------------------------------------------------------------------------------------")
     print("Command(s) to execute in ccpp-scm/scm/bin/: ")
     print(" ")
-    print("./run_scm.py --npz_type gfs --file " + fileOUT + " --n_itt_diag " + \
-          str(n_itt_diag) + " --n_itt_out " + str(n_itt_out) + " --timestep "   + \
-          str(args.timestep))
-    print("")
+    print("./run_scm.py --npz_type gfs --file " + fileOUT + " --timestep " + str(args.timestep))
     print("")
     print("-------------------------------------------------------------------------------------------")
 
