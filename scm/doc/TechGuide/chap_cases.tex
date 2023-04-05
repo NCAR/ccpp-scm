@@ -290,7 +290,7 @@ UFS regression test, \execout{control\_c384}, for multiple points.
 
 UFS regression test, \execout{control\_p8}, for an ensemble (10) of randomly selected points over a specified longitude (300-320oW) and latitude (40-50oN) range
 
-But first, to use the \execout{control\_p8} test we need to rerun the regression test and UFS history files with a denser and constant output interval. First, in \execout{control\_p8/model\_configure}, change \exec{-{}-output_fh} to \execout{interval -1}, where interval is the UFS history file output frequency (in hours)”. See \href{https://ufs-weather-model.readthedocs.io/en/latest/InputsOutputs.html}{UFS Weather Model Users Guide}. Next, in \execout{control\_p8/input.nml}, change \exec{-{}-fhzero} in the gfs_phys_nml to the \execout{interval}. Then rerun the test. On Cheyenne, for example, run the following command: \execout{qsub job\_card}.
+But first, to use the \execout{control\_p8} test we need to rerun the regression test and UFS history files with a denser and constant output interval. First, in \execout{control\_p8/model\_configure}, change \exec{-{}-output\_fh} to \execout{interval -1}, where interval is the UFS history file output frequency (in hours)”. See \href{https://ufs-weather-model.readthedocs.io/en/latest/InputsOutputs.html}{UFS Weather Model Users Guide}. Next, in \execout{control\_p8/input.nml}, change \exec{-{}-fhzero} in the gfs_phys_nml to the \execout{interval}. Then rerun the test. On Cheyenne, for example, run the following command: \execout{qsub job\_card}.
 \begin{lstlisting}[language=bash]
 ./UFS_forcing_ensemble_generator.py -d /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_p8/ -sc --C_RES 96 -dt 720 -fhz 3 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10
 \end{lstlisting}
