@@ -15,22 +15,18 @@ import random
 # Argument list
 ###############################################################################
 parser = argparse.ArgumentParser()
-parser.add_argument('-d',    '--dir',              help='Directory path containing UFS output files',                                required=False)
-parser.add_argument('-i',    '--dir_ic',           help='Directory path containing FV3 input files',                                 required=False)
-parser.add_argument('-g',    '--dir_grid',         help='directory path containing FV3 tile supergrid files',                        required=False)
-parser.add_argument('-f',    '--dir_forcing',      help='Directory path containing physics diag files',                              required=False)
-parser.add_argument('-rt',   '--dir_ufs_rt',       help='Directory path containing UFS regression test output',                      required=False)
-parser.add_argument('-n',    '--case_name',        help='Name of case',                                                              required=True)
-parser.add_argument('-lonl', '--lon_limits',       help='Longitude range for ensemble, separated by a space', nargs=2,   type=float, required=False)
-parser.add_argument('-latl', '--lat_limits',       help='Latitude range for ensemble, separated by a space',  nargs=2,   type=float, required=False)
-parser.add_argument('-lons', '--lon_list',         help='Longitudes for ensemble, separated by a space',      nargs='*', type=float, required=False)
-parser.add_argument('-lats', '--lat_list',         help='Latitudes for ensemble, separated by a space',       nargs='*', type=float, required=False)
-parser.add_argument('-nens', '--nensmembers',      help='Number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
-parser.add_argument('-dt',   '--timestep',         help='SCM timestep, in seconds',                                      type=int,   default = 3600)
-parser.add_argument('-fhz',  '--fhzero',           help='UFS frequency, in hours, for emptying diagnostic buckets.',     type=int,   default = 1)
-parser.add_argument('-cres', '--C_RES',            help='UFS spatial resolution',                                        type=int,   default = 96)
-parser.add_argument('-sdf',  '--suite',            help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
-parser.add_argument('-sc',   '--save_comp',        help='Flag to save a file with UFS data for comparisons',                         action='store_true')
+parser.add_argument('-d',    '--dir',           help='path to UFS Regression Test output', required=True)
+parser.add_argument('-n',    '--case_name',     help='name of case',                       required=True)
+parser.add_argument('-lonl', '--lon_limits',    help='longitude range for ensemble, separated by a space', nargs=2,   type=float, required=False)
+parser.add_argument('-latl', '--lat_limits',    help='latitude range for ensemble, separated by a space',  nargs=2,   type=float, required=False)
+parser.add_argument('-lons', '--lon_list',      help='longitudes for ensemble, separated by a space',      nargs='*', type=float, required=False)
+parser.add_argument('-lats', '--lat_list',      help='latitudes for ensemble, separated by a space',       nargs='*', type=float, required=False)
+parser.add_argument('-nens', '--nensmembers',   help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
+parser.add_argument('-dt',   '--timestep',      help='sCM timestep, in seconds',                                      type=int,   default = 3600)
+parser.add_argument('-fhz',  '--fhzero',        help='UFS frequency, in hours, for emptying diagnostic buckets.',     type=int,   default = 1)
+parser.add_argument('-cres', '--C_RES',         help='UFS spatial resolution',                                        type=int,   default = 96)
+parser.add_argument('-sdf',  '--suite',         help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
+parser.add_argument('-sc',   '--save_comp',     help='flag to save a file with UFS data for comparisons',                         action='store_true')
 parser.add_argument('-near', '--use_nearest',   help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
 
 ###############################################################################
@@ -40,10 +36,13 @@ def main():
     # Get command line arguments
     args  = parser.parse_args()
 
-    if (args.dir):
-        if (not args.dir_ic):      args.dir_ic      = args.dir + "/INPUT/"
-        if (not args.dir_grid):    args.dir_grid    = args.dir + "/INPUT/"
-        if (not args.dir_forcing): args.dir_forcing = args.dir
+    if (not args.dir):
+        print("ERROR: Need to provide UFS RT directory!")
+        exit()
+    else:
+        args.dir_ic      = args.dir + "/INPUT/"
+        args.dir_grid    = args.dir + "/INPUT/"
+        args.dir_forcing = args.dir
 
     # Error checking
     if (args.lon_limits and args.lon_list):

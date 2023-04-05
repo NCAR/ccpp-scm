@@ -132,7 +132,7 @@ For the ARM SGP case, several case configuration files representing different ti
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with Noah variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noah.nc})
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noahmp.nc})
 \end{itemize}
-See \ref{sec:UFS ICs} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions.
+See \ref{sec:UFS cases} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions.
 
 \section{How to set up new cases}
 
@@ -196,15 +196,16 @@ In order to use other LASSO cases than the one provided, perform the following s
 \item Create a new case configuration file (or copy and modify an existing one) in \execout{ccpp-scm/scm/etc/case\_config}. Be sure that the \execout{case\_name} variable points to the newly created/processed case input file from above.
 \end{enumerate}
 
-\section{Using UFS Initial Conditions}
-\label{sec:UFS ICs}
+\section{Using UFS Output to Create SCM Cases}
+\label{sec:UFS cases}
 
-A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS Atmosphere cold start initial conditions and generate a case input data file that the SCM can use. Note that the script requires a few python packages that may not be found by default in all python installations: \exec{argparse}, \exec{fnmatch}, \exec{logging}, \exec{NetCDF4}, \exec{numpy}, \exec{shapely}, \exec{f90nml}, and \exec{re}. 
+A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS history (output) files and their initial conditions to generate a case input data file, in DEPHY format, that the SCM can use. Note that the script requires a few python packages that may not be found by default in all python installations: \exec{argparse}, \exec{fnmatch}, \exec{logging}, \exec{NetCDF4}, \exec{numpy}, \exec{shapely}, \exec{f90nml}, and \exec{re}. 
 
 \begin{lstlisting}[language=bash]
 ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
-DATE -i IN_DIR -g GRID_DIR [-t {1,2,3,4,5,6}]
-[-a AREA] -n CASE_NAME [-oc]
+DATE -i IN_DIR -g GRID_DIR -f FORCING_DIR -n
+CASE_NAME [-t {1,2,3,4,5,6,7}] [-a AREA] [-oc]
+[-lam] [-sc] [-near]
 \end{lstlisting}
 
 Mandatory arguments:
@@ -214,10 +215,11 @@ Mandatory arguments:
 		\item -l 261.51 38.2 (two floating point values separated by a space)
 		\item -ij 8 49 (two integer values separated by a space; this option must also use the \exec{-{}-tile (-t)} argument to specify the tile number)
 	\end{itemize}
-\item \exec{-{}-date (-d)} YYYYMMDDHHMM: date corresponding to the UFS initial conditions
-\item \exec{-{}-in\_dir (-i)}: path to the directory containing UFS initial conditions
+\item \exec{-{}-date (-d)} YYYYMMDDHHMMSS: date corresponding to the UFS initial conditions
+\item \exec{-{}-in\_dir (-i)}: path to the directory containing the UFS initial conditions
 \item \exec{-{}-grid\_dir (-g)}: path to the directory containing the UFS supergrid files (AKA "fix" directory)
-\item \exec{-{}-case\_name (-n)}: what to call the output NetCDF file
+\item \exec{-{}-forcing\_dir (-f)}: path to the directory containing the UFS history files
+\item \exec{-{}-case\_name (-n)}: name of case
 \end{enumerate}
 
 Optional arguments:
@@ -225,6 +227,40 @@ Optional arguments:
 \item \exec{-{}-tile (-t)}: if one already knows the correct tile for the given longitude and latitude OR one is specifying the UFS grid index (\exec{-{}-index} argument)
 \item \exec{-{}-area (-a)}: area of grid cell in $m^2$ (if known or different than the value calculated from the supergrid file)
 \item \exec{-{}-old\_chgres (-oc)}: flag if UFS initial conditions were generated using older version of chgres (global\_chgres); might be the case for pre-2018 data
+\item \exec{-{}-lam (-lam)}: flag to signal that the ICs and forcing is from a limited-area model run
+\item \exec{-{}-save\_comp (-sc)}: flag to create UFS reference file for comparison
+\item \exec{-{}-use\_nearest (-near)}: flag to indicate using the nearest UFS history file gridpoint
+\end{enumerate}
+
+There is an additional script in \execout{scm/etc/scripts/UFS\_forcing\_ensemble\_generator.py} to create UFS-replay case(s) starting with output from UFS Weather Model (UWM) Regression Tests (RTs).
+
+\begin{lstlisting}[language=bash]
+UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
+[-lonl LON_LIMITS LON_LIMITS]
+[-latl LAT_LIMITS LAT_LIMITS]
+[-lons [LON_LIST [LON_LIST ...]]]
+[-lats [LAT_LIST [LAT_LIST ...]]]
+[-nens NENSMEMBERS] [-dt TIMESTEP]
+[-fhz FHZERO] [-cres C_RES]
+[-sdf SUITE] [-sc] [-near]
+\end{lstlisting}
+
+Mandatory arguments:
+\begin{enumerate}
+\item \exec{-{}-dir (-d)}: path to UFS Regression Test output
+\item \exec{-{}-case\_name (-n)}: name of case
+\end{enumerate}
+
+Optional arguments:
+\begin{enumerate}
+\item \exec{-{}-lon\_limits (-lonl)} AND \exec{-{}-lat\_limits (-latl)} AND \exec{-{}-nensmembers (-nens): longitude range, latitude range, and number of cases to create
+\item \exec{-{}-lon\_list (-lons)} AND \exec{-{}-lat\_list (-lats)}: longitude and latitude of cases
+\item \exec{-{]-timestep (-dt)}: SCM timestep, in seconds
+\item \exec{-{}-fhzero (-fhz)}: UFS frequency, in hours, for emptying diagnostic buckets
+\item \exec{-{}-C\_res (-cres)}: UFS spatial resolution
+\item \exec{-{}-suite (-sdf)}: CCPP suite definition file to use for ensemble
+\item \exec{-{}-save\_comp (-sc)}: flag to create UFS reference file for comparison
+\item \exec{-{}-use\_nearest (-near)}: flag to indicate using the nearest UFS history file gridpoint
 \end{enumerate}
 
 The following commands were used from within the \exec{scm/etc/scripts} directory to generate the example UFS Atmosphere initial condition case input file:
