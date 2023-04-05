@@ -7,7 +7,7 @@
 	#url = https://github.com/NCAR/ccpp-physics
 	#branch = main
         url = https://github.com/grantfirl/ccpp-physics
-        branch = ufs-dev-PR53
+        branch = ufs-dev-PR42
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
