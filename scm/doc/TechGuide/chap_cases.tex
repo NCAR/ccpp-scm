@@ -132,7 +132,7 @@ For the ARM SGP case, several case configuration files representing different ti
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with Noah variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noah.nc})
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noahmp.nc})
 \end{itemize}
-See \ref{sec:UFS cases} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions.
+See \ref{sec:UFScases} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions.
 
 \section{How to set up new cases}
 
@@ -197,7 +197,7 @@ In order to use other LASSO cases than the one provided, perform the following s
 \end{enumerate}
 
 \section{Using UFS Output to Create SCM Cases}
-\label{sec:UFS cases}
+\label{sec:UFScases}
 
 A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS history (output) files and their initial conditions to generate a case input data file, in DEPHY format, that the SCM can use. Note that the script requires a few python packages that may not be found by default in all python installations: \exec{argparse}, \exec{fnmatch}, \exec{logging}, \exec{NetCDF4}, \exec{numpy}, \exec{shapely}, \exec{f90nml}, and \exec{re}. 
 
@@ -248,14 +248,17 @@ UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
 Mandatory arguments:
 \begin{enumerate}
 \item \exec{-{}-dir (-d)}: path to UFS Regression Test output
-\item \exec{-{}-case\_name (-n)}: name of case
+\item \exec{-{}-case\_name (-n)}: name of cases
 \end{enumerate}
 
 Optional arguments:
 \begin{enumerate}
-\item \exec{-{}-lon\_limits (-lonl)} AND \exec{-{}-lat\_limits (-latl)} AND \exec{-{}-nensmembers (-nens): longitude range, latitude range, and number of cases to create
-\item \exec{-{}-lon\_list (-lons)} AND \exec{-{}-lat\_list (-lats)}: longitude and latitude of cases
-\item \exec{-{]-timestep (-dt)}: SCM timestep, in seconds
+\item Either
+      \begin{itemize}
+           \item \exec{-{}-lon\_limits (-lonl)} AND \exec{-{}-lat\_limits (-latl)} AND \exec{-{}-nensmembers (-nens)}: longitude range, latitude range, and number of cases to create
+           \item \exec{-{}-lon\_list (-lons)} AND \exec{-{}-lat\_list (-lats)}: longitude and latitude of cases
+      \end{itemize}
+\item \exec{-{}-timestep (-dt)}: SCM timestep, in seconds
 \item \exec{-{}-fhzero (-fhz)}: UFS frequency, in hours, for emptying diagnostic buckets
 \item \exec{-{}-C\_res (-cres)}: UFS spatial resolution
 \item \exec{-{}-suite (-sdf)}: CCPP suite definition file to use for ensemble
