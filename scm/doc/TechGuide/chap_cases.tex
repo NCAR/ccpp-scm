@@ -249,15 +249,15 @@ Mandatory arguments:
 \begin{enumerate}
 \item \exec{-{}-dir (-d)}: path to UFS Regression Test output
 \item \exec{-{}-case\_name (-n)}: name of cases
-\end{enumerate}
-
-Optional arguments:
-\begin{enumerate}
-\item Either
+\item Either:
       \begin{itemize}
            \item \exec{-{}-lon\_limits (-lonl)} AND \exec{-{}-lat\_limits (-latl)} AND \exec{-{}-nensmembers (-nens)}: longitude range, latitude range, and number of cases to create
            \item \exec{-{}-lon\_list (-lons)} AND \exec{-{}-lat\_list (-lats)}: longitude and latitude of cases
       \end{itemize}
+\end{enumerate}
+
+Optional arguments:
+\begin{enumerate}
 \item \exec{-{}-timestep (-dt)}: SCM timestep, in seconds
 \item \exec{-{}-fhzero (-fhz)}: UFS frequency, in hours, for emptying diagnostic buckets
 \item \exec{-{}-C\_res (-cres)}: UFS spatial resolution
@@ -265,6 +265,44 @@ Optional arguments:
 \item \exec{-{}-save\_comp (-sc)}: flag to create UFS reference file for comparison
 \item \exec{-{}-use\_nearest (-near)}: flag to indicate using the nearest UFS history file gridpoint
 \end{enumerate}
+
+Below are some examples run from within the \exec{scm/etc/scripts} directory to create SCM cases starting with the output from a UFS Weather Model regression test(s):
+
+On the supported platforms Cheyenne (NCAR) and Hera (NOAA), there are staged UWM RTs located at:
+\begin{itemize}
+     \item Cheyenne: \exec{RT_DIR=/glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs}
+     \iten Hera: \exec{RT_DIR=/scratch1/BMC/gmtb/CCPP-SCM/UFS_RTs}
+\end{itemize}
+
+UFS regression test (control_c192), for single point.
+\begin{lstlisting}[language=bash]
+./UFS_forcing_ensemble_generator.py -d $RT_DIR/control_c192/ -sc --C_RES 192 -dt 360 -fhz 12 -n control_c192 -lons 300 -lats 34
+\end{lstlisting}
+
+Upon succesfull completion of the script you should see the following:
+
+\exec{-------------------------------------------------------------------------------------------}
+\exec{Command(s) to execute in ccpp-scm/scm/bin/:}
+
+\exec{./run_scm.py --npz_type gfs --file scm_ufsens_control_c192_n000.py --n_itt_diag 120 --n_itt_out 10 --timestep 360}
+
+\exec{-------------------------------------------------------------------------------------------}
+
+The file \exec{scm_ufsens_control_c192_n000.py} is created in \exec{ccpp-scm/scm/bin/}, where the SCM run script is located.
+
+UFS regression test (control_c384), for multiple points.
+\begin{lstlisting}[language=bash]
+./UFS_forcing_ensemble_generator.py -d $RT_DIR/control_c384/ -sc --C_RES 384 -dt 225 -fhz 6 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37
+\end{lstlisting}
+
+UFS regression test, control_p8, for an ensemble (10) of randomly selected points over a specified longitude (300-320oW) and latitude (40-50oN) range
+
+But first, to use the control_p8 test we need to rerun the regression test and UFS history files with a denser and constant output interval. First, in control_p8/model_configure, change output_fh to “interval -1, where interval is the UFS history file output frequency (in hours)”. See UFS Weather Model Users Guide (https://ufs-weather-model.readthedocs.io/en/latest/InputsOutputs.html#model-configure-file). Next, in control_p8/input.nml, change “fhzero” in the gfs_phys_nml to the “interval”. Then rerun the test. On Cheyenne, for example, run the following command: “qsub job_card”.
+\begin{lstlisting}[language=bash]
+./UFS_forcing_ensemble_generator.py -d $RT_DIR/control_p8/ -sc --C_RES 96 -dt 720 -fhz 3 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10
+\end{lstlisting}
+
+
 
 The following commands were used from within the \exec{scm/etc/scripts} directory to generate the example UFS Atmosphere initial condition case input file:
 \begin{lstlisting}[language=bash]
