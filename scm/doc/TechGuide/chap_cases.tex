@@ -103,16 +103,14 @@ The initialization and forcing data for each case is stored in a NetCDF (version
 
 \subsection{Case input data file (DEPHY format)}
 \label{subsection: case input dephy}
-The Development and Evaluation of Physics in atmospheric models (DEPHY) format is an internationally-adopted data format intended for use by SCM and LESs. The initialization and forcing data for each case is stored in a NetCDF (version 4) file, although these files are not by default included in the CCPP SCM repository. Note that the DEPHY format was adopted by the CCPP SCM prior to the standard being finalized (and has not been updated). Testing with DEPHY cases requires cloning the DEPHY-SCM repository mentioned above at a specific commit (\href{https://github.com/GdR-DEPHY/DEPHY-SCM/tree/f654162054f19f1fb6475f79c985b1a07cdffe4c}{f654162}) into the \execout{scm/data} directory and using the \execout{-{}-case\_data\_dir} argument with the run script. For example:
+The Development and Evaluation of Physics in atmospheric models (DEPHY) format is an internationally-adopted data format intended for use by SCM and LESs. The initialization and forcing data for each case is stored in a NetCDF (version 4) file, although these files are not by default included in the CCPP SCM repository. To access these cases you need to clone the DEPHY-SCM repository, and provide the DEPHY-SCM file location to the SCM. For example:
 \begin{lstlisting}[language=bash]
 cd [...]/ccpp-scm/scm/data
-git clone https://https://github.com/GdR-DEPHY/DEPHY-SCM
-cd DEPHY-SCM
-git checkout f654162
+git clone https://github.com/GdR-DEPHY/DEPHY-SCM DEPHY-SCM
 cd [...]/ccpp-scm/scm/bin
-./run_scm.py -c ARMCU_REF --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/ARMCU/REF -v
+./run_scm.py -c MAGIC_LEG04A --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/MAGIC/LEG04A -v
 \end{lstlisting}
-Each DEPHY file has four dimensions (\execout{time}, \execout{levels}, \execout{longitude}, \execout{latitude}) and contains the initial conditions and forcing data. Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases. More information on the DEPHY format requirements can be found at \href{https://github.com/GdR-DEPHY/DEPHY-SCM}{DEPHY}. 
+Each DEPHY file has three dimensions (\execout{time}, \execout{t0}, \execout{levels}) and contains the initial conditions (\execout{t0}, \execout{levels}) and forcing data (\execout{time}, \execout{levels}). Just as when using the CCPP-SCM formatted inputs, \ref{subsection: case input}, not all fields are required for all cases. More information on the DEPHY format requirements can be found at \href{https://github.com/GdR-DEPHY/DEPHY-SCM}{DEPHY}. 
 
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,

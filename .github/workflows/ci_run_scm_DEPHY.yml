@@ -1,0 +1,156 @@
+name: CI test to run the SCM with DEPHY v1 data
+
+on: [push, pull_request]
+
+jobs:
+  run-scm-DEPHY:
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        fortran-compiler: [gfortran-12]
+        py-version:       [3.7.13]
+
+    # Environmental variables
+    env:
+      NFHOME:     /home/runner/netcdf-fortran
+      NFVERSION:  v4.5.3
+      bacio_ROOT: /home/runner/bacio
+      sp_ROOT:    /home/runner/NCEPLIBS-sp
+      w3emc_ROOT: /home/runner/myw3emc
+      SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
+      suites:     SCM_GFS_v16,SCM_GFS_v16_ps
+
+    # Workflow steps
+    steps:
+    #######################################################################################
+    # Initial
+    #######################################################################################
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v3
+
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+
+    #######################################################################################
+    # Python setup
+    #######################################################################################    
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{matrix.py-version}}
+
+    - name: Add conda to system path
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+    - name: Install python libraries
+      run: |
+        conda install --yes -c conda-forge f90nml
+        conda install --yes -c conda-forge netCDF4
+    - name: Update system packages
+      run: sudo apt-get update
+
+    #######################################################################################
+    # Install FORTRAN dependencies
+    #######################################################################################
+    - name: Cache bacio library v2.4.1
+      id: cache-bacio-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/bacio
+        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install bacio library v2.4.1
+      if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
+        cd bacio && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${bacio_ROOT} ../
+        make -j2
+        make install
+        echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
+
+    - name: Cache SP-library v2.3.3
+      id: cache-sp-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/NCEPLIBS-sp
+        key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install SP-library v2.3.3
+      if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.3.3 https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp
+        cd NCEPLIBS-sp && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${sp_ROOT} ../
+        make -j2
+        make install
+        echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
+
+    - name: Cache w3emc library v2.9.2
+      id: cache-w3emc-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/myw3emc
+        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install w3emc library v2.9.2
+      if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
+        cd NCEPLIBS-w3emc && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${w3emc_ROOT} ../
+        make -j2
+        make install
+        echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
+
+    - name: Install NetCDF C library
+      run: sudo apt-get install libnetcdf-dev
+
+    - name: Cache NetCDF Fortran library v4.4.4
+      id: cache-netcdf-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-fortran
+        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install NetCDF Fortran library
+      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
+        cd netcdf-fortran
+        ./configure
+        make -j
+        sudo make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+
+    #######################################################################################
+    # Build SCM. Run DEPHYv1 case.
+    #######################################################################################
+    - name: Download data for SCM
+      run: |
+        cd ${SCM_ROOT}
+        ./contrib/get_all_static_data.sh
+        ./contrib/get_thompson_tables.sh
+
+    - name: Configure build with CMake
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites} ../src
+
+    - name: Build SCM
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        make -j4
+
+    - name: Clone GdR-DEPHY/DEPHY-SCM repository
+      run: |
+        cd /home/runner
+        git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
+
+    - name: Run SCM with MAGIC_LEG04A DEPHY reference case
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py -c MAGIC_LEG04A --case_data_dir /home/runner/DEPHY-SCM/MAGIC/LEG04A --runtime_mult 0.1 -v

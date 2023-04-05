@@ -1,5 +1,5 @@
 $case_config
-case_name = 'ARMCU_E3SM',
+case_name = 'MAGIC_LEG04A',
 input_type = 1
 lsm_ics = .false.,
 do_spinup = .false.,
