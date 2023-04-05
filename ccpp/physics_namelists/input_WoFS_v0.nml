@@ -62,7 +62,7 @@
     lwhtr = .true.
     n_var_lndp = 0
     n_var_spp = 0
-    nsradar_reset = 3600
+    nsfullradar_diag = 3600
     nssl_cccn = 600000000.0
     nssl_ccn_on = .true.
     nssl_hail_on = .true.
