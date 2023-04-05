@@ -3569,7 +3569,6 @@ module GFS_typedefs
                                sedi_semi, decfl,                                            &
                                nssl_cccn, nssl_alphah, nssl_alphahl,                        &
                                nssl_alphar, nssl_ehw0_in, nssl_ehlw0_in,                    &
-                               nssl_alphar, nssl_ehw0_in, nssl_ehlw0_in,                    &
                                nssl_invertccn, nssl_hail_on, nssl_ccn_on,                   &
                           !--- max hourly
                                avg_max_length,                                              &
