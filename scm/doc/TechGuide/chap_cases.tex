@@ -199,9 +199,27 @@ In order to use other LASSO cases than the one provided, perform the following s
 \section{Using UFS Output to Create SCM Cases: UFS-Replay}
 \label{sec:UFSreplay}
 
+
+\subsection{Python Dependencies}
+\label{subsection: pydepend}
+The scripts here require a few python packages that may not be found by default in all python installations. There is a YAML file with the python environment needed to run the script in \execout{ccpp-scm/environment-ufsreplay.yml}. To create and activate this environment using conda:
+
+Create environment (only once):
+
+\execout{> conda env create -f environment-ufsreplay.yml}
+
+This will create the conda environment \execout{env\_ufsreplay}
+
+
+Activate environment:
+
+\execout{> conda activate env\_ufsreplay}
+
+
 \subsection{UFS\_IC\_generator.py}
 \label{subsection: ufsicgenerator}
-A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS history (output) files and their initial conditions to generate a SCM case input data file, in DEPHY format. Note that the script requires a few python packages that may not be found by default in all python installations: \exec{argparse}, \exec{fnmatch}, \exec{logging}, \exec{NetCDF4}, \exec{numpy}, \exec{shapely}, \exec{f90nml}, and \exec{re}. 
+A script exists in \execout{scm/etc/scripts/UFS\_IC\_generator.py} to read in UFS history (output) files and their initial conditions to generate a SCM case input data file, in DEPHY format. 
+
 
 \begin{lstlisting}[language=bash]
 ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
