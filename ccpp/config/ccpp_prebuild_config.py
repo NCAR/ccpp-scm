@@ -190,9 +190,8 @@ SCHEME_FILES = [
     'ccpp/physics/physics/sfc_sice.f'                       ,
     'ccpp/physics/physics/mp_fer_hires.F90'                 ,
     # SMOKE
-    'ccpp/physics/smoke/rrfs_smoke_wrapper.F90'             ,
-    'ccpp/physics/smoke/rrfs_smoke_postpbl.F90'             ,
-    'ccpp/physics/smoke/rrfs_smoke_lsdep_wrapper.F90'       ,
+    'ccpp/physics/physics/smoke_dust/rrfs_smoke_wrapper.F90',
+    'ccpp/physics/physics/smoke_dust/rrfs_smoke_postpbl.F90',
     'ccpp/physics/physics/scm_sfc_flux_spec.F90'            ,
     # RRTMGP
     'ccpp/physics/physics/rrtmgp_aerosol_optics.F90'        ,
