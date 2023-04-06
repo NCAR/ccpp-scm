@@ -6,7 +6,6 @@
 import argparse
 import os
 from netCDF4 import Dataset
-import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
 import random
