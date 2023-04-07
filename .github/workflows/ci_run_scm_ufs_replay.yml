@@ -1,0 +1,74 @@
+name: CI test to create UFS-replay case for the SCM
+
+on: [pull_request, workflow_dispatch]
+
+jobs:
+  run_scm_ufs_replay:
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+#        fortran-compiler: [gfortran-11]
+#        c-compiler:       [gcc-11]
+#        build-type:       [Release]
+        py-version:       [3.9.12]
+
+    # Environmental variables
+    env:
+#      FC:         ${{ matrix.fortran-compiler }}
+       GITHUB_WORKSPACE: /home/runner/
+#      CC:         ${{ matrix.c-compiler }}
+#      NFHOME:     /home/runner/netcdf-fortran
+#      NFVERSION:  v4.5.3
+#      bacio_ROOT: /home/runner/bacio
+#      sp_ROOT:    /home/runner/NCEPLIBS-sp
+#      w3emc_ROOT: /home/runner/myw3emc
+      SCM_ROOT:   /home/runner/work/ccpp-scm
+
+    # Workflow steps
+    steps:
+
+    #######################################################################################
+    # Initial
+    #######################################################################################
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v3
+
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+
+    #######################################################################################
+    # Python setup
+    #######################################################################################    
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{matrix.py-version}}
+
+    - name: Add conda to system path
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Install python libraries
+      run: |
+        conda install --yes -c conda-forge f90nml
+        conda install --yes -c conda-forge netCDF4
+        conda install --yes -c conda-forge xarray
+        conda install --yes -c conda-forge numpy
+        conda install --yes -c conda-forge shapely
+        conda install --yes -c conda-forge xesmf
+
+    - name: Update system packages
+      run: sudo apt-get update
+
+    #######################################################################################
+    # Create UFS-replay case for SCM using UWM Regression Tests
+    #######################################################################################
+    - name: Download UWM regression tests from #?@%$W@!*&#?
+    - name: Run UFS_forcing_ensemble_generator.py
+      run: |
+        cd $SCM_ROOT
+        pwd
+        ./UFS_forcing_ensemble_generator.py -h
+    # /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_c192/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
