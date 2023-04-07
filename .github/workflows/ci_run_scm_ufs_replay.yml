@@ -10,7 +10,7 @@ jobs:
 
     # Environmental variables
     env:
-      SCM_ROOT: /home/runner/work/ccpp-scm
+      SCM_ROOT: /home/runner/work/ccpp-scm/ccpp-scm
 
     steps:
 
