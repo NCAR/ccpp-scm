@@ -1,43 +1,33 @@
-name: CI test to create UFS-replay case for the SCM
+name: CI test to create SCM UFS-replay cases from UWM regression tests
 
-on: [pull_request, workflow_dispatch]
+on: [push, pull_request]
 
 jobs:
   run_scm_ufs_replay:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        py-version:       [3.9.12]
+    runs-on: ubuntu-20.04
 
     # Environmental variables
     env:
-      GITHUB_WORKSPACE: /home/runner/
-      SCM_ROOT:   /home/runner/work/ccpp-scm
+      SCM_ROOT: /home/runner/work/ccpp-scm
 
-    # Workflow steps
     steps:
 
-    #######################################################################################
-    # Initial
-    #######################################################################################
-    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+    - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
-
-    #######################################################################################
-    # Python setup
-    #######################################################################################    
-    - name: Set up Python
+    
+    - name: Set up Python 3.8.5
       uses: actions/setup-python@v3
       with:
-        python-version: ${{matrix.py-version}}
+        python-version: 3.8.5
 
     - name: Add conda to system path
       run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
 
     - name: Install python libraries
@@ -55,10 +45,11 @@ jobs:
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
     #######################################################################################
-    - name: Download UWM regression tests from #?@%$W@!*&#?
+
+#    - name: Download UWM regression tests from #?@%$W@!*&#?
+
     - name: Run UFS_forcing_ensemble_generator.py
       run: |
-        cd $SCM_ROOT
+        cd $SCM_ROOT/scm/etc/scripts/
         pwd
         ./UFS_forcing_ensemble_generator.py -h
-    # /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_c192/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
