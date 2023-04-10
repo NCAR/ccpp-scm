@@ -66,11 +66,16 @@ jobs:
     - name: Run UFS_forcing_ensemble_generator.py
       run: |
         cd ${GITHUB_WORKSPACE}/scm/etc/scripts/
-        ./UFS_forcing_ensemble_generator.py -h
+        ./UFS_forcing_ensemble_generator.py -d ${GITHUB_WORKSPACE}/data/ufs_rts/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
 
     #######################################################################################
     # Run UFS-replay case in SCM
     #######################################################################################
+
+#    - name: Run the SCM using the UFS-replay column.
+#      run: |
+#        cd ${GITHUB_WORKSPACE}/scm/bin
+#        ./run_scm.py --npz_type gfs --file scm_ufsens_control_c192.py --timestep 360
 
 
     #######################################################################################
