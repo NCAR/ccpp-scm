@@ -30,26 +30,28 @@ jobs:
         path: ~/conda_pkgs_dir
         key: conda-pkgs
 
-    - name: Set up Conda
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        miniforge-version: latest
-        activate-environment: env_ufsreplay
-        environment-file: environment-ufsreplay.yml
-        python-version: 3.8.5
-        auto-activate-base: false
-
-#    - name: Set up Python 3.8.5
-#      uses: actions/setup-python@v3
+#    - name: Set up Conda
+#      uses: conda-incubator/setup-miniconda@v2
 #      with:
+#        miniforge-version: latest
+#        activate-environment: env_ufsreplay
+#        environment-file: environment-ufsreplay.yml
 #        python-version: 3.8.5
-#
+#        auto-activate-base: false
+
+    - name: Set up Python 3.8.5
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8.5
+        environment-file: environment-ufsreplay.yml
+        activate-environment: env_ufsreplay
+
 #    - name: Add conda to system path
 #      run: |
 #        # $CONDA is an environment variable pointing to the root of the miniconda directory
 #        echo $CONDA/bin >> $GITHUB_PATH
-#
-#    - name: Install python libraries
+
+#    - name: In
 #      run: |
 #        conda install --yes -c conda-forge f90nml
 #        conda install --yes -c conda-forge netCDF4
@@ -66,11 +68,18 @@ jobs:
 
 #    - name: Download UWM regression tests from DTC FTP site.
 #      run: |
-#        mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
-#        wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/ufs_rts_scmreplay_ci.tar
-#        tar -xvf ufs_rts_scmreplay_ci.tar
-#        ls ${dir_rt_cache}
-
+#        if test ! -d "${dir_rt_cache}"; then
+#          mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
+#          wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/ufs_rts_scmreplay_ci.tar
+#          tar -xvf ufs_rts_scmreplay_ci.tar
+#          ls ${dir_rt_cache}
+#        fi
+#        for file in "${dir_rt_cache}"/*; do
+#          if test ! -d "${file}"; then
+#            echo "copying '${file}'..."
+#            cp "${file}" "${GITHUB_WORKSPACE}"
+#          fi
+#        done
 
     - name: Run UFS_forcing_ensemble_generator.py
       run: |
