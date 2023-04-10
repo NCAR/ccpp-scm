@@ -1,6 +1,6 @@
 name: CI test to build and run SCM regression tests
 
-on: [pull_request, workflow_dispatch]
+on: [workflow_dispatch]
 
 jobs:
   run_scm_rts:
