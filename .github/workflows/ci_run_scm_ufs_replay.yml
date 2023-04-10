@@ -24,6 +24,7 @@ jobs:
       sp_ROOT:      /home/runner/NCEPLIBS-sp
       w3emc_ROOT:   /home/runner/myw3emc
       suites:       SCM_GFS_v16,SCM_GFS_v16_ps
+      SCM_WORK:     ${GITHUB_WORKSPACE}
 
     steps:
 
