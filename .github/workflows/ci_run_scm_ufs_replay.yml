@@ -33,28 +33,20 @@ jobs:
         path: ~/conda_pkgs_dir
         key: conda-pkgs
 
-    - name: Set up Conda
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Set up Python 3.8.5
+      uses: actions/setup-python@v3
       with:
-        activate-environment: env_ufsreplay
-        environment-file: environment-ufsreplay.yml
         python-version: 3.8.5
-        auto-activate-base: false
-
-#    - name: Set up Python 3.8.5
-#      uses: actions/setup-python@v3
-#      with:
-#        python-version: 3.8.5
-#        environment-file: environment-ufsreplay.yml
-#        activate-environment: env_ufsreplay
 
 #    - name: Add conda to system path
 #      run: |
 #        # $CONDA is an environment variable pointing to the root of the miniconda directory
 #        echo $CONDA/bin >> $GITHUB_PATH
 
-#    - name: In
-#      run: |
+    - name: In
+      run: |
+         conda env create -f environment-ufsreplay.yml
+         conda activate env_ufsreplay
 #        conda install --yes -c conda-forge f90nml
 #        conda install --yes -c conda-forge netCDF4
 #        conda install --yes -c conda-forge xarray
