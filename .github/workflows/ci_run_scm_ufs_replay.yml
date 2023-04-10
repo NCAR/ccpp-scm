@@ -14,6 +14,10 @@ jobs:
       ufs_rt_cache: /home/runner/ufs_rts
     steps:
 
+    #######################################################################################
+    #
+    #######################################################################################
+
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -31,16 +35,11 @@ jobs:
 
     - name: In
       run: |
-         echo $CONDA/bin >> $GITHUB_PATH
+         source ~/anaconda3/etc/profile.d/conda.sh
+#         echo $CONDA/bin >> $GITHUB_PATH
          conda init
          conda env create -f environment.yml #environment-ufsreplay.yml
          conda activate scm_py37 #env_ufsreplay
-#        conda install --yes -c conda-forge f90nml
-#        conda install --yes -c conda-forge netCDF4
-#        conda install --yes -c conda-forge xarray
-#        conda install --yes -c conda-forge numpy
-#        conda install --yes -c conda-forge shapely
-#        conda install --yes -c conda-forge xesmf
 
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
