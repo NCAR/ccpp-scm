@@ -64,7 +64,7 @@ jobs:
         for file in "${dir_rt_cache}"/*; do
           if test ! -d "${file}"; then
             echo "copying '${file}'..."
-            cp "${file}" "${GITHUB_WORKSPACE}/data/ufs_rts"
+            cp "${file}" "${GITHUB_WORKSPACE}/scm/data/ufs_rts"
           fi
         done
 
