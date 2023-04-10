@@ -66,13 +66,6 @@ def main():
                 print("ERROR: Number of longitude/latitudes are inconsistent")
                 exit()
 
-    # Make sure that SCM_WORK has been set.
-    try:
-        dir_scm = os.getenv('SCM_WORK')+'/'
-    except:
-        print("Environment variable SCM_WORK not set. Stopping.")
-        exit()
-
     ###########################################################################
     #
     # Set longitude/latitude 
@@ -129,7 +122,7 @@ def main():
     for pt in range(0,npts):
         # Call UFS_IC_generator.py
         case_name     = args.case_name +"_n" + str(pt).zfill(3)
-        file_scminput = dir_scm+"scm/data/processed_case_input/"+case_name+"_SCM_driver.nc"
+        file_scminput = "../../data/processed_case_input/"+case_name+"_SCM_driver.nc"
         com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
               " -i " + args.dir_ic + " -g " + args.dir_grid + " -f " + args.dir_forcing + " -n " + case_name + com_config
         print(com)
@@ -144,7 +137,7 @@ def main():
         sfc_type = int(np.round_(dataset.slmsk.values[0]))
 
         # Create case_config file(s)
-        fileOUT = dir_scm+"scm/etc/case_config/"+case_name+".nml"
+        fileOUT = "../../etc/case_config/"+case_name+".nml"
         fileID  = open(fileOUT, 'w')
         fileID.write('$case_config')
         fileID.write('\n')
@@ -170,11 +163,11 @@ def main():
     # Create "multirun file list" needed by run_scm.py
     #
     ###########################################################################
-    com = "mkdir -p "+dir_scm+"scm/bin/"
+    com = "mkdir -p ../../bin/"
     print(com)
     os.system(com)
     fileOUT = "scm_ufsens_"+args.case_name+".py"
-    fileID  = open(dir_scm+"scm/bin/"+fileOUT, 'w')
+    fileID  = open("../../bin/"+fileOUT, 'w')
     fileID.write('run_list = [')
     fileID.write('\n')
     for run in run_list:
