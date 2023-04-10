@@ -35,7 +35,14 @@ jobs:
     - name: Update system packages
       run: sudo apt-get update
 
-    - uses: conda-incubator/setup-miniconda@v2
+    - name: Cache conda/python.
+      uses: actions/cache@v3
+      with:
+        path: ~/conda_pkgs_dir
+        key: conda-pkgs
+
+    - name: Setup python.
+      uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: env_ufsreplay
         environment-file: environment-ufsreplay.yml
@@ -53,7 +60,7 @@ jobs:
         path: ${dir_rt_cache}
         key: ufs-rt-files
 
-    - name: Download UWM regression tests from NCAR-DTC FTP site.
+    - name: Stage UWM regression test data (download from NCAR-DTC FTP site, if not cached).
       run: |
         if test ! -d "${dir_rt_cache}"; then
           mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
@@ -61,20 +68,21 @@ jobs:
           tar -xvf ufs_rts_scmreplay_ci.tar
           ls ${dir_rt_cache}
         fi
-        for file in "${dir_rt_cache}"/*; do
-          if test ! -d "${file}"; then
-            echo "copying '${file}'..."
-            cp "${file}" "${GITHUB_WORKSPACE}/scm/data/ufs_rts"
-          fi
-        done
+        #for file in "${dir_rt_cache}"/*; do
+        #  if test ! -d "${file}"; then
+        #    echo "copying '${file}'..."
+        #    cp "${file}" "${GITHUB_WORKSPACE}/scm/data/ufs_rts"
+        #  fi
+        #done
 
     - name: Run UFS_forcing_ensemble_generator.py
       run: |
         cd ${GITHUB_WORKSPACE}/scm/etc/scripts/
-        ./UFS_forcing_ensemble_generator.py -d ${GITHUB_WORKSPACE}/data/ufs_rts/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
-
+#        ./UFS_forcing_ensemble_generator.py -d ${GITHUB_WORKSPACE}/data/ufs_rts/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
+        ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/ --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
     #######################################################################################
     # Setup environment for SCM.
+    # *NOTE* We should add hpstack ci build.
     #######################################################################################
 
     - name: Cache bacio library v2.4.1
