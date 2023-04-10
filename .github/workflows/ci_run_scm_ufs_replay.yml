@@ -62,7 +62,7 @@ jobs:
     # Create UFS-replay case for SCM using UWM Regression Tests
     #######################################################################################
 
-    - name: Cache UWM regression test output.
+#    - name: Cache UWM regression test output.
 
 #    - name: Download UWM regression tests from DTC FTP site.
 #      run: |
