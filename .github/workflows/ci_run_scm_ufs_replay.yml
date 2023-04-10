@@ -29,21 +29,21 @@ jobs:
         path: ~/conda_pkgs_dir
         key: conda-pkgs
 
-#    - name: Set up Conda
-#      uses: conda-incubator/setup-miniconda@v2
-#      with:
-#        miniforge-version: latest
-#        activate-environment: env_ufsreplay
-#        environment-file: environment-ufsreplay.yml
-#        python-version: 3.8.5
-#        auto-activate-base: false
-
-    - name: Set up Python 3.8.5
-      uses: actions/setup-python@v3
+    - name: Set up Conda
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: 3.8.5
-        environment-file: environment-ufsreplay.yml
+        miniforge-version: latest
         activate-environment: env_ufsreplay
+        environment-file: environment-ufsreplay.yml
+        python-version: 3.8.5
+        auto-activate-base: false
+
+#    - name: Set up Python 3.8.5
+#      uses: actions/setup-python@v3
+#      with:
+#        python-version: 3.8.5
+#        environment-file: environment-ufsreplay.yml
+#        activate-environment: env_ufsreplay
 
 #    - name: Add conda to system path
 #      run: |
