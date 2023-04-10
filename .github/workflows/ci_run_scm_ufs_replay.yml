@@ -8,6 +8,10 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
 
+    defaults:
+      run:
+        shell: bash -el {0}
+
     # Environmental variables
     env:
       dir_rt: /data/ufs_rts
@@ -15,7 +19,7 @@ jobs:
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
@@ -32,7 +36,6 @@ jobs:
     - name: Set up Conda
       uses: conda-incubator/setup-miniconda@v2
       with:
-        miniforge-version: latest
         activate-environment: env_ufsreplay
         environment-file: environment-ufsreplay.yml
         python-version: 3.8.5
