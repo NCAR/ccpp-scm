@@ -66,13 +66,6 @@ def main():
                 print("ERROR: Number of longitude/latitudes are inconsistent")
                 exit()
 
-    # Make sure that SCM_WORK has been set.
-    try:
-        dir_scm = os.getenv('SCM_WORK')+'/'
-    except:
-        print("Environment variable SCM_WORK not set. Stopping.")
-        exit()
-
     ###########################################################################
     #
     # Set longitude/latitude 
