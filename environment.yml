@@ -4,6 +4,3 @@ dependencies:
   - conda-forge::python=3.7
   - conda-forge::netcdf4
   - conda-forge::f90nml
-variables:
-  SCM_WORK: $PWD/
-  SCM_ROOT: $PWD/

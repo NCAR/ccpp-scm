@@ -8,6 +8,3 @@ dependencies:
   - conda-forge::numpy
   - conda-forge::shapely
   - conda-forge::xesmf
-variables:
-  SCM_WORK: $PWD/
-  SCM_ROOT: $PWD/
