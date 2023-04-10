@@ -13,7 +13,7 @@ jobs:
 
     # Environmental variables
     env:
-      ufs_rt_cache: /home/runner/ufs_rts
+      dir_rt_cache: /home/runner/ufs_rts
 
     steps:
 
@@ -48,7 +48,7 @@ jobs:
         path: ${dir_rt_cache}
         key: ufs-rt-files
 
-    - name: Download UWM regression tests from DTC FTP site.
+    - name: Download UWM regression tests from NCAR-DTC FTP site.
       run: |
         if test ! -d "${dir_rt_cache}"; then
           mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
@@ -67,3 +67,12 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/scm/etc/scripts/
         ./UFS_forcing_ensemble_generator.py -h
+
+    #######################################################################################
+    # Run UFS-replay case in SCM
+    #######################################################################################
+
+
+    #######################################################################################
+    # Done
+    #######################################################################################
