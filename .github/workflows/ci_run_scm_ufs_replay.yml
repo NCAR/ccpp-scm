@@ -26,6 +26,10 @@ jobs:
 
     - name: Update system packages
       run: sudo apt-get update
+
+    - name: Add conda to system path
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
  
     - name: Cache Conda environment
       uses: actions/cache@v3
@@ -35,8 +39,6 @@ jobs:
 
     - name: Setup Python
       run: |
-         source /usr/share/miniconda/etc/profile.d/conda.csh
-         conda init
          conda env create -f environment.yml #environment-ufsreplay.yml
          conda activate scm_py37 #env_ufsreplay
 
