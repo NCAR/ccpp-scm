@@ -40,7 +40,7 @@ jobs:
     - name: Setup Python
       run: |
          conda env create -f environment.yml #environment-ufsreplay.yml
-         conda activate scm_py37 #env_ufsreplay
+#         conda activate scm_py37 #env_ufsreplay
 
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
