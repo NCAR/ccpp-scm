@@ -11,15 +11,14 @@ jobs:
       run:
         shell: bash -el {0}
 
-
     # Environmental variables
     env:
-      dir_rt: /data/ufs_rts
       ufs_rt_cache: /home/runner/ufs_rts
+
     steps:
 
     #######################################################################################
-    #
+    # Checkout SCM code, setup python.
     #######################################################################################
 
     - name: Checkout code
@@ -39,44 +38,32 @@ jobs:
         auto-update-conda: true
         auto-activate-base: true
 
-#    - name: Add conda to system path
-#      run: |
-#        echo $CONDA/bin >> $GITHUB_PATH
-# 
-#    - name: Cache Conda environment
-#      uses: actions/cache@v3
-#      with:
-#        path: ~/conda_pkgs_dir
-#        key: conda-pkgs
-#
-#    - name: Setup Python
-#      run: |
-#         conda env create -f environment.yml #environment-ufsreplay.yml
-#         conda activate scm_py37 #env_ufsreplay
-
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
     #######################################################################################
 
-#    - name: Cache UWM regression test output.
+    - name: Cache UWM regression test output.
+      uses: actions/cache@v3
+      with:
+        path: ${dir_rt_cache}
+        key: ufs-rt-files
 
-#    - name: Download UWM regression tests from DTC FTP site.
-#      run: |
-#        if test ! -d "${dir_rt_cache}"; then
-#          mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
-#          wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/ufs_rts_scmreplay_ci.tar
-#          tar -xvf ufs_rts_scmreplay_ci.tar
-#          ls ${dir_rt_cache}
-#        fi
-#        for file in "${dir_rt_cache}"/*; do
-#          if test ! -d "${file}"; then
-#            echo "copying '${file}'..."
-#            cp "${file}" "${GITHUB_WORKSPACE}"
-#          fi
-#        done
+    - name: Download UWM regression tests from DTC FTP site.
+      run: |
+        if test ! -d "${dir_rt_cache}"; then
+          mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
+          wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/ufs_rts_scmreplay_ci.tar
+          tar -xvf ufs_rts_scmreplay_ci.tar
+          ls ${dir_rt_cache}
+        fi
+        for file in "${dir_rt_cache}"/*; do
+          if test ! -d "${file}"; then
+            echo "copying '${file}'..."
+            cp "${file}" "${GITHUB_WORKSPACE}/data/ufs_rts"
+          fi
+        done
 
     - name: Run UFS_forcing_ensemble_generator.py
       run: |
         cd ${GITHUB_WORKSPACE}/scm/etc/scripts/
-        pwd
         ./UFS_forcing_ensemble_generator.py -h
