@@ -12,7 +12,7 @@ jobs:
     env:
       SCM_ROOT: /home/runner/work/ccpp-scm/ccpp-scm
       dir_rt: /home/runner/work/ccpp-scm/ccpp-scm/data/ufs_rts
-      
+      ufs_rt_cache: /home/runner/ufs_rts
     steps:
 
     - name: Checkout code
@@ -36,7 +36,7 @@ jobs:
         miniforge-version: latest
         activate-environment: env_ufsreplay
         environment-file: environment-ufsreplay.yml
-        python-version: 3.9
+        python-version: 3.8.5
         auto-activate-base: false
 
 #    - name: Set up Python 3.8.5
@@ -66,10 +66,10 @@ jobs:
 
 #    - name: Download UWM regression tests from DTC FTP site.
 #      run: |
-#        mkdir -p ${dir_rt} && cd ${dir_rt}
+#        mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
 #        wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/ufs_rts_scmreplay_ci.tar
 #        tar -xvf ufs_rts_scmreplay_ci.tar
-#        ls ${dir_rt}
+#        ls ${dir_rt_cache}
 
 
     - name: Run UFS_forcing_ensemble_generator.py
