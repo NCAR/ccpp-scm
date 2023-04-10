@@ -10,6 +10,10 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
+    #
+    strategy:
+      matrix:
+        fortran-compiler: [gfortran-12]
 
     # Environmental variables
     env:
@@ -19,6 +23,7 @@ jobs:
       bacio_ROOT:   /home/runner/bacio
       sp_ROOT:      /home/runner/NCEPLIBS-sp
       w3emc_ROOT:   /home/runner/myw3emc
+      suites:       SCM_GFS_v16,SCM_GFS_v16_ps
 
     steps:
 
@@ -26,13 +31,13 @@ jobs:
     # Checkout SCM code, setup python.
     #######################################################################################
 
-    - name: Checkout code
+    - name: Checkout SCM.
       uses: actions/checkout@v2
 
-    - name: Initialize submodules
+    - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
 
-    - name: Update system packages
+    - name: Update system packages.
       run: sudo apt-get update
 
     - name: Cache conda/python.
@@ -60,7 +65,7 @@ jobs:
         path: ${dir_rt_cache}
         key: ufs-rt-files
 
-    - name: Stage UWM regression test data (download from NCAR-DTC FTP site, if not cached).
+    - name: Download UWM regression test output from NCAR-DTC FTP site, if not cached.
       run: |
         if test ! -d "${dir_rt_cache}"; then
           mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
@@ -69,13 +74,14 @@ jobs:
           ls ${dir_rt_cache}
         fi
 
-    - name: Run UFS_forcing_ensemble_generator.py
+    - name: Create UFS-replay case.
       run: |
         cd ${GITHUB_WORKSPACE}/scm/etc/scripts/
         ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/ --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
+
     #######################################################################################
     # Setup environment for SCM.
-    # *NOTE* We should add hpstack ci build.
+    # *NOTE* We should add hpstack and replace this section.
     #######################################################################################
 
     - name: Cache bacio library v2.4.1
