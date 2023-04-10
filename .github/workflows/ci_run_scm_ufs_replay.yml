@@ -35,7 +35,7 @@ jobs:
 
     - name: In
       run: |
-         source ~/anaconda3/etc/profile.d/conda.sh
+         source /usr/share/miniconda/etc/profile.d/conda.csh
 #         echo $CONDA/bin >> $GITHUB_PATH
          conda init
          conda env create -f environment.yml #environment-ufsreplay.yml
