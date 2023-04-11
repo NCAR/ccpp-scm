@@ -35,8 +35,9 @@ jobs:
 
     - name: Checkout SCM.
       uses: actions/checkout@v3
-      with:
-        ls -l ${{ github.workspace }}/scm/etc/scripts
+
+    - name: Check
+      run: ls -l ${{ github.workspace }}/scm/etc/scripts
 
     - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
