@@ -43,10 +43,10 @@ jobs:
       run: sudo apt-get update
 
     - name: Cache conda
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/conda_pkgs_dir
-        key: ${{ runner.os }}-conda
+        key: conda-pkgs
 
     - name: Setup python.
       uses: conda-incubator/setup-miniconda@v2
