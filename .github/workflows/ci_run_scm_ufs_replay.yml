@@ -39,9 +39,6 @@ jobs:
     - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
 
-    - name: Update system packages.
-      run: sudo apt-get update
-
     - name: Set up Python 3.8.5
       uses: actions/setup-python@v3
       with:
@@ -60,6 +57,9 @@ jobs:
         conda install --yes -c conda-forge numpy
         conda install --yes -c conda-forge shapely
         conda install --yes -c conda-forge xesmf
+
+    - name: Update system packages.
+      run: sudo apt-get update
 
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
