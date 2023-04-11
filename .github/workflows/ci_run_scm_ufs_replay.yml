@@ -6,10 +6,10 @@ jobs:
   run_scm_ufs_replay:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-20.04
-#    defaults:
-#      run:
-#        shell: bash -el {0}
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash -el {0}
     #
     strategy:
       matrix:
@@ -39,27 +39,23 @@ jobs:
     - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
 
-    - name: Set up Python 3.8.5
-      uses: actions/setup-python@v3
-      with:
-        python-version: 3.8.5
-
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-
-    - name: Install python libraries
-      run: |
-        conda install --yes -c conda-forge f90nml
-        conda install --yes -c conda-forge netCDF4
-        conda install --yes -c conda-forge xarray
-        conda install --yes -c conda-forge numpy
-        conda install --yes -c conda-forge shapely
-        conda install --yes -c conda-forge xesmf
-
     - name: Update system packages.
       run: sudo apt-get update
+
+    - name: Cache conda
+      uses: actions/cache@v3
+      with:
+        path: ~/conda_pkgs_dir
+        key: conda-pkgs
+
+    - name: Setup python.
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: env_ufsreplay
+        environment-file: environment-ufsreplay.yml
+        use-only-tar-bz2: false
+        auto-activate-base: true
+        auto-update-conda: false
 
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
