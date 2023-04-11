@@ -42,20 +42,39 @@ jobs:
     - name: Update system packages.
       run: sudo apt-get update
 
-    - name: Cache conda
-      uses: actions/cache@v3
-      with:
-        path: ~/conda_pkgs_dir
-        key: conda-pkgs
+#    - name: Cache conda
+#      uses: actions/cache@v3
+#      with:
+#        path: ~/conda_pkgs_dir
+#        key: conda-pkgs
 
-    - name: Setup python.
-      uses: conda-incubator/setup-miniconda@v2
+#    - name: Setup python.
+#      uses: conda-incubator/setup-miniconda@v2
+#      with:
+#        activate-environment: env_ufsreplay
+#        environment-file:     environment-ufsreplay.yml
+#        use-only-tar-bz2:     true
+#        auto-activate-base:   true
+#        auto-update-conda:    true
+
+    - name: Set up Python 3.8.5
+      uses: actions/setup-python@v3
       with:
-        activate-environment: env_ufsreplay
-        environment-file: environment-ufsreplay.yml
-        use-only-tar-bz2: true
-        auto-activate-base: true
-        auto-update-conda: true
+        python-version: 3.8.5
+
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Install python libraries
+      run: |
+        conda install --yes -c conda-forge f90nml
+        conda install --yes -c conda-forge netCDF4
+        conda install --yes -c conda-forge xarray
+        conda install --yes -c conda-forge numpy
+        conda install --yes -c conda-forge shapely
+        conda install --yes -c conda-forge xesmf
 
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
