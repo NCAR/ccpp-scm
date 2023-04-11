@@ -36,9 +36,6 @@ jobs:
     - name: Checkout SCM.
       uses: actions/checkout@v3
 
-    - name: Check
-      run: ls -l ${{ github.workspace }}/scm/etc/scripts
-
     - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
 
@@ -81,7 +78,7 @@ jobs:
 
     - name: Create UFS-replay case.
       run: |
-        cd ${GITHUB_WORKSPACE}/scm/etc/scripts/
+        cd ${SCM_ROOT}/scm/etc/scripts/
         ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/ --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
 
     #######################################################################################
@@ -166,24 +163,24 @@ jobs:
 
     - name: Download data for SCM
       run: |
-        cd ${GITHUB_WORKSPACE}
+        cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
 
     - name: Configure build with CMake
       run: |
-        cd ${GITHUB_WORKSPACE}/scm/bin
+        cd ${SCM_ROOT}/scm/bin
         cmake -DCCPP_SUITES=${suites} ../src
 
     - name: Build SCM
       run: |
-        cd ${GITHUB_WORKSPACE}/scm/bin
+        cd ${SCM_ROOT}/scm/bin
         make -j4
 
     - name: Run the SCM using the UFS-replay column case.
       run: |
-        cd ${GITHUB_WORKSPACE}/scm/bin
-        ./run_scm.py --npz_type gfs --file scm_ufsens_control_c192.py --timestep 360
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --npz_type gfs --file ${{ github.workspace }}/scm/bin/scm_ufsens_control_c192.py --timestep 360 -v
 
     #######################################################################################
     # Done
