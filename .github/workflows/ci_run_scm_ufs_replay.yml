@@ -6,10 +6,10 @@ jobs:
   run_scm_ufs_replay:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
-#    defaults:
-#      run:
-#        shell: bash -el {0}
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash -el {0}
     #
     strategy:
       matrix:
