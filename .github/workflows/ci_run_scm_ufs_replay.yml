@@ -1,6 +1,6 @@
 name: CI test to create SCM UFS-replay cases from UWM regression tests
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   run_scm_ufs_replay:
@@ -34,7 +34,7 @@ jobs:
     #######################################################################################
 
     - name: Checkout SCM.
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
