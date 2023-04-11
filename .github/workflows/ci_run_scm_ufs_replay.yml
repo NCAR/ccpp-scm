@@ -168,8 +168,7 @@ jobs:
 
     - name: Configure build with CMake
       run: |
-        cd ${GITHUB_WORKSPACE}/scm
-        mkdir bin && cd bin
+        cd ${GITHUB_WORKSPACE}/scm/bin
         cmake -DCCPP_SUITES=${suites} ../src
 
     - name: Build SCM
