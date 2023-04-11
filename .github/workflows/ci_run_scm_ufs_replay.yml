@@ -25,6 +25,7 @@ jobs:
       w3emc_ROOT:   /home/runner/myw3emc
       suites:       SCM_GFS_v16,SCM_GFS_v16_ps
       SCM_WORK:     ${GITHUB_WORKSPACE}
+      SCM_ROOT:     ${GITHUB_WORKSPACE}
 
     steps:
 
