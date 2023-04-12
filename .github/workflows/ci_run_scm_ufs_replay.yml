@@ -79,7 +79,7 @@ jobs:
     - name: Create UFS-replay case.
       run: |
         cd ${SCM_ROOT}/scm/etc/scripts/
-        ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/ --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
+        ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/ --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34 -sc
 
     #######################################################################################
     # Setup environment for SCM.
