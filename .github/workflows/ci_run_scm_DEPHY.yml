@@ -1,6 +1,6 @@
 name: CI test to run the SCM with DEPHY v1 data
 
-on: [push, pull_request]
+on: [pull_request,workflow_dispatch]
 
 jobs:
   run-scm-DEPHY:

@@ -1,6 +1,6 @@
 name: CI test to create SCM UFS-replay cases from UWM regression tests
 
-on: [pull_request]
+on: [pull_request,workflow_dispatch]
 
 jobs:
   run_scm_ufs_replay:
@@ -10,21 +10,10 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
-    #
-    strategy:
-      matrix:
-        fortran-compiler: [gfortran-12]
 
     # Environmental variables
     env:
       dir_rt_cache: /home/runner/ufs_rts
-      NFHOME:       /home/runner/netcdf-fortran
-      NFVERSION:    v4.5.3
-      bacio_ROOT:   /home/runner/bacio
-      sp_ROOT:      /home/runner/NCEPLIBS-sp
-      w3emc_ROOT:   /home/runner/myw3emc
-      suites:       SCM_GFS_v16,SCM_GFS_v16_ps
-      SCM_WORK:     ${{ github.workspace }}
       SCM_ROOT:     ${{ github.workspace }}
 
     steps:
