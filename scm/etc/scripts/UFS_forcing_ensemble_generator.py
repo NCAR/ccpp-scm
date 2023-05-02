@@ -34,13 +34,10 @@ def main():
     # Get command line arguments
     args  = parser.parse_args()
 
-    if (not args.dir):
-        print("ERROR: Need to provide UFS RT directory!")
-        exit()
-    else:
-        args.dir_ic      = args.dir + "/INPUT/"
-        args.dir_grid    = args.dir + "/INPUT/"
-        args.dir_forcing = args.dir
+    # This asssumes using UFS Weather Model Regression Test output.
+    args.dir_ic      = args.dir + "/INPUT/"
+    args.dir_grid    = args.dir + "/INPUT/"
+    args.dir_forcing = args.dir
 
     # Error checking
     if (args.lon_limits and args.lon_list):

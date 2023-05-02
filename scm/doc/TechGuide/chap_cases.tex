@@ -132,7 +132,7 @@ For the ARM SGP case, several case configuration files representing different ti
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with Noah variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noah.nc})
 \item UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (\execout{fv3\_model\_point\_noahmp.nc})
 \end{itemize}
-See \ref{sec:UFSreplay} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions.
+See \ref{sec:UFSreplay} for information on how to generate these files for other locations and dates, given appropriate UFS Atmosphere initial conditions and output.
 
 \section{How to set up new cases}
 
@@ -267,7 +267,7 @@ Mandatory arguments:
 \begin{enumerate}
 \item \exec{-{}-dir (-d)}: path to UFS Regression Test output
 \item \exec{-{}-case\_name (-n)}: name of cases
-\item Either: (see examples bewlow) 
+\item Either: (see examples below) 
       \begin{itemize}
            \item \exec{-{}-lon\_limits (-lonl)} AND \exec{-{}-lat\_limits (-latl)} AND \exec{-{}-nensmembers (-nens)}: longitude range, latitude range, and number of cases to create
            \item \exec{-{}-lon\_list (-lons)} AND \exec{-{}-lat\_list (-lats)}: longitude and latitude of cases
