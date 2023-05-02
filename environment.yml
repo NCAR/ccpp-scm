@@ -1,0 +1,6 @@
+name: scm_py37
+
+dependencies:
+  - conda-forge::python=3.7
+  - conda-forge::netcdf4
+  - conda-forge::f90nml

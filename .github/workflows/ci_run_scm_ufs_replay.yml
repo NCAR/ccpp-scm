@@ -1,0 +1,75 @@
+name: CI test to create SCM UFS-replay cases from UWM regression tests
+
+on: [pull_request,workflow_dispatch]
+
+jobs:
+  run_scm_ufs_replay:
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    # Environmental variables
+    env:
+      dir_rt_cache: /home/runner/ufs_rts
+      SCM_ROOT:     ${{ github.workspace }}
+
+    steps:
+
+    #######################################################################################
+    # Checkout SCM code, setup python.
+    #######################################################################################
+
+    - name: Checkout SCM.
+      uses: actions/checkout@v3
+
+    - name: Initialize SCM submodules.
+      run: git submodule update --init --recursive
+
+    - name: Update system packages.
+      run: sudo apt-get update
+
+    - name: Cache conda
+      uses: actions/cache@v3
+      with:
+        path: ~/conda_pkgs_dir
+        key: conda-pkgs
+
+    - name: Setup python.
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: env_ufsreplay
+        environment-file: environment-ufsreplay.yml
+        use-only-tar-bz2: true
+        auto-activate-base: true
+        auto-update-conda: true
+
+    #######################################################################################
+    # Create UFS-replay case for SCM using UWM Regression Tests
+    #######################################################################################
+
+    - name: Cache UWM regression test output.
+      uses: actions/cache@v3
+      with:
+        path: ${dir_rt_cache}
+        key: ufs-rt-files
+
+    - name: Download UWM regression test output from NCAR-DTC FTP site, if not cached.
+      run: |
+        if test ! -d "${dir_rt_cache}"; then
+          mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
+          wget -q ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/ufs_rts_scmreplay_ci.tar
+          tar -xvf ufs_rts_scmreplay_ci.tar
+          ls ${dir_rt_cache}
+        fi
+
+    - name: Create UFS-replay case.
+      run: |
+        cd ${SCM_ROOT}/scm/etc/scripts/
+        ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/ --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34 -sc
+
+    #######################################################################################
+    # Done
+    #######################################################################################

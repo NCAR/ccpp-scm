@@ -1302,7 +1302,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
   if (trim(input_surfaceForcingLSM) == "lsm") then
     !if model ICs are included in the file
-    
+    scm_state%lsm_ics = .true.
+
     !variables with vertical extent
     allocate(input_ozone   (input_n_lev,  input_n_init_times), &
              input_stc     (input_n_soil, input_n_init_times), &

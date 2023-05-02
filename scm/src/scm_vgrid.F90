@@ -350,6 +350,14 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
                 scm_state%b_k(k) = b64(k)
               enddo
             endif
+         ! xi chen's l65
+         case (65)
+            ks = 29
+            do k=1,km+1
+               scm_state%a_k(k) = a65(k)
+               scm_state%b_k(k) = b65(k)
+            enddo
+
             !-->cjg
           case (68)
             ks = 27
@@ -361,11 +369,23 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             ptop = 1.
             stretch_fac = 1.03
             auto_routine = 1
-          case (75)   ! HS-SGO test configuration
-            pint = 100.E2
-            ptop = 10.E2
-            stretch_fac = 1.035
-            auto_routine = 6
+         ! kgao: introduce EMC's L75 config
+         case (75)
+            if (trim(scm_state%npz_type) == 'emc') then
+               ! EMC's L75 config
+               ks = 12
+               do k=1,km+1
+                  scm_state%a_k(k) = a75(k)
+                  scm_state%b_k(k) = b75(k)
+               enddo
+            else
+               ! HS-SGO test configuration
+               pint = 100.E2
+               ptop = 10.E2
+               stretch_fac = 1.035
+               auto_routine = 6
+            endif
+
           case (79)               ! N = 10, M=5
             if (trim(scm_state%npz_type) == 'gcrm') then
               pint = 100.E2
@@ -377,7 +397,14 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               stretch_fac = 1.03
               auto_routine = 1
             endif
-          case (90)          ! super-duper cell
+         ! kgao L88
+         case (88)
+            ks = 20 !19 bug fix
+            do k=1,km+1
+               scm_state%a_k(k) = a88(k)
+               scm_state%b_k(k) = b88(k)
+            enddo
+         case (90)          ! super-duper cell
             ptop = 40.e2
             stretch_fac = 1.025
             auto_routine = 2
@@ -421,16 +448,24 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
               scm_state%b_k(k) = b125(k)
             enddo
           case (127)               ! N = 10, M=5
-            if (trim(scm_state%npz_type) == 'hitop') then
-              ptop = 1.
-              stretch_fac = 1.03
-              auto_routine = 2
-            else
-              ptop = 1.
-              pint = 75.E2
-              stretch_fac = 1.028
-              auto_routine = 6
-            endif
+             if (trim(scm_state%npz_type) == 'hitop') then
+                ptop = 1.
+                stretch_fac = 1.03
+                auto_routine = 2
+             elseif (trim(scm_state%npz_type) == 'gfs') then
+                ks = 39
+                ptop = a127(1)
+                pint = a127(ks+1)
+                do k=1,km+1
+                   scm_state%a_k(k) = a127(k)
+                   scm_state%b_k(k) = b127(k)
+                enddo
+             else
+                ptop = 1.
+                pint = 75.E2
+                stretch_fac = 1.028
+                auto_routine = 6
+             endif
           case (151)
             !LES applications
             ptop = 75.e2
