@@ -1074,6 +1074,7 @@ module GFS_typedefs
     integer              :: imfshalcnv_samf     = 2 !< flag for SAMF scale- & aerosol-aware mass-flux shallow convection scheme
     integer              :: imfshalcnv_gf       = 3 !< flag for scale- & aerosol-aware Grell-Freitas scheme (GSD)
     integer              :: imfshalcnv_ntiedtke = 4 !< flag for new Tiedtke scheme (CAPS)
+    integer              :: imfshalcnv_unified  = 5 !< flag for the unified convection scheme
     logical              :: hwrf_samfdeep           !< flag for HWRF SAMF deepcnv scheme (HWRF)
     logical              :: progsigma               !< flag for prognostic area fraction in samf ddepcnv scheme (GFS)   
     integer              :: imfdeepcnv      !< flag for mass-flux deep convection scheme
@@ -1087,6 +1088,7 @@ module GFS_typedefs
     integer              :: imfdeepcnv_samf     = 2 !< flag for SAMF scale- & aerosol-aware mass-flux deep convection scheme
     integer              :: imfdeepcnv_gf       = 3 !< flag for scale- & aerosol-aware Grell-Freitas scheme (GSD)
     integer              :: imfdeepcnv_ntiedtke = 4 !< flag for new Tiedtke scheme (CAPS)
+    integer              :: imfdeepcnv_unified  = 5 !< flag for the unified convection scheme
     logical              :: hwrf_samfshal           !< flag for HWRF SAMF shalcnv scheme (HWRF)
     integer              :: isatmedmf       !< flag for scale-aware TKE-based moist edmf scheme
                                             !<     0: initial version of satmedmf (Nov. 2018)
@@ -2551,7 +2553,7 @@ module GFS_typedefs
        Sfcprop%cqs2        = clear_val
        Sfcprop%lh          = clear_val
     end if
-    if (Model%imfdeepcnv == Model%imfdeepcnv_gf) then
+    if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_unified) then
         allocate (Sfcprop%conv_act(IM))
         allocate (Sfcprop%conv_act_m(IM))
         Sfcprop%conv_act = zero
@@ -2934,7 +2936,7 @@ module GFS_typedefs
       Coupling%rrfs_hwp   = clear_val
     endif
 
-    if (Model%imfdeepcnv == Model%imfdeepcnv_gf) then
+    if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_unified) then
       allocate (Coupling%qci_conv (IM,Model%levs))
       Coupling%qci_conv   = clear_val
     endif
@@ -3370,7 +3372,7 @@ module GFS_typedefs
 
     logical              :: hwrf_samfdeep     = .false.               !< flag for HWRF SAMF deepcnv scheme
     logical              :: hwrf_samfshal     = .false.               !< flag for HWRF SAMF shalcnv scheme
-    logical              :: progsigma         = .false.               !< flag for prognostic updraft area fraction closure in saSAS
+    logical              :: progsigma         = .false.               !< flag for prognostic updraft area fraction closure in saSAS or Unified conv.
     logical              :: do_mynnedmf       = .false.               !< flag for MYNN-EDMF
     logical              :: do_mynnsfclay     = .false.               !< flag for MYNN Surface Layer Scheme
     ! DH* TODO - move to MYNN namelist section
@@ -3880,17 +3882,17 @@ module GFS_typedefs
       write(*,*) 'NO FLAG: pbl is generic'
     endif
 
-    if(imfshalcnv == Model%imfshalcnv_gf) then
+    if(imfshalcnv == Model%imfshalcnv_gf .or. imfshalcnv == Model%imfshalcnv_unified) then
       if(me==master) &
-           write(*,*) 'FLAG: imfshalcnv_gf so scnv not generic'
+           write(*,*) 'FLAG: imfshalcnv_gf or imfshalcnv_unified so scnv not generic'
       Model%flag_for_scnv_generic_tend=.false.
     elseif(me==master) then
       write(*,*) 'NO FLAG: scnv is generic'
     endif
 
-    if(imfdeepcnv == Model%imfdeepcnv_gf) then
+    if(imfdeepcnv == Model%imfdeepcnv_gf .or. imfdeepcnv == Model%imfdeepcnv_unified) then
       if(me==master) &
-           write(*,*) 'FLAG: imfdeepcnv_gf so dcnv not generic'
+           write(*,*) 'FLAG: imfdeepcnv_gf or imfdeepcnv_unified so dcnv not generic'
       Model%flag_for_dcnv_generic_tend=.false.
     elseif(me==master) then
       write(*,*) 'NO FLAG: dcnv is generic'
@@ -4462,8 +4464,8 @@ module GFS_typedefs
     Model%hwrf_samfdeep = hwrf_samfdeep
     Model%hwrf_samfshal = hwrf_samfshal
 
-    if (progsigma .and. imfdeepcnv/=2) then
-       write(*,*) 'Logic error: progsigma requires imfdeepcnv=2'
+    if ((progsigma .and. imfdeepcnv/=2) .and. (progsigma .and. imfdeepcnv/=5)) then
+       write(*,*) 'Logic error: progsigma requires imfdeepcnv=2 or 5'
        stop
     end if
     Model%progsigma = progsigma
@@ -5407,6 +5409,8 @@ module GFS_typedefs
                print *,' Grell-Freitas scale & aerosol-aware mass-flux deep conv scheme'
             elseif(Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke) then
                print *,' New Tiedtke cumulus scheme'
+            elseif(Model%imfdeepcnv == Model%imfdeepcnv_unified) then
+               print *,' New unified cumulus convection scheme'
             endif
           endif
         else
@@ -5450,6 +5454,8 @@ module GFS_typedefs
           print *,' Grell-Freitas scale- & aerosol-aware mass-flux shallow conv scheme (2013)'
         elseif (Model%imfshalcnv == Model%imfshalcnv_ntiedtke) then
           print *,' New Tiedtke cumulus scheme'
+        elseif (Model%imfshalcnv == Model%imfshalcnv_unified) then
+          print *,' New unified cumulus scheme'
         else
           print *,' unknown mass-flux scheme in use - defaulting to no shallow convection'
           Model%imfshalcnv = -1
@@ -5696,7 +5702,7 @@ module GFS_typedefs
     endif
 
     if(Model%ras     .or. Model%cscnv)  Model%cnvcld = .false.
-    if(Model%do_shoc .or. Model%pdfcld .or. Model%do_mynnedmf .or. Model%imfdeepcnv == Model%imfdeepcnv_gf) Model%cnvcld = .false.
+    if(Model%do_shoc .or. Model%pdfcld .or. Model%do_mynnedmf .or. Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_unified) Model%cnvcld = .false.
     if(Model%cnvcld) Model%ncnvcld3d = 1
 
 !--- get cnvwind index in phy_f2d; last entry in phy_f2d array
@@ -5761,7 +5767,8 @@ module GFS_typedefs
     Model%lmfshal  = (Model%shal_cnv .and. Model%imfshalcnv > 0)
     Model%lmfdeep2 = (Model%imfdeepcnv == Model%imfdeepcnv_samf         &
                       .or. Model%imfdeepcnv == Model%imfdeepcnv_gf      &
-                      .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke)
+                      .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke &
+                      .or. Model%imfdeepcnv == Model%imfdeepcnv_unified)
 !--- END CODE FROM GLOOPR
 
 !--- BEGIN CODE FROM GLOOPB
@@ -6701,7 +6708,7 @@ module GFS_typedefs
     allocate (Tbd%hpbl (IM))
     Tbd%hpbl     = clear_val
 
-    if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .or. Model%imfdeepcnv == Model%imfdeepcnv_samf .or. Model%imfshalcnv == Model%imfshalcnv_samf) then
+    if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .or. Model%imfdeepcnv == Model%imfdeepcnv_samf .or. Model%imfshalcnv == Model%imfshalcnv_samf .or. Model%imfdeepcnv == Model%imfdeepcnv_unified .or. Model%imfshalcnv == Model%imfshalcnv_unified) then
        allocate(Tbd%prevsq(IM, Model%levs))
        Tbd%prevsq = clear_val
     endif
@@ -6711,7 +6718,7 @@ module GFS_typedefs
        Tbd%ud_mf = zero
     endif
 
-    if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke) then
+    if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .or.  Model%imfdeepcnv == Model%imfdeepcnv_unified) then
        allocate(Tbd%forcet(IM, Model%levs))
        allocate(Tbd%forceq(IM, Model%levs))
        allocate(Tbd%prevst(IM, Model%levs))
@@ -6720,7 +6727,7 @@ module GFS_typedefs
        Tbd%prevst = clear_val
     end if
 
-    if (Model%imfdeepcnv == Model%imfdeepcnv_gf) then
+    if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or.  Model%imfdeepcnv == Model%imfdeepcnv_unified) then
        allocate(Tbd%cactiv(IM))
        allocate(Tbd%cactiv_m(IM))
        allocate(Tbd%aod_gf(IM))
