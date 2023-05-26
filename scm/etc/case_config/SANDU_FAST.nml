@@ -5,6 +5,5 @@ lsm_ics = .false.,
 do_spinup = .false.,
 spinup_timesteps = 0,
 reference_profile_choice = 2,
-reference_profile_dir = '../data/processed_case_input'
 column_area = 1.45E8,
 $end
