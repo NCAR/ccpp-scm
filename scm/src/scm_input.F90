@@ -1738,9 +1738,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
      call NetCDF_read_var(ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
      call NetCDF_read_var(ncid, "emis_ice",         .False., input_emis_ice)
      call NetCDF_read_var(ncid, "lai",              .False., input_lai)
-  else
-     write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that an LSM should be used, but the required initial conditions are missing. Stopping ...'
-     stop
   end if
   
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
