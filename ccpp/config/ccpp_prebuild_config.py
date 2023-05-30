@@ -68,6 +68,10 @@ TYPEDEFS_NEW_METADATA = {
         'scm_type_defs' : '',
         'physics_type' : 'physics',
         },
+    'module_ccpp_scheme_simulator' : {
+        'base_physics_process' : '',
+        'module_ccpp_scheme_simulator' : '',
+        },
     }
 
 # Add all physics scheme files relative to basedir
@@ -205,7 +209,9 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GFS_cloud_diagnostics.F90'        ,
     'ccpp/physics/physics/GFS_rrtmgp_cloud_mp.F90'          ,
     'ccpp/physics/physics/GFS_rrtmgp_cloud_overlap.F90'     ,
-    'ccpp/physics/physics/GFS_rrtmgp_post.F90'
+    'ccpp/physics/physics/GFS_rrtmgp_post.F90'              ,
+    'ccpp/physics/physics/GFS_ccpp_scheme_sim_pre.F90'      ,
+    'ccpp/physics/physics/ccpp_scheme_simulator.F90'
     ]
 
 # Default build dir, relative to current working directory,
