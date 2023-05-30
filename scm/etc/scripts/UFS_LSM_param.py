@@ -31,6 +31,7 @@ group1 = parser.add_mutually_exclusive_group(required=True)
 group1.add_argument('-l', '--location',   help='longitude and latitude in degress E and N, respectively, separated by a space', nargs=2, type=float)
 group1.add_argument('-ij','--index',      help='i,j indices within the tile (if known - bypasses search for closest model point to lon/lat location)', nargs=2, type=int)
 parser.add_argument('-g', '--grid_dir',   help='directory path containing FV3 tile supergrid files', required=True)
+parser.add_argument('-ic','--lsm_dir',    help='directory path containing FV3 tile IC files', required=True)
 parser.add_argument('-t', '--tile',       help='tile of desired point (if known - bypasses tile search if present)', type=int, choices=range(1,7))
 
 ###############################################################################
@@ -43,11 +44,16 @@ def parse_arguments():
     location = args.location
     index = args.index
     grid_dir = args.grid_dir
+    lsm_dir = args.lsm_dir
     tile = args.tile
     
     #validate args
     if not os.path.exists(grid_dir):
         message = 'The directory {0} does not exist'.format(grid_dir)
+        logging.critical(message)
+        raise Exception(message)
+    if not os.path.exists(lsm_dir):
+        message = 'The directory {0} does not exist'.format(lsm_dir)
         logging.critical(message)
         raise Exception(message)
     
@@ -62,7 +68,7 @@ def parse_arguments():
             logging.critical(message)
             raise Exception(message)
         
-    return (location, index, grid_dir, tile)
+    return (location, index, grid_dir, lsm_dir, tile)
 
 def setup_logging():
     """Sets up the logging module."""
@@ -108,20 +114,20 @@ def find_tile(loc, dir):
             
             edge_1_lon = longitude[0,:]
             edge_1_lat = latitude[0,:]
-            edge_1 = zip(edge_1_lon, edge_1_lat)
+            edge_1 = list(zip(edge_1_lon, edge_1_lat))
                         
             edge_2_lon = longitude[:,-1]
             edge_2_lat = latitude[:,-1]
-            edge_2 = zip(edge_2_lon, edge_2_lat)
+            edge_2 = list(zip(edge_2_lon, edge_2_lat))
                         
             edge_3_lon = longitude[-1,:]
             edge_3_lat = latitude[-1,:]
-            edge_3 = zip(edge_3_lon, edge_3_lat)
+            edge_3 = list(zip(edge_3_lon, edge_3_lat))
             edge_3.reverse() #need to reverse the direction of this edge to form a regular polygon
             
             edge_4_lon = longitude[:,0]
             edge_4_lat = latitude[:,0]
-            edge_4 = zip(edge_4_lon, edge_4_lat)
+            edge_4 = list(zip(edge_4_lon, edge_4_lat))
             edge_4.reverse() #need to reverse the direction of this edge to form a regular polygon
                         
             polygon_points = edge_1 + edge_2 + edge_3 + edge_4
@@ -231,9 +237,9 @@ def find_lon_lat_of_indices(indices, dir, tile):
     
     return (longitude[indices[1],indices[0]], latitude[indices[1],indices[0]])
 
-def get_UFS_surface_fix_data(dir, tile, i, j):
+def get_UFS_surface_fix_data(fix_dir, tile, i, j):
     
-    fix_dir = dir + '/fix_sfc'
+    #fix_dir = dir + '/fix_sfc'
     
     filename_pattern = '*facsf.tile{0}.nc'.format(tile)
     for f_name in os.listdir(fix_dir):
@@ -388,36 +394,36 @@ def main():
     setup_logging()
     
     #read in arguments
-    (location, indices, grid_dir, tile) = parse_arguments()
+    (location, indices, grid_dir, lsm_dir, tile) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     if not tile:
-        tile = find_tile(location, grid_dir)
+        tile = int(find_tile(location, grid_dir))
         if tile < 0:
             message = 'No tile was found for location {0}'.format(location)
             logging.critical(message)
             raise Exception(message)
-        print 'Tile found: {0}'.format(tile)
+        print('Tile found: {0}'.format(tile))
     
     #find index of closest point in the tile if indices are not specified
     if not indices:
         (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile)
-        print 'The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j)
-        print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
-        print 'This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1])
+        print('The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j))
+        print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
+        print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
     else:
         tile_i = indices[0]
         tile_j = indices[1]
         #still need to grab the lon/lat if the tile and indices are supplied
         (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile)
         
-        print 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
+        print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
     
     
     #get grid cell area if not given
     #area = get_UFS_grid_area(grid_dir, tile, tile_i, tile_j)
         
-    (facsf, facwf, max_snow_alb, alvsf, alvwf, alnsf, alnwf, substrate_t, veg_greenness, max_veg_greenness, min_veg_greenness, slope_type, soil_type, veg_type) = get_UFS_surface_fix_data(grid_dir, tile, tile_i, tile_j)
+    (facsf, facwf, max_snow_alb, alvsf, alvwf, alnsf, alnwf, substrate_t, veg_greenness, max_veg_greenness, min_veg_greenness, slope_type, soil_type, veg_type) = get_UFS_surface_fix_data(lsm_dir, tile, tile_i, tile_j)
     
     print("facsf,facwf={0},{1}".format(facsf,facwf))
     print("maximum_snow_albedo={}".format(max_snow_alb))
