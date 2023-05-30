@@ -57,7 +57,7 @@
     lwhtr = .true.
     n_var_lndp = 0
     n_var_spp = 0
-    nsradar_reset = 3600
+    nsfullradar_diag = 3600
     nst_anl = .true.
     nstf_name = 2, 1, 0, 0, 0
     oz_phys = .false.
@@ -146,9 +146,9 @@
 &scm_data_nml
     fileIN = '/glade/u/home/dswales/Projects/SCM/scheme_simulator/test.twpice.SCM_GFS_v16.nc'
     nPhysProcess = 7
-    proc_LWRAD_config = 1, 0, 1
-    proc_SWRAD_config = 1, 0, 2
-    proc_PBL_config   = 0, 0, 3
+    proc_LWRAD_config = 0, 0, 1
+    proc_SWRAD_config = 0, 0, 2
+    proc_PBL_config   = 1, 0, 3
     proc_GWD_config   = 1, 0, 4
     proc_SCNV_config  = 1, 1, 5
     proc_DCNV_config  = 1, 1, 6

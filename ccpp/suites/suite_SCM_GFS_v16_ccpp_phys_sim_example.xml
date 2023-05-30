@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_GFS_v16_ccpp_phys_sim_example1" version="1">
+<suite name="SCM_GFS_v16_ccpp_phys_sim_example" version="1">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>
@@ -67,8 +67,6 @@
       <scheme>GFS_DCNV_generic_pre</scheme>
       <scheme>samfdeepcnv</scheme>
       <scheme>GFS_DCNV_generic_post</scheme>
-      <scheme>load_ccpp_scheme_sim</scheme>
-      <scheme>ccpp_scheme_simulator</scheme>
       <scheme>GFS_SCNV_generic_pre</scheme>
       <scheme>samfshalcnv</scheme>
       <scheme>GFS_SCNV_generic_post</scheme>
@@ -79,6 +77,7 @@
       <scheme>GFS_MP_generic_post</scheme>
       <scheme>maximum_hourly_diagnostics</scheme>
       <scheme>phys_tend</scheme>
+      <scheme>GFS_ccpp_scheme_sim_pre</scheme>
       <scheme>ccpp_scheme_simulator</scheme>
     </subcycle>
   </group>

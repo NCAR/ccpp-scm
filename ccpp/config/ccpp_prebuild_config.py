@@ -22,6 +22,7 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/h2o_def.f',
     'ccpp/physics/physics/ozne_def.f',
     'ccpp/physics/physics/radiation_surface.f',
+    'ccpp/physics/physics/module_ccpp_scheme_simulator.F90',
     'scm/src/CCPP_typedefs.F90',
     'scm/src/GFS_typedefs.F90',
     'scm/src/scm_kinds.F90',
@@ -67,6 +68,10 @@ TYPEDEFS_NEW_METADATA = {
     'scm_type_defs' : {
         'scm_type_defs' : '',
         'physics_type' : 'physics',
+        },
+    'module_ccpp_scheme_simulator' : {
+        'base_physics_process' : '',
+        'module_ccpp_scheme_simulator' : '',
         },
     }
 
@@ -205,7 +210,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GFS_rrtmgp_cloud_overlap.F90'     ,
     'ccpp/physics/physics/GFS_rrtmgp_post.F90'              ,
     # CCPP-SCM
-    'ccpp/physics/physics/load_ccpp_scheme_sim.F90'         ,
+    'ccpp/physics/physics/GFS_ccpp_scheme_sim_pre.F90'      ,
     'ccpp/physics/physics/ccpp_scheme_simulator.F90'
     ]
 
