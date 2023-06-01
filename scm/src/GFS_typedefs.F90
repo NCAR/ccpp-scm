@@ -6,6 +6,7 @@ module GFS_typedefs
    use module_radlw_parameters,  only: topflw_type, sfcflw_type
    use ozne_def,                 only: levozp, oz_coeff
    use h2o_def,                  only: levh2o, h2o_coeff
+   use module_ccpp_scheme_simulator, only: base_physics_process
 
    implicit none
 
@@ -1488,6 +1489,16 @@ module GFS_typedefs
 !--- lightning threat and diagsnostics
     logical              :: lightning_threat !< report lightning threat indices
 
+!--- CCPP scheme simulator
+    logical                            :: do_ccpp_scheme_sim
+    integer                            :: nphys_proc
+    integer                            :: proc_start                        !
+    integer                            :: proc_end                          !
+    logical                            :: in_pre_active                     !
+    logical                            :: in_post_active                    !
+    integer                            :: nprg_active                       ! number of prognostic variables
+    type(base_physics_process),allocatable :: physics_process(:)
+
     contains
       procedure :: init            => control_initialize
       procedure :: init_chemistry  => control_chemistry_initialize
@@ -2960,6 +2971,8 @@ module GFS_typedefs
     use physcons,         only: con_rerth, con_pi, con_p0, rhowater
     use mersenne_twister, only: random_setseed, random_number
     use parse_tracers,    only: get_tracer_index
+    use netcdf
+    use GFS_ccpp_scheme_sim_pre, only: load_ccpp_scheme_sim
 !
     implicit none
 
@@ -3607,6 +3620,15 @@ module GFS_typedefs
 !-- Lightning threat index
     logical :: lightning_threat = .false.
 
+!--- CCPP scheme simulator
+    logical            :: do_ccpp_scheme_sim = .false.
+    integer            :: nphys_proc         = 0
+    integer            :: proc_start         = 0
+    integer            :: proc_end           = 0
+    logical            :: in_pre_active      = .false.
+    logical            :: in_post_active     = .false.
+    integer            :: nprg_active        = 0
+
 !--- aerosol scavenging factors
     integer, parameter :: max_scav_factors = 183
     character(len=40)  :: fscav_aero(max_scav_factors)
@@ -3758,7 +3780,9 @@ module GFS_typedefs
                           !          and (maybe) convection suppression
                                fh_dfi_radar, radar_tten_limits, do_cap_suppress,            &
                           !--- GSL lightning threat indices
-                               lightning_threat
+                               lightning_threat,                                            &
+                          !--- CCPP scheme simulator
+                               do_ccpp_scheme_sim
 
 !--- other parameters
     integer :: nctp    =  0                !< number of cloud types in CS scheme
@@ -3775,6 +3799,10 @@ module GFS_typedefs
     logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys, have_samf, have_pbl_edmf, have_cnvtrans, have_rdamp
     character(len=20) :: namestr
     character(len=44) :: descstr
+
+!--- CCPP scheme simulator
+    integer :: ncid, dimID, varID, status, ntime_sim_data, nlev_sim_data, errflg
+    character(len=256) :: errmsg
 
     ! dtend selection: default is to match all variables:
     dtend_select(1)='*'
@@ -3833,6 +3861,25 @@ module GFS_typedefs
     Model%flag_for_dcnv_generic_tend = .true.
 
     Model%lightning_threat = lightning_threat
+
+!--- CCPP scheme simulator
+    Model%do_ccpp_scheme_sim = do_ccpp_scheme_sim
+    if (Model%do_ccpp_scheme_sim) then
+       call load_ccpp_scheme_sim(Model%nlunit, Model%fn_nml, Model%physics_process, Model%nprg_active, errmsg, errflg)
+       if (errflg == 0) then
+          write(0,*) 'Using CCPP scheme simulator'
+          Model%nphys_proc = size(Model%physics_process)
+          if (Model%physics_process(1)%iactive_scheme == 1) then
+             Model%in_post_active = .true.
+          else
+             Model%in_pre_active = .true.
+          endif
+       else
+          write(0,*) 'CCPP scheme simulator turned on, but error encountered loading data.'
+          write(0,*) errmsg
+          stop
+       endif
+    endif
 
     Model%fh_dfi_radar     = fh_dfi_radar
     Model%num_dfi_radar    = 0

@@ -77,7 +77,6 @@
       <scheme>GFS_MP_generic_post</scheme>
       <scheme>maximum_hourly_diagnostics</scheme>
       <scheme>phys_tend</scheme>
-      <scheme>scm_phys_tend_adj</scheme> 
     </subcycle>
   </group>
 </suite>

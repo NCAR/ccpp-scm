@@ -417,22 +417,8 @@ module CCPP_typedefs
     !-- 3D diagnostics
     integer :: rtg_ozone_index, rtg_tke_index
 
-    !
-    !-- CCPP Physics tendencies
-    real (kind=kind_phys), pointer      :: dTdt_DCNV(:,:)     => null()
-    real (kind=kind_phys), pointer      :: dqdt_DCNV(:,:,:)   => null()
-    real (kind=kind_phys), pointer      :: dudt_DCNV(:,:)     => null()
-    real (kind=kind_phys), pointer      :: dvdt_DCNV(:,:)     => null()
-    real (kind=kind_phys), pointer      :: dTdt_SCNV(:,:)     => null()
-    real (kind=kind_phys), pointer      :: dqdt_SCNV(:,:,:)   => null()
-    real (kind=kind_phys), pointer      :: dudt_SCNV(:,:)     => null()
-    real (kind=kind_phys), pointer      :: dvdt_SCNV(:,:)     => null()
-    real (kind=kind_phys), pointer      :: dTdt_cldMP(:,:)    => null()
-    real (kind=kind_phys), pointer      :: dqdt_cldMP(:,:,:)  => null()
-    real (kind=kind_phys), pointer      :: dTdt_PBL(:,:)      => null()
-    real (kind=kind_phys), pointer      :: dqdt_PBL(:,:,:)    => null()
-    real (kind=kind_phys), pointer      :: dudt_PBL(:,:)      => null()
-    real (kind=kind_phys), pointer      :: dvdt_PBL(:,:)      => null()
+    !-- CCPP scheme simulator
+    real (kind=kind_phys), pointer      :: active_phys_tend(:,:,:) => null() ! tendencies for active physics process
 
     contains
 
@@ -840,21 +826,10 @@ contains
     Interstitial%phys_hydrostatic = .true.
 
     !
-    ! Physics tendencies 
-    allocate (Interstitial%dTdt_DCNV(IM,Model%levs))
-    allocate (Interstitial%dqdt_DCNV(IM,Model%levs,Model%ntrac))
-    allocate (Interstitial%dudt_DCNV(IM,Model%levs))
-    allocate (Interstitial%dvdt_DCNV(IM,Model%levs))
-    allocate (Interstitial%dTdt_SCNV(IM,Model%levs))
-    allocate (Interstitial%dqdt_SCNV(IM,Model%levs,Model%ntrac))
-    allocate (Interstitial%dudt_SCNV(IM,Model%levs))
-    allocate (Interstitial%dvdt_SCNV(IM,Model%levs))
-    allocate (Interstitial%dTdt_cldMP(IM,Model%levs))
-    allocate (Interstitial%dqdt_cldMP(IM,Model%levs,Model%ntrac))
-    allocate (Interstitial%dTdt_PBL(IM,Model%levs))
-    allocate (Interstitial%dqdt_PBL(IM,Model%levs,Model%ntrac))
-    allocate (Interstitial%dudt_PBL(IM,Model%levs))
-    allocate (Interstitial%dvdt_PBL(IM,Model%levs))
+    ! CCPP scheme simulator
+    if (Model%do_ccpp_scheme_sim) then
+       allocate (Interstitial%active_phys_tend(IM,Model%levs,Model%nprg_active))
+    endif
 
     !
     ! Reset all other variables
@@ -1449,21 +1424,10 @@ contains
     !
 
     !
-    ! Physics tendencies
-    Interstitial%dTdt_DCNV  = clear_val
-    Interstitial%dqdt_DCNV  = clear_val
-    Interstitial%dudt_DCNV  = clear_val
-    Interstitial%dvdt_DCNV  = clear_val
-    Interstitial%dTdt_SCNV  = clear_val
-    Interstitial%dqdt_SCNV  = clear_val
-    Interstitial%dudt_SCNV  = clear_val
-    Interstitial%dvdt_SCNV  = clear_val
-    Interstitial%dTdt_cldMP = clear_val
-    Interstitial%dqdt_cldMP = clear_val
-    Interstitial%dTdt_PBL   = clear_val
-    Interstitial%dqdt_PBL   = clear_val
-    Interstitial%dudt_PBL   = clear_val
-    Interstitial%dvdt_PBL   = clear_val
+    ! CCPP scheme simulator
+    if (Model%do_ccpp_scheme_sim) then
+       Interstitial%active_phys_tend = clear_val
+    endif
 
   end subroutine gfs_interstitial_phys_reset
 

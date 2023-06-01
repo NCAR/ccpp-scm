@@ -40,7 +40,7 @@
     iopt_snf = 4
     iopt_stc = 1
     iopt_tbot = 2
-    iovr = 3
+    iovr = 5
     isatmedmf = 1
     isol = 2
     isot = 1
@@ -57,7 +57,7 @@
     lwhtr = .true.
     n_var_lndp = 0
     n_var_spp = 0
-    nsradar_reset = 3600
+    nsfullradar_diag = 3600
     nst_anl = .true.
     nstf_name = 2, 1, 0, 0, 0
     oz_phys = .false.
@@ -76,6 +76,7 @@
     swhtr = .true.
     trans_trac = .true.
     use_ufo = .true.
+    do_ccpp_scheme_sim = .true.
 /
 
 &gfdl_cloud_microphysics_nml
@@ -143,14 +144,14 @@
     launch_level = 27
 /
 
-&scm_data_nml
-    fileIN = '/glade/u/home/dswales/Projects/SCM/scheme_simulator/test.twpice.SCM_GFS_v16.nc'
-    nPhysProcess = 7
-    proc_LWRAD_config = 0, 0, 1
-    proc_SWRAD_config = 0, 0, 2
-    proc_PBL_config   = 1, 0, 3
-    proc_GWD_config   = 1, 0, 4
-    proc_SCNV_config  = 1, 1, 5
-    proc_DCNV_config  = 1, 1, 6
-    proc_cldMP_config = 1, 1, 7
+&ccpp_scheme_sim_nml
+    scheme_sim_file    = '/glade/u/home/dswales/Projects/SCM/scheme_simulator/test.twpice.SCM_GFS_v16.nc'
+    nprc_sim           = 7
+    prc_LWRAD_cfg      = 1, 0, 1
+    prc_SWRAD_cfg      = 0, 0, 2
+    prc_PBL_cfg        = 1, 0, 3
+    prc_GWD_cfg        = 1, 0, 4
+    prc_SCNV_cfg       = 1, 1, 5
+    prc_DCNV_cfg       = 1, 1, 6
+    prc_cldMP_cfg      = 1, 1, 7
 /
