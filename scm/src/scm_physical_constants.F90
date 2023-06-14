@@ -48,6 +48,8 @@ public
   real(kind=dp),parameter:: con_tice   =2.7120e+2
   
   real(kind=dp),parameter:: rhowater   =1000._dp
+  real(kind=dp),parameter:: rholakeice = 0.917e3_dp          !< density of ice on lake (kg/m^3)
+
 
   real(kind=dp),parameter:: con_c         = 2.99792458e+8_dp !< speed of light (\f$m/s\f$)
   real(kind=dp),parameter:: con_plnk      = 6.6260693e-34_dp !< planck constant (\f$J/s\f$)

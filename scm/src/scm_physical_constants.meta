@@ -216,6 +216,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[rholakeice]
+  standard_name = density_of_ice_on_lake
+  long_name = density of ice on a lake
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [con_omega]
   standard_name = angular_velocity_of_earth
   long_name = angular velocity of earth
