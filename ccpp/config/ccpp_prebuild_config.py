@@ -191,6 +191,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/lsm_noah.f'                       ,
     'ccpp/physics/physics/noahmpdrv.F90'                    ,
     'ccpp/physics/physics/flake_driver.F90'                 ,
+    'ccpp/physics/physics/clm_lake.f90'                     ,
     'ccpp/physics/physics/sfc_nst_pre.f'                    ,
     'ccpp/physics/physics/sfc_nst.f'                        ,
     'ccpp/physics/physics/sfc_nst_post.f'                   ,
