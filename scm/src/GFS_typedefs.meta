@@ -6258,6 +6258,30 @@
   units = count
   dimensions = ()
   type = integer
+[iactive_T]
+  standard_name = index_for_active_T_in_CCPP_scheme_simulator
+  long_name = index into active process tracer array for temperature in CCPP scheme simulator
+  units = count
+  dimensions = ()
+  type = integer
+[iactive_u]
+  standard_name = index_for_active_u_in_CCPP_scheme_simulator
+  long_name = index into active process tracer array for zonal wind in CCPP scheme simulator
+  units = count
+  dimensions = ()
+  type = integer
+[iactive_v]
+  standard_name = index_for_active_v_in_CCPP_scheme_simulator
+  long_name = index into active process tracer array for meridional wind in CCPP scheme simulator
+  units = count
+  dimensions = ()
+  type = integer
+[iactive_q]
+  standard_name = index_for_active_q_in_CCPP_scheme_simulator
+  long_name = index into active process tracer array for moisture in CCPP scheme simulator
+  units = count
+  dimensions = ()
+  type = integer
 [nphys_proc]
   standard_name = number_of_physics_process_in_CCPP_scheme_simulator
   long_name = number of physics processes in CCPP scheme simulator

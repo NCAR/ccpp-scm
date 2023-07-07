@@ -828,7 +828,7 @@ contains
     !
     ! CCPP scheme simulator
     if (Model%do_ccpp_scheme_sim) then
-       allocate (Interstitial%active_phys_tend(IM,Model%levs,Model%nprg_active))
+       allocate (Interstitial%active_phys_tend(IM,Model%levs,Model%physics_process(1)%nprg_active))
     endif
 
     !

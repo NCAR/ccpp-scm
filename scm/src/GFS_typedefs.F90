@@ -1490,14 +1490,18 @@ module GFS_typedefs
     logical              :: lightning_threat !< report lightning threat indices
 
 !--- CCPP scheme simulator
-    logical                            :: do_ccpp_scheme_sim
-    integer                            :: nphys_proc
-    integer                            :: proc_start                        !
-    integer                            :: proc_end                          !
-    logical                            :: in_pre_active                     !
-    logical                            :: in_post_active                    !
-    integer                            :: nprg_active                       ! number of prognostic variables
-    type(base_physics_process),allocatable :: physics_process(:)
+    logical                                :: do_ccpp_scheme_sim  !
+    integer                                :: nphys_proc          !
+    integer                                :: proc_start          !
+    integer                                :: proc_end            !
+    logical                                :: in_pre_active       !
+    logical                                :: in_post_active      !
+    type(base_physics_process),allocatable :: physics_process(:)  !
+    integer                                :: nprg_active         !
+    integer                                :: iactive_T           !
+    integer                                :: iactive_u           !
+    integer                                :: iactive_v           !
+    integer                                :: iactive_q           !
 
     contains
       procedure :: init            => control_initialize
@@ -3628,6 +3632,10 @@ module GFS_typedefs
     logical            :: in_pre_active      = .false.
     logical            :: in_post_active     = .false.
     integer            :: nprg_active        = 0
+    integer            :: iactive_T          = 0
+    integer            :: iactive_u          = 0
+    integer            :: iactive_v          = 0
+    integer            :: iactive_q          = 0
 
 !--- aerosol scavenging factors
     integer, parameter :: max_scav_factors = 183
@@ -3865,10 +3873,13 @@ module GFS_typedefs
 !--- CCPP scheme simulator
     Model%do_ccpp_scheme_sim = do_ccpp_scheme_sim
     if (Model%do_ccpp_scheme_sim) then
-       call load_ccpp_scheme_sim(Model%nlunit, Model%fn_nml, Model%physics_process, Model%nprg_active, errmsg, errflg)
+       call load_ccpp_scheme_sim(Model%nlunit, Model%fn_nml, Model%physics_process, &
+            Model%iactive_T, Model%iactive_u, Model%iactive_v, Model%iactive_q, errmsg, errflg)
+
        if (errflg == 0) then
           write(0,*) 'Using CCPP scheme simulator'
-          Model%nphys_proc = size(Model%physics_process)
+          Model%nphys_proc  = size(Model%physics_process)
+          Model%nprg_active = Model%physics_process(1)%nprg_active
           if (Model%physics_process(1)%iactive_scheme == 1) then
              Model%in_post_active = .true.
           else
