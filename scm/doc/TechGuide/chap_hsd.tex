@@ -1,0 +1,37 @@
+\chapter{Hierarchical Physics Development}
+\label{chapter: Hierarchical_Physics_Development}
+
+Chapter 7 of the CCPP v6 Technical Documentation (\url{https://ccpp-techdoc.readthedocs.io/en/v6.0.0/}) provides a an overview of the tools supported by the SCM to faciliate hierarchical systems systems development (HSD)
+
+\section{Background}
+
+Developing and implementing a new physics parameterization for use in an operational setting requires extensive testing and evaluation. This is to ensure that new developments aren’t yielding unexpected results and that all computational considerations are being met. From a scientific perspective, this process should be incremental and hierarchical: starting with initial testing of a simple idealized case, then progressing to fully-coupled high-resolution global forecasts on high-performance computing systems.
+
+
+The CCPP-SCM provides developers working within CCPP compliant host models the ability to test their physics innovations without having to worry about the coupling to the dynamical core. This is a critical step in the model development hierarchy, providing insight on how an introduced physics change can modify the evolution of the internal physics state. However, there are still challenges, most notably the interactions between introduced changes and the other physics schemes in the suite.
+
+\section{CCPP Suite Simulator}
+
+\subsection{Overview}
+
+The CCPP Suite Simulator is a CCPP compliant physics scheme that provides the ability to turn off physical processes in a Suite Definition File (SDF), using namelist options. This simulator `piggybacks' on an existing SDF, replacing physics tendencies with data-driven tendencies. 
+
+ADD FIGURE HERE
+
+\subsection{Process-split vs. Time-split Physics Process}
+
+Process-split physics processes are schemes that rely on the state provided the model's dynamical core, whereas time-split processes use the state provided by the previous physics process. A SDF can be any combination of time-split and process-split schemes, just as long as the appropriate interstitial schemes are created to couple the physics schemes.
+
+ADD FIGURE HERE
+
+\subsection{About the Suite Simulator}
+
+The CCPP Suite Simulator emulates the evolution of the internal physics state provided by the SDF. There are different deployments of the scheme simulator, depending on the role(s) and order of the physical processes in the SDF we are emulating (e.g. time vs. process-split), that need further attention. For instance, SDFs consisting of only process-split physics schemes can be handled simply by adding the simulator to the end of the SDF, since for process-split schemes the order is not critical to the evolution of the internal physics state. On the other hand, for SDFs that contain time-split processes, where the simulator is added is important to preserve the order of the internal state evolution.
+
+\subsection{Creating Custom Data for Simulator}
+
+Provided with the SCM is a script to generate data for the suite simulator, from a previously run SCM case.
+
+\subsection{Example 1: Suite with Active Radiation}
+
+\subsection{Example 2: Suite with Active Cloud Microphysics }
