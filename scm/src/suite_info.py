@@ -48,9 +48,6 @@ suite_list.append(suite('SCM_RAP',               'tracers_RAP.txt',             
 suite_list.append(suite('SCM_RRFS_v1beta',       'tracers_RRFS_v1beta.txt',              'input_RRFS_v1beta.nml',             600.0, 600.0 , True ))
 suite_list.append(suite('SCM_WoFS_v0',           'tracers_WoFS_v0.txt',                  'input_WoFS_v0.nml',                 600.0, 600.0 , True ))
 suite_list.append(suite('SCM_HRRR',              'tracers_HRRR.txt',                     'input_HRRR.nml',                    600.0, 600.0 , True ))
-suite_list.append(suite('SCM_GFS_v16_ccpp_phys_sim_example1', 'tracers_GFS_v16.txt',     'input_GFS_v16_ccpp_phys_sim_example1.nml',   600.0, 1800.0, False ))
-suite_list.append(suite('SCM_GFS_v16_ccpp_phys_sim_example2', 'tracers_GFS_v16.txt',     'input_GFS_v16_ccpp_phys_sim_example2.nml',   600.0, 1800.0, False ))
-
 
 suite_list.append(suite('SCM_GFS_v15p2',         'tracers_GFS_v15p2.txt',                'input_GFS_v15p2.nml',               600.0, 1800.0, False))
 suite_list.append(suite('SCM_GFS_v15p2_RRTMGP',  'tracers_GFS_v15p2.txt',                'input_GFS_v15p2_RRTMGP.nml',        600.0, 1800.0, False))
