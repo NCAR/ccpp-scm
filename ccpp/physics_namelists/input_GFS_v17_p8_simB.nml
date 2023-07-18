@@ -151,7 +151,7 @@
 /
 
 &ccpp_scheme_sim_nml
-    scheme_sim_file    = '/glade/u/home/dswales/Projects/SCM/scheme_simulator/test.twpice.SCM_GFS_v16.nc'
+    scheme_sim_file    = ''
     nprc_sim           = 7
     prc_LWRAD_cfg      = 0, 0, 1
     prc_SWRAD_cfg      = 0, 0, 2
