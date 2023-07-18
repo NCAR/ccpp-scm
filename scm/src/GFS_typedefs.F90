@@ -4086,6 +4086,11 @@ module GFS_typedefs
           write(0,*) errmsg
           stop
        endif
+       if(.not. qdiag3d .and. .not. ldiag3d) then
+          write(0,*) 'CCPP scheme simulator turned on, but qdiag3d and/or ldiag3d are not set to .true.'
+          write(0,*) errmsg
+          stop
+       endif
     endif
 
     Model%fh_dfi_radar     = fh_dfi_radar
