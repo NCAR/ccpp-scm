@@ -24,13 +24,39 @@ Process-split physics processes are schemes that rely on the state provided the 
 
 ADD FIGURE HERE
 
-\subsection{About the Suite Simulator}
+\subsection{About the CCPP Suite Simulator}
 
-The CCPP Suite Simulator emulates the evolution of the internal physics state provided by the SDF. There are different deployments of the scheme simulator, depending on the role(s) and order of the physical processes in the SDF we are emulating (e.g. time vs. process-split), that need further attention. For instance, SDFs consisting of only process-split physics schemes can be handled simply by adding the simulator to the end of the SDF, since for process-split schemes the order is not critical to the evolution of the internal physics state. On the other hand, for SDFs that contain time-split processes, where the simulator is added is important to preserve the order of the internal state evolution.
+The CCPP Suite Simulator (CSS) emulates the evolution of the internal physics state provided by the SDF. There are different deployments of the scheme simulator, depending on the role(s) and order of the physical processes in the SDF we are emulating (e.g. time vs. process-split), that need further attention. For instance, SDFs consisting of only process-split physics schemes can be handled simply by adding the simulator to the end of the SDF, since for process-split schemes the order is not critical to the evolution of the internal physics state. On the other hand, for SDFs that contain time-split processes, where the simulator is added is important to preserve the order of the internal state evolution.
+
+\subsection{Enabling the CCPP Suite Simulator}
+
+To use the CSS in the CCPP-SCM two modifications need to be made:
+
+\begin{enumerate}
+\item Add CSS, and any interstitial schemes needed for coupling the CSS to the host (e.g. SCM), to an existing CCPP SDF (or create a new SDF).
+\item Modify, or create new, namelist that has the options needed to activate the CSS.
+\end{enumerate}
 
 \subsection{Creating Custom Data for Simulator}
 
-Provided with the SCM is a script to generate data for the suite simulator, from a previously run SCM case.
+Navigate to \execout{ccpp-scm/scm/etc/scripts/ccpp\_scheme\_sim}
+
+Provided with the SCM are scripts to generate data for the suite simulator using output from a previous SCM run. The first script, \execout{create\_1D\_simdata.py}, extracts the physics tendencies from a user specified time interval, which are used for constant forcing in the suite simulator. The other script, \execout{create\_2D\_simdata.py}, creates a two-dimensional forcing dataset. The suite simulator interpoaltes these forcings in time.
+
+\begin{enumerate}
+\item Run the SCM, using TWPICE case with \execout{GFS\_v17\_p8} suite.
+\begin{lstlisting}[language=bash]
+cd ccpp-scm/scm/bin
+./run_scm.py -c twpice -s SCM_GFS_v17_p8
+\end{lstlisting}
+\item Create data for the CSS, using SCM output from TWPICE case with \execout{GFS\_v17\_p8} suite.
+\begin{lstlisting}[language=bash]
+cd ccpp-scm/scm/etc/scripts/ccpp_scheme_sim
+./create_2D_simdata.py --cases twpice --suites SCM_GFS_v17_p8
+\end{lstlisting}
+\end{enumerate}
+
+The data file will be written to \execout{ccpp-scm/scm/etc/scripts/ccpp\_scheme\_sim/} with the following format, \execout{data\_scheme\_sim\_2D.CASES.SUITES.nc}, where cases and suites are mandatory arguments.
 
 \subsection{Example 1: Suite with Active Radiation}
 
