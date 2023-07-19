@@ -52,7 +52,7 @@ def agg_scm_out(data_var, data_time, data_dt):
     return(data_mean)
 
 #################################################################################################
-# Argument list ./create_2D_simdata.py --cases twpice --suites SCM_GFS_v17_p8
+# Argument list ./create_2D_CSSdata.py --cases twpice --suites SCM_GFS_v17_p8
 #################################################################################################
 parser = ap.ArgumentParser()
 parser.add_argument('-c',   '--cases',  help='name of case(s), separated by a space', nargs='*', required=True)
@@ -125,7 +125,7 @@ def main():
     # Loop over all run(s)
     for run in run_dict:
 
-        file_out = "data_scheme_sim_2D."+run["case"] + "." + run["suite"]+".nc"
+        file_out = "data_CSS_2D."+run["case"] + "." + run["suite"]+".nc"
 
         # SCM data location for current run
         local_dir = run_dir + "output_" + run["case"] + "_" + run["suite"]
@@ -153,7 +153,7 @@ def main():
         ntime = plev[:,0].size
         nlev  = plev[0,:].size
 
-        # Create output file for CCPP scheme simulator.
+        # Create output file for CCPP suite simulator.
         time_varout = xr.Dataset({"times": (("time"),1800.+np.linspace(0,(ntime-1)*3600.,ntime))},
                                  coords = {"time": np.linspace(0,ntime,ntime)})
         time_varout["times"].attrs = {"units":"seconds"}

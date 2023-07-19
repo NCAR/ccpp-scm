@@ -35,7 +35,7 @@ def read_SCMout2d(fileIN,vars2plt):
 
 #################################################################################################
 # Argument list
-# ./plt_scmout_2d_scheme_sim.py -n twpice -sdf SCM_GFS_v17_p8 -nmls input_GFS_v17_p8_simA input_GFS_v17_p8_simB -vars sfc_dwn_sw sfc_up_sw sfc_dwn_lw
+# ./plt_scmout_2d.py -n twpice -sdf SCM_GFS_v17_p8 -nmls input_GFS_v17_p8_simA input_GFS_v17_p8_simB -vars sfc_dwn_sw sfc_up_sw sfc_dwn_lw
 #################################################################################################
 parser = ap.ArgumentParser()
 parser.add_argument('-n',    '--case_name', help='name of case', required=True)

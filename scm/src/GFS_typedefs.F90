@@ -6,7 +6,7 @@ module GFS_typedefs
    use module_radlw_parameters,  only: topflw_type, sfcflw_type
    use ozne_def,                 only: levozp, oz_coeff
    use h2o_def,                  only: levh2o, h2o_coeff
-   use module_ccpp_scheme_simulator, only: base_physics_process
+   use module_ccpp_suite_simulator, only: base_physics_process
 
    implicit none
 
@@ -1555,8 +1555,8 @@ module GFS_typedefs
 !--- lightning threat and diagsnostics
     logical              :: lightning_threat !< report lightning threat indices
 
-!--- CCPP scheme simulator
-    logical                                :: do_ccpp_scheme_sim  !
+!--- CCPP suite simulator
+    logical                                :: do_ccpp_suite_sim  !
     integer                                :: nphys_proc          !
     integer                                :: proc_start          !
     integer                                :: proc_end            !
@@ -3153,7 +3153,7 @@ module GFS_typedefs
     use mersenne_twister, only: random_setseed, random_number
     use parse_tracers,    only: get_tracer_index
     use netcdf
-    use GFS_ccpp_scheme_sim_pre, only: load_ccpp_scheme_sim
+    use GFS_ccpp_suite_sim_pre, only: load_ccpp_suite_sim
 !
     implicit none
 
@@ -3818,8 +3818,8 @@ module GFS_typedefs
 !-- Lightning threat index
     logical :: lightning_threat = .false.
 
-!--- CCPP scheme simulator
-    logical            :: do_ccpp_scheme_sim = .false.
+!--- CCPP suite simulator
+    logical            :: do_ccpp_suite_sim  = .false.
     integer            :: nphys_proc         = 0
     integer            :: proc_start         = 0
     integer            :: proc_end           = 0
@@ -3985,8 +3985,8 @@ module GFS_typedefs
                                fh_dfi_radar, radar_tten_limits, do_cap_suppress,            &
                           !--- GSL lightning threat indices
                                lightning_threat,                                            &
-                          !--- CCPP scheme simulator
-                               do_ccpp_scheme_sim
+                          !--- CCPP suite simulator
+                               do_ccpp_suite_sim
 
 !--- other parameters
     integer :: nctp    =  0                !< number of cloud types in CS scheme
@@ -4004,7 +4004,7 @@ module GFS_typedefs
     character(len=20) :: namestr
     character(len=44) :: descstr
 
-!--- CCPP scheme simulator
+!--- CCPP suite simulator
     integer :: ncid, dimID, varID, status, ntime_sim_data, nlev_sim_data, errflg
     character(len=256) :: errmsg
 
@@ -4066,14 +4066,14 @@ module GFS_typedefs
 
     Model%lightning_threat = lightning_threat
 
-!--- CCPP scheme simulator
-    Model%do_ccpp_scheme_sim = do_ccpp_scheme_sim
-    if (Model%do_ccpp_scheme_sim) then
-       call load_ccpp_scheme_sim(Model%nlunit, Model%fn_nml, Model%physics_process, &
+!--- CCPP suite simulator
+    Model%do_ccpp_suite_sim = do_ccpp_suite_sim
+    if (Model%do_ccpp_suite_sim) then
+       call load_ccpp_suite_sim(Model%nlunit, Model%fn_nml, Model%physics_process, &
             Model%iactive_T, Model%iactive_u, Model%iactive_v, Model%iactive_q, errmsg, errflg)
 
        if (errflg == 0) then
-          write(0,*) 'Using CCPP scheme simulator'
+          write(0,*) 'Using CCPP suite simulator'
           Model%nphys_proc  = size(Model%physics_process)
           Model%nprg_active = Model%physics_process(1)%nprg_active
           if (Model%physics_process(1)%iactive_scheme == 1) then
@@ -4082,12 +4082,12 @@ module GFS_typedefs
              Model%in_pre_active = .true.
           endif
        else
-          write(0,*) 'CCPP scheme simulator turned on, but error encountered loading data.'
+          write(0,*) 'CCPP suite simulator turned on, but error encountered loading data.'
           write(0,*) errmsg
           stop
        endif
        if(.not. qdiag3d .and. .not. ldiag3d) then
-          write(0,*) 'CCPP scheme simulator turned on, but qdiag3d and/or ldiag3d are not set to .true.'
+          write(0,*) 'CCPP suite simulator turned on, but qdiag3d and/or ldiag3d are not set to .true.'
           write(0,*) errmsg
           stop
        endif

@@ -2840,13 +2840,13 @@
   dimensions = ()
   type = integer
 [active_phys_tend]
-  standard_name = tendencies_for_active_process_in_ccpp_scheme_simulator
-  long_name = tendencies for active physics process in ccpp scheme simulator
+  standard_name = tendencies_for_active_process_in_ccpp_suite_simulator
+  long_name = tendencies for active physics process in ccpp suite simulator
   units = mixed
-  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_prognostics_varaibles_in_CCPP_scheme_simulator)
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_prognostics_varaibles_in_CCPP_suite_simulator)
   type = real
   kind = kind_phys
-  active = (flag_for_CCPP_scheme_simulator)
+  active = (flag_for_CCPP_suite_simulator)
 
 ########################################################################
 [ccpp-table-properties]

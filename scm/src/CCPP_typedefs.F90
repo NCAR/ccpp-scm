@@ -416,7 +416,7 @@ module CCPP_typedefs
     !-- 3D diagnostics
     integer :: rtg_ozone_index, rtg_tke_index
 
-    !-- CCPP scheme simulator
+    !-- CCPP suite simulator
     real (kind=kind_phys), pointer      :: active_phys_tend(:,:,:) => null() ! tendencies for active physics process
 
     contains
@@ -824,8 +824,8 @@ contains
     Interstitial%phys_hydrostatic = .true.
 
     !
-    ! CCPP scheme simulator
-    if (Model%do_ccpp_scheme_sim) then
+    ! CCPP suite simulator
+    if (Model%do_ccpp_suite_sim) then
        allocate (Interstitial%active_phys_tend(IM,Model%levs,Model%physics_process(1)%nprg_active))
     endif
 
@@ -1421,8 +1421,8 @@ contains
     !
 
     !
-    ! CCPP scheme simulator
-    if (Model%do_ccpp_scheme_sim) then
+    ! CCPP suite simulator
+    if (Model%do_ccpp_suite_sim) then
        Interstitial%active_phys_tend = clear_val
     endif
 

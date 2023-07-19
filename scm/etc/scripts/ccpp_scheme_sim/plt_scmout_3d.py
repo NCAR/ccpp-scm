@@ -35,7 +35,7 @@ def read_SCMout3d(fileIN,vars2plt):
 
 #################################################################################################
 # Argument list
-# ./plt_scmout_3d_scheme_sim.py -n twpice -sdf SCM_GFS_v17_p8 -nmls input_GFS_v17_p8_simA input_GFS_v17_p8_simB -vars dT_dt_lwrad dT_dt_swrad -time 3600
+# ./plt_scmout_3d.py -n twpice -sdf SCM_GFS_v17_p8 -nmls input_GFS_v17_p8_simA input_GFS_v17_p8_simB -vars dT_dt_lwrad dT_dt_swrad -time 3600
 #################################################################################################
 parser = ap.ArgumentParser()
 parser.add_argument('-n',    '--case_name', help='name of case', required=True)
