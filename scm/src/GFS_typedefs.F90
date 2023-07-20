@@ -3152,7 +3152,6 @@ module GFS_typedefs
     use physcons,         only: con_rerth, con_pi, con_p0, rhowater
     use mersenne_twister, only: random_setseed, random_number
     use parse_tracers,    only: get_tracer_index
-    use netcdf
     use GFS_ccpp_suite_sim_pre, only: load_ccpp_suite_sim
 !
     implicit none
