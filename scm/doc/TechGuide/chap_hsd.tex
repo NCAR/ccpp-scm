@@ -40,6 +40,17 @@ To use the CSS in the CCPP-SCM two modifications need to be made:
 \item Modify, or create new, namelist that has the options needed to activate the CSS.
 \end{enumerate}
 
+\subsection{Modifying the CCPP Suite Definition File}
+
+The SDF needs to be modified to include the CSS scheme, and any interstitial schemes needed for your host application. Here we will illustrate how to use the CSS within SCM (UFS) physics, for which all applications use a physics SDF with mixture of process-split and time-split physics schemes.
+In general,
+\begin{itemize}
+\item for SDFs that contain ONLY process-split schemes, the CSS can be added to the end of the SDF for all configurations. In this case we have the flexibility to switch ``on/off'' any combination of active physics and simulated physics at runtime, via namelist, with the same modified SDF.
+\item when using SDFs that contain ONLY time-split schemes, the CSS needs to be added before and after each scheme you want to switch ``on/off''. So one could add calls to the CSS between each process in the SDF to obtain total flexibility, or just around the schemes they are interested in.
+\end{itemize}
+
+In the examples below we will demonstrate how to modify SDFs to use the CSS for SCM (UFS) physics applications, \ref{section:Suite_with_Active_Radiation} and \ref{section:Suite_with_Active_Cloud_Microphysics}.
+
 \subsection{Namelist for the CCPP Suite Simulator}
 
 The CSS has its own namelist, \execout{ccpp\_suite\_sim\_nml}, that needs to be added to the physics namelists used by the SCM.
@@ -91,5 +102,11 @@ cd ccpp-scm/scm/etc/scripts/ccpp_scheme_sim
 The data file will be written to \execout{ccpp-scm/scm/etc/scripts/ccpp\_scheme\_sim/} with the following format, \execout{data\_scheme\_sim\_DIM.CASES.SUITES.nc}.
 
 \subsection{Example 1: Suite with Active Radiation}
+\label{section:Suite_with_Active_Radiation}
 
-\subsection{Example 2: Suite with Active Cloud Microphysics }
+For this example we will use the two-dimensional forcing data from \ref{section:Creating_Custom_Data_for_Simulator}.
+
+
+
+\subsection{Example 2: Suite with Active Cloud Microphysics}
+\label{section:Suite_with_Active_Cloud_Microphysics}
