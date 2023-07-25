@@ -31,6 +31,21 @@ Process-split physics processes are schemes that rely on the state provided the 
 
 The CCPP Suite Simulator (CSS) emulates the evolution of the internal physics state provided by the SDF. There are different deployments of the scheme simulator, depending on the role(s) and order of the physical processes in the SDF we are emulating (e.g. time vs. process-split), that need further attention. For instance, SDFs consisting of only process-split physics schemes can be handled simply by adding the simulator to the end of the SDF, since for process-split schemes the order is not critical to the evolution of the internal physics state. On the other hand, for SDFs that contain time-split processes, where the simulator is added is important to preserve the order of the internal state evolution.
 
+\subsection{Python Dependencies}
+\label{subsection: pydepend}
+The scripts here require a few python packages that may not be found by default in all python installations. There is a YAML file with the python environment needed to run the script in \execout{ccpp-scm/scm\_suite\_sim.yml}. To create and activate this environment using conda:
+
+Create environment (only once):
+
+\execout{> conda env create -f environment-suite-sim.yml}
+
+This will create the conda environment \execout{scm\_suite\_sim}
+
+
+Activate environment:
+
+\execout{> conda activate scm\_suite\_sim}
+
 \subsection{Enabling the CCPP Suite Simulator}
 
 To use the CSS in the CCPP-SCM two modifications need to be made:
@@ -79,7 +94,7 @@ For example, in \ref{lst_css_nml}, there are two active schemes, longwave and sh
 
 Navigate to \execout{ccpp-scm/scm/etc/scripts/ccpp\_scheme\_sim}
 
-Provided with the SCM are scripts to generate data for the suite simulator using output from a previous SCM run. The first script, \execout{create\_1D\_simdata.py}, extracts the physics tendencies from a user specified time interval, which are used for constant forcing in the suite simulator. The other script, \execout{create\_2D\_simdata.py}, creates a two-dimensional forcing dataset. The suite simulator interpoaltes these forcings in time.
+Provided with the SCM are scripts to generate data for the suite simulator using output from a previous SCM run. The first script, \execout{create\_1D\_CSSdata.py}, extracts the physics tendencies from a user specified time interval, which are used for constant forcing in the suite simulator. The other script, \execout{create\_2D\_CSSdata.py}, creates a two-dimensional forcing dataset. The suite simulator interpoaltes these forcings in time.
 
 \begin{enumerate}
 \item Run the SCM, using TWPICE case with \execout{GFS\_v17\_p8} suite.
@@ -90,12 +105,12 @@ cd ccpp-scm/scm/bin
 \item Create 2D forcing data for the CSS, using SCM output from TWPICE case with \execout{GFS\_v17\_p8} suite.
 \begin{lstlisting}[language=bash]
 cd ccpp-scm/scm/etc/scripts/ccpp_scheme_sim
-./create_2D_simdata.py --cases twpice --suites SCM_GFS_v17_p8
+./create_2D_CSSdata.py --cases twpice --suites SCM_GFS_v17_p8
 \end{lstlisting}
 \item Create constant forcing data for the CSS, using SCM output, at forecast time 3600s, from TWPICE case with \execout{GFS\_v17\_p8} suite.
 \begin{lstlisting}[language=bash]
 cd ccpp-scm/scm/etc/scripts/ccpp_scheme_sim
-./create_1D_simdata.py --cases twpice --suites SCM_GFS_v17_p8 --time 3600
+./create_1D_CSSdata.py --cases twpice --suites SCM_GFS_v17_p8 --time 3600
 \end{lstlisting}
 \end{enumerate}
 
