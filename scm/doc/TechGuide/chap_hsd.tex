@@ -104,9 +104,94 @@ The data file will be written to \execout{ccpp-scm/scm/etc/scripts/ccpp\_scheme\
 \subsection{Example 1: Suite with Active Radiation}
 \label{section:Suite_with_Active_Radiation}
 
-For this example we will use the two-dimensional forcing data from \ref{section:Creating_Custom_Data_for_Simulator}.
+For this example we will use the two-dimensional forcing data from \ref{section:Creating_Custom_Data_for_Simulator}. 
 
+First, we need to modify the SDF to include the CSS, \execout{ccpp\_suite\_simulator.F90} and an additional interstital scheme to couple to the GFS physics, \execout{GFS\_ccpp\_suite\_sim\_pre.F90} (See \ref{fig:CSS_SDF_ex1}).
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.80\textwidth]{images/SDF_changes_for_CSS_ex1.png}
+    \caption{Changes to GFS v16 physics SDF to include CCPP suite simulator for \execout{active} radiation parameterization. All other parameterizations are replaced by simulated data.}
+    \label{fig:CSS_SDF_ex1}
+\end{figure}
+
+Next, the physics namelist needs to be configured to:
+\begin{enumerate}
+\item Add data file, \execout{suite\_sim\_file} created in \ref{section:Creating_Custom_Data_for_Simulator} to the namelist.
+\item Turn ``off'' all schemes except the radiation (see Fig. \ref{lst_css_nml})
+\end{enumerate}
+
+Finally, we rebuild the SCM with the modified SDFs to include the CSS, and run the SCM  using TWPICE case with the modified \execout{GFS\_v16} suite.
+\begin{lstlisting}[language=bash]
+cd ccpp-scm/scm/bin
+cmake ../src -DCCPP_SUITES=SCM_GFS_v16
+./run_scm.py -c twpice -s SCM_GFS_v16
+\end{lstlisting}
 
 \subsection{Example 2: Suite with Active Cloud Microphysics}
-\label{section:Suite_with_Active_Cloud_Microphysics}
+\label{section:Suite_with_Active_cldmp}
+
+For this example we will use the constant forcing data from \ref{section:Creating_Custom_Data_for_Simulator}.
+
+First, we need to modify the SDF to include the CSS, \execout{ccpp\_suite\_simulator.F90} and an additional interstital scheme to couple to the GFS physics, \execout{GFS\_ccpp\_suite\_sim\_pre.F90} (See \ref{fig:CSS_SDF_ex2}).
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.80\textwidth]{images/SDF_changes_for_CSS_ex2.png}
+    \caption{Changes to GFS v17 prototype 8  physics SDF to include CCPP suite simulator for \execout{active} cloud microphysics parameterization. All other parameterizations are replaced by simulated data.}
+    \label{fig:CSS_SDF_ex2}
+\end{figure}
+
+Next, the physics namelist needs to be configured to:
+\begin{enumerate}
+\item Add data file, \execout{suite\_sim\_file} created in \ref{section:Creating_Custom_Data_for_Simulator} to the namelist.
+\item Turn ``off'' all schemes except the cloud microphysics (see Fig. \ref{lst_css_nml_ex2})
+\end{enumerate}
+
+\lstinputlisting[
+                 basicstyle=\scriptsize\ttfamily,
+                 label=lst_css_nml,
+                 caption=Example namelist for CCPP Suite Simulator with active cloud microphysics.
+                 ]{./css_nml_ex2.txt}
+
+Finally, we rebuild the SCM with the modified SDFs to include the CSS, and run the SCM  using TWPICE case with the modified \execout{GFS\_v17\_p8} suite.
+\begin{lstlisting}[language=bash]
+cd ccpp-scm/scm/bin
+cmake ../src -DCCPP_SUITES=SCM_GFS_v17_p8
+./run_scm.py -c twpice -s SCM_GFS_v17_p8
+\end{lstlisting}
+
+\subsection{Plotting tools}
+\label{section:plotting_tools}
+
+Additionally, plotting scripts provided in \execout{ccpp-scm/scm/etc/scripts/ccpp\_scheme\_sim}:
+
+\begin{enumerate}
+\item
+\begin{lstlisting}[language=bash]
+./plt_scmout_2d.py [-h] -n CASE_NAME -sdf SDF -nmls NMLS -vars VAR1 VAR2 VAR3
+\end{lstlisting}
+
+Mandatory arguments:
+\begin{enumerate}
+\item \exec{-{}-case\_name (-n)} name of case
+\item \exec{-{}-suite (-sdf)} CCPP suite definition file
+\item \exec{-{}-nml\_list (-nmls)} namelists, separated by a space
+\item \exec{-{}-var\_list (-vars)} varaibles to plot, separated by a space
+\end{enumerate}
+
+\item
+\begin{lstlisting}[language=bash]
+./plt_scmout_3d.py [-h] -n CASE_NAME -sdf SDF -nmls NMLS -vars VAR1 VAR2 VAR3 -time TIME
+\end{lstlisting}
+
+Mandatory arguments:
+\begin{enumerate}
+\item \exec{-{}-case\_name (-n)} name of case
+\item \exec{-{}-suite (-sdf)} CCPP suite definition file
+\item \exec{-{}-nml\_list (-nmls)} namelists, separated by a space
+\item \exec{-{}-var\_list (-vars)} varaibles to plot, separated by a space
+\item \exec{-{}-time\_plot (-time)} time to plot, in seconds
+\end{enumerate}
+
+\end{enumerate}

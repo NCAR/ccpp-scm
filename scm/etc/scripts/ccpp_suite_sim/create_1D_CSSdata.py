@@ -48,7 +48,6 @@ def main():
 
     #
     run_dir  = '../../../run/'
-    run_dict = [{"case":"twpice", "suite":"SCM_GFS_v17_p8", "namelist": ""}]
     var_dict = [{"name": "dT_dt_swrad",     "time": "time_diag"},\
                 {"name": "dT_dt_lwrad",     "time": "time_diag"},\
                 {"name": "dT_dt_pbl",       "time": "time_diag"},\
