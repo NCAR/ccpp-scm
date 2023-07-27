@@ -47,10 +47,11 @@ Activate environment:
 
 \subsection{Enabling the CCPP Suite Simulator}
 
-To use the CSS in the CCPP-SCM two modifications need to be made:
+To use the CSS in the CCPP-SCM three modifications need to be made:
 
 \begin{enumerate}
 \item Add CSS, and any interstitial schemes needed for coupling the CSS to the host (e.g. SCM), to an existing CCPP SDF (or create a new SDF).
+\item Set \execout{do\_ccpp\_suite\_sim = .true.} in the GFS physics namelist, \execout{gfs\_physics\_nml}
 \item Modify, or create new, namelist that has the options needed to activate the CSS.
 \end{enumerate}
 
