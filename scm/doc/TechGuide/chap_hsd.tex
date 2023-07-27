@@ -71,7 +71,7 @@ The CSS has its own namelist, \execout{ccpp\_suite\_sim\_nml}, that needs to be 
 
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,
-                 label=lst_css_nml,
+                 label=lst_css_nml_ex1,
                  caption=Example namelist for CCPP Suite Simulator.
                  ]{./css_nml.txt}
 
@@ -86,7 +86,7 @@ The CSS has its own namelist, \execout{ccpp\_suite\_sim\_nml}, that needs to be 
 \end{itemize}
 \end{itemize}
 
-For example, in Listing \ref{lst_css_nml}, there are two active schemes, longwave and shortwave radiaiton, and five simulated schemes: PBL, gravity-wave drag, deep/shallow convection, and cloud microphysics. The radiation, gravity-wave drag and PBL schemes are all process-split, whereas convection and cloud microphysics are time-split. 
+For example, in Listing \ref{lst_css_nml_ex1}, there are two active schemes, longwave and shortwave radiaiton, and five simulated schemes: PBL, gravity-wave drag, deep/shallow convection, and cloud microphysics. The radiation, gravity-wave drag and PBL schemes are all process-split, whereas convection and cloud microphysics are time-split. 
 
 \subsection{Creating Custom Data for Simulator}
 \label{section:Creating_Custom_Data_for_Simulator}
@@ -133,7 +133,7 @@ First, we need to modify the SDF to include the CSS, \execout{ccpp\_suite\_simul
 Next, the physics namelist needs to be configured to:
 \begin{enumerate}
 \item Add data file, \execout{suite\_sim\_file} created in \ref{section:Creating_Custom_Data_for_Simulator} to the namelist.
-\item Turn ``off'' all schemes except the radiation (see Listing \ref{lst_css_nml})
+\item Turn ``off'' all schemes except the radiation (see Listing \ref{lst_css_nml_ex1})
 \end{enumerate}
 
 Finally, we rebuild the SCM with the modified SDFs to include the CSS, and run the SCM  using TWPICE case with the modified \execout{GFS\_v16} suite.
@@ -165,7 +165,7 @@ Next, the physics namelist needs to be configured to:
 
 \lstinputlisting[
                  basicstyle=\scriptsize\ttfamily,
-                 label=lst_css_nml,
+                 label=lst_css_nml_ex2,
                  caption=Example namelist for CCPP Suite Simulator with active cloud microphysics.
                  ]{./css_nml_ex2.txt}
 
