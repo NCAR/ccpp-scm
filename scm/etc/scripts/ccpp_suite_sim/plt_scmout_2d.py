@@ -40,7 +40,7 @@ def read_SCMout2d(fileIN,vars2plt):
 parser = ap.ArgumentParser()
 parser.add_argument('-n',    '--case_name', help='name of case', required=True)
 parser.add_argument('-sdf',  '--suite',     help='CCPP suite definition file',required=True)
-parser.add_argument('-nmls', '--nml_list',  help='namelists, separated by a space', nargs='*', required=True)
+parser.add_argument('-nmls', '--nml_list',  help='namelists, separated by a space', nargs='*')
 parser.add_argument('-vars', '--var_list',  help='varaibles to plot, separated by a space', nargs='*', required=True)
 
 def main():
@@ -51,7 +51,12 @@ def main():
     args      = parser.parse_args()
     case_name = args.case_name
     suite     = args.suite
-    namelist  = args.nml_list
+    have_nml  = True
+    if (args.nml_list):
+        namelist = args.nml_list
+    else:
+        have_nml = False
+        namelist = ['']
     vars2plt  = args.var_list
 
     #############################################################################################
@@ -62,7 +67,11 @@ def main():
     nfiles  = 0
     fileSCM = []
     for nml in namelist:
-        fileSCM.append("../../../../scm/run/output_" + case_name + "_" + suite+"_"+nml+"/output.nc")
+        if have_nml:
+            fileSCM.append("../../../../scm/run/output_" + case_name + "_" + suite+"_"+nml+"/output.nc")
+        else:
+            fileSCM.append("../../../../scm/run/output_" + case_name + "_" + suite+"/output.nc")
+
         # Check that file exists (Exit if not)
         if (not os.path.exists(fileSCM[nfiles])):
             print('ERROR: ',fileSCM[nfiles],' does not exist.')
@@ -91,7 +100,8 @@ def main():
     for var2plt in vars2plt:
 
         # Top row) Absolute plot
-        plt.subplot(2,len(vars2plt),varcount)
+        if (nfiles  > 1): plt.subplot(2,len(vars2plt),varcount)
+        if (nfiles == 1): plt.subplot(1,len(vars2plt),varcount)
         plt.title(var2plt, fontsize=fontsize*1.5)
         ccount = 0
         for ifile in range(0,nfiles):
@@ -102,18 +112,19 @@ def main():
         plt.ylabel("("+stateSCM[ifile][var2plt+"_units"]+")")
 
         # Bottom row) Difference plot (assumes first element is reference)
-        plt.subplot(2,len(vars2plt),len(vars2plt)+varcount)
-        ccount = 1
-        for ifile in range(1,nfiles):
-            plt.plot(stateSCM[ifile][var2plt+"_time"], stateSCM[ifile][var2plt][:] - stateSCM[0][var2plt][:], colors[ccount])
-            plt.plot([0,tlimit],[0,0],color='grey',linestyle='--')
-            ccount = ccount+ 1
-        plt.xlim(0,tlimit)
-        ylimit = max(stateSCM[ifile][var2plt][:] - stateSCM[0][var2plt][:], key=abs)*1.05
-        plt.ylim(-ylimit,ylimit)
-        plt.yticks(fontsize=fontsize)
-        plt.ylabel("("+stateSCM[ifile][var2plt+"_units"]+")")
-        plt.xlabel("(hours)")
+        if (nfiles > 1):
+            plt.subplot(2,len(vars2plt),len(vars2plt)+varcount)
+            ccount = 1
+            for ifile in range(1,nfiles):
+                plt.plot(stateSCM[ifile][var2plt+"_time"], stateSCM[ifile][var2plt][:] - stateSCM[0][var2plt][:], colors[ccount])
+                plt.plot([0,tlimit],[0,0],color='grey',linestyle='--')
+                ccount = ccount+ 1
+            plt.xlim(0,tlimit)
+            ylimit = max(stateSCM[ifile][var2plt][:] - stateSCM[0][var2plt][:], key=abs)*1.05
+            plt.ylim(-ylimit,ylimit)
+            plt.yticks(fontsize=fontsize)
+            plt.ylabel("("+stateSCM[ifile][var2plt+"_units"]+")")
+            plt.xlabel("(hours)")
         #
         varcount = varcount + 1
     plt.show()
