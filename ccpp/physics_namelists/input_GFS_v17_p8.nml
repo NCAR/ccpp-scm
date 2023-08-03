@@ -132,6 +132,7 @@
   iseed_ca     = 12345
   lndp_type    = 0
   n_var_lndp   = 0
+  do_ccpp_suite_sim = .false.
 /
 
 &cires_ugwp_nml
@@ -147,4 +148,16 @@
   knob_ugwp_ndx4lh  = 1 
   knob_ugwp_version = 0
   launch_level = 54
+/
+
+&ccpp_suite_sim_nml
+    suite_sim_file    = ''
+    nprc_sim           = 7
+    prc_LWRAD_cfg      = 0, 0, 1
+    prc_SWRAD_cfg      = 0, 0, 2
+    prc_PBL_cfg        = 1, 0, 3
+    prc_GWD_cfg        = 1, 0, 4
+    prc_SCNV_cfg       = 1, 1, 5
+    prc_DCNV_cfg       = 1, 1, 6
+    prc_cldMP_cfg      = 1, 1, 7
 /

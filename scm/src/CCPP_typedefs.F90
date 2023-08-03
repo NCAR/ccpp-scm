@@ -416,6 +416,9 @@ module CCPP_typedefs
     !-- 3D diagnostics
     integer :: rtg_ozone_index, rtg_tke_index
 
+    !-- CCPP suite simulator
+    real (kind=kind_phys), pointer      :: active_phys_tend(:,:,:) => null() ! tendencies for active physics process
+
     contains
 
       procedure :: create      => gfs_interstitial_create     !<   allocate array data
@@ -819,6 +822,13 @@ contains
     ! hardcoded value for calling GFDL MP in GFS_physics_driver.F90,
     ! which is set to .true.
     Interstitial%phys_hydrostatic = .true.
+
+    !
+    ! CCPP suite simulator
+    if (Model%do_ccpp_suite_sim) then
+       allocate (Interstitial%active_phys_tend(IM,Model%levs,Model%physics_process(1)%nprg_active))
+    endif
+
     !
     ! Reset all other variables
     call Interstitial%rad_reset (Model)
@@ -1409,6 +1419,13 @@ contains
       Interstitial%fullradar_diag = (Model%kdt == 1 .or. mod(Model%kdt, nint(Model%nsfullradar_diag/Model%dtp)) == 0) 
     end if
     !
+
+    !
+    ! CCPP suite simulator
+    if (Model%do_ccpp_suite_sim) then
+       Interstitial%active_phys_tend = clear_val
+    endif
+
   end subroutine gfs_interstitial_phys_reset
 
 end module CCPP_typedefs
