@@ -1628,7 +1628,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
               {"name":"lhtfl_ave"},  {"name":"shtfl_ave"},\
               {"name":"dswrf"},      {"name":"ulwrf"},\
               {"name":"lhtfl"},      {"name":"shtfl"},\
-              {"name":"pwatclm"},    {"name":"vgrd10m"},\
+              {"name":"pwat"},       {"name":"vgrd10m"},\
               {"name":"ugrd10m"}]
     for var2d in vars2d: var2d["values"] = []
 
