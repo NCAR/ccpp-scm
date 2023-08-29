@@ -1049,7 +1049,6 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     vfrac_in  = read_NetCDF_surface_var(nc_file, 'vfrac',  i, j, old_chgres, 0)
     shdmin_in = read_NetCDF_surface_var(nc_file, 'shdmin', i, j, old_chgres, 0)
     shdmax_in = read_NetCDF_surface_var(nc_file, 'shdmax', i, j, old_chgres, 0)
-    zorlo_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)
     slmsk_in  = read_NetCDF_surface_var(nc_file, 'slmsk',  i, j, old_chgres, 0)
     canopy_in = read_NetCDF_surface_var(nc_file, 'canopy', i, j, old_chgres, 0)
     hice_in   = read_NetCDF_surface_var(nc_file, 'hice',   i, j, old_chgres, 0)
@@ -1066,10 +1065,11 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     tprcp_in  = read_NetCDF_surface_var(nc_file, 'tprcp',  i, j, old_chgres, 0)
     srflag_in = read_NetCDF_surface_var(nc_file, 'srflag', i, j, old_chgres, 0)
     sncovr_in = read_NetCDF_surface_var(nc_file, 'sncovr', i, j, old_chgres, 0)
-    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsfcl',  i, j, old_chgres, 0)
-    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorll',  i, j, old_chgres, 0)   
-    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorli',  i, j, old_chgres, 0)
-    
+    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsea',   i, j, old_chgres, 0)
+    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)
+    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)
+    zorlo_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)
+
     # present when cplwav = T
     zorlw_in = read_NetCDF_surface_var(nc_file, 'zorlw', i, j, old_chgres, 0)
     
@@ -1454,7 +1454,7 @@ def search_in_dict(listin,name):
 #
 ########################################################################################
 def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, grid_dir,
-                         tile, i, j, lam, save_comp_data):
+                         tile, tile_i, tile_j, lam, forcing_i, forcing_j, save_comp_data):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
 
     # Determine UFS history file format (tiled/quilted)
@@ -1513,8 +1513,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
 
     # Find nearest point on UFS history file (quilted) grid.
     if use_nearest:
-        (tile_jj, tile_ii, point_lon, point_lat, dist_min) = find_loc_indices(location, forcing_dir, -999, lam)
-        print('The closest point has indices [{0},{1}]'.format(tile_ii,tile_jj))
+        (forcing_j,forcing_i, point_lon, point_lat, dist_min) = find_loc_indices(location, forcing_dir, -999, lam)
+        print('The closest point has indices [{0},{1}]'.format(forcing_i,forcing_j))
         print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
         print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
 
@@ -1544,6 +1544,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             except:
                 data_grid_lon = nc_file['grid_xt'][:,:]
                 data_grid_lat = nc_file['grid_yt'][:,:]
+            nlat = len(data_grid_lon[:,0])
+            nlon = len(data_grid_lon[0,:])
+
             equal_grids = False
             if (ic_grid_lon.shape == data_grid_lon.shape and                               \
                 ic_grid_lat.shape == ic_grid_lat.shape):
@@ -1555,41 +1558,37 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             if (not equal_grids):
                 print('Regridding {} onto native grid: regridding progress = {}%'.         \
                       format(filename, 100.0*count/(2*n_files)))
-
-                grid_in   = {'lon': data_grid_lon, 'lat': data_grid_lat}
-                grid_out  = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat':            \
-                             np.reshape(ic_grid_lat[j,i],(-1,1))}
+                ilon = [max([0,forcing_i-1]), min([nlon,forcing_i+1])+1]
+                ilat = [max([0,forcing_j-1]), min([nlat,forcing_j+1])+1]
+                grid_in   = {'lon': data_grid_lon[ilat[0]:ilat[1],ilon[0]:ilon[1]], \
+                             'lat': data_grid_lat[ilat[0]:ilat[1],ilon[0]:ilon[1]]}
+                grid_out  = {'lon': np.reshape(ic_grid_lon[tile_j,tile_i],(-1,1)), \
+                             'lat': np.reshape(ic_grid_lat[tile_j,tile_i],(-1,1))}
                 regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
-                ps_data   = regridder(nc_file['pressfc'][0,:,:])
-                t_data    = regridder(nc_file['tmp'][0,::-1,:,:])
-                qv_data   = regridder(nc_file['spfh'][0,::-1,:,:])
-                u_data    = regridder(nc_file['ugrd'][0,::-1,:,:])
-                v_data    = regridder(nc_file['vgrd'][0,::-1,:,:])
-                i_get     = 0
-                j_get     = 0
+                ps_data   = regridder(nc_file['pressfc'][0,ilat[0]:ilat[1],ilon[0]:ilon[1]])
+                t_data    = regridder(nc_file['tmp'][0,::-1,ilat[0]:ilat[1],ilon[0]:ilon[1]])
+                qv_data   = regridder(nc_file['spfh'][0,::-1,ilat[0]:ilat[1],ilon[0]:ilon[1]])
+                u_data    = regridder(nc_file['ugrd'][0,::-1,ilat[0]:ilat[1],ilon[0]:ilon[1]])
+                v_data    = regridder(nc_file['vgrd'][0,::-1,ilat[0]:ilat[1],ilon[0]:ilon[1]])
             # Same grids for history file (data_grid) to IC file (ic_grid).
             else:
-                ps_data   = nc_file['pressfc'][0,:,:]
-                t_data    = nc_file['tmp'][0,::-1,:,:]
-                qv_data   = nc_file['spfh'][0,::-1,:,:]
-                u_data    = nc_file['ugrd'][0,::-1,:,:]
-                v_data    = nc_file['vgrd'][0,::-1,:,:]
-                i_get     = i
-                j_get     = j
+                ps_data   = nc_file['pressfc'][0,forcing_j,forcing_i]
+                t_data    = nc_file['tmp'][0,::-1,forcing_j,forcing_i]
+                qv_data   = nc_file['spfh'][0,::-1,forcing_j,forcing_i]
+                u_data    = nc_file['ugrd'][0,::-1,forcing_j,forcing_i]
+                v_data    = nc_file['vgrd'][0,::-1,forcing_j,forcing_i]
         else:
             print('Using nearest UFS point {} progress = {}%'.format(filename, 100.0*count/(2*n_files)))
-            ps_data = nc_file['pressfc'][0,:,:]
-            t_data  = nc_file['tmp'][0,::-1,:,:]
-            qv_data = nc_file['spfh'][0,::-1,:,:]
-            u_data  = nc_file['ugrd'][0,::-1,:,:]
-            v_data  = nc_file['vgrd'][0,::-1,:,:]
-            j_get   = tile_jj
-            i_get   = tile_ii
+            ps_data = nc_file['pressfc'][0,forcing_j,forcing_i]
+            t_data  = nc_file['tmp'][0,::-1,forcing_j,forcing_i]
+            qv_data = nc_file['spfh'][0,::-1,forcing_j,forcing_i]
+            u_data  = nc_file['ugrd'][0,::-1,forcing_j,forcing_i]
+            v_data  = nc_file['vgrd'][0,::-1,forcing_j,forcing_i]
 
         # Compute and store vertical grid information.
         ak = getattr(nc_file, "ak")[::-1]
         bk = getattr(nc_file, "bk")[::-1]
-        ps.append(ps_data[j_get,i_get])
+        ps.append(ps_data[0,0])
         nlevs = len(nc_file.dimensions['pfull'])
         p_interface = np.zeros(nlevs+1)
         for k in range(nlevs+1):
@@ -1603,10 +1602,10 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         p_lay.append(p_layer)
 
         # Store state variables.
-        t_lay.append(t_data[:,j_get,i_get])
-        qv_lay.append(qv_data[:,j_get,i_get])
-        u_lay.append(u_data[:,j_get,i_get])
-        v_lay.append(v_data[:,j_get,i_get])
+        t_lay.append(t_data[:,0,0])
+        qv_lay.append(qv_data[:,0,0])
+        u_lay.append(u_data[:,0,0])
+        v_lay.append(v_data[:,0,0])
         time_hr.append(nc_file['time'][0])
         
         # Close file
@@ -1629,7 +1628,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
               {"name":"lhtfl_ave"},  {"name":"shtfl_ave"},\
               {"name":"dswrf"},      {"name":"ulwrf"},\
               {"name":"lhtfl"},      {"name":"shtfl"},\
-              {"name":"pwat"},       {"name":"vgrd10m"},\
+              {"name":"pwatclm"},    {"name":"vgrd10m"},\
               {"name":"ugrd10m"}]
     for var2d in vars2d: var2d["values"] = []
 
@@ -1656,28 +1655,20 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             if (not equal_grids):
                 print('Regridding {} onto native grid: regridding progress = {}%'.         \
                       format(filename, 50+50.0*count/(n_files)))
-
-                grid_in   = {'lon': data_grid_lon, 'lat': data_grid_lat}
-                grid_out  = {'lon': np.reshape(ic_grid_lon[j,i],(-1,1)), 'lat':            \
-                             np.reshape(ic_grid_lat[j,i],(-1,1))}
+                ilon = [max([0,forcing_i-1]), min([nlon,forcing_i+1])+1]
+                ilat = [max([0,forcing_j-1]), min([nlat,forcing_j+1])+1]
+                grid_in   = {'lon': data_grid_lon[ilat[0]:ilat[1],ilon[0]:ilon[1]], \
+                             'lat': data_grid_lat[ilat[0]:ilat[1],ilon[0]:ilon[1]]}
+                grid_out  = {'lon': np.reshape(ic_grid_lon[tile_j,tile_i],(-1,1)), \
+                             'lat': np.reshape(ic_grid_lat[tile_j,tile_i],(-1,1))}
                 regridder = xesmf.Regridder(grid_in, grid_out, 'bilinear')
-                i_get     = 0
-                j_get     = 0
-            # Same grids for history file (data_grid) to IC file (ic_grid).
-            else:
-                i_get     = i
-                j_get     = j
-        else:
-            print('Using nearest UFS point {} progress = {}%'.format(filename, 50+50.0*count/(n_files)))
-            j_get   = tile_jj
-            i_get   = tile_ii
 
         for var2d in vars2d:
             if not use_nearest:
-                data = regridder(nc_file[var2d["name"]][0,:,:])
+                data = regridder(nc_file[var2d["name"]][0,ilat[0]:ilat[1],ilon[0]:ilon[1]])
             else:
-                data = nc_file[var2d["name"]][0,:,:]
-            var2d["values"].append(data[j_get,i_get])
+                data = nc_file[var2d["name"]][0,forcing_j,forcing_i]
+            var2d["values"].append(data[0,0])
             var2d["units"]     = nc_file[var2d["name"]].getncattr(name="units")
             var2d["long_name"] = nc_file[var2d["name"]].getncattr(name="long_name")
 
@@ -2720,10 +2711,11 @@ def main():
     surface_data["lat"]  = point_lat
     
     # Get UFS forcing data
+    (forcing_j, forcing_i, point_lon, point_lat, dist_min) = find_loc_indices(location, forcing_dir, -999, lam)
     (forcing_data, comp_data, stateREGRID) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
                                                                   location, use_nearest, forcing_dir, \
                                                                   grid_dir, tile, tile_i, tile_j, lam,\
-                                                                  save_comp)
+                                                                  forcing_i, forcing_j, save_comp)
     
     # Write SCM case file
     fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, \
