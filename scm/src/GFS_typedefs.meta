@@ -6666,6 +6666,85 @@
   units = flag
   dimensions = ()
   type = logical
+[do_ccpp_suite_sim]
+  standard_name = flag_for_CCPP_suite_simulator
+  long_name = flag for ccpp suite simulator
+  units = flag
+  dimensions = ()
+  type = logical
+[suite_sim_data]
+  standard_name = filename_for_CCPP_suite_simulator
+  long_name = filename for cccpp suite simulator data file
+  units = none
+  dimensions = ()
+  type = character
+  kind = len=256
+[nprg_active]
+  standard_name = number_of_prognostics_varaibles_in_CCPP_suite_simulator
+  long_name = number of prognostic variables used in CCPP suite simulator
+  units = count
+  dimensions = ()
+  type = integer
+[iactive_T]
+  standard_name = index_for_active_T_in_CCPP_suite_simulator
+  long_name = index into active process tracer array for temperature in CCPP suite simulator
+  units = count
+  dimensions = ()
+  type = integer
+[iactive_u]
+  standard_name = index_for_active_u_in_CCPP_suite_simulator
+  long_name = index into active process tracer array for zonal wind in CCPP suite simulator
+  units = count
+  dimensions = ()
+  type = integer
+[iactive_v]
+  standard_name = index_for_active_v_in_CCPP_suite_simulator
+  long_name = index into active process tracer array for meridional wind in CCPP suite simulator
+  units = count
+  dimensions = ()
+  type = integer
+[iactive_q]
+  standard_name = index_for_active_q_in_CCPP_suite_simulator
+  long_name = index into active process tracer array for moisture in CCPP suite simulator
+  units = count
+  dimensions = ()
+  type = integer
+[nphys_proc]
+  standard_name = number_of_physics_process_in_CCPP_suite_simulator
+  long_name = number of physics processes in CCPP suite simulator
+  units = count
+  dimensions = ()
+  type = integer
+[physics_process]
+  standard_name = physics_process_type_for_CCPP_suite_simulator
+  long_name = physics process type for CCPP suite simulator
+  units = mixed
+  dimensions = (number_of_physics_process_in_CCPP_suite_simulator)
+  type = base_physics_process
+[proc_start]
+  standard_name = index_for_first_physics_process_in_CCPP_suite_simulator
+  long_name = index for first physics process in CCPP suite simulator
+  units     = count
+  dimensions = ()
+  type = integer
+[proc_end]
+  standard_name = index_for_last_physics_process_in_CCPP_suite_simulator
+  long_name = index for last physics process in CCPP suite simulator
+  units     = count
+  dimensions = ()
+  type = integer
+[in_pre_active]
+  standard_name = flag_to_indicate_location_in_physics_process_loop_before_active_scheme
+  long_name = flag to indicate location in physics process loop before active scheme
+  units = flag
+  dimensions = ()
+  type = logical
+[in_post_active]
+  standard_name = flag_to_indicate_location_in_physics_process_loop_after_active_scheme
+  long_name = flag to indicate location in physics process loop after active scheme
+  units = flag
+  dimensions = ()
+  type = logical
 [ipt]
   standard_name = index_of_horizontal_gridpoint_for_debug_output
   long_name = horizontal index for point used for diagnostic printout
@@ -9561,7 +9640,7 @@
   type = module
   relative_path = ../../ccpp/physics/physics
   dependencies = machine.F,physcons.F90,radlw_param.f,radsw_param.f
-  dependencies = GFDL_parse_tracers.F90,h2o_def.f,ozne_def.f
+  dependencies = GFDL_parse_tracers.F90,h2o_def.f,ozne_def.f,GFS_ccpp_suite_sim_pre.F90
 
 [ccpp-arg-table]
   name = GFS_typedefs
