@@ -201,6 +201,7 @@ module scm_type_defs
     real(kind=dp)                     :: input_q2m     !< 2-meter specific humidity (kg kg-1)
     integer                           :: input_vegtyp !< vegetation type classification
     integer                           :: input_soiltyp !<
+    integer                           :: input_scolor
     real(kind=dp)                     :: input_uustar  !< surface friction velocity (m s-1)
     real(kind=dp)                     :: input_ffmm    !< Monin-Obukhov similarity function for momentum
     real(kind=dp)                     :: input_ffhh    !< Monin-Obukhov similarity function for heat
@@ -693,6 +694,7 @@ module scm_type_defs
     scm_input%input_q2m           = real_zero
     scm_input%input_vegtyp        = int_zero
     scm_input%input_soiltyp       = int_zero
+    scm_input%input_scolor        = int_zero
     scm_input%input_uustar        = real_zero
     scm_input%input_ffmm          = real_zero
     scm_input%input_ffhh          = real_zero
@@ -1165,12 +1167,25 @@ module scm_type_defs
         else
           physics%Sfcprop%zorlwav(i)  = physics%Sfcprop%zorlw(i)
         end if
+        call conditionally_set_var(scm_input%input_scolor, physics%Sfcprop%scolor(i), "scolor", .false., missing_var(50))
+        
+        if (missing_var(50)) then
+          if (.not. missing_var(1)) then
+            if ( nint (physics%Sfcprop%slmsk(i)) == 1 ) then  !including glacier
+              physics%Sfcprop%scolor(i)  = 4
+            else
+              physics%Sfcprop%scolor(i)  = int_zero
+            endif
+          else
+            physics%Sfcprop%scolor(i)  = int_zero      
+          end if
+        end if
         
         !GJF: Is this still needed?
         if (missing_var(32)) physics%Sfcprop%sncovr(i) = real_zero
                 
         !write out warning if missing data for non-required variables
-        n = 49
+        n = 50
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables. This may lead to crashes or other strange behavior."
           write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
