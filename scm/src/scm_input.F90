@@ -2038,7 +2038,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_T_surf = input_force_ts(:)
       scm_state%surface_thermo_control = 2
     end if
-  else if (input_surfaceForcingTemp == 'surface_flux') then
+  else if (input_surfaceForcingTemp == 'kinematic') then
     !overwrite sfc_flux_spec
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 0
