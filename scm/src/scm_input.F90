@@ -243,6 +243,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_q2m    !< 2-meter specific humidity (kg kg-1)
   integer                     :: input_vegtyp !< vegetation type
   integer                     :: input_soiltyp!< soil type
+  integer                     :: input_scolor !< soil color
   real(kind=dp)               :: input_uustar  !< surface friction velocity (m s-1)
   real(kind=dp)               :: input_ffmm    !< Monin-Obukhov similarity function for momentum
   real(kind=dp)               :: input_ffhh    !< Monin-Obukhov similarity function for heat
@@ -552,6 +553,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "q2m",     .False., input_q2m)
   call NetCDF_read_var(grp_ncid, "vegtyp",  .False., input_vegtyp   )
   call NetCDF_read_var(grp_ncid, "soiltyp", .False., input_soiltyp  )
+  call NetCDF_read_var(grp_ncid, "scolor",  .False., input_scolor)
   call NetCDF_read_var(grp_ncid, "uustar",  .False., input_uustar)
   call NetCDF_read_var(grp_ncid, "ffmm",    .False., input_ffmm)
   call NetCDF_read_var(grp_ncid, "ffhh",    .False., input_ffhh)
@@ -797,6 +799,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_q2m      = input_q2m
   scm_input%input_vegtyp   = input_vegtyp
   scm_input%input_soiltyp  = input_soiltyp
+  scm_input%input_scolor   = input_scolor
   scm_input%input_uustar   = input_uustar
   scm_input%input_ffmm     = input_ffmm
   scm_input%input_ffhh     = input_ffhh
@@ -994,6 +997,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   integer      , allocatable  :: input_vegsrc(:) !< vegetation source
   integer      , allocatable  :: input_vegtyp(:) !< vegetation type
   integer      , allocatable  :: input_soiltyp(:)!< soil type
+  integer      , allocatable  :: input_scolor(:) !< soil color
   integer      , allocatable  :: input_slopetype(:) !< slope type
   real(kind=dp), allocatable  :: input_vegfrac(:)  !< vegetation fraction
   real(kind=dp), allocatable  :: input_shdmin(:)  !< minimun vegetation fraction
@@ -1329,6 +1333,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_vegsrc    (          input_n_init_times), &
              input_vegtyp    (          input_n_init_times), &
              input_soiltyp   (          input_n_init_times), &
+             input_scolor    (          input_n_init_times), &
              input_slopetype (          input_n_init_times), &
              input_vegfrac   (          input_n_init_times), &
              input_shdmin    (          input_n_init_times), &
@@ -1659,6 +1664,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
      call NetCDF_read_var(ncid, "vegsrc",   .True., input_vegsrc   )
      call NetCDF_read_var(ncid, "vegtyp",   .True., input_vegtyp   )
      call NetCDF_read_var(ncid, "soiltyp",  .True., input_soiltyp  )
+     call NetCDF_read_var(ncid, "scolor",   .True., input_scolor)
      call NetCDF_read_var(ncid, "slopetyp", .True., input_slopetype)
      call NetCDF_read_var(ncid, "tsfco",    .True., input_tsfco)
      call NetCDF_read_var(ncid, "vegfrac",  .True., input_vegfrac)
@@ -2032,7 +2038,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_T_surf = input_force_ts(:)
       scm_state%surface_thermo_control = 2
     end if
-  else if (input_surfaceForcingTemp == 'surface_flux') then
+  else if (input_surfaceForcingTemp == 'kinematic') then
     !overwrite sfc_flux_spec
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 0
@@ -2155,6 +2161,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_vegtyp   = REAL(input_vegtyp(active_init_time), kind=dp)
     scm_input%input_soiltyp  = REAL(input_soiltyp(active_init_time), kind=dp)
     scm_input%input_slopetype = REAL(input_slopetype(active_init_time), kind=dp)
+    scm_input%input_scolor   = REAL(input_scolor(active_init_time), kind=dp)
     scm_input%input_tsfco    = input_tsfco(active_init_time)
     scm_input%input_vegfrac  = input_vegfrac(active_init_time)
     scm_input%input_shdmin   = input_shdmin(active_init_time)
