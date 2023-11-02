@@ -20,7 +20,7 @@ jobs:
     env:
       FCFLAGS:    -fPIC
       NFHOME:     /home/runner/netcdf-fortran
-      NFVERSION:  v4.4.4
+      NFVERSION:  v4.5.3
       bacio_ROOT: /home/runner/bacio
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
