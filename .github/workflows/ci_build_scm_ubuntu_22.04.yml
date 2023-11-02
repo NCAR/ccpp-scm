@@ -18,7 +18,9 @@ jobs:
 
     # Environmental variables
     env:
-      FCFLAGS:    -fPIC
+      F90:        ${{ matrix.fortran-compiler }}
+      FC:         ${{ matrix.fortran-compiler }}
+      F90FLAGS:   "-O3 -ffree-line-length-none -fcheck=bounds -finit-real=nan"
       NFHOME:     /home/runner/netcdf-fortran
       NFVERSION:  v4.5.3
       bacio_ROOT: /home/runner/bacio
@@ -154,13 +156,14 @@ jobs:
 
     - name: Install NetCDF Fortran library
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+      env:
+        FCFLAGS: -fPIC
       run: |
         git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
         ./configure --prefix=${NFHOME}
         make -j
         sudo make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
     #######################################################################################
     # Build SCM.
