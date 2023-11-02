@@ -164,7 +164,7 @@ jobs:
         ./configure --prefix=${NFHOME}
         make -j
         sudo make install
-	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
     #######################################################################################
     # Build SCM.
