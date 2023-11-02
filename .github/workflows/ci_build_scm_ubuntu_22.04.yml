@@ -18,6 +18,7 @@ jobs:
 
     # Environmental variables
     env:
+      FCFLAGS:    -fPIC
       NFHOME:     /home/runner/netcdf-fortran
       NFVERSION:  v4.4.4
       bacio_ROOT: /home/runner/bacio
@@ -156,7 +157,7 @@ jobs:
       run: |
         git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
         cd netcdf-fortran
-        ./configure
+        ./configure --prefix=${NFHOME}
         make -j
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
