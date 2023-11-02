@@ -64,6 +64,10 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
+    - name: Install gfortran compiler
+      if: contains(matrix.fortran-compiler, 'gfortran')
+      run: sudo apt-get install ${{ matrix.fortran-compiler }}
+
     - name: Environment for ifort compiler
       if: contains(matrix.fortran-compiler, 'ifort')
       run: |
