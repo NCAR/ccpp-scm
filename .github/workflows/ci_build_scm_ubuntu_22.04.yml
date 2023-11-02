@@ -19,7 +19,7 @@ jobs:
     # Environmental variables
     env:
       NFHOME:     /home/runner/netcdf-fortran
-      NFVERSION:  v4.5.3
+      NFVERSION:  v4.4.4
       bacio_ROOT: /home/runner/bacio
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
