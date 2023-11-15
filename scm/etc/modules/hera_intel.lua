@@ -3,7 +3,7 @@ This module loads libraries for building the CCPP Single-Column Model on
 the NOAA RDHPC machine Hera using Intel-2021.5.0
 ]])
 
-whatis([===[Loads libraries needed for building the CCPP SCM on Hera ]===])
+whatis([===[Loads libraries needed for building the CCPP SCM on Hera with Intel compilers ]===])
 
 load("cmake/3.20.1")
 
