@@ -39,7 +39,7 @@ jobs:
 
     #######################################################################################
     # Python setup
-    #######################################################################################    
+    #######################################################################################
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
@@ -49,10 +49,9 @@ jobs:
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
 
-    - name: Install python libraries
+    - name: Install NetCDF Python libraries
       run: |
-        conda install --yes -c conda-forge f90nml
-        conda install --yes -c conda-forge netCDF4
+        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
 
     - name: Update system packages
       run: sudo apt-get update
@@ -198,6 +197,6 @@ jobs:
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v2
-      with: 
+      with:
         name: rt-baselines-${{matrix.build-type}}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
