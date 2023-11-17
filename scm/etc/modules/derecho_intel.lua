@@ -3,15 +3,15 @@ This module loads libraries for building the CCPP Single-Column Model on
 the CISL machine Derecho (Cray) using Intel-classic-2023.0.0
 ]])
 
-whatis([===[Loads libraries needed for building the CCPP SCM on Derecho ]===])
+whatis([===[Loads spack-stack libraries needed for building the CCPP SCM on Derecho with Intel compilers]===])
 
-load(pathJoin("cmake", os.getenv("cmake_ver") or "3.26.3"))
-load(pathJoin("ncarenv", os.getenv("ncarenv_ver") or "23.06"))
-load(pathJoin("craype", os.getenv("craype_ver") or "2.7.20"))
+setenv("LMOD_TMOD_FIND_FIRST","yes")
+load("ncarenv/23.09")
+load("cmake/3.26.3")
 
-unload("conda")
 prepend_path("MODULEPATH","/glade/work/epicufsrt/contrib/spack-stack/derecho/modulefiles")
 prepend_path("MODULEPATH","/glade/work/epicufsrt/contrib/spack-stack/derecho/spack-stack-1.5.1/envs/unified-env/install/modulefiles/Core")
+
 load("stack-intel/2021.10.0")
 load("stack-cray-mpich/8.1.25")
 load("stack-python/3.10.8")
@@ -23,10 +23,6 @@ load("netcdf-fortran/4.6.0")
 load("bacio/2.4.1")
 load("sp/2.3.3")
 load("w3emc")
-
-setenv("CC","cc")
-setenv("FC","ftn")
-setenv("CXX","CC")
 
 setenv("CMAKE_C_COMPILER","cc")
 setenv("CMAKE_CXX_COMPILER","CC")
