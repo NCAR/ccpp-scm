@@ -5,9 +5,11 @@ the NOAA RDHPC machine Hera using GNU 9.2.0
 
 whatis([===[Loads libraries needed for building the CCPP SCM on Hera with GNU compilers ]===])
 
-load("cmake/3.20.1")
-
 prepend_path("MODULEPATH", "/scratch1/NCEPDEV/jcsda/jedipara/spack-stack/modulefiles")
+
+load("cmake/3.20.1")
+load("miniconda/3.9.12")
+
 prepend_path("MODULEPATH", "/scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-stack-1.5.1/envs/unified-env/install/modulefiles/Core")
 
 load("stack-gcc/9.2.0")
