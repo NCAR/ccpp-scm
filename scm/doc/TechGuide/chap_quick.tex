@@ -99,19 +99,15 @@ most recent version of a compiler. If you have problems with compilers, please c
 release website (\url{https://dtcenter.org/community-code/common-community-physics-package-ccpp/download}).
 
 \subsection{Using Existing Libraries on Preconfigured Platforms}\label{section: use_preconfigured_platforms}
-Platform-specific scripts are provided to load modules and set the user environment for preconfigured platforms. These scripts load compiler modules (Fortran 2008-compliant), the NetCDF module, Python environment, etc. and set compiler and environment variables. From the top-level code directory (\execout{ccpp-scm} by default), source the correct script for your platform and shell. For \textit{t/csh} shells,
-\begin{lstlisting}[language=csh]
-source scm/etc/Hera_setup_intel.csh
-source scm/etc/Cheyenne_setup_gnu.csh
-source scm/etc/Cheyenne_setup_intel.csh
-\end{lstlisting}
-For bourne/bash shells,
-\begin{lstlisting}[language=bash]
-. scm/etc/Hera_setup_intel.sh
-. scm/etc/Cheyenne_setup_gnu.sh
-. scm/etc/Cheyenne_setup_intel.sh
+Because the SCM can be built using the so-called \href{https://ufs-weather-model.readthedocs.io/en/latest/Glossary.html#term-spack-stack}{"spack-stack" libraries} maintained for the UFS Weather Model effort, there are many platforms where the SCM can be built using those existing libraries. This can be done by loading provided modules in the \execout{scm/etc/modules} directory (must be done from the top-level "ccpp-scm" directory; otherwise the \execout{module use} command should point to the corresponding absolute path):
+
+\begin{lstlisting}[language=sh]
+module purge
+module use scm/etc/modules
+module load [machine]_[compiler]
 \end{lstlisting}
 
+View the contents of the \execout{scm/etc/modules} directory to see if your machine/compiler combination is supported. As of this writing, modulefiles are provided for Intel and GNU compilers on the NCAR machine Derecho, the NOAA machines Hera and Jet, and the NOAA/MSU machine Orion. Loading these modules will set up all the needed compilers, libraries, and other programs needed for building, as well as the python libraries needed for both building and running the SCM.
 
 \subsection{Installing Libraries on Non-preconfigured Platforms}\label{section: setup_supported_platforms}
 For users on supported platforms such as generic Linux or macOS systems that have not been preconfigured, the \execout{hpc-stack} project is suggested for installing prerequisite libraries. Visit \url{https://github.com/NOAA-EMC/hpc-stack} for instructions for installing prerequisite libraries via \execout{hpc-stack} in their docs directory. UFS users who already installed libraries via the \execout{hpc-stack} package only need to set the compiler (\execout{CC, CXX, FC}), NetCDF (\execout{NetCDF\_ROOT}), and \execout{bacio},  \execout{sp} and \execout{w3emc} (\execout{bacio\_ROOT}, \execout{sp\_ROOT}, \execout{w3emc\_ROOT}) environment variables to point to their installation paths in order to compile the SCM. 
