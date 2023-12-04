@@ -4,8 +4,8 @@ module GFS_typedefs
      
    use module_radsw_parameters,  only: topfsw_type, sfcfsw_type
    use module_radlw_parameters,  only: topflw_type, sfcflw_type
-   use ozne_def,                 only: levozp, oz_coeff
    use h2o_def,                  only: levh2o, h2o_coeff
+   use module_ozphys,            only: ty_ozphys
    use module_ccpp_suite_simulator, only: base_physics_process
 
    implicit none
@@ -1106,8 +1106,6 @@ module GFS_typedefs
     logical              :: shocaftcnv      !< flag for SHOC
     logical              :: shoc_cld        !< flag for clouds
     logical              :: uni_cld         !< flag for clouds in grrad
-    logical              :: oz_phys         !< flag for old (2006) ozone physics
-    logical              :: oz_phys_2015    !< flag for new (2015) ozone physics
     logical              :: h2o_phys        !< flag for stratosphere h2o
     logical              :: pdfcld          !< flag for pdfcld
     logical              :: shcnvcw         !< flag for shallow convective cloud
@@ -1561,6 +1559,13 @@ module GFS_typedefs
 !--- lightning threat and diagsnostics
     logical              :: lightning_threat !< report lightning threat indices
 
+!--- NRL Ozone physics
+    logical         :: oz_phys         !< Flag for old (2006) ozone physics
+    logical         :: oz_phys_2015    !< Flag for new (2015) ozone physics
+    type(ty_ozphys) :: ozphys          !< DDT with data needed by ozone physics
+    integer         :: levozp          !< Number of vertical layers in ozone forcing data
+    integer         :: oz_coeff        !< Number of coefficients in ozone forcing data
+
 !--- CCPP suite simulator
     logical                                :: do_ccpp_suite_sim  !
     integer                                :: nphys_proc          !
@@ -1798,7 +1803,7 @@ module GFS_typedefs
 !--- In/Out (???) (physics only)
     real (kind=kind_phys), pointer :: swhc (:,:)   => null()  !< clear sky sw heating rates ( k/s )
     real (kind=kind_phys), pointer :: lwhc (:,:)   => null()  !< clear sky lw heating rates ( k/s )
-    real (kind=kind_phys), pointer :: lwhd (:,:,:) => null()  !< idea sky lw heating rates ( k/s )
+    real (kind=kind_phys), pointer :: lwhd (:,:,:) => null()  !< idea sky lw heating rates ( k/s ) !DJS2023 THIS IS NOT USED. IT IS REFERENCED, BUT NEVER SET?
 
     contains
       procedure :: create  => radtend_create   !<   allocate array data
@@ -2105,6 +2110,12 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: ltg1_max(:)        => null()  !
     real (kind=kind_phys), pointer :: ltg2_max(:)        => null()  !
     real (kind=kind_phys), pointer :: ltg3_max(:)        => null()  !
+
+    !--- NRL Ozone physics diagnostics
+    real (kind=kind_phys), pointer :: do3_dt_prd(:,:)  => null()
+    real (kind=kind_phys), pointer :: do3_dt_ozmx(:,:) => null()
+    real (kind=kind_phys), pointer :: do3_dt_temp(:,:) => null()
+    real (kind=kind_phys), pointer :: do3_dt_ohoz(:,:) => null()
 
     contains
       procedure :: create    => diag_create
@@ -3540,8 +3551,6 @@ module GFS_typedefs
     logical              :: do_shoc        = .false.                  !< flag for SHOC
     logical              :: shocaftcnv     = .false.                  !< flag for SHOC
     logical              :: shoc_cld       = .false.                  !< flag for SHOC in grrad
-    logical              :: oz_phys        = .true.                   !< flag for old (2006) ozone physics
-    logical              :: oz_phys_2015   = .false.                  !< flag for new (2015) ozone physics
     logical              :: h2o_phys       = .false.                  !< flag for stratosphere h2o
     logical              :: pdfcld         = .false.                  !< flag for pdfcld
     logical              :: shcnvcw        = .false.                  !< flag for shallow convective cloud
@@ -3825,6 +3834,12 @@ module GFS_typedefs
 !-- Lightning threat index
     logical :: lightning_threat = .false.
 
+!--- NRL Ozone physics
+    logical              :: oz_phys      = .false.  !< Flag for old (2006) ozone physics
+    logical              :: oz_phys_2015 = .true.   !< Flag for new (2015) ozone physics
+    integer              :: kozpl        = 28       !< File identifier for ozone forcing data
+    integer              :: kozc         = 48       !< File identifier for ozone climotology data
+
 !--- CCPP suite simulator
     logical            :: do_ccpp_suite_sim  = .false.
     integer            :: nphys_proc         = 0
@@ -4013,6 +4028,9 @@ module GFS_typedefs
     logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys, have_samf, have_pbl_edmf, have_cnvtrans, have_rdamp
     character(len=20) :: namestr
     character(len=44) :: descstr
+
+!--- NRL ozone physics
+    character(len=128) :: err_message
 
 !--- CCPP suite simulator
     integer :: ncid, dimID, varID, status, ntime_sim_data, nlev_sim_data, errflg
@@ -5446,29 +5464,23 @@ module GFS_typedefs
 
     ENDIF !}
 
-    ! To ensure that these values match what's in the physics,
-    ! array sizes are compared during model init in GFS_phys_time_vary_init()
-    !
-    ! from module ozinterp
-    if (Model%ntoz>0) then
-       if (Model%oz_phys) then
-          levozp   = 80
-          oz_coeff = 4
-       else if (Model%oz_phys_2015) then
-          levozp   = 53
-          oz_coeff = 6
-       else
-          write(*,*) 'Logic error, ntoz>0 but no ozone physics selected'
-          stop
-       end if
+    !--- NRL ozone physics
+    if (Model%ntoz > 0) then
+       ! Load data for ozone physics into DDT ozphys
+       err_message    = Model%ozphys%load_o3prog('global_o3prdlos.f77',kozpl)
+       Model%levozp   = Model%ozphys%nlev
+       Model%oz_coeff = Model%ozphys%ncf
+
+       if (Model%me == Model%master) then
+          write(*,*) 'Reading in o3data from global_o3prdlos.f77 '
+          write(*,*) '      oz_coeff = ', Model%ozphys%ncf
+          write(*,*) '       latsozp = ', Model%ozphys%nlat
+          write(*,*) '        levozp = ', Model%ozphys%nlev
+          write(*,*) '        timeoz = ', Model%ozphys%ntime
+       endif
     else
-       if (Model%oz_phys .or. Model%oz_phys_2015) then
-          write(*,*) 'Logic error, ozone physics are selected, but ntoz<=0'
-          stop
-       else
-          levozp   = 1
-          oz_coeff = 1
-       end if
+       !--- Climatological ozone
+       err_message = Model%ozphys%load_o3clim('global_o3prdlos.f77',kozc)
     end if
 
 !--- quantities to be used to derive phy_f*d totals
@@ -6997,10 +7009,11 @@ module GFS_typedefs
     endif
 
 !--- ozone and stratosphere h2o needs
-    allocate (Tbd%ozpl  (IM,levozp,oz_coeff))
+    allocate (Tbd%ozpl  (IM,Model%levozp,Model%oz_coeff))
     allocate (Tbd%h2opl (IM,levh2o,h2o_coeff))
-    Tbd%ozpl  = clear_val
     Tbd%h2opl = clear_val
+    Tbd%ozpl  = clear_val
+    
 
 !--- ccn and in needs
     ! DH* allocate only for MG? *DH
@@ -7614,6 +7627,12 @@ module GFS_typedefs
         allocate (Diag%dwn_mf (IM,Model%levs))
         allocate (Diag%det_mf (IM,Model%levs))
       endif
+      if (Model%oz_phys_2015) then
+         allocate(Diag%do3_dt_prd( IM, Model%levs))
+         allocate(Diag%do3_dt_ozmx(IM, Model%levs))
+         allocate(Diag%do3_dt_temp(IM, Model%levs))
+         allocate(Diag%do3_dt_ohoz(IM, Model%levs))
+      endif
     endif
 
 ! UGWP
@@ -7951,6 +7970,12 @@ module GFS_typedefs
         Diag%upd_mf   = zero
         Diag%dwn_mf   = zero
         Diag%det_mf   = zero
+      endif
+      if (Model%oz_phys_2015) then
+         Diag%do3_dt_prd  = zero
+         Diag%do3_dt_ozmx = zero
+         Diag%do3_dt_temp = zero
+         Diag%do3_dt_ohoz = zero
       endif
     endif
 
