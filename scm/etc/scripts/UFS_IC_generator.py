@@ -1044,6 +1044,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     facsf_in  = read_NetCDF_surface_var(nc_file, 'facsf',  i, j, old_chgres, 0)
     facwf_in  = read_NetCDF_surface_var(nc_file, 'facwf',  i, j, old_chgres, 0)
     styp_in   = read_NetCDF_surface_var(nc_file, 'stype',  i, j, old_chgres, 0)
+    scol_in   = read_NetCDF_surface_var(nc_file, 'scolor', i, j, old_chgres, 0)
     slope_in  = read_NetCDF_surface_var(nc_file, 'slope',  i, j, old_chgres, 0)
     vtyp_in   = read_NetCDF_surface_var(nc_file, 'vtype',  i, j, old_chgres, 0)
     vfrac_in  = read_NetCDF_surface_var(nc_file, 'vfrac',  i, j, old_chgres, 0)
@@ -1187,6 +1188,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "facsf": facsf_in,
         "facwf": facwf_in,
         "soiltyp": styp_in,
+        "scolor": scol_in,
         "slopetyp": slope_in,
         "vegtyp": vtyp_in,
         "vegfrac": vfrac_in,
@@ -1313,7 +1315,7 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
     if lam:
         nc_file = Dataset('{0}/{1}'.format(dir,'oro_data.nc'))
     else:
-        filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
+        filename_pattern = 'oro*.tile{0}.nc'.format(tile)
         for f_name in os.listdir(dir):
            if fnmatch.fnmatch(f_name, filename_pattern):
               filename = f_name
@@ -1462,8 +1464,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
         sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
     else:
-        atm_ftag = 'atmf*.nc'
-        sfc_ftag = 'sfcf*.nc'
+        atm_ftag = '*atmf*.nc'
+        sfc_ftag = '*sfcf*.nc'
 
     # Get list of UFS history files with 3D ATMospheric state variables.
     atm_filenames = []
@@ -2450,6 +2452,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
                 {"name": "q2m",          "type":wp, "dimd": ('t0'),             "units": "kg kg-1", "desc": "2-meter specific humidity"}, \
                 {"name": "vegtyp",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation type (1-12)"}, \
                 {"name": "soiltyp",      "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "soil type (1-12)"}, \
+                {"name": "scolor",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "soil color (1-20)"}, \
                 {"name": "ffmm",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for momentum"}, \
                 {"name": "ffhh",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for heat"}, \
                 {"name": "hice",         "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sea ice thickness"}, \
@@ -2638,8 +2641,8 @@ def write_comparison_file(comp_data, case_name, date, surface):
 ########################################################################################
 def find_date(forcing_dir):
     
-    atm_ftag = 'atmf*.nc'
-    
+    atm_ftag = '*atmf*.nc'    
+
     atm_filenames = []
     for f_name in os.listdir(forcing_dir):
        if fnmatch.fnmatch(f_name, atm_ftag):
