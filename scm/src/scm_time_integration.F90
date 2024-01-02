@@ -156,6 +156,10 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
     call physics%Diag%phys_zero (physics%Model)
   endif
   
+  !--- Reset interstitials
+  call physics%Interstitial%rad_reset(physics%Model)
+  call physics%Interstitial%phys_reset(physics%Model)
+
   call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'

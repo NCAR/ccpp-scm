@@ -6,7 +6,7 @@ module GFS_typedefs
    use module_radlw_parameters,  only: topflw_type, sfcflw_type
    use ozne_def,                 only: levozp, oz_coeff
    use h2o_def,                  only: levh2o, h2o_coeff
-   use module_ccpp_suite_simulator, only: base_physics_process
+   !use module_ccpp_suite_simulator,     only: base_physics_process
 
    implicit none
 
@@ -17,7 +17,7 @@ module GFS_typedefs
 
    ! This will be set later in GFS_Control%initialize, since
    ! it depends on the runtime config (Model%aero_in)
-   integer, private  :: ntrcaer
+   integer, private  :: ntrcaer_loc
 
    ! If these are changed to >99, need to adjust formatting string in GFS_diagnostics.F90 (and names in diag_tables)
    integer, parameter :: naux2dmax = 20 !< maximum number of auxiliary 2d arrays in output (for debugging)
@@ -26,7 +26,6 @@ module GFS_typedefs
    integer, parameter :: dfi_radar_max_intervals = 4 !< Number of radar-derived temperature tendency and/or convection suppression intervals. Do not change.
 
    real(kind=kind_phys), parameter :: limit_unspecified = 1e12 !< special constant for "namelist value was not provided" in radar-derived temperature tendency limit range
-
 
 !> \section arg_table_GFS_typedefs
 !! \htmlinclude GFS_typedefs.html
@@ -55,6 +54,9 @@ module GFS_typedefs
   integer, parameter :: LTP = 0   ! no extra top layer
   !integer, parameter :: LTP = 1   ! add an extra top layer
 
+  ! Index for surface
+  integer, parameter :: isfc_gfs = 1
+
 !----------------
 ! Data Containers
 !----------------
@@ -72,6 +74,17 @@ module GFS_typedefs
 !    GFS_cldprop_type        !< cloud fields needed by radiation from physics
 !    GFS_radtend_type        !< radiation tendencies needed in physics
 !    GFS_diag_type           !< fields targetted for diagnostic output
+!  type(GFS_init_type)     :: GFS_init_type
+!  type(GFS_statein_type)  :: GFS_statein_type
+!  type(GFS_stateout_type) :: GFS_stateout_type
+!  type(GFS_sfcprop_type)  :: GFS_sfcprop_type
+!  type(GFS_coupling_type) :: GFS_coupling_type
+!  type(GFS_control_type)  :: GFS_control_type
+!  type(GFS_grid_type)     :: GFS_grid_type
+!  type(GFS_tbd_type)      :: GFS_tbd_type
+!  type(GFS_cldprop_type)  :: GFS_cldprop_type
+!  type(GFS_radtend_type)  :: GFS_radtend_type
+!  type(GFS_diag_type)     :: GFS_diag_type
 
 !--------------------------------------------------------------------------------
 ! GFS_init_type
@@ -79,6 +92,7 @@ module GFS_typedefs
 !   This container is the minimum set of data required from the dycore/atmosphere
 !   component to allow proper initialization of the GFS physics
 !--------------------------------------------------------------------------------
+
 !! \section arg_table_GFS_init_type
 !! \htmlinclude GFS_init_type.html
 !!
@@ -242,6 +256,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: snodi  (:)   => null()  !< snow depth over ice
     real (kind=kind_phys), pointer :: weasdi (:)   => null()  !< weasd over ice
     real (kind=kind_phys), pointer :: hprime (:,:) => null()  !< orographic metrics
+    integer                        :: isubgrd_sigma = 1       !< Index into hprime for standard deviation of subgrid orography
     real (kind=kind_phys), pointer :: dust12m_in  (:,:,:) => null()  !< fengsha dust input
     real (kind=kind_phys), pointer :: emi_in (:,:) => null()  !< anthropogenic background input
     real (kind=kind_phys), pointer :: smoke_RRFS(:,:,:) => null()  !< RRFS fire input
@@ -495,7 +510,7 @@ module GFS_typedefs
 
     ! RRTMGP
     real (kind=kind_phys), pointer :: fluxlwUP_jac(:,:)       => null()  !< RRTMGP Jacobian of upward longwave all-sky flux
-    real (kind=kind_phys), pointer :: htrlw(:,:)              => null()  !< RRTMGP updated LW heating rate
+    real (kind=kind_phys), pointer :: hrlw(:,:)               => null()  !< RRTMGP updated LW heating rate
     real (kind=kind_phys), pointer :: tsfc_radtime(:)         => null()  !< RRTMGP surface temperature on radiation timestep
     real (kind=kind_phys), pointer :: fluxlwUP_radtime(:,:)   => null()  !< RRTMGP upward   longwave  all-sky flux profile
     real (kind=kind_phys), pointer :: fluxlwDOWN_radtime(:,:) => null()  !< RRTMGP downward  longwave  all-sky flux profile
@@ -644,16 +659,21 @@ module GFS_typedefs
 ! dtend_var_label
 !  Information about first dimension of dtidx
 !----------------------------------------------------------------
+!! \section arg_table_dtend_var_label
+!! \htmlinclude dtend_var_label.html
+!!
   type dtend_var_label
     character(len=20) :: name
     character(len=44) :: desc
     character(len=32) :: unit
   end type dtend_var_label
-
 !----------------------------------------------------------------
 ! dtend_process_label
 !  Information about second dimension of dtidx
 !----------------------------------------------------------------
+!! \section arg_table_dtend_process_label
+!! \htmlinclude dtend_process_label.html
+!!
   type dtend_process_label
     character(len=20) :: name
     character(len=44) :: desc
@@ -678,7 +698,7 @@ module GFS_typedefs
     integer              :: nthreads        !< OpenMP threads available for physics
     integer              :: nlunit          !< unit for namelist
     character(len=64)    :: fn_nml          !< namelist filename for surface data cycling
-    character(len=:), pointer, dimension(:) :: input_nml_file => null() !< character string containing full namelist
+    character(len=256), pointer, dimension(:) :: input_nml_file => null() !< character string containing full namelist
                                                                         !< for use with internal file reads
     integer              :: input_nml_file_length    !< length (number of lines) in namelist for internal reads
     integer              :: logunit
@@ -934,7 +954,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: tcrf
 !
     integer              :: num_dfi_radar      !< number of timespans with radar-prescribed temperature tendencies
-    real (kind=kind_phys) :: fh_dfi_radar(1+dfi_radar_max_intervals)   !< begin+end of timespans to receive radar-prescribed temperature tendencies
+    real (kind=kind_phys) :: fh_dfi_radar(dfi_radar_max_intervals_plus_one)   !< begin+end of timespans to receive radar-prescribed temperature tendencies
     logical              :: do_cap_suppress    !< enable convection suppression in GF scheme if fh_dfi_radar is specified
     real (kind=kind_phys) :: radar_tten_limits(2) !< radar_tten values outside this range (min,max) are discarded
     integer              :: ix_dfi_radar(dfi_radar_max_intervals) = -1 !< Index within dfi_radar_tten of each timespan (-1 means "none")
@@ -1184,6 +1204,9 @@ module GFS_typedefs
                                             !< (used if mstrat=.true.)
     real(kind=kind_phys) :: crtrh(3)        !< critical relative humidity at the surface
                                             !< PBL top and at the top of the atmosphere
+    integer              :: icrtrh_sfc = 1  !< Index into crtrh for surface 
+    integer              :: icrtrh_pbl = 2  !< Index into crtrh for PBL top
+    integer              :: icrtrh_toa = 3  !< Index into crtrh for TOA
     real(kind=kind_phys) :: dlqf(2)         !< factor for cloud condensate detrainment
                                             !< from cloud edges for RAS
     real(kind=kind_phys) :: psauras(2)      !< [in] auto conversion coeff from ice to snow in ras
@@ -1264,12 +1287,12 @@ module GFS_typedefs
     integer              :: lsea
     integer              :: nstf_name(5)    !< flag 0 for no nst  1 for uncoupled nst  and 2 for coupled NST
                                             !< nstf_name contains the NSST related parameters
-                                            !< nstf_name(1) : 0 = NSSTM off, 1 = NSSTM on but uncoupled
-                                            !<                2 = NSSTM on and coupled
-                                            !< nstf_name(2) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
-                                            !< nstf_name(3) : 1 = NSST analysis on, 0 = NSSTM analysis off
-                                            !< nstf_name(4) : zsea1 in mm
-                                            !< nstf_name(5) : zsea2 in mm
+    integer              :: instf_opt       !< nstf_name(instf_opt)    : 0 = NSSTM off, 1 = NSSTM on but uncoupled
+                                            !<                           2 = NSSTM on and coupled
+    integer              :: instf_spinup    !< nstf_name(instf_spinup) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
+    integer              :: instf_anlys     !< nstf_name(instf_anlys)  : 1 = NSST analysis on, 0 = NSSTM analysis off
+    integer              :: instf_zs1_lb    !< nstf_name(instf_zs1_lb) : lower bounds (in mm)
+    integer              :: instf_zs2_ub    !< nstf_name(instf_zs2_ub) : upper bounds (in mm)
 !--- fractional grid
     logical              :: frac_grid       !< flag for fractional grid
     logical              :: frac_ice        !< flag for fractional ice when fractional grid is not in use
@@ -1564,17 +1587,17 @@ module GFS_typedefs
 
 !--- CCPP suite simulator
     logical                                :: do_ccpp_suite_sim  !
-    integer                                :: nphys_proc          !
-    integer                                :: proc_start          !
-    integer                                :: proc_end            !
-    logical                                :: in_pre_active       !
-    logical                                :: in_post_active      !
-    type(base_physics_process),allocatable :: physics_process(:)  !
-    integer                                :: nprg_active         !
-    integer                                :: iactive_T           !
-    integer                                :: iactive_u           !
-    integer                                :: iactive_v           !
-    integer                                :: iactive_q           !
+!    integer                                :: nphys_proc          !
+!    integer                                :: proc_start          !
+!    integer                                :: proc_end            !
+!    logical                                :: in_pre_active       !
+!    logical                                :: in_post_active      !
+!    type(base_physics_process),allocatable :: physics_process(:)  !
+!    integer                                :: nprg_active         !
+!    integer                                :: iactive_T           !
+!    integer                                :: iactive_u           !
+!    integer                                :: iactive_v           !
+!    integer                                :: iactive_q           !
 
     contains
       procedure :: init            => control_initialize
@@ -2116,6 +2139,7 @@ module GFS_typedefs
 !----------------
 ! PUBLIC ENTITIES
 !----------------
+
   public GFS_init_type
   public GFS_statein_type,  GFS_stateout_type, GFS_sfcprop_type, &
          GFS_coupling_type
@@ -2835,12 +2859,12 @@ module GFS_typedefs
        allocate (Coupling%fluxlwUP_radtime   (IM, Model%levs+1))
        allocate (Coupling%fluxlwDOWN_radtime (IM, Model%levs+1))
        allocate (Coupling%fluxlwUP_jac       (IM, Model%levs+1))
-       allocate (Coupling%htrlw              (IM, Model%levs))
+       allocate (Coupling%hrlw               (IM, Model%levs))
        allocate (Coupling%tsfc_radtime       (IM))
        Coupling%fluxlwUP_radtime   = clear_val
        Coupling%fluxlwDOWN_radtime = clear_val
        Coupling%fluxlwUP_jac       = clear_val
-       Coupling%htrlw              = clear_val
+       Coupling%hrlw               = clear_val
        Coupling%tsfc_radtime       = clear_val
     endif
 
@@ -3690,12 +3714,17 @@ module GFS_typedefs
     logical              :: nst_anl        = .false.         !< flag for NSSTM analysis in gcycle/sfcsub
     integer              :: lsea           = 0
     integer              :: nstf_name(5)   = (/0,0,1,0,5/)   !< flag 0 for no nst  1 for uncoupled nst  and 2 for coupled NST
-                                                             !< nstf_name(1) : 0 = NSSTM off, 1 = NSSTM on but uncoupled
-                                                             !<                2 = NSSTM on and coupled
-                                                             !< nstf_name(2) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
-                                                             !< nstf_name(3) : 1 = NSSTM analysis on, 0 = NSSTM analysis off
-                                                             !< nstf_name(4) : zsea1 in mm
-                                                             !< nstf_name(5) : zsea2 in mm
+                                                             !< nstf_name(instf_opt)    : 0 = NSSTM off, 1 = NSSTM on but uncoupled
+                                                             !<                           2 = NSSTM on and coupled
+                                                             !< nstf_name(instf_spinup) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
+                                                             !< nstf_name(instf_anlys)  : 1 = NSSTM analysis on, 0 = NSSTM analysis off
+                                                             !< nstf_name(instf_zs1_lb) : lower bounds (in mm)
+                                                             !< nstf_name(instf_zs2_ub) : upper bounds (in mm)
+    integer              :: instf_opt    = 1
+    integer              :: instf_spinup = 2
+    integer              :: instf_anlys  = 3
+    integer              :: instf_zs1_lb = 4
+    integer              :: instf_zs2_ub = 5
 !--- fractional grid
     logical              :: frac_grid       = .false.         !< flag for fractional grid
     logical              :: frac_ice        = .false.         !< flag for fractional ice when fractional grid is not in use
@@ -3836,16 +3865,16 @@ module GFS_typedefs
 
 !--- CCPP suite simulator
     logical            :: do_ccpp_suite_sim  = .false.
-    integer            :: nphys_proc         = 0
-    integer            :: proc_start         = 0
-    integer            :: proc_end           = 0
-    logical            :: in_pre_active      = .false.
-    logical            :: in_post_active     = .false.
-    integer            :: nprg_active        = 0
-    integer            :: iactive_T          = 0
-    integer            :: iactive_u          = 0
-    integer            :: iactive_v          = 0
-    integer            :: iactive_q          = 0
+!    integer            :: nphys_proc         = 0
+!    integer            :: proc_start         = 0
+!    integer            :: proc_end           = 0
+!    logical            :: in_pre_active      = .false.
+!    logical            :: in_post_active     = .false.
+!    integer            :: nprg_active        = 0
+!    integer            :: iactive_T          = 0
+!    integer            :: iactive_u          = 0
+!    integer            :: iactive_v          = 0
+!    integer            :: iactive_q          = 0
 
 !--- aerosol scavenging factors
     integer, parameter :: max_scav_factors = 183
@@ -4372,11 +4401,11 @@ module GFS_typedefs
     Model%iaerclm          = iaerclm
     if (iaer/1000 == 1 .or. Model%iccn == 2) then
       Model%iaerclm = .true.
-      ntrcaer = ntrcaerm
+      ntrcaer_loc = ntrcaerm
     else if (iaer/1000 == 2) then
-      ntrcaer = ntrcaerm
+      ntrcaer_loc = ntrcaerm
     else
-      ntrcaer = 1
+      ntrcaer_loc = 1
     endif
     Model%lalw1bd          = lalw1bd
     Model%iaerflg          = iaerflg
@@ -4388,7 +4417,7 @@ module GFS_typedefs
     Model%co2gbl_file      = co2gbl_file
     Model%co2usr_file      = co2usr_file
     Model%co2cyc_file      = co2cyc_file
-    Model%ntrcaer          = ntrcaer
+    Model%ntrcaer          = ntrcaer_loc
     Model%idcor            = idcor
     Model%dcorr_con        = dcorr_con
     Model%icliq_sw         = icliq_sw
@@ -5704,11 +5733,11 @@ module GFS_typedefs
 
       if (Model%nstf_name(1) > 0 ) then
         print *,' NSSTM is active '
-        print *,' nstf_name(1)=',Model%nstf_name(1)
-        print *,' nstf_name(2)=',Model%nstf_name(2)
-        print *,' nstf_name(3)=',Model%nstf_name(3)
-        print *,' nstf_name(4)=',Model%nstf_name(4)
-        print *,' nstf_name(5)=',Model%nstf_name(5)
+        print *,' nstf_name(1)=',Model%nstf_name(instf_opt)
+        print *,' nstf_name(2)=',Model%nstf_name(instf_spinup)
+        print *,' nstf_name(3)=',Model%nstf_name(instf_anlys)
+        print *,' nstf_name(4)=',Model%nstf_name(instf_zs1_units)
+        print *,' nstf_name(5)=',Model%nstf_name(instf_zs2_units)
       endif
       if (Model%do_deep) then
         ! Consistency check for NTDK convection: deep and shallow convection are bundled
@@ -7008,7 +7037,7 @@ module GFS_typedefs
 
 !--- aerosol fields
     ! DH* allocate only for MG? *DH
-    allocate (Tbd%aer_nm  (IM,Model%levs,ntrcaer))
+    allocate (Tbd%aer_nm  (IM,Model%levs,Model%ntrcaer))
     Tbd%aer_nm = clear_val
 
 !--- tau_amf for  NGWs

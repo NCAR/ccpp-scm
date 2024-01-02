@@ -32,19 +32,25 @@ module scm_type_defs
   real(kind=dp), parameter :: real_zero = 0.0
   real(kind=dp), parameter :: real_one = 1.0
 
-  character(len = character_length) :: clear_char = ''
+  character(len = 80) :: clear_char = ''
 
+  type(physics_type) :: physics_type
+  type(physics_type), target :: physics
+  type(ccpp_t),       target :: cdata
 
+!> \section arg_table_scm_state_type
+!! \htmlinclude scm_state_type.html
+!!   
   type scm_state_type
 
-    character(len=character_length)                 :: experiment_name !> name of model configuration file
-    character(len=character_length)                 :: npz_type !< used to define different FV3 vertical grids
-    character(len=character_length)                 :: vert_coord_file !< name of vertical coordinate file
-    character(len=character_length)                 :: output_dir !< name of output directory to place netCDF file
-    character(len=character_length)                 :: output_file !< name of output file (without the file extension)
-    character(len=character_length)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
-    character(len=character_length)                 :: physics_suite_name !< name of physics suite (must be "GFS_operational" for prototype)
-    character(len=character_length)                 :: physics_nml
+    character(len=80)                 :: experiment_name !> name of model configuration file
+    character(len=80)                 :: npz_type !< used to define different FV3 vertical grids
+    character(len=80)                 :: vert_coord_file !< name of vertical coordinate file
+    character(len=80)                 :: output_dir !< name of output directory to place netCDF file
+    character(len=80)                 :: output_file !< name of output file (without the file extension)
+    character(len=80)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
+    character(len=80)                 :: physics_suite_name !< name of physics suite (must be "GFS_operational" for prototype)
+    character(len=80)                 :: physics_nml
 
     integer                           :: n_levels !< number of model levels
     integer                           :: n_soil  !< number of model levels
@@ -170,6 +176,9 @@ module scm_type_defs
 
   end type scm_state_type
 
+!> \section arg_table_scm_input_type
+!! \htmlinclude scm_input_type.html
+!!   
   type scm_input_type
     !> - Define the case-specific initialization and forcing variables.
     integer                           :: input_nlev !< number of levels in the input file
@@ -390,6 +399,9 @@ module scm_type_defs
 
   end type scm_input_type
 
+!> \section arg_table_scm_reference_type
+!! \htmlinclude scm_reference_type.html
+!!
   type scm_reference_type
     !> - Define the reference profile variables.
     integer                                 :: ref_nlev !< number of levels in the reference profile
@@ -427,16 +439,12 @@ module scm_type_defs
       procedure :: set => physics_set
   end type physics_type
 
-  type(physics_type), target :: physics
-
-  type(ccpp_t),       target :: cdata
-
   contains
 
   subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels, tracers, tracer_types)
     class(scm_state_type)             :: scm_state
     integer, intent(in)               :: n_columns, n_levels, n_soil, n_snow, n_time_levels
-    character(len=character_length), intent(in), dimension(:) :: tracers
+    character(len=80),               intent(in), dimension(:) :: tracers
     integer,                         intent(in), dimension(:) :: tracer_types
     
     integer :: i

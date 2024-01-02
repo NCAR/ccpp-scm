@@ -1,4 +1,34 @@
 [ccpp-table-properties]
+  name = scm_state_type
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = scm_state_type
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
+  name = scm_input_type
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = scm_input_type
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
+  name = scm_reference_type
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = scm_reference_type
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
   name = physics_type
   type = ddt
   dependencies = GFS_typedefs.F90,CCPP_typedefs.F90
@@ -72,6 +102,12 @@
   units = DDT
   dimensions = ()
   type = GFS_interstitial_type
+[Init_parm]
+  standard_name = GFS_init_type_instance
+  long_name = definition of type GFS_init_type
+  units = DDT
+  dimensions = ()
+  type = GFS_init_type
 
 ########################################################################
 [ccpp-table-properties]
@@ -88,15 +124,15 @@
   units = DDT
   dimensions = ()
   type = physics_type
-[physics]
-  standard_name = physics_type_instance
-  long_name = instance of derived data type physics_type
-  units = DDT
-  dimensions = ()
-  type = physics_type
-[cdata]
-  standard_name = ccpp_t_instance
-  long_name = instance of derived data type ccpp_t
-  units = DDT
-  dimensions = ()
-  type = ccpp_t
+#[physics]
+#  standard_name = physics_type_instance
+#  long_name = instance of derived data type physics_type
+#  units = DDT
+#  dimensions = ()
+#  type = physics_type
+#[cdata]
+#  standard_name = ccpp_t_instance
+#  long_name = instance of derived data type ccpp_t
+#  units = DDT
+#  dimensions = ()
+#  type = ccpp_t

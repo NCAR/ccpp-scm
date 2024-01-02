@@ -239,63 +239,63 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[clouds(:,:,1)]
+[clouds(:,:,index_for_cloud_fraction_in_cloud_data_array)]
   standard_name = total_cloud_fraction
   long_name = layer total cloud fraction
   units = frac
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,2)]
+[clouds(:,:,index_for_cloud_liquid_water_path_in_cloud_data_array)]
   standard_name = cloud_liquid_water_path
   long_name = layer cloud liquid water path
   units = g m-2
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,3)]
+[clouds(:,:,index_for_cloud_liquid_effective_radius_in_cloud_data_array)]
   standard_name = mean_effective_radius_for_liquid_cloud
   long_name = mean effective radius for liquid cloud
   units = um
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,4)]
+[clouds(:,:,index_for_cloud_ice_water_path_in_cloud_data_array)]
   standard_name = cloud_ice_water_path
   long_name = layer cloud ice water path
   units = g m-2
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,5)]
+[clouds(:,:,index_for_cloud_ice_effective_radius_in_cloud_data_array)]
   standard_name = mean_effective_radius_for_ice_cloud
   long_name = mean effective radius for ice cloud
   units = um
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,6)]
+[clouds(:,:,index_for_cloud_rain_water_path_in_cloud_data_array)]
   standard_name = cloud_rain_water_path
   long_name = cloud rain water path
   units = g m-2
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,7)]
+[clouds(:,:,index_for_cloud_rain_effective_radius_in_cloud_data_array)]
   standard_name = mean_effective_radius_for_rain_drop
   long_name = mean effective radius for rain drop
   units = um
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,8)]
+[clouds(:,:,index_for_cloud_snow_water_path_in_cloud_data_array)]
   standard_name = cloud_snow_water_path
   long_name = cloud snow water path
   units = g m-2
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[clouds(:,:,9)]
+[clouds(:,:,index_for_cloud_snow_effective_radius_in_cloud_data_array)]
   standard_name = mean_effective_radius_for_snow_flake
   long_name = mean effective radius for snow flake
   units = um
@@ -774,21 +774,21 @@
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation,number_of_aerosol_bands_for_longwave_radiation,number_of_aerosol_output_fields_for_longwave_radiation)
   type = real
   kind = kind_phys
-[faerlw(:,:,:,1)]
+[faerlw(:,:,:,index_for_aerosol_optical_depth_in_aer_array)]
   standard_name = aerosol_optical_depth_for_longwave_bands_01_16
   long_name = aerosol optical depth for longwave bands 01-16
   units = none
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation,number_of_aerosol_bands_for_longwave_radiation)
   type = real
   kind = kind_phys
-[faerlw(:,:,:,2)]
+[faerlw(:,:,:,index_for_aerosol_single_scattering_albedo_in_aer_array)]
   standard_name = aerosol_single_scattering_albedo_for_longwave_bands_01_16
   long_name = aerosol single scattering albedo for longwave bands 01-16
   units = frac
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation,number_of_aerosol_bands_for_longwave_radiation)
   type = real
   kind = kind_phys
-[faerlw(:,:,:,3)]
+[faerlw(:,:,:,index_for_aerosol_asymmetry_parameter_in_aer_array)]
   standard_name = aerosol_asymmetry_parameter_for_longwave_bands_01_16
   long_name = aerosol asymmetry parameter for longwave bands 01-16
   units = none
@@ -802,21 +802,21 @@
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation,number_of_aerosol_bands_for_shortwave_radiation,number_of_aerosol_output_fields_for_shortwave_radiation)
   type = real
   kind = kind_phys
-[faersw(:,:,:,1)]
+[faersw(:,:,:,index_for_aerosol_optical_depth_in_aer_array)]
   standard_name = aerosol_optical_depth_for_shortwave_bands_01_16
   long_name = aerosol optical depth for shortwave bands 01-16
   units = none
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation,number_of_aerosol_bands_for_shortwave_radiation)
   type = real
   kind = kind_phys
-[faersw(:,:,:,2)]
+[faersw(:,:,:,index_for_aerosol_single_scattering_albedo_in_aer_array)]
   standard_name = aerosol_single_scattering_albedo_for_shortwave_bands_01_16
   long_name = aerosol single scattering albedo for shortwave bands 01-16
   units = frac
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation,number_of_aerosol_bands_for_shortwave_radiation)
   type = real
   kind = kind_phys
-[faersw(:,:,:,3)]
+[faersw(:,:,:,index_for_aerosol_asymmetry_parameter_in_aer_array)]
   standard_name = aerosol_asymmetry_parameter_for_shortwave_bands_01_16
   long_name = aerosol asymmetry parameter for shortwave bands 01-16
   units = none
@@ -953,7 +953,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[fscav]
+[fscavv]
   standard_name = fraction_of_tracer_scavenged
   long_name = fraction of the tracer (aerosols) that is scavenged by convection
   units = km-1
@@ -1016,70 +1016,70 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[gasvmr(:,:,1)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_co2_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_co2
   long_name = volume mixing ratio co2
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,2)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_n2o_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_n2o
   long_name = volume mixing ratio no2
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,3)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_ch4_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_ch4
   long_name = volume mixing ratio ch4
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,4)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_o2_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_o2
   long_name = volume mixing ratio o2
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,5)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_co_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_co
   long_name = volume mixing ratio co
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,6)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_cfc11_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_cfc11
   long_name = volume mixing ratio cfc11
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,7)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_cfc12_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_cfc12
   long_name = volume mixing ratio cfc12
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,8)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_cfc22_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_cfc22
   long_name = volume mixing ratio cfc22
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,9)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_ccl4_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_ccl4
   long_name = volume mixing ratio ccl4
   units = m3 m-3
   dimensions = (horizontal_loop_extent,adjusted_vertical_layer_dimension_for_radiation)
   type = real
   kind = kind_phys
-[gasvmr(:,:,10)]
+[gasvmr(:,:,index_for_volume_mixing_ratio_of_cfc113_in_gasvmr_array)]
   standard_name = volume_mixing_ratio_of_cfc113
   long_name = volume mixing ratio cfc113
   units = m3 m-3
@@ -1775,14 +1775,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[rho1]
-  standard_name = air_density_at_lowest_model_layer
-  long_name = air density at lowest model layer
-  units = kg m-3
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys
-[runoff]
+[runofff]
   standard_name = surface_runoff_flux
   long_name = surface runoff flux
   units = kg m-2 s-1
@@ -1893,28 +1886,28 @@
   dimensions = (horizontal_loop_extent,number_of_components_for_surface_albedo)
   type = real
   kind = kind_phys
-[sfcalb(:,1)]
+[sfcalb(:,index_for_surface_albedo_due_to_near_ir_direct)]
   standard_name = surface_albedo_due_to_near_IR_direct
   long_name = surface albedo due to near IR direct beam
   units = frac
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[sfcalb(:,2)]
+[sfcalb(:,index_for_surface_albedo_due_to_near_ir_diffuse)]
   standard_name = surface_albedo_due_to_near_IR_diffused
   long_name = surface albedo due to near IR diffused beam
   units = frac
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[sfcalb(:,3)]
+[sfcalb(:,index_for_surface_albedo_due_to_uv_and_vis_direct)]
   standard_name = surface_albedo_due_to_UV_and_VIS_direct
   long_name = surface albedo due to UV+VIS direct beam
   units = frac
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[sfcalb(:,4)]
+[sfcalb(:,index_for_surface_albedo_due_to_uv_and_vis_diffuse)]
   standard_name = surface_albedo_due_to_UV_and_VIS_diffused
   long_name = surface albedo due to UV+VIS diffused beam
   units = frac
@@ -2276,7 +2269,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[zmtb]
+[zmtbb]
   standard_name = height_of_mountain_blocking
   long_name = height of mountain blocking drag
   units = m
@@ -2315,14 +2308,14 @@
   type = real
   kind = kind_phys
   active = (flag_for_unified_gravity_wave_physics_diagnostics .or. flag_for_ugwp_version_0 .or. flag_for_ugwp_version_0_nonorographic_gwd .or. flag_for_ugwp_version_1)
-[zlwb]
+[zlwbb]
   standard_name = height_of_low_level_wave_breaking
   long_name = height of low level wave breaking
   units = m
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[zogw]
+[zogww]
   standard_name = height_of_launch_level_of_orographic_gravity_wave
   long_name = height of launch level of orographic gravity wave
   units = m
@@ -2336,35 +2329,35 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_tofd]
+[tau_tofdi]
   standard_name = instantaneous_momentum_flux_due_to_turbulent_orographic_form_drag
   long_name = instantaneous momentum flux due to TOFD
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_mtb]
+[tau_mtbi]
   standard_name = instantaneous_momentum_flux_due_to_mountain_blocking_drag
   long_name = instantaneous momentum flux due to mountain blocking drag
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_ogw]
+[tau_ogwi]
   standard_name = instantaneous_momentum_flux_due_to_orographic_gravity_wave_drag
   long_name = instantaneous momentum flux due to orographic gravity wave drag
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_oss]
+[tau_ossi]
   standard_name = momentum_flux_due_to_subgrid_scale_orographic_gravity_wave_drag
   long_name = momentum flux or stress due to SSO including OBL-OSS-OFD
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_ngw]
+[tau_ngwi]
   standard_name = instantaneous_momentum_flux_due_to_nonstationary_gravity_wave
   long_name = instantaneous momentum flux due to nonstationary gravity waves
   units = Pa
@@ -2854,17 +2847,169 @@
   type = module
   relative_path = ../../ccpp/physics/physics
   dependencies = machine.F,ozne_def.f,radlw_param.f,radsw_param.f
-  dependencies = rte-rrtmgp/rrtmgp/mo_gas_optics_rrtmgp.F90,rte-rrtmgp/rte/mo_optical_props.F90
-  dependencies = rte-rrtmgp/extensions/cloud_optics/mo_cloud_optics.F90
-  dependencies = rte-rrtmgp/rrtmgp/mo_gas_concentrations.F90,rte-rrtmgp/rte/mo_rte_config.F90
-  dependencies = rte-rrtmgp/rte/mo_source_functions.F90
 
 [ccpp-arg-table]
   name = CCPP_typedefs
   type = module
-[GFS_interstitial_type]
-  standard_name = GFS_interstitial_type
-  long_name = definition of type GFS_interstitial_type
-  units = DDT
+#[GFS_interstitial_type]
+#  standard_name = GFS_interstitial_type
+#  long_name = definition of type GFS_interstitial_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_interstitial_type
+[icld_cfrac]
+  standard_name = index_for_cloud_fraction_in_cloud_data_array
+  long_name = index for cloud fraction in cloud data array
+  units = count
   dimensions = ()
-  type = GFS_interstitial_type
+  type = integer
+[icld_lwp]
+  standard_name = index_for_cloud_liquid_water_path_in_cloud_data_array
+  long_name = index for cloud LWP in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_reliq]
+  standard_name = index_for_cloud_liquid_effective_radius_in_cloud_data_array
+  long_name = index for cloud liquid effective radius in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_iwp]
+  standard_name = index_for_cloud_ice_water_path_in_cloud_data_array
+  long_name = index for cloud IWP in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_reice]
+  standard_name = index_for_cloud_ice_effective_radius_in_cloud_data_array
+  long_name = index for cloud ice effective radius in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_rwp]
+  standard_name = index_for_cloud_rain_water_path_in_cloud_data_array
+  long_name = index for cloud rain water path in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_rerain]
+  standard_name = index_for_cloud_rain_effective_radius_in_cloud_data_array
+  long_name = index for cloud rain effective radius in  cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_swp]
+  standard_name = index_for_cloud_snow_water_path_in_cloud_data_array
+  long_name = index for cloud snow water path in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_resnow]
+  standard_name = index_for_cloud_snow_effective_radius_in_cloud_data_array
+  long_name = index for cloud snow effective radius in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_nirdir]
+  standard_name = index_for_surface_albedo_due_to_near_ir_direct
+  long_name = index for surface albedo due to near IR direct beam
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_nirdif]
+  standard_name = index_for_surface_albedo_due_to_near_ir_diffuse
+  long_name = index for surface albedo due to near IR diffuse beam
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_uvvisdir]
+  standard_name = index_for_surface_albedo_due_to_uv_and_vis_direct
+  long_name = index for surface albedo due to UV+VIS direct beam
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_uvvisdif]
+  standard_name = index_for_surface_albedo_due_to_uv_and_vis_diffuse
+  long_name = index for surface albedo due to UV+VIS diffuse beam
+  units = count
+  dimensions = ()
+  type = integer
+[iaer_tau]
+  standard_name = index_for_aerosol_optical_depth_in_aer_array
+  long_name = index into aerosol array for aerosol optical depth
+  units = count
+  dimensions = ()
+  type = integer
+[iaer_ssa]
+  standard_name = index_for_aerosol_single_scattering_albedo_in_aer_array
+  long_name = index into aerosol array for aerosol single scattering albedo
+  units     = count
+  dimensions = ()
+  type = integer
+[iaer_g]
+  standard_name = index_for_aerosol_asymmetry_parameter_in_aer_array
+  long_name = index into aerosol array for aerosol asymmetry_parameter
+  units     = count
+  dimensions = ()
+  type = integer
+[igas_co2]
+  standard_name = index_for_volume_mixing_ratio_of_co2_in_gasvmr_array
+  long_name = index for volume mixing ratio co2
+  units = count
+  dimensions = ()
+  type = integer
+[igas_n2o]
+  standard_name = index_for_volume_mixing_ratio_of_n2o_in_gasvmr_array
+  long_name = index for volume mixing ratio no2
+  units = count
+  dimensions = ()
+  type = integer
+[igas_ch4]
+  standard_name = index_for_volume_mixing_ratio_of_ch4_in_gasvmr_array
+  long_name = index for volume mixing ratio ch4
+  units = count
+  dimensions = ()
+  type = integer
+[igas_o2]
+  standard_name = index_for_volume_mixing_ratio_of_o2_in_gasvmr_array
+  long_name = index for volume mixing ratio o2
+  units = count
+  dimensions = ()
+  type = integer
+[igas_co]
+  standard_name = index_for_volume_mixing_ratio_of_co_in_gasvmr_array
+  long_name = index for volume mixing ratio co
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc11]
+  standard_name = index_for_volume_mixing_ratio_of_cfc11_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc11
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc12]
+  standard_name = index_for_volume_mixing_ratio_of_cfc12_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc12
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc22]
+  standard_name = index_for_volume_mixing_ratio_of_cfc22_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc22
+  units = count
+  dimensions = ()
+  type = integer
+[igas_ccl4]
+  standard_name = index_for_volume_mixing_ratio_of_ccl4_in_gasvmr_array
+  long_name = index for volume mixing ratio ccl4
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc113]
+  standard_name = index_for_volume_mixing_ratio_of_cfc113_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc113
+  units = count
+  dimensions = ()
+  type = integer

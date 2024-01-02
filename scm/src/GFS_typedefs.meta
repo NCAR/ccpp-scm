@@ -1,4 +1,14 @@
 [ccpp-table-properties]
+  name = GFS_init_type
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = GFS_init_type
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
   name = GFS_statein_type
   type = ddt
   dependencies =
@@ -20,7 +30,7 @@
   dimensions = (horizontal_loop_extent,vertical_interface_dimension)
   type = real
   kind = kind_phys
-[prsi(:,1)]
+[prsi(:,ccpp_constant_one)]
   standard_name = air_pressure_at_lowest_model_interface
   long_name = air pressure at lowest model interface
   units = Pa
@@ -34,7 +44,7 @@
   dimensions = (horizontal_loop_extent,vertical_interface_dimension)
   type = real
   kind = kind_phys
-[prsik(:,1)]
+[prsik(:,surface_index_used_in_gfs)]
   standard_name = surface_dimensionless_exner_function
   long_name = dimensionless Exner function at lowest model interface
   units = none
@@ -55,7 +65,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[prsl(:,1)]
+[prsl(:,surface_index_used_in_gfs)]
   standard_name = air_pressure_at_surface_adjacent_layer
   long_name = mean pressure at lowest model layer
   units = Pa
@@ -69,7 +79,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[prslk(:,1)]
+[prslk(:,surface_index_used_in_gfs)]
   standard_name = dimensionless_exner_function_at_surface_adjacent_layer
   long_name = dimensionless Exner function at lowest model layer
   units = none
@@ -90,7 +100,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[ugrs(:,1)]
+[ugrs(:,surface_index_used_in_gfs)]
   standard_name = x_wind_at_surface_adjacent_layer
   long_name = zonal wind at lowest model layer
   units = m s-1
@@ -104,7 +114,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[vgrs(:,1)]
+[vgrs(:,surface_index_used_in_gfs)]
   standard_name = y_wind_at_surface_adjacent_layer
   long_name = meridional wind at lowest model layer
   units = m s-1
@@ -133,7 +143,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[tgrs(:,1)]
+[tgrs(:,surface_index_used_in_gfs)]
   standard_name = air_temperature_at_surface_adjacent_layer
   long_name = mean temperature at lowest model layer
   units = K
@@ -154,7 +164,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[qgrs(:,1,index_of_specific_humidity_in_tracer_concentration_array)]
+[qgrs(:,surface_index_used_in_gfs,index_of_specific_humidity_in_tracer_concentration_array)]
   standard_name = specific_humidity_at_surface_adjacent_layer
   long_name = water vapor specific humidity at lowest model layer
   units = kg kg-1
@@ -168,7 +178,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[qgrs(:,1,index_of_cloud_liquid_water_mixing_ratio_in_tracer_concentration_array)]
+[qgrs(:,surface_index_used_in_gfs,index_of_cloud_liquid_water_mixing_ratio_in_tracer_concentration_array)]
   standard_name = cloud_liquid_water_mixing_ratio_at_surface_adjacent_layer
   long_name = ratio of mass of cloud water to mass of dry air plus vapor (without condensates) at lowest model layer
   units = kg kg-1
@@ -363,7 +373,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[gu0(:,1)]
+[gu0(:,surface_index_used_in_gfs)]
   standard_name = x_wind_of_new_state_at_surface_adjacent_layer
   long_name = zonal wind at lowest model layer updated by physics
   units = m s-1
@@ -377,7 +387,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[gv0(:,1)]
+[gv0(:,surface_index_used_in_gfs)]
   standard_name = y_wind_of_new_state_at_surface_adjacent_layer
   long_name = meridional wind at lowest model layer updated by physics
   units = m s-1
@@ -391,7 +401,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[gt0(:,1)]
+[gt0(:,surface_index_used_in_gfs)]
   standard_name = air_temperature_of_new_state_at_surface_adjacent_layer
   long_name = temperature at lowest model layer updated by physics
   units = K
@@ -412,7 +422,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[gq0(:,1,index_of_specific_humidity_in_tracer_concentration_array)]
+[gq0(:,surface_index_used_in_gfs,index_of_specific_humidity_in_tracer_concentration_array)]
   standard_name = specific_humidity_of_new_state_at_surface_adjacent_layer
   long_name = water vapor specific humidity at lowest model layer updated by physics
   units = kg kg-1
@@ -855,6 +865,12 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
+[isubgrd_sigma]
+  standard_name = index_for_the_standard_deviation_of_subgrid_orography_in_hprime_array
+  long_name = index for the standard deviation of subgrid height_above_mean_sea_level in the hprime array
+  units = count
+  dimensions = ()
+  type = integer
 [hprime]
   standard_name = statistical_measures_of_subgrid_orography_collection_array
   long_name = orographic metrics
@@ -862,7 +878,7 @@
   dimensions = (horizontal_loop_extent,number_of_statistical_measures_of_subgrid_orography)
   type = real
   kind = kind_phys
-[hprime(:,1)]
+[hprime(:,index_for_the_standard_deviation_of_subgrid_orography_in_hprime_array)]
   standard_name = standard_deviation_of_subgrid_orography
   long_name = standard deviation of subgrid height_above_mean_sea_level
   units = m
@@ -1513,7 +1529,7 @@
   standard_name = temperature_in_surface_snow
   long_name = temperature_in_surface_snow
   units = K
-  dimensions = (horizontal_loop_extent, lower_bound_of_vertical_dimension_of_surface_snow:0)
+  dimensions = (horizontal_loop_extent, lower_bound_of_vertical_dimension_of_surface_snow:upper_bound_of_vertical_dimension_of_surface_snow)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -1529,7 +1545,7 @@
   standard_name = lwe_thickness_of_ice_in_surface_snow
   long_name = snow layer ice
   units = mm
-  dimensions = (horizontal_loop_extent, lower_bound_of_vertical_dimension_of_surface_snow:0)
+  dimensions = (horizontal_loop_extent, lower_bound_of_vertical_dimension_of_surface_snow:upper_bound_of_vertical_dimension_of_surface_snow)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -1537,7 +1553,7 @@
   standard_name = lwe_thickness_of_liquid_water_in_surface_snow
   long_name = snow layer liquid water
   units = mm
-  dimensions = (horizontal_loop_extent, lower_bound_of_vertical_dimension_of_surface_snow:0)
+  dimensions = (horizontal_loop_extent, lower_bound_of_vertical_dimension_of_surface_snow:upper_bound_of_vertical_dimension_of_surface_snow)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -2237,14 +2253,16 @@
   long_name = percent clay in clm lake model
   units = percent
   dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
-  type = integer
+  type = real
+  kind = kind_phys
   active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
 [lake_sand3d]
   standard_name = clm_lake_percent_sand
   long_name = percent sand in clm lake model
   units = percent
   dimensions = (horizontal_loop_extent,soil_vertical_dimension_for_clm_lake_model)
-  type = integer
+  type = real
+  kind = kind_phys
   active = (control_for_lake_model_selection == 2 .and. control_for_lake_model_execution_method > 0)
 [lake_is_salty]
   standard_name = clm_lake_is_salty
@@ -2332,6 +2350,26 @@
   type = real
   kind = kind_phys
   active = (do_smoke_coupling)
+
+########################################################################
+[ccpp-table-properties]
+  name = dtend_var_label
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = dtend_var_label
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
+  name = dtend_process_label
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = dtend_process_label
+  type = ddt
 
 ########################################################################
 [ccpp-table-properties]
@@ -3072,7 +3110,7 @@
   type = real
   kind = kind_phys
   active = (flag_for_chemistry_coupling)
-[htrlw]
+[hrlw]
   standard_name = updated_tendency_of_air_temperature_due_to_longwave_heating_on_physics_timestep
   long_name = total sky longwave heating rate on physics time step
   units = K s-1
@@ -5005,7 +5043,7 @@
   long_name = model 2m diagnostics use the temperature and humidity calculated by the lake model
   units = flag
   dimensions = ()
-  type = integer
+  type = logical
 [lkm]
   standard_name = control_for_lake_model_execution_method
   long_name = control for lake model execution: 0=no lake, 1=lake, 2=lake+nsst
@@ -5407,21 +5445,39 @@
   dimensions = (2)
   type = real
   kind = kind_phys
-[crtrh(1)]
+[icrtrh_sfc]
+  standard_name = index_for_critical_relative_humidity_at_surface
+  long_name = index for critical relative humidity at the surface
+  units = count
+  dimensions = ()
+  type = integer
+[icrtrh_pbl]
+  standard_name = index_for_critical_relative_humidity_at_pbl_top
+  long_name = index for critical relative humidity at the PBL top
+  units = count
+  dimensions = ()
+  type = integer
+[icrtrh_toa]
+  standard_name = index_for_critical_relative_humidity_at_toa
+  long_name = index for critical relative humidity at the top of atmosphere
+  units = count
+  dimensions = ()
+  type = integer
+[crtrh(index_for_critical_relative_humidity_at_surface)]
   standard_name = critical_relative_humidity_at_surface
   long_name = critical relative humidity at the surface
   units = frac
   dimensions = ()
   type = real
   kind = kind_phys
-[crtrh(2)]
+[crtrh(index_for_critical_relative_humidity_at_pbl_top)]
   standard_name = critical_relative_humidity_at_PBL_top
   long_name = critical relative humidity at the PBL top
   units = frac
   dimensions = ()
   type = real
   kind = kind_phys
-[crtrh(3)]
+[crtrh(index_for_critical_relative_humidity_at_toa)]
   standard_name = critical_relative_humidity_at_toa
   long_name = critical relative humidity at the top of atmosphere
   units = frac
@@ -5574,19 +5630,49 @@
   units = flag
   dimensions = ()
   type = logical
-[nstf_name(1)]
+[instf_opt]
+  standard_name = index_to_control_for_nsstm
+  long_name = index ofr NSSTM flag: off/uncoupled/coupled=0/1/2
+  units = count
+  dimensions = ()
+  type = integer
+[instf_spinup]
+  standard_name = index_for_nsstm_spinup
+  long_name = index for nsstm spinup
+  units = count
+  dimensions = ()
+  type = integer
+[instf_anlys]
+  standard_name = index_for_nsstm_analysis
+  long_name = index for nsstm analysis
+  units = count
+  dimensions = ()
+  type = integer
+[instf_zs1_lb]
+  standard_name = index_for_lower_bound_for_depth_of_sea_temperature_for_nsstm
+  long_name = index for lower bound for depth of sea temperature for nsstm
+  units = count
+  dimensions = ()
+  type = integer
+[instf_zs2_ub]
+  standard_name = index_for_upper_bound_for_depth_of_sea_temperature_for_nsstm
+  long_name = index for upper bound for depth of sea temperature for nsstm
+  units = count
+  dimensions = ()
+  type = integer
+[nstf_name(index_to_control_for_nsstm)]
   standard_name = control_for_nsstm
   long_name = NSSTM flag: off/uncoupled/coupled=0/1/2
   units = flag
   dimensions = ()
   type = integer
-[nstf_name(4)]
+[nstf_name(index_for_lower_bound_for_depth_of_sea_temperature_for_nsstm)]
   standard_name = lower_bound_for_depth_of_sea_temperature_for_nsstm
   long_name = zsea1 in mm
   units = mm
   dimensions = ()
   type = integer
-[nstf_name(5)]
+[nstf_name(index_for_upper_bound_for_depth_of_sea_temperature_for_nsstm)]
   standard_name = upper_bound_for_depth_of_sea_temperature_for_nsstm
   long_name = zsea2 in mm
   units = mm
@@ -6690,79 +6776,72 @@
   units = flag
   dimensions = ()
   type = logical
-[suite_sim_data]
-  standard_name = filename_for_CCPP_suite_simulator
-  long_name = filename for cccpp suite simulator data file
-  units = none
-  dimensions = ()
-  type = character
-  kind = len=256
-[nprg_active]
-  standard_name = number_of_prognostics_varaibles_in_CCPP_suite_simulator
-  long_name = number of prognostic variables used in CCPP suite simulator
-  units = count
-  dimensions = ()
-  type = integer
-[iactive_T]
-  standard_name = index_for_active_T_in_CCPP_suite_simulator
-  long_name = index into active process tracer array for temperature in CCPP suite simulator
-  units = count
-  dimensions = ()
-  type = integer
-[iactive_u]
-  standard_name = index_for_active_u_in_CCPP_suite_simulator
-  long_name = index into active process tracer array for zonal wind in CCPP suite simulator
-  units = count
-  dimensions = ()
-  type = integer
-[iactive_v]
-  standard_name = index_for_active_v_in_CCPP_suite_simulator
-  long_name = index into active process tracer array for meridional wind in CCPP suite simulator
-  units = count
-  dimensions = ()
-  type = integer
-[iactive_q]
-  standard_name = index_for_active_q_in_CCPP_suite_simulator
-  long_name = index into active process tracer array for moisture in CCPP suite simulator
-  units = count
-  dimensions = ()
-  type = integer
-[nphys_proc]
-  standard_name = number_of_physics_process_in_CCPP_suite_simulator
-  long_name = number of physics processes in CCPP suite simulator
-  units = count
-  dimensions = ()
-  type = integer
-[physics_process]
-  standard_name = physics_process_type_for_CCPP_suite_simulator
-  long_name = physics process type for CCPP suite simulator
-  units = mixed
-  dimensions = (number_of_physics_process_in_CCPP_suite_simulator)
-  type = base_physics_process
-[proc_start]
-  standard_name = index_for_first_physics_process_in_CCPP_suite_simulator
-  long_name = index for first physics process in CCPP suite simulator
-  units     = count
-  dimensions = ()
-  type = integer
-[proc_end]
-  standard_name = index_for_last_physics_process_in_CCPP_suite_simulator
-  long_name = index for last physics process in CCPP suite simulator
-  units     = count
-  dimensions = ()
-  type = integer
-[in_pre_active]
-  standard_name = flag_to_indicate_location_in_physics_process_loop_before_active_scheme
-  long_name = flag to indicate location in physics process loop before active scheme
-  units = flag
-  dimensions = ()
-  type = logical
-[in_post_active]
-  standard_name = flag_to_indicate_location_in_physics_process_loop_after_active_scheme
-  long_name = flag to indicate location in physics process loop after active scheme
-  units = flag
-  dimensions = ()
-  type = logical
+#[nprg_active]
+#  standard_name = number_of_prognostics_varaibles_in_CCPP_suite_simulator
+#  long_name = number of prognostic variables used in CCPP suite simulator
+#  units = count
+#  dimensions = ()
+#  type = integer
+#[iactive_T]
+#  standard_name = index_for_active_T_in_CCPP_suite_simulator
+#  long_name = index into active process tracer array for temperature in CCPP suite simulator
+#  units = count
+#  dimensions = ()
+#  type = integer
+#[iactive_u]
+#  standard_name = index_for_active_u_in_CCPP_suite_simulator
+#  long_name = index into active process tracer array for zonal wind in CCPP suite simulator
+#  units = count
+#  dimensions = ()
+#  type = integer
+#[iactive_v]
+#  standard_name = index_for_active_v_in_CCPP_suite_simulator
+#  long_name = index into active process tracer array for meridional wind in CCPP suite simulator
+#  units = count
+#  dimensions = ()
+#  type = integer
+#[iactive_q]
+#  standard_name = index_for_active_q_in_CCPP_suite_simulator
+#  long_name = index into active process tracer array for moisture in CCPP suite simulator
+#  units = count
+#  dimensions = ()
+#  type = integer
+#[nphys_proc]
+#  standard_name = number_of_physics_process_in_CCPP_suite_simulator
+#  long_name = number of physics processes in CCPP suite simulator
+#  units = count
+#  dimensions = ()
+#  type = integer
+#[physics_process]
+#  standard_name = physics_process_type_for_CCPP_suite_simulator
+#  long_name = physics process type for CCPP suite simulator
+#  units = mixed
+#  dimensions = (number_of_physics_process_in_CCPP_suite_simulator)
+#  type = base_physics_process
+#[proc_start]
+#  standard_name = index_for_first_physics_process_in_CCPP_suite_simulator
+#  long_name = index for first physics process in CCPP suite simulator
+#  units     = count
+#  dimensions = ()
+#  type = integer
+#[proc_end]
+#  standard_name = index_for_last_physics_process_in_CCPP_suite_simulator
+#  long_name = index for last physics process in CCPP suite simulator
+#  units     = count
+#  dimensions = ()
+#  type = integer
+#[in_pre_active]
+#  standard_name = flag_to_indicate_location_in_physics_process_loop_before_active_scheme
+#  long_name = flag to indicate location in physics process loop before active scheme
+#  units = flag
+#  dimensions = ()
+#  type = logical
+#[in_post_active]
+#  standard_name = flag_to_indicate_location_in_physics_process_loop_after_active_scheme
+#  long_name = flag to indicate location in physics process loop after active scheme
+#  units = flag
+#  dimensions = ()
+#  type = logical
 [ipt]
   standard_name = index_of_horizontal_gridpoint_for_debug_output
   long_name = horizontal index for point used for diagnostic printout
@@ -9167,12 +9246,6 @@
   type = real
   kind = kind_phys
   active = (flag_for_mellor_yamada_nakanishi_niino_pbl_scheme)
-[ktop_shallow]
-  standard_name = k_level_of_highest_reaching_plume
-  long_name = k-level of highest reaching plume
-  units = count
-  dimensions = (horizontal_loop_extent)
-  type = integer
 [ktop_plume]
   standard_name = k_level_of_highest_plume
   long_name = k-level of highest plume
@@ -9627,7 +9700,7 @@
 [ltg1_max]
   standard_name = lightning_threat_index_1
   long_name = lightning threat index 1
-  units = flashes 5 min-1
+  units = flashes min-1
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
@@ -9636,7 +9709,7 @@
 [ltg2_max]
   standard_name = lightning_threat_index_2
   long_name = lightning threat index 2
-  units = flashes 5 min-1
+  units = flashes min-1
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
@@ -9645,7 +9718,7 @@
 [ltg3_max]
   standard_name = lightning_threat_index_3
   long_name = lightning threat index 3
-  units = flashes 5 min-1
+  units = flashes min-1
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
@@ -9658,74 +9731,87 @@
   type = module
   relative_path = ../../ccpp/physics/physics
   dependencies = machine.F,physcons.F90,radlw_param.f,radsw_param.f
-  dependencies = GFDL_parse_tracers.F90,h2o_def.f,ozne_def.f,GFS_ccpp_suite_sim_pre.F90
+  dependencies = GFDL_parse_tracers.F90,h2o_def.f,ozne_def.f
+#  dependencies = module_ccpp_suite_simulator.F90
 
 [ccpp-arg-table]
   name = GFS_typedefs
   type = module
-[GFS_cldprop_type]
-  standard_name = GFS_cldprop_type
-  long_name = definition of type GFS_cldprop_type
-  units = DDT
-  dimensions = ()
-  type = GFS_cldprop_type
-[GFS_control_type]
-  standard_name = GFS_control_type
-  long_name = definition of type GFS_control_type
-  units = DDT
-  dimensions = ()
-  type = GFS_control_type
-[GFS_coupling_type]
-  standard_name = GFS_coupling_type
-  long_name = definition of type GFS_coupling_type
-  units = DDT
-  dimensions = ()
-  type = GFS_coupling_type
-[GFS_diag_type]
-  standard_name = GFS_diag_type
-  long_name = definition of type GFS_diag_type
-  units = DDT
-  dimensions = ()
-  type = GFS_diag_type
-[GFS_grid_type]
-  standard_name = GFS_grid_type
-  long_name = definition of type GFS_grid_type
-  units = DDT
-  dimensions = ()
-  type = GFS_grid_type
-[GFS_radtend_type]
-  standard_name = GFS_radtend_type
-  long_name = definition of type GFS_radtend_type
-  units = DDT
-  dimensions = ()
-  type = GFS_radtend_type
-[GFS_sfcprop_type]
-  standard_name = GFS_sfcprop_type
-  long_name = definition of type GFS_sfcprop_type
-  units = DDT
-  dimensions = ()
-  type = GFS_sfcprop_type
-[GFS_statein_type]
-  standard_name = GFS_statein_type
-  long_name = definition of type GFS_statein_type
-  units = DDT
-  dimensions = ()
-  type = GFS_statein_type
-[GFS_stateout_type]
-  standard_name = GFS_stateout_type
-  long_name = definition of type GFS_stateout_type
-  units = DDT
-  dimensions = ()
-  type = GFS_stateout_type
-[GFS_tbd_type]
-  standard_name = GFS_tbd_type
-  long_name = definition of type GFS_tbd_type
-  units = DDT
-  dimensions = ()
-  type = GFS_tbd_type
+#[GFS_init_type]
+#  standard_name = GFS_init_type
+#  long_name = definition of type GFS_init_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_init_type
+#[GFS_cldprop_type]
+#  standard_name = GFS_cldprop_type
+#  long_name = definition of type GFS_cldprop_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_cldprop_type
+#[GFS_control_type]
+#  standard_name = GFS_control_type
+#  long_name = definition of type GFS_control_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_control_type
+#[GFS_coupling_type]
+#  standard_name = GFS_coupling_type
+#  long_name = definition of type GFS_coupling_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_coupling_type
+#[GFS_diag_type]
+#  standard_name = GFS_diag_type
+#  long_name = definition of type GFS_diag_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_diag_type
+#[GFS_grid_type]
+#  standard_name = GFS_grid_type
+#  long_name = definition of type GFS_grid_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_grid_type
+#[GFS_radtend_type]
+#  standard_name = GFS_radtend_type
+#  long_name = definition of type GFS_radtend_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_radtend_type
+#[GFS_sfcprop_type]
+#  standard_name = GFS_sfcprop_type
+#  long_name = definition of type GFS_sfcprop_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_sfcprop_type
+#[GFS_statein_type]
+#  standard_name = GFS_statein_type
+#  long_name = definition of type GFS_statein_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_statein_type
+#[GFS_stateout_type]
+#  standard_name = GFS_stateout_type
+#  long_name = definition of type GFS_stateout_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_stateout_type
+#[GFS_tbd_type]
+#  standard_name = GFS_tbd_type
+#  long_name = definition of type GFS_tbd_type
+#  units = DDT
+#  dimensions = ()
+#  type = GFS_tbd_type
 [LTP]
   standard_name = extra_top_layer
   long_name = extra top layer for radiation
+  units = count
+  dimensions = ()
+  type = integer
+[isfc_gfs]
+  standard_name = surface_index_used_in_gfs
+  long_name = surface index for GFS applications
   units = count
   dimensions = ()
   type = integer
