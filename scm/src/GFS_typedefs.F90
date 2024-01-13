@@ -3161,6 +3161,7 @@ module GFS_typedefs
                                  communicator, ntasks, nthreads)
 
 !--- modules
+    use w3emc,            only: w3difdat
     use physcons,         only: con_rerth, con_pi, con_p0, rhowater
     use mersenne_twister, only: random_setseed, random_number
     use parse_tracers,    only: get_tracer_index
