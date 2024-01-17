@@ -30,6 +30,9 @@ endif()
 message (STATUS "Running ccpp_prebuild.py for CCPP")
 # Make the directories where the ccpp_prebuild.py script wants to write caps and make snippets
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
+if (NOT EXISTS "${CMAKE_SOURCE_DIR}/../../ccpp/framework/scripts/ccpp_prebuild.py")
+  message( FATAL_ERROR "ccpp_prebuild.py script does not exist, did you check out the code recursively?" )
+endif()
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   execute_process(
     COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py ${_ccpp_suites_arg} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
