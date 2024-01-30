@@ -820,7 +820,7 @@ contains
        allocate (Interstitial%ncpi (IM,Model%levs))
        allocate (Interstitial%ncpl (IM,Model%levs))
     end if
-    if (Model%lsm == Model%lsm_noahmp) then
+    if (Model%lsm == Model%ilsm_noahmp) then
        allocate (Interstitial%t2mmp (IM))
        allocate (Interstitial%q2mp  (IM))
     end if
@@ -1429,7 +1429,7 @@ contains
        Interstitial%ncpi      = clear_val
        Interstitial%ncpl      = clear_val
     end if
-    if (Model%lsm == Model%lsm_noahmp) then
+    if (Model%lsm == Model%ilsm_noahmp) then
        Interstitial%t2mmp     = clear_val
        Interstitial%q2mp      = clear_val
     end if
