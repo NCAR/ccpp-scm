@@ -34,10 +34,6 @@ module scm_type_defs
 
   character(len = 80) :: clear_char = ''
 
-  type(physics_type) :: physics_type
-  type(physics_type), target :: physics
-  type(ccpp_t),       target :: cdata
-
 !> \section arg_table_scm_state_type
 !! \htmlinclude scm_state_type.html
 !!   
@@ -438,6 +434,10 @@ module scm_type_defs
       procedure :: associate => physics_associate
       procedure :: set => physics_set
   end type physics_type
+
+
+  type(ccpp_t),       target :: cdata
+  type(physics_type), target :: physics
 
   contains
 
@@ -1054,7 +1054,7 @@ module scm_type_defs
     
     !check whether input has NoahMP or RUC LSM input data
     if (scm_state%model_ics .or. scm_state%lsm_ics) then
-      if (physics%Model%lsm == physics%Model%lsm_noahmp) then
+      if (physics%Model%lsm == physics%Model%ilsm_noahmp) then
         !FV3GFS_io.F90 uses the presence of the snowxy variable in the ICs to indicate presence of NoahMP warm start
         call check_missing(scm_input%input_snowxy, missing_var(1))
         if (missing_var(1)) then
@@ -1062,7 +1062,7 @@ module scm_type_defs
         else
           physics%Model%lsm_cold_start = .false.
         end if
-      elseif (physics%Model%lsm == physics%Model%lsm_ruc) then
+      elseif (physics%Model%lsm == physics%Model%ilsm_ruc) then
         !RUC LSM uses the tslb variable as soil temperature; if it is missing, assume a cold start using Noah LSM ICs
         call check_missing(scm_input%input_tslb(:), missing_var(1))
         if (missing_var(1)) then
@@ -1164,7 +1164,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_albdifvis_lnd, physics%Sfcprop%albdifvis_lnd(i), "albdifvis_lnd", .false., missing_var(42))
         call conditionally_set_var(scm_input%input_albdifnir_lnd, physics%Sfcprop%albdifnir_lnd(i), "albdifnir_lnd", .false., missing_var(43))
         call conditionally_set_var(scm_input%input_emis_lnd, physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(44))
-        if (physics%Model%use_cice_alb .or. physics%Model%lsm == physics%Model%lsm_ruc) then
+        if (physics%Model%use_cice_alb .or. physics%Model%lsm == physics%Model%ilsm_ruc) then
           call conditionally_set_var(scm_input%input_albdirvis_ice, physics%Sfcprop%albdirvis_ice(i), "albdirvis_ice", .false., missing_var(45))
           call conditionally_set_var(scm_input%input_albdirnir_ice, physics%Sfcprop%albdirnir_ice(i), "albdirnir_ice", .false., missing_var(46))
           call conditionally_set_var(scm_input%input_albdifvis_ice, physics%Sfcprop%albdifvis_ice(i), "albdifvis_ice", .false., missing_var(47))
@@ -1366,7 +1366,7 @@ module scm_type_defs
         endif
       endif
       
-      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc .and. .not. physics%Model%lsm_cold_start) then
+      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%ilsm_ruc .and. .not. physics%Model%lsm_cold_start) then
         !--- Extra RUC LSM variables
         write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .true., missing_var(1))
@@ -1383,7 +1383,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_sfalb_lnd_bck, physics%Sfcprop%sfalb_lnd_bck(i), "sfalb_lnd_bck", .true., missing_var(12))
         call conditionally_set_var(scm_input%input_sfalb_ice, physics%Sfcprop%sfalb_ice(i), "sfalb_ice", .true., missing_var(13))
         call conditionally_set_var(scm_input%input_emis_ice, physics%Sfcprop%emis_ice(i), "emis_ice", .true., missing_var(14))
-        if (physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%rdlai) then
+        if (physics%Model%lsm == physics%Model%ilsm_ruc .and. physics%Model%rdlai) then
            !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
            call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(15))
         end if
@@ -1403,7 +1403,7 @@ module scm_type_defs
           end do
         end if
         missing_var = .false.
-      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%lsm_cold_start) then
+      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%ilsm_ruc .and. physics%Model%lsm_cold_start) then
         call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .true., missing_var(1))
         if (physics%Model%rdlai) then
            !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
@@ -1420,7 +1420,7 @@ module scm_type_defs
          end do
        end if
        missing_var = .false.
-      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_noahmp) then
+      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%ilsm_noahmp) then
         write(0,'(a)') "Setting internal physics variables from the NoahMP section of the case input file (scalars)..."
         !all of these can be missing, since a method exists to "cold start" these variables
         call conditionally_set_var(scm_input%input_snowxy, physics%Sfcprop%snowxy(i), "snowxy", .false., missing_var(1))
@@ -1465,14 +1465,14 @@ module scm_type_defs
         missing_var = .false.
       end if
       
-      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. (physics%Model%lsm == physics%Model%lsm_noah .or. &
-          physics%Model%lsm == physics%Model%lsm_noahmp .or. physics%Model%lsm_cold_start)) then
+      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. (physics%Model%lsm == physics%Model%ilsm_noah .or. &
+          physics%Model%lsm == physics%Model%ilsm_noahmp .or. physics%Model%lsm_cold_start)) then
         
         call conditionally_set_var(scm_input%input_stc(:), physics%Sfcprop%stc(i,:), "stc", .true., missing_var(1))
         call conditionally_set_var(scm_input%input_smc(:), physics%Sfcprop%smc(i,:), "smc", .true., missing_var(2))
         call conditionally_set_var(scm_input%input_slc(:), physics%Sfcprop%slc(i,:), "slc", .true., missing_var(3))
 
-        if (physics%Model%lsm == physics%Model%lsm_noahmp) then
+        if (physics%Model%lsm == physics%Model%ilsm_noahmp) then
           call conditionally_set_var(scm_input%input_snicexy(:), physics%Sfcprop%snicexy(i,:), "snicexy", .false., missing_var(4))
           call conditionally_set_var(scm_input%input_snliqxy(:), physics%Sfcprop%snliqxy(i,:), "sliqexy", .false., missing_var(5))
           call conditionally_set_var(scm_input%input_tsnoxy(:), physics%Sfcprop%tsnoxy(i,:), "tsnoxy", .false., missing_var(6))
@@ -1493,7 +1493,7 @@ module scm_type_defs
           missing_var = .false.
         endif
 
-      else if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then
+      else if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%ilsm_ruc) then
         call conditionally_set_var(scm_input%input_tslb(:), physics%Sfcprop%tslb(i,:), "tslb", .false., missing_var(1))
         call conditionally_set_var(scm_input%input_smois(:), physics%Sfcprop%smois(i,:), "smois", .false., missing_var(2))
         call conditionally_set_var(scm_input%input_sh2o(:), physics%Sfcprop%sh2o(i,:), "sh2o", .false., missing_var(3))

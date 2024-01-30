@@ -4,6 +4,9 @@ project(scm
         VERSION 5.0.0
         LANGUAGES C Fortran)
 set(PROJECT "CCPP-SCM")
+ENABLE_LANGUAGE(Fortran)
+include(CMakeForceCompiler)
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../../CMakeModules/Modules)
 
 #------------------------------------------------------------------------------
 #
@@ -18,9 +21,10 @@ get_filename_component(CCPP_ROOT "${TEST_ROOT}" DIRECTORY)
 # Paths should be relative to CMAKE_SOURCE_DIR (this file's directory)
 #
 #------------------------------------------------------------------------------
-LIST(APPEND SCHEME_FILES "/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/bin/scheme_files.txt")
-LIST(APPEND HOST_FILES  "/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/bin/host_files.txt")
-LIST(APPEND SUITE_FILES "/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/suites/suite_SCM_GFS_v16.xml")
+LIST(APPEND SCHEME_FILES "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/scm/bin/scheme_files2.txt")
+LIST(APPEND HOST_FILES  "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/scm/bin/host_files2.txt")
+LIST(APPEND SUITE_FILES "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/ccpp/suites/suite_SCM_GFS_v16.xml")
+LIST(APPEND TYPEDEF_FILES "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/scm/bin/typedef_files.txt")
 # HOST is the name of the executable we will build.
 # We assume there are files ${HOST}.meta and ${HOST}.F90 in CMAKE_SOURCE_DIR
 SET(HOST "${CMAKE_PROJECT_NAME}")
@@ -58,8 +62,7 @@ endif()
 ADD_COMPILE_OPTIONS(-O0)
 
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-#  gfortran
-#  MESSAGE("gfortran being used.")
+  MESSAGE(STATUS "gfortran being used.")
   ADD_COMPILE_OPTIONS(-fcheck=all)
   ADD_COMPILE_OPTIONS(-fbacktrace)
   ADD_COMPILE_OPTIONS(-ffpe-trap=zero)
@@ -68,8 +71,7 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   ADD_COMPILE_OPTIONS(-ffree-line-length-none)
   ADD_COMPILE_OPTIONS(-cpp)
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
-#  ifort
-#  MESSAGE("ifort being used.")
+  MESSAGE(STATUS "ifort being used.")
   #ADD_COMPILE_OPTIONS(-check all)
   ADD_COMPILE_OPTIONS(-fpe0)
   ADD_COMPILE_OPTIONS(-warn)
@@ -97,51 +99,95 @@ else(OPENMP)
   message (STATUS "Disable OpenMP support for C/C++/Fortran compiler")
 endif()
 
-# Create metadata and source file lists
+#------------------------------------------------------------------------------
+#
+# Create metadata and source file lists from ${SCHEME_FILES}
+#
+#------------------------------------------------------------------------------
 FOREACH(FILE ${SCHEME_FILES})
   FILE(STRINGS ${FILE} FILENAMES)
   LIST(APPEND SCHEME_FILENAMES ${FILENAMES})
+  FOREACH(FILE ${SCHEME_FILENAMES})
+    MATH(EXPR NSCHEME_FILES "${NSCHEME_FILES}+1")
+  ENDFOREACH(FILE)
 ENDFOREACH(FILE)
-string(REPLACE ";" "," SCHEME_METADATA "${SCHEME_FILES}")
-
+#
+MATH(EXPR FCOUNT 0)
 FOREACH(FILE ${SCHEME_FILENAMES})
-  # target_sources prefers absolute pathnames
-  string(REPLACE ".meta" ".F90" TEMP "${FILE}")
-  get_filename_component(ABS_PATH "${TEMP}" ABSOLUTE)
-  list(APPEND LIBRARY_LIST ${ABS_PATH})
+  # Set character seperator
+  MATH(EXPR FCOUNT "${FCOUNT}+1")
+  set(SEPERATOR "")
+#  if (${FCOUNT} EQUAL ${NSCHEME_FILES})
+#    set(SEPERATOR "")
+#  endif()
+  # Source file list
+  string(CONCAT SCHEME_FILENAME ${CCPP_ROOT} "/" ${FILE} ${SEPERATOR} )
+  string(REGEX REPLACE "\n$" "" SCHEME_FILENAME "${SCHEME_FILENAME}")
+  list(APPEND SCHEME_SOURCE ${SCHEME_FILENAME})
+  # Meta file list
+  string(REGEX REPLACE "\\.[^.]*$" ".meta" METADATA_FILE ${FILE})
+  string(CONCAT METADATA_FILENAME ${CCPP_ROOT} "/" ${METADATA_FILE} ${SEPERATOR} )
+  list(APPEND SCHEME_METADATA ${METADATA_FILENAME})
 ENDFOREACH(FILE)
+string(REPLACE ";" "," SCHEME_METADATA "${SCHEME_METADATA}")
 
+#------------------------------------------------------------------------------
+#
+# Create metadata and source file lists	from ${HOST_FILES}
+#
+#------------------------------------------------------------------------------
 FOREACH(FILE ${HOST_FILES})
   FILE(STRINGS ${FILE} FILENAMES)
-  LIST(APPEND HOST_METADATA "${FILE}.meta")
+  LIST(APPEND HOST_FILENAMES "${FILENAMES}")
+  FOREACH(FILE ${HOST_FILENAMES})
+    MATH(EXPR NHOST_FILES "${NHOST_FILES}+1")
+  ENDFOREACH(FILE)
 ENDFOREACH(FILE)
-string(REPLACE ";" "," HOST_METADATA "${HOST_FILES}")
-
-FOREACH(FILE ${HOST_METADATA})
-  # target_sources prefers absolute pathnames
-  string(REPLACE ".meta" ".F90" TEMP "${FILE}")
-  get_filename_component(ABS_PATH "${FILE}.F90" ABSOLUTE)
-  LIST(APPEND HOST_SOURCE   "${ABS_PATH}")
+#
+MATH(EXPR FCOUNT 0)
+FOREACH(FILE ${HOST_FILENAMES})
+  # Set character seperator
+  MATH(EXPR FCOUNT "${FCOUNT}+1")
+  set(SEPERATOR "")
+#  if (${FCOUNT} EQUAL ${NHOST_FILES})
+#    set(SEPERATOR "")
+#  endif()
+  string(CONCAT HOST_FILENAME ${CCPP_ROOT} "/" ${FILE} ${SEPERATOR} )
+  list(APPEND HOST_SOURCE ${HOST_FILENAME})
+  #
+  string(REGEX REPLACE "\\.[^.]*$" ".meta" METADATA_FILE ${FILE})
+  string(CONCAT METADATA_FILENAME ${CCPP_ROOT} "/" ${METADATA_FILE} ${SEPERATOR} )
+  list(APPEND HOST_METADATA ${METADATA_FILENAME})
 ENDFOREACH(FILE)
+string(REPLACE ";" "," HOST_METADATA "${HOST_METADATA}")
 
-#list(APPEND LIBRARY_LIST ${HOST_SOURCE})
-#string(REPLACE ";" ".meta," HOST_METADATA "${HOST_FILES}")
-#set(HOST_METADATA "${HOST_METADATA}.meta")
+#------------------------------------------------------------------------------
+#
+# Run ccpp_capgen
+#
+#------------------------------------------------------------------------------
 
 string(REPLACE ";" "," SUITE_XML "${SUITE_FILES}")
 
-# Run ccpp_capgen
 set(CAPGEN_CMD "${CCPP_FRAMEWORK}/ccpp_capgen.py")
 list(APPEND CAPGEN_CMD "--host-files")
-list(APPEND CAPGEN_CMD "${HOST_METADATA}")
+list(APPEND CAPGEN_CMD ${HOST_METADATA})
 list(APPEND CAPGEN_CMD "--scheme-files")
-list(APPEND CAPGEN_CMD "${SCHEME_METADATA}")
+list(APPEND CAPGEN_CMD ${SCHEME_METADATA})
 list(APPEND CAPGEN_CMD "--suites")
 list(APPEND CAPGEN_CMD "${SUITE_XML}")
 list(APPEND CAPGEN_CMD "--host-name")
 list(APPEND CAPGEN_CMD "SCM")
 list(APPEND CAPGEN_CMD "--output-root")
 list(APPEND CAPGEN_CMD "${CCPP_CAP_FILES}")
+list(APPEND CAPGEN_CMD "--kind-type")
+list(APPEND CAPGEN_CMD "kind_phys=REAL64")
+list(APPEND CAPGEN_CMD "--kind-type")
+list(APPEND CAPGEN_CMD "kind_dyn=REAL64")
+list(APPEND CAPGEN_CMD "--kind-type")
+list(APPEND CAPGEN_CMD "kind_sngl_prec=REAL32")
+list(APPEND CAPGEN_CMD "--kind-type")
+list(APPEND CAPGEN_CMD "kind_dbl_prec=REAL64")
 while (VERBOSITY GREATER 0)
   list(APPEND CAPGEN_CMD "--verbose")
   MATH(EXPR VERBOSITY "${VERBOSITY} - 1")
@@ -158,7 +204,11 @@ else(RES EQUAL 0)
   MESSAGE(FATAL_ERROR "CCPP cap generation FAILED: result = ${RES}")
 endif(RES EQUAL 0)
 
+#------------------------------------------------------------------------------
+#
 # Retrieve the list of files from datatable.xml and set to CCPP_CAPS
+#
+#------------------------------------------------------------------------------
 set(DTABLE_CMD "${CCPP_FRAMEWORK}/ccpp_datafile.py")
 list(APPEND DTABLE_CMD "${CCPP_CAP_FILES}/datatable.xml")
 list(APPEND DTABLE_CMD "--ccpp-files")
@@ -174,26 +224,12 @@ if (RES EQUAL 0)
 else(RES EQUAL 0)
   MESSAGE(FATAL_ERROR "CCPP cap file retrieval FAILED: result = ${RES}")
 endif(RES EQUAL 0)
-list(APPEND LIBRARY_LIST ${CCPP_CAPS})
-add_library(TESTLIB OBJECT  ${LIBRARY_LIST})
-ADD_EXECUTABLE(${HOST} ${HOST}.F90 $<TARGET_OBJECTS:TESTLIB>)
 
-INCLUDE_DIRECTORIES(${CCPP_CAP_FILES})
-
-set_target_properties(${HOST} PROPERTIES
-                              COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
-                              LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
-
+MESSAGE(STATUS "CCPP capgen step complete")
 
 ####################################################################
 # End CCPP capgen step                                             #
 ####################################################################
-
-ENABLE_LANGUAGE(Fortran)
-
-include(CMakeForceCompiler)
-
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../../CMakeModules/Modules)
 
 find_package(NetCDF REQUIRED COMPONENTS C Fortran)
 find_package(bacio REQUIRED)
@@ -368,24 +404,24 @@ SET(scm_source_files scm.F90
             scm_output.F90
 )
 
-ADD_EXECUTABLE(scm ${scm_source_files} ccpp_static_api.F90)
+ADD_EXECUTABLE(ccpp_scm ${scm_source_files} ${CCPP_CAPS})
 
 if(OPENMP)
-  TARGET_LINK_LIBRARIES(scm PUBLIC OpenMP::OpenMP_Fortran)
+  TARGET_LINK_LIBRARIES(ccpp_scm PUBLIC OpenMP::OpenMP_Fortran)
 endif()
-TARGET_LINK_LIBRARIES(scm NetCDF::NetCDF_Fortran)
-TARGET_LINK_LIBRARIES(scm bacio::bacio_4)
-TARGET_LINK_LIBRARIES(scm sp::sp_d)
-TARGET_LINK_LIBRARIES(scm w3emc::w3emc_d)
-TARGET_LINK_LIBRARIES(scm ccpp_framework)
-TARGET_LINK_LIBRARIES(scm ccpp_physics)
+TARGET_LINK_LIBRARIES(ccpp_scm NetCDF::NetCDF_Fortran)
+TARGET_LINK_LIBRARIES(ccpp_scm bacio::bacio_4)
+TARGET_LINK_LIBRARIES(ccpp_scm sp::sp_d)
+TARGET_LINK_LIBRARIES(ccpp_scm w3emc::w3emc_d)
+TARGET_LINK_LIBRARIES(ccpp_scm ccpp_framework)
+TARGET_LINK_LIBRARIES(ccpp_scm ccpp_physics)
 
-SET_TARGET_PROPERTIES(scm PROPERTIES
+SET_TARGET_PROPERTIES(ccpp_scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
                                LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
 
 ADD_CUSTOM_COMMAND(
-        TARGET scm POST_BUILD
+        TARGET ccpp_scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_SOURCE_DIR}/run_scm.py
                 ${CMAKE_CURRENT_BINARY_DIR}/run_scm.py)
