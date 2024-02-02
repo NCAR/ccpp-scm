@@ -491,19 +491,19 @@ subroutine output_append_state(ncid, scm_state, physics)
   call NetCDF_put_var(ncid, "sigma_i", scm_state%si(:,:),      scm_state%itt_out)
   call NetCDF_put_var(ncid, "pres_s",  scm_state%pres_surf(:), scm_state%itt_out)
   
-  call NetCDF_put_var(ncid, "qv",      scm_state%state_tracer(:,:,scm_state%water_vapor_index,1), scm_state%itt_out)
-  call NetCDF_put_var(ncid, "T",       scm_state%state_T(:,:,1), scm_state%itt_out)
-  call NetCDF_put_var(ncid, "u",       scm_state%state_u(:,:,1), scm_state%itt_out)
-  call NetCDF_put_var(ncid, "v",       scm_state%state_v(:,:,1), scm_state%itt_out)
-  call NetCDF_put_var(ncid, "ql",      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1), scm_state%itt_out)
-  call NetCDF_put_var(ncid, "qi",      scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "qv",      scm_state%state_tracer(:,:,scm_state%water_vapor_index), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "T",       scm_state%state_T(:,:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "u",       scm_state%state_u(:,:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "v",       scm_state%state_v(:,:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "ql",      scm_state%state_tracer(:,:,scm_state%cloud_water_index), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "qi",      scm_state%state_tracer(:,:,scm_state%cloud_ice_index), scm_state%itt_out)
   if (physics%model%do_mynnedmf) then
-    call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
-                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1)   + &
+    call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index) + &
+                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index)   + &
                                        physics%Tbd%QC_BL(:,:), scm_state%itt_out)
   else
-    call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
-                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1),    &
+    call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index) + &
+                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index),    &
                                        scm_state%itt_out)
   endif
   
