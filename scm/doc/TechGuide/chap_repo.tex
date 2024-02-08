@@ -26,32 +26,21 @@ The repository contains all code required to build the CCPP SCM and scripts that
 	.3 Dockerfile\DTcomment{contains Docker instructions for building the CCPP SCM image}.
 	.2 README.md.
 	.2 scm/.
-	.3 bin/\DTcomment{build directory (initially empty; populated by cmake)}.
 	.3 data/\DTcomment{build directory (most data directories populated by contrib/get\_all\_static\_data.sh)}.
-	.4 comparison\_data/\DTcomment{initially empty; contains data with which to compare SCM output}.
-	.4 physics\_input\_data/\DTcomment{initially empty; contains data needed by the CCPP physics}.
-	.4 processed\_case\_input/\DTcomment{initially empty; contains initialization and forcing data for cases}.
-	.4 raw\_case\_input/\DTcomment{initially empty; contains case data to be processed by scripts}.
 	.4 vert\_coord\_data/\DTcomment{contains data to calculate vertical coordinates (from GSM-based GFS only)}.
 	.3 doc/\DTcomment{contains this User's/Technical Guide}.
 	.4 TechGuide/\DTcomment{contains LaTeX for this User's Guide}.
 	.3 etc/\DTcomment{contains case configuration, machine setup scripts, and plotting scripts}.
 	.4 case\_config/\DTcomment{contains case configuration files}.
 	.4 CENTOS\_docker\_setup.sh\DTcomment{contains machine setup for Docker container}.
-	.4 Cheyenne\_setup\_gnu.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
-	.4 Cheyenne\_setup\_gnu.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
-	.4 Cheyenne\_setup\_intel.csh\DTcomment{setup script for Cheyenne HPC for csh, tcsh}.
-	.4 Cheyenne\_setup\_intel.sh\DTcomment{setup script for Cheyenne HPC for sh, bash}.
 	.4 Desktop\_setup\_gfortran.csh\DTcomment{setup script for Mac Desktop for csh, tcsh}.
 	.4 Desktop\_setup\_gfortran.sh\DTcomment{setup script for Mac Desktop for sh, bash}.
-	.4 Hera\_setup\_intel.csh\DTcomment{setup script for Theia HPC for csh, tcsh}.
-	.4 Hera\_setup\_intel.sh\DTcomment{setup script for Theia HPC for sh, bash}.
+        .4 modules/\DTcomment{Directory containing modulefiles for building on HPC environments (see section \ref{section: use_preconfigured_platforms})}.
 	.4 scm\_qsub\_example.py\DTcomment{example QSUB run script}.
 	.4 scm\_slurm\_example.py\DTcomment{example SLURM run script}.
 	.4 scripts/\DTcomment{Python scripts for setting up cases and plotting}.
 	.5 plot\_configs/\DTcomment{plot configuration files}.
 	.4 tracer\_config\DTcomment{tracer configuration files}.
 	.3 LICENSE.txt.
-	.3 run/\DTcomment{initially empty; populated by run\_scm.py}.
 	.3 src/\DTcomment{source code for SCM infrastructure, Python run script, CMakeLists.txt for the SCM, example multirun setup files, suite\_info.py}.
 }}
