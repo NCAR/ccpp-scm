@@ -204,6 +204,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/SFC_Layer/UFS/sfc_nst_post.f90',
     'ccpp/physics/physics/SFC_Models/Land/RUC/lsm_ruc.F90',
     'ccpp/physics/physics/SFC_Models/SeaIce/CICE/sfc_cice.f',
+    'ccpp/physics/physics/SFC_Models/Land/sfc_land.F90',
     'ccpp/physics/physics/SFC_Models/Land/Noah/lsm_noah.f',
     'ccpp/physics/physics/SFC_Models/Land/Noahmp/noahmpdrv.F90',
     'ccpp/physics/physics/SFC_Models/Lake/Flake/flake_driver.F90',
