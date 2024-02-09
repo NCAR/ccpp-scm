@@ -77,7 +77,7 @@
 [ccpp-table-properties]
   name = scm_type_defs
   type = module
-  dependencies = scm_kinds.F90,GFS_typedefs.F90,CCPP_typedefs.F90,../../ccpp/physics/physics/machine.F
+  dependencies = scm_kinds.F90,GFS_typedefs.F90,CCPP_typedefs.F90,../../ccpp/physics/physics/hooks/machine.F
 
 [ccpp-arg-table]
   name = scm_type_defs
