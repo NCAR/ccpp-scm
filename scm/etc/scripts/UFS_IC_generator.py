@@ -1187,6 +1187,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "facsf": facsf_in,
         "facwf": facwf_in,
         "soiltyp": styp_in,
+        "scolor": 0.,
         "slopetyp": slope_in,
         "vegtyp": vtyp_in,
         "vegfrac": vfrac_in,
@@ -2450,6 +2451,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
                 {"name": "q2m",          "type":wp, "dimd": ('t0'),             "units": "kg kg-1", "desc": "2-meter specific humidity"}, \
                 {"name": "vegtyp",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation type (1-12)"}, \
                 {"name": "soiltyp",      "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "soil type (1-12)"}, \
+                {"name": "scolor",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "soil color"}, \
                 {"name": "ffmm",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for momentum"}, \
                 {"name": "ffhh",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for heat"}, \
                 {"name": "hice",         "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sea ice thickness"}, \
