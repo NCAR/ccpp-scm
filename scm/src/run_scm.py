@@ -470,6 +470,8 @@ class Experiment(object):
             case_nml['case_config']['n_itt_diag'] = self._n_itt_diag
         if self._timestep:
             case_nml['case_config']['dt'] = self._timestep
+        if self._case_data_dir:
+            case_nml['case_config']['case_data_dir'] = self._case_data_dir
         # look for the output_dir variable in the case configuration namelist and use it if it does; 
         # if it doesn't exist, create a default output directory name (from the case and suite names) and create a namelist patch
         try:
