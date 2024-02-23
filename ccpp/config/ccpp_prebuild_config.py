@@ -20,8 +20,8 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/radsw_param.f',
     'ccpp/physics/physics/radlw_param.f',
     'ccpp/physics/physics/h2o_def.f',
-    'ccpp/physics/physics/ozne_def.f',
     'ccpp/physics/physics/radiation_surface.f',
+    'ccpp/physics/physics/module_ozphys.F90',
     'ccpp/physics/physics/module_ccpp_suite_simulator.F90',
     'scm/src/CCPP_typedefs.F90',
     'scm/src/GFS_typedefs.F90',
@@ -39,11 +39,15 @@ TYPEDEFS_NEW_METADATA = {
     'machine' : {
         'machine' : '',
         },
-    'module_radlw_parameters' : {
+    'module_radsw_parameters' : {
         'module_radsw_parameters' : '',
         },
     'module_radlw_parameters' : {
         'module_radlw_parameters' : '',
+        },
+    'module_ozphys' : {
+        'module_ozphys' : '',
+        'ty_ozphys'     : '',
         },
     'CCPP_typedefs' : {
         'GFS_interstitial_type' : 'physics%Interstitial',
@@ -113,6 +117,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GFS_surface_loop_control_part1.F90' ,
     'ccpp/physics/physics/GFS_surface_loop_control_part2.F90' ,
     'ccpp/physics/physics/GFS_time_vary_pre.scm.F90'        ,
+    'ccpp/physics/physics/GFS_physics_post.F90',
 #    'ccpp/physics/physics/bl_acm.F90'                       ,
     'ccpp/physics/physics/cires_ugwp.F90'                   ,
     'ccpp/physics/physics/cires_ugwp_post.F90'              ,
@@ -171,10 +176,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/mp_thompson.F90'                  ,
     'ccpp/physics/physics/mp_thompson_post.F90'             ,
     'ccpp/physics/physics/mp_nssl.F90'                      ,
-    'ccpp/physics/physics/ozphys.f'                         ,
-    'ccpp/physics/physics/ozphys_2015.f'                    ,
     'ccpp/physics/physics/zhaocarr_precpd.f'                ,
-    'ccpp/physics/physics/phys_tend.F90'                    ,
     'ccpp/physics/physics/radlw_main.F90'                   ,
     'ccpp/physics/physics/radsw_main.F90'                   ,
     'ccpp/physics/physics/rascnv.F90'                       ,
