@@ -1175,6 +1175,12 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     # fractional grid
     tiice_in = read_NetCDF_surface_var(nc_file, 'tiice', i, j, old_chgres, missing_variable_ice_layers)
 
+    # soil color
+    if (slmsk_in == 1):
+        scolor_in = 4
+    else:
+        scolor_in = 1
+
     #
     nc_file.close()
     
@@ -1191,7 +1197,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "facsf": facsf_in,
         "facwf": facwf_in,
         "soiltyp": styp_in,
-        "scolor": 0.,
+        "scolor": scolor_in,
         "slopetyp": slope_in,
         "vegtyp": vtyp_in,
         "vegfrac": vfrac_in,
