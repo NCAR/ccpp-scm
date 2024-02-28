@@ -1066,10 +1066,14 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     tprcp_in  = read_NetCDF_surface_var(nc_file, 'tprcp',  i, j, old_chgres, 0)
     srflag_in = read_NetCDF_surface_var(nc_file, 'srflag', i, j, old_chgres, 0)
     sncovr_in = read_NetCDF_surface_var(nc_file, 'sncovr', i, j, old_chgres, 0)
-    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsfcl',  i, j, old_chgres, 0)
-    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorll',  i, j, old_chgres, 0)   
-    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorli',  i, j, old_chgres, 0)
-    
+    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsea',   i, j, old_chgres, 0)
+    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)   
+    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)
+    if (snwdph_in > 0):
+        sncovr_in = 1.0
+    else:
+        sncovr_in = 0.0
+
     # present when cplwav = T
     zorlw_in = read_NetCDF_surface_var(nc_file, 'zorlw', i, j, old_chgres, 0)
     
@@ -2393,7 +2397,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
                 {"name": "mrsos_forc",   "type":wp, "dimd": ('time'       ),    "units": "kg m-2",        "desc": "forcing_mass_content_of_water_in_soil_layer"}]
 
     #
-    var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m 2-1",   "desc": "grid_cell_area"},\
+    var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m2",      "desc": "grid_cell_area"},\
                 {"name": "stddev",       "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "standard deviation of subgrid orography"}, \
                 {"name": "convexity",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "convexity of subgrid orography"}, \
                 {"name": "oa1",          "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "assymetry of subgrid orography 1"}, \
