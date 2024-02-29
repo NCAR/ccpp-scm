@@ -74,9 +74,6 @@ jobs:
          echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
          sudo apt-get update -y
          sudo apt-get install -y nvhpc-24-1
-#        wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-#        tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-#        nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
 
     #######################################################################################
     # Install FORTRAN dependencies
@@ -139,48 +136,3 @@ jobs:
         make -j2
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
-
-    - name: Install NetCDF C library
-      run: |
-        sudo apt-get update
-        sudo apt-get install libnetcdf-dev
-
-    - name: Cache NetCDF Fortran library
-      id: cache-netcdf-fortran
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
-
-    - name: Install NetCDF Fortran library
-      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
-      run: |
-        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
-        cd netcdf-fortran
-        ./configure
-        make -j
-        sudo make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
-
-    #######################################################################################
-    # Build SCM.
-    #######################################################################################
-
-    - name: Configure build with CMake (Release)
-      if: contains(matrix.build-type, 'Release')
-      run: |
-        cd ${SCM_ROOT}/scm
-        mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} ../src
-
-    - name: Configure build with CMake (Debug)
-      if: contains(matrix.build-type, 'Debug')
-      run: |
-        cd ${SCM_ROOT}/scm
-        mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src
-
-    - name: Build SCM
-      run: |
-        cd ${SCM_ROOT}/scm/bin
-        make -j4
