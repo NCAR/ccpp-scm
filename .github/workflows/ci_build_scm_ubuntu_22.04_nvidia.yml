@@ -23,7 +23,7 @@ jobs:
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
 #      NVHPC_SILENT: true
 #      NVHPC_INSTALL_TYPE: single
-      NVHPC_INSTALL_DIR: /home/runner/nvidia
+#      NVHPC_INSTALL_DIR: /home/runner/nvidia
       suites:      SCM_RAP
 
     # Workflow steps
@@ -68,6 +68,9 @@ jobs:
       env:
         NVCOMPILERS: /home/runner/hpc_sdk
       run: |
+        echo "NVHPC_SILENT=true"                      >> $GITHUB_ENV
+	echo "NVHPC_INSTALL_DIR=/home/runner/hpc_sdk" >> $GITHUB_ENV
+	echo "NVHPC_INSTALL_TYPE=single"              >> $GITHUB_ENV
         mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
         wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
