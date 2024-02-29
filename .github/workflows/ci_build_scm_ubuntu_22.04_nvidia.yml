@@ -3,25 +3,25 @@ name: CI test to build the CCPP-SCM on ubuntu v22.04 using NVidia compilers
 on: [push,pull_request,workflow_dispatch]
 
 jobs:
-  free-disk-space:
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Free Disk Space (Ubuntu)
-      uses: jlumbroso/free-disk-space@main
-      with:
-        # this might remove tools that are actually needed,
-        # if set to "true" but frees about 6 GB
-        tool-cache: false
-        
-        # all of these default to true, but feel free to set to
-        # "false" if necessary for your workflow
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: true
-        swap-storage: true
+#  free-disk-space:
+#    runs-on: ubuntu-latest
+#    steps:
+#
+#    - name: Free Disk Space (Ubuntu)
+#      uses: jlumbroso/free-disk-space@main
+#      with:
+#        # this might remove tools that are actually needed,
+#        # if set to "true" but frees about 6 GB
+#        tool-cache: false
+#        
+#        # all of these default to true, but feel free to set to
+#        # "false" if necessary for your workflow
+#        android: true
+#        dotnet: true
+#        haskell: true
+#        large-packages: true
+#        docker-images: true
+#        swap-storage: true
 
   build_scm:
     # The type of runner that the job will run on
@@ -40,17 +40,38 @@ jobs:
       sp_ROOT:     /home/runner/NCEPLIBS-sp
       w3emc_ROOT:  /home/runner/myw3emc
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
-#      NVHPC_SILENT: true
-#      NVHPC_INSTALL_TYPE: single
-#      NVHPC_INSTALL_DIR: /home/runner/nvidia
       suites:      SCM_RAP
 
     # Workflow steps
     steps:
-#    - name: Clear caches
-#      uses: easimon/wipe-cache@main
-#      with:
-#        dry-run: 'true'
+
+    #######################################################################################
+    # Cleanup space
+    #######################################################################################
+    - name: Check space (pre)
+      run: |
+        df -h
+
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        # this might remove tools that are actually needed,
+        # if set to "true" but frees about 6 GB
+        tool-cache: false
+
+        # all of these default to true, but feel free to set to
+        # "false" if necessary for your workflow
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
+
+    - name: Check space (post)
+      run: |
+      	   df -h
+
     #######################################################################################
     # Initial
     #######################################################################################
