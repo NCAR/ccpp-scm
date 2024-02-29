@@ -52,13 +52,16 @@ jobs:
     - name: Add conda to system path
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
+        df -h
 
     - name: Install NetCDF Python libraries
       run: |
         conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
-
+        df -h
     - name: Update system packages
-      run: sudo apt-get update
+      run: |
+        sudo apt-get update
+        df -h
 
     #######################################################################################
     # Install Nvidia.
@@ -68,6 +71,7 @@ jobs:
       env:
         NVCOMPILERS: /home/runner/hpc_sdk
       run: |
+        df -h
         echo "NVHPC_SILENT=true"                      >> $GITHUB_ENV
         echo "NVHPC_INSTALL_DIR=/home/runner/hpc_sdk" >> $GITHUB_ENV
         echo "NVHPC_INSTALL_TYPE=single"              >> $GITHUB_ENV
