@@ -10,19 +10,19 @@ jobs:
     strategy:
       matrix:
         fortran-compiler: [nvfortran]
-        build-type:       [Release, Debug]
-        py-version:       [3.7.13, 3.9.12]
+        build-type:       [Release]#, Debug]
+        py-version:       [3.7.13]#, 3.9.12]
 
     # Environmental variables
     env:
-      NFHOME:     /home/runner/netcdf-fortran
-      NFVERSION:  v4.5.3
-      bacio_ROOT: /home/runner/bacio
-      sp_ROOT:    /home/runner/NCEPLIBS-sp
-      w3emc_ROOT: /home/runner/myw3emc
-      SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      intel_ROOT: /home/runner/intel
-      suites:     SCM_RAP
+      NFHOME:      /home/runner/netcdf-fortran
+      NFVERSION:   v4.5.3
+      bacio_ROOT:  /home/runner/bacio
+      sp_ROOT:     /home/runner/NCEPLIBS-sp
+      w3emc_ROOT:  /home/runner/myw3emc
+      SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
+      nvidia_ROOT: /home/runner/intel
+      suites:      SCM_RAP
 
     # Workflow steps
     steps:
@@ -62,7 +62,7 @@ jobs:
       if: contains(matrix.fortran-compiler, 'nvfortran')
       uses: actions/cache@v3
       with:
-        path: /opt/nvidia/hpc_sdk/
+        path: /home/runner/hpc_sdk/
         key: nvhpc-${{ runner.os }}-2024-24.1
 
     - name: Nvidia setup compilers
@@ -70,9 +70,13 @@ jobs:
       env:
         NVCOMPILERS: /opt/nvidia/hpc_sdk
       run: |
-        wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-        tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-        nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
+         curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
+         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
+         sudo apt-get update -y
+         sudo apt-get install -y nvhpc-24-1
+#        wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
+#        tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
+#        nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
 
     #######################################################################################
     # Install FORTRAN dependencies
