@@ -63,14 +63,6 @@ jobs:
     #######################################################################################
     # Install Nvidia.
     #######################################################################################
-#    - name: cache-nvidia-compilers
-#      id: cache-nvidia-compilers
-#      if: contains(matrix.fortran-compiler, 'nvfortran')
-#      uses: actions/cache@v3
-#      with:
-#        path: /home/runner/hpc_sdk/
-#        key: cache-nvidia-compilers-${{matrix.fortran-compiler}}-key
-#
     - name: Nvidia setup compilers
       if: contains(matrix.fortran-compiler, 'nvfortran') && steps.cache-nvidia-compilers.outputs.cache-hit != 'true'
       env:
@@ -80,10 +72,6 @@ jobs:
         wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
-#         curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
-#         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
-#         sudo apt-get update -y
-#         sudo apt-get install -y nvhpc-24-1
         echo "The nvfortran installed is:"
         nvfortran --version
         echo "The path to nvfortran is:"
