@@ -3,7 +3,7 @@
 
 module scm_vgrid
 
-use scm_kinds, only: sp, dp, qp, kind_scm_dp
+use scm_kinds, only: sp, dp, qp, kind_scm_dp, kind_scm_sp
 use scm_physical_constants, only : con_cp, con_rocp, con_fvirt, con_g, con_rd
 
 implicit none
@@ -50,7 +50,11 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       character(len=16)     :: file_format
       integer :: nx, ny
       real(kind_scm_dp), allocatable :: pres_l_row(:), pres_i(:,:)
-      real(kind_scm_dp), parameter :: zero = 0.0
+      real(kind_scm_dp), parameter :: zero_dp = 0.0
+      ! added for forcing initialized pressure to be single precision for
+      ! single and double precision runs
+      real(kind_scm_sp), parameter :: zero_sp = 0.0
+      real(kind_scm_sp), allocatable :: pres_l_row_sp(:)
       
 #include "fv_eta.h"
       
@@ -545,7 +549,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
 
       nx = size(scm_state%pres_i, 1)
       ny = size(scm_state%pres_i, 2)
-      allocate(pres_i(nx,ny), source=zero)
+      allocate(pres_i(nx,ny), source=zero_dp)
       do k=1, km+1
         pres_i(:,k) = scm_state%a_k(k) + scm_state%b_k(k)*p_ref
         scm_state%si(:,k) = scm_state%a_k(k)*pres_sfc_inv + scm_state%b_k(k)
@@ -554,12 +558,13 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       scm_state%pres_i = pres_i
 
       !> - Calculate layer center pressures, sigma, and exner function.
-      allocate(pres_l_row(nx), source=zero)
+      allocate(pres_l_row(nx), source=zero_dp)
+      allocate(pres_l_row_sp(nx), source=zero_sp)
       do k=1, km
-        pres_l_row = ((1.0/(con_rocp+1.0))*&
+        pres_l_row_sp = ((1.0/(con_rocp+1.0))*&
           (pres_i(:,k)**(con_rocp+1.0) - pres_i(:,k+1)**(con_rocp+1.0))/ &
           (pres_i(:,k) - pres_i(:,k+1)))**(1.0/con_rocp)
-        scm_state%pres_l(:,k) = pres_l_row
+        scm_state%pres_l(:,k) = pres_l_row_sp
         scm_state%sl(:,k) = 0.5*(scm_state%si(:,k) + scm_state%si(:,k+1))
 
         scm_state%exner_l(:,k) = (scm_state%pres_l(:,k)/1.0E5)**con_rocp

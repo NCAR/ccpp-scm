@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 
 # TODO:
 #  - [ ] add user argument to cmake "$@" in configure{32,64}
-#  - [ ] add run function
-#  - [ ] run through all cases compiled
 suites = ['SCM_RAP']
 cases = ['twpice']
 
@@ -34,7 +32,7 @@ def run_cmd(command):
 # Function to run configuration step
 def configure32():
     print("Running single precision configuration step")
-    command = ["cmake", "src/", "-B", "build32", "-D32BIT=1"]
+    command = ["cmake", "src/", "-B", "build32", "-D32BIT=ON"]
     run_cmd(command)
 
 
