@@ -85,9 +85,6 @@ jobs:
     # Install FORTRAN dependencies
     #######################################################################################
     - name: Environment for nvidia compiler.
-      env:
-        NVCOMPILERS: /home/runner/hpc_sdk
-      if: contains(matrix.fortran-compiler, 'nvfortran')
       run: |
         echo "CC=nvc"   >> $GITHUB_ENV
         echo "FC=nvfortran" >> $GITHUB_ENV
