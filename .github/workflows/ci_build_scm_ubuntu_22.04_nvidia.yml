@@ -110,6 +110,9 @@ jobs:
       if: contains(matrix.fortran-compiler, 'nvfortran') && steps.cache-nvidia-compilers.outputs.cache-hit != 'true'
       env:
         NVCOMPILERS: /home/runner/hpc_sdk
+        NVHPC_SILENT: true
+        NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
+        NVHPC_INSTALL_TYPE: single
       run: |
         df -h
         echo "NVHPC_SILENT=true"                      >> $GITHUB_ENV
