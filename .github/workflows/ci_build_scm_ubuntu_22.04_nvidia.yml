@@ -21,8 +21,8 @@ jobs:
       sp_ROOT:     /home/runner/NCEPLIBS-sp
       w3emc_ROOT:  /home/runner/myw3emc
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
-      NVHPC_SILENT: true
-      NVHPC_INSTALL_TYPE: single
+#      NVHPC_SILENT: true
+#      NVHPC_INSTALL_TYPE: single
       NVHPC_INSTALL_DIR: /home/runner/nvidia
       suites:      SCM_RAP
 
