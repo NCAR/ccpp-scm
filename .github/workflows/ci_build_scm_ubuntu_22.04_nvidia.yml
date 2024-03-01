@@ -97,7 +97,7 @@ jobs:
     - name: Nvidia setup compilers
       if: steps.cache-nvidia.outputs.cache-hit != 'true'
       env:
-        NVCOMPILERS: /home/runner/hpc_sdk
+        #NVCOMPILERS: /home/runner/hpc_sdk
         NVHPC_SILENT: true
         NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
         NVHPC_INSTALL_TYPE: single
@@ -111,13 +111,13 @@ jobs:
         nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
         echo "SWALES here1"
         echo "NVARCH=Linux_x86_64" >> $GITHUB_ENV
-      	echo "SWALES here2"
+        echo "SWALES here2"
         echo "NVCOMPILERS=/home/runner/hpc_sdk" >> $GITHUB_ENV
-      	echo "SWALES here3"
+        echo "SWALES here3"
         echo "MANPATH=$MANPATH":$NVCOMPILERS/$NVARCH/24.1/compilers/man" >> $GITHUB_ENV
-      	echo "SWALES here4"
+        echo "SWALES here4"
         echo "PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH" >> $GITHUB_ENV
-      	echo "SWALES here5"
+        echo "SWALES here5"
         echo "The nvfortran installed is:"
         nvfortran --version
         echo "The path to nvfortran is:"
