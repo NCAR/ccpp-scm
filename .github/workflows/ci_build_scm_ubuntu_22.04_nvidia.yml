@@ -111,11 +111,11 @@ jobs:
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
         ls /home/runner/hpc_sdk
-        NVCOMPILERS=/home/runner/hpc_sdk && export NVCOMPILERS
-        PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH
-        LD_LIBRARY_PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$LD_LIBRARY_PATH
-#        echo "NVCOMPILERS=/home/runner/hpc_sdk; export NVCOMPILERS" >> $GITHUB_ENV
-#        echo "PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH; export PATH"  >> $GITHUB_ENV
+#        NVCOMPILERS=/home/runner/hpc_sdk && export NVCOMPILERS
+#        PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH
+#        LD_LIBRARY_PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$LD_LIBRARY_PATH
+        echo "NVCOMPILERS=/home/runner/hpc_sdk" >> $GITHUB_ENV
+        echo "PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH"  >> $GITHUB_ENV
 
 # NVARCH=`uname -s`_`uname -m`; export NVARCH
 # NVCOMPILERS=/opt/nvidia/hpc_sdk; export NVCOMPILERS
@@ -136,6 +136,7 @@ jobs:
         echo "FC=nvfortran" >> $GITHUB_ENV
         echo "F90FLAGS=-Mallocatable=03 -Mstandard -Mbounds -Mchkptr -Kieee -Mchkstk" > $GITHUB_ENV
         echo "NFVERSION=v4.4.4" >> $GITHUB_ENV
+        ls /home/runner/hpc_sdk
 
 #    - name: Cache bacio library v2.4.1
 #      id: cache-bacio-fortran
