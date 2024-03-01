@@ -125,8 +125,8 @@ jobs:
     #######################################################################################
     - name: Environment for nvidia compiler.
       run: |
-        echo "CC=nvc" >> $GITHUB_ENV
-        echo "FC=nvfortran" >> $GITHUB_ENV
+        echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
         echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
         echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
 
