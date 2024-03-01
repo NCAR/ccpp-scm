@@ -23,8 +23,8 @@ jobs:
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
       suites:      SCM_RAP
       F90FLAGS:    -O3
-      CC:          nvc
-      FC:          nvfortran
+      #CC:          nvc
+      #FC:          nvfortran
 
     # Workflow steps
     steps:
@@ -125,6 +125,8 @@ jobs:
       run: |
         export CC=nvc
         export FC=nvfortran
+        export CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc
+        export CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran
 
 #    - name: Cache bacio library v2.4.1
 #      id: cache-bacio-fortran
