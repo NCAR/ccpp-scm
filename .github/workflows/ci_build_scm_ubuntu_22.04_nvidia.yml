@@ -110,17 +110,8 @@ jobs:
         wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
-#        echo "SWALES here1"
-#        echo "NVARCH=Linux_x86_64" >> $GITHUB_ENV
-#        echo "SWALES here2"
-#        echo "NVCOMPILERS=/home/runner/hpc_sdk" >> $GITHUB_ENV
-#        echo "SWALES here3"
-#        export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
-#        echo "SWALES here3.5"
-#        echo "MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man" >> $GITHUB_ENV
-#        echo "SWALES here4"
+        echo "SWALES here4"
         export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
-#        echo "PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin" >> $GITHUB_ENV
         echo "SWALES here5"
         echo "The nvfortran installed is:"
         nvfortran --version
