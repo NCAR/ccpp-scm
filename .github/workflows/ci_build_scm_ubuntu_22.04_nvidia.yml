@@ -78,16 +78,14 @@ jobs:
     - name: Add conda to system path
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
-        df -h
 
     - name: Install NetCDF Python libraries
       run: |
         conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
-        df -h
+
     - name: Update system packages
       run: |
         sudo apt-get update
-        df -h
 
     #######################################################################################
     # Install Nvidia.
@@ -123,7 +121,7 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
-    - name: Environment for nvidia compiler.
+    - name: Set environment for nvidia compiler.
       run: |
         echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
         echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
@@ -180,3 +178,25 @@ jobs:
         make -j2
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
+
+    - name: Install NetCDF C library
+      run: |
+        sudo apt-get update
+        sudo apt-get install libnetcdf-dev
+
+    - name: Cache NetCDF Fortran library
+      id: cache-netcdf-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-fortran
+        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install NetCDF Fortran library
+      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
+        cd netcdf-fortran
+        ./configure
+        make -j
+        sudo make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
