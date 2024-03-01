@@ -25,6 +25,8 @@ jobs:
       F90FLAGS:    -O3
       CC:          nvc
       FC:          nvfortran
+      CMAKE_C_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc
+      CMAKE_Fortran_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran
 
     # Workflow steps
     steps:
