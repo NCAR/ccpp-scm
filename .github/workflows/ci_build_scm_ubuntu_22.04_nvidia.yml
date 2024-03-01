@@ -222,10 +222,11 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        if: contains(matrix.enable-gpu-acc, 'True')
-           cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=True
-        else:
-           cmake -DCCPP_SUITES=${suites} ../src
+        cmake -DCCPP_SUITES=${suites} ../src
+#       if: contains(matrix.enable-gpu-acc, 'True')
+#          cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=True
+#        else:
+#           cmake -DCCPP_SUITES=${suites} ../src
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
