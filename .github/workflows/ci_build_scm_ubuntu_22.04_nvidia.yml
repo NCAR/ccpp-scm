@@ -11,6 +11,7 @@ jobs:
       matrix:
         fortran-compiler: [nvfortran]
         build-type:       [Release]#, Debug]
+        enable-gpu-acc:   [False]#, True]
         py-version:       [3.7.13]#, 3.9.12]
 
     # Environmental variables
@@ -111,6 +112,7 @@ jobs:
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
         export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
+        export MANPATH=${MANPAT}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
         echo "The nvfortran installed is:"
         nvfortran --version
         echo "The path to nvfortran is:"
@@ -123,6 +125,14 @@ jobs:
     #######################################################################################
     - name: Set environment for nvidia compiler.
       run: |
+        export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
+      	export MANPATH=${MANPAT}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
+        echo "The nvfortran installed is:"
+	nvfortran --version
+        echo "The path to nvfortran is:"
+        command -v nvfortran
+        echo "Removing tarball"
+        rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
         echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
         echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
@@ -212,7 +222,10 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} ../src
+        if: contains(matrix.enable-gpu-acc, 'True')
+           cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=True
+        else:
+           cmake -DCCPP_SUITES=${suites} ../src
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
