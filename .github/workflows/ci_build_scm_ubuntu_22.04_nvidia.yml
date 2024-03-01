@@ -87,12 +87,12 @@ jobs:
     #######################################################################################
     # Install Nvidia.
     #######################################################################################
-#    - name: Cache Nvidia HPC
-#      id: cache-nvidia
-#      uses: actions/cache@v3
-#      with:
-#        path: /home/runner/hpc_sdk
-#        key: cache-nvidia-key
+    - name: Cache Nvidia HPC
+      id: cache-nvidia
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/hpc_sdk
+        key: cache-nvidia-key
 
     - name: Nvidia setup compilers
       if: steps.cache-nvidia.outputs.cache-hit != 'true'
@@ -103,9 +103,9 @@ jobs:
         NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
         NVHPC_INSTALL_TYPE: single
       run: |
-        echo "NVHPC_SILENT=true" >> $GITHUB_ENV
-        echo "NVHPC_INSTALL_DIR=/home/runner/hpc_sdk" >> $GITHUB_ENV
-        echo "NVHPC_INSTALL_TYPE=single" >> $GITHUB_ENV
+        #echo "NVHPC_SILENT=true" >> $GITHUB_ENV
+        #echo "NVHPC_INSTALL_DIR=/home/runner/hpc_sdk" >> $GITHUB_ENV
+        #echo "NVHPC_INSTALL_TYPE=single" >> $GITHUB_ENV
         mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
         wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
