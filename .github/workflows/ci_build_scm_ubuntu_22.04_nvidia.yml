@@ -114,7 +114,9 @@ jobs:
         echo "SWALES here2"
         echo "NVCOMPILERS=/home/runner/hpc_sdk" >> $GITHUB_ENV
         echo "SWALES here3"
-        echo "MANPATH=$MANPATH":$NVCOMPILERS/$NVARCH/24.1/compilers/man" >> $GITHUB_ENV
+        export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
+        echo "SWALES here3.5" 
+        echo "MANPATH=${MANPATH}":${NVCOMPILERS}/${NVARCH}/24.1/compilers/man" >> $GITHUB_ENV
         echo "SWALES here4"
         echo "PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH" >> $GITHUB_ENV
         echo "SWALES here5"
