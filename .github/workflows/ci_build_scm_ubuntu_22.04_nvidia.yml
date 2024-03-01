@@ -125,10 +125,10 @@ jobs:
     #######################################################################################
     - name: Environment for nvidia compiler.
       run: |
-        export CC=nvc
-        export FC=nvfortran
-        export CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc
-        export CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran
+        echo "CC=nvc" >> $GITHUB_ENV
+        echo "FC=nvfortran" >> $GITHUB_ENV
+        echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
 
 #    - name: Cache bacio library v2.4.1
 #      id: cache-bacio-fortran
