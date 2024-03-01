@@ -22,6 +22,9 @@ jobs:
       w3emc_ROOT:  /home/runner/myw3emc
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
       suites:      SCM_RAP
+      F90FLAGS:    -O3
+      CC:          nvc
+      FC:          nvfortran
 
     # Workflow steps
     steps:
@@ -122,8 +125,6 @@ jobs:
       run: |
         export CC=nvc
         export FC=nvfortran
-        export F90FLAGS=-Mallocatable=03 -Mstandard -Mbounds -Mchkptr -Kieee -Mchkstk
-        export NFVERSION=v4.4.4
 
 #    - name: Cache bacio library v2.4.1
 #      id: cache-bacio-fortran
