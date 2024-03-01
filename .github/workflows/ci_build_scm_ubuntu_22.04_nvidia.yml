@@ -97,7 +97,7 @@ jobs:
     - name: Nvidia setup compilers
       if: steps.cache-nvidia.outputs.cache-hit != 'true'
       env:
-#        NVCOMPILERS: /home/runner/hpc_sdk
+        NVCOMPILERS: /home/runner/hpc_sdk
         NVHPC_SILENT: true
         NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
         NVHPC_INSTALL_TYPE: single
