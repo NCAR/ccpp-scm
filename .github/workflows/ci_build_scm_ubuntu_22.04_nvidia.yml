@@ -110,6 +110,7 @@ jobs:
         wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
+        ls /home/runner/hpc_sdk
         #echo "The nvfortran installed is:"
         #nvfortran --version
         #echo "The path to nvfortran is:"
