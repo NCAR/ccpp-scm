@@ -128,7 +128,7 @@ jobs:
         export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
       	export MANPATH=${MANPAT}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
         echo "The nvfortran installed is:"
-	nvfortran --version
+        nvfortran --version
         echo "The path to nvfortran is:"
         command -v nvfortran
         echo "Removing tarball"
