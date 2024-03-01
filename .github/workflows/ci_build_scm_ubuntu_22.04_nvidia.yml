@@ -117,10 +117,10 @@ jobs:
 #        echo "NVCOMPILERS=/home/runner/hpc_sdk; export NVCOMPILERS" >> $GITHUB_ENV
 #        echo "PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH; export PATH"  >> $GITHUB_ENV
 
-$ NVARCH=`uname -s`_`uname -m`; export NVARCH
-$ NVCOMPILERS=/opt/nvidia/hpc_sdk; export NVCOMPILERS
-$ MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.1/compilers/man; export MANPATH
-$ PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH; export PATH
+# NVARCH=`uname -s`_`uname -m`; export NVARCH
+# NVCOMPILERS=/opt/nvidia/hpc_sdk; export NVCOMPILERS
+# MANPATH=$MANPATH:$NVCOMPILERS/$NVARCH/24.1/compilers/man; export MANPATH
+# PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH; export PATH
 
         #echo "The nvfortran installed is:"
         #nvfortran --version
