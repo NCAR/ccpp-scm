@@ -103,31 +103,27 @@ jobs:
         NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
         NVHPC_INSTALL_TYPE: single
       run: |
-        #echo "NVHPC_SILENT=true" >> $GITHUB_ENV
-        #echo "NVHPC_INSTALL_DIR=/home/runner/hpc_sdk" >> $GITHUB_ENV
-        #echo "NVHPC_INSTALL_TYPE=single" >> $GITHUB_ENV
         mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
-        wget https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
+        wget -q https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
-        echo "SWALES here4"
         export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
-        echo "SWALES here5"
         echo "The nvfortran installed is:"
         nvfortran --version
         echo "The path to nvfortran is:"
         command -v nvfortran
+        echo "Removing tarball"
+        rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
 
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
     - name: Environment for nvidia compiler.
       run: |
-        echo "CC=nvc"   >> $GITHUB_ENV
-        echo "FC=nvfortran" >> $GITHUB_ENV
-        echo "F90FLAGS=-Mallocatable=03 -Mstandard -Mbounds -Mchkptr -Kieee -Mchkstk" > $GITHUB_ENV
-        echo "NFVERSION=v4.4.4" >> $GITHUB_ENV
-        ls /home/runner/hpc_sdk
+        export CC=nvc
+        export FC=nvfortran
+        export F90FLAGS=-Mallocatable=03 -Mstandard -Mbounds -Mchkptr -Kieee -Mchkstk
+        export NFVERSION=v4.4.4
 
 #    - name: Cache bacio library v2.4.1
 #      id: cache-bacio-fortran
