@@ -189,6 +189,11 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
+    - name: Install Curl
+      run: |
+        sudo apt-get update
+        sudo apt-get install libcurl4-openssl-dev
+
     - name: Install NetCDF C library
       run: |
         sudo apt-get update
