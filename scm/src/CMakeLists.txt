@@ -30,9 +30,6 @@ endif()
 message (STATUS "Running ccpp_prebuild.py for CCPP")
 # Make the directories where the ccpp_prebuild.py script wants to write caps and make snippets
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
-if (NOT EXISTS "${CMAKE_SOURCE_DIR}/../../ccpp/framework/scripts/ccpp_prebuild.py")
-  message( FATAL_ERROR "ccpp_prebuild.py script does not exist, did you check out the code recursively?" )
-endif()
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   execute_process(
     COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py ${_ccpp_suites_arg} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
@@ -129,7 +126,8 @@ set(SIMDMULTIARCH   OFF CACHE BOOL "Enable multi-target SIMD instruction sets")
 #------------------------------------------------------------------------------
 # Set compile options
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
+  #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fopenacc -foffload=nvptx-none -fopt-info -fno-stack-protector -lm -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
   
   if(${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -fallow-invalid-boz")
@@ -186,6 +184,37 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
+
+elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
+  if(DEFINED ENABLE_NVIDIA_OPENACC)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc -Minfo=accel")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -acc -Minfo=accel")
+  else()
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+  endif()
+
+  if(NOT 32BIT)
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -r8")
+  endif()
+  
+  if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -g")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g")
+  else()
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+  endif()
+
+  set(MPI_C_COMPILER mpicc)
+  set(MPI_CXX_COMPILER mpicxx)
+  set(MPI_Fortran_COMPILER mpif90)
+  
+  set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
+  set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
+  set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
+
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message (FATAL_ERROR "This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
