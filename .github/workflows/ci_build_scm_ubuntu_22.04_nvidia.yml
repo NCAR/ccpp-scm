@@ -23,8 +23,8 @@ jobs:
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
       suites:      SCM_RAP
       F90FLAGS:    -O3
-      #CC:          nvc
-      #FC:          nvfortran
+      CC:          nvc
+      FC:          nvfortran
 
     # Workflow steps
     steps:
