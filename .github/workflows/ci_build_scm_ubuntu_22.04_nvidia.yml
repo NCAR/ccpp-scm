@@ -115,10 +115,11 @@ jobs:
         echo "NVCOMPILERS=/home/runner/hpc_sdk" >> $GITHUB_ENV
         echo "SWALES here3"
         export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
-        echo "SWALES here3.5" 
-        echo "MANPATH=${MANPATH}":${NVCOMPILERS}/${NVARCH}/24.1/compilers/man" >> $GITHUB_ENV
+#        echo "SWALES here3.5" 
+#        echo "MANPATH=${MANPATH}":${NVCOMPILERS}/${NVARCH}/24.1/compilers/man" >> $GITHUB_ENV
         echo "SWALES here4"
-        echo "PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH" >> $GITHUB_ENV
+        export PATH=${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin:${PATH}
+#        echo "PATH=$NVCOMPILERS/$NVARCH/24.1/compilers/bin:$PATH" >> $GITHUB_ENV
         echo "SWALES here5"
         echo "The nvfortran installed is:"
         nvfortran --version
