@@ -192,6 +192,8 @@ jobs:
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF Fortran library
+      env:
+        FCFLAGS: -fPIC
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
         git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
@@ -200,3 +202,26 @@ jobs:
         make -j
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+
+    #######################################################################################
+    # Build SCM.
+    #######################################################################################
+
+    - name: Configure build with CMake (Release)
+      if: contains(matrix.build-type, 'Release')
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+	cmake -DCCPP_SUITES=${suites} ../src
+
+    - name: Configure build with CMake (Debug)
+      if: contains(matrix.build-type, 'Debug')
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src
+
+    - name: Build SCM
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        make -j4
