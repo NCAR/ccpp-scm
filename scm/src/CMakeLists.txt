@@ -68,9 +68,6 @@ find_package(NetCDF REQUIRED COMPONENTS C Fortran)
 find_package(bacio REQUIRED)
 find_package(sp    REQUIRED)
 find_package(w3emc REQUIRED)
-if (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
-    find_package(curl REQUIRED)
-endif()
 
 SET(CCPP_FRAMEWORK_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(CCPP_PHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -283,9 +280,6 @@ TARGET_LINK_LIBRARIES(scm sp::sp_d)
 TARGET_LINK_LIBRARIES(scm w3emc::w3emc_d)
 TARGET_LINK_LIBRARIES(scm ccpp_framework)
 TARGET_LINK_LIBRARIES(scm ccpp_physics)
-if (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
-    TARGET_LINK_LIBRARIES(scm curl)
-endif()
 
 SET_TARGET_PROPERTIES(scm PROPERTIES
                                COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
