@@ -51,9 +51,9 @@ jobs:
         android: true
         dotnet: true
         haskell: true
-        large-packages: false
+        large-packages: true
         docker-images: true
-        swap-storage: true
+        swap-storage: false
 
     - name: Check space (post)
       run: |
@@ -125,14 +125,6 @@ jobs:
     #######################################################################################
     - name: Set environment for nvidia compiler.
       run: |
-        #export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
-        #export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
-        #echo "The nvfortran installed is:"
-        #nvfortran --version
-        #echo "The path to nvfortran is:"
-        #command -v nvfortran
-        #echo "Removing tarball"
-        #rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
         echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
         echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
         echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
