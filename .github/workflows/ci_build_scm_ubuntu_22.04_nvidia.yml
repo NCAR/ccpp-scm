@@ -17,6 +17,7 @@ jobs:
     # Environmental variables
     env:
       NFHOME:      /home/runner/netcdf-fortran
+      NCHOME:      /home/runner/netcdf
       NFVERSION:   v4.6.1
       bacio_ROOT:  /home/runner/bacio
       sp_ROOT:     /home/runner/NCEPLIBS-sp
@@ -159,6 +160,41 @@ jobs:
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HDF5_ROOT}/lib
         export PATH=${PATH}:${HDF5_ROOT}/lib
 
+    - name: Install NetCDF C library
+      env:
+        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
+        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib
+      run: |
+        wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
+        tar -zvxf v4.7.4.tar.gz
+        cd netcdf-c-4.7.4
+        ./configure --prefix=${NCHOME}
+        make
+        make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NCHOME}/lib
+        export PATH=${PATH}:${NCHOME}/lib
+#        sudo apt-get update
+#        sudo apt-get install libnetcdf-dev
+
+    - name: Cache NetCDF Fortran library
+      id: cache-netcdf-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-fortran
+        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install NetCDF Fortran library
+      env:
+        FCFLAGS: -fPIC
+      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
+        cd netcdf-fortran
+        ./configure
+        make -j
+        sudo make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v3
@@ -216,30 +252,6 @@ jobs:
 #         sudo apt-get install libssl-dev libcurl4-openssl-dev
 #        sudo apt-get update
 #        sudo apt-get install libcurl4-openssl-dev
-
-    - name: Install NetCDF C library
-      run: |
-        sudo apt-get update
-        sudo apt-get install libnetcdf-dev
-
-    - name: Cache NetCDF Fortran library
-      id: cache-netcdf-fortran
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
-
-    - name: Install NetCDF Fortran library
-      env:
-        FCFLAGS: -fPIC
-      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
-      run: |
-        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
-        cd netcdf-fortran
-        ./configure
-        make -j
-        sudo make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
     #######################################################################################
     # Build SCM.
