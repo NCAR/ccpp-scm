@@ -48,11 +48,11 @@ jobs:
 
         # all of these default to true, but feel free to set to
         # "false" if necessary for your workflow
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: true
+        android: false
+        dotnet: false
+        haskell: false
+        large-packages: false
+        docker-images: false
         swap-storage: false
 
     - name: Check space (post)
