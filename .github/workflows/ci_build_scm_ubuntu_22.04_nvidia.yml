@@ -31,7 +31,7 @@ jobs:
       FC:          nvfortran
       CMAKE_C_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc
       CMAKE_Fortran_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran
-      LD_LIBRARY_PATH: ${{ github.workspace }}
+#      LD_LIBRARY_PATH: ${{ github.workspace }}
 
     # Workflow steps
     steps:
@@ -145,7 +145,8 @@ jobs:
         ./configure --prefix=${zlib_ROOT}
         make
         make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${zlib_ROOT}/lib
+        #export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${zlib_ROOT}/lib
+        echo "LD_LIBRARY_PATH=$zlib_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
     - name: Install HDF5
       env:
@@ -158,8 +159,10 @@ jobs:
         ./configure --prefix=${HDF5_ROOT} --with-zlib=${zlib_ROOT}
         make -j4
         make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HDF5_ROOT}/lib
-        export PATH=${PATH}:${HDF5_ROOT}/lib
+        echo "LD_LIBRARY_PATH=$HDF5_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=$HDF5_ROOT/lib:$PATH" >> $GITHUB_ENV
+#        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HDF5_ROOT}/lib
+#        export PATH=${PATH}:${HDF5_ROOT}/lib
 
     - name: Install Curl
       run: |
@@ -179,8 +182,10 @@ jobs:
         ./configure --prefix=${NETCDF}
         make
         make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NETCDF}/lib
-        export PATH=${PATH}:${NETCDF}/lib
+        echo "LD_LIBRARY_PATH=$NETCDF/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=$NETCDF/lib:$PATH" >> $GITHUB_ENV
+#        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NETCDF}/lib
+#        export PATH=${PATH}:${NETCDF}/lib
 
 #    - name: Cache NetCDF Fortran library
 #      id: cache-netcdf-fortran
@@ -203,7 +208,6 @@ jobs:
         ./configure --prefix=${NETCDF}
         make
         make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NETCDF}/lib
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
