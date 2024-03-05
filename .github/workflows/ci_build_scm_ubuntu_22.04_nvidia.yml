@@ -38,8 +38,6 @@ jobs:
     - name: Check space (pre)
       run: |
         df -h
-        uname -s
-        uname -m
 
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@main
@@ -184,8 +182,10 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-#    - name: Install Curl
-#      run: |
+    - name: Install Curl
+      run: |
+         sudo apt-get install curl
+         sudo apt-get install libssl-dev libcurl4-openssl-dev
 #        sudo apt-get update
 #        sudo apt-get install libcurl4-openssl-dev
 
