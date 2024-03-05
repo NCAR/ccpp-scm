@@ -200,7 +200,7 @@ jobs:
         tar -zvxf v4.6.1.tar.gz
         cd netcdf-fortran-4.6.1
         ./configure --prefix=${NETCDF}
-	make
+        make
         make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NETCDF}/lib
 
