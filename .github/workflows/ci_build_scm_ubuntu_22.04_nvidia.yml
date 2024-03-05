@@ -17,7 +17,7 @@ jobs:
     # Environmental variables
     env:
       NFHOME:      /home/runner/netcdf-fortran
-      NCHOME:      /home/runner/netcdf
+      NETCDF:      /home/runner/netcdf
       NFVERSION:   v4.6.1
       bacio_ROOT:  /home/runner/bacio
       sp_ROOT:     /home/runner/NCEPLIBS-sp
@@ -170,35 +170,39 @@ jobs:
         CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
         LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib
       run: |
+        echo "CPPFLAGS=-I/home/runner/hdf5/include -I/home/runner/zlib/include" >> $GITHUB_ENV
+        echo "LDFLAGS=-L/home/runner/hdf5/lib -I/home/runner/zlib/lib" >> $GITHUB_ENV
         wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
         tar -zvxf v4.7.4.tar.gz
         cd netcdf-c-4.7.4
-        ./configure --prefix=${NCHOME}
+        ./configure --prefix=${NETCDF}
         make
         make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NCHOME}/lib
-        export PATH=${PATH}:${NCHOME}/lib
-#        sudo apt-get update
-#        sudo apt-get install libnetcdf-dev
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NETCDF}/lib
+        export PATH=${PATH}:${NETCDF}/lib
 
-    - name: Cache NetCDF Fortran library
-      id: cache-netcdf-fortran
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+#    - name: Cache NetCDF Fortran library
+#      id: cache-netcdf-fortran
+#      uses: actions/cache@v3
+#      with:
+#        path: /home/runner/netcdf-fortran
+#        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF Fortran library
       env:
         FCFLAGS: -fPIC
-      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+        FFLAGS: -fPIC
+        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include -I${NETCDF}/include
+        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib -L${NETCDF}/lib
+#      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
-        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
-        cd netcdf-fortran
-        ./configure
-        make -j
-        sudo make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+        wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
+        tar -zvxf v4.6.1.tar.gz
+        cd netcdf-fortran-4.6.1
+        ./configure --prefix=${NETCDF}
+	make
+        make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NETCDF}/lib
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
