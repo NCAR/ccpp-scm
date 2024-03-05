@@ -140,20 +140,20 @@ jobs:
         wget https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz
         tar -zxvf zlib-1.2.13.tar.gz
         cd zlib-1.2.13
-        ./configure --prefix=${ZLIB_ROOT}
+        ./configure --prefix=${zlib_ROOT}
         make
         make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ZLIB_ROOT}/lib
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${zlib_ROOT}/lib
 
     - name: Install HDF5
       env:
-        CPPFLAGS: -I${ZLIB_ROOT}/include
-        LDFLAGS: -L${ZLIB_ROOT}/lib
+        CPPFLAGS: -I${zlib_ROOT}/include
+        LDFLAGS: -L${zlib_ROOT}/lib
       run: |
         wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_14_1-2.tar.gz
         tar -zxvf hdf5-1_14_1-2.tar.gz
         cd hdf5-hdf5-1_14_1-2
-        ./configure --prefix=${HDF5_ROOT} --with-zlib=${ZLIB_ROOT}
+        ./configure --prefix=${HDF5_ROOT} --with-zlib=${zlib_ROOT}
         make -j4
         make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HDF5_ROOT}/lib
