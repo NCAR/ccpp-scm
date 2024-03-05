@@ -50,7 +50,7 @@ jobs:
         # "false" if necessary for your workflow
         android: false
         dotnet: false
-        haskell: false
+        haskell: true
         large-packages: true
         docker-images: false
         swap-storage: false
