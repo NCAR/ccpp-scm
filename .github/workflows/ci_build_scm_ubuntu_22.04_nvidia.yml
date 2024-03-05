@@ -121,6 +121,10 @@ jobs:
         echo "Removing tarball"
         rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
 
+    - name: Call uname  command
+      run: |
+         `uname -s`_`uname -m`
+	 
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
