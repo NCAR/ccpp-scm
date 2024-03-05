@@ -38,6 +38,8 @@ jobs:
     - name: Check space (pre)
       run: |
         df -h
+        uname -s
+        uname -m
 
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@main
@@ -58,8 +60,6 @@ jobs:
     - name: Check space (post)
       run: |
         df -h
-        uname -c
-        uname -s
 
     #######################################################################################
     # Initial
