@@ -31,6 +31,7 @@ jobs:
       FC:          nvfortran
       CMAKE_C_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc
       CMAKE_Fortran_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran
+      LD_LIBRARY_PATH: ${{ github.workspace }}
 
     # Workflow steps
     steps:
