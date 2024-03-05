@@ -210,18 +210,15 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    - name: Install Curl
-      run: |
-         sudo apt-get install curl
-         sudo apt-get install libssl-dev libcurl4-openssl-dev
+#    - name: Install Curl
+#      run: |
+#         sudo apt-get install curl
+#         sudo apt-get install libssl-dev libcurl4-openssl-dev
 #        sudo apt-get update
 #        sudo apt-get install libcurl4-openssl-dev
 
     - name: Install NetCDF C library
       run: |
-#        wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
-#        tar -zvxf v4.7.4.tar.gz
-#        cd netcdf-c-4.7.4
         sudo apt-get update
         sudo apt-get install libnetcdf-dev
 
