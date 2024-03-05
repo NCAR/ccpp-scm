@@ -160,6 +160,11 @@ jobs:
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HDF5_ROOT}/lib
         export PATH=${PATH}:${HDF5_ROOT}/lib
 
+    - name: Install Curl
+      run: |
+        sudo apt-get install curl
+        sudo apt-get install libssl-dev libcurl4-openssl-dev
+
     - name: Install NetCDF C library
       env:
         CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
