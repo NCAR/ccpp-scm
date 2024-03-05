@@ -105,7 +105,7 @@ jobs:
         NVARCH: Linux_x86_64
         NVHPC_SILENT: true
         NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
-        NVHPC_INSTALL_TYPE: single
+        NVHPC_INSTALL_TYPE: auto
       run: |
         mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
         wget -q https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
@@ -181,10 +181,10 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    - name: Install Curl
-      run: |
-        sudo apt-get update
-        sudo apt-get install libcurl4-openssl-dev
+#    - name: Install Curl
+#      run: |
+#        sudo apt-get update
+#        sudo apt-get install libcurl4-openssl-dev
 
     - name: Install NetCDF C library
       run: |
