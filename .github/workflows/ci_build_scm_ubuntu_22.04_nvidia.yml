@@ -51,7 +51,7 @@ jobs:
         android: false
         dotnet: false
         haskell: false
-        large-packages: false
+        large-packages: true
         docker-images: false
         swap-storage: false
 
