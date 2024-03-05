@@ -17,11 +17,13 @@ jobs:
     # Environmental variables
     env:
       NFHOME:      /home/runner/netcdf-fortran
-      NFVERSION:   v4.5.3
+      NFVERSION:   v4.6.1
       bacio_ROOT:  /home/runner/bacio
       sp_ROOT:     /home/runner/NCEPLIBS-sp
       w3emc_ROOT:  /home/runner/myw3emc
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
+      zlib_ROOT:   /home/runner/zlib
+      HDF5_ROOT:   /home/runner/hdf5
       suites:      SCM_RAP
       F90FLAGS:    -O3
       CC:          nvc
@@ -131,6 +133,32 @@ jobs:
         echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
         echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
 
+    - name: Install zlib
+      env:
+        CFLAGS: -fPIC
+      run: |
+        wget https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz
+        tar -zxvf zlib-1.2.13.tar.gz
+        cd zlib-1.2.13
+        ./configure --prefix=${ZLIB_ROOT}
+        make
+        make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ZLIB_ROOT}/lib
+
+    - name: Install HDF5
+      env:
+        CPPFLAGS: -I${ZLIB_ROOT}/include
+        LDFLAGS: -L${ZLIB_ROOT}/lib
+      run: |
+        wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_14_1-2.tar.gz
+        tar -zxvf hdf5-1_14_1-2.tar.gz
+        cd hdf5-hdf5-1_14_1-2
+        ./configure --prefix=${HDF5_ROOT} --with-zlib=${ZLIB_ROOT}
+        make -j4
+        make install
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HDF5_ROOT}/lib
+        export PATH=${PATH}:${HDF5_ROOT}/lib
+	
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v3
@@ -191,6 +219,9 @@ jobs:
 
     - name: Install NetCDF C library
       run: |
+#        wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
+#        tar -zvxf v4.7.4.tar.gz
+#        cd netcdf-c-4.7.4
         sudo apt-get update
         sudo apt-get install libnetcdf-dev
 
