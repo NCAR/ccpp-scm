@@ -1,4 +1,4 @@
-name: CI test to build the CCPP-SCM on ubuntu v22.04 using NVidia compilers
+name: CI test to build the CCPP-SCM on ubuntu v22.04
 
 on: [push,pull_request,workflow_dispatch]
 
@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         fortran-compiler: [nvfortran]
-        build-type:       [Release, Debug]
+        build-type:       [Release]
         enable-gpu-acc:   [False, True]
         py-version:       [3.7.13]#, 3.9.12]
 
@@ -247,7 +247,7 @@ jobs:
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}} ../src
 
-    - name: Build SCM
+    - name: Build SCM.
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
@@ -258,7 +258,7 @@ jobs:
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
 
-    - name: Run SCM RTs
+    - name: Run SCM RTs (w/o GPU)
       if: contains(matrix.enable-gpu-acc, 'False')
       run: |
         cd ${SCM_ROOT}/scm/bin
