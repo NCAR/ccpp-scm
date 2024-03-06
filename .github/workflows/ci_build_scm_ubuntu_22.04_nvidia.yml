@@ -91,7 +91,7 @@ jobs:
     # Install Nvidia.
     #######################################################################################
 
-    - name: Nvidia setup compilers
+    - name: Nvidia setup compilers.
       env:
         NVCOMPILERS: /home/runner/hpc_sdk
         NVARCH: Linux_x86_64
@@ -113,19 +113,29 @@ jobs:
         echo "Removing tarball"
         rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
 
-    #######################################################################################
-    # Install FORTRAN dependencies
-    #######################################################################################
-    - name: Set environment for nvidia compiler.
+    - name: Set environment for Nvidia compiler.
       run: |
         echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
         echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
         echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
         echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
 
+    #######################################################################################
+    # Install FORTRAN dependencies
+    #######################################################################################
+
+    - name: Cache Zlib
+      run: |
+      id: cache-zlib
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/zlib
+        key: cache-zlib-${{matrix.fortran-compiler}}-key
+	
     - name: Install zlib
       env:
         CFLAGS: -fPIC
+      if: steps.cache-zlib.outputs.cache-hit != 'true'
       run: |
         wget https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz
         tar -zxvf zlib-1.2.13.tar.gz
@@ -133,13 +143,21 @@ jobs:
         ./configure --prefix=${zlib_ROOT}
         make
         make install
-        #export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${zlib_ROOT}/lib
         echo "LD_LIBRARY_PATH=$zlib_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+    - name: Cache HDF5
+      run: |
+      id: cache-hdf5
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/hdf5
+        key: cache-hdf5-${{matrix.fortran-compiler}}-key
 
     - name: Install HDF5
       env:
         CPPFLAGS: -I${zlib_ROOT}/include
         LDFLAGS: -L${zlib_ROOT}/lib
+      if: steps.cache-hdf5.outputs.cache-hit != 'true'
       run: |
         wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_14_1-2.tar.gz
         tar -zxvf hdf5-1_14_1-2.tar.gz
@@ -163,13 +181,13 @@ jobs:
         key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF C library
-      env:
-        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
-        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib
+#      env:
+#        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
+#        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib
       if: steps.cache-netcdf-c.outputs.cache-hit != 'true'
       run: |
-        echo "CPPFLAGS=-I/home/runner/hdf5/include -I/home/runner/zlib/include" >> $GITHUB_ENV
-        echo "LDFLAGS=-L/home/runner/hdf5/lib -L/home/runner/zlib/lib" >> $GITHUB_ENV
+#        echo "CPPFLAGS=-I/home/runner/hdf5/include -I/home/runner/zlib/include" >> $GITHUB_ENV
+#        echo "LDFLAGS=-L/home/runner/hdf5/lib -L/home/runner/zlib/lib" >> $GITHUB_ENV
         wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
         tar -zvxf v4.7.4.tar.gz
         cd netcdf-c-4.7.4
