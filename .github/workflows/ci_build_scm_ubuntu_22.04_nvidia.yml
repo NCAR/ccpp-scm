@@ -173,12 +173,12 @@ jobs:
         sudo apt-get install curl
         sudo apt-get install libssl-dev libcurl4-openssl-dev
 
-    - name: Cache NetCDF C library
-      id: cache-netcdf-c
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/netcdf-c
-        key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
+#    - name: Cache NetCDF C library
+#      id: cache-netcdf-c
+#      uses: actions/cache@v3
+#      with:
+#        path: /home/runner/netcdf-c
+#        key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF C library
 #      env:
