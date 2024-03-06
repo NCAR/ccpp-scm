@@ -31,7 +31,6 @@ jobs:
       FC:          nvfortran
       CMAKE_C_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc
       CMAKE_Fortran_COMPILER: /home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran
-#      LD_LIBRARY_PATH: ${{ github.workspace }}
 
     # Workflow steps
     steps:
@@ -91,15 +90,8 @@ jobs:
     #######################################################################################
     # Install Nvidia.
     #######################################################################################
-    - name: Cache Nvidia HPC
-      id: cache-nvidia
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/hpc_sdk
-        key: cache-nvidia-key
 
     - name: Nvidia setup compilers
-      if: steps.cache-nvidia.outputs.cache-hit != 'true'
       env:
         NVCOMPILERS: /home/runner/hpc_sdk
         NVARCH: Linux_x86_64
