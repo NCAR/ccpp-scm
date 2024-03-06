@@ -173,17 +173,17 @@ jobs:
         sudo apt-get install curl
         sudo apt-get install libssl-dev libcurl4-openssl-dev
 
-#    - name: Cache NetCDF C library
-#      id: cache-netcdf-c
-#      uses: actions/cache@v3
-#      with:
-#        path: /home/runner/netcdf-c
-#        key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
+    - name: Cache NetCDF C library
+      id: cache-netcdf-c
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-c
+        key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF C library
-#      env:
-#        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
-#        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib
+      env:
+        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
+        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib
       if: steps.cache-netcdf-c.outputs.cache-hit != 'true'
       run: |
 #        echo "CPPFLAGS=-I/home/runner/hdf5/include -I/home/runner/zlib/include" >> $GITHUB_ENV
