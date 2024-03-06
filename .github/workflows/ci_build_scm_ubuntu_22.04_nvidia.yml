@@ -191,7 +191,10 @@ jobs:
         wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
         tar -zvxf v4.6.1.tar.gz
         cd netcdf-fortran-4.6.1
-        FCFLAGS="-fPIC" FFLAGS="-fPIC" CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include -I/home/runner/netcdf/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib -L/home/runner/netcdf/lib" ./configure --prefix=${NETCDF}
+        FCFLAGS="-fPIC" FFLAGS="-fPIC"
+        CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include -I/home/runner/netcdf/include"
+        LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib -L/home/runner/netcdf/lib"
+        ./configure --prefix=${NETCDF}
         make
         make install
 
