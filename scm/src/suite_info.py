@@ -44,6 +44,7 @@ class suite(object):
 suite_list = []
 suite_list.append(suite('SCM_GFS_v16',           'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, True ))
 suite_list.append(suite('SCM_GFS_v17_p8',        'tracers_GFS_v17_p8.txt',               'input_GFS_v17_p8.nml',              600.0, 600.0,  True ))
+suite_list.append(suite('SCM_GFS_v17_p8_ugwpv1', 'tracers_GFS_v17_p8.txt',               'input_GFS_v17_p8_ugwpv1_C96.nml',   600.0, 600.0,  True ))
 suite_list.append(suite('SCM_RAP',               'tracers_RAP.txt',                      'input_RAP.nml',                     600.0, 600.0 , True ))
 suite_list.append(suite('SCM_RRFS_v1beta',       'tracers_RRFS_v1beta.txt',              'input_RRFS_v1beta.nml',             600.0, 600.0 , True ))
 suite_list.append(suite('SCM_WoFS_v0',           'tracers_WoFS_v0.txt',                  'input_WoFS_v0.nml',                 600.0, 600.0 , True ))
