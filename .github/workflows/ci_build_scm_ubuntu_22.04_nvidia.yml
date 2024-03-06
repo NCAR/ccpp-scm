@@ -248,9 +248,8 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-#        cmake -DCCPP_SUITES=${suites} ../src
-       if: matrix.enable-gpu-acc
-          cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=True
+        if: matrix.enable-gpu-acc
+           cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=True
         else:
            cmake -DCCPP_SUITES=${suites} ../src
 
