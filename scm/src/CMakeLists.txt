@@ -208,15 +208,6 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
   endif()
 
-  set(MPI_C_COMPILER mpicc)
-  set(MPI_CXX_COMPILER mpicxx)
-  set(MPI_Fortran_COMPILER mpif90)
-  
-  set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
-  set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
-  set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
-  set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
-
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message (FATAL_ERROR "This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
