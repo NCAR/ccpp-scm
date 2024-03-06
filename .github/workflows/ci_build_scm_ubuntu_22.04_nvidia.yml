@@ -12,7 +12,7 @@ jobs:
         fortran-compiler: [nvfortran]
         build-type:       [Release]
         enable-gpu-acc:   [False, True]
-        py-version:       [3.7.13]#, 3.9.12]
+        py-version:       [3.7.13, 3.9.12]
 
     # Environmental variables
     env:
@@ -25,7 +25,7 @@ jobs:
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
       zlib_ROOT:   /home/runner/zlib
       HDF5_ROOT:   /home/runner/hdf5
-      suites:      SCM_RAP,SCM_RRFS_v1beta
+      suites:      SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
 
     # Workflow steps
     steps:
