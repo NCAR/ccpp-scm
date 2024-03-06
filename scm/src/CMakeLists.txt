@@ -30,6 +30,9 @@ endif()
 message (STATUS "Running ccpp_prebuild.py for CCPP")
 # Make the directories where the ccpp_prebuild.py script wants to write caps and make snippets
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
+if (NOT EXISTS "${CMAKE_SOURCE_DIR}/../../ccpp/framework/scripts/ccpp_prebuild.py")
+  message( FATAL_ERROR "ccpp_prebuild.py script does not exist, did you check out the code recursively?" )
+endif()
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   execute_process(
     COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py ${_ccpp_suites_arg} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
@@ -126,8 +129,7 @@ set(SIMDMULTIARCH   OFF CACHE BOOL "Enable multi-target SIMD instruction sets")
 #------------------------------------------------------------------------------
 # Set compile options
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-  #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fopenacc -foffload=nvptx-none -fopt-info -fno-stack-protector -lm -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
   
   if(${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -fallow-invalid-boz")
