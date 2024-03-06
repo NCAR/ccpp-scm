@@ -11,7 +11,7 @@ jobs:
       matrix:
         fortran-compiler: [nvfortran]
         build-type:       [Release, Debug]
-        enable-gpu-acc:   [false, true]
+        enable-gpu-acc:   [False, True]
         py-version:       [3.7.13]#, 3.9.12]
 
     # Environmental variables
@@ -246,17 +246,14 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        if: contains(matrix.enable-gpu-acc, 'true')
-          cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=True
-        else:
-          cmake -DCCPP_SUITES=${suites} ../src
+        cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}}
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src
+        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}} ../src
 
     - name: Build SCM
       run: |
