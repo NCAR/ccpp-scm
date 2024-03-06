@@ -88,22 +88,18 @@ jobs:
       run: |
         conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
 
-#    - name: Update system packages
-#      run: |
-#        sudo apt-get update
-
     #######################################################################################
     # Install Nvidia.
     #######################################################################################
-#    - name: Cache Nvidia HPC
-#      id: cache-nvidia
-#      uses: actions/cache@v3
-#      with:
-#        path: /home/runner/hpc_sdk
-#        key: cache-nvidia-key
+    - name: Cache Nvidia HPC
+      id: cache-nvidia
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/hpc_sdk
+        key: cache-nvidia-key
 
     - name: Nvidia setup compilers
-#      if: steps.cache-nvidia.outputs.cache-hit != 'true'
+      if: steps.cache-nvidia.outputs.cache-hit != 'true'
       env:
         NVCOMPILERS: /home/runner/hpc_sdk
         NVARCH: Linux_x86_64
@@ -161,18 +157,24 @@ jobs:
         make install
         echo "LD_LIBRARY_PATH=$HDF5_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "PATH=$HDF5_ROOT/lib:$PATH" >> $GITHUB_ENV
-#        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HDF5_ROOT}/lib
-#        export PATH=${PATH}:${HDF5_ROOT}/lib
 
     - name: Install Curl
       run: |
         sudo apt-get install curl
         sudo apt-get install libssl-dev libcurl4-openssl-dev
 
+    - name: Cache NetCDF C library
+      id: cache-netcdf-c
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-c
+        key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
+
     - name: Install NetCDF C library
       env:
         CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include
         LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib
+      if: steps.cache-netcdf-c.outputs.cache-hit != 'true'
       run: |
         echo "CPPFLAGS=-I/home/runner/hdf5/include -I/home/runner/zlib/include" >> $GITHUB_ENV
         echo "LDFLAGS=-L/home/runner/hdf5/lib -L/home/runner/zlib/lib" >> $GITHUB_ENV
@@ -184,23 +186,21 @@ jobs:
         make install
         echo "LD_LIBRARY_PATH=$NETCDF/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "PATH=$NETCDF/lib:$PATH" >> $GITHUB_ENV
-#        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NETCDF}/lib
-#        export PATH=${PATH}:${NETCDF}/lib
 
-#    - name: Cache NetCDF Fortran library
-#      id: cache-netcdf-fortran
-#      uses: actions/cache@v3
-#      with:
-#        path: /home/runner/netcdf-fortran
-#        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+    - name: Cache NetCDF Fortran library
+      id: cache-netcdf-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-fortran
+        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF Fortran library
-      env:
-        FCFLAGS: -fPIC
-        FFLAGS: -fPIC
-        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include -I${NETCDF}/include
-        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib -L${NETCDF}/lib
-#      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+#      env:
+#        FCFLAGS: -fPIC
+#        FFLAGS: -fPIC
+#        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include -I${NETCDF}/include
+#        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib -L${NETCDF}/lib
+      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
         wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
         tar -zvxf v4.6.1.tar.gz
@@ -259,13 +259,6 @@ jobs:
         make -j2
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
-
-#    - name: Install Curl
-#      run: |
-#         sudo apt-get install curl
-#         sudo apt-get install libssl-dev libcurl4-openssl-dev
-#        sudo apt-get update
-#        sudo apt-get install libcurl4-openssl-dev
 
     #######################################################################################
     # Build SCM.
