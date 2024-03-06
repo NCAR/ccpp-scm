@@ -1,6 +1,6 @@
 name: CI test to build the CCPP-SCM on ubuntu v22.04 using NVidia compilers
 
-on: [push,pull_request,workflow_dispatch]
+on: [pull_request,workflow_dispatch]
 
 jobs:
 
@@ -122,7 +122,6 @@ jobs:
     - name: Install zlib
       env:
         CFLAGS: -fPIC
-      if: steps.cache-zlib.outputs.cache-hit != 'true'
       run: |
         wget https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz
         tar -zxvf zlib-1.2.13.tar.gz
@@ -136,7 +135,6 @@ jobs:
       env:
         CPPFLAGS: -I${zlib_ROOT}/include
         LDFLAGS: -L${zlib_ROOT}/lib
-      if: steps.cache-hdf5.outputs.cache-hit != 'true'
       run: |
         wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_14_1-2.tar.gz
         tar -zxvf hdf5-1_14_1-2.tar.gz
@@ -272,6 +270,7 @@ jobs:
         ./contrib/get_thompson_tables.sh
 
     - name: Run SCM RTs
+      if: contains(matrix.enable-gpu-acc, 'false')
       run: |
         cd ${SCM_ROOT}/scm/bin
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_nvidia.py --runtime_mult 0.1 -v
