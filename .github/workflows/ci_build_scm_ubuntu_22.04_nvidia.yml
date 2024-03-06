@@ -205,11 +205,11 @@ jobs:
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF Fortran library
-#      env:
-#        FCFLAGS: -fPIC
-#        FFLAGS: -fPIC
-#        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include -I${NETCDF}/include
-#        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib -L${NETCDF}/lib
+      env:
+        FCFLAGS: -fPIC
+        FFLAGS: -fPIC
+        CPPFLAGS: -I${zlib_DIR}/include -I${HDF5_ROOT}/include -I${NETCDF}/include
+        LDFLAGS: -L${zlib_DIR}/lib -L${HDF5_ROOT}/lib -L${NETCDF}/lib
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
       run: |
         wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
