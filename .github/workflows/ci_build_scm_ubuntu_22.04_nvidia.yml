@@ -170,9 +170,7 @@ jobs:
         wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
         tar -zvxf v4.7.4.tar.gz
         cd netcdf-c-4.7.4
-        CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include"
-        LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib"
-        ./configure --prefix=${NETCDF}
+        CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib" ./configure --prefix=${NETCDF}
         make
         make install
         echo "LD_LIBRARY_PATH=$NETCDF/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
@@ -191,10 +189,7 @@ jobs:
         wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
         tar -zvxf v4.6.1.tar.gz
         cd netcdf-fortran-4.6.1
-        FCFLAGS="-fPIC" FFLAGS="-fPIC"
-        CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include -I/home/runner/netcdf/include"
-        LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib -L/home/runner/netcdf/lib"
-        ./configure --prefix=${NETCDF}
+        FCFLAGS="-fPIC" FFLAGS="-fPIC" CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include -I/home/runner/netcdf/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib -L/home/runner/netcdf/lib" ./configure --prefix=${NETCDF}
         make
         make install
 
