@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         fortran-compiler: [nvfortran]
-        build-type:       [Release]#, Debug]
+        build-type:       [Release, Debug]
         enable-gpu-acc:   [False]#, True]
         py-version:       [3.7.13]#, 3.9.12]
 
@@ -275,4 +275,4 @@ jobs:
     - name: Run SCM RTs
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 -v
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_nvidia.py --runtime_mult 0.1 -v
