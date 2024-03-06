@@ -275,3 +275,14 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
+
+    - name: Download data for SCM
+      run: |
+        cd ${SCM_ROOT}
+        ./contrib/get_all_static_data.sh
+        ./contrib/get_thompson_tables.sh
+
+    - name: Run SCM RTs
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
