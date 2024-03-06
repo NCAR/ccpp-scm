@@ -124,14 +124,6 @@ jobs:
     # Install FORTRAN dependencies
     #######################################################################################
 
-    - name: Cache Zlib
-      run: |
-      id: cache-zlib
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/zlib
-        key: cache-zlib-${{matrix.fortran-compiler}}-key
-
     - name: Install zlib
       env:
         CFLAGS: -fPIC
@@ -144,14 +136,6 @@ jobs:
         make
         make install
         echo "LD_LIBRARY_PATH=$zlib_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-
-    - name: Cache HDF5
-      run: |
-      id: cache-hdf5
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/hdf5
-        key: cache-hdf5-${{matrix.fortran-compiler}}-key
 
     - name: Install HDF5
       env:
