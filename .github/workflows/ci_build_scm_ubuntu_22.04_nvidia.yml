@@ -241,19 +241,11 @@ jobs:
     # Build SCM.
     #######################################################################################
 
-    - name: Configure build with CMake (Release)
-      if: contains(matrix.build-type, 'Release')
+    - name: Configure build with CMake
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} ../src -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}}
-
-    - name: Configure build with CMake (Debug)
-      if: contains(matrix.build-type, 'Debug')
-      run: |
-        cd ${SCM_ROOT}/scm
-        mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}} ../src
+        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}} ../src
 
     - name: Build SCM
       run: |
@@ -267,7 +259,7 @@ jobs:
         ./contrib/get_thompson_tables.sh
 
     - name: Run SCM RTs
-      if: contains(matrix.enable-gpu-acc, 'false')
+      if: contains(matrix.enable-gpu-acc, 'False')
       run: |
         cd ${SCM_ROOT}/scm/bin
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_nvidia.py --runtime_mult 0.1 -v
