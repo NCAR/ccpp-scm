@@ -24,6 +24,7 @@ jobs:
       zlib_ROOT:   /home/runner/zlib
       HDF5_ROOT:   /home/runner/hdf5
       suites:      SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
+      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
 
     # Workflow steps
     steps:
@@ -243,7 +244,7 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}} ../src
+        cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}} ../src
 
     - name: Build SCM.
       run: |
