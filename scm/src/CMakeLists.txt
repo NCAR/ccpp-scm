@@ -188,7 +188,7 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
 
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
-  if(ENABLE_NVIDIA_OPENACC MATCHES "True")
+  if(ENABLE_NVIDIA_OPENACC MATCHES "true")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc -Minfo=accel")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -acc -Minfo=accel")
   else()
