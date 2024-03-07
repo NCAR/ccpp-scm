@@ -10,15 +10,13 @@ jobs:
     strategy:
       matrix:
         fortran-compiler: [nvfortran]
-        build-type:       [Release]
+        build-type:       [Release, Debug]
         enable-gpu-acc:   [False, True]
         py-version:       [3.7.13, 3.9.12]
 
     # Environmental variables
     env:
-      NFHOME:      /home/runner/netcdf-fortran
       NETCDF:      /home/runner/netcdf
-      NFVERSION:   v4.6.1
       bacio_ROOT:  /home/runner/bacio
       sp_ROOT:     /home/runner/NCEPLIBS-sp
       w3emc_ROOT:  /home/runner/myw3emc
@@ -238,7 +236,7 @@ jobs:
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
     #######################################################################################
-    # Build SCM.
+    # Build and run SCM regression tests (ccpp-scm/test/rt_test_cases.py)
     #######################################################################################
 
     - name: Configure build with CMake
@@ -253,6 +251,7 @@ jobs:
         make -j4
 
     - name: Download data for SCM
+      if: contains(matrix.enable-gpu-acc, 'True')
       run: |
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
@@ -262,4 +261,4 @@ jobs:
       if: contains(matrix.enable-gpu-acc, 'False')
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_nvidia.py --runtime_mult 0.1 -v
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 -v
