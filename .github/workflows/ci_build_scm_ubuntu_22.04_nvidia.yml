@@ -251,7 +251,6 @@ jobs:
         make -j4
 
     - name: Download data for SCM
-      if: contains(matrix.enable-gpu-acc, 'True')
       run: |
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
