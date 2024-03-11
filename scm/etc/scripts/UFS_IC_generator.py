@@ -1066,10 +1066,14 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     tprcp_in  = read_NetCDF_surface_var(nc_file, 'tprcp',  i, j, old_chgres, 0)
     srflag_in = read_NetCDF_surface_var(nc_file, 'srflag', i, j, old_chgres, 0)
     sncovr_in = read_NetCDF_surface_var(nc_file, 'sncovr', i, j, old_chgres, 0)
-    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsfcl',  i, j, old_chgres, 0)
-    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorll',  i, j, old_chgres, 0)   
-    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorli',  i, j, old_chgres, 0)
-    
+    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsea',   i, j, old_chgres, 0)
+    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)   
+    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)
+    if (snwdph_in > 0):
+        sncovr_in = 1.0
+    else:
+        sncovr_in = 0.0
+
     # present when cplwav = T
     zorlw_in = read_NetCDF_surface_var(nc_file, 'zorlw', i, j, old_chgres, 0)
     
@@ -1171,6 +1175,12 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     # fractional grid
     tiice_in = read_NetCDF_surface_var(nc_file, 'tiice', i, j, old_chgres, missing_variable_ice_layers)
 
+    # soil color
+    if (slmsk_in == 1):
+        scolor_in = 4
+    else:
+        scolor_in = 1
+
     #
     nc_file.close()
     
@@ -1187,6 +1197,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "facsf": facsf_in,
         "facwf": facwf_in,
         "soiltyp": styp_in,
+        "scolor": scolor_in,
         "slopetyp": slope_in,
         "vegtyp": vtyp_in,
         "vegfrac": vfrac_in,
@@ -1906,37 +1917,6 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     pres_adv[t+1,:]   = pres_adv[t,:] 
     pres_i_adv[t+1,:] = pres_i_adv[t,:]
 
-    if save_comp_data:
-        #
-        t_layr     = np.zeros([n_files+1,nlevs])
-        qv_layr    = np.zeros([n_files+1,nlevs])
-        u_layr     = np.zeros([n_files+1,nlevs])
-        v_layr     = np.zeros([n_files+1,nlevs])
-        p_layr     = np.zeros([n_files+1,nlevs])
-
-        #
-        for t in range(0,n_files):
-            from_p[0,:]     = stateNATIVE["p_lev"][t,::-1]
-            to_p[0,:]       = stateNATIVE["p_lev"][1,::-1]
-            log_from_p[0,:] = np.log(from_p[0,:])
-            log_to_p[0,:]   = np.log(to_p[0,:])
-            p_layr[t,:]     = stateNATIVE["p_lay"][1,::-1]
-            for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
-            t_layr[t,:]  = fv3_remap.map_scalar(nlevs, log_from_p, stateNATIVE["t_lay"][t:t+1,::-1],  \
-                                dummy, nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
-            qv_layr[t,:] = fv3_remap.map1_q2(nlevs, from_p, stateNATIVE["qv_lay"][t:t+1,::-1],        \
-                                nlevs, to_p, dp2, 0, 0, 0, kord_tr, q_min)
-            u_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["u_lay"][t:t+1,::-1],        \
-                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-            v_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["v_lay"][t:t+1,::-1],        \
-                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-
-        t_layr[t+1,:]  = t_layr[t,:]
-        qv_layr[t+1,:] = qv_layr[t,:]
-        u_layr[t+1,:]  = u_layr[t,:]
-        v_layr[t+1,:]  = v_layr[t,:]
-        p_layr[t+1,:]  = p_layr[t,:]
-
     ####################################################################################
     #
     # if we had atmf,sfcf files at every timestep (and the SCM timestep is made to match
@@ -2105,11 +2085,11 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     if (save_comp_data):
         comp_data = {
             "time": stateNATIVE["time"]*sec_in_hr,
-            "pa"  : p_layr[:,::-1],
-            "ta"  : t_layr[:,::-1],
-            "qv"  : qv_layr[:,::-1],
-            "ua"  : u_layr[:,::-1],
-            "va"  : v_layr[:,::-1],
+            "pa"  : stateNATIVE["p_lay"][:,:],
+            "ta"  : stateNATIVE["t_lay"][:,:],
+            "qv"  : stateNATIVE["qv_lay"][:,:],
+            "ua"  : stateNATIVE["u_lay"][:,:],
+            "va"  : stateNATIVE["v_lay"][:,:],
             "vars2d":vars2d}
     else:
         comp_data = {}
@@ -2392,7 +2372,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
                 {"name": "mrsos_forc",   "type":wp, "dimd": ('time'       ),    "units": "kg m-2",        "desc": "forcing_mass_content_of_water_in_soil_layer"}]
 
     #
-    var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m 2-1",   "desc": "grid_cell_area"},\
+    var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m2",      "desc": "grid_cell_area"},\
                 {"name": "stddev",       "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "standard deviation of subgrid orography"}, \
                 {"name": "convexity",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "convexity of subgrid orography"}, \
                 {"name": "oa1",          "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "assymetry of subgrid orography 1"}, \
@@ -2450,6 +2430,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
                 {"name": "q2m",          "type":wp, "dimd": ('t0'),             "units": "kg kg-1", "desc": "2-meter specific humidity"}, \
                 {"name": "vegtyp",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation type (1-12)"}, \
                 {"name": "soiltyp",      "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "soil type (1-12)"}, \
+                {"name": "scolor",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "soil color"}, \
                 {"name": "ffmm",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for momentum"}, \
                 {"name": "ffhh",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for heat"}, \
                 {"name": "hice",         "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sea ice thickness"}, \
