@@ -22,8 +22,6 @@ sys.path.insert(0, os.path.abspath('.'))
 project = 'Single Column Model (SCM) for the Common Community Physics Package (CCPP)'
 copyright = '2024 '
 author = 'Firl, Grant, Ligia Bernardet, Dom Heinzeller, Dustin Swales, \\\ Tracy Hertneky, and Michael Kavulich, Jr.'
-        pdfauthor={Grant Firl / Laurie Carson / Ligia Bernardet / Dom Heinzeller},
-        pdftitle={Common Community Physics Packaged (CCPP) Single Column Model (SCM)},
 
 # The short X.Y version
 version = '7.0'
