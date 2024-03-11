@@ -1917,37 +1917,6 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     pres_adv[t+1,:]   = pres_adv[t,:] 
     pres_i_adv[t+1,:] = pres_i_adv[t,:]
 
-    if save_comp_data:
-        #
-        t_layr     = np.zeros([n_files+1,nlevs])
-        qv_layr    = np.zeros([n_files+1,nlevs])
-        u_layr     = np.zeros([n_files+1,nlevs])
-        v_layr     = np.zeros([n_files+1,nlevs])
-        p_layr     = np.zeros([n_files+1,nlevs])
-
-        #
-        for t in range(0,n_files):
-            from_p[0,:]     = stateNATIVE["p_lev"][t,::-1]
-            to_p[0,:]       = stateNATIVE["p_lev"][1,::-1]
-            log_from_p[0,:] = np.log(from_p[0,:])
-            log_to_p[0,:]   = np.log(to_p[0,:])
-            p_layr[t,:]     = stateNATIVE["p_lay"][1,::-1]
-            for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
-            t_layr[t,:]  = fv3_remap.map_scalar(nlevs, log_from_p, stateNATIVE["t_lay"][t:t+1,::-1],  \
-                                dummy, nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
-            qv_layr[t,:] = fv3_remap.map1_q2(nlevs, from_p, stateNATIVE["qv_lay"][t:t+1,::-1],        \
-                                nlevs, to_p, dp2, 0, 0, 0, kord_tr, q_min)
-            u_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["u_lay"][t:t+1,::-1],        \
-                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-            v_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["v_lay"][t:t+1,::-1],        \
-                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-
-        t_layr[t+1,:]  = t_layr[t,:]
-        qv_layr[t+1,:] = qv_layr[t,:]
-        u_layr[t+1,:]  = u_layr[t,:]
-        v_layr[t+1,:]  = v_layr[t,:]
-        p_layr[t+1,:]  = p_layr[t,:]
-
     ####################################################################################
     #
     # if we had atmf,sfcf files at every timestep (and the SCM timestep is made to match
@@ -2116,11 +2085,11 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     if (save_comp_data):
         comp_data = {
             "time": stateNATIVE["time"]*sec_in_hr,
-            "pa"  : p_layr[:,::-1],
-            "ta"  : t_layr[:,::-1],
-            "qv"  : qv_layr[:,::-1],
-            "ua"  : u_layr[:,::-1],
-            "va"  : v_layr[:,::-1],
+            "pa"  : stateNATIVE["p_lay"][:,:],
+            "ta"  : stateNATIVE["t_lay"][:,:],
+            "qv"  : stateNATIVE["qv_lay"][:,:],
+            "ua"  : stateNATIVE["u_lay"][:,:],
+            "va"  : stateNATIVE["v_lay"][:,:],
             "vars2d":vars2d}
     else:
         comp_data = {}
