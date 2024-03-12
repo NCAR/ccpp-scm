@@ -6,27 +6,27 @@ Quick Start Guide
 This chapter provides instructions for obtaining and compiling the CCPP
 SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP
 framework code. As such, it requires the CCPP framework code and physics
-code, both of which are included as submodules within the SCM code. This
+code, both of which are included as submodules within the SCM git repository. This
 package can be considered a simple example for an atmospheric model to
 interact with physics through the CCPP.
 
-Alternatively, if one doesn’t have access or care to set up a machine
+Alternatively, if one doesn’t have access to or care to set up a machine
 with the appropriate system requirements but has a working Docker
 installation, it is possible to create and use a Docker container with a
 pre-configured computing environment with a pre-compiled model. This is
 also an avenue for running this software with a Windows PC. See section
-`1.5 <#docker>`__ for more information.
+:numref:`Section %s <docker>` for more information.
 
 .. _obtaining_code:
 
 Obtaining Code
 --------------
 
-The source code for the CCPP and SCM is provided through GitHub.com.
-This release branch contains the tested and supported version for
-general use, while a development branch is less stable, yet contains the
-latest developer code. Instructions for using either option are
-discussed here.
+The source code for the SCM, CCPP, and their required components are provided through GitHub.
+The latest release branch contains the tested and supported version for
+general use, while the development branch (``main``) contains the latest
+developer code, but may not be as stable or consistent with existing documentation. 
+Instructions for using either option are discussed here.
 
 Release Code
 ~~~~~~~~~~~~
@@ -37,13 +37,19 @@ Clone the source using
 
    git clone --recursive -b v6.0.0 https://github.com/NCAR/ccpp-scm
 
-Recall that the option in this command clones the main ccpp-scm
-repository and all subrepositories (ccpp-physics and ccpp-framework).
-Using this option, there is no need to execute and .
+By using the ``--recursive`` option, it guarantees that you are checking out the commits
+of ccpp-physics and ccpp-framework that were tested with the latest
+commit of the SCM main branch. If not included initially, you can always retrieve the commits of
+the submodules that were intended to be used with a given commit of the
+SCM by executing the following command from the SCM directory:
 
-The CCPP framework can be found in the ccpp/framework subdirectory at
+.. code:: bash
+
+   git submodule update --init --recursive
+
+The CCPP framework can be found in the ``ccpp/framework`` subdirectory at
 this level. The CCPP physics parameterizations can be found in the
-ccpp/physics subdirectory.
+``ccpp/physics`` subdirectory.
 
 .. _`section: development_code`:
 
@@ -52,7 +58,7 @@ Development Code
 
 If you would like to contribute as a developer to this project, please
 see (in addition to the rest of this guide) the scientific and technical
-documentation included with this release:
+documentation included with this release for both the SCM and the CCPP:
 
 https://dtcenter.org/community-code/common-community-physics-package-ccpp/documentation
 
@@ -60,17 +66,17 @@ There you will find links to all of the documentation pertinent to
 developers.
 
 For working with the development branches (stability not guaranteed),
-check out the branch of the repository:
+check out the ``main`` branch of the repository:
 
 .. code:: bash
 
    git clone --recursive -b main https://github.com/NCAR/ccpp-scm
 
-By using the option, it guarantees that you are checking out the commits
-of ccpp-physics and ccpp-framework that were tested with the latest
-commit of the SCM main branch. You can always retrieve the commits of
+Recall that the ``--recursive`` option in this command clones the main ccpp-scm
+repository and all subrepositories (ccpp-physics and ccpp-framework).
+If not included initially, you can always retrieve the commits of
 the submodules that were intended to be used with a given commit of the
-SCM by doing the following from the top level SCM directory:
+SCM by executing the following command from the SCM directory:
 
 .. code:: bash
 
@@ -108,8 +114,8 @@ development). To do so:
       git pull
 
 #. Change back to the main directory for following the instructions in
-   section `1.3 <#section: compiling>`__ assuming system requirements in
-   section `1.2 <#section: systemrequirements>`__ are met.
+   :numref:`Section %s <compiling>`, assuming system requirements in
+   section :numref:`Section %s <systemrequirements>` are met.
 
    .. code:: bash
 
@@ -121,7 +127,8 @@ System Requirements, Libraries, and Tools
 -----------------------------------------
 
 The source code for the SCM and CCPP components is in the form of
-programs written in FORTRAN, FORTRAN 90, and C. In addition, the I/O
+programs written in FORTRAN 90 (with some required features from the 
+FORTRAN 2008 standard), and C. In addition, the model I/O
 relies on the NetCDF libraries. Beyond the standard scripts, the build
 system relies on use of the Python scripting language, along with cmake,
 GNU make and date.
