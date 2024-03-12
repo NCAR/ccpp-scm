@@ -3,15 +3,15 @@
 Introduction
 ============
 
-A single column model (SCM) can be a valuable tool for diagnosing the
+A single-column model (SCM) can be a valuable tool for diagnosing the
 performance of a physics suite, from validating that schemes have been
 integrated into a suite correctly to deep dives into how physical
 processes are being represented by the approximating code. This SCM has
-the advantage of working with the Common Community Physics Package
+the advantage of working with and being developed alongside the Common Community Physics Package
 (CCPP), a library of physical parameterizations for atmospheric
-numerical models and the associated framework for connecting potentially
+numerical models (CCPP physics) and the associated framework for connecting potentially
 any atmospheric model to physics suites constructed from its member
-parameterizations. In fact, this SCM serves as perhaps the simplest
+parameterizations (CCPP framework). In fact, this SCM serves as perhaps the simplest
 example for using the CCPP and its framework in an atmospheric model.
 This version contains all parameterizations of NOAA’s evolved
 operational GFS v16 suite (implemented in 2021), plus additional
@@ -22,9 +22,9 @@ Documentation <https://dtcenter.ucar.edu/GMTB/v6.0.0/sci_doc/>`__
 
 This document serves as both the User and Technical Guides for this
 model. It contains a Quick Start Guide with instructions for obtaining
-the code, compiling, and running a sample test case, an explanation for
-what is included in the repository, a brief description of the operation
-of the model, a description of how cases are set up and run, and
+the code, compiling, and running a sample test case; an explanation for
+what is included in the repository; a brief description of the operation
+of the model; a description of how cases are set up and run, and
 finally, an explanation for how the model interfaces with physics
 through the CCPP infrastructure.
 
@@ -102,8 +102,8 @@ This release bundle has some known limitations:
       technical reason why they cannot be used with LSMs, however.
 
 -  As of this release, using the SCM over a land point with an LSM is
-   possible through the use of UFS initial conditions (see section
-   `[sec:UFS ICs] <#sec:UFS ICs>`__). However, advective forcing terms
+   possible through the use of UFS initial conditions (see 
+   :numref:`Section %s <UFS ICs>`). However, advective forcing terms
    are unavailable as of this release, so only short integrations using
    this configuration should be employed. Using dynamical tendencies
    (advective forcing terms) from the UFS will be part of a future
@@ -112,5 +112,5 @@ This release bundle has some known limitations:
 -  There are several capabilities of the developmental code that have
    not been tested sufficiently to be considered part of the supported
    release. Those include additional parameterizations. Users that want
-   to use experimental capabilities should refer to Subsection
-   `[section: development_code] <#section: development_code>`__.
+   to use experimental capabilities should refer to 
+   :numref:`Subsection %s <development_code>`.

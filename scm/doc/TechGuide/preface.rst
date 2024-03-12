@@ -24,7 +24,7 @@ The table below describes the type changes and symbols used in this document.
          * ``host$ You have mail!``
    * - *AaBbCc123*
      - 
-         * The names of CCPP-specific terms, subroutines, etc.
+         * The names of SCM- and CCPP-specific terms, subroutines, etc.
          * Captions for figures, tables, etc.
      - 
          * Each scheme must include at least one of the following subroutines: ``{schemename}_timestep_init``, ``{schemename}_init``, ``{schemename}_run``, ``{schemename}_finalize``, and ``{schemename}_timestep_finalize``.
