@@ -152,8 +152,7 @@ to install and maintain, they are considered part of the basic system
 requirements. The Unified Forecast System (UFS) Short-Range Weather
 Application release v1.0.0 of March 2021 provides software packages and
 detailed instructions to install these prerequisites and the hpc-stack
-on supported platforms (see
-section `1.2.3 <#section: setup_supported_platforms>`__).
+on supported platforms (see :numref:`Section %s <setup_supported_platforms>`)
 
 Further, there are several utility libraries as part of the hpc-stack
 package that must be installed with environment variables pointing to
@@ -166,18 +165,18 @@ their locations prior to building the SCM.
 -  w3emc - GRIB decoder and encoder library
 
 The following environment variables are used by the build system to
-properly link these libraries: , , and . Computational platforms in
+properly link these libraries: ``bacio_ROOT``, ``sp_ROOT``, and ``w3emc_ROOT`` Computational platforms on
 which these libraries are prebuilt and installed in a central location
-are referred to as preconfigured platforms. Examples of preconfigured
+are referred to as *preconfigured* platforms. Examples of preconfigured
 platforms are most NOAA high-performance computing machines (using the
 Intel compiler) and the NCAR Cheyenne system (using the Intel and GNU
-compilers). The machine setup scripts mentioned in section
-`1.3 <#section: compiling>`__ load these libraries (which are identical
+compilers). The machine setup scripts mentioned in
+:numref:`Section %s <compiling>` load these libraries (which are identical
 to those used by the UFS Short and Medium Range Weather Applications on
 those machines) and set these environment variables for the user
 automatically. For installing the libraries and its prerequisites on
 supported platforms, existing UFS packages can be used (see
-section `1.2.3 <#section: setup_supported_platforms>`__).
+:numref:`Section %s <setup_supported_platforms>`).
 
 Compilers
 ~~~~~~~~~
@@ -230,15 +229,16 @@ For users on supported platforms such as generic Linux or macOS systems
 that have not been preconfigured, the project is suggested for
 installing prerequisite libraries. Visit
 https://github.com/NOAA-EMC/hpc-stack for instructions for installing
-prerequisite libraries via in their docs directory. UFS users who
-already installed libraries via the package only need to set the
-compiler (), NetCDF (), and , and (, , ) environment variables to point
+prerequisite libraries via *hpc-stack* in their docs directory. UFS users who
+already installed libraries via the *hpc-stack* package only need to set the
+compiler (``CC``, ``CXX``, ``FC``), NetCDF (``NetCDF_ROOT``), and ``bacio``,
+``sp`` and ``w3emc`` (``bacio_ROOT``, ``sp_ROOT``, ``w3emc_ROOT``) environment variables to point
 to their installation paths in order to compile the SCM.
 
-The SCM uses only a small part of the UFS package and has fewer
-prerequisites (i.e. no or needed). Users who are not planning to use the
+The SCM uses only a small part of the UFS *hpc-stack* package and has fewer
+prerequisites (i.e. no ESMF or wgrib2 needed). Users who are not planning to use the
 UFS can install only NetCDF/NetCDF-Fortran manually or using the
-software package manager (, , ).
+software package manager (apt, yum, brew).
 
 The Python environment must provide the module for the SCM scripts to
 function. Users can test if f90nml is installed using this command in
@@ -248,8 +248,8 @@ the shell:
 
    python -c "import f90nml"
 
-If is installed, this command will succeed silently, otherwise an will
-be printed to screen. To install the (v0.19) Python module, use the
+If is installed, this command will succeed silently, otherwise an ``ImportError: No module named f90nml``
+will be printed to screen. To install the ``f90nml`` (v0.19) Python module, use the
 install method preferred for your Python environment (one of the
 following):
 
@@ -274,8 +274,10 @@ or perform the following steps to install it manually from source:
    cd f90nml
    python setup.py install [--prefix=/my/install/directory or --user]
 
-The directory must exist and its subdirectory (or instead of , depending
-on the system) must be in the environment variable.
+The directory ``/my/install/directory`` must exist and its subdirectory
+``/my/install/directory/lib/python[version]/site-packages`` (or ``lib64``
+instead of ``lib``, depending on the system) must be in the ``PYTHONPATH``
+environment variable.
 
 .. _`section: compiling`:
 
@@ -288,7 +290,7 @@ sections `1.2.2 <#section: use_preconfigured_platforms>`__
 and `1.2.3 <#section: setup_supported_platforms>`__. The second step is
 to download the lookup tables and other large datasets (large binaries,
 :math:`<`\ 1 GB) needed by the physics schemes and place them in the
-correct directory: From the top-level code directory ( by default),
+correct directory: From the top-level code directory (``ccpp-scm`` by default),
 execute the following scripts:
 
 .. code:: bash
@@ -297,19 +299,21 @@ execute the following scripts:
    ./contrib/get_thompson_tables.sh
 
 If the download step fails, make sure that your system’s firewall does
-not block access to GitHub. If it does, download the files , , , from
-the GitHub release website using your browser and manually extract its
-contents in the directory . Similarly, do the same for and and extract
-to .
+not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
+``physics_input_data.tar.gz``, ``processed_case_input.tar.gz``, and ``raw_case_input.tar.gz``
+from the GitHub release website using your browser and manually extract its
+contents in the directory ``scm/data``. Similarly, do the same for 
+``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
+to ``scm/data/physics_input_data/``.
 
-Following this step, the top level build system will use to query system
+Following this step, the top level build system will use ``cmake`` to query system
 parameters, execute the CCPP prebuild script to match the physics
 variables (between what the host model – SCM – can provide and what is
 needed by physics schemes in the CCPP for the chosen suites), and build
-the physics caps needed to use them. Finally, is used to compile the
+the physics caps needed to use them. Finally, ``make`` is used to compile the
 components.
 
-#. From the top-level code directory ( by default), change directory to
+#. From the top-level code directory (``ccpp-scm`` by default), change directory to
    the top-level SCM directory.
 
    .. code:: bash
@@ -322,7 +326,7 @@ components.
 
       mkdir bin && cd bin
 
-#. Invoke on the source code to build using one of the options below.
+#. Invoke ``cmake`` on the source code to build using one of the options below.
    This step is used to identify for which suites the ccpp-framework
    will build caps and which suites can be run in the SCM without
    recompiling.
@@ -334,7 +338,7 @@ components.
          cmake ../src
 
       By default, this option uses all supported suites. The list of
-      supported suites is controlled by .
+      supported suites is controlled by ``scm/src/suite_info.py``.
 
    -  All suites mode
 
@@ -342,7 +346,7 @@ components.
 
          cmake -DCCPP_SUITES=ALL ../src
 
-      All suites in , regardless of whether they’re supported, will be
+      All suites in ``scm/src/suite_info.py``, regardless of whether they’re supported, will be
       used. This list is typically longer for the development version of
       the code than for releases.
 
@@ -353,10 +357,10 @@ components.
          cmake -DCCPP_SUITES=SCM_GFS_v16,SCM_RAP ../src
 
       This only compiles the listed subset of suites (which should still
-      have a corresponding entry in
+      have a corresponding entry in ``scm/src/suite_info.py``)
 
    -  The statements above can be modified with the following options
-      (put before ):
+      (put before ``../src``):
 
       -  Use threading with openmp (not for macOS with clang+gfortran)
 
@@ -384,17 +388,17 @@ components.
    SCM executable.
 
    If necessary, the CCPP prebuild script can be executed manually from
-   the top level directory (). The basic syntax is
+   the top level directory (``ccpp-scm``). The basic syntax is
 
    .. code:: bash
 
       ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --suites=SCM_GFS_v16,SCM_RAP[...] --builddir=./scm/bin [--debug]
 
-   where the argument supplied via the variable is a comma-separated
+   where the argument supplied via the ``--suites`` variable is a comma-separated
    list of suite names that exist in the directory. Note that suite
-   names are the suite definition filenames minus the prefix and suffix.
+   names are the suite definition filenames minus the ``suite_`` prefix and ``.xml`` suffix.
 
-#. Compile. Add to obtain more information on the build process.
+#. Compile. Add ``VERBOSE=1`` to obtain more information on the build process.
 
    .. code:: bash
 
@@ -407,10 +411,10 @@ components.
 
          make -j4 2>&1 | tee log.make
 
-The resulting executable may be found at (Full path of ).
+The resulting executable may be found at ./scm (Full path of ``ccpp-scm/scm/bin/scm``).
 
-Although is not currently implemented, an out-of-source build is used,
-so all that is required to clean the build directory is (from the
+Although ``make clean`` is not currently implemented, an out-of-source build is used,
+so all that is required to clean the build directory is (from the ``bin``
 directory)
 
 .. code:: bash
@@ -432,8 +436,8 @@ There are several test cases provided with this version of the SCM. For
 all cases, the SCM will go through the time steps, applying forcing and
 calling the physics defined in the chosen suite definition file using
 physics configuration options from an associated namelist. The model is
-executed through a Python run script that is pre-staged into the
-directory: . It can be used to run one integration or several
+executed through a Python run script that is pre-staged into the ``bin``
+directory: ``run_scm.py``. It can be used to run one integration or several
 integrations serially, depending on the command line arguments supplied.
 
 .. _`subsection: singlerunscript`:
@@ -445,131 +449,130 @@ Running a case requires four pieces of information: the case to run
 (consisting of initial conditions, geolocation, forcing data, etc.), the
 physics suite to use (through a CCPP suite definition file), a physics
 namelist (that specifies configurable physics options to use), and a
-tracer configuration file. As discussed in chapter
-`[chapter: cases] <#chapter: cases>`__, cases are set up via their own
-namelists in . A default physics suite is provided as a user-editable
+tracer configuration file. As discussed in :numref:`Chapter %c <cases>`, cases are set up via their own
+namelists in ``../etc/case_config``. A default physics suite is provided as a user-editable
 variable in the script and default namelists and tracer configurations
-are associated with each physics suite (through ), so, technically, one
+are associated with each physics suite (through ``../src/suite_info.py``), so, technically, one
 must only specify a case to run with the SCM when running just one
 integration. For running multiple integrations at once, one need only
-specify one argument () which runs through all permutations of supported
-suites from and cases from . The run script’s options are described
+specify one argument (``-m``) which runs through all permutations of supported
+suites from ``../src/suite_info.py`` and cases from ``../src/supported_cases.py``. The run script’s options are described
 below where option abbreviations are included in brackets.
 
--  
+-  ``--case [-c]``
 
-   -  **This or the option are the minimum required arguments.** The
-      case should correspond to the name of a case in (without the
-      extension).
+   -  **This or the ``--multirun`` option are the minimum required arguments.** The
+      case should correspond to the name of a case in ``../etc/case_config`` (without the
+      ``.nml`` extension).
 
--  
+-  ``--suite [-s]``
 
-   -  The suite should correspond to the name of a suite in (without the
-      ) extension that was supplied in the or step.
+   -  The suite should correspond to the name of a suite in ``../ccpp/suites`` (without the
+      ``.xml`` extension) that was supplied in the ``cmake`` or ``ccpp_prebuild`` step.
 
--  
+-  ``--namelist [-n]``
 
-   -  The namelist should correspond to the name of a file in (WITH the
-      extension). If this argument is omitted, the default namelist for
-      the given suite in will be used.
+   -  The namelist should correspond to the name of a file in ``../ccpp/physics_namelists`` (WITH the
+      ``.txt`` extension). If this argument is omitted, the default namelist for
+      the given suite in ``../src/suite_info.py`` will be used.
 
--  
+-  ``--tracers [-t]``
 
-   -  The tracers file should correspond to the name of a file in (WITH
-      the extension). If this argument is omitted, the default tracer
-      configuration for the given suite in will be used.
+   -  The tracers file should correspond to the name of a file in ``../etc/tracer_config`` (WITH
+      the ``.txt`` extension). If this argument is omitted, the default tracer
+      configuration for the given suite in ``../src/suite_info.py`` will be used.
 
--  
+-  ``--multirun [-m]``
 
-   -  **This or the option are the minimum required arguments.** When
+   -  **This or the ``--case`` option are the minimum required arguments.** When
       used alone, this option runs through all permutations of supported
-      suites from and cases from . When used in conjunction with the
-      option, only the runs configured in the file will be run.
+      suites from ``../src/suite_info.py`` and cases from ``../src/supported_cases.py``. When used in conjunction with the
+      ``--file`` option, only the runs configured in the file will be run.
 
--  
+-  ``--file [-f]``
 
-   -  This option may be used in conjunction with the argument. It
+   -  This option may be used in conjunction with the ``--multirun`` argument. It
       specifies a path and filename to a python file where multiple runs
       are configured.
 
--  
+-  ``--gdb [-g]``
 
-   -  Use this to run the executable through the debugger (if it is
+   -  Use this to run the executable through the ``gdb`` debugger (if it is
       installed on the system).
 
--  
+-  ``--docker [-d]``
 
    -  Use this argument when running in a docker container in order to
       successfully mount a volume between the host machine and the
       Docker container instance and to share the output and plots with
       the host machine.
 
--  
+-  ``--runtime``
 
    -  Use this to override the runtime provided in the case
       configuration namelist.
 
--  
+-  ``--runtime_mult``
 
    -  Use this to override the runtime provided in the case
       configuration namelist by multiplying the runtime by the given
       value. This is used, for example, in regression testing to reduce
       total runtimes.
 
--  
+-  ``--levels [-l]
 
    -  Use this to change the number of vertical levels.
 
--  
+-  ``--npz_type``
 
    -  Use this to change the type of FV3 vertical grid to produce (see
-      for valid values).
+      ``src/scm_vgrid.F90`` for valid values).
 
--  
+-  ``--vert_coord_file``
 
    -  Use this to specify the path/filename of a file containing the a_k
       and b_k coefficients for the vertical grid generation code to use.
 
--  
+-  ``--bin_dir``
 
    -  Use this to specify the path to the build directory.
 
--  
+-  ``--run_dir``
 
    -  Use this to specify the path to the run directory.
 
--  
+-  ``--case_data_dir``
 
    -  Use this to specify the path to the directory containing the case
       data file (useful for using the DEPHY case repository).
 
--  
+-  ``--n_itt_out``
 
    -  Use this to specify the period of writing instantaneous output in
       timesteps (if different than the default specified in the script).
 
--  
+-  ``--n_itt_diag``
 
    -  Use this to specify the period of writing instantaneous and
       time-averaged diagnostic output in timesteps (if different than
       the default specified in the script).
 
--  
+-  ``--timestep [-dt]``
 
    -  Use this to specify the timestep to use (if different than the
-      default specified in ).
+      default specified in ``../src/suite_info.py``).
 
--  
+-  ``--verbose [-v]``
 
    -  Use this option to see additional debugging output from the run
       script and screen output from the executable.
 
 When invoking the run script, the only required argument is the name of
 the case to run. The case name used must match one of the case
-configuration files located in (*without the .nml extension!*). If
+configuration files located in ``../etc/case_config`` (*without the .nml extension!*). If
 specifying a suite other than the default, the suite name used must
 match the value of the suite name in one of the suite definition files
-located in (Note: not the filename of the suite definition file). As
+located in ``../../ccpp/suites`` (Note: not the filename of the suite definition file). As
 part of the sixth CCPP release, the following suite names are valid:
 
 #. SCM_GFS_v16
@@ -588,31 +591,30 @@ Note that using the Thompson microphysics scheme requires the
 computation of look-up tables during its initialization phase. As of the
 release, this process has been prohibitively slow with this model, so it
 is HIGHLY suggested that these look-up tables are downloaded and staged
-to use this scheme as described in
-section `1.3 <#section: compiling>`__. The issue appears to be
+to use this scheme as described in :numref:`Section %s <compiling>`. The issue appears to be
 machine/compiler-specific, so you may be able to produce the tables with
-the SCM, especially when invoking with the option.
+the SCM, especially when invoking ``cmake`` with the ``-DOPENMP=ON`` option.
 
 Also note that some cases require specified surface fluxes. Special
 suite definition files that correspond to the suites listed above have
-been created and use the decoration. It is not necessary to specify this
-filename decoration when specifying the suite name. If the variable in
-the configuration file of the case being run is set to , the run script
+been created and use the ``*_prescribed_surface`` decoration. It is not necessary to specify this
+filename decoration when specifying the suite name. If the ``spec_sfc_flux`` variable in
+the configuration file of the case being run is set to ``.true.``, the run script
 will automatically use the special suite definition file that
 corresponds to the chosen suite from the list above.
 
 If specifying a namelist other than the default, the value must be an
-entire filename that exists in . Caution should be exercised when
+entire filename that exists in ``../../ccpp/physics_namelists``. Caution should be exercised when
 modifying physics namelists since some redundancy between flags to
 control some physics parameterizations and scheme entries in the CCPP
 suite definition files currently exists. Values of numerical parameters
 are typically OK to change without fear of inconsistencies. If
 specifying a tracer configuration other than the default, the value must
-be an entire filename that exists in . The tracers that are used should
+be an entire filename that exists in ``../../scm/etc/tracer_config``. The tracers that are used should
 match what the physics suite expects, lest a runtime error will result.
 Most of the tracers are dependent on the microphysics scheme used within
 the suite. The tracer names that are supported as of this release are
-given by the following list. Note that running without , , and may
+given by the following list. Note that running without ``sphum``, ``o3mr``, and ``liq_wat`` and may
 result in a runtime error in all supported suites.
 
 #. sphum
@@ -672,15 +674,15 @@ If using the model on HPC resources and significant amounts of processor
 time is anticipated for the experiments, it will likely be necessary to
 submit a job through the HPC’s batch system. An example script has been
 included in the repository for running the model on Hera’s batch system
-(SLURM). It is located in . Edit the , , etc. to suit your needs and
-copy to the directory. The case name to be run is included in the
+(SLURM). It is located in ``ccpp-scm/scm/etc/scm_slurm_example.py``. Edit the ``job_name``, ``account``, etc. to suit your needs and
+copy to the ``bin`` directory. The case name to be run is included in the ``command``
 variable. To use, invoke
 
 .. code:: bash
 
    ./scm_slurm_example.py
 
-from the directory.
+from the ``bin`` directory.
 
 Additional details regarding the SCM may be found in the remainder of
 this guide. More information on the CCPP can be found in the CCPP
@@ -716,7 +718,8 @@ internet search.
 
 -  After a successful installation of Docker Toolbox, starting with
    Docker Quickstart may result in the following error even with
-   virtualization correctly enabled: . We were able to bypass this error
+   virtualization correctly enabled: ``This computer doesn’t have VT-X/AMD-v enabled. Enabling it in the BIOS is mandatory.``
+   We were able to bypass this error
    by opening a bash terminal installed with Docker Toolbox, navigating
    to the directory where it was installed, and executing the following
    command:
@@ -758,15 +761,15 @@ GNU-based Docker image:
 
 A Docker image containing the SCM, CCPP, and its software prerequisites
 can be generated from the code in the software repository obtained by
-following section `1.1 <#obtaining_code>`__ by executing the following
-steps:
+following the instructions in :numref:`Section %s <obtaining_code>`,
+and then executing the following steps:
 
 NOTE: Windows users can execute these steps in the terminal application
 that was installed as part of Docker Toolbox.
 
-#. Navigate to the directory.
+#. Navigate to the ``ccpp-scm/docker`` directory.
 
-#. Run the command to generate the Docker image, using the supplied
+#. Run the ``docker build`` command to generate the Docker image, using the supplied
    Dockerfile.
 
    .. code:: bash
@@ -844,10 +847,11 @@ Quickstart application installed with Docker Toolbox.
       export OUT_DIR=/path/to/output
 
    For Windows, the format that worked for us followed this example:
+   ``/c/Users/myusername/path/to/directory/to/mount``
 
 #. To run the SCM, you can run the Docker container that was just
-   created and give it the same run commands as discussed in section
-   `1.4.1 <#subsection: singlerunscript>`__. **Be sure to remember to
+   created and give it the same run commands as discussed in :numref:`Section %s <singlerunscript>`
+   **Be sure to remember to include the ``-d``
    include the option for all run commands**. For example,
 
    .. code:: bash
@@ -856,32 +860,32 @@ Quickstart application installed with Docker Toolbox.
 
    will run through the TWPICE case using the default suite and namelist
    and put the output in the shared directory. NOTE: Windows users may
-   need to omit the curly braces around environment variables: use
-   instead of . For running through all supported cases and suites, use
+   need to omit the curly braces around environment variables: use ``$OUT_DIR``
+   instead of ``${OUT_DIR}``. For running through all supported cases and suites, use
 
    .. code:: bash
 
       docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -m -d
 
-   The options included in the above commands are the following:
+   The options included in the above ``run`` commands are the following:
 
-   -  removes the container when it exits
+   -  ``−−rm`` removes the container when it exits
 
-   -  interactive mode with terminal access
+   -  ``-it`` interactive mode with terminal access
 
-   -  specifies the volume mount from host directory (outside container)
+   -  ``-v`` specifies the volume mount from host directory (outside container)
       to inside the container. Using volumes allows you to share data
       between the host machine and container. For running the SCM, the
       output is being mounted from inside the container to the on the
       host machine. Upon exiting the container, data mounted to the host
       machine will still be accessible.
 
-   -  names the container. If no name is provided, the daemon will
+   -  ``−−name`` names the container. If no name is provided, the daemon will
       autogenerate a random string name.
 
    NOTE: If you are using a prebuilt image from Dockerhub, substitute
    the name of the image that was pulled from Dockerhub in the commands
-   above; i.e. instead of above, one would have .
+   above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v6.0.0``.
 
 #. To use the SCM interactively, run non-default configurations, create
    plots, or even develop code, issue the following command:
