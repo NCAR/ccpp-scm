@@ -1,13 +1,12 @@
-CCPP Technical Documentation
+CCPP Single Column Model (SCM) User and Technical Guide v6.0.0
 ============================
 
 .. toctree::
    :numbered:
    :maxdepth: 3
 
-   Title
-   Acknow
-   Preface
+   acknow
+   preface
    chap_intro
    chap_quick
    chap_repo
