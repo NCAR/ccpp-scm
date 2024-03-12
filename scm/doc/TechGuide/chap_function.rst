@@ -29,21 +29,21 @@ Reading input
 
 The following steps are performed at the beginning of program execution:
 
-#. Call in the module to read in the ` <#subsection: case config>`__ and
-   ` <#subsection: physics config>`__ namelists. This subroutine also
-   sets some variables within the derived type from the data that was
+#. Call ``get_config_nml()`` in the ``scm_input`` module to read in the ``case_config`` and
+   ``physics_config`` namelists. This subroutine also
+   sets some variables within the ``scm_state`` derived type from the data that was
    read.
 
-#. Call (or if using the DEPHY format) in the module to read in the
-   `case input data file <#subsection: case input>`__. This subroutine
-   also sets some variables within the derived type from the data that
+#. Call ``get_case_init()`` (or ``get_case_init_DEPHY()`` if using the DEPHY format) in the ``scm_input`` module to read in the
+   :numref:`case input data file <case input>`. This subroutine
+   also sets some variables within the ``scm_input`` derived type from the data that
    was read.
 
-#. Call in the module to read in the reference profile data. This
-   subroutine also sets some variables within the derived type from the
+#. Call ``get_reference_profile()`` in the ``scm_input`` module to read in the reference profile data. This
+   subroutine also sets some variables within the ``scm_reference`` derived type from the
    data that was read. At this time, there is no “standard” format for
-   the reference profile data file. There is a statement within the
-   subroutine that reads in differently-formatted data. If adding a new
+   the reference profile data file. There is a ``select case`` statement within the
+   ``get_reference_profile()`` subroutine that reads in differently-formatted data. If adding a new
    reference profile, it will be required to add a section that reads
    its data in this subroutine.
 
@@ -53,18 +53,18 @@ Setting up vertical grid and interpolating input data
 The CCPP SCM uses pressure for the vertical coordinate (lowest index is
 the surface). The pressure levels are calculated using the surface
 pressure and coefficients (:math:`a_k` and :math:`b_k`), which are taken
-directly from FV3 code (). For vertical grid options, inspect for valid
-values of . The default vertical coordinate uses 127 levels and sets to
-the empty string. Alternatively, one can specify the (:math:`a_k` and
-:math:`b_k`) coefficients via an external file in the directory and pass
-it in to the SCM via the argument of the run script. If changing the
-number of vertical levels or the algorithm via the or run script
-arguments, be sure to check and that the vertical coordinate is as
-inteneded.
+directly from FV3 code (``fv_eta.h``). For vertical grid options, inspect ``scm/src/scm_vgrid.F90`` for valid
+values of ``npz_type``. The default vertical coordinate uses 127 levels and sets ``npz_type`` to
+an empty string. Alternatively, one can specify the (:math:`a_k` and
+:math:`b_k`) coefficients via an external file in the ``scm/data/vert_coord_data`` directory and pass
+it in to the SCM via the ``--vert_coord_file`` argument of the run script. If changing the
+number of vertical levels or the algorithm via the ``--levels`` or ``--npz_type`` run script
+arguments, be sure to check ``src/scm/scm_vgrid.F90`` and ``fv_eta.h`` that the vertical coordinate is as
+intended.
 
 After the vertical grid has been set up, the state variable profiles
-stored in the derived data type are interpolated from the input and
-reference profiles in the subroutine of the module.
+stored in the ``scm_state`` derived data type are interpolated from the input and
+reference profiles in the ``set_state`` subroutine of the ``scm_setup`` module.
 
 .. _`section: physics init`:
 
@@ -86,10 +86,10 @@ process:
    initialization that is not already performed within CCPP-compliant
    scheme initialization routines.
 
-#. Associate the variables with the appropriate pointers in the derived
+#. Associate the ``scm_state`` variables with the appropriate pointers in the derived
    data type.
 
-#. Call with the derived data type as input. This call executes the
+#. Call ``ccpp_physics_init`` with the ``cdata`` derived data type as input. This call executes the
    initialization stages of all schemes, groups, and suites that are
    defined in the suite definition file.
 
@@ -107,22 +107,22 @@ During each step of the time integration, the following sequence occurs:
 #. Calculate the current date and time given the initial date and time
    and the elapsed time.
 
-#. Call the subroutine in the module to interpolate the forcing data in
+#. Call the ``interpolate_forcing()`` subroutine in the ``scm_forcing`` module to interpolate the forcing data in
    space and time.
 
 #. Recalculate the pressure variables (pressure, Exner function,
    geopotential) in case the surface pressure has changed.
 
-#. Call in the module. Within this subroutine:
+#. Call ``do_time_step()`` in the ``scm_time_integration`` module. Within this subroutine:
 
-   -  Call the appropriate subroutine from the module.
+   -  Call the appropriate ``apply_forcing_*`` subroutine from the ``scm_forcing`` module.
 
-   -  For each column, call to call all physics schemes within the suite
+   -  For each column, call ``ccpp_physics_run()`` to call all physics schemes within the suite
       (this assumes that all suite parts are called sequentially without
       intervening code execution)
 
 #. Check to see if output should be written during the current time step
-   and call in the module if necessary.
+   and call ``output_append()`` in the module if necessary.
 
 Writing output
 --------------
@@ -134,24 +134,24 @@ can be written out as instantaneous or time-averaged and there are 5
 output periods:
 
 #. one associated with how often instantaneous variables should be
-   written out (controlled by the run script variable).
+   written out (controlled by the ``-- n_itt_out`` run script variable).
 
 #. one associated with how often diagnostic (either instantaneous or
-   time-averaged) should be written out (controlled by the run script
+   time-averaged) should be written out (controlled by the ``-- n_itt_diag`` run script
    variable)
 
-#. one associated with the shortwave radiation period (controlled by
+#. one associated with the shortwave radiation period (controlled by ``fhswr``
    variable in the physics namelist)
 
-#. one associated with the longwave radiation period (controlled by the
+#. one associated with the longwave radiation period (controlled by the ``fhlwr``
    variable in the physics namelist)
 
 #. one associated with the minimum of the shortwave and longwave
    radiation intervals (for writing output if any radiation is called)
 
 Further, which variables are output and on each interval are controlled
-via the source file. Of course, any changes to this file must result in
+via the ``scm/src/scm_output.F90`` source file. Of course, any changes to this file must result in
 a recompilation to take effect. There are several subroutines for
-initializing the output file () and for appending to it () that are
+initializing the output file (``output_init_*``) and for appending to it (``output_append_*``) that are
 organized according to their membership in physics derived data types.
-See the source file to understand how to change output variables.
+See the ``scm/src/scm_output.F90`` source file to understand how to change output variables.
