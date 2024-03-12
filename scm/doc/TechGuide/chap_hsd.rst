@@ -66,7 +66,7 @@ Definition File (SDF), using namelist options. This simulator
 data-driven tendencies (`1.1 <#fig:CSS_tendency_schematic>`__).
 
 .. figure:: images/CSS_tendency_schematic.png
-   name: fig:CSS_tendency_schematic
+   :name: fig:CSS_tendency_schematic
    :width: 80.0%
 
    Equation for internal physics state evolution for process-split
@@ -239,7 +239,7 @@ interstital scheme to couple to the GFS physics, (See
 `1.2 <#fig:CSS_SDF_ex1>`__).
 
 .. figure:: images/SDF_changes_for_CSS_ex1.png
-   name: fig:CSS_SDF_ex1
+   :name: fig:CSS_SDF_ex1
    :width: 80.0%
 
    Changes to GFS v16 physics SDF to include CCPP suite simulator for
@@ -277,7 +277,7 @@ interstital scheme to couple to the GFS physics, (See
 `1.3 <#fig:CSS_SDF_ex2>`__).
 
 .. figure:: images/SDF_changes_for_CSS_ex2.png
-   name: fig:CSS_SDF_ex2
+   :name: fig:CSS_SDF_ex2
    :width: 80.0%
 
    Changes to GFS v17 Prototype 8 physics SDF to include CCPP suite
