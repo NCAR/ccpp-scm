@@ -1,5 +1,3 @@
-.. _`chapter: cases`:
-
 Cases
 =====
 
@@ -12,7 +10,7 @@ for the SCM infrastructure. The second necessary file is a NetCDF file
 containing data to initialize the column state and time-dependent data
 to force the column state. The two files are described below.
 
-.. _`subsection: case config`:
+.. _`case config`:
 
 Case configuration namelist parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,7 +126,7 @@ arguments) are:
 
    -  Specify the integer number of vertical levels.
 
-.. _`subsection: case input`:
+.. _`case input`:
 
 Case input data file (CCPP-SCM format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,10 +142,10 @@ and state nudging variables are only required if ``thermo_forcing_type = 3`` or 
 than are listed here. Example files for using with Noah and NoahMP LSMs
 are included in ``ccpp-scm/scm/data/processed_case_input/fv3_model_point_noah[mp].nc``.
 
-.. _`subsection: case input dephy`:
+.. _`case input dephy`:
 
 .. literalinclude:: arm_case_header.txt
-    :name: lst_case_input_netcdf_header
+    :name: lst_case_input_netcdf_header_arm
     :caption: example NetCDF file (CCPP-SCM format) header for case initialization and forcing data
  
 Case input data file (DEPHY format)
@@ -176,7 +174,7 @@ requirements can be found at
 `DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__.
 
 .. literalinclude:: dephy_case_header.txt
-    :name: lst_case_input_netcdf_header
+    :name: lst_case_input_netcdf_header_dephy
     :caption: example NetCDF file (DEPHY format) header for case initialization and forcing data
 
 Included Cases
@@ -346,7 +344,7 @@ from prescribed vertical velocity (type 3). If relaxation forcing is
 chosen, a ``relax_time`` that represents the timescale over which the profile would
 return to the nudging profiles must be specified.
 
-.. _`sec:lasso`:
+.. _`lasso`:
 
 Using other LASSO cases
 -----------------------
@@ -380,12 +378,12 @@ following steps:
    one) in ``ccpp-scm/scm/etc/case_config``. Be sure that the ``case_name`` variable points to the newly
    created/processed case input file from above.
 
-.. _`sec:UFSreplay`:
+.. _`UFSreplay`:
 
 Using UFS Output to Create SCM Cases: UFS-Replay
 ------------------------------------------------
 
-.. _`subsection: pydepend`:
+.. _`pydepend_replay`:
 
 Python Dependencies
 ~~~~~~~~~~~~~~~~~~~
@@ -409,7 +407,7 @@ Activate environment:
 
   > conda activate env_ufsreplay
 
-.. _`subsection: ufsicgenerator`:
+.. _`ufsicgenerator`:
 
 UFS_IC_generator.py
 ~~~~~~~~~~~~~~~~~~~
@@ -464,7 +462,7 @@ Optional arguments:
 
 #. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint
 
-.. _`subsection: ufsforcingensemblegenerator`:
+.. _`ufsforcingensemblegenerator`:
 
 UFS_forcing_ensemble_generator.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -513,7 +511,7 @@ staged UWM RTs located at:
 -  Cheyenne ``/glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs``
 -  Hera ``/scratch1/BMC/gmtb/CCPP-SCM/UFS_RTs``
 
-.. _`subsection: example1`:
+.. _`example1`:
 
 Example 1: UFS-replay for single point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -533,7 +531,7 @@ will print to the screen. For example,
 
 The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, where the SCM run script is to be exectued.
 
-.. _`subsection: example2`:
+.. _`example2`:
 
 Example 2: UFS-replay for list of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -562,7 +560,7 @@ number of points provided. The contents of the file should look like:
                {"case": "control_c384_n002", "suite": "SCM_GFS_v16"},
                {"case": "control_c384_n003", "suite": "SCM_GFS_v16"}]
 
-.. _`subsection: example3`:
+.. _`example3`:
 
 Example 3: UFS-replay for an ensemble of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -43,7 +43,7 @@ with a corresponding variable within one or more of the physics schemes.
 A list of all standard names used can be found in ``ccpp/framework/doc/DevelopersGuide/CCPP_VARIABLES_SCM.pdf``.
 
 Editing and running ``ccpp_prebuild.py``
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 General instructions for configuring and running the ``ccpp_prebuild.py`` script can be found
 in chapter 8 of the `CCPP Technical

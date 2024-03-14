@@ -66,7 +66,7 @@ After the vertical grid has been set up, the state variable profiles
 stored in the ``scm_state`` derived data type are interpolated from the input and
 reference profiles in the ``set_state`` subroutine of the ``scm_setup`` module.
 
-.. _`section: physics init`:
+.. _`physics init`:
 
 Physics suite initialization
 ----------------------------
@@ -93,7 +93,7 @@ process:
    initialization stages of all schemes, groups, and suites that are
    defined in the suite definition file.
 
-.. _`section: time integration`:
+.. _`time integration`:
 
 Time integration
 ----------------

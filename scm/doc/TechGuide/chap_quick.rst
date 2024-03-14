@@ -51,7 +51,7 @@ The CCPP framework can be found in the ``ccpp/framework`` subdirectory at
 this level. The CCPP physics parameterizations can be found in the
 ``ccpp/physics`` subdirectory.
 
-.. _`section: development_code`:
+.. _`development_code`:
 
 Development Code
 ~~~~~~~~~~~~~~~~
@@ -121,7 +121,7 @@ development). To do so:
 
       cd ../..
 
-.. _`section: systemrequirements`:
+.. _`systemrequirements`:
 
 System Requirements, Libraries, and Tools
 -----------------------------------------
@@ -193,7 +193,7 @@ problems with compilers, please check the “Known Issues” section of the
 release website
 (https://dtcenter.org/community-code/common-community-physics-package-ccpp/download).
 
-.. _`section: use_preconfigured_platforms`:
+.. _`use_preconfigured_platforms`:
 
 Using Existing Libraries on Preconfigured Platforms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,7 +220,7 @@ modules will set up all the needed compilers, libraries, and other
 programs needed for building, as well as the python libraries needed for
 both building and running the SCM.
 
-.. _`section: setup_supported_platforms`:
+.. _`setup_supported_platforms`:
 
 Installing Libraries on Non-preconfigured Platforms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -279,15 +279,14 @@ The directory ``/my/install/directory`` must exist and its subdirectory
 instead of ``lib``, depending on the system) must be in the ``PYTHONPATH``
 environment variable.
 
-.. _`section: compiling`:
+.. _`compiling`:
 
 Compiling SCM with CCPP
 -----------------------
 
 The first step in compiling the CCPP and SCM is to properly setup your
 user environment as described in
-sections `1.2.2 <#section: use_preconfigured_platforms>`__
-and `1.2.3 <#section: setup_supported_platforms>`__. The second step is
+sections :numref:`%s <use_preconfigured_platforms>` and :numref:`Section %s <setup_supported_platforms>`. The second step is
 to download the lookup tables and other large datasets (large binaries,
 :math:`<`\ 1 GB) needed by the physics schemes and place them in the
 correct directory: From the top-level code directory (``ccpp-scm`` by default),
@@ -440,7 +439,7 @@ executed through a Python run script that is pre-staged into the ``bin``
 directory: ``run_scm.py``. It can be used to run one integration or several
 integrations serially, depending on the command line arguments supplied.
 
-.. _`subsection: singlerunscript`:
+.. _`singlerunscript`:
 
 Run Script Usage
 ~~~~~~~~~~~~~~~~

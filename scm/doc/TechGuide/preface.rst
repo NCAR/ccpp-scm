@@ -25,10 +25,8 @@ The table below describes the type changes and symbols used in this document.
    * - *AaBbCc123*
      - 
          * The names of SCM- and CCPP-specific terms, subroutines, etc.
-         * Captions for figures, tables, etc.
      - 
-         * Each scheme must include at least one of the following subroutines: ``{schemename}_timestep_init``, ``{schemename}_init``, ``{schemename}_run``, ``{schemename}_finalize``, and ``{schemename}_timestep_finalize``.
-         * *Listing 2.1: Fortran template for a CCPP-compliant scheme showing the* _run *subroutine.*
+         * The SCM uses only a small part of the UFS *hpc-stack* package
    * - **AaBbCc123**
      - Words or phrases requiring particular emphasis
      - Fortran77 code should **not** be used

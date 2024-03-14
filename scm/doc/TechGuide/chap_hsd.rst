@@ -100,7 +100,7 @@ the other hand, for SDFs that contain time-split processes, where the
 simulator is added is important to preserve the order of the internal
 state evolution.
 
-.. _`subsection: pydepend`:
+.. _`pydepend_css`:
 
 Python Dependencies
 ~~~~~~~~~~~~~~~~~~~
@@ -193,7 +193,7 @@ cloud microphysics. The radiation, gravity-wave drag and PBL schemes are
 all process-split, whereas convection and cloud microphysics are
 time-split.
 
-.. _`section:Creating_Custom_Data_for_Simulator`:
+.. _`Creating_Custom_Data_for_Simulator`:
 
 Creating Custom Data for Simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -233,7 +233,7 @@ interpolates these forcings in time.
 
 The data file will be written to ``ccpp-scm/scm/etc/scripts/ccpp_suite_sim/`` with the format ``data_CSS_DIM.CASES.SUITES.nc``
 
-.. _`section:Suite_with_Active_Radiation`:
+.. _`Suite_with_Active_Radiation`:
 
 Example 1: Suite with Active Radiation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -271,7 +271,7 @@ and run the SCM using TWPICE case with the modified suite.
    cmake ../src -DCCPP_SUITES=SCM_GFS_v16
    ./run_scm.py -c twpice -s SCM_GFS_v16
 
-.. _`section:Suite_with_Active_cldmp`:
+.. _`Suite_with_Active_cldmp`:
 
 Example 2: Suite with Active Cloud Microphysics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -311,7 +311,7 @@ and run the SCM using TWPICE case with the modified suite.
    cmake ../src -DCCPP_SUITES=SCM_GFS_v17_p8
    ./run_scm.py -c twpice -s SCM_GFS_v17_p8
 
-.. _`section:plotting_tools`:
+.. _`plotting_tools`:
 
 Plotting tools
 ~~~~~~~~~~~~~~
