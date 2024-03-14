@@ -142,8 +142,7 @@ and state nudging variables are only required if ``thermo_forcing_type = 3`` or 
 than are listed here. Example files for using with Noah and NoahMP LSMs
 are included in ``ccpp-scm/scm/data/processed_case_input/fv3_model_point_noah[mp].nc``.
 
-.. _`case input dephy`:
-
+.. _`case input arm`:
 .. literalinclude:: arm_case_header.txt
     :name: lst_case_input_netcdf_header_arm
     :caption: example NetCDF file (CCPP-SCM format) header for case initialization and forcing data
@@ -173,6 +172,7 @@ are required for all cases. More information on the DEPHY format
 requirements can be found at
 `DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__.
 
+.. _`case input dephy`:
 .. literalinclude:: dephy_case_header.txt
     :name: lst_case_input_netcdf_header_dephy
     :caption: example NetCDF file (DEPHY format) header for case initialization and forcing data

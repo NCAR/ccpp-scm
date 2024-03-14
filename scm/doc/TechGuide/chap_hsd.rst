@@ -63,8 +63,9 @@ The CCPP Suite Simulator is a CCPP-compliant physics scheme that
 provides the ability to turn on/off physical processes in a Suite
 Definition File (SDF), using namelist options. This simulator
 ‘piggybacks’ on an existing SDF, replacing physics tendencies with
-data-driven tendencies (:numref:`Section %s <CSS_tendency_schematic>`).
+data-driven tendencies (Figure :numref:`CSS_tendency_schematic`).
 
+.. _CSS_tendency_schematic:
 .. figure:: images/CSS_tendency_schematic.png
    :name: fig:CSS_tendency_schematic
    :width: 80.0%
@@ -165,11 +166,11 @@ CSS for SCM (UFS) physics applications,
 Namelist for the CCPP Suite Simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The CSS has its own namelist, , that needs to be added to the physics
+The CSS has its own namelist, ``ccpp_suite_sim_nml``, that needs to be added to the physics
 namelists used by the SCM.
 
+.. _lst_css_nml_ex1:
 .. literalinclude:: css_nml.txt
-    :name: lst_css_nml_ex1
     :caption: Example namelist for CCPP Suite Simulator.
 
 -  ``suite_sim_file``: Input file with simulated data tendencies (See
@@ -186,7 +187,7 @@ namelists used by the SCM.
 
    -  Index for scheme order (1 - ``nprc_sim``)
 
-For example, in Listing `[lst_css_nml_ex1] <#lst_css_nml_ex1>`__, there
+For example, in Listing :numref:`lst_css_nml_ex1`, there
 are two active schemes, longwave and shortwave radiation, and five
 simulated schemes: PBL, gravity-wave drag, deep/shallow convection, and
 cloud microphysics. The radiation, gravity-wave drag and PBL schemes are
@@ -243,8 +244,9 @@ For this example we will use the two-dimensional forcing data from
 
 First, we need to modify the SDF to include the CSS, ``ccpp_suite_simulator.F90`` and an additional
 interstital scheme to couple to the GFS physics, ``GFS_ccpp_suite_sim_pre.F90`` (See
-`1.2 <#fig:CSS_SDF_ex1>`__).
+Figure :numref:`CSS_SDF_ex1`).
 
+.. _CSS_SDF_ex1:
 .. figure:: images/SDF_changes_for_CSS_ex1.png
    :name: fig:CSS_SDF_ex1
    :width: 80.0%
@@ -255,12 +257,11 @@ interstital scheme to couple to the GFS physics, ``GFS_ccpp_suite_sim_pre.F90`` 
 
 Next, the physics namelist needs to be configured to:
 
-#. Add data file, created in
-   `1.2.8 <#section:Creating_Custom_Data_for_Simulator>`__ to the
-   namelist.
+#. Add data file, created in :numref:`Section %s <Creating_Custom_Data_for_Simulator>`
+   to the namelist.
 
 #. Turn “off” all schemes except the radiation (see Listing
-   `[lst_css_nml_ex1] <#lst_css_nml_ex1>`__)
+   :numref:`lst_css_nml_ex1`)
 
 Finally, we rebuild the SCM with the modified SDFs to include the CSS,
 and run the SCM using TWPICE case with the modified suite.
@@ -280,8 +281,10 @@ For this example we will use the constant forcing data from
 :numref:`Section %s <Creating_Custom_Data_for_Simulator>`
 
 First, we need to modify the SDF to include the CSS, and an additional
-interstital scheme to couple to the GFS physics, (See :numref:`Section %s <fig:CSS_SDF_ex2>`)
+interstital scheme to couple to the GFS physics, (See
+Figure :numref:`CSS_SDF_ex2`).
 
+.. _CSS_SDF_ex2:
 .. figure:: images/SDF_changes_for_CSS_ex2.png
    :name: fig:CSS_SDF_ex2
    :width: 80.0%
@@ -296,10 +299,10 @@ Next, the physics namelist needs to be configured to:
    :numref:`Section %s <Creating_Custom_Data_for_Simulator>` to the namelist.
 
 #. Turn “off” all schemes except the cloud microphysics (see Listing
-   `[lst_css_nml_ex2] <#lst_css_nml_ex2>`__)
+   :numref:`lst_css_nml_ex2`)
 
+.. _lst_css_nml_ex2:
 .. literalinclude:: css_nml_ex2.txt
-    :name: lst_css_nml_ex2
     :caption: Example namelist for CCPP Suite Simulator with active cloud microphysics.
 
 Finally, we rebuild the SCM with the modified SDFs to include the CSS,
