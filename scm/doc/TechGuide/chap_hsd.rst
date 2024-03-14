@@ -63,7 +63,7 @@ The CCPP Suite Simulator is a CCPP-compliant physics scheme that
 provides the ability to turn on/off physical processes in a Suite
 Definition File (SDF), using namelist options. This simulator
 ‘piggybacks’ on an existing SDF, replacing physics tendencies with
-data-driven tendencies (`1.1 <#fig:CSS_tendency_schematic>`__).
+data-driven tendencies (:numref:`Section %s <CSS_tendency_schematic>`).
 
 .. figure:: images/CSS_tendency_schematic.png
    :name: fig:CSS_tendency_schematic
@@ -107,14 +107,22 @@ Python Dependencies
 
 The scripts here require a few python packages that may not be found by
 default in all python installations. There is a YAML file with the
-python environment needed to run the script in . To create and activate
+python environment needed to run the script in ``ccpp-scm/environment_suite_sim.yml``. To create and activate
 this environment using conda:
 
 Create environment (only once):
 
-This will create the conda environment
+.. code:: bash
+   
+  > conda env create -f environment-suite-sim.yml
+
+This will create the conda environment ``scm_suite_sim``
 
 Activate environment:
+
+.. code:: bash
+
+  > conda activate scm_suite_sim
 
 Enabling the CCPP Suite Simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,7 +132,7 @@ To use the CSS in the CCPP-SCM three modifications need to be made:
 #. Add CSS, and any interstitial schemes needed for coupling the CSS to
    the host (e.g. SCM), to an existing CCPP SDF (or create a new SDF).
 
-#. Set in the GFS physics namelist,
+#. Set ``do_ccpp_suite_sim = .true.`` in the GFS physics namelist, ``gfs_physics_nml``
 
 #. Modify, or create new, namelist that has the options needed to
    activate the CSS.
@@ -152,8 +160,7 @@ time-split physics schemes. In general,
 
 In the examples below we will demonstrate how to modify SDFs to use the
 CSS for SCM (UFS) physics applications,
-`1.2.9 <#section:Suite_with_Active_Radiation>`__ and
-`1.2.10 <#section:Suite_with_Active_cldmp>`__.
+:numref:`Section %s <Suite_with_Active_Radiation>` and :numref:`Section %s <Suite_with_Active_cldmp>`.
 
 Namelist for the CCPP Suite Simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -165,19 +172,19 @@ namelists used by the SCM.
     :name: lst_css_nml_ex1
     :caption: Example namelist for CCPP Suite Simulator.
 
--  : Input file with simulated data tendencies (See
-   `1.2.8 <#section:Creating_Custom_Data_for_Simulator>`__ for how to
+-  ``suite_sim_file``: Input file with simulated data tendencies (See
+   :numref:`Section %s <Creating_Custom_Data_for_Simulator>` for how to
    create input file from SCM output).
 
--  : Number of physical processes in the input data.
+-  ``nprc_sim``: Number of physical processes in the input data.
 
--  : Configuration for physical process XYZ.
+-  ``prc_XYZ_cfg``: Configuration for physical process XYZ.
 
    -  0 - Active scheme; 1 - Use data
 
    -  0 - Process-split scheme; 1 - Time-split scheme
 
-   -  Index for scheme order (1 - )
+   -  Index for scheme order (1 - ``nprc_sim``)
 
 For example, in Listing `[lst_css_nml_ex1] <#lst_css_nml_ex1>`__, there
 are two active schemes, longwave and shortwave radiation, and five
@@ -191,16 +198,16 @@ time-split.
 Creating Custom Data for Simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Navigate to
+Navigate to ``ccpp-scm/scm/etc/scripts/ccpp_suite_sim``
 
 Provided with the SCM are scripts to generate data for the suite
-simulator using output from a previous SCM run. The first script, ,
+simulator using output from a previous SCM run. The first script, ``create_1D_CSSdata.py``,
 extracts the physics tendencies from a user-specified time interval,
 which are used for constant forcing in the suite simulator. The other
-script, , creates a two-dimensional forcing dataset. The suite simulator
+script, ``create_2D_CSSdata.py``, creates a two-dimensional forcing dataset. The suite simulator
 interpolates these forcings in time.
 
-#. Run the SCM twice using the TWPICE case with the and suites.
+#. Run the SCM twice using the TWPICE case with the ``GFS_v16`` and ``GFS_v17_p8`` suites.
 
    .. code:: bash
 
@@ -209,7 +216,7 @@ interpolates these forcings in time.
       ./run_scm.py -c twpice -s SCM_GFS_v17_p8
 
 #. Create 2D forcing data for the CSS, using SCM output from TWPICE case
-   with suite.
+   with ``GFS_v16`` suite.
 
    .. code:: bash
 
@@ -217,14 +224,14 @@ interpolates these forcings in time.
       ./create_2D_CSSdata.py --cases twpice --suites SCM_GFS_v16
 
 #. Create constant forcing data for the CSS, using SCM output, at
-   forecast time 3600s, from TWPICE case with suite.
+   forecast time 3600s, from TWPICE case with ``GFS_v17_p8`` suite.
 
    .. code:: bash
 
       cd ccpp-scm/scm/etc/scripts/ccpp_suite_sim
       ./create_1D_CSSdata.py --cases twpice --suites SCM_GFS_v17_p8 --time 3600
 
-The data file will be written to with the following format, .
+The data file will be written to ``ccpp-scm/scm/etc/scripts/ccpp_suite_sim/`` with the format ``data_CSS_DIM.CASES.SUITES.nc``
 
 .. _`section:Suite_with_Active_Radiation`:
 
@@ -232,10 +239,10 @@ Example 1: Suite with Active Radiation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For this example we will use the two-dimensional forcing data from
-`1.2.8 <#section:Creating_Custom_Data_for_Simulator>`__.
+:numref:`Section %s <Creating_Custom_Data_for_Simulator>`
 
-First, we need to modify the SDF to include the CSS, and an additional
-interstital scheme to couple to the GFS physics, (See
+First, we need to modify the SDF to include the CSS, ``ccpp_suite_simulator.F90`` and an additional
+interstital scheme to couple to the GFS physics, ``GFS_ccpp_suite_sim_pre.F90`` (See
 `1.2 <#fig:CSS_SDF_ex1>`__).
 
 .. figure:: images/SDF_changes_for_CSS_ex1.png
@@ -270,11 +277,10 @@ Example 2: Suite with Active Cloud Microphysics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For this example we will use the constant forcing data from
-`1.2.8 <#section:Creating_Custom_Data_for_Simulator>`__.
+:numref:`Section %s <Creating_Custom_Data_for_Simulator>`
 
 First, we need to modify the SDF to include the CSS, and an additional
-interstital scheme to couple to the GFS physics, (See
-`1.3 <#fig:CSS_SDF_ex2>`__).
+interstital scheme to couple to the GFS physics, (See :numref:`Section %s <fig:CSS_SDF_ex2>`)
 
 .. figure:: images/SDF_changes_for_CSS_ex2.png
    :name: fig:CSS_SDF_ex2
@@ -286,9 +292,8 @@ interstital scheme to couple to the GFS physics, (See
 
 Next, the physics namelist needs to be configured to:
 
-#. Add data file, created in
-   `1.2.8 <#section:Creating_Custom_Data_for_Simulator>`__ to the
-   namelist.
+#. Add data file ``suite_sim_file`` created in
+   :numref:`Section %s <Creating_Custom_Data_for_Simulator>` to the namelist.
 
 #. Turn “off” all schemes except the cloud microphysics (see Listing
    `[lst_css_nml_ex2] <#lst_css_nml_ex2>`__)
@@ -319,13 +324,13 @@ Additionally, plotting scripts provided in :
 
    Mandatory arguments:
 
-   #. name of case
+   #. ``--case_name (-n)`` name of case
 
-   #. CCPP suite definition file
+   #. ``--suite (-sdf)`` CCPP suite definition file
 
-   #. namelists, separated by a space
+   #. ``--nml_list (-nmls)`` namelists, separated by a space
 
-   #. varaibles to plot, separated by a space
+   #. ``--var_list (-vars)`` varaibles to plot, separated by a space
 
 #. .. code:: bash
 
@@ -333,12 +338,12 @@ Additionally, plotting scripts provided in :
 
    Mandatory arguments:
 
-   #. name of case
+   #. ``--case_name (-n)`` name of case
 
-   #. CCPP suite definition file
+   #. ``--suite (-sdf)`` CCPP suite definition file
 
-   #. namelists, separated by a space
+   #. ``--nml_list (-nmls)`` namelists, separated by a space
 
-   #. varaibles to plot, separated by a space
+   #. ``--var_list (-vars)`` variables to plot, separated by a space
 
-   #. time to plot, in seconds
+   #. ``--time_plot (-time)`` time to plot, in seconds
