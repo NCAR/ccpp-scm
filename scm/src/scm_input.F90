@@ -2645,7 +2645,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
       open(unit=1, file='McCProfiles.dat', status='old', action='read', iostat=ioerror)
       if(ioerror /= 0) then
         write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
-          Error code = ',ioerror
+          &Error code = ',ioerror
         stop
       endif
 
