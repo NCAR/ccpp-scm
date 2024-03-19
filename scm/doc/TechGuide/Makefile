@@ -2,13 +2,16 @@
 # Makefile for the CCPP (SCM) Users Guide
 #
 
-.PHONY: main.pdf all clean
+.PHONY: html latex all clean
 
-all: main.pdf
+all: html latex
 
-main.pdf: main.tex
-	latexmk -f -pdf -pdflatex="pdflatex" -use-make main.tex
-	open main.pdf
+latex:
+	python -m sphinx -T -b latex -d _build/doctrees -D language=en . latex
+	cd latex && latexmk -f -pdf -pdflatex="pdflatex" -use-make index.tex
+
+html:
+	python -m sphinx -T -b html -d _build/doctrees -D language=en . html
 
 clean:
 	latexmk -CA
