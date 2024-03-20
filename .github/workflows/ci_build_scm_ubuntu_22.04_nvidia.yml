@@ -1,0 +1,264 @@
+name: CI test to build the CCPP-SCM on ubuntu v22.04
+
+on: [push,pull_request,workflow_dispatch]
+
+jobs:
+
+  build_scm:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        fortran-compiler: [nvfortran]
+        build-type:       [Release]#, Debug]
+        enable-gpu-acc:   [False, True]
+        py-version:       [3.7.13, 3.9.12]
+
+    # Environmental variables
+    env:
+      NETCDF:      /home/runner/netcdf
+      bacio_ROOT:  /home/runner/bacio
+      sp_ROOT:     /home/runner/NCEPLIBS-sp
+      w3emc_ROOT:  /home/runner/myw3emc
+      SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
+      zlib_ROOT:   /home/runner/zlib
+      HDF5_ROOT:   /home/runner/hdf5
+      suites:      SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
+      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
+
+    # Workflow steps
+    steps:
+
+    #######################################################################################
+    # Cleanup space
+    #######################################################################################
+    - name: Check space (pre)
+      run: |
+        df -h
+
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        # this might remove tools that are actually needed,
+        # if set to "true" but frees about 6 GB
+        tool-cache: false
+
+        # all of these default to true, but feel free to set to
+        # "false" if necessary for your workflow
+        android: false
+        dotnet: false
+        haskell: true
+        large-packages: true
+        docker-images: false
+        swap-storage: false
+
+    - name: Check space (post)
+      run: |
+        df -h
+
+    #######################################################################################
+    # Initial
+    #######################################################################################
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v3
+
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+
+    #######################################################################################
+    # Python setup
+    #######################################################################################
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{matrix.py-version}}
+
+    - name: Add conda to system path
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Install NetCDF Python libraries
+      run: |
+        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
+
+    #######################################################################################
+    # Install Nvidia.
+    #######################################################################################
+
+    - name: Nvidia setup compilers.
+      env:
+        NVCOMPILERS: /home/runner/hpc_sdk
+        NVARCH: Linux_x86_64
+        NVHPC_SILENT: true
+        NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
+        NVHPC_INSTALL_TYPE: network
+        NVHPC_INSTALL_LOCAL_DIR: /home/runner/hpc_sdk
+      run: |
+        mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
+        wget -q https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
+        tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
+        nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
+        export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
+        export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
+        echo "The nvfortran installed is:"
+        nvfortran --version
+        echo "The path to nvfortran is:"
+        command -v nvfortran
+        echo "Removing tarball"
+        rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
+
+    - name: Set environment for Nvidia compiler.
+      run: |
+        echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
+        echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
+
+    #######################################################################################
+    # Install FORTRAN dependencies
+    #######################################################################################
+
+    - name: Install zlib
+      env:
+        CFLAGS: -fPIC
+      run: |
+        wget https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz
+        tar -zxvf zlib-1.2.13.tar.gz
+        cd zlib-1.2.13
+        ./configure --prefix=${zlib_ROOT}
+        make
+        make install
+        echo "LD_LIBRARY_PATH=$zlib_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+    - name: Install HDF5
+      env:
+        CPPFLAGS: -I${zlib_ROOT}/include
+        LDFLAGS: -L${zlib_ROOT}/lib
+      run: |
+        wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_14_1-2.tar.gz
+        tar -zxvf hdf5-1_14_1-2.tar.gz
+        cd hdf5-hdf5-1_14_1-2
+        ./configure --prefix=${HDF5_ROOT} --with-zlib=${zlib_ROOT}
+        make -j4
+        make install
+        echo "LD_LIBRARY_PATH=$HDF5_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=$HDF5_ROOT/lib:$PATH" >> $GITHUB_ENV
+
+    - name: Install Curl
+      run: |
+        sudo apt-get install curl
+        sudo apt-get install libssl-dev libcurl4-openssl-dev
+
+    - name: Cache NetCDF C library
+      id: cache-netcdf-c
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-c
+        key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
+
+    - name: Install NetCDF C library
+      if: steps.cache-netcdf-c.outputs.cache-hit != 'true'
+      run: |
+        wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
+        tar -zvxf v4.7.4.tar.gz
+        cd netcdf-c-4.7.4
+        CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib" ./configure --prefix=${NETCDF}
+        make
+        make install
+        echo "LD_LIBRARY_PATH=$NETCDF/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=$NETCDF/lib:$PATH" >> $GITHUB_ENV
+
+    - name: Cache NetCDF Fortran library
+      id: cache-netcdf-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/netcdf-fortran
+        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install NetCDF Fortran library
+      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+      run: |
+        wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
+        tar -zvxf v4.6.1.tar.gz
+        cd netcdf-fortran-4.6.1
+        FCFLAGS="-fPIC" FFLAGS="-fPIC" CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include -I/home/runner/netcdf/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib -L/home/runner/netcdf/lib" ./configure --prefix=${NETCDF}
+        make
+        make install
+
+    - name: Cache bacio library v2.4.1
+      id: cache-bacio-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/bacio
+        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install bacio library v2.4.1
+      if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
+        cd bacio && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${bacio_ROOT} ../
+        make -j2
+        make install
+        echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
+
+    - name: Cache SP-library v2.3.3
+      id: cache-sp-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/NCEPLIBS-sp
+        key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install SP-library v2.3.3
+      if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.3.3 https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp
+        cd NCEPLIBS-sp && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${sp_ROOT} ../
+        make -j2
+        make install
+        echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
+
+    - name: Cache w3emc library v2.9.2
+      id: cache-w3emc-fortran
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/myw3emc
+        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
+
+    - name: Install w3emc library v2.9.2
+      if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
+        cd NCEPLIBS-w3emc && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${w3emc_ROOT} ../
+        make -j2
+        make install
+        echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
+
+    #######################################################################################
+    # Build and run SCM regression tests (ccpp-scm/test/rt_test_cases.py)
+    #######################################################################################
+
+    - name: Configure build with CMake
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -DENABLE_NVIDIA_OPENACC=${{matrix.enable-gpu-acc}} ../src
+
+    - name: Build SCM.
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        make -j4
+
+    - name: Download data for SCM
+      run: |
+        cd ${SCM_ROOT}
+        ./contrib/get_all_static_data.sh
+        ./contrib/get_thompson_tables.sh
+
+    - name: Run SCM RTs (w/o GPU)
+      if: contains(matrix.enable-gpu-acc, 'False')
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 -v
