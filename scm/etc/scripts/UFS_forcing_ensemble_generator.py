@@ -115,8 +115,6 @@ def main():
         lons = eval(lon_list)
         lat_list = lines[1]
         lats = eval(lat_list)
-        lons = lons[563::]
-        lats = lats[563::]
         npts = len(lons)
     else:
         print("ERROR: Must provide input points in one of the following formats:")
