@@ -153,35 +153,37 @@ def main():
         print(com)
         os.system(com)
 
-        # Add case to ensemble list.
-        case_list     = case_list + '"'+case_name+'"'
-        if (count != npts-1): case_list = case_list + ', '
+        if (os.path.isfile(file_scminput)):
+            # Add case to ensemble list.
+            case_list     = case_list + '"'+case_name+'"'
+            if (count != npts-1): case_list = case_list + ', '
 
-        # What is the surface type? (get from SCM input file)
-        dataset  = xr.open_dataset(file_scminput)
-        sfc_type = int(np.round_(dataset.slmsk.values[0]))
+            # What is the surface type? (get from SCM input file)
+            dataset  = xr.open_dataset(file_scminput)
+            sfc_type = int(np.round_(dataset.slmsk.values[0]))
 
-        # Create case_config file(s)
-        fileOUT = "../../etc/case_config/"+case_name+".nml"
-        fileID  = open(fileOUT, 'w')
-        fileID.write('$case_config')
-        fileID.write('\n')
-        fileID.write('case_name = ' + "'" + case_name + "',")
-        fileID.write('\n')
-        fileID.write('sfc_type = ' + str(sfc_type) + ",")
-        fileID.write('\n')
-        for opts in case_config:
-            fileID.write(opts["name"] + ' = ' + opts["values"] + ",")
+            # Create case_config file(s)
+            fileOUT = "../../etc/case_config/"+case_name+".nml"
+            fileID  = open(fileOUT, 'w')
+            fileID.write('$case_config')
             fileID.write('\n')
-        fileID.write('$end')
-        fileID.write('\n')
-        fileID.close()
+            fileID.write('case_name = ' + "'" + case_name + "',")
+            fileID.write('\n')
+            fileID.write('sfc_type = ' + str(sfc_type) + ",")
+            fileID.write('\n')
+            for opts in case_config:
+                fileID.write(opts["name"] + ' = ' + opts["values"] + ",")
+                fileID.write('\n')
+            fileID.write('$end')
+            fileID.write('\n')
+            fileID.close()
 
-        # Add case to dictionary to be used by run_scm.py
-        run_list.append({"case": case_name, "suite": args.suite})
+            # Add case to dictionary to be used by run_scm.py
+            run_list.append({"case": case_name, "suite": args.suite})
             
-        #
-        count = count + 1
+            #
+            count = count + 1
+        # end if
     # end for
 
     ###########################################################################
