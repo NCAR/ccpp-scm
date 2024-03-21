@@ -20,6 +20,7 @@ parser.add_argument('-lonl', '--lon_limits',    help='longitude range, separated
 parser.add_argument('-latl', '--lat_limits',    help='latitude range, separated by a space',  nargs=2,   type=float, required=False)
 parser.add_argument('-lons', '--lon_list',      help='longitudes, separated by a space',      nargs='*', type=float, required=False)
 parser.add_argument('-lats', '--lat_list',      help='latitudes, separated by a space',       nargs='*', type=float, required=False)
+parser.add_argument('-fxy',  '--lonlat_file',   help='file containing longitudes and latitude',nargs=1,              required=False)
 parser.add_argument('-nens', '--nensmembers',   help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
 parser.add_argument('-dt',   '--timestep',      help='SCM timestep, in seconds',                                      type=int,   default = 3600)
 parser.add_argument('-cres', '--C_RES',         help='UFS spatial resolution',                                        type=int,   default = 96)
@@ -43,25 +44,29 @@ def main():
     if (args.lon_limits and args.lon_list):
         print("ERROR: Can't provide explicit longitude(s) AND a longitude range")
         exit()
+    # end if
     if (args.lat_limits and args.lat_list):
         print("ERROR: Can't provide explicit latitude(s) AND a latitude range")
         exit()
+    # end if
     if (args.lon_limits or args.lat_limits) and not args.nensmembers:
         print("ERROR: Longitude/Latitude range provided, but NOT ensemble count.")
         exit()
-
+    # end if
     if (args.nensmembers):
         npts = args.nensmembers
         if (args.lat_list or args.lon_list):
             print("ERROR: Can't provide explicit lon/lat range AND number of points for ensemble generation.")
             exit()
-    else:
-        if (args.lon_list and args.lat_list):
-            if (len(args.lon_list) == len(args.lat_list)):
-                npts = len(args.lon_list)
-            else:
-                print("ERROR: Number of longitude/latitudes are inconsistent")
-                exit()
+        # end if
+    elif (args.lon_list and args.lat_list):
+        if (len(args.lon_list) == len(args.lat_list)):
+            npts = len(args.lon_list)
+        else:
+            print("ERROR: Number of longitude/latitudes are inconsistent")
+            exit()
+        # end if
+    # end if
 
     ###########################################################################
     #
@@ -83,19 +88,44 @@ def main():
                 lats[ipt] = args.lat_limits[0] + (args.lat_limits[1]-args.lat_limits[0])*rng1[ipt]
             else:
                 lats[ipt] = rng1[ipt]*180-90
+            # end if
             if args.lon_limits:
                 lons[ipt] = args.lon_limits[0] + (args.lon_limits[1]-args.lon_limits[0])*rng2[ipt]
             else:
                 lons[ipt] = rng2[ipt]*360
+            # end if
+        # end for
     ###########################################################################
     #
-    # Use longitude and latitude provided
+    # Use longitude and latitude provided to command line
     #
     ###########################################################################
-    else:
+    elif (args.lon_list and args.lat_list):
         lons = np.asarray(args.lon_list)
         lats = np.asarray(args.lat_list)
-
+    ###########################################################################
+    #
+    # Use longitude and latitude from input file
+    #
+    ###########################################################################
+    elif (args.lonlat_file):
+        fid = open(args.lonlat_file[0], 'r')
+        lines = fid.read().split('\n')
+        lon_list = lines[0]
+        lons = eval(lon_list)
+        lat_list = lines[1]
+        lats = eval(lat_list)
+        lons = lons[563::]
+        lats = lats[563::]
+        npts = len(lons)
+    else:
+        print("ERROR: Must provide input points in one of the following formats:")
+        print("  Using -nens [] -lonl [] -latl []  (e.g. -nens 20 -lonl 30 40 -latl 30 35)")
+        print("  Using -lons [] -lats []           (e.g. -lons 203 204 205 -lats 30 30 30)")
+        print("  Using -fxy                        (e.g. -fxy lonlat.txt w/ -lons [] -lats [])")
+        exit()
+    # end if
+    
     ###########################################################################
     #
     # Create SCM case configuration (etc/case_config) file.
@@ -154,6 +184,7 @@ def main():
             
         #
         count = count + 1
+    # end for
 
     ###########################################################################
     #
@@ -171,6 +202,7 @@ def main():
         #print('            {"case": "' , run["case"] , '", "suite": "' , run["suite"] , '"},')
         fileID.write('            {"case": "' + run["case"] + '", "suite": "' + run["suite"] + '"},')
         fileID.write('\n')
+    # end for
     fileID.write('            ]')
     fileID.close()
 

@@ -464,18 +464,20 @@ def get_UFS_IC_data(dir, grid_dir, tile, i, j, old_chgres, lam):
     #returns dictionaries with the data
     
     vgrid_data = get_UFS_vgrid_data(grid_dir) #only needed for ak, bk to calculate pressure
-    state_data = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres, lam)
+    (state_data, error_msg) = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres, lam)
     surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres, lam)
     oro_data = get_UFS_oro_data(dir, tile, i, j, lam)
     
-    return (state_data, surface_data, oro_data)
+    return (state_data, surface_data, oro_data, error_msg)
 
 ########################################################################################
 #
 ########################################################################################
 def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     """Get the state data for the given tile and indices"""
-    
+
+    state = {}
+    error_msg=None
     if lam:
         nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.nc'))
     else:
@@ -600,7 +602,10 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
                     icewat_model_rev[k] = cloud_water - liqwat_model_rev[0,k]
         (liqwat_model_rev[0,k], dummy_rain, icewat_model_rev[k], dummy_snow) = fv3_remap.mp_auto_conversion(liqwat_model_rev[0,k], icewat_model_rev[k])
     
-    [u_s, u_n, v_w, v_e] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam)
+    [u_s, u_n, v_w, v_e, unknown_grid] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam)
+    if unknown_grid:
+        error_msg='unknown grid orientation'
+        return(state,error_msg)
     
     #put C/D grid zonal/meridional winds on model pressure levels
     u_s_model_rev = fv3_remap.mappm(levp_data, pressure_from_data_rev[np.newaxis, :], u_s[np.newaxis, :], nlevs_model, pressure_model_interfaces_rev[np.newaxis, :], 1, 1, -1, 8, ptop_data)
@@ -638,7 +643,7 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
         "pa_i": pressure_model_interfaces
     }
         
-    return state
+    return (state,error_msg)
 
 ########################################################################################
 #
@@ -665,6 +670,10 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             raise Exception(message)
     
     nc_file_grid = Dataset('{0}/{1}'.format(dir,filename))
+
+    # Get grid dimension
+    nz,nx,ny = np.shape(nc_file_data['u_w'])
+
     
     if (lam):
         #strip ghost/halo points and return supergrid
@@ -696,7 +705,7 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
     
     east_test_point = np.argmax(test_lon_diff)
     north_test_point = np.argmax(test_lat_diff)
-    
+    unknown=False
     if east_test_point == 0:
         #longitude increases most along the positive i axis
         if north_test_point == 2:
@@ -775,7 +784,11 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ey)
         else:
-            print('unknown grid orientation')
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     elif east_test_point == 1:
         #longitude increases most along the negative i axis
         if north_test_point == 2:
@@ -853,7 +866,11 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ey)
         else:
-            print('unknown grid orientation')
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     elif east_test_point == 2:
         #longitude increases most along the positive j axis
         if north_test_point == 0:
@@ -929,9 +946,16 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             p3 = fv3_remap.mid_pt_sphere(p1*deg_to_rad, p2*deg_to_rad)
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
-            v_e = nc_file_data['u_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
+            if (j < nx -1):
+                v_e = nc_file_data['u_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
+            else:
+                v_e = nc_file_data['v_w'][:,j,i]
         else:
-            print('unknown grid orientation')
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     elif east_test_point == 3:
         #longitude increases most along the negative j axis
         if north_test_point == 0:
@@ -1009,12 +1033,15 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ey)
         else:
-            print('unknown grid orientation')
-    
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     
     nc_file_grid.close()
     
-    return [u_s, u_n, v_w, v_e]
+    return [u_s, u_n, v_w, v_e, unknown]
 
 ########################################################################################
 #
@@ -2685,8 +2712,11 @@ def main():
     
     # get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement
     # different file reads)
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
-                                                           tile_j, old_chgres, lam)
+    (state_data, surface_data, oro_data, error_msg) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
+                                                                      tile_j, old_chgres, lam)
+    if (error_msg):
+        print("ERROR: unknown grid orintation")
+        exit()
 
     if not date:
         # date was not included on command line; look in atmf* file for initial date
