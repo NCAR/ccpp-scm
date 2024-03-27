@@ -950,7 +950,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp) :: z_nudging_temp, z_nudging_theta, z_nudging_thetal, z_nudging_qv, z_nudging_qt, z_nudging_rv, z_nudging_rt, z_nudging_u, z_nudging_v
   real(kind=sp) :: p_nudging_temp, p_nudging_theta, p_nudging_thetal, p_nudging_qv, p_nudging_qt, p_nudging_rv, p_nudging_rt, p_nudging_u, p_nudging_v
   character(len=5) :: input_surfaceType
-  character(len=11) :: input_surfaceForcingWind='',input_surfaceForcingMoist='',input_surfaceForcingLSM='',input_surfaceForcingTemp=''
+  character(len=12) :: input_surfaceForcingWind='',input_surfaceForcingMoist='',input_surfaceForcingLSM='',input_surfaceForcingTemp=''
   
   ! initial variables (IC = Initial Condition)
   real(kind=dp), allocatable :: input_lat(:) !< column latitude (deg)
@@ -1630,7 +1630,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
      call NetCDF_read_var(ncid, "wprvp_s",    .False., input_force_wprvp)
      call NetCDF_read_var(ncid, "wprtp_s",    .False., input_force_wprtp)
   else if (trim(input_surfaceForcingMoist) == 'surface_flux') then
-     call NetCDF_read_var(ncid, "hfls",       .False., input_force_sfc_sens_flx)
+     call NetCDF_read_var(ncid, "hfls",       .False., input_force_sfc_lat_flx)
   endif
 
   !
