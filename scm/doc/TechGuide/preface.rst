@@ -28,5 +28,7 @@ The table below describes the type changes and symbols used in this document.
      - 
          * The SCM uses only a small part of the UFS *hpc-stack* package
    * - **AaBbCc123**
-     - Words or phrases requiring particular emphasis
-     - Fortran77 code should **not** be used
+     - 
+         * Words or phrases requiring particular emphasis
+     - 
+         * Fortran77 code should **not** be used

@@ -29,13 +29,13 @@ Reading input
 
 The following steps are performed at the beginning of program execution:
 
-#. Call ``get_config_nml()`` in the ``scm_input`` module to read in the ``case_config`` and
+#. Call ``get_config_nml()`` in the ``scm_input`` module to read in the ``case_config`` (:numref:`Section %s <case config>`) and
    ``physics_config`` namelists. This subroutine also
    sets some variables within the ``scm_state`` derived type from the data that was
    read.
 
 #. Call ``get_case_init()`` (or ``get_case_init_DEPHY()`` if using the DEPHY format) in the ``scm_input`` module to read in the
-   :numref:`case input data file <case input>`. This subroutine
+   case input data file (see :numref:`Section %s <case input>`). This subroutine
    also sets some variables within the ``scm_input`` derived type from the data that
    was read.
 
@@ -134,10 +134,10 @@ can be written out as instantaneous or time-averaged and there are 5
 output periods:
 
 #. one associated with how often instantaneous variables should be
-   written out (controlled by the ``-- n_itt_out`` run script variable).
+   written out (controlled by the ``--n_itt_out`` run script variable).
 
 #. one associated with how often diagnostic (either instantaneous or
-   time-averaged) should be written out (controlled by the ``-- n_itt_diag`` run script
+   time-averaged) should be written out (controlled by the ``--n_itt_diag`` run script
    variable)
 
 #. one associated with the shortwave radiation period (controlled by ``fhswr``

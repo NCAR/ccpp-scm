@@ -3,8 +3,7 @@
 Hierarchical Physics Development
 ================================
 
-Chapter 7 of the CCPP v6 Technical Documentation
-(https://ccpp-techdoc.readthedocs.io/en/v6.0.0/) provides an overview of
+:numref:`Chapter %c <Hierarchical_Physics_Development>` provides an overview of
 the tools supported by the Single Column Model (SCM) to faciliate
 hierarchical system development (HSD)
 
