@@ -3,7 +3,7 @@
 Hierarchical Physics Development
 ================================
 
-:numref:`Chapter %c <Hierarchical_Physics_Development>` provides an overview of
+:numref:`Chapter %c <Hierarchical Physics Development>` provides an overview of
 the tools supported by the Single Column Model (SCM) to faciliate
 hierarchical system development (HSD)
 

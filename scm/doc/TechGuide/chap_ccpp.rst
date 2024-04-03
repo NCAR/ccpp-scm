@@ -328,7 +328,7 @@ called ‘smoke’.
          .. code:: fortran
 
             call check(NF90_INQ_VARID(grp_ncid,"smoke",varID))
-                    call check(NF90_GET_VAR(grp_ncid,varID,input_smoke))
+            call check(NF90_GET_VAR(grp_ncid,varID,input_smoke))
 
       -  set ``scm_input%input_smoke = input_smoke``
 
@@ -339,9 +339,9 @@ called ‘smoke’.
          .. code:: fortran
 
             do i=1, scm_state%n_cols
-                            call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_smoke, scm_state%pres_l(i,1,:), &
-                                    scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%smoke_index,1), last_index_init, 1)
-                    end do
+                call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_smoke, scm_state%pres_l(i,1,:), &
+                                               scm_state%n_levels, scm_state%state_tracer(i,1,:,scm_state%smoke_index,1), last_index_init, 1)
+            end do
 
    -  At this point, you have a new tracer initialized to values
       specified in the input file on the model vertical grid, but it is
