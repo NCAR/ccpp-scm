@@ -16,7 +16,6 @@
       <!-- <scheme>sgscloud_radpre</scheme> -->
       <scheme>GFS_rrtmg_pre</scheme>
       <scheme>GFS_radiation_surface</scheme>
-      <scheme>rrtmg_lw_pre</scheme>
       <scheme>rrtmg_lw</scheme>
       <scheme>rrtmg_lw_post</scheme>
       <scheme>rad_sw_pre</scheme>
