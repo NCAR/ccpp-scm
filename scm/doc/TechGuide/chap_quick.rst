@@ -29,7 +29,7 @@ developer code, but may not be as stable or consistent with existing documentati
 Instructions for using either option are discussed here.
 
 Release Code
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 Clone the source using
 
@@ -54,7 +54,7 @@ this level. The CCPP physics parameterizations can be found in the
 .. _`development_code`:
 
 Development Code
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 If you would like to contribute as a developer to this project, please
 see (in addition to the rest of this guide) the scientific and technical
@@ -133,62 +133,49 @@ relies on the NetCDF libraries. Beyond the standard scripts, the build
 system relies on use of the Python scripting language, along with cmake,
 GNU make and date.
 
-The following software stacks have been tested with this code. Other
-versions of various components will likely still work, however.
 
--  gfortran 12.1.0, gcc 12.1.0, cmake 3.23.2, NetCDF 4.7.4, Python
-   3.9.12
+For the latest release, the minimum required Python version is 3.8, and CMake requires a minimum version of 3.14.
+While exact minimum required versions of other prerequisites have not been established, users can reference the
+list of Continuous Integration tests run on the CCPP SCM repository (see :numref:`Section %s <continuous integration>`)
+for examples of known working configurations.
 
--  GNU compilers 10.1.0, cmake 3.16.4, NetCDF 4.8.1, Python 3.7.12
+Spack-stack
+^^^^^^^^^^^^
 
--  GNU compilers 11.1.0, cmake 3.18.2, NetCDF 4.8.1, Python 3.8.5
+A joint effort between NOAA's Unified Forecast System (UFS) and Joint Effort for Data assimilation Integration (JEDI).
+It is designed to be a comprehensive, all-in-one package containing prerequisite libraries and tools needed for all
+software in the UFS ecosystem, including the CCPP SCM. As of the version 7, installing spack-stack is the main
+supported method of installing the prerequisites needed for building the SCM. The latest version of the SCM is meant
+to be built with spack-stack v1.6.0. Older versions may work, but are not guaranteed. Version 1.6.0 of spack-stack
+contains the following set of libraries needed for building the SCM:
 
--  Intel compilers 2022.0.2, cmake 3.20.1, NetCDF 4.7.4, Python 3.7.11
+ - Netcdf-c (v4.9.2)
 
--  Intel compilers 2022.1.0, cmake 3.22.0, NetCDF 4.8.1, Python 3.7.12
+ - Netcdf-FORTRAN (v4.6.0)
+
+ - BACIO (v2.4.1) - Binary I/O Library
+
+ - SP (v2.3.3) - Spectral Transformation Library
+
+ - W3EMC (2.10.0) - GRIB decoder and encoder library
+
+Instructions for installing spack-stack can be found in the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
+Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera and
+Jet, and MSU's Orion and Hercules.  
 
 Because these tools are typically the purview of system administrators
 to install and maintain, they are considered part of the basic system
-requirements. The Unified Forecast System (UFS) Short-Range Weather
-Application release v1.0.0 of March 2021 provides software packages and
-detailed instructions to install these prerequisites and the hpc-stack
-on supported platforms (see :numref:`Section %s <setup_supported_platforms>`)
-
-Further, there are several utility libraries as part of the hpc-stack
-package that must be installed with environment variables pointing to
-their locations prior to building the SCM.
-
--  bacio - Binary I/O Library
-
--  sp - Spectral Transformation Library
-
--  w3emc - GRIB decoder and encoder library
-
-The following environment variables are used by the build system to
-properly link these libraries: ``bacio_ROOT``, ``sp_ROOT``, and ``w3emc_ROOT`` Computational platforms on
-which these libraries are prebuilt and installed in a central location
-are referred to as *preconfigured* platforms. Examples of preconfigured
-platforms are most NOAA high-performance computing machines (using the
-Intel compiler) and the NCAR Cheyenne system (using the Intel and GNU
-compilers). The machine setup scripts mentioned in
-:numref:`Section %s <compiling>` load these libraries (which are identical
-to those used by the UFS Short and Medium Range Weather Applications on
-those machines) and set these environment variables for the user
-automatically. For installing the libraries and its prerequisites on
-supported platforms, existing UFS packages can be used (see
-:numref:`Section %s <setup_supported_platforms>`).
+requirements.
 
 Compilers
-~~~~~~~~~
+^^^^^^^^^
 
 The CCPP and SCM have been tested on a variety of computing platforms.
 Currently the CCPP system is actively supported on Linux and MacOS
 computing platforms using the Intel or GNU Fortran compilers. Windows
 users have a path to use this software through a Docker container that
-uses Linux internally (see section `1.5 <#docker>`__). Please use
-compiler versions listed in the previous section as unforeseen build
-issues may occur when using older versions. Typically the best results
-come from using the most recent version of a compiler. If you have
+uses Linux internally (see :numref:`Section %s <docker>`). Typically the best chance of successfully building and
+running the SCM on a new machine comes from using the most recent version of a compiler. If you have
 problems with compilers, please check the “Known Issues” section of the
 release website
 (https://dtcenter.org/community-code/common-community-physics-package-ccpp/download).
@@ -196,7 +183,7 @@ release website
 .. _`use_preconfigured_platforms`:
 
 Using Existing Libraries on Preconfigured Platforms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Because the SCM can be built using the so-called `"spack-stack"
 libraries <https://ufs-weather-model.readthedocs.io/en/latest/Glossary.html#term-spack-stack>`__
@@ -223,7 +210,7 @@ both building and running the SCM.
 .. _`setup_supported_platforms`:
 
 Installing Libraries on Non-preconfigured Platforms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For users on supported platforms such as generic Linux or macOS systems
 that have not been preconfigured, the project is suggested for
@@ -442,7 +429,7 @@ integrations serially, depending on the command line arguments supplied.
 .. _`singlerunscript`:
 
 Run Script Usage
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Running a case requires four pieces of information: the case to run
 (consisting of initial conditions, geolocation, forcing data, etc.), the
@@ -518,7 +505,7 @@ below where option abbreviations are included in brackets.
       value. This is used, for example, in regression testing to reduce
       total runtimes.
 
--  ``--levels [-l]
+-  ``--levels [-l]``
 
    -  Use this to change the number of vertical levels.
 
@@ -667,7 +654,7 @@ volume-mounting purposes. Any standard NetCDF file viewing or analysis
 tools may be used to examine the output file (ncdump, ncview, NCL, etc).
 
 Batch Run Script
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 If using the model on HPC resources and significant amounts of processor
 time is anticipated for the experiments, it will likely be necessary to
@@ -728,7 +715,7 @@ internet search.
       docker-machine create default --virtualbox-no-vtx-check
 
 Building the Docker image
-~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Dockerfile builds CCPP SCM v6.0.0 from source using the GNU
 compiler. A number of required codes are built and installed via the
@@ -787,7 +774,7 @@ that was installed as part of Docker Toolbox.
       docker images
 
 Using a prebuilt Docker image from Dockerhub
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A prebuilt Docker image for this release is available on Dockerhub if it
 is not desired to build from source. In order to use this, execute the
@@ -804,7 +791,7 @@ To verify that it exists afterward, run
    docker images
 
 Running the Docker image
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 NOTE: Windows users can execute these steps through the Docker
 Quickstart application installed with Docker Toolbox.
