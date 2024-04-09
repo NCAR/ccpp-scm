@@ -34,6 +34,33 @@ module scm_type_defs
 
   character(len = 80) :: clear_char = ''
 
+  type(ccpp_t),       target :: cdata
+  type(physics_type), target :: physics
+
+!> \section arg_table_physics_type
+!! \htmlinclude physics_type.html
+!!
+  type physics_type
+
+    type(GFS_control_type)                   :: Model
+    type(GFS_statein_type)                   :: Statein
+    type(GFS_stateout_type)                  :: Stateout
+    type(GFS_sfcprop_type)                   :: Sfcprop
+    type(GFS_coupling_type)                  :: Coupling
+    type(GFS_grid_type)                      :: Grid
+    type(GFS_tbd_type)                       :: Tbd
+    type(GFS_cldprop_type)                   :: Cldprop
+    type(GFS_radtend_type)                   :: Radtend
+    type(GFS_diag_type)                      :: Diag
+    type(GFS_interstitial_type)              :: Interstitial
+    type(GFS_init_type)                      :: Init_parm
+
+    contains
+      procedure :: create => physics_create
+      procedure :: associate => physics_associate
+      procedure :: set => physics_set
+  end type physics_type
+
 !> \section arg_table_scm_state_type
 !! \htmlinclude scm_state_type.html
 !!   
@@ -410,34 +437,6 @@ module scm_type_defs
       procedure :: create => scm_reference_create
 
   end type scm_reference_type
-
-!> \section arg_table_physics_type
-!! \htmlinclude physics_type.html
-!!
-  type physics_type
-
-    type(GFS_control_type)                   :: Model
-    type(GFS_statein_type)                   :: Statein
-    type(GFS_stateout_type)                  :: Stateout
-    type(GFS_sfcprop_type)                   :: Sfcprop
-    type(GFS_coupling_type)                  :: Coupling
-    type(GFS_grid_type)                      :: Grid
-    type(GFS_tbd_type)                       :: Tbd
-    type(GFS_cldprop_type)                   :: Cldprop
-    type(GFS_radtend_type)                   :: Radtend
-    type(GFS_diag_type)                      :: Diag
-    type(GFS_interstitial_type)              :: Interstitial
-    type(GFS_init_type)                      :: Init_parm
-
-    contains
-      procedure :: create => physics_create
-      procedure :: associate => physics_associate
-      procedure :: set => physics_set
-  end type physics_type
-
-
-  type(ccpp_t),       target :: cdata
-  type(physics_type), target :: physics
 
   contains
 
