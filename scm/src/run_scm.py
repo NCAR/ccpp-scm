@@ -758,13 +758,16 @@ def main():
      verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,       \
      n_itt_diag, run_dir, bin_dir, timestep) = parse_arguments()
     
+    setup_logging(verbose)
+
     global SCM_ROOT
     SCM_ROOT = os.getenv('SCM_ROOT')
     if SCM_ROOT is None:
-        message = 'The SCM_ROOT environment variable is not set. Please set the SCM_ROOT environment variable to the top-level path where the model was cloned.'
-        logging.critical(message)
-        raise Exception(message)
-    
+        # Note: os.path.dirname() is the platform-agnostic way to get a parent directory
+        SCM_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        message = f"The SCM_ROOT environment variable is not set. Using default value:\n{SCM_ROOT}"
+        logging.warning(message)
+
     global SCM_BIN
     if bin_dir:
         SCM_BIN = bin_dir
@@ -782,14 +785,11 @@ def main():
     global EXECUTABLE
     EXECUTABLE = os.path.join(SCM_RUN, EXECUTABLE_NAME)
     
-    setup_logging(verbose)
-    
     # Debugger
     if use_gdb:
         gdb = find_gdb()
     else:
         gdb = None
-
     if (file != None):
         logging.info('SCM-run: Using {} to loop through defined runs'.format(file))
         try:

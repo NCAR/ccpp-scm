@@ -32,9 +32,10 @@ public
 
   real(kind=kind_phys),parameter:: con_rocp   =con_rd/con_cp
   real(kind=kind_phys),parameter:: con_rog    =con_rd/con_g
-  real(kind=kind_phys),parameter:: con_fvirt  =con_rv/con_rd - 1
+  real(kind=kind_phys),parameter:: con_fvirt  =con_rv/con_rd - 1._kind_phys
   real(kind=kind_phys),parameter:: con_eps    =con_rd/con_rv
-  real(kind=kind_phys),parameter:: con_epsm1  =con_rd/con_rv-1.
+  real(kind=kind_phys),parameter:: con_epsm1  =con_rd/con_rv-1._kind_phys
+  real(kind=kind_phys),parameter:: con_1ovg   =1._kind_phys/con_g
 
   real(kind=kind_phys),parameter:: karman = 0.4_kind_phys
   
