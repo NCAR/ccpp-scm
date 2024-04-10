@@ -1202,7 +1202,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     # fractional grid
     tiice_in = read_NetCDF_surface_var(nc_file, 'tiice', i, j, old_chgres, missing_variable_ice_layers)
 
-    # soil color
+    # soil color (From  the UFS FV3: io/fv3atm_sfc_io.F90)
     if (slmsk_in == 1):
         scolor_in = 4
     else:
@@ -2715,7 +2715,8 @@ def main():
     (state_data, surface_data, oro_data, error_msg) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
                                                                       tile_j, old_chgres, lam)
     if (error_msg):
-        print("ERROR: unknown grid orintation")
+        print(error_msg)
+        print("STOPPING")
         exit()
 
     if not date:
