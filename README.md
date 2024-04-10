@@ -1,3 +1,3 @@
 # User's Guide
 
-Please find the up-to-date User's Guide located in this repository in [`scm/doc/TechGuide/main.pdf`](https://github.com/NCAR/ccpp-scm/blob/main/scm/doc/TechGuide/main.pdf)
+Please find the up-to-date User's Guide located on ReadTheDocs: https://ccpp-scm.readthedocs.io/en/latest/
