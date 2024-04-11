@@ -6,10 +6,10 @@ the NOAA RDHPC machine Hera using Intel-2021.5.0
 whatis([===[Loads libraries needed for building the CCPP SCM on Hera with Intel compilers ]===])
 
 prepend_path("MODULEPATH", "/scratch1/NCEPDEV/jcsda/jedipara/spack-stack/modulefiles")
-load("cmake/3.20.1")
+load("cmake/3.28.1")
 load("miniconda/3.9.12")
 
-prepend_path("MODULEPATH", "/scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-stack-1.5.1/envs/unified-env/install/modulefiles/Core")
+prepend_path("MODULEPATH", "/scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-stack-1.5.1/envs/unified-env-rocky8/install/modulefiles/Core")
 
 load("stack-intel/2021.5.0")
 load("stack-intel-oneapi-mpi/2021.5.1")
