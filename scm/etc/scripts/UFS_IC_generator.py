@@ -1351,7 +1351,7 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
     if lam:
         nc_file = Dataset('{0}/{1}'.format(dir,'oro_data.nc'))
     else:
-        filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
+        filename_pattern = 'oro*.tile{0}.nc'.format(tile)
         for f_name in os.listdir(dir):
            if fnmatch.fnmatch(f_name, filename_pattern):
               filename = f_name
@@ -1500,8 +1500,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
         sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
     else:
-        atm_ftag = 'atmf*.nc'
-        sfc_ftag = 'sfcf*.nc'
+        atm_ftag = '*atmf*.nc'
+        sfc_ftag = '*sfcf*.nc'
 
     # Get list of UFS history files with 3D ATMospheric state variables.
     atm_filenames = []
@@ -2646,7 +2646,7 @@ def write_comparison_file(comp_data, case_name, date, surface):
 ########################################################################################
 def find_date(forcing_dir):
     
-    atm_ftag = 'atmf*.nc'
+    atm_ftag = '*atmf*.nc'
     
     atm_filenames = []
     for f_name in os.listdir(forcing_dir):
