@@ -148,7 +148,7 @@ def main():
         # Call UFS_IC_generator.py
         case_name     = args.case_name +"_n" + str(pt).zfill(3)
         file_scminput = "../../data/processed_case_input/"+case_name+"_SCM_driver.nc"
-        com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
+        com = "./UFS_case_gen.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
               " -i " + args.dir_ic + " -g " + args.dir_grid + " -f " + args.dir_forcing + " -n " + case_name + com_config
         print(com)
         os.system(com)
