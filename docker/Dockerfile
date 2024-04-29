@@ -9,6 +9,7 @@ RUN apt-get -y update
 RUN apt-get -y install build-essential
 RUN apt-get -y install cmake curl git file gfortran-12 ksh m4 python3 tcsh time wget vim
 RUN apt-get -y install libnetcdf-pnetcdf-19 libnetcdff7 libnetcdf-dev libnetcdff-dev libxml2
+RUN apt-get -y install python3-pip python3.11-venv
 
 MAINTAINER Grant Firl <grantf@ucar.edu> or Michael Kavulich <kavulich@ucar.edu>
 
@@ -35,8 +36,8 @@ RUN chown -R comuser:comusers /home \
 RUN chown -R comuser:comusers /comsoftware \
  && chmod -R 6755 /comsoftware
 
-# Link version-specific aliases
-RUN ln -s /usr/bin/python3 /usr/local/bin/python
+# Link version-specific aliases (python3 will be created later with virtual environment)
+RUN ln -s ~comuser/.venv/bin/python3 /usr/local/bin/python
 RUN ln -s /usr/bin/gfortran-12 /usr/bin/gfortran
 
 # all root steps completed above, now continue below as regular userID comuser
@@ -103,3 +104,12 @@ RUN cd /comsoftware/ccpp-scm/scm \
 WORKDIR /comsoftware/ccpp-scm/scm/bin
 ENV SCM_WORK=/comsoftware
 ENV SCM_ROOT=/comsoftware/ccpp-scm/
+
+# For interactive use, vim mouse settings are infuriating
+RUN echo "set mouse=" > ~/.vimrc
+
+# Set up python virtual environment and install needed packages
+ENV VIRTUAL_ENV=~/.venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN pip3 install f90nml==1.4.4 netcdf4==1.6.5

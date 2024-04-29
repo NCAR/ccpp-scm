@@ -169,7 +169,6 @@ requirements.
 
 Compilers
 ^^^^^^^^^
-
 The CCPP and SCM have been tested on a variety of computing platforms.
 Currently the CCPP system is actively supported on Linux and MacOS
 computing platforms using the Intel or GNU Fortran compilers. Windows
@@ -227,44 +226,31 @@ prerequisites (i.e. no ESMF or wgrib2 needed). Users who are not planning to use
 UFS can install only NetCDF/NetCDF-Fortran manually or using the
 software package manager (apt, yum, brew).
 
-The Python environment must provide the module for the SCM scripts to
-function. Users can test if f90nml is installed using this command in
+The Python environment must provide a few non-default modules for the SCM scripts to
+function: ``f90nml`` (`documentation <https://f90nml.readthedocs.io/en/latest/index.html>`__) and 
+``netcdf4`` (`documentation <https://unidata.github.io/netcdf4-python/>`__). Users can test if these are installed using this command in
 the shell:
 
 ::
 
-   python -c "import f90nml"
+   python -c "import f90nml; import netcdf4"
 
 If is installed, this command will succeed silently, otherwise an ``ImportError: No module named f90nml``
-will be printed to screen. To install the ``f90nml`` (v0.19) Python module, use the
-install method preferred for your Python environment (one of the
-following):
+will be printed to screen. To install the ``f90nml`` (v1.4.4; ) and ``netcdf4`` (v1.6.5) Python modules, use the
+install method preferred for your Python environment (one of the following):
 
 -  ::
 
-      easy_install f90nml==0.19
+      easy_install f90nml==1.4.4 netcdf4==1.6.5
 
 -  ::
 
-      pip install f90nml==0.19
+      pip install f90nml==1.4.4 netcdf4==1.6.5
 
 -  ::
 
-      conda install f90nml=0.19
+      conda install -c conda-forge f90nml==1.4.4 netcdf4==1.6.5
 
-or perform the following steps to install it manually from source:
-
-::
-
-   cd /directory/with/write/priveleges
-   git clone -b v0.19 https://github.com/marshallward/f90nml
-   cd f90nml
-   python setup.py install [--prefix=/my/install/directory or --user]
-
-The directory ``/my/install/directory`` must exist and its subdirectory
-``/my/install/directory/lib/python[version]/site-packages`` (or ``lib64``
-instead of ``lib``, depending on the system) must be in the ``PYTHONPATH``
-environment variable.
 
 .. _`compiling`:
 
