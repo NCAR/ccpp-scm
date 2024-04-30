@@ -36,8 +36,7 @@ jobs:
         run: |
           docker pull ${{ env.TEST_TAG }}
           mkdir $HOME/output
-          chmod +r $HOME/output
-          chmod +w $HOME/output
+          chmod a+rw $HOME/output
           ls -al $HOME/output
           docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -c twpice -d
       - name: Build and push
