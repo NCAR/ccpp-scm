@@ -24,20 +24,20 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and export test tag to Docker
+      - name: Build and export test tag
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/Dockerfile
           load: true
           tags: ${{ env.TEST_TAG }}
-      - name: Test and push latest tag
+      - name: Test
         run: |
           docker pull ${{ env.TEST_TAG }}
           mkdir $HOME/output
           chmod a+rw $HOME/output
           docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d
-      - name: Build and push
+      - name: Push latest tag
         uses: docker/build-push-action@v5
         with:
           context: .

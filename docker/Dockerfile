@@ -6,10 +6,10 @@ MAINTAINER Michael Kavulich <kavulich@ucar.edu>
 RUN apt-get -y update
 
 # Get "essential" tools and libraries
-RUN apt-get -y install build-essential
-RUN apt-get -y install cmake curl git file gfortran-12 ksh m4 python3 tcsh time wget vim
-RUN apt-get -y install libnetcdf-pnetcdf-19 libnetcdff7 libnetcdf-dev libnetcdff-dev libxml2
-RUN apt-get -y install python3-pip python3.11-venv
+RUN apt-get -y install build-essential \
+  && apt-get -y install cmake curl git file gfortran-12 ksh m4 python3 tcsh time wget vim \
+  && apt-get -y install libnetcdf-pnetcdf-19 libnetcdff7 libnetcdf-dev libnetcdff-dev libxml2 \
+  && apt-get -y install python3-pip python3.11-venv
 
 MAINTAINER Grant Firl <grantf@ucar.edu> or Michael Kavulich <kavulich@ucar.edu>
 
@@ -69,24 +69,17 @@ RUN cd $NCEPLIBS_DIR/src \
   && make VERBOSE=1 \
   && make install
 
-# Obtain CCPP SCM source code
-RUN cd /comsoftware \
-  && git clone --recursive -b main https://github.com/NCAR/ccpp-scm
-
-# Obtain static data that was previously stored in repository
-RUN cd /comsoftware/ccpp-scm/ \
-  && ./contrib/get_all_static_data.sh
-
-# Obtain the pre-computed look-up tables for running with Thompson microphysics
-RUN cd /comsoftware/ccpp-scm/ \
-  && ./contrib/get_thompson_tables.sh
-  
 ENV bacio_ROOT /comsoftware/nceplibs
 ENV sp_ROOT /comsoftware/nceplibs
 ENV w3emc_ROOT /comsoftware/nceplibs
 
-# Invoke cmake on the source code to build
-RUN cd /comsoftware/ccpp-scm/scm \
+# Obtain CCPP SCM source code and static data, build code
+RUN cd /comsoftware \
+  && git clone --recursive -b main https://github.com/NCAR/ccpp-scm \
+  && cd /comsoftware/ccpp-scm/ \
+  && ./contrib/get_all_static_data.sh \
+  && ./contrib/get_thompson_tables.sh \
+  && cd /comsoftware/ccpp-scm/scm \
   && mkdir bin \
   && cd bin \
   && cmake ../src \
