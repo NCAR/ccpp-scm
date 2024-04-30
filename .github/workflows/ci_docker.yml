@@ -35,6 +35,8 @@ jobs:
       - name: Test
         run: |
           docker pull ${{ env.TEST_TAG }}
+          echo $HOME
+          ls -al $HOME
           docker run --rm -v $HOME:/home ${{ env.TEST_TAG }} ./run_scm.py -c twpice -d
       - name: Build and push
         uses: docker/build-push-action@v5
