@@ -24,16 +24,16 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and export test tag to Docker
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile
-          load: true
-          tags: ${{ env.TEST_TAG }}
+#      - name: Build and export test tag to Docker
+#        uses: docker/build-push-action@v5
+#        with:
+#          context: .
+#          file: docker/Dockerfile
+#          load: true
+#          tags: ${{ env.TEST_TAG }}
       - name: Test
         run: |
-          docker run --rm -it -v $HOME:/home ${{ env.TEST_TAG }} ./run_scm.py -c twpice -d
+          docker run --rm -v $HOME:/home ${{ env.TEST_TAG }} ./run_scm.py -c twpice -d
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
