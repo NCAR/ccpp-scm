@@ -28,15 +28,17 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: docker/Dockerfile
           load: true
           tags: ${{ env.TEST_TAG }}
       - name: Test
         run: |
-          docker run --rm -it -v ${OUT_DIR}:/home ${{ env.TEST_TAG }} ./run_scm.py -c twpice -d
+          docker run --rm -it -v ${{ env.HOME }}:/home ${{ env.TEST_TAG }} ./run_scm.py -c twpice -d
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: docker/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.LATEST_TAG }}
