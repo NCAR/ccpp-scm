@@ -205,47 +205,14 @@ Installing Libraries on Non-preconfigured Platforms
 For users on supported platforms such as generic Linux or macOS systems
 that have not been preconfigured, installing ``spack-stack`` (see :ref:`Section %s <spack-stack>`)
 is highly recommended, as it provides all the necessary prerequisite libraries needed for installing the SCM.
+The main downside to spack-stack is that it contains a large number of libraries and utilities used by the whole
+Unified Forecast System and related applications, only a minority of which are required for the SCM. Users may
+install libraries manually if they wish, but they will need to make sure the appropriate environment variables
+are set to the correct values so that the build system can find them:
 
-
-MacOS example
-""""""""""""""
-
-As an example of the steps needed for installing spack-stack on a MacOS machine, here is the list of steps that
-resulted in a successful build and run of the SCM on a MacBook Pro with the Ventura 13.6.3 operating system,
-using ``clang`` compilers. The necessary prerequisites for spack-stack (see 
-`spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/NewSiteConfigs.html#prerequisites-one-off>`__)
-were installed using Homebrew.
-
-::
-
-  cd your_experiment_dir
-  export TOP_DIR=`pwd`
-  mkdir spack_stack_1.6.0
-  cd spack_stack_1.6.0
-  git clone --recurse-submodules https://github.com/jcsda/spack-stack.git -b 1.6.0
-  cd spack-stack
-  source setup.sh
-  ulimit -S -s unlimited
-  spack stack create env --site macos.default --template ufs-weather-model --name SCM
-  cd envs/SCM
-  spack env activate -p .
-  export SPACK_SYSTEM_CONFIG_PATH="$PWD/site"
-  spack external find --scope system     --exclude bison --exclude openssl     --exclude python
-  spack external find --scope system libiconv
-  spack external find --scope system perl
-  spack external find --scope system wget
-  PATH="$HOMEBREW_ROOT/opt/curl/bin:$PATH"      spack external find --scope system curl
-  PATH="$HOMEBREW_ROOT/opt/qt5/bin:$PATH"     spack external find --scope system qt
-  spack config --scope system add packages:pkg-config:buildable:false
-  spack compiler find --scope system
-  unset SPACK_SYSTEM_CONFIG_PATH
-  spack config add "packages:all:compiler:[apple-clang@15.0.0]"
-  spack config add "packages:all:providers:mpi:[openmpi@4.1.6]"
-  spack concretize 2>&1 | tee log.concretize
-  ../../util/show_duplicate_packages.py -d log.concretize
-  spack install --verbose --fail-fast 2>&1 | tee log.install
-  spack module lmod refresh
-  spack stack setup-meta-modules
+The CCPP/SCM team does not support spack-stack, so users with questions or requiring help with spack-stack installation
+should reference the spack-stack documentation. However, we have provided an example procedure in
+`this GitHub discussion <https://github.com/NCAR/ccpp-scm/discussions/464>`__.
 
 
 Setting up compilation environment
@@ -254,12 +221,26 @@ Setting up compilation environment
 Once libraries are installed, either with spack-stack or manually, users will need to set some environment variables
 needed for specifying the location of the various prerequisites. Users will need to set variables for the
 compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the library installs of NetCDF (``NetCDF_ROOT``),
-``bacio`` (``bacio_ROOT``), ``sp`` (``sp_ROOT``), and ``w3emc`` (``w3emc_ROOT``).
+``bacio`` (``bacio_ROOT``), ``sp`` (``sp_ROOT``), and ``w3emc`` (``w3emc_ROOT``). This is the procedure used in the
+provided Dockerfile in ``ccpp-scm/docker/``, so users can reference that file for guidance on how to install this software
+and set these variables.
 
-The SCM uses only a small part of the UFS *hpc-stack* package and has fewer
-prerequisites (i.e. no ESMF or wgrib2 needed). Users who are not planning to use the
-UFS can install only NetCDF/NetCDF-Fortran manually or using the
-software package manager (apt, yum, brew).
+For users on a pre-configured platform, you can load the spack-stack environment via one of the provided modules in ``scm/etc/modules/``.
+For example, users on the NSF NCAR machine Derecho who wish to use Intel compilers can do the following:
+
+::
+
+   cd [path/to/ccpp-scm/]
+   module use scm/etc/modules/
+   module load derecho_intel
+
+Additionally, for users who have installed spack-stack on their own MacOS or Linux machine can use the provided ``macos_clang``
+or ``linux_gnu`` modules. 
+
+.. note::
+
+  The provided modules assume ``clang``/``gfortran`` compilers on MacOS and GNU compilers for Linux.
+  If you are using a different set of compilers, you may need to modify the module file.
 
 Python requirements
 """""""""""""""""""""
@@ -298,24 +279,7 @@ Compiling SCM with CCPP
 
 The first step in compiling the CCPP and SCM is to properly setup your
 user environment as described in
-sections :numref:`%s <use_preconfigured_platforms>` and :numref:`Section %s <setup_supported_platforms>`. The second step is
-to download the lookup tables and other large datasets (large binaries,
-:math:`<`\ 1 GB) needed by the physics schemes and place them in the
-correct directory: From the top-level code directory (``ccpp-scm`` by default),
-execute the following scripts:
-
-.. code:: bash
-
-   ./contrib/get_all_static_data.sh
-   ./contrib/get_thompson_tables.sh
-
-If the download step fails, make sure that your system’s firewall does
-not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
-``physics_input_data.tar.gz``, ``processed_case_input.tar.gz``, and ``raw_case_input.tar.gz``
-from the GitHub release website using your browser and manually extract its
-contents in the directory ``scm/data``. Similarly, do the same for 
-``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
-to ``scm/data/physics_input_data/``.
+sections :numref:`%s <use_preconfigured_platforms>` and :numref:`Section %s <setup_supported_platforms>`.
 
 Following this step, the top level build system will use ``cmake`` to query system
 parameters, execute the CCPP prebuild script to match the physics
@@ -379,7 +343,8 @@ components.
 
             -DOPENMP=ON
 
-      -  Debug mode
+      -  Debug mode, which compiles with lower optimization and additional compile-time checks. Only
+         recommended for development and debugging, because code compiled in this mode will run slower.
 
          .. code:: bash
 
@@ -433,12 +398,13 @@ directory)
    pwd #confirm that you are in the ccpp-scm/scm/bin directory before deleting files
    rm -rfd *
 
-Note: This command can be dangerous (deletes files without confirming),
-so make sure that you’re in the right directory before executing!
+.. note::
+  This command can be dangerous (deletes files without confirming),
+  so make sure that you’re in the right directory before executing!
 
 If you encounter errors, please capture a log file from all of the
-steps, and start a thread on the support forum at:
-https://dtcenter.org/forum/ccpp-user-support/ccpp-single-column-model
+steps, and start a thread on the Github Discussions support forum at:
+https://github.com/NCAR/ccpp-scm/discussions
 
 Run the SCM with a supplied case
 --------------------------------
@@ -450,6 +416,27 @@ physics configuration options from an associated namelist. The model is
 executed through a Python run script that is pre-staged into the ``bin``
 directory: ``run_scm.py``. It can be used to run one integration or several
 integrations serially, depending on the command line arguments supplied.
+
+Downloading input data
+^^^^^^^^^^^^^^^^^^^^^^
+The various SCM cases require staged input data in order to run. This includes
+input data for cases and lookup tables for runtime use. This is a large dataset
+(:math:`<`\ 1 GB) so it is not stored in the SCM repository, and must be downloaded
+separately. To download this data place it in the correct directories, 
+execute the following scripts:
+
+.. code:: bash
+
+   ./contrib/get_all_static_data.sh
+   ./contrib/get_thompson_tables.sh
+
+If the download step fails, make sure that your system’s firewall does
+not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
+``physics_input_data.tar.gz``, ``processed_case_input.tar.gz``, and ``raw_case_input.tar.gz``
+from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v6.0.0>`__ using your browser and manually extract its
+contents in the directory ``scm/data``. Similarly, do the same for
+``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
+to ``scm/data/physics_input_data/``.
 
 .. _`singlerunscript`:
 
@@ -709,10 +696,12 @@ In order to run a precompiled version of the CCPP SCM in a container,
 Docker will need to be available on your machine. Please visit
 https://www.docker.com to download and install the version compatible
 with your system. Docker frequently releases updates to the software; it
-is recommended to apply all available updates. NOTE: In order to install
-Docker on your machine, you will be required to have root access
-privileges. More information about getting started can be found at
-https://docs.docker.com/get-started
+is recommended to apply all available updates.
+
+.. note::
+  In order to install Docker on your machine, you will be required to have root access
+  privileges. More information about getting started can be found at
+  https://docs.docker.com/get-started
 
 The following tips were acquired during a recent installation of Docker
 on a machine with Windows 10 Home Edition. Further help should be
@@ -775,8 +764,9 @@ can be generated from the code in the software repository obtained by
 following the instructions in :numref:`Section %s <obtaining_code>`,
 and then executing the following steps:
 
-NOTE: Windows users can execute these steps in the terminal application
-that was installed as part of Docker Toolbox.
+.. note::
+  Windows users can execute these steps in the terminal application
+  that was installed as part of Docker Toolbox.
 
 #. Navigate to the ``ccpp-scm/docker`` directory.
 
@@ -818,8 +808,9 @@ To verify that it exists afterward, run
 Running the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-NOTE: Windows users can execute these steps through the Docker
-Quickstart application installed with Docker Toolbox.
+.. note::
+  Windows users can execute these steps through the Docker
+  Quickstart application installed with Docker Toolbox.
 
 #. Set up a directory that will be shared between the host machine and
    the Docker container. When set up correctly, it will contain output
@@ -870,9 +861,13 @@ Quickstart application installed with Docker Toolbox.
       docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice -d
 
    will run through the TWPICE case using the default suite and namelist
-   and put the output in the shared directory. NOTE: Windows users may
-   need to omit the curly braces around environment variables: use ``$OUT_DIR``
-   instead of ``${OUT_DIR}``. For running through all supported cases and suites, use
+   and put the output in the shared directory.
+
+   .. note::
+     Windows users may need to omit the curly braces around environment variables: use ``$OUT_DIR``
+     instead of ``${OUT_DIR}``. 
+
+   For running through all supported cases and suites, use
 
    .. code:: bash
 
@@ -894,9 +889,10 @@ Quickstart application installed with Docker Toolbox.
    -  ``−−name`` names the container. If no name is provided, the daemon will
       autogenerate a random string name.
 
-   NOTE: If you are using a prebuilt image from Dockerhub, substitute
-   the name of the image that was pulled from Dockerhub in the commands
-   above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v6.0.0``.
+   .. note::
+     If you are using a prebuilt image from Dockerhub, substitute
+     the name of the image that was pulled from Dockerhub in the commands
+     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v6.0.0``.
 
 #. To use the SCM interactively, run non-default configurations, create
    plots, or even develop code, issue the following command:
@@ -909,6 +905,9 @@ Quickstart application installed with Docker Toolbox.
    directory of the SCM with a pre-compiled executable. At this point,
    one could use the run scripts as described in previous sections
    (remembering to include the option on run scripts if output is to be
-   shared with the host machine). NOTE: If developing, since the
-   container is ephemeral, one should push their changes to a remote git
-   repository to save them (i.e. a fork on GitHub.com).
+   shared with the host machine). 
+
+   .. note::
+
+     If developing or modifying code, since the container is ephemeral, one should push their changes to a remote git
+     repository to save them (i.e. a fork on GitHub.com).
