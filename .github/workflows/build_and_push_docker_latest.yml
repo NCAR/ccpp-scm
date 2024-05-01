@@ -1,9 +1,13 @@
 name: build_test_and_push_docker
 
-on: [pull_request,workflow_dispatch]
+on:
+  push:
+    branches:
+      # Only build containers when pushing to main
+      - "main"
 
 env:
-  TEST_TAG: NCAR/ccpp-scm:test
+  LATEST_TAG: NCAR/ccpp-scm:latest
 
 jobs:
   docker:
@@ -20,15 +24,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and export test tag
+      - name: Push latest tag
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/Dockerfile
-          load: true
-          tags: ${{ env.TEST_TAG }}
-      - name: Test
-        run: |
-          mkdir $HOME/output
-          chmod a+rw $HOME/output
-          docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.LATEST_TAG }}
