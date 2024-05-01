@@ -28,7 +28,7 @@ RUN groupadd comusers -g 9999 \
  && useradd -u 9999 -g comusers -M -s /bin/bash -c "Unpriviledged user account" -d /home comuser \
  && mkdir /comsoftware \
  && chown -R comuser:comusers /home \
- && chmod 6755 /home
+ && chmod 6755 /home \
  && chown -R comuser:comusers /comsoftware \
  && chmod -R 6755 /comsoftware
 
