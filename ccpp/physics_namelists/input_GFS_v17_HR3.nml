@@ -43,7 +43,7 @@
   fhlwr        = 1200.
   ialb         = 1
   iems         = 1
-  iaer         = 5111
+  iaer         = 1011
   icliq_sw     = 2
   ico2         = 2
   isubc_sw     = 2
