@@ -455,16 +455,33 @@ namelists in ``../etc/case_config``. A default physics suite is provided as a us
 variable in the script and default namelists and tracer configurations
 are associated with each physics suite (through ``../src/suite_info.py``), so, technically, one
 must only specify a case to run with the SCM when running just one
-integration. For running multiple integrations at once, one need only
-specify one argument (``-m``) which runs through all permutations of supported
-suites from ``../src/suite_info.py`` and cases from ``../src/supported_cases.py``. The run script’s options are described
-below where option abbreviations are included in brackets.
+integration. For example, to run the "BOMEX" case:
+
+.. code:: bash
+
+  ./run_scm.py -c bomex
+
+For running multiple integrations at once, the run script can accept a file that contains a list of tests to run.
+The file ``ccpp-scm/test/rt_test_cases.py`` contains the full list of regression test cases, so you could run that list
+of tests with the following command:
+
+ ./run_scm.py -f ../../test/rt_test_cases.py
+
+To see the full list of available options, use the ``--help`` flag:
+
+../../test/rt_test_cases.py
+.. code:: bash
+
+  ./run_scm.py --help
+
+
+The run script’s full set of options are described below, where optional abbreviations are included in brackets.
+If using the main branch, you should run the above command to ensure you have the most up-to-date list of options. 
 
 -  ``--case [-c]``
 
-   -  **This or the ``--multirun`` option are the minimum required arguments.** The
-      case should correspond to the name of a case in ``../etc/case_config`` (without the
-      ``.nml`` extension).
+   -  **This is the only required argument.** The provided argument should correspond to the name of a case in
+      ``../etc/case_config`` (without the ``.nml`` extension).
 
 -  ``--suite [-s]``
 
@@ -483,18 +500,9 @@ below where option abbreviations are included in brackets.
       the ``.txt`` extension). If this argument is omitted, the default tracer
       configuration for the given suite in ``../src/suite_info.py`` will be used.
 
--  ``--multirun [-m]``
-
-   -  **This or the ``--case`` option are the minimum required arguments.** When
-      used alone, this option runs through all permutations of supported
-      suites from ``../src/suite_info.py`` and cases from ``../src/supported_cases.py``. When used in conjunction with the
-      ``--file`` option, only the runs configured in the file will be run.
-
 -  ``--file [-f]``
 
-   -  This option may be used in conjunction with the ``--multirun`` argument. It
-      specifies a path and filename to a python file where multiple runs
-      are configured.
+   -  This option may be used to specify a list of tests to run; see ../../test/rt_test_cases.py for an example.
 
 -  ``--gdb [-g]``
 
@@ -505,7 +513,7 @@ below where option abbreviations are included in brackets.
 
    -  Use this argument when running in a docker container in order to
       successfully mount a volume between the host machine and the
-      Docker container instance and to share the output and plots with
+      Docker container instance, allowing the container to share the output and plots with
       the host machine.
 
 -  ``--runtime``
@@ -518,7 +526,7 @@ below where option abbreviations are included in brackets.
    -  Use this to override the runtime provided in the case
       configuration namelist by multiplying the runtime by the given
       value. This is used, for example, in regression testing to reduce
-      total runtimes.
+      total runtimes (e.g., ``--runtime_mult 0.1``).
 
 -  ``--levels [-l]``
 
@@ -574,7 +582,7 @@ configuration files located in ``../etc/case_config`` (*without the .nml extensi
 specifying a suite other than the default, the suite name used must
 match the value of the suite name in one of the suite definition files
 located in ``../../ccpp/suites`` (Note: not the filename of the suite definition file). As
-part of the sixth CCPP release, the following suite names are valid:
+part of the sixth CCPP release, the following suite names are supported:
 
 #. SCM_GFS_v16
 
@@ -735,32 +743,28 @@ Building the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Dockerfile builds CCPP SCM v6.0.0 from source using the GNU
-compiler. A number of required codes are built and installed via the
-DTC-supported common community container. For reference, the common
-community container repository can be accessed here:
-https://github.com/NCAR/Common-Community-Container.
+compiler. 
 
 The CCPP SCM has a number of system requirements and necessary libraries
 and tools. Below is a list, including versions, used to create the the
-GNU-based Docker image:
+GNU-based Docker image. These are included for reference, but recall that
+the Docker container contains all of this software built-in, you do not need to install them separately!
 
--  gfortran - 9.3
+-  gfortran - 12.2.0
 
--  gcc - 9.3
+-  gcc - 12.2.0
 
--  cmake - 3.16.5
+-  cmake - 3.25.1
 
--  NetCDF - 4.6.2
+-  NetCDF - 4.9.0
 
--  HDF5 - 1.10.4
+-  Python - 3.11.2
 
--  ZLIB - 1.2.7
+-  NCEPLIBS BACIO - v2.4.1
 
--  SZIP - 2.1.1
+-  NCEPLIBS SP - v2.3.3
 
--  Python - 3
-
--  NCEPLIBS subset: bacio v2.4.1_4, sp v2.3.3_d, w3emc v2.9.2_d
+-  NCEPLIBS W3EMC  - v2.11.0
 
 A Docker image containing the SCM, CCPP, and its software prerequisites
 can be generated from the code in the software repository obtained by
@@ -783,13 +787,15 @@ and then executing the following steps:
    Inspect the Dockerfile if you would like to see details for how the
    image is built. The image will contain SCM prerequisite software from
    DTC, the SCM and CCPP code, and a pre-compiled executable for the SCM
-   with the 6 supported suites for the SCM. A successful build will show
-   two images: dtcenter/common-community-container, and ccpp-scm. To
-   list images, type:
+   with the 6 supported suites for the SCM. To view 
 
    .. code:: bash
 
-      docker images
+      > docker images
+
+      REPOSITORY           TAG       IMAGE ID       CREATED       SIZE
+      ccpp-scm             latest    1b2e0a0afdf9   2 days ago    3.21GB
+
 
 Using a prebuilt Docker image from Dockerhub
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -838,14 +844,7 @@ Running the Docker image
    does not) and make sure that the “auto-mount" and “permanent" options
    are checked.
 
-#. Set an environment variable to use for your SCM output directory. For
-   *t/csh* shells,
-
-   .. code:: bash
-
-      setenv OUT_DIR /path/to/output
-
-   For bourne/bash shells,
+#. Set an environment variable to use for your SCM output directory.
 
    .. code:: bash
 
