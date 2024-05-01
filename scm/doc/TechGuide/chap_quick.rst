@@ -401,7 +401,7 @@ directory)
    pwd #confirm that you are in the ccpp-scm/scm/bin directory before deleting files
    rm -rfd *
 
-.. note::
+.. warning::
   This command can be dangerous (deletes files without confirming),
   so make sure that you’re in the right directory before executing!
 
@@ -465,11 +465,12 @@ For running multiple integrations at once, the run script can accept a file that
 The file ``ccpp-scm/test/rt_test_cases.py`` contains the full list of regression test cases, so you could run that list
 of tests with the following command:
 
+.. code:: bash
+
  ./run_scm.py -f ../../test/rt_test_cases.py
 
 To see the full list of available options, use the ``--help`` flag:
 
-../../test/rt_test_cases.py
 .. code:: bash
 
   ./run_scm.py --help
@@ -909,7 +910,7 @@ Running the Docker image
    (remembering to include the option on run scripts if output is to be
    shared with the host machine). 
 
-   .. note::
+   .. warning::
 
      If developing or modifying code, since the container is ephemeral, one should push their changes to a remote git
      repository to save them (i.e. a fork on GitHub.com).
