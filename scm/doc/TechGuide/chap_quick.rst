@@ -4,18 +4,8 @@ Quick Start Guide
 =================
 
 This chapter provides instructions for obtaining and compiling the CCPP
-SCM. The SCM code calls CCPP-compliant physics schemes through the CCPP
-framework code. As such, it requires the CCPP framework code and physics
-code, both of which are included as submodules within the SCM git repository. This
-package can be considered a simple example for an atmospheric model to
-interact with physics through the CCPP.
-
-Alternatively, if one doesn’t have access to or care to set up a machine
-with the appropriate system requirements but has a working Docker
-installation, it is possible to create and use a Docker container with a
-pre-configured computing environment with a pre-compiled model. This is
-also an avenue for running this software with a Windows PC. See section
-:numref:`Section %s <docker>` for more information.
+SCM. We provide instructions on building the code from scratch (:numref:`Section %s <obtaining_code>`), as well as
+using Docker containers for machines that have Docker software installed (:numref:`Section %s <docker>`). 
 
 .. _obtaining_code:
 
@@ -37,11 +27,10 @@ Clone the source using
 
    git clone --recursive -b v6.0.0 https://github.com/NCAR/ccpp-scm
 
-By using the ``--recursive`` option, it guarantees that you are checking out the commits
-of ccpp-physics and ccpp-framework that were tested with the latest
-commit of the SCM main branch. If not included initially, you can always retrieve the commits of
-the submodules that were intended to be used with a given commit of the
-SCM by executing the following command from the SCM directory:
+The ``--recursive`` option is required to retrieve the ccpp-physics and ccpp-framework code,
+which are stored in separate repositories and linked to the SCM repository as submodules.
+If not included initially, you can always retrieve the submodules 
+by executing the following command from the SCM directory:
 
 .. code:: bash
 
@@ -56,17 +45,8 @@ this level. The CCPP physics parameterizations can be found in the
 Development Code
 ^^^^^^^^^^^^^^^^
 
-If you would like to contribute as a developer to this project, please
-see (in addition to the rest of this guide) the scientific and technical
-documentation included with this release for both the SCM and the CCPP:
-
-https://dtcenter.org/community-code/common-community-physics-package-ccpp/documentation
-
-There you will find links to all of the documentation pertinent to
-developers.
-
-For working with the development branches (stability not guaranteed),
-check out the ``main`` branch of the repository:
+Developers seeking to contribute code to the SCM or CCPP will need to use the most up-to-date
+version of the code, which can be found on the ``main`` branch of the repository: 
 
 .. code:: bash
 
@@ -82,7 +62,21 @@ SCM by executing the following command from the SCM directory:
 
    git submodule update --init --recursive
 
-You can try to use the latest commits of the ccpp-physics and
+While the ``main`` branch is tested regularly for compilation and basic functionality (as described in :numref:`Section %s <testing>`),
+it may not be as stable or scientifically vetted as the latest release code, and may be lacking in up-to-date documentation.
+
+If you would like to contribute as a developer to this project, please
+see (in addition to the rest of this guide) the scientific and technical
+documentation included with this release for both the SCM and the CCPP:
+
+https://dtcenter.org/community-code/common-community-physics-package-ccpp/documentation
+
+There you will find links to all of the documentation pertinent to
+developers.
+
+
+While the SCM is updated with the latest commits to the CCPP submodules (ccpp-physics and ccpp-framework)
+on a fairly regular basis, it may be weeks or even months behind at times. You can try to use the latest commits of the ccpp-physics and
 ccpp-framework submodules if you wish, but this may not have been tested
 (i.e. SCM development may lag ccpp-physics and/or ccpp-framework
 development). To do so:
@@ -129,10 +123,11 @@ System Requirements, Libraries, and Tools
 The source code for the SCM and CCPP components is in the form of
 programs written in FORTRAN 90 (with some required features from the 
 FORTRAN 2008 standard), and C. In addition, the model I/O
-relies on the NetCDF libraries. Beyond the standard scripts, the build
+relies on the NetCDF libraries, as well as the NCEP libraries ``bacio``, ``sp`` and ``w3emc``.
+
+Beyond the standard shell scripts, the build
 system relies on use of the Python scripting language, along with cmake,
 GNU make and date.
-
 
 For the latest release, the minimum required Python version is 3.8, and CMake requires a minimum version of 3.14.
 While exact minimum required versions of other prerequisites have not been established, users can reference the
@@ -162,10 +157,6 @@ contains the following set of libraries needed for building the SCM:
 Instructions for installing spack-stack can be found in the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
 Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera and
 Jet, and MSU's Orion and Hercules.  
-
-Because these tools are typically the purview of system administrators
-to install and maintain, they are considered part of the basic system
-requirements.
 
 Compilers
 ^^^^^^^^^
@@ -212,21 +203,69 @@ Installing Libraries on Non-preconfigured Platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For users on supported platforms such as generic Linux or macOS systems
-that have not been preconfigured, the project is suggested for
-installing prerequisite libraries. Visit
-https://github.com/NOAA-EMC/hpc-stack for instructions for installing
-prerequisite libraries via *hpc-stack* in their docs directory. UFS users who
-already installed libraries via the *hpc-stack* package only need to set the
-compiler (``CC``, ``CXX``, ``FC``), NetCDF (``NetCDF_ROOT``), and ``bacio``,
-``sp`` and ``w3emc`` (``bacio_ROOT``, ``sp_ROOT``, ``w3emc_ROOT``) environment variables to point
-to their installation paths in order to compile the SCM.
+that have not been preconfigured, installing ``spack-stack`` (see :ref:`Section %s <spack-stack>`)
+is highly recommended, as it provides all the necessary prerequisite libraries needed for installing the SCM.
+
+
+MacOS example
+""""""""""""""
+
+As an example of the steps needed for installing spack-stack on a MacOS machine, here is the list of steps that
+resulted in a successful build and run of the SCM on a MacBook Pro with the Ventura 13.6.3 operating system,
+using ``clang`` compilers. The necessary prerequisites for spack-stack (see 
+`spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/NewSiteConfigs.html#prerequisites-one-off>`__)
+were installed using Homebrew.
+
+::
+
+  cd your_experiment_dir
+  export TOP_DIR=`pwd`
+  mkdir spack_stack_1.6.0
+  cd spack_stack_1.6.0
+  git clone --recurse-submodules https://github.com/jcsda/spack-stack.git -b 1.6.0
+  cd spack-stack
+  source setup.sh
+  ulimit -S -s unlimited
+  spack stack create env --site macos.default --template ufs-weather-model --name SCM
+  cd envs/SCM
+  spack env activate -p .
+  export SPACK_SYSTEM_CONFIG_PATH="$PWD/site"
+  spack external find --scope system     --exclude bison --exclude openssl     --exclude python
+  spack external find --scope system libiconv
+  spack external find --scope system perl
+  spack external find --scope system wget
+  PATH="$HOMEBREW_ROOT/opt/curl/bin:$PATH"      spack external find --scope system curl
+  PATH="$HOMEBREW_ROOT/opt/qt5/bin:$PATH"     spack external find --scope system qt
+  spack config --scope system add packages:pkg-config:buildable:false
+  spack compiler find --scope system
+  unset SPACK_SYSTEM_CONFIG_PATH
+  spack config add "packages:all:compiler:[apple-clang@15.0.0]"
+  spack config add "packages:all:providers:mpi:[openmpi@4.1.6]"
+  spack concretize 2>&1 | tee log.concretize
+  ../../util/show_duplicate_packages.py -d log.concretize
+  spack install --verbose --fail-fast 2>&1 | tee log.install
+  spack module lmod refresh
+  spack stack setup-meta-modules
+
+
+Setting up compilation environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once libraries are installed, either with spack-stack or manually, users will need to set some environment variables
+needed for specifying the location of the various prerequisites. Users will need to set variables for the
+compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the library installs of NetCDF (``NetCDF_ROOT``),
+``bacio`` (``bacio_ROOT``), ``sp`` (``sp_ROOT``), and ``w3emc`` (``w3emc_ROOT``).
 
 The SCM uses only a small part of the UFS *hpc-stack* package and has fewer
 prerequisites (i.e. no ESMF or wgrib2 needed). Users who are not planning to use the
 UFS can install only NetCDF/NetCDF-Fortran manually or using the
 software package manager (apt, yum, brew).
 
-The Python environment must provide a few non-default modules for the SCM scripts to
+Python requirements
+"""""""""""""""""""""
+
+The SCM build system invokes the ``ccpp_prebuild.py`` script, and so the Python environment must be set up prior to building.
+As mentioned earlier, a minimum Python version of 3.8 is required. Additionally, there are a few non-default modules required for the SCM to
 function: ``f90nml`` (`documentation <https://f90nml.readthedocs.io/en/latest/index.html>`__) and 
 ``netcdf4`` (`documentation <https://unidata.github.io/netcdf4-python/>`__). Users can test if these are installed using this command in
 the shell:
@@ -837,7 +876,7 @@ Quickstart application installed with Docker Toolbox.
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -m -d
+      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d
 
    The options included in the above ``run`` commands are the following:
 
