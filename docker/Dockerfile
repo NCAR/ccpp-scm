@@ -23,17 +23,13 @@ ENV F90 /usr/bin/gfortran
 # Other necessary environment variables
 ENV LD_LIBRARY_PATH /usr/lib/
 
-# Set up unpriviledged user account
-RUN groupadd comusers -g 9999
-RUN useradd -u 9999 -g comusers -M -s /bin/bash -c "Unpriviledged user account" -d /home comuser
-RUN mkdir /comsoftware \
- &&  chown -R comuser:comusers /comsoftware \
- &&  chmod 6755 /comsoftware
-
-# Set up user home space correctly and make sure user has permissions on all stuff in /comsoftware
-RUN chown -R comuser:comusers /home \
+# Set up unpriviledged user account, set up user home space and make sure user has permissions on all stuff in /comsoftware
+RUN groupadd comusers -g 9999 \
+ && useradd -u 9999 -g comusers -M -s /bin/bash -c "Unpriviledged user account" -d /home comuser \
+ && mkdir /comsoftware \
+ && chown -R comuser:comusers /home \
  && chmod 6755 /home
-RUN chown -R comuser:comusers /comsoftware \
+ && chown -R comuser:comusers /comsoftware \
  && chmod -R 6755 /comsoftware
 
 # Link version-specific aliases (python3 will be created later with virtual environment)
