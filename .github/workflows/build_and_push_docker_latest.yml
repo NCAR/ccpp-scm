@@ -7,7 +7,7 @@ on:
       - "main"
 
 env:
-  LATEST_TAG: NCAR/ccpp-scm:latest
+  LATEST_TAG: dtcenter/ccpp-scm:latest
 
 jobs:
   docker:

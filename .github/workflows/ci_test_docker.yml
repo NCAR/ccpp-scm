@@ -3,7 +3,7 @@ name: build_test_and_push_docker
 on: [pull_request,workflow_dispatch]
 
 env:
-  TEST_TAG: NCAR/ccpp-scm:test
+  TEST_TAG: dtcenter/ccpp-scm:test
 
 jobs:
   docker:
