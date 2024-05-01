@@ -156,7 +156,7 @@ contains the following set of libraries needed for building the SCM:
 
 Instructions for installing spack-stack can be found in the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
 Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera and
-Jet, and MSU's Orion and Hercules.  
+Jet, and MSU's Orion.  
 
 Compilers
 ^^^^^^^^^
@@ -205,25 +205,20 @@ Installing Libraries on Non-preconfigured Platforms
 For users on supported platforms such as generic Linux or macOS systems
 that have not been preconfigured, installing ``spack-stack`` (see :ref:`Section %s <spack-stack>`)
 is highly recommended, as it provides all the necessary prerequisite libraries needed for installing the SCM.
+
+The CCPP/SCM team does not support spack-stack, so users with questions or requiring help with spack-stack installation
+should reference the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
+However, we have provided an example procedure in
+`this GitHub discussion <https://github.com/NCAR/ccpp-scm/discussions/464>`__.
+
 The main downside to spack-stack is that it contains a large number of libraries and utilities used by the whole
 Unified Forecast System and related applications, only a minority of which are required for the SCM. Users may
 install libraries manually if they wish, but they will need to make sure the appropriate environment variables
-are set to the correct values so that the build system can find them:
-
-The CCPP/SCM team does not support spack-stack, so users with questions or requiring help with spack-stack installation
-should reference the spack-stack documentation. However, we have provided an example procedure in
-`this GitHub discussion <https://github.com/NCAR/ccpp-scm/discussions/464>`__.
+are set to the correct values so that the build system can find them, as described in the following chapter.
 
 
 Setting up compilation environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Once libraries are installed, either with spack-stack or manually, users will need to set some environment variables
-needed for specifying the location of the various prerequisites. Users will need to set variables for the
-compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the library installs of NetCDF (``NetCDF_ROOT``),
-``bacio`` (``bacio_ROOT``), ``sp`` (``sp_ROOT``), and ``w3emc`` (``w3emc_ROOT``). This is the procedure used in the
-provided Dockerfile in ``ccpp-scm/docker/``, so users can reference that file for guidance on how to install this software
-and set these variables.
 
 For users on a pre-configured platform, you can load the spack-stack environment via one of the provided modules in ``scm/etc/modules/``.
 For example, users on the NSF NCAR machine Derecho who wish to use Intel compilers can do the following:
@@ -241,6 +236,14 @@ or ``linux_gnu`` modules.
 
   The provided modules assume ``clang``/``gfortran`` compilers on MacOS and GNU compilers for Linux.
   If you are using a different set of compilers, you may need to modify the module file.
+
+If libraries were installed manually, users will need to set some environment variables
+needed for specifying the location of the various prerequisites. Users will need to set variables for the
+compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the library installs of NetCDF (``NetCDF_ROOT``),
+``bacio`` (``bacio_ROOT``), ``sp`` (``sp_ROOT``), and ``w3emc`` (``w3emc_ROOT``). This is the procedure used in the
+provided Dockerfile in ``ccpp-scm/docker/``, so users can reference that file for guidance on how to install this software
+and set these variables.
+
 
 Python requirements
 """""""""""""""""""""
