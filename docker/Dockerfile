@@ -49,7 +49,7 @@ RUN mkdir -p $NCEPLIBS_DIR/src && cd $NCEPLIBS_DIR/src \
   && mkdir NCEPLIBS-bacio/build && cd NCEPLIBS-bacio/build \
   && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
   && make VERBOSE=1 \
-  && make install 
+  && make install
 
 RUN cd $NCEPLIBS_DIR/src \
   && git clone -b v2.3.3 --recursive https://github.com/NOAA-EMC/NCEPLIBS-sp \
@@ -82,7 +82,7 @@ RUN cd /comsoftware \
   && make -j4
 
 # The analysis scripts have options for using LaTeX when making figure labels.
-# If you would like to install LaTeK, uncomment the section below. 
+# If you would like to install LaTeK, uncomment the section below.
 # Note: This will increase the image size by 1 GB.
 #USER root
 #RUN yum -y update \

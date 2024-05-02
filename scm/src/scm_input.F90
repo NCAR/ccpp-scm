@@ -7,6 +7,7 @@ module scm_input
 use scm_kinds, only : sp, dp, qp
 use netcdf
 use scm_type_defs, only: character_length
+use w3emc, only: w3difdat
 
 implicit none
 

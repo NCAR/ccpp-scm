@@ -16,7 +16,8 @@ subroutine scm_main_sub()
   use scm_output
   use scm_type_defs
   use mpi_f08
-
+  use w3emc, only: w3movdat
+       
   use :: ccpp_static_api,                      &
          only: ccpp_physics_init,              &
                ccpp_physics_timestep_init,     &

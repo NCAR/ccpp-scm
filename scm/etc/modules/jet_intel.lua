@@ -21,9 +21,6 @@ load("py-netcdf4/1.5.8")
 
 load("netcdf-c/4.9.2")
 load("netcdf-fortran/4.6.0")
-load("bacio/2.4.1")
-load("sp/2.3.3")
-load("w3emc")
 
 setenv("CMAKE_C_COMPILER","mpiicc")
 setenv("CMAKE_CXX_COMPILER","mpiicpc")

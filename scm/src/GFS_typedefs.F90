@@ -2,7 +2,8 @@ module GFS_typedefs
 
    use mpi_f08
    use machine,                  only: kind_phys, kind_dbl_prec, kind_sngl_prec
-     
+   use w3emc,                    only: w3difdat, w3kind
+
    use module_radsw_parameters,  only: topfsw_type, sfcfsw_type
    use module_radlw_parameters,  only: topflw_type, sfcflw_type
    use h2o_def,                  only: levh2o, h2o_coeff
