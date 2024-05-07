@@ -27,6 +27,7 @@ parser.add_argument('-cres', '--C_RES',         help='UFS spatial resolution',  
 parser.add_argument('-sdf',  '--suite',         help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
 parser.add_argument('-sc',   '--save_comp',     help='flag to save a file with UFS data for comparisons',                         action='store_true')
 parser.add_argument('-near', '--use_nearest',   help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
+parser.add_argument('-ext',  '--exact_mode',    help='flag to indicate using dynamic tendencies from UFS history files', action='store_true')
 
 ###############################################################################
 # Main program
@@ -138,6 +139,7 @@ def main():
     com_config = ''
     if args.save_comp:   com_config = com_config + ' -sc'
     if args.use_nearest: com_config = com_config + ' -near'
+    if args.exact_mode:  com_config = com_config + ' -ext'
 
     # Create inputs to SCM
     case_list    = ""

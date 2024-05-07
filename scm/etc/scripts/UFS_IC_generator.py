@@ -68,6 +68,7 @@ parser.add_argument('-oc',  '--old_chgres',  help='flag to denote that the initi
 parser.add_argument('-lam', '--lam',         help='flag to signal that the ICs and forcing is from a limited-area model run',              action='store_true')
 parser.add_argument('-sc',  '--save_comp',   help='flag to create UFS reference file for comparison',             action='store_true')
 parser.add_argument('-near','--use_nearest', help='flag to indicate using the nearest UFS history file gridpoint',action='store_true')
+parser.add_argument('-ext', '--exact_mode',  help='flag to indicate using dynamic tendencies from UFS history files', action='store_true')
 
 ########################################################################################
 #
@@ -88,6 +89,7 @@ def parse_arguments():
     lam         = args.lam
     save_comp   = args.save_comp
     use_nearest = args.use_nearest
+    exact_mode  = args.exact_mode
     
     #validate args
     if not os.path.exists(in_dir):
@@ -127,7 +129,7 @@ def parse_arguments():
             raise Exception(message)
     
     return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, \
-            area, case_name, old_chgres, lam, save_comp, use_nearest)
+            area, case_name, old_chgres, lam, save_comp, use_nearest, exact_mode)
 
 ########################################################################################
 #
@@ -1492,7 +1494,7 @@ def search_in_dict(listin,name):
 #
 ########################################################################################
 def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, grid_dir,
-                         tile, i, j, lam, save_comp_data):
+                         tile, i, j, lam, save_comp_data, exact_mode):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
 
     # Determine UFS history file format (tiled/quilted)
@@ -1502,17 +1504,21 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     else:
         atm_ftag = 'atmf*.nc'
         sfc_ftag = 'sfcf*.nc'
-
+    # end if
+    
     # Get list of UFS history files with 3D ATMospheric state variables.
     atm_filenames = []
     for f_name in os.listdir(forcing_dir):
        if fnmatch.fnmatch(f_name, atm_ftag):
           atm_filenames.append(f_name)
+        # end if
+    # end for
     if not atm_filenames:
         message = 'No filenames matching the pattern {0} found in {1}'.                \
                   format(atm_ftag,forcing_dir)
         logging.critical(message)
         raise Exception(message)
+    # end if
     atm_filenames = sorted(atm_filenames)
     n_filesA      = len(atm_filenames)
 
@@ -1521,11 +1527,14 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     for f_name in os.listdir(forcing_dir):
        if fnmatch.fnmatch(f_name, sfc_ftag):
           sfc_filenames.append(f_name)
+        # end if
+    # end fo
     if not sfc_filenames:
         message = 'No filenames matching the pattern {0} found in {1}'.                \
                   format(sfc_ftag,forcing_dir)
         logging.critical(message)
         raise Exception(message)
+    # end if
     sfc_filenames = sorted(sfc_filenames)
     n_filesS      = len(sfc_filenames)
 
@@ -1535,7 +1544,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         message = 'Number of UFS 2D/3D history files is inconsistent'
         logging.critical(message)
         raise Exception(message)
-
+    # end if
+    
     # Physical constants (used by FV3 remapping functions)
     kord_tm = -9
     kord_tr = 9
@@ -1545,7 +1555,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     
     ####################################################################################
     #
-    # Read in atmospheric state, atmf*.nc history files.
+    # Read in 3D UFS history files
     #
     ####################################################################################
 
@@ -1555,8 +1565,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         print('The closest point has indices [{0},{1}]'.format(tile_ii,tile_jj))
         print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
         print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
-
-    #
+    # end if
+    
+    # Initialize
     ps      = []
     p_lev   = []
     p_lay   = []
@@ -1582,12 +1593,15 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             except:
                 data_grid_lon = nc_file['grid_xt'][:,:]
                 data_grid_lat = nc_file['grid_yt'][:,:]
+            # end try
             equal_grids = False
             if (ic_grid_lon.shape == data_grid_lon.shape and                               \
                 ic_grid_lat.shape == ic_grid_lat.shape):
                 if (np.equal(ic_grid_lon,data_grid_lon).all() and                          \
                     np.equal(ic_grid_lat,data_grid_lat).all()):
                     equal_grids = True
+                # end if
+            # end if
 
             # If necessary, remap history file (data_grid) to IC file (ic_grid).
             if (not equal_grids):
@@ -1614,6 +1628,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                 v_data    = nc_file['vgrd'][0,::-1,:,:]
                 i_get     = i
                 j_get     = j
+            # end if
         else:
             print('Using nearest UFS point {} progress = {}%'.format(filename, 100.0*count/(2*n_files)))
             ps_data = nc_file['pressfc'][0,:,:]
@@ -1623,21 +1638,30 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             v_data  = nc_file['vgrd'][0,::-1,:,:]
             j_get   = tile_jj
             i_get   = tile_ii
+        # end if
 
-        # Compute and store vertical grid information.
-        ak = getattr(nc_file, "ak")[::-1]
-        bk = getattr(nc_file, "bk")[::-1]
+        # Store surface pressure.
         ps.append(ps_data[j_get,i_get])
+        
+        # Compute and store vertical grid information.
+        ak    = getattr(nc_file, "ak")[::-1]
+        bk    = getattr(nc_file, "bk")[::-1]
         nlevs = len(nc_file.dimensions['pfull'])
+
+        # Compute and store pressure at layer-interfaces (nlev+1).
         p_interface = np.zeros(nlevs+1)
         for k in range(nlevs+1):
             p_interface[k]=ak[k]+ps[-1]*bk[k]
+        # end for
         p_lev.append(p_interface)
+
+        # Compute and store pressure at layer-centers (nlev).
         p_layer = np.zeros(nlevs)
         for k in range(nlevs):
             p_layer[k] = ((1.0/(rocp+1.0))*(p_interface[k]**(rocp+1.0) -               \
                             p_interface[k+1]**(rocp+1.0))/(p_interface[k] -            \
                             p_interface[k+1]))**(1.0/rocp)
+        # end for
         p_lay.append(p_layer)
 
         # Store state variables.
@@ -1646,9 +1670,10 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         u_lay.append(u_data[:,j_get,i_get])
         v_lay.append(v_data[:,j_get,i_get])
         time_hr.append(nc_file['time'][0])
-        
+
         # Close file
         nc_file.close()
+    # end for
 
     # Convert from python list to numpy array
     ps      = np.asarray(ps)
@@ -1658,19 +1683,38 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     qv_lay  = np.asarray(qv_lay)
     u_lay   = np.asarray(u_lay)
     v_lay   = np.asarray(v_lay)
-    tv_lay  = t_lay*(1.0 + zvir*qv_lay)
     time_hr = np.asarray(time_hr)
 
+    # Compute virtual temperature.
+    tv_lay  = t_lay*(1.0 + zvir*qv_lay)
+
+    ####################################################################################
+    #
     # Read in 2D UFS history files
-    vars2d  =[{"name":"spfh2m"},     {"name":"tmp2m"},    \
-              {"name":"dswrf_ave"},  {"name":"ulwrf_ave"},\
-              {"name":"lhtfl_ave"},  {"name":"shtfl_ave"},\
-              {"name":"dswrf"},      {"name":"ulwrf"},\
-              {"name":"lhtfl"},      {"name":"shtfl"},\
-              {"name":"pwat"},       {"name":"vgrd10m"},\
+    #
+    # Comments:
+    # These files contain the 3D (diagnostic) dynamic tendencies needed to create "exact"
+    # UFS forcings. These are stored in the python dictionary "dyntends".
+    #
+    # Additionally, a limited set of two-dimensionsal variables, python dictionary "vars2d",
+    # are output to the "case comparison file".
+    #
+    ####################################################################################
+
+    # Variable sneeded for "exact" UFS case generation.
+    dyntends = [{"name":"dtend_temp_nophys"}, {"name":"dtend_u_nophys"},   \
+                {"name":"dtend_v_nophys"},    {"name":"dtend_qv_nophys"}]
+    for dyntend in dyntends: dyntend["values"] = []
+    
+    # Variables to be added to "UFS comparison file"
+    vars2d  =[{"name":"spfh2m"},    {"name":"tmp2m"},     {"name":"dswrf_ave"}, \
+              {"name":"ulwrf_ave"}, {"name":"lhtfl_ave"}, {"name":"shtfl_ave"}, \
+              {"name":"dswrf"},     {"name":"ulwrf"},     {"name":"lhtfl"},     \
+              {"name":"shtfl"},     {"name":"pwat"},      {"name":"vgrd10m"},   \
               {"name":"ugrd10m"}]
     for var2d in vars2d: var2d["values"] = []
 
+    # Read in 2D UFS history files
     for count, filename in enumerate(sfc_filenames, start=1):
         nc_file = Dataset('{0}/{1}'.format(forcing_dir,filename))
         nc_file.set_always_mask(False)
@@ -1683,12 +1727,15 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             except:
                 data_grid_lon = nc_file['grid_xt'][:,:]
                 data_grid_lat = nc_file['grid_yt'][:,:]
+            # end try
             equal_grids = False
             if (ic_grid_lon.shape == data_grid_lon.shape and                               \
                 ic_grid_lat.shape == ic_grid_lat.shape):
                 if (np.equal(ic_grid_lon,data_grid_lon).all() and                          \
                     np.equal(ic_grid_lat,data_grid_lat).all()):
                     equal_grids = True
+                # end if
+            # endif
 
             # If necessary, remap history file (data_grid) to IC file (ic_grid).
             if (not equal_grids):
@@ -1705,29 +1752,55 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             else:
                 i_get     = i
                 j_get     = j
+            # end if
         else:
             print('Using nearest UFS point {} progress = {}%'.format(filename, 50+50.0*count/(n_files)))
             j_get   = tile_jj
             i_get   = tile_ii
-
+        # end if
+        
         for var2d in vars2d:
             if not use_nearest:
                 data = regridder(nc_file[var2d["name"]][0,:,:])
             else:
                 data = nc_file[var2d["name"]][0,:,:]
+            # end if
             var2d["values"].append(data[j_get,i_get])
             var2d["units"]     = nc_file[var2d["name"]].getncattr(name="units")
             var2d["long_name"] = nc_file[var2d["name"]].getncattr(name="long_name")
-
+        # end for
+        
+        for dyntend in dyntends:
+            try:
+                if not use_nearest:
+                    data = regridder(nc_file[dyntend["name"]][0,::-1,:,:])
+                else:
+                    data = nc_file[dyntend["name"]][0,::-1,:,:]
+                # end if
+                dyntend["values"].append(data[:,j_get,i_get])
+                dyntend["units"]     = nc_file[dyntend["name"]].getncattr(name="units")
+                dyntend["long_name"] = nc_file[dyntend["name"]].getncattr(name="long_name")
+            except:
+                print("Could not find ",dyntend["name"]," in ",nc_file)
+            # end try
+        # end for
+            
         nc_file.close()
-
+    # end for
+    
     # Convert to numpy arrays
     for var2d in vars2d:
         var2d["values"] = np.asarray(var2d["values"])
+    # end for
+    for dyntend in dyntends:
+        dyntend["values"] = np.asarray(dyntend["values"])
+    # end for
 
+    ####################################################################################
     #
     # Create dictionary with full "Native" state (IC@t=0,ATMF*@t>0)
     #
+    ####################################################################################
     ps_IC      = np.zeros([1])
     ps_IC[0]   = state_IC["ps"]
     pi_IC      = np.zeros([1,nlevs+1])
@@ -1753,6 +1826,16 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                    "v_lay":  np.concatenate((v_IC,   v_lay),   axis=0),                \
                    "tv_lay": np.concatenate((tv_IC,  tv_lay),  axis=0)}
 
+    print("DJS2024: WHAT DOES THE NATIVE STATE LOOK LIKE, at the surface?")
+    print('{0: <4} {1: >8} {2: >8} {3: >8} {4: >8} {5: >6} {6: >6} {7: >6} {8: >8}'.
+          format('Time','sfcP','pi','p','t','qv','u','v','tv'))
+    for ij in range(0,len(stateNATIVE["time"])):
+        print('{0:4d} {1:8.2f} {2:8.2f} {3:8.2f} {4:8.2f} {5:6.2f} {6:6.2f} {7:6.2f} {8:8.2f}'.
+              format(int(stateNATIVE["time"][ij]),stateNATIVE["ps"][ij]*0.01,stateNATIVE["p_lev"][ij,0]*0.01,\
+                     stateNATIVE["p_lay"][ij,0]*0.01,stateNATIVE["t_lay"][ij,0],stateNATIVE["qv_lay"][ij,0]*100.,\
+                     stateNATIVE["u_lay"][ij,0],stateNATIVE["v_lay"][ij,0],stateNATIVE["tv_lay"][ij,0]))
+    # end for
+    
     ####################################################################################
     #
     # The "total" advection, where "total" = "advective + remapping", can be computed 
@@ -1775,8 +1858,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     #
     ####################################################################################
 
-    #
-    nlevs      = len(p_lay[0,:])
+    # Initialize
+#    nlevs      = len(p_lay[0,:])
     dummy      = np.zeros(1)
     from_p     = np.zeros([1,nlevs+1])
     to_p       = np.zeros([1,nlevs+1])
@@ -1826,7 +1909,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     v_init_rev  = state_IC["va"][::-1]
     v_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, v_init_rev[np.newaxis, :], 0.0,    \
                                      nlevs, to_p, 0, 0, -1, kord_tm )
-
+    
     # Store
     p_layr[0,:]  = p_lay[0,:]
     p_levr[0,:]  = p_lev[0,:]
@@ -1834,20 +1917,18 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     u_layr[0,:]  = u_rev_new[0,::-1]
     tv_layr[0,:] = tv_rev_new[0,::-1]
     qv_layr[0,:] = qv_rev_new[0,::-1]
-
+    
     #
     # Subsequent timestep(s)...
     # (current state on vertical grid of subsequent time-step(s). Used for differencing)
     #
-
-    #
     for t in range(n_files-1):
-        #
+        # Interpolation range
         from_p[0,:]     = p_lev[t,::-1]
         to_p[0,:]       = p_lev[t+1,::-1]
         log_from_p[0,:] = np.log(p_lev[t,::-1])
         log_to_p[0,:]   = np.log(p_lev[t+1,::-1])
-
+        
         # Virtual Temperature @ time > 0
         tv_rev[0,:] = tv_lay[t,::-1]
         tv_rev_new  = fv3_remap.map_scalar(nlevs, log_from_p, tv_rev, dummy, nlevs,    \
@@ -1865,7 +1946,6 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         v_rev[0,:] = v_lay[t,::-1]
         v_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, v_rev, 0.0, nlevs, to_p,        \
                                         0, 0, -1, kord_tm )
-
         # Store
         p_layr[t+1,:]  = p_lay[t+1,:]
         p_levr[t+1,:]  = p_lev[t+1,:]
@@ -1873,7 +1953,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         qv_layr[t+1,:] = qv_rev_new[0,::-1]
         u_layr[t+1,:]  = u_rev_new[0,::-1]
         v_layr[t+1,:]  = v_rev_new[0,::-1]
-
+    # end for
+    
     #
     p_layr[t+2,:]  = p_layr[t+1,:]
     p_levr[t+2,:]  = p_levr[t+1,:]
@@ -1895,6 +1976,15 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                    "u_lay":  u_layr,  \
                    "v_lay":  v_layr,  \
                    "tv_lay": tv_layr  }
+    print("DJS2024: WHAT DOES THE REGRIDDED STATE LOOK LIKE, at the surface?")
+    print('{0: <4} {1: >8} {2: >8} {3: >8} {4: >8} {5: >6} {6: >6} {7: >6} {8: >8}'.
+          format('Time','sfcP','pi','p','t','qv','u','v','tv'))
+    for ij in range(0,len(stateREGRID["time"])):
+        print('{0:4d} {1:8.2f} {2:8.2f} {3:8.2f} {4:8.2f} {5:6.2f} {6:6.2f} {7:6.2f} {8:8.2f}'.
+              format(int(stateREGRID["time"][ij]),stateREGRID["ps"][ij]*0.01,stateREGRID["p_lev"][ij,0]*0.01,\
+                     stateREGRID["p_lay"][ij,0]*0.01,stateREGRID["t_lay"][ij,0],stateREGRID["qv_lay"][ij,0]*100.,\
+                     stateREGRID["u_lay"][ij,0],stateREGRID["v_lay"][ij,0],stateREGRID["tv_lay"][ij,0]))
+    # end for
     
     ####################################################################################
     #
@@ -1923,15 +2013,15 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         tend_total[0,:] = stateREGRID["t_lay"][t+1,:] - stateREGRID["t_lay"][t,:]
         tend_remap[0,:] = stateREGRID["t_lay"][t,:]   - stateNATIVE["t_lay"][t,:]
         dtdt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
-        #
+        
         tend_total[0,:] = stateREGRID["qv_lay"][t+1,:] - stateREGRID["qv_lay"][t,:]
         tend_remap[0,:] = stateREGRID["qv_lay"][t,:]   - stateNATIVE["qv_lay"][t,:]
         dqvdt_adv[t,:]  = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
-        #
+        
         tend_total[0,:] = stateREGRID["u_lay"][t+1,:] - stateREGRID["u_lay"][t,:]
         tend_remap[0,:] = stateREGRID["u_lay"][t,:]   - stateNATIVE["u_lay"][t,:]
         dudt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
-        #
+        
         tend_total[0,:] = stateREGRID["v_lay"][t+1,:] - stateREGRID["v_lay"][t,:]
         tend_remap[0,:] = stateREGRID["v_lay"][t,:]   - stateNATIVE["v_lay"][t,:]
         dvdt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
@@ -1943,6 +2033,119 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     dvdt_adv[t+1,:]   = dvdt_adv[t,:]
     pres_adv[t+1,:]   = pres_adv[t,:] 
     pres_i_adv[t+1,:] = pres_i_adv[t,:]
+    
+    ####################################################################################
+    #
+    # Exact mode
+    #
+    ####################################################################################
+    # Initialize tendencies.
+    dtdt_adv   = np.zeros([n_files+1,nlevs])
+    dqvdt_adv  = np.zeros([n_files+1,nlevs])
+    dudt_adv   = np.zeros([n_files+1,nlevs])
+    dvdt_adv   = np.zeros([n_files+1,nlevs])
+    pres_adv   = np.zeros([n_files+1,nlevs])
+    pres_i_adv = np.zeros([n_files+1,nlevs+1])
+
+    # First timestep...
+    dtdtr = np.zeros([1,nlevs])
+    dqdtr = np.zeros([1,nlevs])
+    dudtr = np.zeros([1,nlevs])
+    dvdtr = np.zeros([1,nlevs])
+    #
+    pres_adv[0,:]   = state_IC["pa"]
+    pres_i_adv[0,:] = state_IC["pa_i"]
+    dt = 3600.0*(time_hr[0])
+    #dqdtr[0,:]     = qv_layr[0,:] - state_IC["qv"][:] # Do we need to do this? 
+    dqdtt          = qv_lay[0,:]  - state_IC["qv"][:]
+    dqvdt_adv[0,:] = (dqdtt - dqdtr[0,:])/dt
+    #dudtr[0,:]    = u_layr[0,:] - state_IC["ua"][:] # Do we need to do this? 
+    dudtt         = u_lay[0,:]  - state_IC["ua"][:]
+    dudt_adv[0,:] = (dudtt - dudtr[0,:])/dt
+    #dvdtr[0,:]    = v_layr[0,:] - state_IC["va"][:] # Do we need to do this? 
+    dvdtt         = v_lay[0,:]  - state_IC["va"][:]
+    dvdt_adv[0,:] = (dvdtt - dvdtr[0,:])/dt
+    #dtdtr[0,:]    = t_layr[0,:] - state_IC["ta"][:] # Do we need to do this?
+    dtdtt         = t_lay[0,:]  - state_IC["ta"][:]
+    dtdt_adv[0,:] = (dtdtt - dtdtr[0,:])/dt
+
+    # Subsequent timesteps...
+    dtdtr = np.zeros([n_files-1,nlevs])
+    dqdtr = np.zeros([n_files-1,nlevs])
+    dudtr = np.zeros([n_files-1,nlevs])
+    dvdtr = np.zeros([n_files-1,nlevs])
+    dtdtt = np.zeros([n_files-1,nlevs])
+    dqdtt = np.zeros([n_files-1,nlevs])
+    dudtt = np.zeros([n_files-1,nlevs])
+    dvdtt = np.zeros([n_files-1,nlevs])
+    for t in range(n_files-1):
+        dt = (stateNATIVE["time"][t+2] - stateNATIVE["time"][t+1])*3600.
+        pres_adv[t+1,:]   = p_lay[t]
+        pres_i_adv[t+1,:] = p_lev[t]
+        if exact_mode:
+            for dyntend in dyntends:
+                if (dyntend["name"] == "dtend_qv_nophys"):
+                    dqdtr[t,:] = (qv_layr[t+1,:] - qv_lay[t,:])/dt # Do we need to do this? 
+                    dqvdt_adv[t+1,:] = dyntend["values"][t,:] - dqdtr[t,:]
+                # end if
+                if (dyntend["name"] == "dtend_temp_nophys"):
+                    dtdtr[t,:] = (t_layr[t+1,:] - t_lay[t,:])/dt # Do we need to do this? 
+                    dtdt_adv[t+1,:] = dyntend["values"][t,:] - dtdtr[t,:]
+                # end if
+                if (dyntend["name"] == "dtend_u_nophys"):
+                    dudtr[t,:] = (u_layr[t+1,:] - u_lay[t,:])/dt # Do we need to do this? 
+                    dudt_adv[t+1,:] = dyntend["values"][t,:] - dudtr[t,:]
+                # endif
+                if (dyntend["name"] == "dtend_v_nophys"):
+                    dvdtr[t,:] = (v_layr[t+1,:] - v_lay[t,:])/dt # Do we need to do this? 
+                    dvdt_adv[t+1,:] = dyntend["values"][t,:] - dvdtr[t,:]
+                # end if
+            # end for
+        else:
+            #dqdtr[t,:] = qv_layr[t+1,:] - qv_lay[t,:]
+            dqdtt       = qv_lay[t+1,:]  - qv_lay[t,:]
+            dqvdt_adv[t+1,:] = (dqdtt - dqdtr[t,:])/dt
+
+            #dudtr[t,:] = u_layr[t+1,:] - u_lay[t,:]
+            dudtt      = u_lay[t+1,:]	- u_lay[t,:]
+            dudt_adv[t+1,:] = (dudtt - dudtr[t,:])/dt
+
+            #dvdtr[t,:] = v_layr[t+1,:] - v_lay[t,:]
+            dvdtt      = v_lay[t+1,:]   - v_lay[t,:]
+            dvdt_adv[t+1,:] = (dvdtt - dvdtr[t,:])/dt
+
+            #dtdtr[t,:] = t_layr[t+1,:] - t_lay[t,:]
+            dtdtt      = t_lay[t+1,:]   - t_lay[t,:]
+            dtdt_adv[t+1,:] = (dtdtt - dtdtr[t,:])/dt
+        # end if
+    # end for
+    dtdt_adv[t+2,:]   = dtdt_adv[t+1,:]
+    dqvdt_adv[t+2,:]  = dqvdt_adv[t+1,:]
+    dudt_adv[t+2,:]   = dudt_adv[t+1,:]
+    dvdt_adv[t+2,:]   = dvdt_adv[t+1,:]
+    pres_adv[t+2,:]   = pres_adv[t+1,:]
+    pres_i_adv[t+2,:] = pres_i_adv[t+1,:]
+
+    lev2display = 0
+
+    print("DJS2024: HOW WELL DO THE COMPUTATIONS MATCH THE INPUT STATE?")
+    if exact_mode:
+        print("   Using Exact mode")
+    else:
+        print("   Using Approximate mode")
+    # end if
+
+
+    a1 = '{0: <4} {1: >8} {2: >8} {3: >8} {4: >8} {5: >8} {6: >8} {7: >8} {8: >8} {9: >8} {10: >8} {11: >8} {12: >8} {13: >8} {14: >8} {15: >8} {16: >8} {17: >8}'
+    b1 = 'Time',   'q(t)',  'calc', 'q(t+1)',  'dqdt',  'u(t)',  'calc', 'u(t+1)', 'dudt',   'v(t)',  'calc', 'v(t+1)',   'dvdt',   'T(t)',   'calc',  'T(t+1)',   'dTdt',    'dt'
+    a2 = '{0:4.2f} {1:8.2e} {2:8.2e} {3:8.2e} {4:8.1e} {5:8.2f} {6:8.2f} {7:8.2f} {8:8.1e} {9:8.2f} {10:8.2f} {11:8.2f} {12:8.1e} {13:8.2f} {14:8.2f} {15:8.2f} {16:8.1e} {17:8.2f}'    
+    print(a1.format('Time',   'q(t)',  'calc', 'q(t+1)',  'dqdt',  'u(t)',  'calc', 'u(t+1)', 'dudt',   'v(t)',  'calc', 'v(t+1)',   'dvdt',   'T(t)',   'calc',  'T(t+1)',   'dTdt',    'dt'))
+    for t in range(0,n_files):
+        dt = (stateNATIVE["time"][t+1] - stateNATIVE["time"][t])*3600.
+        print(a2.format(stateNATIVE["time"][t],stateNATIVE["qv_lay"][t,lev2display],stateNATIVE["qv_lay"][t,lev2display]+dqvdt_adv[t,lev2display]*dt,stateNATIVE["qv_lay"][t+1,lev2display],dqvdt_adv[t,lev2display], \
+                        stateNATIVE["u_lay"][t,lev2display],stateNATIVE["u_lay"][t,lev2display]+dudt_adv[t,lev2display]*dt,stateNATIVE["u_lay"][t+1,lev2display],dudt_adv[t,lev2display],\
+                        stateNATIVE["v_lay"][t,lev2display],stateNATIVE["v_lay"][t,lev2display]+dvdt_adv[t,lev2display]*dt,stateNATIVE["v_lay"][t+1,lev2display],dvdt_adv[t,lev2display],\
+                        stateNATIVE["t_lay"][t,lev2display],stateNATIVE["t_lay"][t,lev2display]+dtdt_adv[t,lev2display]*dt,stateNATIVE["t_lay"][t+1,lev2display],dtdt_adv[t,lev2display],dt))
 
     ####################################################################################
     #
@@ -2684,7 +2887,7 @@ def main():
     
     #read in arguments
     (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, case_name, 
-     old_chgres, lam, save_comp, use_nearest) = parse_arguments()
+     old_chgres, lam, save_comp, use_nearest, exact_mode) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     #if not tile and not lam:
@@ -2715,8 +2918,7 @@ def main():
     (state_data, surface_data, oro_data, error_msg) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
                                                                       tile_j, old_chgres, lam)
     if (error_msg):
-        print(error_msg)
-        print("STOPPING")
+        print("ERROR: unknown grid orintation")
         exit()
 
     if not date:
@@ -2735,7 +2937,7 @@ def main():
     (forcing_data, comp_data, stateREGRID) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
                                                                   location, use_nearest, forcing_dir, \
                                                                   grid_dir, tile, tile_i, tile_j, lam,\
-                                                                  save_comp)
+                                                                  save_comp, exact_mode)
     
     # Write SCM case file
     fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, \
