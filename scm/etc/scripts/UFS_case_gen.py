@@ -61,20 +61,21 @@ LOGLEVEL = logging.DEBUG
 
 parser = argparse.ArgumentParser()
 group1 = parser.add_mutually_exclusive_group(required=True)
-group1.add_argument('-l',   '--location',       help='longitude and latitude in degress E and N, respectively, separated by a space', nargs=2, type=float)
-group1.add_argument('-ij',  '--index',          help='i,j indices within the tile (if known - bypasses search for closest model point to lon/lat location)', nargs=2, type=int)
-parser.add_argument('-d',   '--date',           help='date corresponding to initial conditions in YYYYMMDDHHMMSS format', required=False)
-parser.add_argument('-i',   '--in_dir',         help='path to the directory containing the UFS initial conditions',                    required=True)
-parser.add_argument('-g',   '--grid_dir',       help='path to the directory containing the UFS supergrid files (AKA "fix" directory)', required=True)
-parser.add_argument('-f',   '--forcing_dir',    help='path to the directory containing the UFS history files',                         required=True)
-parser.add_argument('-n',   '--case_name',      help='name of case',                                                                   required=True)
-parser.add_argument('-t',   '--tile',           help='tile of desired point (if known - bypasses tile search if present)', type=int, choices=range(1,8))
-parser.add_argument('-a',   '--area',           help='area of grid cell in m^2', type=float)
-parser.add_argument('-oc',  '--old_chgres',     help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
-parser.add_argument('-lam', '--lam',            help='flag to signal that the ICs and forcing is from a limited-area model run',              action='store_true')
-parser.add_argument('-sc',  '--save_comp',      help='flag to create UFS reference file for comparison',             action='store_true')
-parser.add_argument('-near','--use_nearest',    help='flag to indicate using the nearest UFS history file gridpoint',action='store_true')
-parser.add_argument('-fm',  '--forcing_method', help='method used to calculate forcing (1=tendencies from dycore, 2=advective terms calculated, 3=total time tendency terms calculated)', type=int, choices=range(1,3), default=2)
+group1.add_argument('-l',   '--location',        help='longitude and latitude in degress E and N, respectively, separated by a space', nargs=2, type=float)
+group1.add_argument('-ij',  '--index',           help='i,j indices within the tile (if known - bypasses search for closest model point to lon/lat location)', nargs=2, type=int)
+parser.add_argument('-d',   '--date',            help='date corresponding to initial conditions in YYYYMMDDHHMMSS format', required=False)
+parser.add_argument('-i',   '--in_dir',          help='path to the directory containing the UFS initial conditions',                    required=True)
+parser.add_argument('-g',   '--grid_dir',        help='path to the directory containing the UFS supergrid files (AKA "fix" directory)', required=True)
+parser.add_argument('-f',   '--forcing_dir',     help='path to the directory containing the UFS history files',                         required=True)
+parser.add_argument('-n',   '--case_name',       help='name of case',                                                                   required=True)
+parser.add_argument('-t',   '--tile',            help='tile of desired point (if known - bypasses tile search if present)', type=int, choices=range(1,8))
+parser.add_argument('-a',   '--area',            help='area of grid cell in m^2', type=float)
+parser.add_argument('-oc',  '--old_chgres',      help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
+parser.add_argument('-lam', '--lam',             help='flag to signal that the ICs and forcing is from a limited-area model run',              action='store_true')
+parser.add_argument('-sc',  '--save_comp',       help='flag to create UFS reference file for comparison',             action='store_true')
+parser.add_argument('-near','--use_nearest',     help='flag to indicate using the nearest UFS history file gridpoint',action='store_true')
+parser.add_argument('-fm',  '--forcing_method',  help='method used to calculate forcing (1=tendencies from dycore, 2=advective terms calculated, 3=total time tendency terms calculated)', type=int, choices=range(1,4), default=2)
+parser.add_argument('-vert','--vertical_forcing',help='method used for vertical advection (1=calculated from history files, 2=vertical velocity provided)', type=int, choices=range(1,3), default=1)
 
 ########################################################################################
 #
@@ -96,6 +97,7 @@ def parse_arguments():
     save_comp      = args.save_comp
     use_nearest    = args.use_nearest
     forcing_method = args.forcing_method
+    vertical_forcing = args.vertical_forcing
     
     #validate args
     if not os.path.exists(in_dir):
@@ -135,7 +137,7 @@ def parse_arguments():
             raise Exception(message)
     
     return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, \
-            area, case_name, old_chgres, lam, save_comp, use_nearest, forcing_method)
+            area, case_name, old_chgres, lam, save_comp, use_nearest, forcing_method, vertical_forcing)
 
 ########################################################################################
 #
@@ -1103,7 +1105,7 @@ def centered_diff_derivative(y, dx):
     return deriv
     
     
-def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, nlevs, lam, save_comp_data):
+def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, nlevs, lam, save_comp_data, vertical_forcing):
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
@@ -1270,42 +1272,43 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
         # grid(True)
         # show()
         
-        v_advec_u[t,0] = 0.0
-        v_advec_u[t,nlevs-1] = 0.0
-        v_advec_v[t,0] = 0.0
-        v_advec_v[t,nlevs-1] = 0.0
-        v_advec_T[t,0] = 0.0
-        v_advec_T[t,nlevs-1] = 0.0
-        v_advec_qv[t,0] = 0.0
-        v_advec_qv[t,nlevs-1] = 0.0
-        for k in range(1, nlevs-1):
-             w_asc = max(smoothed_w[t,k], 0.0)
-             w_des = min(smoothed_w[t,k], 0.0)
-             gradient_T_asc = (temp[t,k,center,center] - temp[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             gradient_T_des = (temp[t,k+1,center,center] - temp[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             #gradient_T_asc = (smoothed_T[t,k,center,center] - smoothed_T[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             #gradient_T_des = (smoothed_T[t,k+1,center,center] - smoothed_T[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             gradient_qv_asc = (qv[t,k,center,center] - qv[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             gradient_qv_des = (qv[t,k+1,center,center] - qv[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             #gradient_qv_asc = (smoothed_qv[t,k,center,center] - smoothed_qv[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             #gradient_qv_des = (smoothed_qv[t,k+1,center,center] - smoothed_qv[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             #gradient_u_asc = (u_wind[t,k,center,center] - u_wind[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             #gradient_u_des = (u_wind[t,k+1,center,center] - u_wind[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             gradient_u_asc = (smoothed_u[t,k,center,center] - smoothed_u[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             gradient_u_des = (smoothed_u[t,k+1,center,center] - smoothed_u[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             #gradient_v_asc = (v_wind[t,k,center,center] - v_wind[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             #gradient_v_des = (v_wind[t,k+1,center,center] - v_wind[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             gradient_v_asc = (smoothed_v[t,k,center,center] - smoothed_v[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
-             gradient_v_des = (smoothed_v[t,k+1,center,center] - smoothed_v[t,k,center,center])/(pres[t,k+1]-pres[t,k])
-             
-             rho = pres[t,k]/(rdgas*temp[t,k,center,center])
-             adiabatic_exp_comp_term = -(w_asc + w_des)*grav/cp
-             v_advec_u[t,k] = rho*grav*(w_asc*gradient_u_asc + w_des*gradient_u_des)
-             v_advec_v[t,k] = rho*grav*(w_asc*gradient_v_asc + w_des*gradient_v_des)
-             v_advec_T[t,k] = rho*grav*(w_asc*gradient_T_asc + w_des*gradient_T_des) + adiabatic_exp_comp_term
-             v_advec_qv[t,k] = rho*grav*(w_asc*gradient_qv_asc + w_des*gradient_qv_des)
+        if (vertical_forcing == 1):
+            v_advec_u[t,0] = 0.0
+            v_advec_u[t,nlevs-1] = 0.0
+            v_advec_v[t,0] = 0.0
+            v_advec_v[t,nlevs-1] = 0.0
+            v_advec_T[t,0] = 0.0
+            v_advec_T[t,nlevs-1] = 0.0
+            v_advec_qv[t,0] = 0.0
+            v_advec_qv[t,nlevs-1] = 0.0
+            for k in range(1, nlevs-1):
+                 w_asc = max(smoothed_w[t,k], 0.0)
+                 w_des = min(smoothed_w[t,k], 0.0)
+                 gradient_T_asc = (temp[t,k,center,center] - temp[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_T_des = (temp[t,k+1,center,center] - temp[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_T_asc = (smoothed_T[t,k,center,center] - smoothed_T[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_T_des = (smoothed_T[t,k+1,center,center] - smoothed_T[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 gradient_qv_asc = (qv[t,k,center,center] - qv[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_qv_des = (qv[t,k+1,center,center] - qv[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_qv_asc = (smoothed_qv[t,k,center,center] - smoothed_qv[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_qv_des = (smoothed_qv[t,k+1,center,center] - smoothed_qv[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_u_asc = (u_wind[t,k,center,center] - u_wind[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_u_des = (u_wind[t,k+1,center,center] - u_wind[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 gradient_u_asc = (smoothed_u[t,k,center,center] - smoothed_u[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_u_des = (smoothed_u[t,k+1,center,center] - smoothed_u[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_v_asc = (v_wind[t,k,center,center] - v_wind[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_v_des = (v_wind[t,k+1,center,center] - v_wind[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 gradient_v_asc = (smoothed_v[t,k,center,center] - smoothed_v[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_v_des = (smoothed_v[t,k+1,center,center] - smoothed_v[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 
+                 rho = pres[t,k]/(rdgas*temp[t,k,center,center])
+                 adiabatic_exp_comp_term = -(w_asc + w_des)*grav/cp
+                 v_advec_u[t,k] = rho*grav*(w_asc*gradient_u_asc + w_des*gradient_u_des)
+                 v_advec_v[t,k] = rho*grav*(w_asc*gradient_v_asc + w_des*gradient_v_des)
+                 v_advec_T[t,k] = rho*grav*(w_asc*gradient_T_asc + w_des*gradient_T_des) + adiabatic_exp_comp_term
+                 v_advec_qv[t,k] = rho*grav*(w_asc*gradient_qv_asc + w_des*gradient_qv_des)
          
-        if (False):
+        if (True):
             plot(h_advec_T[t,:]*86400.0,pres[t,:],"r")
             # #y_av = movingaverage(y, 10)
             plot(v_advec_T[t,:]*86400.0,pres[t,:],"b")
@@ -1413,6 +1416,7 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
         for var2d in vars2d:
             var2d["values"] = np.asarray(var2d["values"])
     sec_in_hr = 3600.
+    time[0]   = 0.
     forcing = {
         "time":     time*sec_in_hr,
         "wa":       smoothed_w,
@@ -1440,7 +1444,7 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
 ########################################################################################
 #
 ########################################################################################
-def write_SCM_case_file(state, surface, oro, forcing, case, date):
+def write_SCM_case_file(state, surface, oro, forcing, case, date, vertical_forcing):
     """Write all data to a netCDF file in the DEPHY-SCM format"""
 
     # Working types
@@ -1507,7 +1511,10 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date):
     nc_file.adv_qt            = forcing_off
     nc_file.adv_rv            = forcing_off
     nc_file.adv_rt            = forcing_off
-    nc_file.forc_wa           = forcing_off
+    if (vertical_forcing == 2):
+        nc_file.forc_wa       = forcing_on
+    else:
+        nc_file.forc_wa       = forcing_off
     nc_file.forc_wap          = forcing_off
     nc_file.forc_geo          = forcing_off
     nc_file.nudging_ua        = forcing_off
@@ -2050,7 +2057,7 @@ def main():
     
     #read in arguments
     (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, case_name, 
-     old_chgres, lam, save_comp, use_nearest, forcing_method) = parse_arguments()
+     old_chgres, lam, save_comp, use_nearest, forcing_method, vertical_forcing) = parse_arguments()
     
     (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir)
     
@@ -2083,7 +2090,7 @@ def main():
         logging.critical(message)
         raise Exception(message)
     elif forcing_method == 2:
-        (forcing_data, comp_data) = get_UFS_forcing_data_advective_tendency(forcing_dir, hist_i, hist_j, tile, neighbors, dx, dy, state_data["nlevs"], lam, save_comp)
+        (forcing_data, comp_data) = get_UFS_forcing_data_advective_tendency(forcing_dir, hist_i, hist_j, tile, neighbors, dx, dy, state_data["nlevs"], lam, save_comp, vertical_forcing)
     elif forcing_method == 3:
         message = "Chose the total time tendency. This is removed for simplicity in this script."
         logging.critical(message)
@@ -2094,7 +2101,7 @@ def main():
         raise Exception(message)
     
     # Write SCM case file
-    fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date)
+    fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, vertical_forcing)
 
     # write out to compare SCM output to (atmf for state variables and sfcf for physics 
     # tendencies)

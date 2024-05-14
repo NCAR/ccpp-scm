@@ -338,3 +338,45 @@ def read_gabls3_obs(obs_file, time_slices, date):
         'ustar':obs_ustar,'u10m':obs_u10m, 'v10m':obs_v10m, 'hpbl':obs_hpbl, 'tsfc':obs_tsk}
     
     return return_dict
+    
+def read_UFS_comp(obs_file, time_slices, date):
+    
+    obs_fid = Dataset(obs_file, 'r')
+    obs_fid.set_auto_mask(False)
+    
+    obs_time_seconds_elapsed = obs_fid.variables['time'][:]
+    obs_datetime_string = obs_fid.getncattr('startDate')
+    
+    #get initial date from global file attribute
+    obs_init_datetime = datetime.datetime.strptime(obs_datetime_string, '%Y%m%d%H%M%S')
+    
+    obs_date = []
+    for i in range(obs_time_seconds_elapsed.size):
+        obs_date.append(obs_init_datetime + datetime.timedelta(seconds = obs_time_seconds_elapsed[i]))
+    obs_date = np.array(obs_date)
+    
+    obs_time_slice_indices = []
+    for time_slice in time_slices:
+        start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+        end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
+        start_date_index = np.where(obs_date >= start_date)[0][0]
+        end_date_index = np.where(obs_date >= end_date)[0][0]
+        obs_time_slice_indices.append([start_date_index, end_date_index])
+    
+        
+    obs_pres_l = obs_fid.variables['levs'][0,:]
+    obs_T = obs_fid.variables['temp'][:]
+    obs_qv = obs_fid.variables['qv'][:]
+    obs_u = obs_fid.variables['u'][:]
+    obs_v = obs_fid.variables['v'][:]
+    obs_shf = obs_fid.variables['shtfl'][:]
+    obs_lhf = obs_fid.variables['lhtfl'][:]
+    
+    obs_fid.close()
+    
+    return_dict = {'time': obs_time_seconds_elapsed, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices, 'time_h': obs_time_seconds_elapsed/3600.0,
+                    'pres_l': obs_pres_l, 'T': obs_T, 'qv': obs_qv, 'u': obs_u, 'v': obs_v, 'shf': obs_shf, 'lhf': obs_lhf}
+     
+    return return_dict
+    
+    

@@ -856,6 +856,8 @@ if(obs_compare and obs_file):
         obs_dict = sro.read_LASSO_obs(obs_file, time_slices, date_inst)
     elif('gabls3' in case_name.strip()):
         obs_dict = sro.read_gabls3_obs(obs_file, time_slices, date_inst)
+    elif('control' in case_name.strip()):
+        obs_dict = sro.read_UFS_comp(obs_file, time_slices, date_inst)
 
 try:
     os.makedirs(plot_dir)
@@ -1124,7 +1126,7 @@ if(plot_ind_datasets):
                                 data_time_slice_series_rs = data_time_slice_series.resample(resample_string).mean()
 
                                 #print obs_data_time_slice.shape, obs_date_range.shape, data_time_slice_series_rs.shape
-
+                                print(obs_date_range, obs_data_time_slice)
                                 spr.plot_time_series_multi(obs_date_range, [data_time_slice_series_rs], [scm_datasets_labels[i]], 'date', label, ind_dir + '/time_series_' + plot_name + plot_ext, obs_time = obs_date_range, obs_values = obs_data_time_slice, line_type='color', color_index=i, conversion_factor=conversion_factor)
                             elif(obs_delta_seconds < data_delta_seconds):
                                 print('The case where observations are more frequent than model output has not been implmented yet... ')
