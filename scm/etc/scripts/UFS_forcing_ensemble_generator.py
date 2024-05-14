@@ -25,9 +25,10 @@ parser.add_argument('-nens', '--nensmembers',   help='number of SCM UFS ensemble
 parser.add_argument('-dt',   '--timestep',      help='SCM timestep, in seconds',                                      type=int,   default = 3600)
 parser.add_argument('-cres', '--C_RES',         help='UFS spatial resolution',                                        type=int,   default = 96)
 parser.add_argument('-sdf',  '--suite',         help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
-parser.add_argument('-sc',   '--save_comp',     help='flag to save a file with UFS data for comparisons',                         action='store_true')
+parser.add_argument('-sc',   '--save_comp',     help='flag to save a file with UFS data for comparisons',                           action='store_true')
 parser.add_argument('-near', '--use_nearest',   help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
-parser.add_argument('-ext',  '--exact_mode',    help='flag to indicate using dynamic tendencies from UFS history files', action='store_true')
+parser.add_argument('-ext',  '--exact_mode',    help='flag to indicate using dynamic tendencies from UFS history files',            action='store_true')
+parser.add_argument('-tott', '--total_tend',    help='flag to indicate forcing to derive',                                          action='store_true')
 
 ###############################################################################
 # Main program
@@ -140,6 +141,7 @@ def main():
     if args.save_comp:   com_config = com_config + ' -sc'
     if args.use_nearest: com_config = com_config + ' -near'
     if args.exact_mode:  com_config = com_config + ' -ext'
+    if args.total_tend:  com_config = com_config + ' -tott'
 
     # Create inputs to SCM
     case_list    = ""
@@ -213,12 +215,12 @@ def main():
     # Display run commands
     #
     ###########################################################################
-    print("-------------------------------------------------------------------------------------------")
+    print("#"*128)
     print("Command(s) to execute in ccpp-scm/scm/bin/: ")
     print(" ")
     print("./run_scm.py --npz_type gfs --file " + fileOUT + " --timestep " + str(args.timestep))
     print("")
-    print("-------------------------------------------------------------------------------------------")
+    print("#"*128)
 
 if __name__ == '__main__':
     main()

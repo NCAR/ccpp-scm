@@ -66,9 +66,10 @@ parser.add_argument('-t',   '--tile',        help='tile of desired point (if kno
 parser.add_argument('-a',   '--area',        help='area of grid cell in m^2', type=float)
 parser.add_argument('-oc',  '--old_chgres',  help='flag to denote that the initial conditions use an older data format (pre-chgres_cube)', action='store_true')
 parser.add_argument('-lam', '--lam',         help='flag to signal that the ICs and forcing is from a limited-area model run',              action='store_true')
-parser.add_argument('-sc',  '--save_comp',   help='flag to create UFS reference file for comparison',             action='store_true')
-parser.add_argument('-near','--use_nearest', help='flag to indicate using the nearest UFS history file gridpoint',action='store_true')
-parser.add_argument('-ext', '--exact_mode',  help='flag to indicate using dynamic tendencies from UFS history files', action='store_true')
+parser.add_argument('-sc',  '--save_comp',   help='flag to create UFS reference file for comparison',                                      action='store_true')
+parser.add_argument('-near','--use_nearest', help='flag to indicate using the nearest UFS history file gridpoint',                         action='store_true')
+parser.add_argument('-ext', '--exact_mode',  help='flag to indicate using dynamic tendencies from UFS history files',                      action='store_true')
+parser.add_argument('-tott','--total_tend',  help='flag to indicate forcing to derive',                                                    action='store_true')
 
 ########################################################################################
 #
@@ -90,6 +91,7 @@ def parse_arguments():
     save_comp   = args.save_comp
     use_nearest = args.use_nearest
     exact_mode  = args.exact_mode
+    total_tend  = args.total_tend
     
     #validate args
     if not os.path.exists(in_dir):
@@ -129,7 +131,7 @@ def parse_arguments():
             raise Exception(message)
     
     return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, \
-            area, case_name, old_chgres, lam, save_comp, use_nearest, exact_mode)
+            area, case_name, old_chgres, lam, save_comp, use_nearest, exact_mode, total_tend)
 
 ########################################################################################
 #
@@ -1494,7 +1496,7 @@ def search_in_dict(listin,name):
 #
 ########################################################################################
 def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, grid_dir,
-                         tile, i, j, lam, save_comp_data, exact_mode):
+                         tile, i, j, lam, save_comp_data, exact_mode, cmp_total_tendency):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
 
     # Determine UFS history file format (tiled/quilted)
@@ -1638,7 +1640,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             v_data  = nc_file['vgrd'][0,::-1,:,:]
             j_get   = tile_jj
             i_get   = tile_ii
-        # end if
+        # end if (use-nearest)
 
         # Store surface pressure.
         ps.append(ps_data[j_get,i_get])
@@ -1701,9 +1703,11 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     #
     ####################################################################################
 
-    # Variable sneeded for "exact" UFS case generation.
-    dyntends = [{"name":"dtend_temp_nophys"}, {"name":"dtend_u_nophys"},   \
-                {"name":"dtend_v_nophys"},    {"name":"dtend_qv_nophys"}]
+    # Variables needed for "exact" UFS case generation.
+    dyntends = [{"name":"dtend_temp_nophys", "diag_table":'"gfs_dyn", "dtend_temp_nophys", "dtend_temp_nophys", "fv3_history", "all", .false., "none", 2'},\
+                {"name":"dtend_u_nophys",    "diag_table":'"gfs_dyn", "dtend_u_nophys",    "dtend_u_nophys",    "fv3_history", "all", .false., "none", 2'},\
+                {"name":"dtend_v_nophys",    "diag_table":'"gfs_dyn", "dtend_v_nophys",    "dtend_v_nophys",    "fv3_history", "all", .false., "none", 2'},\
+                {"name":"dtend_qv_nophys",   "diag_table":'"gfs_dyn", "dtend_qv_nophys",   "dtend_qv_nophys",   "fv3_history", "all", .false., "none", 2'}]
     for dyntend in dyntends: dyntend["values"] = []
     
     # Variables to be added to "UFS comparison file"
@@ -1769,72 +1773,80 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             var2d["units"]     = nc_file[var2d["name"]].getncattr(name="units")
             var2d["long_name"] = nc_file[var2d["name"]].getncattr(name="long_name")
         # end for
-        
         for dyntend in dyntends:
-            try:
+            if dyntend["name"] in nc_file.variables.keys():
                 if not use_nearest:
                     data = regridder(nc_file[dyntend["name"]][0,::-1,:,:])
                 else:
                     data = nc_file[dyntend["name"]][0,::-1,:,:]
-                # end if
+                # end if (use-nearest)
                 dyntend["values"].append(data[:,j_get,i_get])
                 dyntend["units"]     = nc_file[dyntend["name"]].getncattr(name="units")
                 dyntend["long_name"] = nc_file[dyntend["name"]].getncattr(name="long_name")
-            except:
-                print("Could not find ",dyntend["name"]," in ",nc_file)
-            # end try
+                dyntend["missing"] = False
+            else:
+                dyntend["missing"] = True
+            # end if
         # end for
-            
         nc_file.close()
     # end for
-    
+
+    # Handle the case that "exact-mode" was requested, but the UFS history files do not contains
+    # the necessary fields.
+    # In this scenario, create warning/message that informs the users how to rerun the UFS with
+    # the correct configuration.
+    # Revert to "approximate-mode"
+    if exact_mode:
+        missing_dtend_names = []
+        missing_diag_tables = []
+        for dyntend in dyntends:
+            if dyntend["missing"]:
+                missing_dtend_names.append(dyntend["name"])
+                missing_diag_tables.append(dyntend["diag_table"])
+                exact_mode = False
+            # end if
+        # end for
+        if missing_dtend_names:
+            print("#"*128)
+            print("#"*59,"WARNING","#"*60)
+            print("#"*128)
+            print("Could not find the following fields required for ",'"exact-mode"',':')
+            for missing_dtend_name in missing_dtend_names:
+                print("  -",missing_dtend_name)
+            # end for
+            print("Using ",'"approximate mode"',' instead')
+            print("")
+            print("  *NOTE*")
+            print("  You selected to create the UFS case using ",'"exact-mode"'," which requires additional (diagnostic)")
+            print("  fields in the UFS history files.")
+            print("")
+            print("  These optional diagnostics tendencies can be output from any UFS forecast by:")
+            print("   a) Modifying the physics namelist, gfs_phys_nml, so that:")
+            print("      *) ldiag3d = .true. ")
+            print("      *) qdiag3d = .true. ")
+            print("   b) Addding the following lines to the UFS diag_table:")
+            for missing_diag_table in missing_diag_tables:
+                print('      *) ',missing_diag_table )
+            # end for
+            print("")
+            print("#"*128)
+            print("#"*128)
+        # end if
+    # end if (exact-mode)
+
     # Convert to numpy arrays
     for var2d in vars2d:
         var2d["values"] = np.asarray(var2d["values"])
     # end for
-    for dyntend in dyntends:
-        dyntend["values"] = np.asarray(dyntend["values"])
-    # end for
-
-    ####################################################################################
-    #
-    # Create dictionary with full "Native" state (IC@t=0,ATMF*@t>0)
-    #
-    ####################################################################################
-    ps_IC      = np.zeros([1])
-    ps_IC[0]   = state_IC["ps"]
-    pi_IC      = np.zeros([1,nlevs+1])
-    pi_IC[0,:] = state_IC["pa_i"]
-    p_IC       = np.zeros([1,nlevs])
-    p_IC[0,:]  = state_IC["pa"]
-    t_IC       = np.zeros([1,nlevs])
-    t_IC[0,:]  = state_IC["ta"]
-    qv_IC      = np.zeros([1,nlevs])
-    qv_IC[0,:] = state_IC["qv"]
-    u_IC       = np.zeros([1,nlevs])
-    u_IC[0,:]  = state_IC["ua"]
-    v_IC       = np.zeros([1,nlevs])
-    v_IC[0,:]  = state_IC["va"]
-    tv_IC      = t_IC*(1.0 + zvir*qv_IC)
-    stateNATIVE = {"time":   np.concatenate((np.asarray([0.]), time_hr[:])),           \
-                   "ps":     np.concatenate((ps_IC,  ps),      axis=0),                \
-                   "p_lev":  np.concatenate((pi_IC,  p_lev),   axis=0),                \
-                   "p_lay":  np.concatenate((p_IC,   p_lay),   axis=0),                \
-                   "t_lay":  np.concatenate((t_IC,   t_lay),   axis=0),                \
-                   "qv_lay": np.concatenate((qv_IC,  qv_lay),  axis=0),                \
-                   "u_lay":  np.concatenate((u_IC,   u_lay),   axis=0),                \
-                   "v_lay":  np.concatenate((v_IC,   v_lay),   axis=0),                \
-                   "tv_lay": np.concatenate((tv_IC,  tv_lay),  axis=0)}
-
-    print("DJS2024: WHAT DOES THE NATIVE STATE LOOK LIKE, at the surface?")
-    print('{0: <4} {1: >8} {2: >8} {3: >8} {4: >8} {5: >6} {6: >6} {7: >6} {8: >8}'.
-          format('Time','sfcP','pi','p','t','qv','u','v','tv'))
-    for ij in range(0,len(stateNATIVE["time"])):
-        print('{0:4d} {1:8.2f} {2:8.2f} {3:8.2f} {4:8.2f} {5:6.2f} {6:6.2f} {7:6.2f} {8:8.2f}'.
-              format(int(stateNATIVE["time"][ij]),stateNATIVE["ps"][ij]*0.01,stateNATIVE["p_lev"][ij,0]*0.01,\
-                     stateNATIVE["p_lay"][ij,0]*0.01,stateNATIVE["t_lay"][ij,0],stateNATIVE["qv_lay"][ij,0]*100.,\
-                     stateNATIVE["u_lay"][ij,0],stateNATIVE["v_lay"][ij,0],stateNATIVE["tv_lay"][ij,0]))
-    # end for
+    if exact_mode:
+        for dyntend in dyntends:
+            dyntend["values"] = np.asarray(dyntend["values"])
+        # end for
+        dtend_temp_nophys = dyntends[0]["values"]
+        dtend_u_nophys    = dyntends[1]["values"]
+        dtend_v_nophys    = dyntends[2]["values"]
+        dtend_qv_nophys   = dyntends[3]["values"]
+    # end if (exact-mode)
     
     ####################################################################################
     #
@@ -1859,7 +1871,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     ####################################################################################
 
     # Initialize
-#    nlevs      = len(p_lay[0,:])
+    #nlevs      = len(p_lay[0,:])
     dummy      = np.zeros(1)
     from_p     = np.zeros([1,nlevs+1])
     to_p       = np.zeros([1,nlevs+1])
@@ -1879,6 +1891,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
 
     #
     # First timestep...
+    # (Same for Exact-mode or Approximate mode)
     #
 
     # Interpolation range
@@ -1893,7 +1906,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     tv_rev_new   = fv3_remap.map_scalar(nlevs, log_from_p, tv_init_rev[np.newaxis, :], \
                                         dummy, nlevs, log_to_p, 0, 0, 1,               \
                                         np.abs(kord_tm), t_min)
-
+    
     # IC Specific humidity on vertical-grid of first UFS history file.
     qv_init_rev  = state_IC["qv"][::-1]
     for k in range(0,nlevs): dp2[0,k] = from_p[0,k+1] - from_p[0,k]
@@ -1918,125 +1931,63 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     tv_layr[0,:] = tv_rev_new[0,::-1]
     qv_layr[0,:] = qv_rev_new[0,::-1]
     
-    #
-    # Subsequent timestep(s)...
-    # (current state on vertical grid of subsequent time-step(s). Used for differencing)
-    #
-    for t in range(n_files-1):
-        # Interpolation range
-        from_p[0,:]     = p_lev[t,::-1]
-        to_p[0,:]       = p_lev[t+1,::-1]
-        log_from_p[0,:] = np.log(p_lev[t,::-1])
-        log_to_p[0,:]   = np.log(p_lev[t+1,::-1])
-        
-        # Virtual Temperature @ time > 0
-        tv_rev[0,:] = tv_lay[t,::-1]
-        tv_rev_new  = fv3_remap.map_scalar(nlevs, log_from_p, tv_rev, dummy, nlevs,    \
-                                           log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
-        # Specific humidity @ time > 0
-        qv_rev[0,:] = qv_lay[t,::-1]
-        for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
-        qv_rev_new = fv3_remap.map1_q2(nlevs, from_p, qv_rev, nlevs, to_p, dp2,        \
-                                       0, 0, 0, kord_tr, q_min)
-        # Zonal wind  @ time > 0
-        u_rev[0,:] = u_lay[t,::-1]
-        u_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, u_rev, 0.0, nlevs, to_p,        \
-                                        0, 0, -1, kord_tm )
-        # Meridional wind @ time > 0
-        v_rev[0,:] = v_lay[t,::-1]
-        v_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, v_rev, 0.0, nlevs, to_p,        \
-                                        0, 0, -1, kord_tm )
-        # Store
-        p_layr[t+1,:]  = p_lay[t+1,:]
-        p_levr[t+1,:]  = p_lev[t+1,:]
-        tv_layr[t+1,:] = tv_rev_new[0,::-1]
-        qv_layr[t+1,:] = qv_rev_new[0,::-1]
-        u_layr[t+1,:]  = u_rev_new[0,::-1]
-        v_layr[t+1,:]  = v_rev_new[0,::-1]
-    # end for
+    # Subsequent timestep(s). (exact-mode only)
+    if exact_mode:
+        for t in range(n_files-1):
+            # Interpolation range
+            from_p[0,:]     = p_lev[t,::-1]
+            to_p[0,:]       = p_lev[t+1,::-1]
+            log_from_p[0,:] = np.log(p_lev[t,::-1])
+            log_to_p[0,:]   = np.log(p_lev[t+1,::-1])
+            
+            # Virtual Temperature @ time > 0
+            tv_rev[0,:] = tv_lay[t,::-1]
+            tv_rev_new  = fv3_remap.map_scalar(nlevs, log_from_p, tv_rev, dummy, nlevs,    \
+                                               log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
+            # Specific humidity @ time > 0
+            qv_rev[0,:] = qv_lay[t,::-1]
+            for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
+            qv_rev_new = fv3_remap.map1_q2(nlevs, from_p, qv_rev, nlevs, to_p, dp2,        \
+                                           0, 0, 0, kord_tr, q_min)
+            # Zonal wind  @ time > 0
+            u_rev[0,:] = u_lay[t,::-1]
+            u_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, u_rev, 0.0, nlevs, to_p,        \
+                                            0, 0, -1, kord_tm )
+            # Meridional wind @ time > 0
+            v_rev[0,:] = v_lay[t,::-1]
+            v_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, v_rev, 0.0, nlevs, to_p,        \
+                                            0, 0, -1, kord_tm )
+            # Store
+            p_layr[t+1,:]  = p_lay[t+1,:]
+            p_levr[t+1,:]  = p_lev[t+1,:]
+            tv_layr[t+1,:] = tv_rev_new[0,::-1]
+            qv_layr[t+1,:] = qv_rev_new[0,::-1]
+            u_layr[t+1,:]  = u_rev_new[0,::-1]
+            v_layr[t+1,:]  = v_rev_new[0,::-1]
+        # end for
     
-    #
-    p_layr[t+2,:]  = p_layr[t+1,:]
-    p_levr[t+2,:]  = p_levr[t+1,:]
-    tv_layr[t+2,:] = tv_layr[t+1,:]
-    qv_layr[t+2,:] = qv_layr[t+1,:]
-    u_layr[t+2,:]  = u_layr[t+1,:]
-    v_layr[t+2,:]  = v_layr[t+1,:]
-
+        #
+        p_layr[t+2,:]  = p_layr[t+1,:]
+        p_levr[t+2,:]  = p_levr[t+1,:]
+        tv_layr[t+2,:] = tv_layr[t+1,:]
+        qv_layr[t+2,:] = qv_layr[t+1,:]
+        u_layr[t+2,:]  = u_layr[t+1,:]
+        v_layr[t+2,:]  = v_layr[t+1,:]
+    # end if (exact-mode)
+    
     # Temperature
     t_layr = tv_layr/(1.0 + zvir*qv_layr)
 
-    # Create dictionary with "Regridded" state
-    stateREGRID = {"time":   np.concatenate((np.asarray([0.]), time_hr[:])),           \
-                   "ps":     np.concatenate((ps[0:1], ps), axis=0),                    \
-                   "p_lev":  p_levr,  \
-                   "p_lay":  p_layr,  \
-                   "t_lay":  t_layr,  \
-                   "qv_lay": qv_layr, \
-                   "u_lay":  u_layr,  \
-                   "v_lay":  v_layr,  \
-                   "tv_lay": tv_layr  }
-    print("DJS2024: WHAT DOES THE REGRIDDED STATE LOOK LIKE, at the surface?")
-    print('{0: <4} {1: >8} {2: >8} {3: >8} {4: >8} {5: >6} {6: >6} {7: >6} {8: >8}'.
-          format('Time','sfcP','pi','p','t','qv','u','v','tv'))
-    for ij in range(0,len(stateREGRID["time"])):
-        print('{0:4d} {1:8.2f} {2:8.2f} {3:8.2f} {4:8.2f} {5:6.2f} {6:6.2f} {7:6.2f} {8:8.2f}'.
-              format(int(stateREGRID["time"][ij]),stateREGRID["ps"][ij]*0.01,stateREGRID["p_lev"][ij,0]*0.01,\
-                     stateREGRID["p_lay"][ij,0]*0.01,stateREGRID["t_lay"][ij,0],stateREGRID["qv_lay"][ij,0]*100.,\
-                     stateREGRID["u_lay"][ij,0],stateREGRID["v_lay"][ij,0],stateREGRID["tv_lay"][ij,0]))
-    # end for
+    # Save regridded initial state.
+    stateInit = {"p_lay":  p_lay[0,:],  \
+                 "t_lay":  t_lay[0,:],  \
+                 "qv_lay": qv_lay[0,:], \
+                 "u_lay":  u_lay[0,:],  \
+                 "v_lay":  v_lay[0,:]}
     
     ####################################################################################
     #
-    # Compute tendencies advective = total - remapping
-    # 
-    ####################################################################################
-
-    #
-    dtdt_adv   = np.zeros([n_files+1,nlevs])
-    dqvdt_adv  = np.zeros([n_files+1,nlevs])
-    dudt_adv   = np.zeros([n_files+1,nlevs])
-    dvdt_adv   = np.zeros([n_files+1,nlevs])
-    pres_adv   = np.zeros([n_files+1,nlevs])
-    pres_i_adv = np.zeros([n_files+1,nlevs+1])
-    tend_remap = np.zeros([1,nlevs])
-    tend_total = np.zeros([1,nlevs])
-
-    #
-    for t in range(n_files):
-        #
-        dtime_sec = (stateNATIVE["time"][t+1] - stateNATIVE["time"][t])*sec_in_hr
-        #
-        pres_adv[t,:]   = stateNATIVE["p_lay"][t,:]
-        pres_i_adv[t,:] = stateNATIVE["p_lev"][t,:]
-        #
-        tend_total[0,:] = stateREGRID["t_lay"][t+1,:] - stateREGRID["t_lay"][t,:]
-        tend_remap[0,:] = stateREGRID["t_lay"][t,:]   - stateNATIVE["t_lay"][t,:]
-        dtdt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
-        
-        tend_total[0,:] = stateREGRID["qv_lay"][t+1,:] - stateREGRID["qv_lay"][t,:]
-        tend_remap[0,:] = stateREGRID["qv_lay"][t,:]   - stateNATIVE["qv_lay"][t,:]
-        dqvdt_adv[t,:]  = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
-        
-        tend_total[0,:] = stateREGRID["u_lay"][t+1,:] - stateREGRID["u_lay"][t,:]
-        tend_remap[0,:] = stateREGRID["u_lay"][t,:]   - stateNATIVE["u_lay"][t,:]
-        dudt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
-        
-        tend_total[0,:] = stateREGRID["v_lay"][t+1,:] - stateREGRID["v_lay"][t,:]
-        tend_remap[0,:] = stateREGRID["v_lay"][t,:]   - stateNATIVE["v_lay"][t,:]
-        dvdt_adv[t,:]   = (tend_total[0,:] - tend_remap[0,:]) / dtime_sec
-
-    #
-    dtdt_adv[t+1,:]   = dtdt_adv[t,:]
-    dqvdt_adv[t+1,:]  = dqvdt_adv[t,:]
-    dudt_adv[t+1,:]   = dudt_adv[t,:]
-    dvdt_adv[t+1,:]   = dvdt_adv[t,:]
-    pres_adv[t+1,:]   = pres_adv[t,:] 
-    pres_i_adv[t+1,:] = pres_i_adv[t,:]
-    
-    ####################################################################################
-    #
-    # Exact mode
+    # Compute forcing.
     #
     ####################################################################################
     # Initialize tendencies.
@@ -2046,30 +1997,37 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     dvdt_adv   = np.zeros([n_files+1,nlevs])
     pres_adv   = np.zeros([n_files+1,nlevs])
     pres_i_adv = np.zeros([n_files+1,nlevs+1])
+    dtdtr      = np.zeros([1,nlevs])
+    dqdtr      = np.zeros([1,nlevs])
+    dudtr      = np.zeros([1,nlevs])
+    dvdtr      = np.zeros([1,nlevs])
 
-    # First timestep...
-    dtdtr = np.zeros([1,nlevs])
-    dqdtr = np.zeros([1,nlevs])
-    dudtr = np.zeros([1,nlevs])
-    dvdtr = np.zeros([1,nlevs])
-    #
+    # First timestep.
     pres_adv[0,:]   = state_IC["pa"]
     pres_i_adv[0,:] = state_IC["pa_i"]
-    dt = 3600.0*(time_hr[0])
-    #dqdtr[0,:]     = qv_layr[0,:] - state_IC["qv"][:] # Do we need to do this? 
-    dqdtt          = qv_lay[0,:]  - state_IC["qv"][:]
-    dqvdt_adv[0,:] = (dqdtt - dqdtr[0,:])/dt
-    #dudtr[0,:]    = u_layr[0,:] - state_IC["ua"][:] # Do we need to do this? 
-    dudtt         = u_lay[0,:]  - state_IC["ua"][:]
-    dudt_adv[0,:] = (dudtt - dudtr[0,:])/dt
-    #dvdtr[0,:]    = v_layr[0,:] - state_IC["va"][:] # Do we need to do this? 
-    dvdtt         = v_lay[0,:]  - state_IC["va"][:]
-    dvdt_adv[0,:] = (dvdtt - dvdtr[0,:])/dt
-    #dtdtr[0,:]    = t_layr[0,:] - state_IC["ta"][:] # Do we need to do this?
-    dtdtt         = t_lay[0,:]  - state_IC["ta"][:]
-    dtdt_adv[0,:] = (dtdtt - dtdtr[0,:])/dt
+    dt              = 3600.0*(time_hr[0])
+    if exact_mode:
+        dqdtr[0,:]     = (qv_layr[0,:] - state_IC["qv"][:])/dt
+        dqvdt_adv[0,:] = dtend_qv_nophys[0,:] - dqdtr[0,:]
+        dudtr[0,:]     = (u_layr[0,:] - state_IC["ua"][:])/dt
+        dudt_adv[0,:]  = (dtend_u_nophys[0,:] - dudtr[0,:])
+        dvdtr[0,:]     = (v_layr[0,:] - state_IC["va"][:])/dt
+        dvdt_adv[0,:]  = (dtend_v_nophys[0,:] - dvdtr[0,:])
+        dtdtr[0,:]     = (t_layr[0,:] - state_IC["ta"][:])/dt
+        dtdt_adv[0,:]  = (dtend_temp_nophys[0,:] - dtdtr[0,:])
+    elif cmp_total_tendency:
+        print("DJS ASKS GF: Is this where you will compute something like?  dqvdt_tot = dqdtt/dt + u*dudx/dt + v*dvdy/dt")
+    else:
+        dqdtt          = qv_lay[0,:] - state_IC["qv"][:]
+        dqvdt_adv[0,:] = dqdtt/dt
+        dudtt          = u_lay[0,:]  - state_IC["ua"][:]
+        dudt_adv[0,:]  = dudtt/dt
+        dvdtt          = v_lay[0,:]  - state_IC["va"][:]
+        dvdt_adv[0,:]  = dvdtt/dt
+        dtdtt          = t_lay[0,:]  - state_IC["ta"][:]
+        dtdt_adv[0,:]  = dtdtt/dt        
 
-    # Subsequent timesteps...
+    # Subsequent timestep(s).
     dtdtr = np.zeros([n_files-1,nlevs])
     dqdtr = np.zeros([n_files-1,nlevs])
     dudtr = np.zeros([n_files-1,nlevs])
@@ -2079,46 +2037,31 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     dudtt = np.zeros([n_files-1,nlevs])
     dvdtt = np.zeros([n_files-1,nlevs])
     for t in range(n_files-1):
-        dt = (stateNATIVE["time"][t+2] - stateNATIVE["time"][t+1])*3600.
+        dt = (time_hr[t+1] - time_hr[t])*3600.
         pres_adv[t+1,:]   = p_lay[t]
         pres_i_adv[t+1,:] = p_lev[t]
         if exact_mode:
-            for dyntend in dyntends:
-                if (dyntend["name"] == "dtend_qv_nophys"):
-                    dqdtr[t,:] = (qv_layr[t+1,:] - qv_lay[t,:])/dt # Do we need to do this? 
-                    dqvdt_adv[t+1,:] = dyntend["values"][t,:] - dqdtr[t,:]
-                # end if
-                if (dyntend["name"] == "dtend_temp_nophys"):
-                    dtdtr[t,:] = (t_layr[t+1,:] - t_lay[t,:])/dt # Do we need to do this? 
-                    dtdt_adv[t+1,:] = dyntend["values"][t,:] - dtdtr[t,:]
-                # end if
-                if (dyntend["name"] == "dtend_u_nophys"):
-                    dudtr[t,:] = (u_layr[t+1,:] - u_lay[t,:])/dt # Do we need to do this? 
-                    dudt_adv[t+1,:] = dyntend["values"][t,:] - dudtr[t,:]
-                # endif
-                if (dyntend["name"] == "dtend_v_nophys"):
-                    dvdtr[t,:] = (v_layr[t+1,:] - v_lay[t,:])/dt # Do we need to do this? 
-                    dvdt_adv[t+1,:] = dyntend["values"][t,:] - dvdtr[t,:]
-                # end if
-            # end for
+            dqdtr[t,:]       = (qv_layr[t+1,:] - qv_lay[t,:])/dt
+            dqvdt_adv[t+1,:] = dtend_qv_nophys[t+1,:] - dqdtr[t,:]
+            dtdtr[t,:]       = (t_layr[t+1,:] - t_lay[t,:])/dt
+            dtdt_adv[t+1,:]  = dtend_temp_nophys[t+1,:] - dtdtr[t,:]
+            dudtr[t,:]       = (u_layr[t+1,:] - u_lay[t,:])/dt
+            dudt_adv[t+1,:]  = dtend_u_nophys[t+1,:] - dudtr[t,:]
+            dvdtr[t,:]       = (v_layr[t+1,:] - v_lay[t,:])/dt
+            dvdt_adv[t+1,:]  = dtend_v_nophys[t+1,:] - dvdtr[t,:]
         else:
-            #dqdtr[t,:] = qv_layr[t+1,:] - qv_lay[t,:]
-            dqdtt       = qv_lay[t+1,:]  - qv_lay[t,:]
+            dqdtt            = qv_lay[t+1,:] - qv_lay[t,:]
             dqvdt_adv[t+1,:] = (dqdtt - dqdtr[t,:])/dt
+            dudtt            = u_lay[t+1,:] - u_lay[t,:]
+            dudt_adv[t+1,:]  = (dudtt - dudtr[t,:])/dt
+            dvdtt            = v_lay[t+1,:] - v_lay[t,:]
+            dvdt_adv[t+1,:]  = (dvdtt - dvdtr[t,:])/dt
+            dtdtt            = t_lay[t+1,:] - t_lay[t,:]
+            dtdt_adv[t+1,:]  = (dtdtt - dtdtr[t,:])/dt
+        # end if (exact-mode)
+    # end for (ufs history files)
 
-            #dudtr[t,:] = u_layr[t+1,:] - u_lay[t,:]
-            dudtt      = u_lay[t+1,:]	- u_lay[t,:]
-            dudt_adv[t+1,:] = (dudtt - dudtr[t,:])/dt
-
-            #dvdtr[t,:] = v_layr[t+1,:] - v_lay[t,:]
-            dvdtt      = v_lay[t+1,:]   - v_lay[t,:]
-            dvdt_adv[t+1,:] = (dvdtt - dvdtr[t,:])/dt
-
-            #dtdtr[t,:] = t_layr[t+1,:] - t_lay[t,:]
-            dtdtt      = t_lay[t+1,:]   - t_lay[t,:]
-            dtdt_adv[t+1,:] = (dtdtt - dtdtr[t,:])/dt
-        # end if
-    # end for
+    # Last timestep.
     dtdt_adv[t+2,:]   = dtdt_adv[t+1,:]
     dqvdt_adv[t+2,:]  = dqvdt_adv[t+1,:]
     dudt_adv[t+2,:]   = dudt_adv[t+1,:]
@@ -2126,26 +2069,50 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     pres_adv[t+2,:]   = pres_adv[t+1,:]
     pres_i_adv[t+2,:] = pres_i_adv[t+1,:]
 
-    lev2display = 0
+    ####################################################################################
+    # Save UFS data for comparison with SCM output.
+    ####################################################################################
+    if (save_comp_data):
+        # Initialize
+        t_layers_at_pres1_rev  = np.zeros([t_lay.shape[0],1,t_lay.shape[1]])
+        qv_layers_at_pres1_rev = np.zeros([qv_lay.shape[0],1,qv_lay.shape[1]])
+        u_layers_at_pres1_rev  = np.zeros([u_lay.shape[0],1,u_lay.shape[1]])
+        v_layers_at_pres1_rev  = np.zeros([v_lay.shape[0],1,u_lay.shape[1]])
+        p_layers_at_pres1_rev  = np.zeros([v_lay.shape[0],1,u_lay.shape[1]])
+        from_log_pres_rev      = np.zeros([1,p_lev.shape[1]])
+        to_log_pres_rev        = np.zeros([1,p_lev.shape[1]])
+        from_pres_rev          = np.zeros([1,p_lev.shape[1]])
+        to_pres_rev            = np.zeros([1,p_lev.shape[1]])
+        dp2                    = np.zeros([1,qv_lay.shape[1]])
 
-    print("DJS2024: HOW WELL DO THE COMPUTATIONS MATCH THE INPUT STATE?")
-    if exact_mode:
-        print("   Using Exact mode")
-    else:
-        print("   Using Approximate mode")
-    # end if
-
-
-    a1 = '{0: <4} {1: >8} {2: >8} {3: >8} {4: >8} {5: >8} {6: >8} {7: >8} {8: >8} {9: >8} {10: >8} {11: >8} {12: >8} {13: >8} {14: >8} {15: >8} {16: >8} {17: >8}'
-    b1 = 'Time',   'q(t)',  'calc', 'q(t+1)',  'dqdt',  'u(t)',  'calc', 'u(t+1)', 'dudt',   'v(t)',  'calc', 'v(t+1)',   'dvdt',   'T(t)',   'calc',  'T(t+1)',   'dTdt',    'dt'
-    a2 = '{0:4.2f} {1:8.2e} {2:8.2e} {3:8.2e} {4:8.1e} {5:8.2f} {6:8.2f} {7:8.2f} {8:8.1e} {9:8.2f} {10:8.2f} {11:8.2f} {12:8.1e} {13:8.2f} {14:8.2f} {15:8.2f} {16:8.1e} {17:8.2f}'    
-    print(a1.format('Time',   'q(t)',  'calc', 'q(t+1)',  'dqdt',  'u(t)',  'calc', 'u(t+1)', 'dudt',   'v(t)',  'calc', 'v(t+1)',   'dvdt',   'T(t)',   'calc',  'T(t+1)',   'dTdt',    'dt'))
-    for t in range(0,n_files):
-        dt = (stateNATIVE["time"][t+1] - stateNATIVE["time"][t])*3600.
-        print(a2.format(stateNATIVE["time"][t],stateNATIVE["qv_lay"][t,lev2display],stateNATIVE["qv_lay"][t,lev2display]+dqvdt_adv[t,lev2display]*dt,stateNATIVE["qv_lay"][t+1,lev2display],dqvdt_adv[t,lev2display], \
-                        stateNATIVE["u_lay"][t,lev2display],stateNATIVE["u_lay"][t,lev2display]+dudt_adv[t,lev2display]*dt,stateNATIVE["u_lay"][t+1,lev2display],dudt_adv[t,lev2display],\
-                        stateNATIVE["v_lay"][t,lev2display],stateNATIVE["v_lay"][t,lev2display]+dvdt_adv[t,lev2display]*dt,stateNATIVE["v_lay"][t+1,lev2display],dvdt_adv[t,lev2display],\
-                        stateNATIVE["t_lay"][t,lev2display],stateNATIVE["t_lay"][t,lev2display]+dtdt_adv[t,lev2display]*dt,stateNATIVE["t_lay"][t+1,lev2display],dtdt_adv[t,lev2display],dt))
+        # First timestep...
+        t_layers_at_pres1_rev[0,0,:]  = t_lay[0,::-1]
+        qv_layers_at_pres1_rev[0,0,:] = qv_lay[0,::-1]
+        u_layers_at_pres1_rev[0,0,:]  = u_lay[0,::-1]
+        v_layers_at_pres1_rev[0,0,:]  = v_lay[0,::-1]
+        p_layers_at_pres1_rev[0,0,:]  = p_lay[0,::-1]
+        
+        # Subsequent timestpes...
+        for t in range(1,t_lay.shape[0]):
+            from_log_pres_rev[0,:] = np.log(p_lev[t,::-1])
+            to_log_pres_rev[0,:]   = np.log(p_lev[0,::-1])
+            from_pres_rev[0,:]     = p_lev[t,::-1]
+            to_pres_rev[0,:]       = p_lev[0,::-1]
+            for k in range(0,qv_lay.shape[1]):
+                dp2[0,k] = to_pres_rev[0,k+1] - to_pres_rev[0,k]
+            # end for
+            t_layers_at_pres1_rev[t,:,:]  = fv3_remap.map_scalar(p_lay.shape[1], from_log_pres_rev, t_lay[t,np.newaxis,::-1], dummy, p_lay.shape[1], to_log_pres_rev, 0, 0, 1, np.abs(kord_tm), t_min)
+            qv_layers_at_pres1_rev[t,:,:] = fv3_remap.map1_q2(p_lay.shape[1], from_pres_rev, qv_lay[t,np.newaxis,::-1], p_lay.shape[1], to_pres_rev, dp2, 0, 0, 0, kord_tr, q_min)
+            u_layers_at_pres1_rev[t,:,:]  = fv3_remap.map1_ppm(p_lay.shape[1], from_pres_rev, u_lay[t,np.newaxis,::-1], 0.0, p_lay.shape[1], to_pres_rev, 0, 0, -1, kord_tm)
+            v_layers_at_pres1_rev[t,:,:]  = fv3_remap.map1_ppm(p_lay.shape[1], from_pres_rev, v_lay[t,np.newaxis,::-1], 0.0, p_lay.shape[1], to_pres_rev, 0, 0, -1, kord_tm)
+            p_layers_at_pres1_rev[t,:,:]  = p_lay[0,::-1]
+        # end for
+        t_layers_at_pres1 = t_layers_at_pres1_rev[:,0,::-1]
+        qv_layers_at_pres1 = qv_layers_at_pres1_rev[:,0,::-1]
+        u_layers_at_pres1 = u_layers_at_pres1_rev[:,0,::-1]
+        v_layers_at_pres1 = v_layers_at_pres1_rev[:,0,::-1]
+        p_layers_at_pres1 = p_layers_at_pres1_rev[:,0,::-1]
+    # end if (save_comp_data)
 
     ####################################################################################
     #
@@ -2161,8 +2128,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     # step)
     #
     ####################################################################################
-    time_method = 'constant_simple' #this is not implemented in the SCM code yet
-    #time_method = 'constant_interp'
+    #time_method = 'constant_simple' #this is not implemented in the SCM code yet
+    time_method = 'constant_interp'
     #time_method = 'gradient' #this produced wonky results in the SCM; avoid until investigated more
     
     if (time_method == 'constant_simple'):
@@ -2192,6 +2159,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             tot_advec_qv[:,t] = dqvdt_adv[t,:]
             tot_advec_u[:,t] = dudt_adv[t,:]
             tot_advec_v[:,t] = dvdt_adv[t,:]
+        # end for
     elif (time_method == 'constant_interp'):
         print('Forcing can be interpolated in time, but the time values are chosen such that forcing will effectively be held consant during a diagnostic time interval.')
         ntimes = 2*n_files
@@ -2236,15 +2204,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             tot_advec_u[:,2*t+1] = tot_advec_u[:,2*t]
             tot_advec_v[:,2*t] = dvdt_adv[t,:]
             tot_advec_v[:,2*t+1] = tot_advec_v[:,2*t]
-            #
-            #p_s[2*t-1]             = 0.5*(p_s[2*t]             + p_s[2*t-1])
-            #pressure_forc[:,2*t-1] = 0.5*(pressure_forc[:,2*t] + pressure_forc[:,2*t-1])
-            #tot_advec_T[:,2*t-1]   = 0.5*(tot_advec_T[:,2*t]   + tot_advec_T[:,2*t-1])
-            #tot_advec_qv[:,2*t-1]  = 0.5*(tot_advec_qv[:,2*t]  + tot_advec_qv[:,2*t-1])
-            #tot_advec_u[:,2*t-1]   = 0.5*(tot_advec_u[:,2*t]   + tot_advec_u[:,2*t-1])
-            #tot_advec_v[:,2*t-1]   = 0.5*(tot_advec_v[:,2*t]   + tot_advec_v[:,2*t-1])
-
-
+        # end for
     elif (time_method == 'gradient'): #this produced wonky results in the SCM; avoid until investigated more
         print('Forcing can be interpolated in time since the forcing terms are assumed to follow a constant time-gradient.')
         
@@ -2293,7 +2253,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     else:
         print('Unrecognized forcing time method. Exiting.')
         exit()
-
+    # end if
+    
     #
     w_ls         = np.zeros((nlevs,ntimes),dtype=float)
     omega        = np.zeros((nlevs,ntimes),dtype=float)
@@ -2313,23 +2274,24 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     }
     
     if (save_comp_data):
+        time_hr[0] = 0.0
         comp_data = {
-            "time": stateNATIVE["time"]*sec_in_hr,
-            "pa"  : stateNATIVE["p_lay"][:,:],
-            "ta"  : stateNATIVE["t_lay"][:,:],
-            "qv"  : stateNATIVE["qv_lay"][:,:],
-            "ua"  : stateNATIVE["u_lay"][:,:],
-            "va"  : stateNATIVE["v_lay"][:,:],
-            "vars2d":vars2d}
+            "time" : time_hr*sec_in_hr,
+            "pa"   : p_layers_at_pres1,
+            "ta"   : t_layers_at_pres1,
+            "qv"   : qv_layers_at_pres1,
+            "ua"   : u_layers_at_pres1,
+            "va"   : v_layers_at_pres1,
+            "vars2d":[]}
     else:
         comp_data = {}
 
-    return (forcing, comp_data, stateREGRID)
+    return (forcing, comp_data, stateInit)
 
 ########################################################################################
 #
 ########################################################################################
-def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
+def write_SCM_case_file(state, surface, oro, forcing, init, case, date):
     """Write all data to a netCDF file in the DEPHY-SCM format"""
 
     # Working types
@@ -2534,21 +2496,21 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
     var_dict = [{"name": "orog",         "type":wp, "dimd": ('t0'         ),    "units": "m",             "desc": "surface_altitude"},\
                 {"name": "zh",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m",             "desc": "height"},\
                 {"name": "pa",           "type":wp, "dimd": ('t0',   'lev'),    "units": "Pa",            "desc": "air_ressure"}, \
-                {"name": "ta",           "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_temperature","default_value": stateREGRID["t_lay"][1,:], "override": True}, \
+                {"name": "ta",           "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_temperature","default_value": init["t_lay"][:], "override": True}, \
                 {"name": "theta",        "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_potential_temperature"}, \
                 {"name": "thetal",       "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_liquid_potential_temperature"}, \
                 {"name": "rv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "humidity_mixing_ratio"}, \
                 {"name": "rl",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "cloud_liquid_water_mixing_ratio"}, \
                 {"name": "ri",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "cloud_ice_water_mixing_ratio"}, \
                 {"name": "rt",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "water_mixing_ratio"}, \
-                {"name": "qv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "specific_humidity","default_value": stateREGRID["qv_lay"][1,:], "override": True}, \
+                {"name": "qv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "specific_humidity","default_value": init["qv_lay"][:], "override": True}, \
                 {"name": "ql",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_cloud_liquid_water_in_air"}, \
                 {"name": "qi",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_cloud_ice_water_in_air", "default_value": 0.0}, \
                 {"name": "qt",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_water_in_air"}, \
                 {"name": "hur",          "type":wp, "dimd": ('t0',   'lev'),    "units": "%",             "desc": "relative_humidity"}, \
                 {"name": "tke",          "type":wp, "dimd": ('t0',   'lev'),    "units": "m2 s-2",        "desc": "specific_turbulen_kinetic_energy", "default_value": 0.0}, \
-                {"name": "ua",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "eastward_wind", "default_value": stateREGRID["u_lay"][1,:], "override": True}, \
-                {"name": "va",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "northward_wind", "default_value": stateREGRID["v_lay"][1,:], "override": True}, \
+                {"name": "ua",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "eastward_wind","default_value": init["u_lay"][:], "override": True}, \
+                {"name": "va",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "northward_wind","default_value": init["v_lay"][:], "override": True}, \
                 {"name": "ts",           "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_temperature"},\
                 {"name": "tskin",        "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_skin_pressure"}, \
                 {"name": "ps",           "type":wp, "dimd": ('t0'         ),    "units": "Pa",            "desc": "surface_air_pressure"}, \
@@ -2887,7 +2849,7 @@ def main():
     
     #read in arguments
     (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, case_name, 
-     old_chgres, lam, save_comp, use_nearest, exact_mode) = parse_arguments()
+     old_chgres, lam, save_comp, use_nearest, exact_mode, cmp_total_tendency) = parse_arguments()
         
     #find tile containing the point using the supergrid if no tile is specified 
     #if not tile and not lam:
@@ -2934,14 +2896,13 @@ def main():
     surface_data["lat"]  = point_lat
     
     # Get UFS forcing data
-    (forcing_data, comp_data, stateREGRID) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
-                                                                  location, use_nearest, forcing_dir, \
-                                                                  grid_dir, tile, tile_i, tile_j, lam,\
-                                                                  save_comp, exact_mode)
+    (forcing_data, comp_data, stateInit) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
+                                                                location, use_nearest, forcing_dir, \
+                                                                grid_dir, tile, tile_i, tile_j, lam,\
+                                                                save_comp, exact_mode, cmp_total_tendency)
     
     # Write SCM case file
-    fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, case_name, date, \
-                                  stateREGRID)
+    fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, stateInit, case_name, date)
 
     # read in and remap the state variables to the first history file pressure profile and 
     # write them out to compare SCM output to (atmf for state variables and sfcf for physics 
