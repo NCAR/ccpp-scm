@@ -498,7 +498,6 @@ subroutine output_append_state(ncid, scm_state, physics)
   call NetCDF_put_var(ncid, "v",       scm_state%state_v(:,:,1), scm_state%itt_out)
   call NetCDF_put_var(ncid, "ql",      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1), scm_state%itt_out)
   call NetCDF_put_var(ncid, "qi",      scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1), scm_state%itt_out)
- !zhang
   call NetCDF_put_var(ncid, "sigmab",  scm_state%state_tracer(:,1,scm_state%sigmab_index,1), scm_state%itt_out)
   if (physics%model%do_mynnedmf) then
     call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
