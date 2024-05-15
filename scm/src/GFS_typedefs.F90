@@ -5393,6 +5393,7 @@ module GFS_typedefs
         call label_dtend_tracer(Model,100+Model%ntgz,'graupel_ref','graupel reflectivity','m3 kg-1 s-1')
         call label_dtend_tracer(Model,100+Model%nthz,'hail_ref','hail reflectivity','m3 kg-1 s-1')
         call label_dtend_tracer(Model,100+Model%ntke,'sgs_tke','turbulent kinetic energy','J s-1')
+        call label_dtend_tracer(Model,100+Model%ntsigma,'sigmab','prognostic updraft area fraction in convection','frac')
         call label_dtend_tracer(Model,100+Model%nqrimef,'q_rimef','mass weighted rime factor','kg-1 s-1')
         call label_dtend_tracer(Model,100+Model%ntwa,'liq_aero','number concentration of water-friendly aerosols','kg-1 s-1')
         call label_dtend_tracer(Model,100+Model%ntia,'ice_aero','number concentration of ice-friendly aerosols','kg-1 s-1')
