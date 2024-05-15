@@ -76,7 +76,7 @@ developers.
 
 
 While the SCM is updated with the latest commits to the CCPP submodules (ccpp-physics and ccpp-framework)
-on a fairly regular basis, it may be weeks or even months behind at times. You can try to use the latest commits of the ccpp-physics and
+on a fairly regular basis, it may be behind by a few commits at times. You can try to use the latest commits of the ccpp-physics and
 ccpp-framework submodules if you wish, but this may not have been tested
 (i.e. SCM development may lag ccpp-physics and/or ccpp-framework
 development). To do so:
@@ -440,6 +440,12 @@ from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v6.0.0
 contents in the directory ``scm/data``. Similarly, do the same for
 ``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
 to ``scm/data/physics_input_data/``.
+
+New with the SCM v7 release, static data is available for running cases with GOCART climatological aerosols (where the value of ``iaer`` in the ``&gfs_physics_nml`` namelist starts with 1; see the `CCPP Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v6.0.0/sci_doc/_c_c_p_psuite_nml_desp.html>`__ for more information); one example of this is with the default namelist settings for the GFS_v17_HR3 scheme. This dataset is very large (~12 GB), so it is recommended only to download it if you will be using it.
+
+.. code:: bash
+
+   ./contrib/get_aerosol_climo.sh
 
 .. _`singlerunscript`:
 
