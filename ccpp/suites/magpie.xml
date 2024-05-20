@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<!--
+DESCRIPTION:
+Suite "magpie" (formerly known as GFS_v17_HR3) was originally developed for use by the GFS v17 High-resolution prototype 3 (HR3)
+-->
 <suite name="magpie" version="1">
   <!-- <init></init> -->
   <group name="time_vary">
