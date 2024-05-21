@@ -139,7 +139,7 @@ def plot_results(file_BL,file_RT):
                 # end if
 
                 # Finally, make figure.
-                if (len(x1) > 1):
+                if (np.size(x1) > 1):
                     fig = plt.figure(figsize=(13,10))
                     # Baselines
                     plt.subplot(3,1,1)
