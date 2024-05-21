@@ -220,10 +220,6 @@ def main():
         # end if
     # end for
 
-    # Bundle all plots into tarball for artifact in github action.
-    com    = 'tar -cvf scm_rt_plots.tar scm_rt_out/*'
-    result = os.system(com)
-
     #
     if error_count == 0:
         print("ALL TESTS PASSED, OUTPUT IS IDENTICAL.")
