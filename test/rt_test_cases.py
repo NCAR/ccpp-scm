@@ -21,7 +21,7 @@ run_list = [\
             {"case": "astex",                 "suite": "SCM_GFS_v17_HR3_RRTMGP"},                                                                         \
             {"case": "astex",                 "suite": "SCM_GFS_v16"},                                                                                    \
             {"case": "astex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
-            {"case": "astex",                 "suite":  "SCM_RRFS_v1"},                                                                                   \
+            {"case": "astex",                 "suite": "SCM_RRFS_v1"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_HR3"},                                                                                \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_HR3_RRTMGP"},                                                                         \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16"},                                                                                    \
