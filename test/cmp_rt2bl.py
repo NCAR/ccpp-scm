@@ -88,7 +88,12 @@ def plot_results(file_BL,file_RT):
                 # endif
                 plt_range  = [np.min(SCM_BL[var]),np.max(SCM_BL[var])]
                 plt_ranged = [-1*abs(np.max(SCM_BL[var])),abs(np.max(SCM_BL[var]))]
-
+                print("var: ",var)
+                print("x1: ",x1)
+                print("x2: ",x2)
+                print("y1: ",y1)
+                print("y2: ",y2)
+                
                 # Make figure
                 fig = plt.figure(figsize=(13,10))
                 # Baselines and SCM RTs on same plot
@@ -103,7 +108,7 @@ def plot_results(file_BL,file_RT):
                 plt.subplot(2,1,2)
                 plt.title("Difference (blue - black)")
                 plt.plot(x1, y1 - y2,  color='red')
-                plt.plot(x1, np.zeros(len(x1)), color='grey',linestyle='dashed')
+                plt.plot(x1, np.zeros(len(y1)), color='grey',linestyle='dashed')
                 plt.ylim(plt_ranged)
                 plt.ylabel('('+SCM_RT[var].units+')')
                 plt.xlabel('(hours)')
@@ -130,9 +135,6 @@ def plot_results(file_BL,file_RT):
 
                 # Comppute differences and determine valid plot range(s).
                 dz = z1-z2
-                print("np.min(z1): ",np.min(z1))
-                print("np.max(z1): ",np.max(z1))
-                print("step:       ",(np.max(z1)-np.min(z1))*0.05)
                 if np.min(z1) != np.max(z1):
                     clev  = np.arange(np.min(z1),np.max(z1),(np.max(z1)-np.min(z1))*0.05)
                     if np.count_nonzero(dz) > 0:
