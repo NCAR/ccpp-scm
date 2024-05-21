@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<!--
+DESCRIPTION:
+Suite "barn_owl" (formerly known as HAFS_v0_hwrf) was used for pre-implementation experiments for the first version of The Hurricane Analysis and Forecast System (HAFS)
+-->
 <suite name="barn_owl" version="1">
   <!-- <init></init> -->
   <group name="time_vary">

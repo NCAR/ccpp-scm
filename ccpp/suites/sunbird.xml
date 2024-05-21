@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<suite name="HAFS_v0_hwrf_thompson" version="1">
+<!--
+DESCRIPTION:
+Suite "sunbird" (formerly known as HAFS_v0_hwrf_thompson)
+-->
+<suite name="sunbird" version="1">
   <!-- <init></init> -->
   <group name="time_vary">
     <subcycle loop="1">

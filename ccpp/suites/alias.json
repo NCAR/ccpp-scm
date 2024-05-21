@@ -2,5 +2,7 @@
     "SCM_GFS_v17_HR3.xml": "magpie.xml",
     "SCM_GFS_v16.xml": "raven.xml",
     "HAFS_v0_hwrf.xml": "barn_owl.xml",
-    "HAFS_v0_hwrf_ps.xml": "barn_owl_ps.xml"
+    "HAFS_v0_hwrf_ps.xml": "barn_owl_ps.xml",
+    "HAFS_v0_hwrf_thompson.xml": "sunbird.xml",
+    "HAFS_v0_hwrf_thompson_ps.xml": "sunbird_ps.xml"
 }
