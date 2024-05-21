@@ -139,46 +139,43 @@ def plot_results(file_BL,file_RT):
                 # end if
 
                 # Finally, make figure.
-                fig = plt.figure(figsize=(13,10))
-                # Baselines
-                plt.subplot(3,1,1)
-                plt.title(SCM_BL[var].description, fontsize=12)
-                print("var: ",var)
-                print("x1:  ",x1)
-                print("y1:  ",y1)
-                print("z1:  ",z1)
-
-                plt.contourf(x1, y1, z1, clev, cmap='YlGnBu')
-                plt.ylim(1000,200)
-                plt.ylabel('(Pa)')
-                cbr = plt.colorbar()
-                cbr.set_label('('+SCM_RT[var].units+')')
-                # SCM RTs
-                plt.subplot(3,1,2)
-                plt.contourf(x2, y2, z2, clev, cmap='YlGnBu')
-                plt.ylim(1000,200)
-                plt.ylabel('(Pa)')
-                plt.xlabel('(hours)')
-                cbr = plt.colorbar()
-                cbr.set_label('('+SCM_RT[var].units+')')
-                # Only plot differences if they exist.
-                if np.count_nonzero(dz) > 0:
-                    plt.subplot(3,1,3)
-                    plt.title("Difference (top - middle)", fontsize=8)
-                    plt.contourf(x2, y2, dz, clevd, cmap='bwr')
+                if (len(x1) > 1):
+                    fig = plt.figure(figsize=(13,10))
+                    # Baselines
+                    plt.subplot(3,1,1)
+                    plt.title(SCM_BL[var].description, fontsize=12)
+                    plt.contourf(x1, y1, z1, clev, cmap='YlGnBu')
+                    plt.ylim(1000,200)
+                    plt.ylabel('(Pa)')
+                    cbr = plt.colorbar()
+                    cbr.set_label('('+SCM_RT[var].units+')')
+                    # SCM RTs
+                    plt.subplot(3,1,2)
+                    plt.contourf(x2, y2, z2, clev, cmap='YlGnBu')
                     plt.ylim(1000,200)
                     plt.ylabel('(Pa)')
                     plt.xlabel('(hours)')
                     cbr = plt.colorbar()
                     cbr.set_label('('+SCM_RT[var].units+')')
-                # end if (no differences exist)
-                fileOUT = 'scm.' + var +'.png'
-                plt.savefig(fileOUT)
-                #
-                plot_files.append(fileOUT)
-            # end if (fields exist?)
-        # end if     (field requested?)
-    # end for        (fields in file)
+                    # Only plot differences if they exist.
+                    if np.count_nonzero(dz) > 0:
+                        plt.subplot(3,1,3)
+                        plt.title("Difference (top - middle)", fontsize=8)
+                        plt.contourf(x2, y2, dz, clevd, cmap='bwr')
+                        plt.ylim(1000,200)
+                        plt.ylabel('(Pa)')
+                        plt.xlabel('(hours)')
+                        cbr = plt.colorbar()
+                        cbr.set_label('('+SCM_RT[var].units+')')
+                    # end if (no differences exist)
+                    fileOUT = 'scm.' + var +'.png'
+                    plt.savefig(fileOUT)
+                    #
+                    plot_files.append(fileOUT)
+                # end if (Have enought pts to plot?)
+            # end if     (fields exist?)
+        # end if         (field requested?)
+    # end for            (fields in file)
 
     return(plot_files)
 
