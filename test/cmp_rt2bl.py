@@ -57,7 +57,13 @@ def plot_results(file_BL,file_RT):
                  "graupel_rate_accum","conv_prcp_rate_accum","max_cloud_fraction",       \
                  "toa_total_albedo","vert_int_lwp_mp","vert_int_iwp_mp",                 \
                  "vert_int_lwp_cf","vert_int_iwp_cf"]
-
+    # Use subset of available SCM output for plots.
+    vars2plot = ["qv","T","u","v","ql","qi","qc","sfc_dwn_sw","sfc_up_sw",               \
+                 "sfc_net_sw","sfc_dwn_lw", "u10m","v10m","hpbl","gflux",                \
+                 "qv_force_tend","T_force_tend","u_force_tend","v_force_tend","w_ls",    \
+                 "u_g","v_g","dT_dt_rad_forc","h_advec_thil","h_advec_qt",               \
+                 "v_advec_thil","v_advec_qt","T_s","lhf","shf","tprcp_inst",             \
+                 "tprcp_rate_inst","t2m","q2m","ustar","tsfc","tau_u","tau_v"]
     # Open SCM datasets
     SCM_BL = Dataset(file_BL)
     SCM_RT = Dataset(file_RT)
