@@ -588,18 +588,6 @@ class Experiment(object):
             cmd = "ln -sf {0} {1}".format(os.path.join(SCM_ROOT, VERT_COORD_DATA_DIR, self._vert_coord_file), os.path.join(SCM_RUN, self._vert_coord_file))
             execute(cmd)
         
-        # Link physics SDF to run directory
-        physics_suite = 'suite_' + self._suite + '.xml'
-        logging.debug('Linking physics suite {0} to run directory'.format(physics_suite))
-        if os.path.isfile(os.path.join(SCM_RUN, physics_suite)):
-            os.remove(os.path.join(SCM_RUN, physics_suite))
-        if not os.path.isfile(os.path.join(SCM_ROOT, PHYSICS_SUITE_DIR, physics_suite)):
-            message = 'Physics suite {0} not found in directory {1}'.format(physics_suite, os.path.join(SCM_ROOT, PHYSICS_SUITE_DIR))
-            logging.critical(message)
-            raise Exception(message)
-        cmd = "ln -sf {0} {1}".format(os.path.join(SCM_ROOT, PHYSICS_SUITE_DIR, physics_suite), os.path.join(SCM_RUN, physics_suite))
-        execute(cmd)
-        
         # Link physics data needed for schemes to run directory
         logging.debug('Linking physics input data from {0} into run directory'.format(os.path.join(SCM_ROOT, PHYSICS_DATA_DIR)))
         for entry in os.listdir(os.path.join(SCM_ROOT, PHYSICS_DATA_DIR)):
