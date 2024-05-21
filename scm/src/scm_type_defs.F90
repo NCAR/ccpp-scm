@@ -81,6 +81,7 @@ module scm_type_defs
     integer                           :: graupel_volume_index !< index for graupel volume in the tracer array
     integer                           :: hail_volume_index !< index for hail volume in the tracer array
     integer                           :: tke_index !< index for TKE in the tracer array
+    integer                           :: sigmab_index !< index for prognostic updraft area fraction in convection
     integer                           :: ccn_index !< index for CCN in the tracer array
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
@@ -488,6 +489,7 @@ module scm_type_defs
     scm_state%graupel_volume_index            = get_tracer_index(scm_state%tracer_names,"graupel_vol")
     scm_state%hail_volume_index               = get_tracer_index(scm_state%tracer_names,"hail_vol")
     scm_state%tke_index                       = get_tracer_index(scm_state%tracer_names,"sgs_tke")
+    scm_state%sigmab_index                    = get_tracer_index(scm_state%tracer_names,"sigmab")
     scm_state%ccn_index                       = get_tracer_index(scm_state%tracer_names,"ccn_nc")
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")

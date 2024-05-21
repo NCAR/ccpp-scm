@@ -9,7 +9,7 @@
   pre_rad      = .false.
   imp_physics  = 8
   iovr         = 3
-  ltaerosol    = .false.
+  ltaerosol    = .False.
   lradar       = .true.
   ttendlim     = -999
   dt_inner     = 150
@@ -63,7 +63,7 @@
   hybedmf      = .false.
   satmedmf     = .true.
   isatmedmf    = 1
-  lheatstrg    = .true.
+  lheatstrg    = .false.
   lseaspray    = .true.
   random_clds  = .false.
   trans_trac   = .true.
@@ -101,16 +101,16 @@
   do_sppt      = .false.
   do_shum      = .false.
   do_skeb      = .false.
-  do_RRTMGP          = .false.
+  do_RRTMGP          = .true.
   doGP_cldoptics_LUT = .true.
   doGP_lwscat        = .true.
   active_gases = 'h2o_co2_o3_n2o_ch4_o2'
   ngases = 6
-  rrtmgp_root = '../../ccpp/physics/physics/rte-rrtmgp/'
+  rrtmgp_root = '../../ccpp/physics/physics/Radiation/RRTMGP/rte-rrtmgp/'
   lw_file_gas = 'rrtmgp/data/rrtmgp-data-lw-g128-210809.nc'
   lw_file_clouds = 'extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc'
   sw_file_gas = 'rrtmgp/data/rrtmgp-data-sw-g112-210809.nc'
-  sw_file_clouds = 'extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-sw.nc'
+  sw_file_clouds = 'extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-reordered-sw.nc'
   rrtmgp_nGptsSW = 112
   rrtmgp_nGptsLW = 128
   rrtmgp_nBandsLW = 16

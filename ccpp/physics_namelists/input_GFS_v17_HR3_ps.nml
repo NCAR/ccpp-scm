@@ -9,7 +9,7 @@
   pre_rad      = .false.
   imp_physics  = 8
   iovr         = 3
-  ltaerosol    = .false.
+  ltaerosol    = .False.
   lradar       = .true.
   ttendlim     = -999
   dt_inner     = 150
@@ -63,7 +63,7 @@
   hybedmf      = .false.
   satmedmf     = .true.
   isatmedmf    = 1
-  lheatstrg    = .true.
+  lheatstrg    = .false.
   lseaspray    = .true.
   random_clds  = .false.
   trans_trac   = .true.
