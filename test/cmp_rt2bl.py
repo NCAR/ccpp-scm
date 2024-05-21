@@ -86,13 +86,6 @@ def plot_results(file_BL,file_RT):
                     y1 = SCM_BL[var][:]
                     y2 = SCM_RT[var][:]
                 # endif
-                plt_range  = [np.min(SCM_BL[var]),np.max(SCM_BL[var])]
-                plt_ranged = [-1*abs(np.max(SCM_BL[var])),abs(np.max(SCM_BL[var]))]
-                print("var: ",var)
-                print("x1: ",x1)
-                print("x2: ",x2)
-                print("y1: ",y1)
-                print("y2: ",y2)
                 
                 # Make figure
                 fig = plt.figure(figsize=(13,10))
@@ -101,7 +94,6 @@ def plot_results(file_BL,file_RT):
                 plt.title(SCM_BL[var].description)
                 plt.plot(x1, y1,  color='blue')
                 plt.plot(x2, y2,  color='black')
-                plt.ylim(plt_range)
                 plt.ylabel('('+SCM_BL[var].units+')')
                 plt.xlabel('(hours)')
                 # Difference (Baseline-SCMRT)
@@ -109,7 +101,6 @@ def plot_results(file_BL,file_RT):
                 plt.title("Difference (blue - black)")
                 plt.plot(x1, y1 - y2,  color='red')
                 plt.plot(x1, np.zeros(len(y1)), color='grey',linestyle='dashed')
-                plt.ylim(plt_ranged)
                 plt.ylabel('('+SCM_RT[var].units+')')
                 plt.xlabel('(hours)')
                 #
