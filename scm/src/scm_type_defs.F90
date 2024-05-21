@@ -86,6 +86,9 @@ module scm_type_defs
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
     integer                           :: mass_weighted_rime_factor_index !< index for mass-weighted rime factor
+    integer                           :: smoke_index !< index for smoke in the tracer array
+    integer                           :: dust_index !< index for dust in the tracer array
+    integer                           :: coarsepm_index !< index for coarsepm in the tracer array
     integer                           :: init_year, init_month, init_day, init_hour, init_min
     character(len=32), allocatable    :: tracer_names(:) !<
     integer,           allocatable    :: tracer_types(:) !<
@@ -491,6 +494,9 @@ module scm_type_defs
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
     scm_state%mass_weighted_rime_factor_index = get_tracer_index(scm_state%tracer_names,"q_rimef")
+    scm_state%smoke_index                     = get_tracer_index(scm_state%tracer_names,"smoke")
+    scm_state%dust_index                      = get_tracer_index(scm_state%tracer_names,"dust")
+    scm_state%coarsepm_index                  = get_tracer_index(scm_state%tracer_names,"coarsepm")
     
     scm_state%nwat = 0
     if(scm_state%water_vapor_index /= -99) then
