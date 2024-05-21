@@ -88,26 +88,27 @@ def plot_results(file_BL,file_RT):
                 # endif
                 
                 # Make figure
-                fig = plt.figure(figsize=(13,10))
-                # Baselines and SCM RTs on same plot
-                plt.subplot(2,1,1)
-                plt.title(SCM_BL[var].description)
-                plt.plot(x1, y1,  color='blue')
-                plt.plot(x2, y2,  color='black')
-                plt.ylabel('('+SCM_BL[var].units+')')
-                plt.xlabel('(hours)')
-                # Difference (Baseline-SCMRT)
-                plt.subplot(2,1,2)
-                plt.title("Difference (blue - black)")
-                plt.plot(x1, y1 - y2,  color='red')
-                plt.plot(x1, np.zeros(len(y1)), color='grey',linestyle='dashed')
-                plt.ylabel('('+SCM_RT[var].units+')')
-                plt.xlabel('(hours)')
-                #
-                fileOUT = 'scm.' + var +'.png'
-                plt.savefig(fileOUT)
-                #
-                plot_files.append(fileOUT)
+                if (np.size(x1) > 1):
+                    fig = plt.figure(figsize=(13,10))
+                    # Baselines and SCM RTs on same plot
+                    plt.subplot(2,1,1)
+                    plt.title(SCM_BL[var].description)
+                    plt.plot(x1, y1,  color='blue')
+                    plt.plot(x2, y2,  color='black')
+                    plt.ylabel('('+SCM_BL[var].units+')')
+                    plt.xlabel('(hours)')
+                    # Difference (Baseline-SCMRT)
+                    plt.subplot(2,1,2)
+                    plt.title("Difference (blue - black)")
+                    plt.plot(x1, y1 - y2,  color='red')
+                    plt.plot(x1, np.zeros(len(y1)), color='grey',linestyle='dashed')
+                    plt.ylabel('('+SCM_RT[var].units+')')
+                    plt.xlabel('(hours)')
+                    #
+                    fileOUT = 'scm.' + var +'.png'
+                    plt.savefig(fileOUT)
+                    #
+                    plot_files.append(fileOUT)
             # three-dimensional variables
             elif len(SCM_BL[var].shape) == 3:
                 z1 = np.transpose(SCM_BL[var][:,:,0]).squeeze()
