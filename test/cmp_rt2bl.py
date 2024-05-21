@@ -130,6 +130,9 @@ def plot_results(file_BL,file_RT):
 
                 # Comppute differences and determine valid plot range(s).
                 dz = z1-z2
+                print("np.min(z1): ",np.min(z1))
+                print("np.max(z1): ",np.max(z1))
+                print("step:       ",(np.max(z1)-np.min(z1))*0.05)
                 clev  = np.arange(np.min(z1),np.max(z1),(np.max(z1)-np.min(z1))*0.05)
                 if np.count_nonzero(dz) > 0:
                     clevd = np.arange(np.min(dz),np.max(dz),(np.max(dz)-np.min(dz))*0.05)
