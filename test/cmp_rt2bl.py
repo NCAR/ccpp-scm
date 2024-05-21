@@ -143,6 +143,11 @@ def plot_results(file_BL,file_RT):
                 # Baselines
                 plt.subplot(3,1,1)
                 plt.title(SCM_BL[var].description, fontsize=12)
+                print("var: ",var)
+                print("x1:  ",x1)
+                print("y1:  ",y1)
+                print("z1:  ",z1)
+
                 plt.contourf(x1, y1, z1, clev, cmap='YlGnBu')
                 plt.ylim(1000,200)
                 plt.ylabel('(Pa)')
