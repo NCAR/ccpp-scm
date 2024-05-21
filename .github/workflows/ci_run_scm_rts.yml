@@ -51,7 +51,7 @@ jobs:
 
     - name: Install NetCDF Python libraries
       run: |
-        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
+        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml matplotlib
 
     - name: Update system packages
       run: sudo apt-get update
