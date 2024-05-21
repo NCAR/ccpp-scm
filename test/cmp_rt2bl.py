@@ -79,7 +79,6 @@ def plot_results(file_BL,file_RT):
             # endif
             # one/two-dimensional variables
             if (len(SCM_BL[var].shape) != 3):
-                print("Creating 1D field",var)
                 if (is2D):
                     y1 = SCM_BL[var][:,0].squeeze()
                     y2 = SCM_RT[var][:,0].squeeze()
@@ -131,11 +130,10 @@ def plot_results(file_BL,file_RT):
 
                 # Comppute differences and determine valid plot range(s).
                 dz = z1-z2
+                clev  = np.arange(np.min(z1),np.max(z1),(np.max(z1)-np.min(z1))*0.05)
                 if np.count_nonzero(dz) > 0:
-                    clev  = np.arange(np.min(z1),np.max(z1),(np.max(z1)-np.min(z1))*0.05)
                     clevd = np.arange(np.min(dz),np.max(dz),(np.max(dz)-np.min(dz))*0.05)
                 else:
-                    clev  = 0
                     clevd = 0
                 # end if
 
