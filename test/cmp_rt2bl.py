@@ -127,17 +127,17 @@ def plot_results(file_BL,file_RT):
 
                 # Comppute differences and determine valid plot range(s).
                 dz = z1-z2
-                if np.min(z1) != np.max(z1):
-                    clev  = np.arange(np.min(z1),np.max(z1),(np.max(z1)-np.min(z1))*0.05)
-                    if np.count_nonzero(dz) > 0:
-                        clevd = np.arange(np.min(dz),np.max(dz),(np.max(dz)-np.min(dz))*0.05)
-                    else:
-                        clevd = 0
-                    # end if
-                else:
-                    clev  = 0
-                    clevd = 0
-                # end if
+                #if np.min(z1) != np.max(z1):
+                #    clev  = np.arange(np.min(z1),np.max(z1),(np.max(z1)-np.min(z1))*0.05)
+                #    if np.count_nonzero(dz) > 0:
+                #        clevd = np.arange(np.min(dz),np.max(dz),(np.max(dz)-np.min(dz))*0.05)
+                #    else:
+                #        clevd = 0
+                #    # end if
+                #else:
+                #    clev  = 0
+                #    clevd = 0
+                ## end if
 
                 # Finally, make figure.
                 if (np.size(x1) > 1):
@@ -145,14 +145,14 @@ def plot_results(file_BL,file_RT):
                     # Baselines
                     plt.subplot(3,1,1)
                     plt.title(SCM_BL[var].description, fontsize=12)
-                    plt.contourf(x1, y1, z1, clev, cmap='YlGnBu')
+                    plt.contourf(x1, y1, z1, 20, cmap='YlGnBu')
                     plt.ylim(1000,200)
                     plt.ylabel('(Pa)')
                     cbr = plt.colorbar()
                     cbr.set_label('('+SCM_RT[var].units+')')
                     # SCM RTs
                     plt.subplot(3,1,2)
-                    plt.contourf(x2, y2, z2, clev, cmap='YlGnBu')
+                    plt.contourf(x2, y2, z2, 20, cmap='YlGnBu')
                     plt.ylim(1000,200)
                     plt.ylabel('(Pa)')
                     plt.xlabel('(hours)')
@@ -162,7 +162,7 @@ def plot_results(file_BL,file_RT):
                     if np.count_nonzero(dz) > 0:
                         plt.subplot(3,1,3)
                         plt.title("Difference (top - middle)", fontsize=8)
-                        plt.contourf(x2, y2, dz, clevd, cmap='bwr')
+                        plt.contourf(x2, y2, dz, 20, cmap='bwr')
                         plt.ylim(1000,200)
                         plt.ylabel('(Pa)')
                         plt.xlabel('(hours)')
