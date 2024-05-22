@@ -2,6 +2,7 @@
 <!--
 DESCRIPTION:
 Suite "bald_eagle" (formerly known as SCM_HRRR) was originally developed for research and testing for early prototypes of the Rapid Refresh Forecast System (RRFS). It was meant to emulate the physics of the High-Resolution Rapid Refresh (HRRR) model, though it had some differences from the operational implementation (which was not CCPP-based).
+
 This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points which require prescribed surface fluxes. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
 -->
 <suite name="bald_eagle_ps" version="1">

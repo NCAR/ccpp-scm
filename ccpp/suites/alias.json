@@ -26,5 +26,9 @@
     "SCM_GFS_v16_no_nsst_ps.xml": "nuthatch_ps.xml",
     "SCM_RRFS_v1alpha.xml": "towhee.xml",
     "SCM_RRFS_v1alpha_ps.xml": "towhee_ps.xml",
-    "SCM_RRFS_v1nssl.xml": "crossbill.xml"
+    "SCM_RRFS_v1nssl.xml": "crossbill.xml",
+    "SCM_GFS_v17_HR3_RRTMGP.xml": "robin.xml",
+    "SCM_GFS_v17_HR3_RRTMGP_ps.xml": "robin_ps.xml",
+    "SCM_RRFS_v1.xml": "warbler.xml",
+    "SCM_RRFS_v1_ps.xml": "warbler_ps.xml"
 }

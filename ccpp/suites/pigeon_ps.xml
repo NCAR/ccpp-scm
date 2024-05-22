@@ -2,6 +2,7 @@
 <!--
 DESCRIPTION:
 Suite "pigeon" (formerly known as SCM_RRFS_v1beta) was originally developed for an early prototype of the Rapid Refresh Forecast System (RRFS).
+
 This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points which require prescribed surface fluxes. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
 -->
 <suite name="pigeon_ps" version="1">
