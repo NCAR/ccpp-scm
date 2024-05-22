@@ -165,6 +165,10 @@ jobs:
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
 
+    - name: cat CCPP log file
+      if: always()
+      run: cat ccpp_prebuild.err
+
     - name: Build SCM
       run: |
         cd ${SCM_ROOT}/scm/bin
