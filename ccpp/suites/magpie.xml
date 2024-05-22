@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 DESCRIPTION:
-Suite "magpie" (formerly known as GFS_v17_HR3) was originally developed for use by the GFS v17 High-resolution prototype 3 (HR3)
+Suite "magpie" (formerly known as GFS_v17_HR3) was originally developed for use by the GFS v17 High-resolution prototype 3 (HR3). While it acccurately represents the physics used for this prototype, the eventual implementation of the operational GFS version 17 will likely be somewhat different.
+This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
 -->
 <suite name="magpie" version="1">
   <!-- <init></init> -->

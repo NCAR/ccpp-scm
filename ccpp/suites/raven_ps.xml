@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 DESCRIPTION:
-Suite "raven_ps" (formerly known as SCM_GFS_v16_ps)
+Suite "raven" (formerly known as SCM_GFS_v16) was originally developed for research and prototyping of early UFS systems. It was meant to emulate the operational GFS v16 suite, though it had some differences from the operational implementation (which was not CCPP-based).
+This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
 -->
-
 <suite name="raven_ps" version="1">
   <group name="time_vary">
     <subcycle loop="1">

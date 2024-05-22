@@ -5,5 +5,19 @@
     "HAFS_v0_hwrf.xml": "macaw.xml",
     "HAFS_v0_hwrf_ps.xml": "macaw_ps.xml",
     "HAFS_v0_hwrf_thompson.xml": "sunbird.xml",
-    "HAFS_v0_hwrf_thompson_ps.xml": "sunbird_ps.xml"
+    "HAFS_v0_hwrf_thompson_ps.xml": "sunbird_ps.xml",
+    "SCM_GFS_v17_p8_c3.xml": "parakeet.xml",
+    "SCM_GFS_v17_p8_c3_ps.xml": "parakeet_ps.xml",
+    "SCM_GFS_v15p2.xml": "kingfisher.xml",
+    "SCM_GFS_v15p2_ps.xml": "kingfisher_ps.xml",
+    "SCM_GFS_v17_p8.xml": "bluebird.xml",
+    "SCM_HRRR.xml": "bald_eagle.xml",
+    "SCM_RAP.xml": "albatross.xml",
+    "SCM_RRFS_v1beta.xml": "pigeon.xml",
+    "SCM_WoFS_v0.xml": "hummingbird.xml",
+    "SCM_GFS_v17_p8_ps.xml": "bluebird_ps.xml",
+    "SCM_HRRR_ps.xml": "bald_eagle_ps.xml",
+    "SCM_RAP_ps.xml": "albatross_ps.xml",
+    "SCM_RRFS_v1beta_ps.xml": "pigeon_ps.xml",
+    "SCM_WoFS_v0_ps.xml": "hummingbird_ps.xml"
 }

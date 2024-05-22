@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<suite name="SCM_GFS_v17_p8" version="1">
+<!--
+DESCRIPTION:
+Suite "parakeet" (formerly known as SCM_GFS_v17_p8_c3) was used for testing an early prototype of the Global Forecast System (GFS) version 17 release. While it is similar to the physics used for this prototype (P8), it is not identical, and the eventual operational implementation of GFS version 17 will likely be quite different.
+This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
+-->
+<suite name="parakeet_ps" version="1">
   <!-- <init></init> -->
   <group name="time_vary">
     <subcycle loop="1">
@@ -30,28 +34,9 @@
       <scheme>get_prs_fv3</scheme>
       <scheme>GFS_suite_interstitial_1</scheme>
       <scheme>GFS_surface_generic_pre</scheme>
-      <scheme>GFS_surface_composites_pre</scheme>
+      <scheme>scm_sfc_flux_spec</scheme>
       <scheme>dcyc2t3</scheme>
-      <scheme>GFS_surface_composites_inter</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
-    </subcycle>
-    <!-- Surface iteration loop -->
-    <subcycle loop="2">
-      <scheme>sfc_diff</scheme>
-      <scheme>GFS_surface_loop_control_part1</scheme>
-      <scheme>sfc_nst_pre</scheme>
-      <scheme>sfc_nst</scheme>
-      <scheme>sfc_nst_post</scheme>
-      <scheme>noahmpdrv</scheme>
-      <scheme>sfc_sice</scheme>
-      <scheme>GFS_surface_loop_control_part2</scheme>
-    </subcycle>
-    <!-- End of surface iteration loop -->
-    <subcycle loop="1">
-      <scheme>GFS_surface_composites_post</scheme>
-      <scheme>sfc_diag</scheme>
-      <scheme>sfc_diag_post</scheme>
-      <scheme>GFS_surface_generic_post</scheme>
       <scheme>GFS_PBL_generic_pre</scheme>
       <scheme>satmedmfvdifq</scheme>
       <scheme>GFS_PBL_generic_post</scheme>
@@ -64,10 +49,10 @@
       <scheme>get_phi_fv3</scheme>
       <scheme>GFS_suite_interstitial_3</scheme>
       <scheme>GFS_DCNV_generic_pre</scheme>
-      <scheme>samfdeepcnv</scheme>
+      <scheme>cu_c3_driver_pre</scheme>
+      <scheme>cu_c3_driver</scheme>
       <scheme>GFS_DCNV_generic_post</scheme>
       <scheme>GFS_SCNV_generic_pre</scheme>
-      <scheme>samfshalcnv</scheme>
       <scheme>GFS_SCNV_generic_post</scheme>
       <scheme>GFS_suite_interstitial_4</scheme>
       <scheme>cnvc90</scheme>
@@ -80,9 +65,10 @@
         <subcycle loop="1">
         <scheme>mp_thompson_post</scheme>
         <scheme>GFS_MP_generic_post</scheme>
+        <scheme>cu_c3_driver_post</scheme>
         <scheme>maximum_hourly_diagnostics</scheme>
-        <scheme>GFS_physics_post</scheme>
+	<scheme>GFS_physics_post</scheme>
       </subcycle>
-    </group>
+  </group>
   <!-- <finalize></finalize> -->
 </suite>
