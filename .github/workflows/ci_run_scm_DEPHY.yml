@@ -20,7 +20,7 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     SCM_GFS_v16,SCM_GFS_v16_ps
+      suites:     raven,raven_ps
 
     # Workflow steps
     steps:
