@@ -167,7 +167,9 @@ jobs:
 
     - name: cat CCPP log file
       if: always()
-      run: cat ccpp_prebuild.err
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        cat ccpp_prebuild.err
 
     - name: Build SCM
       run: |
