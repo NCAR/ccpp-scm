@@ -194,7 +194,7 @@ jobs:
     - name: Compare SCM RT output to baselines
       run: |
         cd ${SCM_ROOT}/test
-        ./cmp_rt2bl.py --build_type ${{matrix.build-type}} --dir_rt ${dir_rt} --dir_bl ${dir_bl}
+        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
       uses: actions/upload-artifact@v2
