@@ -174,7 +174,7 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src
+        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src || cat ccpp_prebuild.err 
 
     - name: Build SCM
       run: |
