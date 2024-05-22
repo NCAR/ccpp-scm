@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 DESCRIPTION:
-Suite "sunbird" (formerly known as HAFS_v0_hwrf_thompson)
+Suite "sunbird" (formerly known as HAFS_v0_hwrf_thompson) was used for pre-implementation experiments for the first version of The Hurricane Analysis and Forecast System (HAFS)
 -->
 <suite name="sunbird" version="1">
   <!-- <init></init> -->

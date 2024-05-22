@@ -42,7 +42,7 @@ class suite(object):
                 raise Exception(message)
       
 suite_list = []
-suite_list.append(suite('SCM_GFS_v16',           'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, True ))
+suite_list.append(suite('raven',           'tracers_raven.txt',                  'input_raven.nml',                 600.0, 1800.0, True ))
 suite_list.append(suite('SCM_GFS_v17_p8',        'tracers_GFS_v17_p8.txt',               'input_GFS_v17_p8.nml',              600.0, 600.0,  True ))
 suite_list.append(suite('magpie',       'tracers_GFS_v17_p8.txt',               'input_magpie.nml',             600.0, 600.0,  True ))
 suite_list.append(suite('robin','tracers_GFS_v17_p8.txt',               'input_GFS_v17_HR3_RRTMGP.nml',      600.0, 600.0,  True ))
@@ -60,10 +60,10 @@ suite_list.append(suite('SCM_GFS_v15p2_MYJ',     'tracers_GFS_v15p2.txt',       
 suite_list.append(suite('SCM_GFS_v15p2_YSU',     'tracers_GFS_v15p2.txt',                'input_GFS_v15p2_YSU.nml',           600.0, 1800.0, False))
 suite_list.append(suite('SCM_GFS_v15p2_saYSU',   'tracers_GFS_v15p2.txt',                'input_GFS_v15p2_saYSU.nml',         600.0, 1800.0, False))
 suite_list.append(suite('SCM_GFS_v15p2_ACM',     'tracers_GFS_v15p2.txt',                'input_GFS_v15p2_ACM.nml',           600.0, 1800.0, False))
-suite_list.append(suite('SCM_GFS_v16_RRTMGP',    'tracers_GFS_v16.txt',                  'input_GFS_v16_RRTMGP.nml',          600.0, 1800.0, False))
-suite_list.append(suite('SCM_GFS_v16_no_nsst',   'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, False))
-suite_list.append(suite('HAFS_v0_hwrf',          'tracers_HAFS_v0_hwrf.txt',             'input_HAFS_v0_hwrf.nml',            600.0, 1800.0, False))
-suite_list.append(suite('HAFS_v0_hwrf_thompson', 'tracers_HAFS_v0_hwrf_thompson.txt',    'input_HAFS_v0_hwrf_thompson.nml',   600.0, 600.0 , False))
+suite_list.append(suite('SCM_GFS_v16_RRTMGP',    'tracers_raven.txt',                  'input_GFS_v16_RRTMGP.nml',          600.0, 1800.0, False))
+suite_list.append(suite('SCM_GFS_v16_no_nsst',   'tracers_raven.txt',                  'input_raven.nml',                 600.0, 1800.0, False))
+suite_list.append(suite('macaw',          'tracers_macaw.txt',             'input_macaw.nml',            600.0, 1800.0, False))
+suite_list.append(suite('sunbird', 'tracers_sunbird.txt',    'input_sunbird.nml',   600.0, 600.0 , False))
 suite_list.append(suite('SCM_GSD_v1nssl',        'tracers_gsd_nssl.txt',                 'input_GSD_v1nssl.nml',              600.0, 600.0 , False))
 suite_list.append(suite('SCM_GSD_v1',            'tracers_gsd.txt',                      'input_GSD_v1.nml',                  600.0, 600.0 , False))
 suite_list.append(suite('SCM_RRFS_v1nssl',       'tracers_RRFS_v1nssl_nohail_noccn.txt', 'input_RRFS_v1nssl_nohailnoccn.nml', 600.0, 600.0 , False))

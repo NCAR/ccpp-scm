@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 DESCRIPTION:
-Suite "sunbird_ps" (formerly known as HAFS_v0_hwrf_thompson_ps)
+Suite "sunbird_ps" (formerly known as HAFS_v0_hwrf_thompson_ps) was used for pre-implementation experiments for the first version of The Hurricane Analysis and Forecast System (HAFS)
 This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
 -->
 <suite name="sunbird_ps" version="1">

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<!--
+DESCRIPTION:
+Suite "raven" (formerly known as SCM_GFS_v16) was originally developed for research and prototyping of early UFS systems. It was meant to emulate the operational GFS v16 suite, though it had some differences.
+-->
 <suite name="raven" version="1">
   <group name="time_vary">
     <subcycle loop="1">
