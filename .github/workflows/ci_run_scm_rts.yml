@@ -21,8 +21,8 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     kingfisher,SCM_GFS_v16,bluebird,bald_eagle,pigeon,albatross,hummingbird
-      suites_ps:  kingfisher_ps,SCM_GFS_v16_ps,bluebird_ps,bald_eagle_ps,pigeon_ps,albatross_ps,hummingbird_ps
+      suites:     kingfisher,raven,bluebird,bald_eagle,pigeon,albatross,hummingbird
+      suites_ps:  kingfisher_ps,raven_ps,bluebird_ps,bald_eagle_ps,pigeon_ps,albatross_ps,hummingbird_ps
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
 
