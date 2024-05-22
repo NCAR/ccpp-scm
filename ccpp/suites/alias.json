@@ -19,5 +19,12 @@
     "SCM_HRRR_ps.xml": "bald_eagle_ps.xml",
     "SCM_RAP_ps.xml": "albatross_ps.xml",
     "SCM_RRFS_v1beta_ps.xml": "pigeon_ps.xml",
-    "SCM_WoFS_v0_ps.xml": "hummingbird_ps.xml"
+    "SCM_WoFS_v0_ps.xml": "hummingbird_ps.xml",
+    "SCM_GFS_v16_RRTMGP.xml": "mallard.xml",
+    "SCM_GFS_v16_RRTMGP_ps.xml": "mallard_ps.xml",
+    "SCM_GFS_v16_no_nsst.xml": "nuthatch.xml",
+    "SCM_GFS_v16_no_nsst_ps.xml": "nuthatch_ps.xml",
+    "SCM_RRFS_v1alpha.xml": "towhee.xml",
+    "SCM_RRFS_v1alpha_ps.xml": "towhee_ps.xml",
+    "SCM_RRFS_v1nssl.xml": "crossbill.xml"
 }

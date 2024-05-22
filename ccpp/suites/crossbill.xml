@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<suite name="SCM_RRFS_v1nssl" version="1">
+<!--
+DESCRIPTION:
+Suite "crossbill" (formerly known as SCM_RRFS_v1nssl) was originally developed for research and development of early prototypes of the Rapid Refresh Forecast System (RRFS), specifically including the NSSL 2-moment cloud microphysics scheme when it was added to CCPP (see https://github.com/NOAA-EMC/fv3atm/pull/472 and https://github.com/NCAR/ccpp-physics/pull/761).
+-->
+<suite name="crossbill" version="1">
   <!-- <init></init> -->
   <group name="time_vary">
     <subcycle loop="1">

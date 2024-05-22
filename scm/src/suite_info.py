@@ -42,22 +42,22 @@ class suite(object):
                 raise Exception(message)
       
 suite_list = []
-suite_list.append(suite('raven',           'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, True ))
-suite_list.append(suite('bluebird',        'tracers_GFS_v17_p8.txt',               'input_GFS_v17_p8.nml',              600.0, 600.0,  True ))
+suite_list.append(suite('raven',        'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, True ))
+suite_list.append(suite('bluebird',     'tracers_GFS_v17_p8.txt',               'input_GFS_v17_p8.nml',              600.0, 600.0,  True ))
 suite_list.append(suite('magpie',       'tracers_GFS_v17_p8.txt',               'input_GFS_v17_HR3.nml',             600.0, 600.0,  True ))
-suite_list.append(suite('robin','tracers_GFS_v17_p8.txt',               'input_GFS_v17_HR3_RRTMGP.nml',      600.0, 600.0,  True ))
-suite_list.append(suite('albatross',               'tracers_RAP.txt',                      'input_RAP.nml',                     600.0, 600.0 , True ))
-suite_list.append(suite('warbler',           'tracers_RRFS_v1.txt',                  'input_RRFS_v1.nml',                 600.0, 600.0 , True ))
+suite_list.append(suite('robin',        'tracers_GFS_v17_p8.txt',               'input_GFS_v17_HR3_RRTMGP.nml',      600.0, 600.0,  True ))
+suite_list.append(suite('albatross',    'tracers_RAP.txt',                      'input_RAP.nml',                     600.0, 600.0 , True ))
+suite_list.append(suite('warbler',      'tracers_RRFS_v1.txt',                  'input_RRFS_v1.nml',                 600.0, 600.0 , True ))
 suite_list.append(suite('pigeon',       'tracers_RRFS_v1beta.txt',              'input_RRFS_v1beta.nml',             600.0, 600.0 , True ))
-suite_list.append(suite('hummingbird',           'tracers_WoFS_v0.txt',                  'input_WoFS_v0.nml',                 600.0, 600.0 , True ))
-suite_list.append(suite('bald_eagle',              'tracers_HRRR.txt',                     'input_HRRR.nml',                    600.0, 600.0 , True ))
+suite_list.append(suite('hummingbird',  'tracers_WoFS_v0.txt',                  'input_WoFS_v0.nml',                 600.0, 600.0 , True ))
+suite_list.append(suite('bald_eagle',   'tracers_HRRR.txt',                     'input_HRRR.nml',                    600.0, 600.0 , True ))
 
-suite_list.append(suite('kingfisher',         'tracers_GFS_v15p2.txt',                'input_GFS_v15p2.nml',               600.0, 1800.0, False))
-suite_list.append(suite('SCM_GFS_v16_RRTMGP',    'tracers_GFS_v16.txt',                  'input_GFS_v16_RRTMGP.nml',          600.0, 1800.0, False))
-suite_list.append(suite('SCM_GFS_v16_no_nsst',   'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, False))
-suite_list.append(suite('macaw',          'tracers_HAFS_v0_hwrf.txt',             'input_HAFS_v0_hwrf.nml',            600.0, 1800.0, False))
-suite_list.append(suite('sunbird', 'tracers_HAFS_v0_hwrf_thompson.txt',    'input_HAFS_v0_hwrf_thompson.nml',   600.0, 600.0 , False))
-suite_list.append(suite('SCM_RRFS_v1nssl',       'tracers_RRFS_v1nssl_nohail_noccn.txt', 'input_RRFS_v1nssl_nohailnoccn.nml', 600.0, 600.0 , False))
+suite_list.append(suite('kingfisher',   'tracers_GFS_v15p2.txt',                'input_GFS_v15p2.nml',               600.0, 1800.0, False))
+suite_list.append(suite('mallard',      'tracers_GFS_v16.txt',                  'input_GFS_v16_RRTMGP.nml',          600.0, 1800.0, False))
+suite_list.append(suite('nuthatch',     'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, False))
+suite_list.append(suite('macaw',        'tracers_HAFS_v0_hwrf.txt',             'input_HAFS_v0_hwrf.nml',            600.0, 1800.0, False))
+suite_list.append(suite('sunbird',      'tracers_HAFS_v0_hwrf_thompson.txt',    'input_HAFS_v0_hwrf_thompson.nml',   600.0, 600.0 , False))
+suite_list.append(suite('crossbill',    'tracers_RRFS_v1nssl_nohail_noccn.txt', 'input_RRFS_v1nssl_nohailnoccn.nml', 600.0, 600.0 , False))
 
 def main():
     

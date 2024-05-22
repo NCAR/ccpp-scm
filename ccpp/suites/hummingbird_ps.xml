@@ -2,7 +2,7 @@
 <!--
 DESCRIPTION:
 Suite "hummingbird" (formerly known as SCM_WoFS_v0) was used for testing an early prototype of the experimental FV3-based Warn-on-Forecast System (WoFS).
-This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
+This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points which require prescribed surface fluxes. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
 -->
 <suite name="hummingbird_ps"  version="1">
   <!-- <init></init> -->

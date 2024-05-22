@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<suite name="SCM_GFS_v16_RRTMGP_ps" version="1">
+<!--
+DESCRIPTION:
+Suite "mallard" (formerly known as SCM_GFS_v16_RRTMGP) is a modified version of the "raven" suite (formerly known as SCM_GFS_v16) that i
+ncludes RRTMGP: a re-written an parallelized version of the older RRTMG radiation schemes (see https://earth-system-radiation.github.io/rte-rrtmgp/).
+This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points which require prescribed surface fluxes. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
+-->
+<suite name="mallard_ps" version="1">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>

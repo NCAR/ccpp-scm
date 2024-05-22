@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<suite name="SCM_GFS_v16_no_nsst_ps" version="1">
+<!--
+DESCRIPTION:
+Suite "nuthatch" (formerly known as SCM_GFS_v16_no_nsst) is a modified version of the "raven" suite (formerly known as SCM_GFS_v16) that
+ omits the use of the GFS near-sea-surface temperature (NSST) surface scheme.
+This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points which require prescribed surface fluxes. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
+-->
+<suite name="nuthatch_ps" version="1">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>

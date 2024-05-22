@@ -2,7 +2,7 @@
 <!--
 DESCRIPTION:
 Suite "albatross" (formerly known as SCM_RAP) was originally developed for research and prototyping of early UFS systems. It was meant to emulate the physics of the Rapid Refresh (RAP) model, though it had some differences from the operational implementation (which was not CCPP-based).
-This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
+This is an SCM-specific "prescribed surface" suite file, specifically for experiments over land points which require prescribed surface fluxes. See https://ccpp-scm.readthedocs.io/en/latest/chap_intro.html#limitations for more information.
 -->
 <suite name="albatross_ps" version="1">
   <!-- <init></init> -->

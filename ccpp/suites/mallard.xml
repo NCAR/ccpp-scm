@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<suite name="SCM_GFS_v16_no_nsst" version="1">
+<!--
+DESCRIPTION:
+Suite "mallard" (formerly known as SCM_GFS_v16_RRTMGP) is a modified version of the "raven" suite (formerly known as SCM_GFS_v16) that includes RRTMGP: a re-written an parallelized version of the older RRTMG radiation schemes (see https://earth-system-radiation.github.io/rte-rrtmgp/). 
+-->
+<suite name="mallard" version="1">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>
-      <scheme>GFS_rrtmg_setup</scheme>
+      <scheme>GFS_rrtmgp_setup</scheme>
       <scheme>GFS_rad_time_vary</scheme>
       <scheme>GFS_phys_time_vary</scheme>
     </subcycle>
@@ -12,14 +15,15 @@
   <group name="radiation">
     <subcycle loop="1">
       <scheme>GFS_suite_interstitial_rad_reset</scheme>
-      <scheme>GFS_rrtmg_pre</scheme>
+      <scheme>GFS_rrtmgp_pre</scheme>
       <scheme>GFS_radiation_surface</scheme>
-      <scheme>rad_sw_pre</scheme>
-      <scheme>rrtmg_sw</scheme>
-      <scheme>rrtmg_sw_post</scheme>
-      <scheme>rrtmg_lw</scheme>
-      <scheme>rrtmg_lw_post</scheme>
-      <scheme>GFS_rrtmg_post</scheme>
+      <scheme>GFS_rrtmgp_cloud_mp</scheme>
+      <scheme>GFS_rrtmgp_cloud_overlap</scheme>
+      <scheme>GFS_cloud_diagnostics</scheme>
+      <scheme>rrtmgp_aerosol_optics</scheme>
+      <scheme>rrtmgp_sw_main</scheme>
+      <scheme>rrtmgp_lw_main</scheme>
+      <scheme>GFS_rrtmgp_post</scheme>
     </subcycle>
   </group>
   <group name="physics">
@@ -38,7 +42,9 @@
     <subcycle loop="2">
       <scheme>sfc_diff</scheme>
       <scheme>GFS_surface_loop_control_part1</scheme>
-      <scheme>sfc_ocean</scheme>
+      <scheme>sfc_nst_pre</scheme>
+      <scheme>sfc_nst</scheme>
+      <scheme>sfc_nst_post</scheme>
       <scheme>lsm_noah</scheme>
       <scheme>sfc_sice</scheme>
       <scheme>GFS_surface_loop_control_part2</scheme>
