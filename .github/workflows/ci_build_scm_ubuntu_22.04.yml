@@ -30,7 +30,7 @@ jobs:
     # Initial
     #######################################################################################
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
@@ -39,7 +39,7 @@ jobs:
     # Python setup
     #######################################################################################
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{matrix.py-version}}
 
@@ -87,7 +87,7 @@ jobs:
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
@@ -104,7 +104,7 @@ jobs:
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
@@ -121,7 +121,7 @@ jobs:
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
@@ -143,7 +143,7 @@ jobs:
 
     - name: Cache NetCDF Fortran library
       id: cache-netcdf-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
