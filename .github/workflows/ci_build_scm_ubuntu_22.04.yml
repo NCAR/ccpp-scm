@@ -85,6 +85,20 @@ jobs:
         sudo apt-get install intel-hpckit-getting-started intel-oneapi-clck intel-oneapi-common-licensing intel-oneapi-common-vars
         sudo apt-get install intel-oneapi-dev-utilities  intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-compiler-fortran intel-oneapi-itac
 
+    - name: Install open mpi
+      run: |
+        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
+        tar -xvf v4.1.6.tar.gz
+        cd ompi-4.1.6
+        ./autogen.pl
+        ./configure --prefix=/home/runner/ompi-4.1.6
+        make -j4
+        make install
+        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
+        echo "FC=mpif90" >> $GITHUB_ENV
+
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v3

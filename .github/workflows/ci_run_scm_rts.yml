@@ -60,7 +60,7 @@ jobs:
     # Install FORTRAN dependencies
     #######################################################################################
     - name: Environment for gfortran compiler
-      if: contains(matrix.fortran-compiler, 'gnu')
+      if: contains(matrix.fortran-compiler, 'gfortran')
       run: |
         echo "FC=gfortran-11" >> $GITHUB_ENV
         echo "CC=gcc-11"      >> $GITHUB_ENV
@@ -70,6 +70,29 @@ jobs:
       run: |
         echo "CC=icx"         >> $GITHUB_ENV
         echo "FC=ifort"       >> $GITHUB_ENV
+
+    #######################################################################################
+    # OpenMPI setup
+    #######################################################################################
+
+    - name: Install open mpi
+      run: |
+        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
+        tar -xvf v4.1.6.tar.gz
+        cd ompi-4.1.6
+        ./autogen.pl
+        ./configure --prefix=/home/runner/ompi-4.1.6
+        make -j4
+        make install
+        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
+        echo `ls /home/runner/ompi-4.1.6/bin`
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
+
+    #######################################################################################
+    # Install FORTRAN dependencies
+    #######################################################################################
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
@@ -145,12 +168,6 @@ jobs:
     #######################################################################################
     # Build SCM. Run regression tests.
     #######################################################################################
-    - name: Download data for SCM
-      run: |
-        cd ${SCM_ROOT}
-        ./contrib/get_all_static_data.sh
-        ./contrib/get_thompson_tables.sh
-
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
       run: |
@@ -175,6 +192,12 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
+
+    - name: Download data for SCM
+      run: |
+        cd ${SCM_ROOT}
+        ./contrib/get_all_static_data.sh
+        ./contrib/get_thompson_tables.sh
 
     - name: Run SCM RTs
       run: |
