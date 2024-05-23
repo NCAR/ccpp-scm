@@ -81,10 +81,14 @@ module scm_type_defs
     integer                           :: graupel_volume_index !< index for graupel volume in the tracer array
     integer                           :: hail_volume_index !< index for hail volume in the tracer array
     integer                           :: tke_index !< index for TKE in the tracer array
+    integer                           :: sigmab_index !< index for prognostic updraft area fraction in convection
     integer                           :: ccn_index !< index for CCN in the tracer array
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
     integer                           :: mass_weighted_rime_factor_index !< index for mass-weighted rime factor
+    integer                           :: smoke_index !< index for smoke in the tracer array
+    integer                           :: dust_index !< index for dust in the tracer array
+    integer                           :: coarsepm_index !< index for coarsepm in the tracer array
     integer                           :: init_year, init_month, init_day, init_hour, init_min
     character(len=32), allocatable    :: tracer_names(:) !<
     integer,           allocatable    :: tracer_types(:) !<
@@ -485,10 +489,14 @@ module scm_type_defs
     scm_state%graupel_volume_index            = get_tracer_index(scm_state%tracer_names,"graupel_vol")
     scm_state%hail_volume_index               = get_tracer_index(scm_state%tracer_names,"hail_vol")
     scm_state%tke_index                       = get_tracer_index(scm_state%tracer_names,"sgs_tke")
+    scm_state%sigmab_index                    = get_tracer_index(scm_state%tracer_names,"sigmab")
     scm_state%ccn_index                       = get_tracer_index(scm_state%tracer_names,"ccn_nc")
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
     scm_state%mass_weighted_rime_factor_index = get_tracer_index(scm_state%tracer_names,"q_rimef")
+    scm_state%smoke_index                     = get_tracer_index(scm_state%tracer_names,"smoke")
+    scm_state%dust_index                      = get_tracer_index(scm_state%tracer_names,"dust")
+    scm_state%coarsepm_index                  = get_tracer_index(scm_state%tracer_names,"coarsepm")
     
     scm_state%nwat = 0
     if(scm_state%water_vapor_index /= -99) then
@@ -1044,27 +1052,6 @@ module scm_type_defs
     logical :: missing_var(100)
     real, parameter:: min_lake_orog = 200.0_dp
     
-    !check whether input has NoahMP or RUC LSM input data
-    if (scm_state%model_ics .or. scm_state%lsm_ics) then
-      if (physics%Model%lsm == physics%Model%lsm_noahmp) then
-        !FV3GFS_io.F90 uses the presence of the snowxy variable in the ICs to indicate presence of NoahMP warm start
-        call check_missing(scm_input%input_snowxy, missing_var(1))
-        if (missing_var(1)) then
-          physics%Model%lsm_cold_start = .true.
-        else
-          physics%Model%lsm_cold_start = .false.
-        end if
-      elseif (physics%Model%lsm == physics%Model%lsm_ruc) then
-        !RUC LSM uses the tslb variable as soil temperature; if it is missing, assume a cold start using Noah LSM ICs
-        call check_missing(scm_input%input_tslb(:), missing_var(1))
-        if (missing_var(1)) then
-          physics%Model%lsm_cold_start = .true.
-        else
-          physics%Model%lsm_cold_start = .false.
-        end if
-      end if
-    end if
-    
     !double check under what circumstances these should actually be set from input!!! (these overwrite the initialzation in GFS_typedefs)
     missing_var = .false.
     do i = 1, physics%Model%ncols
@@ -1074,6 +1061,9 @@ module scm_type_defs
         physics%Sfcprop%landfrac(i) = missing_value
         physics%Sfcprop%lakefrac(i) = missing_value
       end if
+      !
+      ! Orographical data (2D)
+      !
       if (scm_state%model_ics) then
         write(0,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_stddev,    physics%Sfcprop%hprime(i,1),  "stddev",    .true., missing_var(1))
@@ -1096,7 +1086,6 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_lakefrac,  physics%Sfcprop%lakefrac(i),  "lakefrac",  (physics%Model%lkm == 1), missing_var(18))
         call conditionally_set_var(scm_input%input_lakedepth, physics%Sfcprop%lakedepth(i), "lakedepth", (physics%Model%lkm == 1), missing_var(19))
         
-        !write out warning if missing data for non-required variables
         n = 19
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
@@ -1108,55 +1097,58 @@ module scm_type_defs
         missing_var = .false.
       end if
       
-      if (scm_state%model_ics .or. scm_state%lsm_ics) then  
+      !
+      ! Surface data (2D)
+      !
+      if (scm_state%model_ics .or. scm_state%lsm_ics) then
         write(0,'(a)') "Setting internal physics variables from the surface section of the case input file (scalars)..."
-        call conditionally_set_var(scm_input%input_slmsk, physics%Sfcprop%slmsk(i), "slmsk", (.not. physics%Model%frac_grid), missing_var(1))
-        call conditionally_set_var(scm_input%input_tsfco, physics%Sfcprop%tsfco(i), "tsfco", .true., missing_var(2))
-        call conditionally_set_var(scm_input%input_weasd, physics%Sfcprop%weasd(i), "weasd", .true., missing_var(3))
-        call conditionally_set_var(scm_input%input_tg3,   physics%Sfcprop%tg3(i), "tg3", .true., missing_var(4))
-        call conditionally_set_var(scm_input%input_zorl,  physics%Sfcprop%zorl(i), "zorl", .true., missing_var(5))
-        call conditionally_set_var(scm_input%input_alvsf, physics%Sfcprop%alvsf(i), "alvsf", .true., missing_var(6))
-        call conditionally_set_var(scm_input%input_alnsf, physics%Sfcprop%alnsf(i), "alnsf", .true., missing_var(7))
-        call conditionally_set_var(scm_input%input_alvwf, physics%Sfcprop%alvwf(i), "alvwf", .true., missing_var(8))
-        call conditionally_set_var(scm_input%input_alnwf, physics%Sfcprop%alnwf(i), "alnwf", .true., missing_var(9))
-        call conditionally_set_var(scm_input%input_facsf, physics%Sfcprop%facsf(i), "facsf", .true., missing_var(10))
-        call conditionally_set_var(scm_input%input_facwf, physics%Sfcprop%facwf(i), "facwf", .true., missing_var(11))
-        call conditionally_set_var(scm_input%input_vegfrac, physics%Sfcprop%vfrac(i), "vegfrac", .true., missing_var(12))
+        call conditionally_set_var(scm_input%input_slmsk,     physics%Sfcprop%slmsk(i),  "slmsk",    (.not. physics%Model%frac_grid), missing_var(1))
+        call conditionally_set_var(scm_input%input_tsfco,     physics%Sfcprop%tsfco(i),  "tsfco",    .true.,  missing_var(2))
+        call conditionally_set_var(scm_input%input_weasd,     physics%Sfcprop%weasd(i),  "weasd",    .true.,  missing_var(3))
+        call conditionally_set_var(scm_input%input_tg3,       physics%Sfcprop%tg3(i),    "tg3",      .true.,  missing_var(4))
+        call conditionally_set_var(scm_input%input_zorl,      physics%Sfcprop%zorl(i),   "zorl",     .true.,  missing_var(5))
+        call conditionally_set_var(scm_input%input_alvsf,     physics%Sfcprop%alvsf(i),  "alvsf",    .true.,  missing_var(6))
+        call conditionally_set_var(scm_input%input_alnsf,     physics%Sfcprop%alnsf(i),  "alnsf",    .true.,  missing_var(7))
+        call conditionally_set_var(scm_input%input_alvwf,     physics%Sfcprop%alvwf(i),  "alvwf",    .true.,  missing_var(8))
+        call conditionally_set_var(scm_input%input_alnwf,     physics%Sfcprop%alnwf(i),  "alnwf",    .true.,  missing_var(9))
+        call conditionally_set_var(scm_input%input_facsf,     physics%Sfcprop%facsf(i),  "facsf",    .true.,  missing_var(10))
+        call conditionally_set_var(scm_input%input_facwf,     physics%Sfcprop%facwf(i),  "facwf",    .true.,  missing_var(11))
+        call conditionally_set_var(scm_input%input_vegfrac,   physics%Sfcprop%vfrac(i),  "vegfrac",  .true.,  missing_var(12))
         !GJF: is this needed anymore (not in FV3GFS_io)?
         physics%Interstitial%sigmaf(i) = min(physics%Sfcprop%vfrac(i),0.01)
-        call conditionally_set_var(scm_input%input_canopy, physics%Sfcprop%canopy(i), "canopy", .true., missing_var(13))
-        call conditionally_set_var(scm_input%input_f10m, physics%Sfcprop%f10m(i), "f10m", .false., missing_var(14))
-        call conditionally_set_var(scm_input%input_t2m, physics%Sfcprop%t2m(i), "t2m", physics%Model%cplflx, missing_var(15))
-        call conditionally_set_var(scm_input%input_q2m, physics%Sfcprop%q2m(i), "q2m", physics%Model%cplflx, missing_var(16))
-        call conditionally_set_var(scm_input%input_vegtyp, physics%Sfcprop%vtype(i), "vegtyp", .true., missing_var(17))
-        call conditionally_set_var(scm_input%input_soiltyp, physics%Sfcprop%stype(i), "soiltyp", .true., missing_var(18))
-        call conditionally_set_var(scm_input%input_uustar, physics%Sfcprop%uustar(i), "uustar", .true., missing_var(19))
-        call conditionally_set_var(scm_input%input_ffmm, physics%Sfcprop%ffmm(i), "ffmm", .false., missing_var(20))
-        call conditionally_set_var(scm_input%input_ffhh, physics%Sfcprop%ffhh(i), "ffhh", .false., missing_var(21))
-        call conditionally_set_var(scm_input%input_hice, physics%Sfcprop%hice(i), "hice", .true., missing_var(22))
-        call conditionally_set_var(scm_input%input_fice, physics%Sfcprop%fice(i), "fice", .true., missing_var(23))
-        call conditionally_set_var(scm_input%input_tisfc, physics%Sfcprop%tisfc(i), "tisfc", .true., missing_var(24))
-        call conditionally_set_var(scm_input%input_tprcp, physics%Sfcprop%tprcp(i), "tprcp", .false., missing_var(25))
-        call conditionally_set_var(scm_input%input_srflag, physics%Sfcprop%srflag(i), "srflag", .false., missing_var(26))
-        call conditionally_set_var(scm_input%input_snwdph, physics%Sfcprop%snowd(i), "snwdph", .true., missing_var(27))
-        call conditionally_set_var(scm_input%input_shdmin, physics%Sfcprop%shdmin(i), "shdmin", .true., missing_var(28))
-        call conditionally_set_var(scm_input%input_shdmax, physics%Sfcprop%shdmax(i), "shdmax", .true., missing_var(29))
-        call conditionally_set_var(scm_input%input_slopetype, physics%Sfcprop%slope(i), "slopetyp", .true., missing_var(30))
-        call conditionally_set_var(scm_input%input_snoalb, physics%Sfcprop%snoalb(i), "snoalb", .true., missing_var(31))
-        call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr(i), "sncovr", .false., missing_var(32))
-        call conditionally_set_var(scm_input%input_snodl, physics%Sfcprop%snodl(i), "snodl", .false., missing_var(33))
-        call conditionally_set_var(scm_input%input_weasdl, physics%Sfcprop%weasdl(i), "weasdl", .false., missing_var(34))
-        call conditionally_set_var(scm_input%input_tsfc, physics%Sfcprop%tsfc(i), "tsfc", .false., missing_var(35))
-        call conditionally_set_var(scm_input%input_tsfcl, physics%Sfcprop%tsfcl(i), "tsfcl", .false., missing_var(36))
-        call conditionally_set_var(scm_input%input_zorlw, physics%Sfcprop%zorlw(i), "zorlw", .false., missing_var(37))
-        call conditionally_set_var(scm_input%input_zorll, physics%Sfcprop%zorll(i), "zorll", .false., missing_var(38))
-        call conditionally_set_var(scm_input%input_zorli, physics%Sfcprop%zorli(i), "zorli", .false., missing_var(39))
+        call conditionally_set_var(scm_input%input_canopy,    physics%Sfcprop%canopy(i), "canopy",   .true.,  missing_var(13))
+        call conditionally_set_var(scm_input%input_f10m,      physics%Sfcprop%f10m(i),   "f10m",     .false., missing_var(14))
+        call conditionally_set_var(scm_input%input_t2m,       physics%Sfcprop%t2m(i),    "t2m",      physics%Model%cplflx, missing_var(15))
+        call conditionally_set_var(scm_input%input_q2m,       physics%Sfcprop%q2m(i),    "q2m",      physics%Model%cplflx, missing_var(16))
+        call conditionally_set_var(scm_input%input_vegtyp,    physics%Sfcprop%vtype(i),  "vegtyp",   .true.,  missing_var(17))
+        call conditionally_set_var(scm_input%input_soiltyp,   physics%Sfcprop%stype(i),  "soiltyp",  .true.,  missing_var(18))
+        call conditionally_set_var(scm_input%input_uustar,    physics%Sfcprop%uustar(i), "uustar",   .true.,  missing_var(19))
+        call conditionally_set_var(scm_input%input_ffmm,      physics%Sfcprop%ffmm(i),   "ffmm",     .false., missing_var(20))
+        call conditionally_set_var(scm_input%input_ffhh,      physics%Sfcprop%ffhh(i),   "ffhh",     .false., missing_var(21))
+        call conditionally_set_var(scm_input%input_hice,      physics%Sfcprop%hice(i),   "hice",     .true.,  missing_var(22))
+        call conditionally_set_var(scm_input%input_fice,      physics%Sfcprop%fice(i),   "fice",     .true.,  missing_var(23))
+        call conditionally_set_var(scm_input%input_tisfc,     physics%Sfcprop%tisfc(i),  "tisfc",    .true.,  missing_var(24))
+        call conditionally_set_var(scm_input%input_tprcp,     physics%Sfcprop%tprcp(i),  "tprcp",    .false., missing_var(25))
+        call conditionally_set_var(scm_input%input_srflag,    physics%Sfcprop%srflag(i), "srflag",   .false., missing_var(26))
+        call conditionally_set_var(scm_input%input_snwdph,    physics%Sfcprop%snowd(i),  "snwdph",   .true.,  missing_var(27))
+        call conditionally_set_var(scm_input%input_shdmin,    physics%Sfcprop%shdmin(i), "shdmin",   .true.,  missing_var(28))
+        call conditionally_set_var(scm_input%input_shdmax,    physics%Sfcprop%shdmax(i), "shdmax",   .true.,  missing_var(29))
+        call conditionally_set_var(scm_input%input_slopetype, physics%Sfcprop%slope(i),  "slopetyp", .true.,  missing_var(30))
+        call conditionally_set_var(scm_input%input_snoalb,    physics%Sfcprop%snoalb(i), "snoalb",   .true.,  missing_var(31))
+        call conditionally_set_var(scm_input%input_sncovr,    physics%Sfcprop%sncovr(i), "sncovr",   .false., missing_var(32))
+        call conditionally_set_var(scm_input%input_snodl,     physics%Sfcprop%snodl(i),  "snodl",    .false., missing_var(33))
+        call conditionally_set_var(scm_input%input_weasdl,    physics%Sfcprop%weasdl(i), "weasdl",   .false., missing_var(34))
+        call conditionally_set_var(scm_input%input_tsfc,      physics%Sfcprop%tsfc(i),   "tsfc",     .false., missing_var(35))
+        call conditionally_set_var(scm_input%input_tsfcl,     physics%Sfcprop%tsfcl(i),  "tsfcl",    .false., missing_var(36))
+        call conditionally_set_var(scm_input%input_zorlw,     physics%Sfcprop%zorlw(i),  "zorlw",    .false., missing_var(37))
+        call conditionally_set_var(scm_input%input_zorll,     physics%Sfcprop%zorll(i),  "zorll",    .false., missing_var(38))
+        call conditionally_set_var(scm_input%input_zorli,     physics%Sfcprop%zorli(i),  "zorli",    .false., missing_var(39))
         call conditionally_set_var(scm_input%input_albdirvis_lnd, physics%Sfcprop%albdirvis_lnd(i), "albdirvis_lnd", .false., missing_var(40))
         call conditionally_set_var(scm_input%input_albdirnir_lnd, physics%Sfcprop%albdirnir_lnd(i), "albdirnir_lnd", .false., missing_var(41))
         call conditionally_set_var(scm_input%input_albdifvis_lnd, physics%Sfcprop%albdifvis_lnd(i), "albdifvis_lnd", .false., missing_var(42))
         call conditionally_set_var(scm_input%input_albdifnir_lnd, physics%Sfcprop%albdifnir_lnd(i), "albdifnir_lnd", .false., missing_var(43))
-        call conditionally_set_var(scm_input%input_emis_lnd, physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(44))
-        if (physics%Model%use_cice_alb .or. physics%Model%lsm == physics%Model%lsm_ruc) then
+        call conditionally_set_var(scm_input%input_emis_lnd,  physics%Sfcprop%emis_lnd(i), "emis_lnd", .false., missing_var(44))
+        if (physics%Model%use_cice_alb) then
           call conditionally_set_var(scm_input%input_albdirvis_ice, physics%Sfcprop%albdirvis_ice(i), "albdirvis_ice", .false., missing_var(45))
           call conditionally_set_var(scm_input%input_albdirnir_ice, physics%Sfcprop%albdirnir_ice(i), "albdirnir_ice", .false., missing_var(46))
           call conditionally_set_var(scm_input%input_albdifvis_ice, physics%Sfcprop%albdifvis_ice(i), "albdifvis_ice", .false., missing_var(47))
@@ -1206,12 +1198,10 @@ module scm_type_defs
         if (physics%Sfcprop%slmsk(i) > 1.9_dp) physics%Sfcprop%fice(i) = 1.0 !needed to calculate tsfc and zorl below when model_ics == .false.
         if (physics%Sfcprop%slmsk(i) < 0.1_dp) physics%Sfcprop%oceanfrac(i) = 1.0
       end if
-      
-      !this overwrites what is in the suite namelist file -- is that desirable? 
-      !if (scm_state%model_ics) then
-      !  physics%Model%ivegsrc = scm_input%input_vegsrc
-      !end if
-      
+
+      !
+      ! Derive physics quantities using surface model ICs.
+      !
       if(scm_state%model_ics .or. scm_state%lsm_ics) then
         if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i)+0.5 <= 0) then
           physics%Sfcprop%landfrac(i) = real_zero
@@ -1311,10 +1301,11 @@ module scm_type_defs
         endif
       end if
       
-      !--- NSSTM variables
+      !
+      ! NSSTM variables
+      !
       if (physics%Model%nstf_name(1) > 0) then
-        if (physics%Model%nstf_name(2) == 1 .or. .not. (scm_state%model_ics .or. scm_state%lsm_ics)) then             ! nsst spinup
-          !--- nsstm tref
+        if (physics%Model%nstf_name(2) == 1 .or. .not. (scm_state%model_ics .or. scm_state%lsm_ics)) then
           physics%Sfcprop%tref(i)    = physics%Sfcprop%tsfco(i)
           physics%Sfcprop%z_c(i)     = real_zero
           physics%Sfcprop%c_0(i)     = real_zero
@@ -1335,183 +1326,50 @@ module scm_type_defs
           physics%Sfcprop%qrain(i)   = real_zero
         elseif (physics%Model%nstf_name(2) == 0) then         ! nsst restart
           write(0,'(a)') "Setting internal physics variables from the NSST section of the case input file (scalars)..."
-          call conditionally_set_var(scm_input%input_tref, physics%Sfcprop%tref(i), "tref", .true., missing_var(1))
-          call conditionally_set_var(scm_input%input_z_c, physics%Sfcprop%z_c(i), "z_c", .true., missing_var(2))
-          call conditionally_set_var(scm_input%input_c_0, physics%Sfcprop%c_0(i), "c_0", .true., missing_var(3))
-          call conditionally_set_var(scm_input%input_c_d, physics%Sfcprop%c_d(i), "c_d", .true., missing_var(4))
-          call conditionally_set_var(scm_input%input_w_0, physics%Sfcprop%w_0(i), "w_0", .true., missing_var(5))
-          call conditionally_set_var(scm_input%input_w_d, physics%Sfcprop%w_d(i), "w_d", .true., missing_var(6))
-          call conditionally_set_var(scm_input%input_xt, physics%Sfcprop%xt(i), "xt", .true., missing_var(7))
-          call conditionally_set_var(scm_input%input_xs, physics%Sfcprop%xs(i), "xs", .true., missing_var(8))
-          call conditionally_set_var(scm_input%input_xu, physics%Sfcprop%xu(i), "xu", .true., missing_var(9))
-          call conditionally_set_var(scm_input%input_xv, physics%Sfcprop%xv(i), "xv", .true., missing_var(10))
-          call conditionally_set_var(scm_input%input_xz, physics%Sfcprop%xz(i), "xz", .true., missing_var(11))
-          call conditionally_set_var(scm_input%input_zm, physics%Sfcprop%zm(i), "zm", .true., missing_var(12))
-          call conditionally_set_var(scm_input%input_xtts, physics%Sfcprop%xtts(i), "xtts", .true., missing_var(13))
-          call conditionally_set_var(scm_input%input_xzts, physics%Sfcprop%xzts(i), "xzts", .true., missing_var(14))
-          call conditionally_set_var(scm_input%input_d_conv, physics%Sfcprop%d_conv(i), "d_conv", .true., missing_var(15))
-          call conditionally_set_var(scm_input%input_ifd, physics%Sfcprop%ifd(i), "ifd", .true., missing_var(16))
+          call conditionally_set_var(scm_input%input_tref,    physics%Sfcprop%tref(i),    "tref",    .true., missing_var(1))
+          call conditionally_set_var(scm_input%input_z_c,     physics%Sfcprop%z_c(i),     "z_c",     .true., missing_var(2))
+          call conditionally_set_var(scm_input%input_c_0,     physics%Sfcprop%c_0(i),     "c_0",     .true., missing_var(3))
+          call conditionally_set_var(scm_input%input_c_d,     physics%Sfcprop%c_d(i),     "c_d",     .true., missing_var(4))
+          call conditionally_set_var(scm_input%input_w_0,     physics%Sfcprop%w_0(i),     "w_0",     .true., missing_var(5))
+          call conditionally_set_var(scm_input%input_w_d,     physics%Sfcprop%w_d(i),     "w_d",     .true., missing_var(6))
+          call conditionally_set_var(scm_input%input_xt,      physics%Sfcprop%xt(i),      "xt",      .true., missing_var(7))
+          call conditionally_set_var(scm_input%input_xs,      physics%Sfcprop%xs(i),      "xs",      .true., missing_var(8))
+          call conditionally_set_var(scm_input%input_xu,      physics%Sfcprop%xu(i),      "xu",      .true., missing_var(9))
+          call conditionally_set_var(scm_input%input_xv,      physics%Sfcprop%xv(i),      "xv",      .true., missing_var(10))
+          call conditionally_set_var(scm_input%input_xz,      physics%Sfcprop%xz(i),      "xz",      .true., missing_var(11))
+          call conditionally_set_var(scm_input%input_zm,      physics%Sfcprop%zm(i),      "zm",      .true., missing_var(12))
+          call conditionally_set_var(scm_input%input_xtts,    physics%Sfcprop%xtts(i),    "xtts",    .true., missing_var(13))
+          call conditionally_set_var(scm_input%input_xzts,    physics%Sfcprop%xzts(i),    "xzts",    .true., missing_var(14))
+          call conditionally_set_var(scm_input%input_d_conv,  physics%Sfcprop%d_conv(i),  "d_conv",  .true., missing_var(15))
+          call conditionally_set_var(scm_input%input_ifd,     physics%Sfcprop%ifd(i),     "ifd",     .true., missing_var(16))
           call conditionally_set_var(scm_input%input_dt_cool, physics%Sfcprop%dt_cool(i), "dt_cool", .true., missing_var(17))
-          call conditionally_set_var(scm_input%input_qrain, physics%Sfcprop%qrain(i), "qrain", .true., missing_var(18))
+          call conditionally_set_var(scm_input%input_qrain,   physics%Sfcprop%qrain(i),   "qrain",   .true., missing_var(18))
           ! all NNST variables are required when NNST spin-up is off, so no need to write out warning for missing data (the model would have already stopped)
           missing_var = .false.
         endif
       endif
-      
-      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc .and. .not. physics%Model%lsm_cold_start) then
-        !--- Extra RUC LSM variables
-        write(0,'(a)') "Setting internal physics variables from the RUC LSM section of the case input file (scalars)..."
-        call conditionally_set_var(scm_input%input_wetness, physics%Sfcprop%wetness(i), "wetness", .true., missing_var(1))
-        call conditionally_set_var(scm_input%input_clw_surf_land, physics%Sfcprop%clw_surf_land(i), "clw_surf_land", .true., missing_var(2))
-        call conditionally_set_var(scm_input%input_clw_surf_ice, physics%Sfcprop%clw_surf_ice(i), "clw_surf_ice", .true., missing_var(3))
-        call conditionally_set_var(scm_input%input_qwv_surf_land, physics%Sfcprop%qwv_surf_land(i), "qwv_surf_land", .true., missing_var(4))
-        call conditionally_set_var(scm_input%input_qwv_surf_ice, physics%Sfcprop%qwv_surf_ice(i), "qwv_surf_ice", .true., missing_var(5))
-        call conditionally_set_var(scm_input%input_tsnow_land, physics%Sfcprop%tsnow_land(i), "tsnow_land", .true., missing_var(6))
-        call conditionally_set_var(scm_input%input_tsnow_ice, physics%Sfcprop%tsnow_ice(i), "tsnow_ice", .true., missing_var(7))
-        call conditionally_set_var(scm_input%input_snowfallac_land, physics%Sfcprop%snowfallac_land(i), "snowfallac_land", .true., missing_var(8))
-        call conditionally_set_var(scm_input%input_snowfallac_ice, physics%Sfcprop%snowfallac_ice(i), "snowfallac_ice", .true., missing_var(9))
-        call conditionally_set_var(scm_input%input_sncovr_ice, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .false., missing_var(10))
-        call conditionally_set_var(scm_input%input_sfalb_lnd, physics%Sfcprop%sfalb_lnd(i), "sfalb_lnd", .true., missing_var(11))
-        call conditionally_set_var(scm_input%input_sfalb_lnd_bck, physics%Sfcprop%sfalb_lnd_bck(i), "sfalb_lnd_bck", .true., missing_var(12))
-        call conditionally_set_var(scm_input%input_sfalb_ice, physics%Sfcprop%sfalb_ice(i), "sfalb_ice", .true., missing_var(13))
-        call conditionally_set_var(scm_input%input_emis_ice, physics%Sfcprop%emis_ice(i), "emis_ice", .true., missing_var(14))
-        if (physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%rdlai) then
-           !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
-           call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(15))
-        end if
-        
-        !if sncovr_ice is missing, set to the land value
-        if(missing_var(10)) then
-          call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .true., missing_var(10))
-        end if
-         
-         !write out warning if missing data for non-required variables
-        n = 15
-        if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-          do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-          end do
-        end if
-        missing_var = .false.
-      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc .and. physics%Model%lsm_cold_start) then
-        call conditionally_set_var(scm_input%input_sncovr, physics%Sfcprop%sncovr_ice(i), "sncovr_ice", .true., missing_var(1))
-        if (physics%Model%rdlai) then
-           !when rdlai = T, RUC LSM expects the LAI to be read in, hence the required variable attribute below
-           call conditionally_set_var(scm_input%input_lai, physics%Sfcprop%xlaixy(i), "lai", .true., missing_var(2))
-        end if
-        
-        !write out warning if missing data for non-required variables
-       n = 2
-       if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-         write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
-         write(0,'(a)') "Check gmtb_scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-         do j=1, n
-           if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-         end do
-       end if
-       missing_var = .false.
-      elseif ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_noahmp) then
-        write(0,'(a)') "Setting internal physics variables from the NoahMP section of the case input file (scalars)..."
-        !all of these can be missing, since a method exists to "cold start" these variables
-        call conditionally_set_var(scm_input%input_snowxy, physics%Sfcprop%snowxy(i), "snowxy", .false., missing_var(1))
-        call conditionally_set_var(scm_input%input_tvxy, physics%Sfcprop%tvxy(i), "tvxy", .false., missing_var(2))
-        call conditionally_set_var(scm_input%input_tgxy, physics%Sfcprop%tgxy(i), "tgxy", .false., missing_var(3))
-        call conditionally_set_var(scm_input%input_canicexy, physics%Sfcprop%canicexy(i), "canicexy", .false., missing_var(4))
-        call conditionally_set_var(scm_input%input_canliqxy, physics%Sfcprop%canliqxy(i), "canliqxy", .false., missing_var(5))
-        call conditionally_set_var(scm_input%input_eahxy, physics%Sfcprop%eahxy(i), "eahxy", .false., missing_var(6))
-        call conditionally_set_var(scm_input%input_tahxy, physics%Sfcprop%tahxy(i), "tahxy", .false., missing_var(7))
-        call conditionally_set_var(scm_input%input_cmxy, physics%Sfcprop%cmxy(i), "cmxy", .false., missing_var(8))
-        call conditionally_set_var(scm_input%input_chxy, physics%Sfcprop%chxy(i), "chxy", .false., missing_var(9))
-        call conditionally_set_var(scm_input%input_fwetxy, physics%Sfcprop%fwetxy(i), "fwetxy", .false., missing_var(10))
-        call conditionally_set_var(scm_input%input_sneqvoxy, physics%Sfcprop%sneqvoxy(i), "sneqvoxy", .false., missing_var(11))
-        call conditionally_set_var(scm_input%input_alboldxy, physics%Sfcprop%alboldxy(i), "alboldxy", .false., missing_var(12))
-        call conditionally_set_var(scm_input%input_qsnowxy, physics%Sfcprop%qsnowxy(i), "qsnowxy", .false., missing_var(13))
-        call conditionally_set_var(scm_input%input_wslakexy, physics%Sfcprop%wslakexy(i), "wslakexy", .false., missing_var(14))
-        call conditionally_set_var(scm_input%input_zwtxy, physics%Sfcprop%zwtxy(i), "zwtxy", .false., missing_var(15))
-        call conditionally_set_var(scm_input%input_waxy, physics%Sfcprop%waxy(i), "waxy", .false., missing_var(16))
-        call conditionally_set_var(scm_input%input_wtxy, physics%Sfcprop%wtxy(i), "wtxy", .false., missing_var(17))
-        call conditionally_set_var(scm_input%input_lfmassxy, physics%Sfcprop%lfmassxy(i), "lfmassxy", .false., missing_var(18))
-        call conditionally_set_var(scm_input%input_rtmassxy, physics%Sfcprop%rtmassxy(i), "rtmassxy", .false., missing_var(19))
-        call conditionally_set_var(scm_input%input_stmassxy, physics%Sfcprop%stmassxy(i), "stmassxy", .false., missing_var(20))
-        call conditionally_set_var(scm_input%input_woodxy, physics%Sfcprop%woodxy(i), "woodxy", .false., missing_var(21))
-        call conditionally_set_var(scm_input%input_stblcpxy, physics%Sfcprop%stblcpxy(i), "stblcpxy", .false., missing_var(22))
-        call conditionally_set_var(scm_input%input_fastcpxy, physics%Sfcprop%fastcpxy(i), "fastcpxy", .false., missing_var(23))
-        call conditionally_set_var(scm_input%input_xsaixy, physics%Sfcprop%xsaixy(i), "xsaixy", .false., missing_var(24))
-        call conditionally_set_var(scm_input%input_xlaixy, physics%Sfcprop%xlaixy(i), "xlaixy", .false., missing_var(25))
-        call conditionally_set_var(scm_input%input_taussxy, physics%Sfcprop%taussxy(i), "taussxy", .false., missing_var(26))
-        call conditionally_set_var(scm_input%input_smcwtdxy, physics%Sfcprop%smcwtdxy(i), "smcwtdxy", .false., missing_var(27))
-        call conditionally_set_var(scm_input%input_deeprechxy, physics%Sfcprop%deeprechxy(i), "deeprechxy", .false., missing_var(28))
-        call conditionally_set_var(scm_input%input_rechxy, physics%Sfcprop%rechxy(i), "rechxy", .false., missing_var(29))
-        
-        !write out warning if missing data for non-required variables
-        n = 29
-        if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
-          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-          do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-          end do
-        end if
-        missing_var = .false.
-      end if
-      
-      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. (physics%Model%lsm == physics%Model%lsm_noah .or. &
-          physics%Model%lsm == physics%Model%lsm_noahmp .or. physics%Model%lsm_cold_start)) then
-        
+
+      !
+      ! LSM model ICs (3D)
+      !
+      if (scm_state%model_ics .or. scm_state%lsm_ics) then
         call conditionally_set_var(scm_input%input_stc(:), physics%Sfcprop%stc(i,:), "stc", .true., missing_var(1))
         call conditionally_set_var(scm_input%input_smc(:), physics%Sfcprop%smc(i,:), "smc", .true., missing_var(2))
         call conditionally_set_var(scm_input%input_slc(:), physics%Sfcprop%slc(i,:), "slc", .true., missing_var(3))
 
-        if (physics%Model%lsm == physics%Model%lsm_noahmp) then
-          call conditionally_set_var(scm_input%input_snicexy(:), physics%Sfcprop%snicexy(i,:), "snicexy", .false., missing_var(4))
-          call conditionally_set_var(scm_input%input_snliqxy(:), physics%Sfcprop%snliqxy(i,:), "sliqexy", .false., missing_var(5))
-          call conditionally_set_var(scm_input%input_tsnoxy(:), physics%Sfcprop%tsnoxy(i,:), "tsnoxy", .false., missing_var(6))
-
-          call conditionally_set_var(scm_input%input_smoiseq(:), physics%Sfcprop%smoiseq(i,:), "smoiseq", .false., missing_var(7))
-
-          call conditionally_set_var(scm_input%input_zsnsoxy(:), physics%Sfcprop%zsnsoxy(i,:), "zsnzoxy", .false., missing_var(8))
-          
-          !write out warning if missing data for non-required variables
-          n = 8
-          if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-            write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables for NoahMP LSM. Due to this, a cold-start algorithm to initialize variables will be used."
-            write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-            do j=1, n
+        n = 3
+        if ( i==1 .and. ANY( missing_var(1:n) ) ) then 
+           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables needed by the LSM. Due to this, a cold-start algorithm to initialize variables will be used."
+           write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+           do j=1, n
               if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-            end do
-          end if
-          missing_var = .false.
-        endif
-
-      else if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. physics%Model%lsm == physics%Model%lsm_ruc) then
-        call conditionally_set_var(scm_input%input_tslb(:), physics%Sfcprop%tslb(i,:), "tslb", .false., missing_var(1))
-        call conditionally_set_var(scm_input%input_smois(:), physics%Sfcprop%smois(i,:), "smois", .false., missing_var(2))
-        call conditionally_set_var(scm_input%input_sh2o(:), physics%Sfcprop%sh2o(i,:), "sh2o", .false., missing_var(3))
-        call conditionally_set_var(scm_input%input_smfr(:), physics%Sfcprop%keepsmfr(i,:), "smfr", .false., missing_var(4))
-        call conditionally_set_var(scm_input%input_flfr(:), physics%Sfcprop%flag_frsoil(i,:), "flfr", .false., missing_var(5))
-        
-        !write out warning if missing data for non-required variables
-        n = 5
-        if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables for RUC LSM. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-          do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-          end do
+           end do
         end if
-        missing_var = .false.
-      end if
-
-      if (scm_state%model_ics .or. scm_state%lsm_ics) then
-        !check for nonmissing values
-        call conditionally_set_var(scm_input%input_tiice(:), physics%Sfcprop%tiice(i,:), "tiice", .false., missing_var(1))
-        if (missing_var(1)) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to the internal sea ice temperature. These will be set from the internal soil temperature variable (stc)."
-        end if
-      end if
+     end if
       
+      !
+      ! Compute surface fields that may/maynot present in model IC files.
+      !
       if (scm_state%model_ics .or. scm_state%lsm_ics) then
         if (scm_input%input_snodl <= real_zero) then
           if (physics%Sfcprop%landfrac(i) > real_zero) then
@@ -1563,41 +1421,33 @@ module scm_type_defs
       if (scm_input%input_zorlwav <= real_zero) then
         physics%Sfcprop%zorlwav(i) = physics%Sfcprop%zorlw(i) !--- compute zorlwav from existing variables
       end if
-      
-      if (physics%Model%lsm_cold_start) then
-        if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics)) then ! 3-way composite
-              if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
-              tem1 = real_one - physics%Sfcprop%landfrac(i)
-              tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
-              physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
-                                   + physics%Sfcprop%zorli(i) * tem                      &
-                                   + physics%Sfcprop%zorlw(i) * (tem1-tem)
 
-              physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
-                                   + physics%Sfcprop%tisfc(i) * tem                      &
-                                   + physics%Sfcprop%tsfco(i) * (tem1-tem)
-        else
-            !--- specify tsfcl/zorll/zorli from existing variable tsfco/zorlw
-    !         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i)
-    !         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorlw(i)
-    !         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorlw(i)
-    !         physics%Sfcprop%zorl(i)  = physics%Sfcprop%zorlw(i)
-    !         physics%Sfcprop%tsfc(i)  = physics%Sfcprop%tsfco(i)
-              if (physics%Sfcprop%slmsk(i) == 1) then
-                physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) 
-                physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i)
-              else
-                tem = real_one - physics%Sfcprop%fice(i)
-                physics%Sfcprop%zorl(i) = physics%Sfcprop%zorli(i) * physics%Sfcprop%fice(i) &
-                                     + physics%Sfcprop%zorlw(i) * tem
+      if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics) ) then ! 3-way composite
+         if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
+         tem1 = real_one - physics%Sfcprop%landfrac(i)
+         tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
+         physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
+                                 + physics%Sfcprop%zorli(i) * tem                      &
+                                 + physics%Sfcprop%zorlw(i) * (tem1-tem)
 
-                physics%Sfcprop%tsfc(i) = physics%Sfcprop%tisfc(i) * physics%Sfcprop%fice(i) &
-                                     + physics%Sfcprop%tsfco(i) * tem
-              endif
-        endif ! if (Model%frac_grid)
-      endif !if (physics%Model%lsm_cold_start)
-      
-      if ((scm_state%model_ics .or. scm_state%lsm_ics) .and. MAXVAL(scm_input%input_tiice) < real_zero) then
+         physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
+                                 + physics%Sfcprop%tisfc(i) * tem                      &
+                                 + physics%Sfcprop%tsfco(i) * (tem1-tem)
+      else
+         if (physics%Sfcprop%slmsk(i) == 1) then
+            physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) 
+            physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i)
+         else
+            tem = real_one - physics%Sfcprop%fice(i)
+            physics%Sfcprop%zorl(i) = physics%Sfcprop%zorli(i) * physics%Sfcprop%fice(i) &
+                                   + physics%Sfcprop%zorlw(i) * tem
+
+            physics%Sfcprop%tsfc(i) = physics%Sfcprop%tisfc(i) * physics%Sfcprop%fice(i) &
+                                   + physics%Sfcprop%tsfco(i) * tem
+         endif
+      endif ! if (Model%frac_grid)
+
+      if (scm_state%model_ics .and. MAXVAL(scm_input%input_tiice) < real_zero) then
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if

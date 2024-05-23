@@ -464,18 +464,20 @@ def get_UFS_IC_data(dir, grid_dir, tile, i, j, old_chgres, lam):
     #returns dictionaries with the data
     
     vgrid_data = get_UFS_vgrid_data(grid_dir) #only needed for ak, bk to calculate pressure
-    state_data = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres, lam)
+    (state_data, error_msg) = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres, lam)
     surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres, lam)
     oro_data = get_UFS_oro_data(dir, tile, i, j, lam)
     
-    return (state_data, surface_data, oro_data)
+    return (state_data, surface_data, oro_data, error_msg)
 
 ########################################################################################
 #
 ########################################################################################
 def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
     """Get the state data for the given tile and indices"""
-    
+
+    state = {}
+    error_msg=None
     if lam:
         nc_file_data = Dataset('{0}/{1}'.format(dir,'gfs_data.nc'))
     else:
@@ -600,7 +602,10 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
                     icewat_model_rev[k] = cloud_water - liqwat_model_rev[0,k]
         (liqwat_model_rev[0,k], dummy_rain, icewat_model_rev[k], dummy_snow) = fv3_remap.mp_auto_conversion(liqwat_model_rev[0,k], icewat_model_rev[k])
     
-    [u_s, u_n, v_w, v_e] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam)
+    [u_s, u_n, v_w, v_e, unknown_grid] = get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam)
+    if unknown_grid:
+        error_msg='unknown grid orientation'
+        return(state,error_msg)
     
     #put C/D grid zonal/meridional winds on model pressure levels
     u_s_model_rev = fv3_remap.mappm(levp_data, pressure_from_data_rev[np.newaxis, :], u_s[np.newaxis, :], nlevs_model, pressure_model_interfaces_rev[np.newaxis, :], 1, 1, -1, 8, ptop_data)
@@ -638,7 +643,7 @@ def get_UFS_state_data(vgrid, dir, tile, i, j, old_chgres, lam):
         "pa_i": pressure_model_interfaces
     }
         
-    return state
+    return (state,error_msg)
 
 ########################################################################################
 #
@@ -665,6 +670,10 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             raise Exception(message)
     
     nc_file_grid = Dataset('{0}/{1}'.format(dir,filename))
+
+    # Get grid dimension
+    nz,nx,ny = np.shape(nc_file_data['u_w'])
+
     
     if (lam):
         #strip ghost/halo points and return supergrid
@@ -696,7 +705,7 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
     
     east_test_point = np.argmax(test_lon_diff)
     north_test_point = np.argmax(test_lat_diff)
-    
+    unknown=False
     if east_test_point == 0:
         #longitude increases most along the positive i axis
         if north_test_point == 2:
@@ -775,7 +784,11 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i+1]*fv3_remap.inner_prod(e1, ey)
         else:
-            print('unknown grid orientation')
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     elif east_test_point == 1:
         #longitude increases most along the negative i axis
         if north_test_point == 2:
@@ -853,7 +866,11 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j,i-1]*fv3_remap.inner_prod(e1, ey)
         else:
-            print('unknown grid orientation')
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     elif east_test_point == 2:
         #longitude increases most along the positive j axis
         if north_test_point == 0:
@@ -929,9 +946,16 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             p3 = fv3_remap.mid_pt_sphere(p1*deg_to_rad, p2*deg_to_rad)
             e1 = fv3_remap.get_unit_vect2(p1*deg_to_rad, p2*deg_to_rad)
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
-            v_e = nc_file_data['u_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
+            if (j < nx -1):
+                v_e = nc_file_data['u_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j+1,i]*fv3_remap.inner_prod(e1, ey)
+            else:
+                v_e = nc_file_data['v_w'][:,j,i]
         else:
-            print('unknown grid orientation')
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     elif east_test_point == 3:
         #longitude increases most along the negative j axis
         if north_test_point == 0:
@@ -1009,12 +1033,15 @@ def get_zonal_and_meridional_winds_on_cd_grid(tile, dir, i, j, nc_file_data, lam
             (ex, ey) = fv3_remap.get_latlon_vector(p3)
             v_e = nc_file_data['u_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ex) + nc_file_data['v_w'][:,j-1,i]*fv3_remap.inner_prod(e1, ey)
         else:
-            print('unknown grid orientation')
-    
+            u_s = np.zeros(nz)
+            u_n = np.zeros(nz)
+            v_w = np.zeros(nz)
+            v_e = np.zeros(nz)
+            unknown=True
     
     nc_file_grid.close()
     
-    return [u_s, u_n, v_w, v_e]
+    return [u_s, u_n, v_w, v_e, unknown]
 
 ########################################################################################
 #
@@ -1066,10 +1093,14 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     tprcp_in  = read_NetCDF_surface_var(nc_file, 'tprcp',  i, j, old_chgres, 0)
     srflag_in = read_NetCDF_surface_var(nc_file, 'srflag', i, j, old_chgres, 0)
     sncovr_in = read_NetCDF_surface_var(nc_file, 'sncovr', i, j, old_chgres, 0)
-    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsfcl',  i, j, old_chgres, 0)
-    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorll',  i, j, old_chgres, 0)   
-    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorli',  i, j, old_chgres, 0)
-    
+    tsfcl_in  = read_NetCDF_surface_var(nc_file, 'tsea',   i, j, old_chgres, 0)
+    zorll_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)   
+    zorli_in  = read_NetCDF_surface_var(nc_file, 'zorl',   i, j, old_chgres, 0)
+    if (snwdph_in > 0):
+        sncovr_in = 1.0
+    else:
+        sncovr_in = 0.0
+
     # present when cplwav = T
     zorlw_in = read_NetCDF_surface_var(nc_file, 'zorlw', i, j, old_chgres, 0)
     
@@ -1171,6 +1202,12 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
     # fractional grid
     tiice_in = read_NetCDF_surface_var(nc_file, 'tiice', i, j, old_chgres, missing_variable_ice_layers)
 
+    # soil color (From  the UFS FV3: io/fv3atm_sfc_io.F90)
+    if (slmsk_in == 1):
+        scolor_in = 4
+    else:
+        scolor_in = 1
+
     #
     nc_file.close()
     
@@ -1187,6 +1224,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
         "facsf": facsf_in,
         "facwf": facwf_in,
         "soiltyp": styp_in,
+        "scolor": scolor_in,
         "slopetyp": slope_in,
         "vegtyp": vtyp_in,
         "vegfrac": vfrac_in,
@@ -1313,7 +1351,7 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
     if lam:
         nc_file = Dataset('{0}/{1}'.format(dir,'oro_data.nc'))
     else:
-        filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
+        filename_pattern = 'oro*.tile{0}.nc'.format(tile)
         for f_name in os.listdir(dir):
            if fnmatch.fnmatch(f_name, filename_pattern):
               filename = f_name
@@ -1462,8 +1500,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
         sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
     else:
-        atm_ftag = 'atmf*.nc'
-        sfc_ftag = 'sfcf*.nc'
+        atm_ftag = '*atmf*.nc'
+        sfc_ftag = '*sfcf*.nc'
 
     # Get list of UFS history files with 3D ATMospheric state variables.
     atm_filenames = []
@@ -1906,37 +1944,6 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     pres_adv[t+1,:]   = pres_adv[t,:] 
     pres_i_adv[t+1,:] = pres_i_adv[t,:]
 
-    if save_comp_data:
-        #
-        t_layr     = np.zeros([n_files+1,nlevs])
-        qv_layr    = np.zeros([n_files+1,nlevs])
-        u_layr     = np.zeros([n_files+1,nlevs])
-        v_layr     = np.zeros([n_files+1,nlevs])
-        p_layr     = np.zeros([n_files+1,nlevs])
-
-        #
-        for t in range(0,n_files):
-            from_p[0,:]     = stateNATIVE["p_lev"][t,::-1]
-            to_p[0,:]       = stateNATIVE["p_lev"][1,::-1]
-            log_from_p[0,:] = np.log(from_p[0,:])
-            log_to_p[0,:]   = np.log(to_p[0,:])
-            p_layr[t,:]     = stateNATIVE["p_lay"][1,::-1]
-            for k in range(0,nlevs): dp2[0,k] = to_p[0,k+1] - to_p[0,k]
-            t_layr[t,:]  = fv3_remap.map_scalar(nlevs, log_from_p, stateNATIVE["t_lay"][t:t+1,::-1],  \
-                                dummy, nlevs, log_to_p, 0, 0, 1, np.abs(kord_tm), t_min)
-            qv_layr[t,:] = fv3_remap.map1_q2(nlevs, from_p, stateNATIVE["qv_lay"][t:t+1,::-1],        \
-                                nlevs, to_p, dp2, 0, 0, 0, kord_tr, q_min)
-            u_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["u_lay"][t:t+1,::-1],        \
-                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-            v_layr[t,:]  = fv3_remap.map1_ppm(nlevs, from_p, stateNATIVE["v_lay"][t:t+1,::-1],        \
-                                0.0, nlevs, to_p, 0, 0, -1, kord_tm)
-
-        t_layr[t+1,:]  = t_layr[t,:]
-        qv_layr[t+1,:] = qv_layr[t,:]
-        u_layr[t+1,:]  = u_layr[t,:]
-        v_layr[t+1,:]  = v_layr[t,:]
-        p_layr[t+1,:]  = p_layr[t,:]
-
     ####################################################################################
     #
     # if we had atmf,sfcf files at every timestep (and the SCM timestep is made to match
@@ -2105,11 +2112,11 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     if (save_comp_data):
         comp_data = {
             "time": stateNATIVE["time"]*sec_in_hr,
-            "pa"  : p_layr[:,::-1],
-            "ta"  : t_layr[:,::-1],
-            "qv"  : qv_layr[:,::-1],
-            "ua"  : u_layr[:,::-1],
-            "va"  : v_layr[:,::-1],
+            "pa"  : stateNATIVE["p_lay"][:,:],
+            "ta"  : stateNATIVE["t_lay"][:,:],
+            "qv"  : stateNATIVE["qv_lay"][:,:],
+            "ua"  : stateNATIVE["u_lay"][:,:],
+            "va"  : stateNATIVE["v_lay"][:,:],
             "vars2d":vars2d}
     else:
         comp_data = {}
@@ -2392,7 +2399,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
                 {"name": "mrsos_forc",   "type":wp, "dimd": ('time'       ),    "units": "kg m-2",        "desc": "forcing_mass_content_of_water_in_soil_layer"}]
 
     #
-    var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m 2-1",   "desc": "grid_cell_area"},\
+    var_oro  = [{"name": "area",         "type":wp, "dimd": ('t0'),             "units": "m2",      "desc": "grid_cell_area"},\
                 {"name": "stddev",       "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "standard deviation of subgrid orography"}, \
                 {"name": "convexity",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "convexity of subgrid orography"}, \
                 {"name": "oa1",          "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "assymetry of subgrid orography 1"}, \
@@ -2450,6 +2457,7 @@ def write_SCM_case_file(state, surface, oro, forcing, case, date, stateREGRID):
                 {"name": "q2m",          "type":wp, "dimd": ('t0'),             "units": "kg kg-1", "desc": "2-meter specific humidity"}, \
                 {"name": "vegtyp",       "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "vegetation type (1-12)"}, \
                 {"name": "soiltyp",      "type":wi, "dimd": ('t0'),             "units": "none",    "desc": "soil type (1-12)"}, \
+                {"name": "scolor",       "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "soil color"}, \
                 {"name": "ffmm",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for momentum"}, \
                 {"name": "ffhh",         "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "Monin-Obukhov similarity function for heat"}, \
                 {"name": "hice",         "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sea ice thickness"}, \
@@ -2638,7 +2646,7 @@ def write_comparison_file(comp_data, case_name, date, surface):
 ########################################################################################
 def find_date(forcing_dir):
     
-    atm_ftag = 'atmf*.nc'
+    atm_ftag = '*atmf*.nc'
     
     atm_filenames = []
     for f_name in os.listdir(forcing_dir):
@@ -2704,8 +2712,12 @@ def main():
     
     # get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement
     # different file reads)
-    (state_data, surface_data, oro_data) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
-                                                           tile_j, old_chgres, lam)
+    (state_data, surface_data, oro_data, error_msg) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
+                                                                      tile_j, old_chgres, lam)
+    if (error_msg):
+        print(error_msg)
+        print("STOPPING")
+        exit()
 
     if not date:
         # date was not included on command line; look in atmf* file for initial date

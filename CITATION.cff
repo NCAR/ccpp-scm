@@ -1,0 +1,54 @@
+title: "CCPP Single Column Model (SCM)"
+version: 6.0.0
+message: "Please cite this software using the metadata from this file."
+type: software
+identifiers:
+    - description: "This is the archived snapshot of all versions of CCPP SCM"
+      type: doi
+      value: 10.5281/zenodo.6896437
+    - description: "This is the archived snapshot of CCPP SCM v6.0.0"
+      type: doi
+      value: 10.5281/zenodo.6896438
+repository-code: "https://github.com/NCAR/ccpp-scm"
+url: "https://dtcenter.org/community-code/common-community-physics-package-ccpp"
+authors:
+  - given-names: Grant
+    family-names: Firl
+    affiliation: >-
+      Cooperative Institute for Research in the Atmosphere, 
+      Developmental Testbed Center,
+      National Oceanic and Atmospheric Administration Global Systems Laboratory
+    orcid: 0009-0001-7076-2735
+  - given-names: Dustin
+    family-names: Swales
+    affiliation: >-
+      Developmental Testbed Center and 
+      National Oceanic and Atmospheric Administration Global Systems Laboratory
+    orcid: 0000-0002-5322-4521
+  - given-names: Laurie
+    family-names: Carson
+    affiliation: >-
+      Developmental Testbed Center and National Center for Atmospheric Research
+  - given-names: Ligia
+    family-names: Bernardet
+    affiliation: >-
+      Developmental Testbed Center and 
+      National Oceanic and Atmospheric Administration Global Systems Laboratory
+    orcid: 0000-0002-4952-4038
+  - given-names: Dominikus
+    family-names: Heinzeller
+    affiliation: Joint Center for Satellite Data Assimilation
+    orcid: 0000-0003-2962-1049
+  - given-names: Michelle
+    family-names: Harrold
+    affiliation: >-
+      Developmental Testbed Center and National Center for Atmospheric Research      
+  - given-names: Tracy
+    family-names: Hertneky
+    affiliation: >-
+      Developmental Testbed Center and National Center for Atmospheric Research      
+  - given-names: Michael
+    family-names: Kavulich
+    affiliation: >-
+      Developmental Testbed Center and National Center for Atmospheric Research
+cff-version: 1.2.0
