@@ -257,6 +257,7 @@ endif()
 # How about using proper compile targets etc?
 #------------------------------------------------------------------------------
 # Configure sources
+set(MPI ON)
 ADD_SUBDIRECTORY(${CCPP_FRAMEWORK_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
 ADD_SUBDIRECTORY(${CCPP_PHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccpp_physics ccpp_framework)
