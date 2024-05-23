@@ -130,6 +130,7 @@ set(SIMDMULTIARCH   OFF CACHE BOOL "Enable multi-target SIMD instruction sets")
 # Set compile options
 if (32BIT)
   add_definitions(-DSINGLE_PREC)
+  add_definitions(-DRTE_USE_SP)
 endif()
 
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
@@ -203,7 +204,7 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
   if(NOT 32BIT)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -r8")
   endif()
-  
+
   if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
     set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -g")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g")
@@ -215,7 +216,7 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
   set(MPI_C_COMPILER mpicc)
   set(MPI_CXX_COMPILER mpicxx)
   set(MPI_Fortran_COMPILER mpif90)
-  
+
   set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
