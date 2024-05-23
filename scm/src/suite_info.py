@@ -45,7 +45,7 @@ suite_list = []
 suite_list.append(suite('raven',        'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, True ))
 suite_list.append(suite('bluebird',     'tracers_GFS_v17_p8.txt',               'input_GFS_v17_p8.nml',              600.0, 600.0,  True ))
 suite_list.append(suite('magpie',       'tracers_GFS_v17_HR3.txt',              'input_GFS_v17_HR3.nml',             600.0, 600.0,  True ))
-suite_list.append(suite('robin',        'tracers_GFS_v17_HR3.txt',              'input_GFS_v17_HR3_RRTMGP.nml',      600.0, 600.0,  True ))
+suite_list.append(suite('robin',        'tracers_GFS_v17_p8',                   'input_GFS_v17_HR3_RRTMGP.nml',      600.0, 600.0,  True ))
 suite_list.append(suite('albatross',    'tracers_RAP.txt',                      'input_RAP.nml',                     600.0, 600.0 , True ))
 suite_list.append(suite('warbler',      'tracers_RRFS_v1.txt',                  'input_RRFS_v1.nml',                 600.0, 600.0 , True ))
 suite_list.append(suite('pigeon',       'tracers_RRFS_v1beta.txt',              'input_RRFS_v1beta.nml',             600.0, 600.0 , True ))
