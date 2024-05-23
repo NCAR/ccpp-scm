@@ -53,23 +53,29 @@ def configure():
 
 
 # Function to run build step
-def build32():
+def build32(debug):
     print("Running single precision build step")
-    command = ["make", "-C", "build32", "-j4"]
+    if (debug):
+        command = ["make", "-C", "build32", "-j1", "VERBOSE=1"]
+    else:
+        command = ["make", "-C", "build32", "-j4"]
     run_cmd(command)
 
 # Function to run build step
-def build64():
+def build64(debug):
     print("Running double precision build step")
-    command = ["make", "-C", "build64", "-j4"]
+    if (debug):
+        command = ["make", "-C", "build64", "-j1", "VERBOSE=1"]
+    else:
+        command = ["make", "-C", "build64", "-j4"]
     run_cmd(command)
 
 
 # Function to run build step
-def build():
+def build(debug=False):
     print("Running make steps")
-    build32()
-    build64()
+    build32(debug)
+    build64(debug)
 
 
 # Post process single vs. double precision output
@@ -285,6 +291,7 @@ def main():
     parser.add_argument("--run", action="store_true", help="Run cases in single and double precision")
     parser.add_argument("--run32", action="store_true", help="Run cases in single precision")
     parser.add_argument("--run64", action="store_true", help="Run cases in double precision")
+    parser.add_argument("-d", "--debug", action="store_true", help="Debug mode")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     args = parser.parse_args()
 
@@ -295,6 +302,11 @@ def main():
 
     verbose = args.verbose
 
+    if args.debug:
+        debug = True
+    else:
+        debug = False
+
     # Execute requested step(s)
     if args.configure:
         configure()
@@ -303,11 +315,11 @@ def main():
     elif args.configure64:
         configure64()
     elif args.build32:
-        build32()
+        build32(debug)
     elif args.build64:
-        build64()
+        build64(debug)
     elif args.build:
-        build()
+        build(debug)
     elif args.run:
         run()
     elif args.run32:
