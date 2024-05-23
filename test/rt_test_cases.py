@@ -58,7 +58,7 @@ run_list = [\
             {"case": "astex",                 "suite": "bald_eagle"},        \
             {"case": "astex",                 "suite": "pigeon"},            \
             {"case": "astex",                 "suite": "albatross"},         \
-            {"case": "LASSO_2016051812",      "suite": "kingfisher"}         \
+            {"case": "LASSO_2016051812",      "suite": "kingfisher"},        \
             {"case": "LASSO_2016051812",      "suite": "bluebird"},          \
             {"case": "LASSO_2016051812",      "suite": "bald_eagle"},        \
             {"case": "LASSO_2016051812",      "suite": "pigeon"},            \

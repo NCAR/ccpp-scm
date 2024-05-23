@@ -22,7 +22,7 @@ jobs:
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
       suites:     kingfisher,raven,bluebird,bald_eagle,pigeon,albatross,hummingbird,magpie,robin,warbler
-      suites_ps:  kingfisher_ps,raven_ps,bluebird_ps,bald_eagle_ps,pigeon_ps,albatross_ps,hummingbird_ps,magpie_os,robin_ps,warbler_ps
+      suites_ps:  kingfisher_ps,raven_ps,bluebird_ps,bald_eagle_ps,pigeon_ps,albatross_ps,hummingbird_ps,magpie_ps,robin_ps,warbler_ps
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
 
@@ -181,12 +181,6 @@ jobs:
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
-
-    - name: cat CCPP log file
-      if: always()
-      run: |
-        cd ${SCM_ROOT}/scm/bin
-        cat ccpp_prebuild.err
 
     - name: Build SCM
       run: |
