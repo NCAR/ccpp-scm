@@ -5,11 +5,6 @@
 # This script compares SCM RT output to baselines.
 #
 ##############################################################################
-import os
-import sys
-from rt_test_cases_testing import run_list
-from os.path import exists
-import argparse
 from netCDF4 import Dataset
 import numpy as np
 import matplotlib.pyplot as plt
