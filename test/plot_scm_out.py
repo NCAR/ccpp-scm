@@ -53,7 +53,7 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
 
     # Which fields to plot? (default is subset of full fields)
     if vars2plt is None:
-        vars2plot = vars2plot_DEBUG
+        vars2plot = vars2plot_SUB
     else:
         vars2plot = vars2plt
     # end if
