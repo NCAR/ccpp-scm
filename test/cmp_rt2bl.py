@@ -16,26 +16,18 @@ from plot_scm_out import plot_results
 parser = argparse.ArgumentParser()
 parser.add_argument('-drt',  '--dir_rt',  help='Directory containing SCM RT output',      required=True)
 parser.add_argument('-dbl',  '--dir_bl',  help='Directory containing SCM RT baselines',   required=True)
-parser.add_argument('-prt',  '--plt_rt',  help='If true, create plots of dir_rt',         action='store_true')
-parser.add_argument('-pbl',  '--plt_bl',  help='If true, create plots of dir_bl',         action='store_true')
-parser.add_argument('-pall', '--plt_all', help='If true, create plots of all SCM fields', action='store_true')
-parser.add_argument('-dbg',  '--debug',   help='Debug mode ',                             action='store_true')
 
 #
 def parse_args():
     args    = parser.parse_args()
     dir_rt  = args.dir_rt 
     dir_bl  = args.dir_bl
-    plt_rt  = args.plt_rt
-    plt_bl  = args.plt_bl
-    plt_all = args.plt_all
-    debug   = args.debug
-    return (dir_rt, dir_bl, plt_rt, plt_bl, plt_all, debug)
+    return (dir_rt, dir_bl)
 
 #
 def main():
     #
-    (dir_rt, dir_bl, plt_rt, plt_bl, plt_all, debug) = parse_args()
+    (dir_rt, dir_bl) = parse_args()
 
     #
     error_count = 0
