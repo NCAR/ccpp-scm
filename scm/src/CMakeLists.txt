@@ -105,6 +105,9 @@ ADD_DEFINITIONS(-DCCPP)
 # Add host-model specific preprocessor flag (needed for some physics schemes)
 ADD_DEFINITIONS(-DSCM)
 
+ADD_DEFINITIONS(-DMPI)
+
+
 #------------------------------------------------------------------------------
 # Add model-specific flags for C/C++/Fortran preprocessor
 ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
@@ -257,7 +260,7 @@ endif()
 # How about using proper compile targets etc?
 #------------------------------------------------------------------------------
 # Configure sources
-set(MPI ON)
+
 ADD_SUBDIRECTORY(${CCPP_FRAMEWORK_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
 ADD_SUBDIRECTORY(${CCPP_PHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccpp_physics ccpp_framework)

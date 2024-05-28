@@ -720,7 +720,7 @@ def launch_executable(use_gdb, gdb, ignore_error = False):
     if use_gdb:
         cmd = '(cd {scm_run} && {gdb} {executable})'.format(scm_run=SCM_RUN, gdb=gdb, executable=EXECUTABLE)
     else:
-        cmd = '(cd {scm_run} && time {executable})'.format(scm_run=SCM_RUN, executable=EXECUTABLE)
+        cmd = '(cd {scm_run} && time srun -A gmtb -n 1 {executable})'.format(scm_run=SCM_RUN, executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(1)
     # This will abort in 'execute' in the event of an error if ignore_error = False
