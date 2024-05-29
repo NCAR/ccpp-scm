@@ -67,7 +67,7 @@ jobs:
         make install
         echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
-	
+
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v3
