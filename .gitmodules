@@ -4,8 +4,8 @@
 	branch = feature/suite_names_update
 [submodule "ccpp-physics"]
 	path = ccpp/physics
-	url = https://github.com/mkavulich/ccpp-physics
-	branch = ufs-dev-182
+	url = https://github.com/grantfirl/ccpp-physics
+	branch = ufs-dev-PR184
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
