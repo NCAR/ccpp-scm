@@ -22,8 +22,6 @@ jobs:
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
       suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
-      CC:         mpicc
-      FC:         mpif90
 
     # Workflow steps
     steps:
@@ -143,6 +141,11 @@ jobs:
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
+    - name: Environment for openmpi compiler
+      run: |
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
+	
     #######################################################################################
     # Build SCM.
     #######################################################################################

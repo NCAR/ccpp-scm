@@ -25,8 +25,6 @@ jobs:
       suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_RRFS_v1_ps,SCM_GFS_v17_HR3_ps,SCM_GFS_v17_HR3_RRTMGP_ps
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
-      CC:         mpicc
-      FC:         mpif90
 
     # Workflow steps
     steps:
@@ -61,6 +59,7 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
+
     - name: Install openmpi
       run: |
         wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
@@ -144,6 +143,11 @@ jobs:
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
+    - name: Environment for openmpi compiler
+      run: |
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
+	
     #######################################################################################
     # Build SCM. Run regression tests.
     #######################################################################################
