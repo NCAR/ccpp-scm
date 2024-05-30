@@ -157,6 +157,7 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                     if file_rt is not None: plt.subplot(3,1,1)
                     plt.contourf(x1, y1, z1, 20, cmap='YlGnBu')
                     plt.ylim(1000,200)
+                    plt.xlim(0,np.max(x1))
                     plt.ylabel('(Pa)')
                     plt.xlabel('(hours)')
                     cbr = plt.colorbar()
