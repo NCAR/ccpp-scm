@@ -44,7 +44,7 @@ subroutine scm_main_sub()
 
   call MPI_INIT(ierr)
   if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in MPI_INIT: ' // ierr // '. Exiting...'
+      write(*,*) 'An error occurred in MPI_INIT: ', ierr
       stop 1
   end if
   fcst_mpi_comm = MPI_COMM_WORLD  
@@ -432,7 +432,7 @@ subroutine scm_main_sub()
   
   call MPI_FINALIZE(ierr)
   if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in MPI_FINALIZE: ' // ierr // '. Exiting...'
+      write(*,*) 'An error occurred in MPI_FINALIZE: ', ierr
       stop 1
   end if
 
