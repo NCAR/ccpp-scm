@@ -14,22 +14,20 @@ from plot_scm_out import plot_results
 
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-drt', '--dir_rt',  help='Directory containing SCM RT output')
-parser.add_argument('-dbl', '--dir_bl',  help='Directory containing SCM RT baselines')
-parser.add_argument('-plt', '--do_plot', help='If true, create plots of SCM RT output', action='store_true')
+parser.add_argument('-drt',  '--dir_rt',  help='Directory containing SCM RT output',      required=True)
+parser.add_argument('-dbl',  '--dir_bl',  help='Directory containing SCM RT baselines',   required=True)
 
 #
 def parse_args():
     args    = parser.parse_args()
     dir_rt  = args.dir_rt 
     dir_bl  = args.dir_bl
-    do_plot = args.do_plot
-    return (dir_rt, dir_bl, do_plot)
+    return (dir_rt, dir_bl)
 
 #
 def main():
     #
-    (dir_rt, dir_bl, do_plot) = parse_args()
+    (dir_rt, dir_bl) = parse_args()
 
     #
     error_count = 0
@@ -48,7 +46,7 @@ def main():
 
             # Create plots between RTs and baselines (only if differences exist)
             if (result != 0):
-                plot_files = plot_results(file_rt, file_bl, do_plot)
+                plot_files = plot_results(file_bl, file_rt)
 
                 # Setup output directories for plots.
                 result = os.system("mkdir -p scm_rt_out/"+run["case"]+"/"+run["suite"])
