@@ -42,10 +42,12 @@ subroutine scm_main_sub()
   character(len=16) :: logfile_name
   logical                           :: in_spinup
 
-#ifdef MPI
   call MPI_INIT(ierr)
-  fcst_mpi_comm = MPI_COMM_WORLD
-#endif  
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in MPI_INIT: ' // ierr // '. Exiting...'
+      stop 1
+  end if
+  fcst_mpi_comm = MPI_COMM_WORLD  
 
   call get_config_nml(scm_state)
   
@@ -427,6 +429,12 @@ subroutine scm_main_sub()
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
       stop 1
   end if
+  
+  call MPI_FINALIZE(ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in MPI_FINALIZE: ' // ierr // '. Exiting...'
+      stop 1
+  end if
 
 end subroutine scm_main_sub
 
@@ -438,10 +446,7 @@ end module scm_main
 !! subroutine \ref scm_main_sub above.
 program scm
   use scm_main
-
-#ifdef MPI
   use mpi_f08
-#endif
 
   call scm_main_sub()
 end program scm
