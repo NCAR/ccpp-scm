@@ -3346,7 +3346,7 @@
   long_name = MPI communicator
   units = index
   dimensions = ()
-  type = integer
+  type = MPI_Comm
 [ntasks]
   standard_name = number_of_mpi_tasks
   long_name = number of MPI tasks in communicator
@@ -5421,6 +5421,12 @@
 [random_clds]
   standard_name = flag_for_random_clouds_for_RAS
   long_name = flag for using random clouds with the RAS scheme
+  units = flag
+  dimensions = ()
+  type = logical
+[xr_cnvcld]
+  standard_name = flag_for_suspended_convective_clouds_in_Xu_Randall
+  long_name = flag for using suspended convective clouds in Xu Randall
   units = flag
   dimensions = ()
   type = logical

@@ -15,7 +15,8 @@ subroutine scm_main_sub()
   use scm_time_integration
   use scm_output
   use scm_type_defs
-       
+  use mpi_f08
+
   use :: ccpp_static_api,                      &
          only: ccpp_physics_init,              &
                ccpp_physics_timestep_init,     &
@@ -30,6 +31,8 @@ subroutine scm_main_sub()
   type(scm_input_type), target :: scm_input_instance
   type(scm_reference_type), target :: scm_reference
 
+  type(MPI_Comm)           :: fcst_mpi_comm
+
   integer      :: i, j, kdt_rad, idtend, itrac
   real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer      :: jdat(1:8)
@@ -38,6 +41,13 @@ subroutine scm_main_sub()
   integer                           :: ierr
   character(len=16) :: logfile_name
   logical                           :: in_spinup
+
+  call MPI_INIT(ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in MPI_INIT: ' // ierr // '. Exiting...'
+      stop 1
+  end if
+  fcst_mpi_comm = MPI_COMM_WORLD  
 
   call get_config_nml(scm_state)
   
@@ -94,6 +104,7 @@ subroutine scm_main_sub()
     open(unit=physics%Init_parm%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
   end if
   
+  physics%Init_parm%fcst_mpi_comm   =  fcst_mpi_comm
   physics%Init_parm%levs = scm_state%n_levels
   physics%Init_parm%bdat(1) = scm_state%init_year
   physics%Init_parm%bdat(2) = scm_state%init_month
@@ -120,7 +131,7 @@ subroutine scm_main_sub()
   call GFS_suite_setup(physics%Model, physics%Statein, physics%Stateout,           &
                        physics%Sfcprop, physics%Coupling, physics%Grid,            &
                        physics%Tbd, physics%Cldprop, physics%Radtend,              &
-                       physics%Diag, physics%Interstitial, 0, 1, 1,                &
+                       physics%Diag, physics%Interstitial, 1, 1,                   &
                        physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
                        scm_state%lat, scm_state%area)
   
@@ -418,6 +429,12 @@ subroutine scm_main_sub()
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
       stop 1
   end if
+  
+  call MPI_FINALIZE(ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in MPI_FINALIZE: ' // ierr // '. Exiting...'
+      stop 1
+  end if
 
 end subroutine scm_main_sub
 
@@ -429,5 +446,7 @@ end module scm_main
 !! subroutine \ref scm_main_sub above.
 program scm
   use scm_main
+  use mpi_f08
+
   call scm_main_sub()
 end program scm

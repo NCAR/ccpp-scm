@@ -59,17 +59,18 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
-    - name: Environment for gfortran compiler
-      if: contains(matrix.fortran-compiler, 'gfortran')
-      run: |
-        echo "FC=gfortran-11" >> $GITHUB_ENV
-        echo "CC=gcc-11"      >> $GITHUB_ENV
 
-    - name: Environment for ifort compiler
-      if: contains(matrix.fortran-compiler, 'intel')
+    - name: Install openmpi
       run: |
-        echo "CC=icx"         >> $GITHUB_ENV
-        echo "FC=ifort"       >> $GITHUB_ENV
+        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
+        tar -xvf v4.1.6.tar.gz
+        cd ompi-4.1.6
+        ./autogen.pl
+        ./configure --prefix=/home/runner/ompi-4.1.6
+        make -j4
+        make install
+        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
 
     #######################################################################################
     # OpenMPI setup
@@ -164,6 +165,11 @@ jobs:
         make -j
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+
+    - name: Environment for openmpi compiler
+      run: |
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
 
     #######################################################################################
     # Build SCM. Run regression tests.
