@@ -3,8 +3,6 @@
     "SCM_GFS_v17_HR3_ps.xml": "magpie_ps.xml",
     "SCM_GFS_v16.xml": "raven.xml",
     "SCM_GFS_v16_ps.xml": "raven_ps.xml",
-    "HAFS_v0_hwrf.xml": "macaw.xml",
-    "HAFS_v0_hwrf_ps.xml": "macaw_ps.xml",
     "HAFS_v0_hwrf_thompson.xml": "sunbird.xml",
     "HAFS_v0_hwrf_thompson_ps.xml": "sunbird_ps.xml",
     "SCM_GFS_v17_p8_c3.xml": "parakeet.xml",
