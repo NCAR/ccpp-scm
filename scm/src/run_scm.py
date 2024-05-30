@@ -720,7 +720,7 @@ class Experiment(object):
         
         return os.path.join(SCM_RUN, output_dir)
 
-def launch_executable(use_gdb, gdb, ignore_error = False, mpi_command):
+def launch_executable(use_gdb, gdb, mpi_command, ignore_error = False):
     """Configure model run command and pass control to shell/gdb"""
     if use_gdb:
         if not mpi_command:
@@ -882,7 +882,7 @@ def main():
             l_ignore_error = MULTIRUN_IGNORE_ERROR
         else:
             l_ignore_error = False
-        (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = l_ignore_error, mpi_command)
+        (status, time_elapsed) = launch_executable(use_gdb, gdb, mpi_command, ignore_error = l_ignore_error)
         #
         if status == 0:
             logging.info('Process "(case={0}, suite={1}, namelist={2}" completed successfully'. \
