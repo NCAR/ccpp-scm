@@ -188,7 +188,7 @@ jobs:
     - name: Download SCM RT baselines
       run: |
         cd ${dir_bl}
-        wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/rt-baselines-${{matrix.build-type}}.zip
+        wget https://dtcenter.ucar.edu/ccpp/users/rt/rt-baselines-${{matrix.build-type}}.zip
         unzip rt-baselines-${{matrix.build-type}}.zip
 
     - name: Compare SCM RT output to baselines
