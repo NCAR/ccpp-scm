@@ -1,6 +1,6 @@
 name: build_test_and_push_docker
 
-on: [pull_request,workflow_dispatch,push]
+on: [pull_request,workflow_dispatch]
 
 env:
   TEST_TAG: dtcenter/ccpp-scm:test

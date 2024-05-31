@@ -1,6 +1,6 @@
 name: CI test to build and run SCM regression tests
 
-on: [pull_request, workflow_dispatch,push]
+on: [pull_request, workflow_dispatch]
 
 jobs:
   run_scm_rts:
@@ -71,25 +71,6 @@ jobs:
         make install
         echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
-
-    #######################################################################################
-    # OpenMPI setup
-    #######################################################################################
-
-    - name: Install open mpi
-      run: |
-        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
-        tar -xvf v4.1.6.tar.gz
-        cd ompi-4.1.6
-        ./autogen.pl
-        ./configure --prefix=/home/runner/ompi-4.1.6
-        make -j4
-        make install
-        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
-        echo `ls /home/runner/ompi-4.1.6/bin`
-        echo "FC=mpif90" >> $GITHUB_ENV
-        echo "CC=mpicc"  >> $GITHUB_ENV
 
     #######################################################################################
     # Install FORTRAN dependencies

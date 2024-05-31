@@ -1,6 +1,6 @@
 name: CI test to run the SCM with DEPHY v1 data
 
-on: [pull_request,workflow_dispatch,push]
+on: [pull_request,workflow_dispatch]
 
 jobs:
   run-scm-DEPHY:
@@ -50,23 +50,6 @@ jobs:
 
     - name: Update system packages
       run: sudo apt-get update
-
-    #######################################################################################
-    # Install OpenMPI
-    #######################################################################################
-    - name: Install open mpi
-      run: |
-        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
-        tar -xvf v4.1.6.tar.gz
-        cd ompi-4.1.6
-        ./autogen.pl
-        ./configure --prefix=/home/runner/ompi-4.1.6
-        make -j4
-        make install
-        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
-        echo "CC=mpicc"  >> $GITHUB_ENV
-        echo "FC=mpif90" >> $GITHUB_ENV
 
 
     #######################################################################################
