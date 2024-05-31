@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 ##############################################################################
 #
 # This script compares SCM RT output to baselines.
@@ -175,3 +176,18 @@ def plot_results(file_BL, file_RT, plot_RT_only):
     # end for            (fields in file)
 
     return(plot_files)
+
+if __name__ == "__main__":
+
+    #Parse arguments
+    parser = argparse.ArgumentParser(
+                     description="Script for setting up a forecast and creating a workflow"\
+                     "according to the parameters specified in the config file\n")
+
+    parser.add_argument('-bl', '--baseline', type=str, required=True,
+                        help='Baseline file')
+    parser.add_argument('-rt', '--rt', type=str, required=True,
+                        help='Regression test file')
+    pargs = parser.parse_args()
+
+    plot_results(pargs.baseline, pargs.rt, False)
