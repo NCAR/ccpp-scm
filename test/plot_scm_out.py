@@ -82,7 +82,7 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
             if file_rt is not None:
                 x2    = SCM_RT[timeD][:].squeeze()/3600. #seconds - >hours
                 # If temporal dimensions disagree, con't compute deltas from experiments, turn off difference plots.
-                if (len(x1) != len(x2)):
+                if (x1.shape != x2.shape):
                     plot_diff = False
                 # end if
             # end if
