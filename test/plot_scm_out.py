@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import argparse
+
 ###############################################################################
 #
 # This script compares SCM output from two simulations.
@@ -82,7 +84,7 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
             if file_rt is not None:
                 x2    = SCM_RT[timeD][:].squeeze()/3600. #seconds - >hours
                 # If temporal dimensions disagree, con't compute deltas from experiments, turn off difference plots.
-                if (len(x1) != len(x2)):
+                if (x1.shape != x2.shape):
                     plot_diff = False
                 # end if
             # end if
@@ -198,3 +200,18 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
     # end for            (fields in file)
 
     return(plot_files)
+
+if __name__ == "__main__":
+
+    #Parse arguments
+    parser = argparse.ArgumentParser(
+                     description="Script for setting up a forecast and creating a workflow"\
+                     "according to the parameters specified in the config file\n")
+
+    parser.add_argument('-bl', '--baseline', type=str, required=True,
+                        help='Baseline file')
+    parser.add_argument('-rt', '--rt', type=str, required=True,
+                        help='Regression test file')
+    pargs = parser.parse_args()
+
+    plot_results(pargs.baseline, pargs.rt, False)

@@ -105,6 +105,9 @@ ADD_DEFINITIONS(-DCCPP)
 # Add host-model specific preprocessor flag (needed for some physics schemes)
 ADD_DEFINITIONS(-DSCM)
 
+ADD_DEFINITIONS(-DMPI)
+
+
 #------------------------------------------------------------------------------
 # Add model-specific flags for C/C++/Fortran preprocessor
 ADD_DEFINITIONS(-DMOIST_CAPPA -DUSE_COND -DNEMS_GSM)
@@ -242,6 +245,13 @@ else()
 endif()
 
 #------------------------------------------------------------------------------
+# Set MPI flags for Fortran with MPI F08 interface
+find_package(MPI REQUIRED Fortran)
+if(NOT MPI_Fortran_HAVE_F08_MODULE)
+  message(FATAL_ERROR "MPI implementation does not support the Fortran 2008 mpi_f08 interface")
+endif()
+
+#------------------------------------------------------------------------------
 # Set netCDF flags for preprocessor
 ADD_DEFINITIONS(-DNETCDF)
 
@@ -257,6 +267,7 @@ endif()
 # How about using proper compile targets etc?
 #------------------------------------------------------------------------------
 # Configure sources
+
 ADD_SUBDIRECTORY(${CCPP_FRAMEWORK_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
 ADD_SUBDIRECTORY(${CCPP_PHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccpp_physics ccpp_framework)
