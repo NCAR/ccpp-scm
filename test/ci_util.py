@@ -26,6 +26,7 @@ def main():
     (build_type) = parse_args()
 
     #
+    errmsgs=[]
     for run in run_list:
         case_tag = run["case"]+"_"+run["suite"]
         file_out = "../scm/run/" + "output_"+case_tag+"/output.nc"
@@ -33,8 +34,13 @@ def main():
             os.system("mkdir -p artifact-"+build_type+"/"+case_tag+"/")
             os.system("cp " + file_out + " artifact-"+build_type+"/"+case_tag+"/output.nc")
         else:
-            print("FAIL: Could not copy output for baseline generation")
-            exit()
+            errmsgs.append("Could not copy output for baseline generation "+ case_tag)
+        # end if
+    # end for
+
+    for errmsg in errmsgs:
+        print(errmsg)
+    # end for
 
 if __name__ == '__main__':
     main()
