@@ -21,7 +21,6 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      intel_ROOT: /home/runner/intel
       suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
 
     # Workflow steps
@@ -57,33 +56,17 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
-    - name: Environment for ifort compiler
-      if: contains(matrix.fortran-compiler, 'ifort')
+    - name: Install openmpi
       run: |
-        echo "CC=icx"   >> $GITHUB_ENV
-        echo "FC=ifort" >> $GITHUB_ENV
-        echo "NFVERSION=v4.4.4" >> $GITHUB_ENV
-
-    - name: Cache Intel compilers
-      id: cache-intel-compilers
-      if: contains(matrix.fortran-compiler, 'ifort')
-      uses: actions/cache@v2
-      with:
-        path: /home/runner/intel
-        key: intel-${{ runner.os }}-compilers-b
-
-    # https://software.intel.com/content/www/us/en/develop/articles/installing-intel-oneapi-toolkits-via-apt.html
-    # List of packages from Docker file at
-    #    https://github.com/intel/oneapi-containers/blob/master/images/docker/hpckit-devel-ubuntu18.04/Dockerfile
-    - name: Install Intel compilers and libraries
-      if: contains(matrix.fortran-compiler, 'ifort') && steps.cache-intel-compilers.outputs.cache-hit != 'true'
-      run: |
-        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
-        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
-        sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
-        sudo apt-get update
-        sudo apt-get install intel-hpckit-getting-started intel-oneapi-clck intel-oneapi-common-licensing intel-oneapi-common-vars
-        sudo apt-get install intel-oneapi-dev-utilities  intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-compiler-fortran intel-oneapi-itac
+        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
+        tar -xvf v4.1.6.tar.gz
+        cd ompi-4.1.6
+        ./autogen.pl
+        ./configure --prefix=/home/runner/ompi-4.1.6
+        make -j4
+        make install
+        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
@@ -157,6 +140,11 @@ jobs:
         make -j
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+
+    - name: Environment for openmpi compiler
+      run: |
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
 
     #######################################################################################
     # Build SCM.

@@ -81,10 +81,14 @@ module scm_type_defs
     integer                           :: graupel_volume_index !< index for graupel volume in the tracer array
     integer                           :: hail_volume_index !< index for hail volume in the tracer array
     integer                           :: tke_index !< index for TKE in the tracer array
+    integer                           :: sigmab_index !< index for prognostic updraft area fraction in convection
     integer                           :: ccn_index !< index for CCN in the tracer array
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
     integer                           :: mass_weighted_rime_factor_index !< index for mass-weighted rime factor
+    integer                           :: smoke_index !< index for smoke in the tracer array
+    integer                           :: dust_index !< index for dust in the tracer array
+    integer                           :: coarsepm_index !< index for coarsepm in the tracer array
     integer                           :: init_year, init_month, init_day, init_hour, init_min
     character(len=32), allocatable    :: tracer_names(:) !<
     integer,           allocatable    :: tracer_types(:) !<
@@ -485,10 +489,14 @@ module scm_type_defs
     scm_state%graupel_volume_index            = get_tracer_index(scm_state%tracer_names,"graupel_vol")
     scm_state%hail_volume_index               = get_tracer_index(scm_state%tracer_names,"hail_vol")
     scm_state%tke_index                       = get_tracer_index(scm_state%tracer_names,"sgs_tke")
+    scm_state%sigmab_index                    = get_tracer_index(scm_state%tracer_names,"sigmab")
     scm_state%ccn_index                       = get_tracer_index(scm_state%tracer_names,"ccn_nc")
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
     scm_state%mass_weighted_rime_factor_index = get_tracer_index(scm_state%tracer_names,"q_rimef")
+    scm_state%smoke_index                     = get_tracer_index(scm_state%tracer_names,"smoke")
+    scm_state%dust_index                      = get_tracer_index(scm_state%tracer_names,"dust")
+    scm_state%coarsepm_index                  = get_tracer_index(scm_state%tracer_names,"coarsepm")
     
     scm_state%nwat = 0
     if(scm_state%water_vapor_index /= -99) then

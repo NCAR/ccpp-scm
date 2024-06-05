@@ -31,6 +31,9 @@ DEFAULT_RUN_DIR = 'scm/run'
 # Path to default bin directory (relative to scm_root)
 DEFAULT_BIN_DIR = 'scm/bin'
 
+# Default command string to run MPI apps (number of processes should be 1 since SCM is not set up to use more than 1 yet)
+DEFAULT_MPI_COMMAND = 'mpirun -np 1'
+
 # Copy executable to run directory if true (otherwise it will be linked)
 COPY_EXECUTABLE = False
 
@@ -119,6 +122,7 @@ parser.add_argument('--n_itt_diag',       help='period of diagnostic output (num
 parser.add_argument('-dt', '--timestep',  help='timestep (s)', required=False, type=float)
 parser.add_argument('-v', '--verbose',    help='set logging level to debug and write log to file', action='count', default=0)
 parser.add_argument('-f', '--file',       help='name of file where SCM runs are defined')
+parser.add_argument('--mpi_command',      help='command used to invoke the executable via MPI (including options)', required=False)
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -185,13 +189,14 @@ def parse_arguments():
     run_dir = args.run_dir
     bin_dir = args.bin_dir
     timestep = args.timestep
+    mpi_command = args.mpi_command
     
     if not sdf:
         sdf = DEFAULT_SUITE
     
     return (file, case, sdf, namelist, tracers, gdb, runtime, runtime_mult, docker, \
             verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,   \
-            n_itt_diag, run_dir, bin_dir, timestep)
+            n_itt_diag, run_dir, bin_dir, timestep, mpi_command)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -715,12 +720,16 @@ class Experiment(object):
         
         return os.path.join(SCM_RUN, output_dir)
 
-def launch_executable(use_gdb, gdb, ignore_error = False):
+def launch_executable(use_gdb, gdb, mpi_command, ignore_error = False):
     """Configure model run command and pass control to shell/gdb"""
     if use_gdb:
-        cmd = '(cd {scm_run} && {gdb} {executable})'.format(scm_run=SCM_RUN, gdb=gdb, executable=EXECUTABLE)
+        if not mpi_command:
+            mpi_command = DEFAULT_MPI_COMMAND + ' xterm -e '
+        cmd = '(cd {scm_run} && {mpi_command} {gdb} {executable})'.format(scm_run=SCM_RUN, mpi_command=mpi_command, gdb=gdb, executable=EXECUTABLE)
     else:
-        cmd = '(cd {scm_run} && time {executable})'.format(scm_run=SCM_RUN, executable=EXECUTABLE)
+        if not mpi_command:
+            mpi_command = DEFAULT_MPI_COMMAND
+        cmd = '(cd {scm_run} && time {mpi_command} {executable})'.format(scm_run=SCM_RUN, mpi_command=mpi_command, executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(1)
     # This will abort in 'execute' in the event of an error if ignore_error = False
@@ -756,7 +765,7 @@ def copy_outdir(exp_dir):
 def main():
     (file, case, sdf, namelist, tracers, use_gdb, runtime, runtime_mult, docker, \
      verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,       \
-     n_itt_diag, run_dir, bin_dir, timestep) = parse_arguments()
+     n_itt_diag, run_dir, bin_dir, timestep, mpi_command) = parse_arguments()
     
     setup_logging(verbose)
 
@@ -873,7 +882,7 @@ def main():
             l_ignore_error = MULTIRUN_IGNORE_ERROR
         else:
             l_ignore_error = False
-        (status, time_elapsed) = launch_executable(use_gdb, gdb, ignore_error = l_ignore_error)
+        (status, time_elapsed) = launch_executable(use_gdb, gdb, mpi_command, ignore_error = l_ignore_error)
         #
         if status == 0:
             logging.info('Process "(case={0}, suite={1}, namelist={2}" completed successfully'. \

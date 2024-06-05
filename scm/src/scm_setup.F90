@@ -279,7 +279,7 @@ end subroutine patch_in_ref
 !--------------
 subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                   &
                             Coupling, Grid, Tbd, Cldprop, Radtend, Diag,         &
-                            Interstitial, communicator, ntasks, nthreads,        &
+                            Interstitial, ntasks, nthreads,                      &
                             Init_parm, n_cols, lon, lat, area)
 
   use machine,             only: kind_phys
@@ -311,7 +311,6 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_interstitial_type),               intent(inout) :: Interstitial
   type(GFS_init_type),                       intent(in)    :: Init_parm
 
-  integer,                  intent(in)    :: communicator
   integer,                  intent(in)    :: ntasks, nthreads, n_cols
   
   real(kind=dp), dimension(n_cols), intent(in) :: lon, lat, area
@@ -334,7 +333,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%input_nml_file, Init_parm%tile_num,   &
                    Init_parm%blksz, Init_parm%ak, Init_parm%bk,    &
                    Init_parm%restart, Init_parm%hydrostatic,       &
-                   communicator, ntasks, nthreads)
+                   Init_parm%fcst_mpi_comm, ntasks, nthreads)
 
   !--- initialize DDTs
   

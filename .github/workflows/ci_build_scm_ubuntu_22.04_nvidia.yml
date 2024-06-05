@@ -1,6 +1,6 @@
 name: CI test to build the CCPP-SCM on ubuntu v22.04
 
-on: [push,pull_request,workflow_dispatch]
+on: [pull_request,workflow_dispatch]
 
 jobs:
 
