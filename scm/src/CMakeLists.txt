@@ -72,6 +72,14 @@ find_package(bacio REQUIRED)
 find_package(sp    REQUIRED)
 find_package(w3emc REQUIRED)
 
+find_package(MPI REQUIRED Fortran)
+if(NOT MPI_Fortran_HAVE_F08_MODULE)
+  message(FATAL_ERROR "MPI implementation does not support the Fortran 2008 mpi_f08 interface")
+endif()
+
+message(STATUS "MPI Include Path: ${MPI_INCLUDE_PATH}")
+message(STATUS "MPI Libraries: ${MPI_LIBRARIES}")
+
 SET(CCPP_FRAMEWORK_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(CCPP_PHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
 
@@ -90,6 +98,7 @@ endif()
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
+INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
 
 #------------------------------------------------------------------------------
 # Add required preprocessor flags for build type
