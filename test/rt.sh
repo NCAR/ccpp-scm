@@ -8,7 +8,7 @@
 #
 # Assumptions:
 #
-# Command line arguments: machine name (hera or cheyenne)
+# Command line arguments: machine name (hera or derecho)
 #                         -g <dir> run tests, generate baseline in <dir>
 #                         -c <dir> run tests, compare to baseline in <dir>
 #                         -h display usage
@@ -35,7 +35,7 @@ function usage() {
 }
 
 function wait_for_criteria() {
- 
+
 # Function that iteratively checks the return code of a given Unix command
 # and returns 0 when the command is successful or 1 if not
 
@@ -67,7 +67,7 @@ function wait_for_criteria() {
   fi
 }
 
-machines=( hera cheyenne desktop )
+machines=( hera derecho desktop )
 executable_name=scm
 
 [[ $# -eq 0 ]] && usage                     # Display usage if no command-line arguments
@@ -138,7 +138,7 @@ run_it=0                                           # Set to 1 to skip run (for t
 
 build_types=( Release Debug )                      # Set all instances of CMAKE_BUILD_TYPE
 
-if [ "${machine}" == "Cheyenne" ] ; then
+if [ "${machine}" == "Derecho" ] ; then
   users=( $USER@ucar.edu )
   compilers=( intel gnu )
   use_batch_system=true
@@ -298,13 +298,13 @@ done   # End compiler loop
 n_tests=0
 for compiler in "${compilers[@]}"; do
   for build_type in "${build_types[@]}"; do
-  
+
     echo "-------------------------------------------------------" >> ${TEST_OUTPUT}
     echo "Monitoring ${compiler} ${build_type} run..." >> ${TEST_OUTPUT}
     echo "-------------------------------------------------------" >> ${TEST_OUTPUT}
 
     build_type_lc=$(echo "${build_type}" | tr '[A-Z]' '[a-z]')  # Make build_type all lower case
-    RUN_DIR=$TOP_DIR/scm/run_${compiler}_${build_type_lc}      
+    RUN_DIR=$TOP_DIR/scm/run_${compiler}_${build_type_lc}
     batch_out=${job_prefix}_${compiler}_${build_type_lc}.o*           # Without PID extension
 
 #-----------------------------------------------------------------------
