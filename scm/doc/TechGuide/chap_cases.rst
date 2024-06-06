@@ -146,7 +146,7 @@ are included in ``ccpp-scm/scm/data/processed_case_input/fv3_model_point_noah[mp
 .. literalinclude:: arm_case_header.txt
     :name: lst_case_input_netcdf_header_arm
     :caption: example NetCDF file (CCPP-SCM format) header for case initialization and forcing data
- 
+
 Case input data file (DEPHY format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -505,10 +505,10 @@ Optional arguments:
 Examples to run from within the ``scm/etc/scripts`` directory to create SCM cases starting
 with the output from a UFS Weather Model regression test(s):
 
-On the supported platforms Cheyenne (NCAR) and Hera (NOAA), there are
+On the supported platforms Derecho (NCAR) and Hera (NOAA), there are
 staged UWM RTs located at:
 
--  Cheyenne ``/glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs``
+-  Derecho ``/glade/derecho/scratch/epicufsrt/FV3_RT/``
 -  Hera ``/scratch1/BMC/gmtb/CCPP-SCM/UFS_RTs``
 
 .. _`example1`:
@@ -520,7 +520,7 @@ UFS regression test, ``control_c192``, for single point.
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_c192/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
+   ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
@@ -540,7 +540,7 @@ UFS regression test, ``control_c384``, for multiple points.
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_c384/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37
+   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
@@ -578,14 +578,14 @@ for more details.
 
 For the purposes of this example the ``control_p8`` test has already been rerun, but if
 starting from your own UWM RTs, you can rerun the UWM regression test,
-on Cheyenne for example, by running the following command in the RT
+on Derecho for example, by running the following command in the RT
 directory: ``qsub job_card``
 
 Now the cases can be generated with the following command:
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_p8/ -sc --C_RES 96 -dt 720 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10 -sdf SCM_GFS_v17_p8
+   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_p8_intel -sc --C_RES 96 -dt 720 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10 -sdf SCM_GFS_v17_p8
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
