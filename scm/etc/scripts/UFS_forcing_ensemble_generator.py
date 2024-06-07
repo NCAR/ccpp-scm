@@ -14,21 +14,20 @@ import random
 # Argument list
 ###############################################################################
 parser = argparse.ArgumentParser()
-parser.add_argument('-d',    '--dir',           help='path to UFS Regression Test output', required=True)
-parser.add_argument('-n',    '--case_name',     help='name of case',                       required=True)
-parser.add_argument('-lonl', '--lon_limits',    help='longitude range, separated by a space', nargs=2,   type=float, required=False)
-parser.add_argument('-latl', '--lat_limits',    help='latitude range, separated by a space',  nargs=2,   type=float, required=False)
-parser.add_argument('-lons', '--lon_list',      help='longitudes, separated by a space',      nargs='*', type=float, required=False)
-parser.add_argument('-lats', '--lat_list',      help='latitudes, separated by a space',       nargs='*', type=float, required=False)
-parser.add_argument('-fxy',  '--lonlat_file',   help='file containing longitudes and latitude',nargs=1,              required=False)
-parser.add_argument('-nens', '--nensmembers',   help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
-parser.add_argument('-dt',   '--timestep',      help='SCM timestep, in seconds',                                      type=int,   default = 3600)
-parser.add_argument('-cres', '--C_RES',         help='UFS spatial resolution',                                        type=int,   default = 96)
-parser.add_argument('-sdf',  '--suite',         help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
-parser.add_argument('-sc',   '--save_comp',     help='flag to save a file with UFS data for comparisons',                           action='store_true')
-parser.add_argument('-near', '--use_nearest',   help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
-parser.add_argument('-ext',  '--exact_mode',    help='flag to indicate using dynamic tendencies from UFS history files',            action='store_true')
-parser.add_argument('-tott', '--total_tend',    help='flag to indicate forcing to derive',                                          action='store_true')
+parser.add_argument('-d',    '--dir',            help='path to UFS Regression Test output', required=True)
+parser.add_argument('-n',    '--case_name',      help='name of case',                       required=True)
+parser.add_argument('-lonl', '--lon_limits',     help='longitude range, separated by a space', nargs=2,   type=float, required=False)
+parser.add_argument('-latl', '--lat_limits',     help='latitude range, separated by a space',  nargs=2,   type=float, required=False)
+parser.add_argument('-lons', '--lon_list',       help='longitudes, separated by a space',      nargs='*', type=float, required=False)
+parser.add_argument('-lats', '--lat_list',       help='latitudes, separated by a space',       nargs='*', type=float, required=False)
+parser.add_argument('-fxy',  '--lonlat_file',    help='file containing longitudes and latitude',nargs=1,              required=False)
+parser.add_argument('-nens', '--nensmembers',    help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
+parser.add_argument('-dt',   '--timestep',       help='SCM timestep, in seconds',                                      type=int,   default = 3600)
+parser.add_argument('-cres', '--C_RES',          help='UFS spatial resolution',                                        type=int,   default = 96)
+parser.add_argument('-sdf',  '--suite',          help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
+parser.add_argument('-sc',   '--save_comp',      help='flag to save a file with UFS data for comparisons',                           action='store_true')
+parser.add_argument('-near', '--use_nearest',    help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
+parser.add_argument('-fm',   '--forcing_method', help='method used to calculate forcing (1=total tendencies from UFS dycore, 2=advective terms calculated from UFS history files, 3=total time tendency terms calculated)', type=int, choices=range(1,4), default=2)
 
 ###############################################################################
 # Main program
@@ -138,10 +137,9 @@ def main():
 
     # What, if any, options neeed to be passsed to UFS_case_gen.py?
     com_config = ''
-    if args.save_comp:   com_config = com_config + ' -sc'
-    if args.use_nearest: com_config = com_config + ' -near'
-    if args.exact_mode:  com_config = com_config + ' -ext'
-    if args.total_tend:  com_config = com_config + ' -tott'
+    if args.save_comp:      com_config = com_config + ' -sc'
+    if args.use_nearest:    com_config = com_config + ' -near'
+    if args.forcing_method: com_config = com_config + ' -fm ' + str(args.forcing_method)
 
     # Create inputs to SCM
     case_list    = ""

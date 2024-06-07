@@ -14,8 +14,7 @@ import re
 import fv3_remap
 import xesmf
 from datetime import datetime, timedelta
-from pylab import plot, ylim, xlim, show, xlabel, ylabel, grid
-
+#from matplotlib import plot, ylim, xlim, show, xlabel, ylabel, grid
 
 ###############################################################################
 # Global settings                                                             #
@@ -2073,46 +2072,46 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
             # show()
             
         
-        if (False):
-            plot(h_advec_T[t,:]*86400.0,pres[t,:],"r")
-            # #y_av = movingaverage(y, 10)
-            plot(v_advec_T[t,:]*86400.0,pres[t,:],"b")
-            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-            xlim(86400.0*np.min(h_advec_T[t,:] + v_advec_T[t,:]),86400.0*np.max(h_advec_T[t,:] + v_advec_T[t,:]))
-            xlabel("K day-1")
-            ylabel("p")
-            grid(True)
-            show()
-            
-            plot(h_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"r")
-            # #y_av = movingaverage(y, 10)
-            plot(v_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"b")
-            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-            xlim(86400.0*1.0E3*np.min(h_advec_qv[t,:] + v_advec_qv[t,:]),86400.0*1.0E3*np.max(h_advec_qv[t,:] + v_advec_qv[t,:]))
-            xlabel("g kg-1 day-1")
-            ylabel("p")
-            grid(True)
-            show()
-            
-            plot(h_advec_u[t,:]*86400.0,pres[t,:],"r")
-            # #y_av = movingaverage(y, 10)
-            plot(v_advec_u[t,:]*86400.0,pres[t,:],"b")
-            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-            xlim(86400.0*np.min(h_advec_u[t,:] + v_advec_u[t,:]),86400.0*np.max(h_advec_u[t,:] + v_advec_u[t,:]))
-            xlabel("u: m s-1 day-1")
-            ylabel("p")
-            grid(True)
-            show()
-            
-            plot(h_advec_v[t,:]*86400.0,pres[t,:],"r")
-            # #y_av = movingaverage(y, 10)
-            plot(v_advec_v[t,:]*86400.0,pres[t,:],"b")
-            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-            xlim(86400.0*np.min(h_advec_v[t,:] + v_advec_v[t,:]),86400.0*np.max(h_advec_v[t,:] + v_advec_v[t,:]))
-            xlabel("v: m s-1 day-1")
-            ylabel("p")
-            grid(True)
-            show()
+#        if (False):
+#            plot(h_advec_T[t,:]*86400.0,pres[t,:],"r")
+#            # #y_av = movingaverage(y, 10)
+#            plot(v_advec_T[t,:]*86400.0,pres[t,:],"b")
+#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+#            xlim(86400.0*np.min(h_advec_T[t,:] + v_advec_T[t,:]),86400.0*np.max(h_advec_T[t,:] + v_advec_T[t,:]))
+#            xlabel("K day-1")
+#            ylabel("p")
+#            grid(True)
+#            show()
+#            
+#            plot(h_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"r")
+#            # #y_av = movingaverage(y, 10)
+#            plot(v_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"b")
+#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+#            xlim(86400.0*1.0E3*np.min(h_advec_qv[t,:] + v_advec_qv[t,:]),86400.0*1.0E3*np.max(h_advec_qv[t,:] + v_advec_qv[t,:]))
+#            xlabel("g kg-1 day-1")
+#            ylabel("p")
+#            grid(True)
+#            show()
+#            
+#            plot(h_advec_u[t,:]*86400.0,pres[t,:],"r")
+#            # #y_av = movingaverage(y, 10)
+#            plot(v_advec_u[t,:]*86400.0,pres[t,:],"b")
+#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+#            xlim(86400.0*np.min(h_advec_u[t,:] + v_advec_u[t,:]),86400.0*np.max(h_advec_u[t,:] + v_advec_u[t,:]))
+#            xlabel("u: m s-1 day-1")
+#            ylabel("p")
+#            grid(True)
+#            show()
+#            
+#            plot(h_advec_v[t,:]*86400.0,pres[t,:],"r")
+#            # #y_av = movingaverage(y, 10)
+#            plot(v_advec_v[t,:]*86400.0,pres[t,:],"b")
+#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+#            xlim(86400.0*np.min(h_advec_v[t,:] + v_advec_v[t,:]),86400.0*np.max(h_advec_v[t,:] + v_advec_v[t,:]))
+#            xlabel("v: m s-1 day-1")
+#            ylabel("p")
+#            grid(True)
+#            show()
         
         
         # grad_t   = np.gradient(temp[t,:,:,:]) #grad_t output is list of components (z, y, x); each axis array has dimensions of (levs,2*n_forcing_halo_points+1,2*n_forcing_halo_points+1); we're interested in middle point for each level
