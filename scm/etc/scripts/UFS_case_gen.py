@@ -3642,7 +3642,7 @@ def main():
     
     #read in the initial condition profiles
     
-    if (forcing_method == 1 or forcing_method == 4):
+    if (forcing_method == 1 or forcing_method == 3):
         #read initial condition profiles from UFS IC files
         (state_data, error_msg) = get_IC_data_from_UFS_ICs(in_dir, grid_dir, tile, IC_i,\
                                                                   IC_j, old_chgres, lam)
