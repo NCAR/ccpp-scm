@@ -1710,6 +1710,15 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                 {"name":"dtend_qv_nophys",   "diag_table":'"gfs_dyn", "dtend_qv_nophys",   "dtend_qv_nophys",   "fv3_history", "all", .false., "none", 2'}]
     for dyntend in dyntends: dyntend["values"] = []
     
+    # Optional diagnostic to be copied into UFS comparison file
+    phystends = [{"name":"dtend_temp_lw"},     {"name":"dtend_temp_sw"},  {"name":"dtend_temp_pbl"},   {"name":"dtend_temp_deepcnv"},\
+                 {"name":"dtend_temp_shalcnv"},{"name":"dtend_temp_mp"},  {"name":"dtend_temp_orogwd"},{"name":"dtend_temp_phys"},   \
+                 {"name":"dtend_u_pbl"},       {"name":"dtend_v_pbl"},    {"name":"dtend_u_orogwd"},   {"name":"dtend_v_orogwd"},    \
+                 {"name":"dtend_u_deepcnv"},   {"name":"dtend_v_deepcnv"},{"name":"dtend_u_shalcnv"},  {"name":"dtend_v_shalcnv"},   \
+                 {"name":"dtend_u_phys"},      {"name":"dtend_v_phys"},   {"name":"dtend_qv_pbl"},     {"name":"dtend_qv_deepcnv"},  \
+                 {"name":"dtend_qv_shalcnv"},  {"name":"dtend_qv_mp"},    {"name":"dtend_qv_phys"},    {"name":"dtend_poop"}]
+    for phystend in phystends: phystend["values"] = []
+    
     # Variables to be added to "UFS comparison file"
     vars2d  =[{"name":"spfh2m"},    {"name":"tmp2m"},     {"name":"dswrf_ave"}, \
               {"name":"ulwrf_ave"}, {"name":"lhtfl_ave"}, {"name":"shtfl_ave"}, \
@@ -1788,6 +1797,21 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                 dyntend["missing"] = True
             # end if
         # end for
+        for phystend in phystends:
+            if phystend["name"] in nc_file.variables.keys():
+                if not use_nearest:
+                    data = regridder(nc_file[phystend["name"]][0,::-1,:,:])
+                else:
+                    data = nc_file[phystend["name"]][0,::-1,:,:]
+                # end if (use-nearest)
+                phystend["values"].append(data[:,j_get,i_get])
+                phystend["units"]     = nc_file[phystend["name"]].getncattr(name="units")
+                phystend["long_name"] = nc_file[phystend["name"]].getncattr(name="long_name")
+                phystend["missing"] = False
+            else:
+                phystend["missing"] = True                
+            # end if
+        # end for
         nc_file.close()
     # end for
 
@@ -1847,7 +1871,12 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         dtend_v_nophys    = dyntends[2]["values"]
         dtend_qv_nophys   = dyntends[3]["values"]
     # end if (exact-mode)
-    
+    for phystend in phystends:
+        if (not phystend["missing"]):
+            phystend["values"] = np.asarray(phystend["values"])
+        # end if
+    # end for
+
     ####################################################################################
     #
     # The "total" advection, where "total" = "advective + remapping", can be computed 
@@ -2282,7 +2311,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             "qv"   : qv_layers_at_pres1,
             "ua"   : u_layers_at_pres1,
             "va"   : v_layers_at_pres1,
-            "vars2d":[]}
+            "vars2d":[],
+            "phystends":phystends}
     else:
         comp_data = {}
 
@@ -2802,6 +2832,14 @@ def write_comparison_file(comp_data, case_name, date, surface):
         tempVar.long_name = var2d["long_name"]
         tempVar[:]        = var2d["values"]
 
+    for phystend in comp_data["phystends"]:
+        if (not phystend["missing"]):
+            tempVar           = nc_file.createVariable(phystend["name"], wp, ('time', 'lev',))
+            tempVar.units     = phystend["units"]
+            tempVar.long_name = phystend["long_name"]
+            tempVar[:]        = phystend["values"]
+        # end if
+    # end for
     nc_file.close()
 
     return
