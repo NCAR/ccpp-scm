@@ -2814,51 +2814,6 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     pres_i_adv[t+2,:] = pres_i_adv[t+1,:]
 
     ####################################################################################
-    # Save UFS data for comparison with SCM output.
-    ####################################################################################
-    if (save_comp_data):
-        # Initialize
-        t_layers_at_pres1_rev  = np.zeros([t_lay.shape[0],1,t_lay.shape[1]])
-        qv_layers_at_pres1_rev = np.zeros([qv_lay.shape[0],1,qv_lay.shape[1]])
-        u_layers_at_pres1_rev  = np.zeros([u_lay.shape[0],1,u_lay.shape[1]])
-        v_layers_at_pres1_rev  = np.zeros([v_lay.shape[0],1,u_lay.shape[1]])
-        p_layers_at_pres1_rev  = np.zeros([v_lay.shape[0],1,u_lay.shape[1]])
-        from_log_pres_rev      = np.zeros([1,p_lev.shape[1]])
-        to_log_pres_rev        = np.zeros([1,p_lev.shape[1]])
-        from_pres_rev          = np.zeros([1,p_lev.shape[1]])
-        to_pres_rev            = np.zeros([1,p_lev.shape[1]])
-        dp2                    = np.zeros([1,qv_lay.shape[1]])
-
-        # First timestep...
-        t_layers_at_pres1_rev[0,0,:]  = t_lay[0,::-1]
-        qv_layers_at_pres1_rev[0,0,:] = qv_lay[0,::-1]
-        u_layers_at_pres1_rev[0,0,:]  = u_lay[0,::-1]
-        v_layers_at_pres1_rev[0,0,:]  = v_lay[0,::-1]
-        p_layers_at_pres1_rev[0,0,:]  = p_lay[0,::-1]
-        
-        # Subsequent timestpes...
-        for t in range(1,t_lay.shape[0]):
-            from_log_pres_rev[0,:] = np.log(p_lev[t,::-1])
-            to_log_pres_rev[0,:]   = np.log(p_lev[0,::-1])
-            from_pres_rev[0,:]     = p_lev[t,::-1]
-            to_pres_rev[0,:]       = p_lev[0,::-1]
-            for k in range(0,qv_lay.shape[1]):
-                dp2[0,k] = to_pres_rev[0,k+1] - to_pres_rev[0,k]
-            # end for
-            t_layers_at_pres1_rev[t,:,:]  = fv3_remap.map_scalar(p_lay.shape[1], from_log_pres_rev, t_lay[t,np.newaxis,::-1], dummy, p_lay.shape[1], to_log_pres_rev, 0, 0, 1, np.abs(kord_tm), t_min)
-            qv_layers_at_pres1_rev[t,:,:] = fv3_remap.map1_q2(p_lay.shape[1], from_pres_rev, qv_lay[t,np.newaxis,::-1], p_lay.shape[1], to_pres_rev, dp2, 0, 0, 0, kord_tr, q_min)
-            u_layers_at_pres1_rev[t,:,:]  = fv3_remap.map1_ppm(p_lay.shape[1], from_pres_rev, u_lay[t,np.newaxis,::-1], 0.0, p_lay.shape[1], to_pres_rev, 0, 0, -1, kord_tm)
-            v_layers_at_pres1_rev[t,:,:]  = fv3_remap.map1_ppm(p_lay.shape[1], from_pres_rev, v_lay[t,np.newaxis,::-1], 0.0, p_lay.shape[1], to_pres_rev, 0, 0, -1, kord_tm)
-            p_layers_at_pres1_rev[t,:,:]  = p_lay[0,::-1]
-        # end for
-        t_layers_at_pres1 = t_layers_at_pres1_rev[:,0,::-1]
-        qv_layers_at_pres1 = qv_layers_at_pres1_rev[:,0,::-1]
-        u_layers_at_pres1 = u_layers_at_pres1_rev[:,0,::-1]
-        v_layers_at_pres1 = v_layers_at_pres1_rev[:,0,::-1]
-        p_layers_at_pres1 = p_layers_at_pres1_rev[:,0,::-1]
-    # end if (save_comp_data)
-
-    ####################################################################################
     #
     # if we had atmf,sfcf files at every timestep (and the SCM timestep is made to match
     # the UFS), then dqvdt_adv should be applied uninterpolated for each time step. If
@@ -3021,12 +2976,12 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         time_hr[0] = 0.0
         comp_data = {
             "time" : time_hr*sec_in_hr,
-            "pa"   : p_layers_at_pres1,
-            "ta"   : t_layers_at_pres1,
-            "qv"   : qv_layers_at_pres1,
-            "ua"   : u_layers_at_pres1,
-            "va"   : v_layers_at_pres1,
-            "vars2d":[],
+            "pa"  : p_lay,#[:,::-1],
+            "ta"  : t_lay,#[:,::-1],
+            "qv"  : qv_lay,#[:,::-1],
+            "ua"  : u_lay,#[:,::-1],
+            "va"  : v_lay,#[:,::-1],
+            "vars2d":vars2d,
             "phystends":phystends}
     else:
         comp_data = {}
