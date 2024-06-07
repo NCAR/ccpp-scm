@@ -2435,7 +2435,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                  {"name":"dtend_u_phys"},      {"name":"dtend_v_phys"},   {"name":"dtend_qv_pbl"},     {"name":"dtend_qv_deepcnv"},  \
                  {"name":"dtend_qv_shalcnv"},  {"name":"dtend_qv_mp"},    {"name":"dtend_qv_phys"},    {"name":"dtend_poop"}]
     for phystend in phystends: phystend["values"] = []
-    
+
     # Variables to be added to "UFS comparison file"
     vars2d  =[{"name":"spfh2m"},    {"name":"tmp2m"},     {"name":"dswrf_ave"}, \
               {"name":"ulwrf_ave"}, {"name":"lhtfl_ave"}, {"name":"shtfl_ave"}, \
@@ -3051,7 +3051,7 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
     com = 'mkdir -p ' + PROCESSED_CASE_DIR
     print(com)
     os.system(com)
-    fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_fm_{}'.format(forcing_method) + ('_vm_{}'.format(vertical_method) if forcing_method == 2 else '') + ('_geos' if geos_wind_forcing else '') + ('_wind_nudge' if wind_nudge else '') + '_SCM_driver.nc')
+    fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_SCM_driver.nc')
 
     nc_file = Dataset(fileOUT, 'w', format='NETCDF3_CLASSIC')
     nc_file.description = "FV3GFS model profile input (UFS forcings)"
@@ -3491,7 +3491,7 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
     return(fileOUT)
 
 ########################################################################################
-def write_comparison_file(comp_data, case_name, date, surface):
+def write_comparison_file(comp_data, case_name, date, surface, forcing_method):
     """Write UFS history file data to netCDF file for comparison"""
 
     wp = np.float64
@@ -3566,14 +3566,16 @@ def write_comparison_file(comp_data, case_name, date, surface):
         tempVar.long_name = var2d["long_name"]
         tempVar[:]        = var2d["values"]
 
-    for phystend in comp_data["phystends"]:
-        if (not phystend["missing"]):
-            tempVar           = nc_file.createVariable(phystend["name"], wp, ('time', 'lev',))
-            tempVar.units     = phystend["units"]
-            tempVar.long_name = phystend["long_name"]
-            tempVar[:]        = phystend["values"]
-        # end if
-    # end for
+    if (forcing_method == 1 or forcing_method == 3):
+        for phystend in comp_data["phystends"]:
+            if (not phystend["missing"]):
+                tempVar           = nc_file.createVariable(phystend["name"], wp, ('time', 'lev',))
+                tempVar.units     = phystend["units"]
+                tempVar.long_name = phystend["long_name"]
+                tempVar[:]        = phystend["values"]
+            # end if
+        # end for
+    # end if
     nc_file.close()
 
     return
@@ -3698,7 +3700,7 @@ def main():
     # write them out to compare SCM output to (atmf for state variables and sfcf for physics 
     # tendencies)
     if (save_comp):
-        write_comparison_file(comp_data, case_name, date, surface_data)
+        write_comparison_file(comp_data, case_name, date, surface_data, forcing_method)
     
 if __name__ == '__main__':
     main()
