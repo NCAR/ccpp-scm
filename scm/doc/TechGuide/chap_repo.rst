@@ -60,3 +60,24 @@ Cubed-Sphere (FV3) dynamical core.
 | ``│   └── src`` - source code for SCM infrastructure, Python run script, CMakeLists.txt for the SCM, example multirun setup files, suite_info.py
 | ``└── test`` - Contains scripts for regression testing, Continuous Integration tests
 
+Testing
+-----------------
+
+Regression Testing
+^^^^^^^^^^^^^^^^^^
+
+Regression tests are a comprehensive set of build and run tests meant to ensure that new changes to the SCM do not break any existing capabilities. These tests are run on code changes before they are merged, and so ensure that the ``main`` branch is always free of major bugs in all facets of the system covered by the tests.
+
+The latest set of Regression tests are run automatically for every new code change when a Pull Request is opened via GitHub's `Continuous Integration`_. Regression tests are also run manually on a wide variety of platforms in preparation for code release to ensure that all capabilities work as expected for a reasonable spectrum of possible machines a user might want to use.
+
+Continuous Integration
+^^^^^^^^^^^^^^^^^^^^^^
+
+The CCPP SCM GitHub repository is set up with Continuous Integration (CI) testing for building the SCM and running some simple test cases. These tests are run automatically on code changes before they are merged, and so ensures that new changes to the SCM do not break basic capabilities. The latest set of tests use the following combinations of SCM prerequisites:
+
+**Regression tests**
+ - GNU compilers 11.4.0, Python 3.9.12, netCDF-c 4.7.3, netCDF-FORTRAN 4.5.3, bacio 2.4.1, sp 2.3.3, and w3emc 2.9.2
+
+**Build tests**
+
+All tests use the same versions of NCEP-supported libraries: bacio 2.4.1, sp 2.3.3, and w3emc 2.9.2. Detailed information on these tests can be found in the definition files for these tests, stored in the SCM repository under ``ccpp-scm/.github/workflows``.

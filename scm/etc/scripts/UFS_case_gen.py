@@ -14,6 +14,8 @@ import re
 import fv3_remap
 import xesmf
 from datetime import datetime, timedelta
+from pylab import plot, ylim, xlim, show, xlabel, ylabel, grid
+
 
 ###############################################################################
 # Global settings                                                             #
@@ -21,6 +23,7 @@ from datetime import datetime, timedelta
 
 #Physical constants
 earth_radius = 6371000.0 #m
+Omega        = 7.292E-5
 rdgas        = 287.05
 rvgas        = 461.50
 cp           = 1004.6
@@ -30,10 +33,21 @@ grav         = 9.80665
 deg_to_rad   = math.pi/180.0
 kappa        = rdgas/cp
 p0           = 100000.0
+one_twelfth  = 1.0/12.0
+two_thirds   = 2.0/3.0
 
 missing_value = -9999.0 #9.99e20
 
+top_pres_for_forcing = 20000.0
+
+const_nudging_time = 3600.0
+
 n_lam_halo_points = 3
+
+n_forcing_halo_points = 2 #number of points in each direction used to retrieve forcing (1 = 3x3, 2 = 5x5, 3 = 7x7); must be >=1
+
+#dist_method = 'euclidean'
+dist_method = 'haversine' #faster
 
 missing_variable_snow_layers = 3
 missing_variable_soil_layers = 4
@@ -68,8 +82,10 @@ parser.add_argument('-oc',  '--old_chgres',  help='flag to denote that the initi
 parser.add_argument('-lam', '--lam',         help='flag to signal that the ICs and forcing is from a limited-area model run',              action='store_true')
 parser.add_argument('-sc',  '--save_comp',   help='flag to create UFS reference file for comparison',                                      action='store_true')
 parser.add_argument('-near','--use_nearest', help='flag to indicate using the nearest UFS history file gridpoint',                         action='store_true')
-parser.add_argument('-ext', '--exact_mode',  help='flag to indicate using dynamic tendencies from UFS history files',                      action='store_true')
-parser.add_argument('-tott','--total_tend',  help='flag to indicate forcing to derive',                                                    action='store_true')
+parser.add_argument('-fm',  '--forcing_method',  help='method used to calculate forcing (1=total tendencies from UFS dycore, 2=advective terms calculated from UFS history files, 3=total time tendency terms calculated)', type=int, choices=range(1,4), default=2)
+parser.add_argument('-vm',  '--vertical_method', help='method used to calculate vertical advective forcing (1=vertical advective terms calculated from UFS history files and added to total, 2=smoothed vertical velocity provided)', type=int, choices=range(1,3), default=2)
+parser.add_argument('-wn',  '--wind_nudge',  help='flag to turn on wind nudging to UFS profiles', action='store_true')
+parser.add_argument('-geos','--geostrophic', help='flag to turn on geostrophic wind forcing', action='store_true')
 
 ########################################################################################
 #
@@ -90,8 +106,10 @@ def parse_arguments():
     lam         = args.lam
     save_comp   = args.save_comp
     use_nearest = args.use_nearest
-    exact_mode  = args.exact_mode
-    total_tend  = args.total_tend
+    forcing_method = args.forcing_method
+    vertical_method = args.vertical_method
+    geos_wind_forcing = args.geostrophic
+    wind_nudge  = args.wind_nudge
     
     #validate args
     if not os.path.exists(in_dir):
@@ -131,7 +149,8 @@ def parse_arguments():
             raise Exception(message)
     
     return (location, index, date_dict, in_dir, grid_dir, forcing_dir, tile, \
-            area, case_name, old_chgres, lam, save_comp, use_nearest, exact_mode, total_tend)
+            area, case_name, old_chgres, lam, save_comp, use_nearest, forcing_method, \
+            vertical_method, geos_wind_forcing, wind_nudge)
 
 ########################################################################################
 #
@@ -139,6 +158,74 @@ def parse_arguments():
 def setup_logging():
     """Sets up the logging module."""
     logging.basicConfig(format='%(levelname)s: %(message)s', level=LOGLEVEL)
+
+########################################################################################
+#
+########################################################################################
+def haversine_distance(lat1, lon1, lat2, lon2):
+    #lats and lons in degrees
+    p = 0.017453292519943295
+    hav = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p)*math.cos(lat2*p) * (1-math.cos((lon2-lon1)*p)) / 2
+    return 12742 * math.asin(math.sqrt(hav)) #km
+
+########################################################################################
+#
+########################################################################################
+def sph2cart(az, el, r):
+    """Calculate the Cartesian coordiates from spherical coordinates"""
+    
+    rcos_theta = r * np.cos(el)
+    x = rcos_theta * np.cos(az)
+    y = rcos_theta * np.sin(az)
+    z = r * np.sin(el)
+    
+    return (x, y, z)
+    
+########################################################################################
+#
+########################################################################################
+def moving_average(interval, window_size):
+    convolve_mode = 'same'
+    window= np.ones(int(window_size))/float(window_size)
+    
+    output = np.zeros((interval.shape[0]))
+    if (convolve_mode == 'same'):
+        convolution = np.convolve(interval, window, mode='same')
+        output = convolution
+    elif (convolve_mode == 'valid'):
+        convolution = np.convolve(interval, window, mode='valid')
+        num_not_valid_points = interval.shape[0] - (max(interval.shape[0], window_size) - min(interval.shape[0], window_size) + 1)
+        output[num_not_valid_points:] = convolution
+        for k in range(num_not_valid_points):
+            output[k] = interval[k]
+            output[-1-k] = interval[-1-k]
+        
+    return output
+
+########################################################################################
+#
+########################################################################################
+def centered_diff_derivative(y, dx):
+    #y is the variable of interest, dx is the space between contiguous points (starting from the first point)
+    cent_diff_coef_three = [-0.5, 0.0, 0.5] #second-order accuracy in space (assuming constant grid)
+    cent_diff_coef_five = [one_twelfth, -two_thirds, 0.0, two_thirds, -one_twelfth] #fourth-order accuracy in space (assuming constant grid)
+    
+    if y.shape[0] % 2:
+        center = int((y.shape[0]-1)/2)
+        if y.shape[0] == 3:
+            deriv = np.sum(cent_diff_coef_three*y)/np.mean(dx)
+        elif y.shape[0] == 5:
+            deriv = np.sum(cent_diff_coef_five*y)/np.mean(dx)
+        else:
+            message = 'centered_diff_derivative can only use n_forcing_halo_points = 1 or 2'
+            logging.exception(message)
+            raise Exception(message)
+    else:
+        message = 'An even number of points was passed into centered_diff_derivative'
+        logging.exception(message)
+        raise Exception(message)
+    
+    return deriv
 
 ########################################################################################
 #
@@ -295,24 +382,32 @@ def find_loc_indices(loc, dir, tile, lam):
         if loc[0] < 180:
             temp_loc[0] += 360
     
-    #set up an array to hold the euclidean distance between the given point and every grid cell
-    eucl_dist = np.zeros((longitude.shape[0],longitude.shape[1]))
-    
-    #get the Cartesian location of the given point
-    cart_loc = np.asarray(sph2cart(math.radians(temp_loc[0]), math.radians(temp_loc[1]), earth_radius))
-    
-    for i in range(len(longitude)):
-        for j in range(len(longitude[i])):
-            #get the Cartesian location of all grid points
-            cart_cell = np.asarray(sph2cart(math.radians(longitude[i,j]), math.radians(latitude[i,j]), earth_radius))
-            
-            #calculate the euclidean distance from the given point to the current grid cell
-            eucl_dist[i,j] = np.linalg.norm(cart_loc - cart_cell)
-    
+    #set up an array to hold the distance between the given point and every grid cell
+    dist = np.zeros((longitude.shape[0],longitude.shape[1]))
+    if (dist_method == 'euclidean'):
+        
+        #get the Cartesian location of the given point
+        cart_loc = np.asarray(sph2cart(math.radians(loc[0]), math.radians(loc[1]), earth_radius))
+        
+        for i in range(len(longitude)):
+            for j in range(len(longitude[i])):
+                #get the Cartesian location of all grid points
+                cart_cell = np.asarray(sph2cart(math.radians(longitude[i,j]), math.radians(latitude[i,j]), earth_radius))
+                
+                #calculate the euclidean distance from the given point to the current grid cell
+                dist[i,j] = np.linalg.norm(cart_loc - cart_cell)
+    else:
+        for i in range(len(longitude)):
+            for j in range(len(longitude[i])):
+                dist[i,j] = haversine_distance(latitude[i,j],longitude[i,j],loc[1],loc[0])
     #get the indices of the grid point with the minimum euclidean distance to the given point
-    i,j = np.unravel_index(eucl_dist.argmin(), eucl_dist.shape)
+    i,j = np.unravel_index(dist.argmin(), dist.shape)
     
-    return (i,j,longitude[i,j]%360.0, latitude[i,j], eucl_dist[i,j])
+    #get the direction of the closest point from the given point
+    theta = math.atan2(math.sin(math.radians(longitude[i,j] - loc[0]))*math.cos(math.radians(latitude[i,j])), math.cos(math.radians(loc[1]))*math.sin(math.radians(latitude[i,j])) - math.sin(math.radians(loc[1]))*math.cos(math.radians(latitude[i,j]))*math.cos(math.radians(longitude[i,j] - loc[0])))
+    theta_deg = math.fmod((math.degrees(theta) + 360.0), 360.0)
+    
+    return (i,j,longitude[i,j]%360.0, latitude[i,j], dist[i,j], theta_deg)
 
 ########################################################################################
 #
@@ -360,6 +455,148 @@ def find_lon_lat_of_indices(indices, dir, tile, lam):
 ########################################################################################
 #
 ########################################################################################
+def find_loc_indices_UFS_history(loc, dir):
+    """Find the nearest neighbor UFS history file grid point given a lon/lat pair"""
+    #returns the indices of the nearest neighbor point in the given tile, the lon/lat of the nearest neighbor, 
+    #and the distance (m) from the given point to the nearest neighbor grid cell
+    
+    filename_pattern = 'atmf000.nc'
+    
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, filename_pattern):
+          filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
+    
+    nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    
+    longitude = np.asarray(nc_file['lon'])
+    latitude  = np.asarray(nc_file['lat'])
+    
+    nc_file.close()
+    
+    #set up an array to hold the distance between the given point and every grid cell
+    dist = np.zeros((longitude.shape[0],longitude.shape[1]))
+    if (dist_method == 'euclidean'):
+        
+        #get the Cartesian location of the given point
+        cart_loc = np.asarray(sph2cart(math.radians(loc[0]), math.radians(loc[1]), earth_radius))
+        
+        for i in range(len(longitude)):
+            for j in range(len(longitude[i])):
+                #get the Cartesian location of all grid points
+                cart_cell = np.asarray(sph2cart(math.radians(longitude[i,j]), math.radians(latitude[i,j]), earth_radius))
+                
+                #calculate the euclidean distance from the given point to the current grid cell
+                dist[i,j] = np.linalg.norm(cart_loc - cart_cell)
+    else:
+        for i in range(len(longitude)):
+            for j in range(len(longitude[i])):
+                dist[i,j] = haversine_distance(latitude[i,j],longitude[i,j],loc[1],loc[0])
+    #get the indices of the grid point with the minimum euclidean distance to the given point
+    i,j = np.unravel_index(dist.argmin(), dist.shape)
+    
+    #get the direction of the closest point from the given point
+    theta = math.atan2(math.sin(math.radians(longitude[i,j] - loc[0]))*math.cos(math.radians(latitude[i,j])), math.cos(math.radians(loc[1]))*math.sin(math.radians(latitude[i,j])) - math.sin(math.radians(loc[1]))*math.cos(math.radians(latitude[i,j]))*math.cos(math.radians(longitude[i,j] - loc[0])))
+    theta_deg = math.fmod((math.degrees(theta) + 360.0), 360.0)
+    
+    halo_indices = np.zeros((1+2*n_forcing_halo_points,1+2*n_forcing_halo_points))
+    if i < n_forcing_halo_points or i > latitude.shape[0]-1-n_forcing_halo_points:
+        message = 'Chosen point too close to the poles for this algorithm'
+        logging.critical(message)
+        raise Exception(message)
+    else:
+        #longitude = (n rows of latitude, 2*n columns of longitude), i index increases toward EAST; rows are circles of latitude, columns are meridians
+        #latitude  = (n rows of latitude, 2*n columns of longitude), j index increases toward NORTH; rows are circles of latitude, columns are meridians
+        neighbors = np.mgrid[-n_forcing_halo_points:n_forcing_halo_points+1,-n_forcing_halo_points:n_forcing_halo_points+1]
+        neighbors[0,:,:] = neighbors[0,:,:] + i
+        neighbors[1,:,:] = neighbors[1,:,:] + j
+        
+        
+        # the closest point is near the western edge of the prime meridian, but longitude should be cyclic, so get neighbors on the eastern/western side of the prime meridian as necessary
+        neighbors[1,:,:] = neighbors[1,:,:]%longitude.shape[1]
+        
+        # if j > n_forcing_halo_points:
+        #     if j < latitude.shape[1]-1-n_forcing_halo_points:
+        #         neighbors[1,:,:] = neighbors[1,:,:] + j
+        #     else:
+        #         
+        #         n_points_on_eastern_side = (j + n_forcing_halo_points)%latitude.shape[1]
+                 
+                
+    
+    message = 'nearest history file indices (i,j): ({},{})'.format(i, j)
+    message += '\n lon/lat : {},{}'.format(longitude[i,j], latitude[i,j])
+    message += '\n distance between history file point and desired point: {} km'.format(dist[i,j])
+    message += '\n bearing from desired point to history file point: {} degrees'.format(theta_deg)
+    logging.debug(message)
+    
+    message = 'neighboring points'
+    for ii in neighbors[0,:,0]:
+        for jj in neighbors[1,0,:]:
+            message += '\n (i,j,lon,lat,dist): ({:>},{:>},{:f},{:f},{:f})'.format(ii,jj,longitude[ii,jj], latitude[ii,jj], dist[ii,jj])
+    logging.debug(message)
+    
+    #calc dx, dy (n_forcing_halo_points*2 x n_forcing_halo_points*2)
+    dx = np.zeros((n_forcing_halo_points*2+1,n_forcing_halo_points*2))
+    dy = np.zeros((n_forcing_halo_points*2,n_forcing_halo_points*2+1))
+    for ii in range(2*n_forcing_halo_points+1):
+         for jj in range(2*n_forcing_halo_points):
+             current_ii_index = neighbors[0,ii,jj]
+             current_jj_index = neighbors[1,ii,jj]
+             eastern_jj_index = neighbors[1,ii,jj+1]
+             dx[ii,jj] = haversine_distance(latitude[current_ii_index,current_jj_index],longitude[current_ii_index,current_jj_index],latitude[current_ii_index,eastern_jj_index],longitude[current_ii_index,eastern_jj_index])
+        
+    for ii in range(2*n_forcing_halo_points):
+         for jj in range(2*n_forcing_halo_points+1):
+             current_ii_index  = neighbors[0,ii,jj]
+             northern_ii_index = neighbors[0,ii+1,jj]
+             current_jj_index  = neighbors[1,ii,jj]
+             dy[ii,jj] = haversine_distance(latitude[current_ii_index,current_jj_index],longitude[current_ii_index,current_jj_index],latitude[northern_ii_index,current_jj_index],longitude[northern_ii_index,current_jj_index])
+    
+    return (i,j,longitude[i,j], latitude[i,j], dist[i,j], theta_deg, neighbors, dx, dy)
+
+########################################################################################
+#
+########################################################################################
+def find_loc_indices_UFS_IC(loc, dir, lam, tile, indices):
+    
+    #find tile containing the point using the supergrid if no tile is specified 
+    #if not tile and not lam:
+    if not tile:
+        tile = int(find_tile(loc, dir, lam))
+        if tile < 0:
+            message = 'No tile was found for location {0}'.format(location)
+            logging.critical(message)
+            raise Exception(message)
+        message = 'Tile found: {0}'.format(tile)
+        logging.debug(message)
+    
+    #find index of closest point in the tile if indices are not specified
+    theta = 0.0
+    if not indices:
+        (tile_j, tile_i, point_lon, point_lat, dist_min, theta) = find_loc_indices(loc, dir, tile, lam)
+        message = 'nearest IC file indices in tile {} - (i,j): ({},{})'.format(tile, tile_i, tile_j)
+        message += '\n lon/lat : {},{}'.format(point_lon, point_lat)
+        message += '\n distance between history file point and desired point: {} km'.format(dist_min)
+        message += '\n bearing from desired point to history file point: {} degrees'.format(theta)
+        logging.debug(message)    
+    else:
+        tile_i = indices[0]
+        tile_j = indices[1]
+        #still need to grab the lon/lat if the tile and indices are supplied
+        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile, lam)
+        
+        message = 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
+        logging.debug(message)
+        
+    return (tile_i, tile_j, tile, point_lon, point_lat, dist_min, theta)
+
+########################################################################################
+#
+########################################################################################
 def get_initial_lon_lat_grid(dir, tile, lam):
     if (lam):
         filename_pattern = '*grid.tile{0}.halo{1}.nc'.format(tile, n_lam_halo_points)
@@ -396,20 +633,59 @@ def get_initial_lon_lat_grid(dir, tile, lam):
     
     nc_file.close()
     
-    return (longitude, latitude)
+    return (longitude, latitude)    
 
-########################################################################################
-#
-########################################################################################
-def sph2cart(az, el, r):
-    """Calculate the Cartesian coordiates from spherical coordinates"""
+def compare_hist_and_IC_points(location, hist_lon, hist_lat, IC_lon, IC_lat, hist_dist, angle_to_hist_point, IC_dist, angle_to_IC_point):
+    #determine distance and angle from IC point to hist point
+    dist = haversine_distance(IC_lat,IC_lon,hist_lat,hist_lon)
+    theta = math.atan2(math.sin(math.radians(hist_lon - IC_lon))*math.cos(math.radians(hist_lat)), math.cos(math.radians(IC_lat))*math.sin(math.radians(hist_lat)) - math.sin(math.radians(IC_lat))*math.cos(math.radians(hist_lat))*math.cos(math.radians(hist_lon - IC_lon)))
+    theta_deg = math.fmod((math.degrees(theta) + 360.0), 360.0)
     
-    rcos_theta = r * np.cos(el)
-    x = rcos_theta * np.cos(az)
-    y = rcos_theta * np.sin(az)
-    z = r * np.sin(el)
+    message = 'Location summary'
+    message += '\n The location as entered is {} deg E {} deg N'.format(location[0],location[1])
+    message += '\n The closest point in the UFS history file is {} deg E {} deg N, or {} km away at a bearing of {} deg'.format(hist_lon, hist_lat, hist_dist, angle_to_hist_point)
+    message += '\n The closest point in the UFS IC files (native grid) is {} deg E {} deg N, or {} km away at a bearing of {} deg'.format(IC_lon, IC_lat, IC_dist, angle_to_IC_point)
+    message += '\n Therefore, the history point (used to define the SCM grid column) is {} km away from the closest UFS native grid poing at a bearing of {} deg'.format(dist, theta_deg)
+    logging.info(message)
+     
+    return
+
+def check_IC_hist_surface_compatibility(dir, i, j, surface_data, lam, old_chgres, tile):
     
-    return (x, y, z)    
+    # Determine UFS history file format (tiled/quilted)
+    if lam:
+        filename_pattern = '*sfcf000.tile{}.nc'.format(tile)
+    else:
+        filename_pattern = '*sfcf000.nc'
+    
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, filename_pattern):
+          filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
+    
+    nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    
+    #doublecheck this is correct point
+    #lon_in     = read_NetCDF_var(nc_file, "lon",     j, i)
+    #lat_in     = read_NetCDF_var(nc_file, "lat",     j, i)
+    #logging.debug('check_IC_hist_surface_compatibility lon/lat: {}/{}'.format(lon_in, lat_in))
+    
+    slmsk_hist = read_NetCDF_surface_var(nc_file, "land",     j, i, old_chgres, 0)
+    
+    if (slmsk_hist != surface_data["slmsk"]):
+        message = 'There is a mismatch between the UFS IC file and history file land masks: IC={}, history={}'.format(surface_data["slmsk"],slmsk_hist)
+        logging.critical(message)
+        raise Exception(message)
+    else:
+        message = 'UFS IC file and history file land masks match: IC={}, history={}'.format(surface_data["slmsk"],slmsk_hist)
+        logging.info(message)
+            
+    nc_file.close()
+    
+    return
 
 ########################################################################################
 #
@@ -460,19 +736,82 @@ def read_NetCDF_surface_var(nc_file, var_name, i, j, old_chgres, vert_dim):
                 var = missing_value
     return var
 
+def get_IC_data_from_UFS_history(dir, i, j, lam, tile):
+    
+    # Determine UFS history file format (tiled/quilted)
+    if lam:
+        filename_pattern = '*atmf000.tile{}.nc'.format(tile)
+    else:
+        filename_pattern = '*atmf000.nc'
+    
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, filename_pattern):
+          filename = f_name
+    if not filename:
+        message = 'No filenames matching the pattern {0} found in {1}'.format(filename_pattern,dir)
+        logging.critical(message)
+        raise Exception(message)
+    
+    nc_file = Dataset('{0}/{1}'.format(dir,filename))
+    
+    pfull   = nc_file['pfull'][::-1]*100.0
+    phalf   = nc_file['phalf'][::-1]*100.0
+    nlevs   = len(pfull)
+    time    = nc_file['time'][0] #model hours since being initialized
+    lon     = nc_file['lon'][i,j]
+    lat     = nc_file['lat'][i,j]
+    logging.debug('Grabbing data from history file point with lon/lat: {}/{}'.format(lon,lat))
+    delz    = -1*nc_file['delz'][0,::-1,i,j] #derive zh
+    ugrd    = nc_file['ugrd'][0,::-1,i,j]
+    vgrd    = nc_file['vgrd'][0,::-1,i,j]
+    spfh    = nc_file['spfh'][0,::-1,i,j]
+    o3mr    = nc_file['o3mr'][0,::-1,i,j]
+    clwmr   = nc_file['clwmr'][0,::-1,i,j]
+    icmr    = nc_file['icmr'][0,::-1,i,j]
+    pressfc = nc_file['pressfc'][0,i,j]
+    tmp     = nc_file['tmp'][0,::-1,i,j]
+    
+    delz = np.asarray(delz)
+    zh = np.zeros(nlevs)
+    zh[0] = 0.5*delz[0]
+    for k in range(1,nlevs):
+        zh[k] = zh[k-1] + 0.5*delz[k-1] + 0.5*delz[k]
+    
+    dz = np.zeros(nlevs-1)
+    for k in range(nlevs-1):
+        dz[k] = zh[k+1]-zh[k]
+    
+    state = {
+        "nlevs": nlevs,
+        "zh": zh,
+        "dz": dz,
+        "ua": np.asarray(ugrd),
+        "va": np.asarray(vgrd),
+        "qv": np.asarray(spfh),
+        "o3": np.asarray(o3mr),
+        "ql": np.asarray(clwmr),
+        "qi": np.asarray(icmr),
+        "ps": pressfc,
+        "ta": np.asarray(tmp),
+        "pa": np.asarray(pfull),
+        "pa_i": np.asarray(phalf)
+    }
+
+    nc_file.close()
+    
+    return state
+
 ########################################################################################
 #
 ########################################################################################
-def get_UFS_IC_data(dir, grid_dir, tile, i, j, old_chgres, lam):
+def get_IC_data_from_UFS_ICs(dir, grid_dir, tile, i, j, old_chgres, lam):
     """Get the state, surface, and orographic data for the given tile and indices"""
     #returns dictionaries with the data
     
     vgrid_data = get_UFS_vgrid_data(grid_dir) #only needed for ak, bk to calculate pressure
     (state_data, error_msg) = get_UFS_state_data(vgrid_data, dir, tile, i, j, old_chgres, lam)
-    surface_data = get_UFS_surface_data(dir, tile, i, j, old_chgres, lam)
-    oro_data = get_UFS_oro_data(dir, tile, i, j, lam)
     
-    return (state_data, surface_data, oro_data, error_msg)
+    return (state_data, error_msg)
 
 ########################################################################################
 #
@@ -1492,11 +1831,390 @@ def search_in_dict(listin,name):
         if dictionary["name"] == name:
             return count
 
+def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, nlevs, lam, save_comp_data, vertical_method, geos_wind_forcing, wind_nudge):
+    
+    # Determine UFS history file format (tiled/quilted)
+    if lam:
+        atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
+        sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
+    else:
+        atm_ftag = '*atmf*.nc'
+        sfc_ftag = '*sfcf*.nc'
+
+    # Get list of UFS history files with 3D ATMospheric state variables.
+    atm_filenames = []
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, atm_ftag):
+          atm_filenames.append(f_name)
+    if not atm_filenames:
+        message = 'No filenames matching the pattern {0} found in {1}'.                \
+                  format(atm_ftag,dir)
+        logging.critical(message)
+        raise Exception(message)
+    atm_filenames = sorted(atm_filenames)
+    n_filesA      = len(atm_filenames)
+    
+    npts  = 2*n_forcing_halo_points+1
+    
+    lon = np.zeros((n_filesA,npts,npts))
+    lat = np.zeros((n_filesA,npts,npts))
+    time = np.zeros((n_filesA))
+    u_wind = np.zeros((n_filesA,nlevs,npts,npts))
+    v_wind = np.zeros((n_filesA,nlevs,npts,npts))
+    w_wind = np.zeros((n_filesA,nlevs,npts,npts))
+    temp = np.zeros((n_filesA,nlevs,npts,npts))
+    qv = np.zeros((n_filesA,nlevs,npts,npts))
+    pres = np.zeros((n_filesA,nlevs))
+    pressfc = np.zeros((n_filesA,npts,npts))
+    delz = np.zeros((n_filesA,nlevs,npts,npts))
+    
+    # Read in 3D UFS history files
+    for count, filename in enumerate(atm_filenames, start=1):
+        nc_file = Dataset('{0}/{1}'.format(dir,filename))
+        nc_file.set_always_mask(False)
+        
+        time[count-1] = nc_file['time'][0]
+        
+        for ii in range(2*n_forcing_halo_points+1):
+            for jj in range(2*n_forcing_halo_points+1):
+                current_ii_index = neighbors[0,ii,jj]
+                current_jj_index = neighbors[1,ii,jj]
+                
+                lon[count-1,ii,jj]      = nc_file['lon'][current_ii_index,current_jj_index]
+                lat[count-1,ii,jj]      = nc_file['lat'][current_ii_index,current_jj_index]                
+                u_wind[count-1,:,ii,jj] = nc_file['ugrd'][0,::-1,current_ii_index,current_jj_index]
+                v_wind[count-1,:,ii,jj] = nc_file['vgrd'][0,::-1,current_ii_index,current_jj_index]
+                w_wind[count-1,:,ii,jj] = nc_file['dzdt'][0,::-1,current_ii_index,current_jj_index]
+                temp[count-1,:,ii,jj]   = nc_file['tmp'][0,::-1,current_ii_index,current_jj_index]
+                qv[count-1,:,ii,jj]     = nc_file['spfh'][0,::-1,current_ii_index,current_jj_index]
+                pressfc[count-1,ii,jj]  = nc_file['pressfc'][0,current_ii_index,current_jj_index]
+                delz[count-1,:,ii,jj]   = -1*nc_file['delz'][0,::-1,current_ii_index,current_jj_index] #derive zh
+        pres[count-1,:] = nc_file['pfull'][::-1]*100.0
+                    
+        #This only works for points with longitude far enough away from the prime meridian
+        # lon_data  = nc_file['lon'][neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        # lat_data  = nc_file['lat'][neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        # u_data    = nc_file['ugrd'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        # v_data    = nc_file['vgrd'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        # w_data    = nc_file['dzdt'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        # temp_data = nc_file['tmp'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        # qv_data   = nc_file['spfh'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        # pres_data = nc_file['pfull'][::-1]*100.0
+        # pressfc_data = nc_file['pressfc'][0,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
+        
+        # time.append(time_data)
+        # lon.append(lon_data)
+        # lat.append(lat_data)
+        # u_wind.append(u_data)
+        # v_wind.append(v_data)
+        # w_wind.append(w_data)
+        # temp.append(temp_data)
+        # qv.append(qv_data)
+        # pres.append(pres_data)
+        # pressfc.append(pressfc_data)
+        
+    # time = np.asarray(time)
+    # lon  = np.asarray(lon)
+    # lat  = np.asarray(lat)
+    # u_wind = np.asarray(u_wind)
+    # v_wind = np.asarray(v_wind)
+    # w_wind = np.asarray(w_wind)
+    # temp = np.asarray(temp)
+    # qv = np.asarray(qv)
+    # pres = np.asarray(pres)
+    # pressfc = np.asarray(pressfc)
+    
+    #check for poor time resolution (e.g. if mean number of grid points traversed by the wind between data intervals is much larger than the number of grid points used for calculating the advective terms)
+    # t=0
+    # for k in range(u_wind.shape[1]):
+    #     mean_u = np.mean(np.sqrt(u_wind[t,k,:,:]*u_wind[t,k,:,:]))
+    #     mean_dist = 43200*mean_u*1.0E-3
+    #     print("k, mean_dist, dx, grid points traversed in timestep: ",k, mean_dist, np.mean(dx), mean_dist/np.mean(dx))
+    
+    center = n_forcing_halo_points
+    smoothed_u  = np.zeros((n_filesA,nlevs,npts,npts))
+    smoothed_v  = np.zeros((n_filesA,nlevs,npts,npts))
+    smoothed_w  = np.zeros((n_filesA,nlevs))
+    smoothed_T  = np.zeros((n_filesA,nlevs,npts,npts))
+    smoothed_qv = np.zeros((n_filesA,nlevs,npts,npts))
+    h_advec_u   = np.zeros((n_filesA,nlevs))
+    h_advec_v   = np.zeros((n_filesA,nlevs))
+    h_advec_T   = np.zeros((n_filesA,nlevs))
+    h_advec_qv  = np.zeros((n_filesA,nlevs))
+    v_advec_u   = np.zeros((n_filesA,nlevs))
+    v_advec_v   = np.zeros((n_filesA,nlevs))
+    v_advec_T   = np.zeros((n_filesA,nlevs))
+    v_advec_qv  = np.zeros((n_filesA,nlevs))
+    for t in range(n_filesA):
+        #velocities gets very noisy in the UFS above the tropopause; define a linear return-to-zero profile above some pressure
+        k_p_top = np.where(pres[t,:] <= top_pres_for_forcing)[0][0]
+        
+        #smooth velocity profile
+        n_smooth_points = 5
+        for ii in range(npts):
+            for jj in range(npts):
+                #the last argument defines the averaging "window" in grid layers; greater numbers results in greater smoothing
+                smoothed_u[t,:,ii,jj]  = moving_average(u_wind[t,:,ii,jj], n_smooth_points)
+                smoothed_v[t,:,ii,jj]  = moving_average(v_wind[t,:,ii,jj], n_smooth_points)
+                smoothed_T[t,:,ii,jj]  = moving_average(temp  [t,:,ii,jj], n_smooth_points)
+                smoothed_qv[t,:,ii,jj] = moving_average(qv    [t,:,ii,jj], n_smooth_points)
+                
+                #velocities gets very noisy in the UFS above the tropopause; define a linear return-to-zero profile above some pressure
+                for k in range(k_p_top+1,nlevs):
+                    lifrac = pres[t,k]/pres[t,k_p_top]
+                    smoothed_u[t,k,ii,jj] = lifrac*smoothed_u[t,k_p_top,ii,jj]
+                    smoothed_v[t,k,ii,jj] = lifrac*smoothed_v[t,k_p_top,ii,jj]
+
+        smoothed_w[t,:] = moving_average(w_wind[t,:,center,center], n_smooth_points)
+        
+        for k in range(k_p_top+1,nlevs):
+            lifrac = pres[t,k]/pres[t,k_p_top]
+            smoothed_w[t,k] = lifrac*smoothed_w[t,k_p_top]
+        
+        for k in range(nlevs):
+            dTdx = centered_diff_derivative(smoothed_T[t,k,center,:],dx[center,:]*1.0E3)
+            dTdy = centered_diff_derivative(smoothed_T[t,k,:,center],dy[:,center]*1.0E3)
+            dqdx = centered_diff_derivative(smoothed_qv[t,k,center,:],dx[center,:]*1.0E3)
+            dqdy = centered_diff_derivative(smoothed_qv[t,k,:,center],dy[:,center]*1.0E3)
+            dudx = centered_diff_derivative(smoothed_u[t,k,center,:],dx[center,:]*1.0E3)
+            dudy = centered_diff_derivative(smoothed_u[t,k,:,center],dy[:,center]*1.0E3)
+            dvdx = centered_diff_derivative(smoothed_v[t,k,center,:],dx[center,:]*1.0E3)
+            dvdy = centered_diff_derivative(smoothed_v[t,k,:,center],dy[:,center]*1.0E3)
+            mean_u = np.mean(smoothed_u[t,k,center,center-1:center+1+1])
+            mean_v = np.mean(smoothed_v[t,k,center-1:center+1+1,center])
+            
+            h_advec_T[t,k]  = -mean_u*dTdx - mean_v*dTdy #K s-1
+            h_advec_qv[t,k] = -mean_u*dqdx - mean_v*dqdy #kg kg-1 s-1
+            h_advec_u[t,k]  = -mean_u*dudx - mean_v*dudy #m s-1 s-1
+            h_advec_v[t,k]  = -mean_u*dvdx - mean_v*dvdy #m s-1 s-1        
+        
+        
+                
+        # plot(w_wind[t,:,center,center],pres[t,:],"k.")
+        # #y_av = movingaverage(y, 10)
+        # plot(w_wind_smoothed_ma, pres[t,:],"r")
+        # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+        # xlim(np.min(w_wind[t,:,center,center]),np.max(w_wind[t,:,center,center]))
+        # xlabel("w")
+        # ylabel("p")
+        # grid(True)
+        # show()
+        
+        if (vertical_method == 1):
+            v_advec_u[t,0] = 0.0
+            v_advec_u[t,nlevs-1] = 0.0
+            v_advec_v[t,0] = 0.0
+            v_advec_v[t,nlevs-1] = 0.0
+            v_advec_T[t,0] = 0.0
+            v_advec_T[t,nlevs-1] = 0.0
+            v_advec_qv[t,0] = 0.0
+            v_advec_qv[t,nlevs-1] = 0.0
+            for k in range(1, nlevs-1):
+                 w_asc = max(smoothed_w[t,k], 0.0)
+                 w_des = min(smoothed_w[t,k], 0.0)
+                 gradient_T_asc = (temp[t,k,center,center] - temp[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_T_des = (temp[t,k+1,center,center] - temp[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_T_asc = (smoothed_T[t,k,center,center] - smoothed_T[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_T_des = (smoothed_T[t,k+1,center,center] - smoothed_T[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 gradient_qv_asc = (qv[t,k,center,center] - qv[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_qv_des = (qv[t,k+1,center,center] - qv[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_qv_asc = (smoothed_qv[t,k,center,center] - smoothed_qv[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_qv_des = (smoothed_qv[t,k+1,center,center] - smoothed_qv[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_u_asc = (u_wind[t,k,center,center] - u_wind[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_u_des = (u_wind[t,k+1,center,center] - u_wind[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 gradient_u_asc = (smoothed_u[t,k,center,center] - smoothed_u[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_u_des = (smoothed_u[t,k+1,center,center] - smoothed_u[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 #gradient_v_asc = (v_wind[t,k,center,center] - v_wind[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 #gradient_v_des = (v_wind[t,k+1,center,center] - v_wind[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 gradient_v_asc = (smoothed_v[t,k,center,center] - smoothed_v[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
+                 gradient_v_des = (smoothed_v[t,k+1,center,center] - smoothed_v[t,k,center,center])/(pres[t,k+1]-pres[t,k])
+                 
+                 rho = pres[t,k]/(rdgas*temp[t,k,center,center])
+                 adiabatic_exp_comp_term = -(w_asc + w_des)*grav/cp
+                 v_advec_u[t,k] = rho*grav*(w_asc*gradient_u_asc + w_des*gradient_u_des)
+                 v_advec_v[t,k] = rho*grav*(w_asc*gradient_v_asc + w_des*gradient_v_des)
+                 v_advec_T[t,k] = rho*grav*(w_asc*gradient_T_asc + w_des*gradient_T_des) + adiabatic_exp_comp_term
+                 v_advec_qv[t,k] = rho*grav*(w_asc*gradient_qv_asc + w_des*gradient_qv_des)
+         
+        
+        u_g = np.zeros((n_filesA,nlevs))
+        v_g = np.zeros((n_filesA,nlevs))
+        if (geos_wind_forcing):
+            #first calc height at the pressure levels (ignore variation in gravity for typical model levels; height ~= geopotential height)
+            zh = np.zeros((n_filesA,nlevs,npts,npts))
+            for ii in range(npts):
+                for jj in range(npts):
+                    
+                    zh[t,0,ii,jj] = 0.5*delz[t,0,ii,jj]
+                    for k in range(1,nlevs):
+                        zh[t,k,ii,jj] = zh[t,k-1,ii,jj] + 0.5*delz[t,k-1,ii,jj] + 0.5*delz[t,k,ii,jj]
+            
+            mean_lat = np.mean(lat[t,:,:])
+            coriolis = 2.0*Omega*np.sin(mean_lat*deg_to_rad)
+            for k in range(1,nlevs):
+                dZdx = centered_diff_derivative(zh[t,k,center,:],dx[center,:]*1.0E3)
+                dZdy = centered_diff_derivative(zh[t,k,:,center],dy[:,center]*1.0E3)
+                
+                u_g[t,k] = -grav/coriolis*dZdy
+                v_g[t,k] = grav/coriolis*dZdx
+            
+            # plot(u_g[t,:],pres[t,:],"r")
+            # plot(u_wind[t,:,center,center],pres[t,:],"b")
+            # xlabel("m/s")
+            # ylabel("p")
+            # grid(True)
+            # show()
+            # 
+            # plot(v_g[t,:],pres[t,:],"r")
+            # plot(v_wind[t,:,center,center],pres[t,:],"b")
+            # xlabel("m/s")
+            # ylabel("p")
+            # grid(True)
+            # show()
+            
+        
+        if (False):
+            plot(h_advec_T[t,:]*86400.0,pres[t,:],"r")
+            # #y_av = movingaverage(y, 10)
+            plot(v_advec_T[t,:]*86400.0,pres[t,:],"b")
+            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+            xlim(86400.0*np.min(h_advec_T[t,:] + v_advec_T[t,:]),86400.0*np.max(h_advec_T[t,:] + v_advec_T[t,:]))
+            xlabel("K day-1")
+            ylabel("p")
+            grid(True)
+            show()
+            
+            plot(h_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"r")
+            # #y_av = movingaverage(y, 10)
+            plot(v_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"b")
+            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+            xlim(86400.0*1.0E3*np.min(h_advec_qv[t,:] + v_advec_qv[t,:]),86400.0*1.0E3*np.max(h_advec_qv[t,:] + v_advec_qv[t,:]))
+            xlabel("g kg-1 day-1")
+            ylabel("p")
+            grid(True)
+            show()
+            
+            plot(h_advec_u[t,:]*86400.0,pres[t,:],"r")
+            # #y_av = movingaverage(y, 10)
+            plot(v_advec_u[t,:]*86400.0,pres[t,:],"b")
+            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+            xlim(86400.0*np.min(h_advec_u[t,:] + v_advec_u[t,:]),86400.0*np.max(h_advec_u[t,:] + v_advec_u[t,:]))
+            xlabel("u: m s-1 day-1")
+            ylabel("p")
+            grid(True)
+            show()
+            
+            plot(h_advec_v[t,:]*86400.0,pres[t,:],"r")
+            # #y_av = movingaverage(y, 10)
+            plot(v_advec_v[t,:]*86400.0,pres[t,:],"b")
+            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
+            xlim(86400.0*np.min(h_advec_v[t,:] + v_advec_v[t,:]),86400.0*np.max(h_advec_v[t,:] + v_advec_v[t,:]))
+            xlabel("v: m s-1 day-1")
+            ylabel("p")
+            grid(True)
+            show()
+        
+        
+        # grad_t   = np.gradient(temp[t,:,:,:]) #grad_t output is list of components (z, y, x); each axis array has dimensions of (levs,2*n_forcing_halo_points+1,2*n_forcing_halo_points+1); we're interested in middle point for each level
+        # grad_qv  = np.gradient(qv[t,:,:,:])
+        # grad_u   = np.gradient(u_wind[t,:,:,:])
+        # grad_v   = np.gradient(v_wind[t,:,:,:])
+        #grad_t_x = np.gradient(temp[t,0,:,:], axis=1)
+        #grad_t_y = np.gradient(temp[t,0,:,:], axis=0)
+        #print(temp[t,0,:,:])
+        #print(grad_t[0][0]) #dT in z direction at level 0
+        #print(grad_t[1][0]) #dT in y direction at level 0
+        #print(grad_t[2][0]) #dT in x direction at level 0
+        #exit()
+        #print('dx tot',grad_t[1])
+        #print('dy tot',grad_t[0])
+        
+        #print('dx',grad_t_x)
+        #print('dy',grad_t_y)
+    
+        #exit()    
+    
+    if (save_comp_data):
+        # Read in 2D UFS history files
+        vars2d  =[{"name":"spfh2m"},     {"name":"tmp2m"},    \
+                  {"name":"dswrf_ave"},  {"name":"ulwrf_ave"},\
+                  {"name":"lhtfl_ave"},  {"name":"shtfl_ave"},\
+                  {"name":"dswrf"},      {"name":"ulwrf"},\
+                  {"name":"lhtfl"},      {"name":"shtfl"},\
+                  {"name":"pwat"},       {"name":"vgrd10m"},\
+                  {"name":"ugrd10m"}]
+        for var2d in vars2d: var2d["values"] = []
+        
+        # Get list of UFS history files with 2D fields.
+        sfc_filenames = []
+        for f_name in os.listdir(dir):
+           if fnmatch.fnmatch(f_name, sfc_ftag):
+              sfc_filenames.append(f_name)
+        if not sfc_filenames:
+            message = 'No filenames matching the pattern {0} found in {1}'.                \
+                      format(sfc_ftag,dir)
+            logging.critical(message)
+            raise Exception(message)
+        sfc_filenames = sorted(sfc_filenames)
+        n_filesS      = len(sfc_filenames)
+
+        if (n_filesS == n_filesA):
+            n_files = n_filesA
+        else:
+            message = 'Number of UFS 2D/3D history files is inconsistent'
+            logging.critical(message)
+            raise Exception(message)
+        
+        for count, filename in enumerate(sfc_filenames, start=1):
+            nc_file = Dataset('{0}/{1}'.format(dir,filename))
+            nc_file.set_always_mask(False)
+            
+            for var2d in vars2d:
+                data = nc_file[var2d["name"]][0,:,:]
+                var2d["values"].append(data[i,j])
+                var2d["units"]     = nc_file[var2d["name"]].getncattr(name="units")
+                var2d["long_name"] = nc_file[var2d["name"]].getncattr(name="long_name")
+
+            nc_file.close()
+        
+        # Convert to numpy arrays
+        for var2d in vars2d:
+            var2d["values"] = np.asarray(var2d["values"])
+    sec_in_hr = 3600.
+    time[0]   = 0.
+    forcing = {
+        "time":     time*sec_in_hr,
+        "wa":       smoothed_w,
+        "ps_forc":  pressfc[:,center,center],
+        "pa_forc":  pres,
+        "tnta_adv": h_advec_T[:,:] + v_advec_T[:,:],
+        "tnqv_adv": h_advec_qv[:,:] + v_advec_qv[:,:],
+        "tnua_adv": h_advec_u[:,:] + v_advec_u[:,:],
+        "tnva_adv": h_advec_v[:,:] + v_advec_v[:,:],
+        "ug"      : u_g[:,:],
+        "vg"      : v_g[:,:],
+        "ua_nud"  : u_wind[:,:,center,center],
+        "va_nud"  : v_wind[:,:,center,center]
+    }
+    
+    if (save_comp_data):
+        comp_data = {
+            "time": time*sec_in_hr,
+            "pa"  : pres,
+            "ta"  : temp  [:,:,center,center],
+            "qv"  : qv    [:,:,center,center],
+            "ua"  : u_wind[:,:,center,center],
+            "va"  : v_wind[:,:,center,center],
+            "vars2d":vars2d}
+    
+    
+    return (forcing, comp_data)
+
 ########################################################################################
 #
 ########################################################################################
 def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, grid_dir,
-                         tile, i, j, lam, save_comp_data, exact_mode, cmp_total_tendency):
+                         tile, i, j, lam, save_comp_data, exact_mode):
     """Get the horizontal and vertical advective tendencies for the given tile and indices"""
 
     # Determine UFS history file format (tiled/quilted)
@@ -1563,7 +2281,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
 
     # Find nearest point on UFS history file (quilted) grid.
     if use_nearest:
-        (tile_jj, tile_ii, point_lon, point_lat, dist_min) = find_loc_indices(location, forcing_dir, -999, lam)
+        (tile_jj, tile_ii, point_lon, point_lat, dist_min, theta) = find_loc_indices(location, forcing_dir, -999, lam)
         print('The closest point has indices [{0},{1}]'.format(tile_ii,tile_jj))
         print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
         print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
@@ -2044,8 +2762,6 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         dvdt_adv[0,:]  = (dtend_v_nophys[0,:] - dvdtr[0,:])
         dtdtr[0,:]     = (t_layr[0,:] - state_IC["ta"][:])/dt
         dtdt_adv[0,:]  = (dtend_temp_nophys[0,:] - dtdtr[0,:])
-    elif cmp_total_tendency:
-        print("DJS ASKS GF: Is this where you will compute something like?  dqvdt_tot = dqdtt/dt + u*dudx/dt + v*dvdy/dt")
     else:
         dqdtt          = qv_lay[0,:] - state_IC["qv"][:]
         dqvdt_adv[0,:] = dqdtt/dt
@@ -2321,7 +3037,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
 ########################################################################################
 #
 ########################################################################################
-def write_SCM_case_file(state, surface, oro, forcing, init, case, date):
+def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_method, vertical_method, geos_wind_forcing, wind_nudge):
     """Write all data to a netCDF file in the DEPHY-SCM format"""
 
     # Working types
@@ -2336,7 +3052,7 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date):
     com = 'mkdir -p ' + PROCESSED_CASE_DIR
     print(com)
     os.system(com)
-    fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_SCM_driver.nc')
+    fileOUT = os.path.join(PROCESSED_CASE_DIR, case + '_fm_{}'.format(forcing_method) + ('_vm_{}'.format(vertical_method) if forcing_method == 2 else '') + ('_geos' if geos_wind_forcing else '') + ('_wind_nudge' if wind_nudge else '') + '_SCM_driver.nc')
 
     nc_file = Dataset(fileOUT, 'w', format='NETCDF3_CLASSIC')
     nc_file.description = "FV3GFS model profile input (UFS forcings)"
@@ -2388,11 +3104,21 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date):
     nc_file.adv_qt            = forcing_off
     nc_file.adv_rv            = forcing_off
     nc_file.adv_rt            = forcing_off
-    nc_file.forc_wa           = forcing_off
+    if (vertical_method == 2):
+        nc_file.forc_wa       = forcing_on
+    else:
+        nc_file.forc_wa       = forcing_off
     nc_file.forc_wap          = forcing_off
-    nc_file.forc_geo          = forcing_off
-    nc_file.nudging_ua        = forcing_off
-    nc_file.nudging_va        = forcing_off
+    if (geos_wind_forcing):
+        nc_file.forc_geo      = forcing_on
+    else:
+        nc_file.forc_geo      = forcing_off
+    if (wind_nudge):
+        nc_file.nudging_ua    = forcing_on*const_nudging_time
+        nc_file.nudging_va    = forcing_on*const_nudging_time
+    else:
+        nc_file.nudging_ua    = forcing_off
+        nc_file.nudging_va    = forcing_off
     nc_file.nudging_ta        = forcing_off
     nc_file.nudging_theta     = forcing_off
     nc_file.nudging_thetal    = forcing_off
@@ -2423,8 +3149,9 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date):
     #
     nc_file.adv_ta            = forcing_on
     nc_file.adv_qv            = forcing_on
-    nc_file.adv_ua            = forcing_on
-    nc_file.adv_va            = forcing_on
+    if (not geos_wind_forcing):
+        nc_file.adv_ua            = forcing_on
+        nc_file.adv_va            = forcing_on
     #
     nc_file.surface_forcing_temp     = 'none'
     nc_file.surface_forcing_moisture = 'none'
@@ -2525,24 +3252,20 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date):
     ######################################################################################## 
     var_dict = [{"name": "orog",         "type":wp, "dimd": ('t0'         ),    "units": "m",             "desc": "surface_altitude"},\
                 {"name": "zh",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m",             "desc": "height"},\
-                {"name": "pa",           "type":wp, "dimd": ('t0',   'lev'),    "units": "Pa",            "desc": "air_ressure"}, \
-                {"name": "ta",           "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_temperature","default_value": init["t_lay"][:], "override": True}, \
+                {"name": "pa",           "type":wp, "dimd": ('t0',   'lev'),    "units": "Pa",            "desc": "air_pressure"}, \
                 {"name": "theta",        "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_potential_temperature"}, \
                 {"name": "thetal",       "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_liquid_potential_temperature"}, \
                 {"name": "rv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "humidity_mixing_ratio"}, \
                 {"name": "rl",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "cloud_liquid_water_mixing_ratio"}, \
                 {"name": "ri",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "cloud_ice_water_mixing_ratio"}, \
                 {"name": "rt",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "water_mixing_ratio"}, \
-                {"name": "qv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "specific_humidity","default_value": init["qv_lay"][:], "override": True}, \
                 {"name": "ql",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_cloud_liquid_water_in_air"}, \
                 {"name": "qi",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_cloud_ice_water_in_air", "default_value": 0.0}, \
                 {"name": "qt",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "mass_fraction_of_water_in_air"}, \
                 {"name": "hur",          "type":wp, "dimd": ('t0',   'lev'),    "units": "%",             "desc": "relative_humidity"}, \
                 {"name": "tke",          "type":wp, "dimd": ('t0',   'lev'),    "units": "m2 s-2",        "desc": "specific_turbulen_kinetic_energy", "default_value": 0.0}, \
-                {"name": "ua",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "eastward_wind","default_value": init["u_lay"][:], "override": True}, \
-                {"name": "va",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "northward_wind","default_value": init["v_lay"][:], "override": True}, \
                 {"name": "ts",           "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_temperature"},\
-                {"name": "tskin",        "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_skin_pressure"}, \
+                {"name": "tskin",        "type":wp, "dimd": ('t0'         ),    "units": "K",             "desc": "surface_skin_temperature"}, \
                 {"name": "ps",           "type":wp, "dimd": ('t0'         ),    "units": "Pa",            "desc": "surface_air_pressure"}, \
                 {"name": "beta",         "type":wp, "dimd": ('t0'         ),    "units": "m",             "desc": "soil_water_stress_factor"}, \
                 {"name": "mrsos",        "type":wp, "dimd": ('t0'         ),    "units": "kg m-2",        "desc": "mass_content_of_water_in_soil_layer"}, \
@@ -2552,6 +3275,17 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date):
                 {"name": "alb",          "type":wp, "dimd": ('t0'         ),    "units": "1",             "desc": "surface_albedo"}, \
                 {"name": "emis",         "type":wp, "dimd": ('t0'         ),    "units": "1",             "desc": "surface_longwave_emissivity"}, \
                 {"name": "slmsk",        "type":wp, "dimd": ('t0'         ),    "units": "none",          "desc": "land_sea_ice_mask"}]
+    if (forcing_method == 1 or forcing_method == 3):
+        var_dict.insert(3, {"name": "ta",           "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_temperature","default_value": init["t_lay"][:], "override": True})
+        var_dict.insert(10,{"name": "qv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "specific_humidity","default_value": init["qv_lay"][:], "override": True})
+        var_dict.insert(16,{"name": "ua",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "eastward_wind","default_value": init["u_lay"][:], "override": True})
+        var_dict.insert(17,{"name": "va",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "northward_wind","default_value": init["v_lay"][:], "override": True})
+    else:
+        var_dict.insert(3, {"name": "ta",           "type":wp, "dimd": ('t0',   'lev'),    "units": "K",             "desc": "air_temperature"})
+        var_dict.insert(10,{"name": "qv",           "type":wp, "dimd": ('t0',   'lev'),    "units": "kg kg-1",       "desc": "specific_humidity"})
+        var_dict.insert(16,{"name": "ua",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "eastward_wind"})
+        var_dict.insert(17,{"name": "va",           "type":wp, "dimd": ('t0',   'lev'),    "units": "m s-1",         "desc": "northward_wind"})
+        
     #
     var_frc  = [{"name": "zh_forc",      "type":wp, "dimd": ('time', 'lev'),    "units": "m",             "desc": "height_forcing","default_value": 1.},\
                 {"name": "pa_forc",      "type":wp, "dimd": ('time', 'lev'),    "units": "Pa",            "desc": "air_pressure_forcing"}, \
@@ -2788,7 +3522,8 @@ def write_comparison_file(comp_data, case_name, date, surface):
     # Dimensions
     lev_dim = nc_file.createDimension('lev', size=nlevs)
     time_dim = nc_file.createDimension('time', size=ntime)
-    time_ufs_history_dim = nc_file.createDimension('time_ufs_history', size=ntime-1)
+    #time_ufs_history_dim = nc_file.createDimension('time_ufs_history', size=ntime-1) #GJF why are we ignoring the first history file?
+    time_ufs_history_dim = nc_file.createDimension('time_ufs_history', size=ntime)
 
     # Varaibles
     time_var = nc_file.createVariable('time', wp, ('time',))
@@ -2799,7 +3534,7 @@ def write_comparison_file(comp_data, case_name, date, surface):
     time2_var = nc_file.createVariable('time_ufs_history', wp, ('time_ufs_history',))
     time2_var.units = 'second'
     time2_var.long_name = 'UFS history file time'
-    time2_var[:] = comp_data['time'][1::]
+    time2_var[:] = comp_data['time']
 
     lev_var = nc_file.createVariable('levs', wp, ('time','lev',))
     lev_var.units = 'Pa'
@@ -2887,36 +3622,39 @@ def main():
     
     #read in arguments
     (location, indices, date, in_dir, grid_dir, forcing_dir, tile, area, case_name, 
-     old_chgres, lam, save_comp, use_nearest, exact_mode, cmp_total_tendency) = parse_arguments()
-        
-    #find tile containing the point using the supergrid if no tile is specified 
-    #if not tile and not lam:
-    if not tile:
-        tile = int(find_tile(location, grid_dir, lam))
-        if tile < 0:
-            message = 'No tile was found for location {0}'.format(location)
-            logging.critical(message)
-            raise Exception(message)
-        print('Tile found: {0}'.format(tile))
+     old_chgres, lam, save_comp, use_nearest, forcing_method, vertical_method, geos_wind_forcing, wind_nudge) = parse_arguments()
     
-    #find index of closest point in the tile if indices are not specified
-    if not indices:
-        (tile_j, tile_i, point_lon, point_lat, dist_min) = find_loc_indices(location, grid_dir, tile, lam)
-        print('The closest point in tile {0} has indices [{1},{2}]'.format(tile,tile_i,tile_j))
-        print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
-        print('This grid cell is approximately {0} km away from the desired location of {1} {2}'.format(dist_min/1.0E3,location[0],location[1]))
-    else:
-        tile_i = indices[0]
-        tile_j = indices[1]
-        #still need to grab the lon/lat if the tile and indices are supplied
-        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile, lam)
+    #find indices corresponding to both UFS history files and initial condition (IC) files
+    (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir)
+    
+    (IC_i, IC_j, tile, IC_lon, IC_lat, IC_dist_min, angle_to_IC_point) = find_loc_indices_UFS_IC(location, grid_dir, lam, tile, indices)
         
-        print('This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat))
+    #compare the locations of the found history file point and UFS IC point
+    compare_hist_and_IC_points(location, hist_lon, hist_lat, IC_lon, IC_lat, hist_dist_min, angle_to_hist_point, IC_dist_min, angle_to_IC_point)
+    
+    #read in surface data for the intial conditions at the IC point
+    surface_data = get_UFS_surface_data(in_dir, tile, IC_i, IC_j, old_chgres, lam)
+    
+    #when using the advective forcing methods, initial conditions are taken from the history files; check that the history file surface type is the same as the UFS IC point from which data is read
+    check_IC_hist_surface_compatibility(forcing_dir, hist_i, hist_j, surface_data, lam, old_chgres, tile)
+    
+    #read in orographic data for the initial conditions at the IC point
+    oro_data = get_UFS_oro_data(in_dir, tile, IC_i, IC_j, lam)
+    
+    #read in the initial condition profiles
+    
+    if (forcing_method == 1 or forcing_method == 4):
+        #read initial condition profiles from UFS IC files
+        (state_data, error_msg) = get_IC_data_from_UFS_ICs(in_dir, grid_dir, tile, IC_i,\
+                                                                  IC_j, old_chgres, lam)
+    else:
+        #read initial condition profiles from UFS history files (not true "initial" conditions, but after first UFS timestep)
+        state_data = get_IC_data_from_UFS_history(forcing_dir, hist_i, hist_j, lam, tile)
+        error_msg = ''
     
     # get UFS IC data (TODO: flag to read in RESTART data rather than IC data and implement
     # different file reads)
-    (state_data, surface_data, oro_data, error_msg) = get_UFS_IC_data(in_dir, grid_dir, tile, tile_i,\
-                                                                      tile_j, old_chgres, lam)
+    
     if (error_msg):
         print("ERROR: unknown grid orintation")
         exit()
@@ -2925,22 +3663,37 @@ def main():
         # date was not included on command line; look in atmf* file for initial date
         date = find_date(forcing_dir)
     
-
     #get grid cell area if not given
     if not area:
-        area = get_UFS_grid_area(grid_dir, tile, tile_i, tile_j, lam)
+        area = get_UFS_grid_area(grid_dir, tile, IC_i, IC_j, lam)
     surface_data["area"] = area
-    surface_data["lon"]  = point_lon
-    surface_data["lat"]  = point_lat
+    surface_data["lon"]  = hist_lon
+    surface_data["lat"]  = hist_lat
     
     # Get UFS forcing data
-    (forcing_data, comp_data, stateInit) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
-                                                                location, use_nearest, forcing_dir, \
-                                                                grid_dir, tile, tile_i, tile_j, lam,\
-                                                                save_comp, exact_mode, cmp_total_tendency)
+    stateInit = {}
+    if forcing_method == 1:
+        exact_mode = True
+        (forcing_data, comp_data, stateInit) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
+                                                                    location, use_nearest, forcing_dir, \
+                                                                    grid_dir, tile, IC_i, IC_j, lam,\
+                                                                    save_comp, exact_mode)
+    elif forcing_method == 2:
+        (forcing_data, comp_data) = get_UFS_forcing_data_advective_tendency(forcing_dir, hist_i, hist_j, tile, neighbors, dx, dy, state_data["nlevs"], lam, save_comp, vertical_method, geos_wind_forcing, wind_nudge)
+    elif forcing_method == 3:
+        exact_mode = False
+        (forcing_data, comp_data, stateInit) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
+                                                                    location, use_nearest, forcing_dir, \
+                                                                    grid_dir, tile, IC_i, IC_j, lam,\
+                                                                    save_comp, exact_mode)
+    else:
+        message = "Unsupported forcing_method chosen"
+        logging.critical(message)
+        raise Exception(message)
+    
     
     # Write SCM case file
-    fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, stateInit, case_name, date)
+    fileOUT = write_SCM_case_file(state_data, surface_data, oro_data, forcing_data, stateInit, case_name, date, forcing_method, vertical_method, geos_wind_forcing, wind_nudge)
 
     # read in and remap the state variables to the first history file pressure profile and 
     # write them out to compare SCM output to (atmf for state variables and sfcf for physics 

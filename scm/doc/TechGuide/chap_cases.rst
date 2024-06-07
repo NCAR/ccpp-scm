@@ -409,16 +409,16 @@ Activate environment:
 
 .. _`ufsicgenerator`:
 
-UFS_IC_generator.py
+UFS_case_gen.py
 ~~~~~~~~~~~~~~~~~~~
 
-A script exists in ``scm/etc/scripts/UFS_IC_generator.py`` to read in UFS history (output) files and their
+A script exists in ``scm/etc/scripts/UFS_case_gen.py`` to read in UFS history (output) files and their
 initial conditions to generate a SCM case input data file, in DEPHY
 format.
 
 .. code:: bash
 
-   ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
+   ./UFS_case_gen.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
    DATE -i IN_DIR -g GRID_DIR -f FORCING_DIR -n
    CASE_NAME [-t {1,2,3,4,5,6,7}] [-a AREA] [-oc]
    [-lam] [-sc] [-near]

@@ -136,7 +136,7 @@ def main():
                   {"name": "dt",          "values": str(args.timestep)}, \
                   {"name": "C_RES",       "values": str(args.C_RES)}]
 
-    # What, if any, options neeed to be passsed to UFS_IC_generator.py?
+    # What, if any, options neeed to be passsed to UFS_case_gen.py?
     com_config = ''
     if args.save_comp:   com_config = com_config + ' -sc'
     if args.use_nearest: com_config = com_config + ' -near'
@@ -149,10 +149,10 @@ def main():
     count = 0
     run_list = []
     for pt in range(0,npts):
-        # Call UFS_IC_generator.py
+        # Call UFS_case_gen.py
         case_name     = args.case_name +"_n" + str(pt).zfill(3)
         file_scminput = "../../data/processed_case_input/"+case_name+"_SCM_driver.nc"
-        com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
+        com = "./UFS_case_gen.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
               " -i " + args.dir_ic + " -g " + args.dir_grid + " -f " + args.dir_forcing + " -n " + case_name + com_config
         print(com)
         os.system(com)
