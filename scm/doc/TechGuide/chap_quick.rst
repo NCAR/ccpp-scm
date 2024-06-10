@@ -5,7 +5,7 @@ Quick Start Guide
 
 This chapter provides instructions for obtaining and compiling the CCPP
 SCM. We provide instructions on building the code from scratch (:numref:`Section %s <obtaining_code>`), as well as
-using Docker containers for machines that have Docker software installed (:numref:`Section %s <docker>`). 
+using Docker containers for machines that have Docker software installed (:numref:`Section %s <docker>`).
 
 .. _obtaining_code:
 
@@ -15,7 +15,7 @@ Obtaining Code
 The source code for the SCM, CCPP, and their required components are provided through GitHub.
 The latest release branch contains the tested and supported version for
 general use, while the development branch (``main``) contains the latest
-developer code, but may not be as stable or consistent with existing documentation. 
+developer code, but may not be as stable or consistent with existing documentation.
 Instructions for using either option are discussed here.
 
 Release Code
@@ -29,7 +29,7 @@ Clone the source using
 
 The ``--recursive`` option is required to retrieve the ccpp-physics and ccpp-framework code,
 which are stored in separate repositories and linked to the SCM repository as submodules.
-If not included initially, you can always retrieve the submodules 
+If not included initially, you can always retrieve the submodules
 by executing the following command from the SCM directory:
 
 .. code:: bash
@@ -46,7 +46,7 @@ Development Code
 ^^^^^^^^^^^^^^^^
 
 Developers seeking to contribute code to the SCM or CCPP will need to use the most up-to-date
-version of the code, which can be found on the ``main`` branch of the repository: 
+version of the code, which can be found on the ``main`` branch of the repository:
 
 .. code:: bash
 
@@ -121,7 +121,7 @@ System Requirements, Libraries, and Tools
 -----------------------------------------
 
 The source code for the SCM and CCPP components is in the form of
-programs written in FORTRAN 90 (with some required features from the 
+programs written in FORTRAN 90 (with some required features from the
 FORTRAN 2008 standard), and C. In addition, the model I/O
 relies on the NetCDF libraries, as well as the NCEP libraries ``bacio``, ``sp`` and ``w3emc``.
 
@@ -156,7 +156,7 @@ contains the following set of libraries needed for building the SCM:
 
 Instructions for installing spack-stack can be found in the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
 Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera and
-Jet, and MSU's Orion.  
+Jet, and MSU's Orion.
 
 Compilers
 ^^^^^^^^^
@@ -230,7 +230,7 @@ For example, users on the NSF NCAR machine Derecho who wish to use Intel compile
    module load derecho_intel
 
 Additionally, for users who have installed spack-stack on their own MacOS or Linux machine can use the provided ``macos_clang``
-or ``linux_gnu`` modules. 
+or ``linux_gnu`` modules.
 
 .. note::
 
@@ -250,7 +250,7 @@ Python requirements
 
 The SCM build system invokes the ``ccpp_prebuild.py`` script, and so the Python environment must be set up prior to building.
 As mentioned earlier, a minimum Python version of 3.8 is required. Additionally, there are a few non-default modules required for the SCM to
-function: ``f90nml`` (`documentation <https://f90nml.readthedocs.io/en/latest/index.html>`__) and 
+function: ``f90nml`` (`documentation <https://f90nml.readthedocs.io/en/latest/index.html>`__) and
 ``netcdf4`` (`documentation <https://unidata.github.io/netcdf4-python/>`__). Users can test if these are installed using this command in
 the shell:
 
@@ -353,6 +353,13 @@ components.
 
             -DCMAKE_BUILD_TYPE=Debug
 
+      -  Single Precision, lowers the default precision of variables from double to single precision.
+         A very few calculations are done in double precision where it is crucial to achieve results comparable to the default double precision.
+
+         .. code:: bash
+
+            -D32BIT=ON
+
    -  One can also save the output of this step to a log file:
 
       .. code:: bash
@@ -425,7 +432,7 @@ Downloading input data
 The various SCM cases require staged input data in order to run. This includes
 input data for cases and lookup tables for runtime use. This is a large dataset
 (:math:`<`\ 1 GB) so it is not stored in the SCM repository, and must be downloaded
-separately. To download this data place it in the correct directories, 
+separately. To download this data place it in the correct directories,
 execute the following scripts:
 
 .. code:: bash
@@ -483,7 +490,7 @@ To see the full list of available options, use the ``--help`` flag:
 
 
 The run script’s full set of options are described below, where optional abbreviations are included in brackets.
-If using the main branch, you should run the above command to ensure you have the most up-to-date list of options. 
+If using the main branch, you should run the above command to ensure you have the most up-to-date list of options.
 
 -  ``--case [-c]``
 
@@ -750,7 +757,7 @@ Building the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Dockerfile builds CCPP SCM v6.0.0 from source using the GNU
-compiler. 
+compiler.
 
 The CCPP SCM has a number of system requirements and necessary libraries
 and tools. Below is a list, including versions, used to create the the
@@ -794,7 +801,7 @@ and then executing the following steps:
    Inspect the Dockerfile if you would like to see details for how the
    image is built. The image will contain SCM prerequisite software from
    DTC, the SCM and CCPP code, and a pre-compiled executable for the SCM
-   with the 6 supported suites for the SCM. To view 
+   with the 6 supported suites for the SCM. To view
 
    .. code:: bash
 
@@ -874,7 +881,7 @@ Running the Docker image
 
    .. note::
      Windows users may need to omit the curly braces around environment variables: use ``$OUT_DIR``
-     instead of ``${OUT_DIR}``. 
+     instead of ``${OUT_DIR}``.
 
    For running through all supported cases and suites, use
 
@@ -914,7 +921,7 @@ Running the Docker image
    directory of the SCM with a pre-compiled executable. At this point,
    one could use the run scripts as described in previous sections
    (remembering to include the option on run scripts if output is to be
-   shared with the host machine). 
+   shared with the host machine).
 
    .. warning::
 
