@@ -21,7 +21,7 @@ load("netcdf-c/4.9.2")
 load("netcdf-fortran/4.6.1")
 load("bacio/2.4.1")
 load("sp/2.5.0")
-load("w3emc")
+load("w3emc/2.10.0")
 
 setenv("CMAKE_C_COMPILER","mpicc")
 setenv("CMAKE_CXX_COMPILER","mpicxx")
