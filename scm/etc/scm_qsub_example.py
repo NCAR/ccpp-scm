@@ -3,10 +3,15 @@
 -----------------------------------------------------------------------
  Description:  Example script to submit a job through the HPC batch system
 
- Assumptions: For use on Cheyenne. This script must be copied to the bin directory.
+ Assumptions: For use on Derecho. This script must be copied to the bin directory.
               The user should edit the JOB_NAME, ACCOUNT, etc.
-              ./scm/etc/Cheyenne_setup_intel.sh or
-              ./scm/etc/Cheyenne_setup_gnu.sh must be run before submitting this script
+              Before running this script the environment must be setup.
+              The following are instructions for that:
+              $ module purge
+              $ module use scm/etc/modules
+              $ module load derecho_gnu
+                or
+              $ module load derecho_intel
 
  Command line arguments: none
 

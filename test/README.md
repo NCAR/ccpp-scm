@@ -7,11 +7,11 @@ and suites.  It consists of the following scripts:
 
 * ``rt.sh`` - Driver for the regresion test that builds, runs and calls the summarize.sh script
 * ``rt_test_cases.py``- list of all supported cases and suites
-* ``summarize.sh`` - Called by ``rt.sh`` to parse the output of each test to determine pass/fail		
+* ``summarize.sh`` - Called by ``rt.sh`` to parse the output of each test to determine pass/fail
 
 Currently, the following configurations are supported:
 
-Machine     | Cheyenne       | Hera           | Desktop        |
+Machine     | Derecho        | Hera           | Desktop        |
 ------------| ---------------|----------------|----------------|
 Compiler(s) | Intel, GNU     | Intel          | gfortran       |
 Build Types | Release, Debug | Release, Debug | Release, Debug |
@@ -39,11 +39,11 @@ The debug tests use a reduced runtime for faster turnaround and to conserve comp
 
 # To run the tests (no baseline generation or comparison):
 
-On Cheyenne:
+On Derecho:
 
 ```
 cd test
-./rt.sh cheyenne >& test.out &
+./rt.sh derecho >& test.out &
 ```
 
 On Hera:
@@ -76,4 +76,3 @@ A useful workflow might consist of the following steps:
 2. Run ``rt.sh ${machine} -g <dir>`` to generate a baseline and verify build/run
 3. Make changes to your working copy
 4. Run ``rt.sh ${machine} -c <dir>`` to verify your changes
-
