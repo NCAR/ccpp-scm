@@ -1456,7 +1456,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
   !>  - Read in the initial profiles.
   call NetCDF_read_var(ncid, "pa", .True., input_pres)
-  call NetCDF_read_var(ncid, "zh", .True., input_height)
+  call NetCDF_read_var(ncid, "zh", .False., input_height)
   call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
   call NetCDF_read_var(ncid, "ua", .True., input_u)
   call NetCDF_read_var(ncid, "va", .True., input_v)
@@ -1476,9 +1476,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "rl",  .False., input_rl)
   call NetCDF_read_var(ncid, "ri",  .False., input_ri)
   call NetCDF_read_var(ncid, "hur", .False., input_rh)
- 
-  call NetCDF_read_var(ncid, "tke", .True., input_tke)
-  
+
+  call NetCDF_read_var(ncid, "tke", .False., input_tke)  
+
   if (trim(input_surfaceForcingLSM) == "lsm") then
     call NetCDF_read_var(ncid, "o3",      .True.,  input_ozone)
     call NetCDF_read_var(ncid, "area",    .True.,  input_area)
@@ -1574,9 +1574,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "lat",     .True., input_lat)
   call NetCDF_read_var(ncid, "lon",     .True., input_lon)  
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
-  call NetCDF_read_var(ncid, "zh_forc", .True., input_force_height)
-  call NetCDF_read_var(ncid, "pa_forc", .True., input_force_pres)
-  
+  call NetCDF_read_var(ncid, "zh_forc", .False., input_force_height)
+  call NetCDF_read_var(ncid, "pa_forc", .False., input_force_pres)
+
   !conditionally read forcing vars (or set to missing); if the global attribute is set to expect a variable and it doesn't exist, stop the model
   call NetCDF_conditionally_read_var(adv_u,      "adv_ua",     "tnua_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_adv)
   call NetCDF_conditionally_read_var(adv_v,      "adv_va",     "tnva_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_adv)
@@ -1630,7 +1630,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
      call NetCDF_read_var(ncid, "wprvp_s",    .False., input_force_wprvp)
      call NetCDF_read_var(ncid, "wprtp_s",    .False., input_force_wprtp)
   else if (trim(input_surfaceForcingMoist) == 'surface_flux') then
-     call NetCDF_read_var(ncid, "hfls",       .False., input_force_sfc_lat_flx)
+     call NetCDF_read_var(ncid, "hfls",       .False., input_force_sfc_sens_flx)
   endif
 
   !
