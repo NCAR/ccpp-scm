@@ -123,7 +123,7 @@ System Requirements, Libraries, and Tools
 The source code for the SCM and CCPP components is in the form of
 programs written in FORTRAN 90 (with some required features from the
 FORTRAN 2008 standard), and C. In addition, the model I/O
-relies on the NetCDF libraries, as well as the NCEP libraries ``bacio``, ``sp`` and ``w3emc``.
+relies on the NetCDF libraries.
 
 Beyond the standard shell scripts, the build
 system relies on use of the Python scripting language, along with cmake,
@@ -147,12 +147,6 @@ contains the following set of libraries needed for building the SCM:
  - Netcdf-c (v4.9.2)
 
  - Netcdf-FORTRAN (v4.6.0)
-
- - BACIO (v2.4.1) - Binary I/O Library
-
- - SP (v2.3.3) - Spectral Transformation Library
-
- - W3EMC (2.10.0) - GRIB decoder and encoder library
 
 Instructions for installing spack-stack can be found in the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
 Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera and
@@ -239,9 +233,9 @@ or ``linux_gnu`` modules.
 
 If libraries were installed manually, users will need to set some environment variables
 needed for specifying the location of the various prerequisites. Users will need to set variables for the
-compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the library installs of NetCDF (``NetCDF_ROOT``),
-``bacio`` (``bacio_ROOT``), ``sp`` (``sp_ROOT``), and ``w3emc`` (``w3emc_ROOT``). This is the procedure used in the
-provided Dockerfile in ``ccpp-scm/docker/``, so users can reference that file for guidance on how to install this software
+compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the library installs of NetCDF (``NetCDF_ROOT``).
+This is the procedure used in the provided Dockerfile in ``ccpp-scm/docker/``,
+so users can reference that file for guidance on how to install this software
 and set these variables.
 
 
@@ -773,12 +767,6 @@ the Docker container contains all of this software built-in, you do not need to 
 -  NetCDF - 4.9.0
 
 -  Python - 3.11.2
-
--  NCEPLIBS BACIO - v2.4.1
-
--  NCEPLIBS SP - v2.3.3
-
--  NCEPLIBS W3EMC  - v2.11.0
 
 A Docker image containing the SCM, CCPP, and its software prerequisites
 can be generated from the code in the software repository obtained by

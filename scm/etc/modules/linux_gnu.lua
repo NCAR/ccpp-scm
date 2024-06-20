@@ -23,11 +23,6 @@ load("netcdf-fortran/4.6.1")
 load("py-f90nml/1.4.3")
 load("py-netcdf4/1.5.8")
 
-
-load("bacio/2.4.1")
-load("sp/2.5.0")
-load("w3emc/2.10.0")
-
 setenv("CMAKE_C_COMPILER","mpicc")
 setenv("CMAKE_CXX_COMPILER","mpicxx")
 setenv("CMAKE_Fortran_COMPILER","mpif90")

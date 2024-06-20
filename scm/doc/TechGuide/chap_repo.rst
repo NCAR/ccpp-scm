@@ -76,8 +76,8 @@ Continuous Integration
 The CCPP SCM GitHub repository is set up with Continuous Integration (CI) testing for building the SCM and running some simple test cases. These tests are run automatically on code changes before they are merged, and so ensures that new changes to the SCM do not break basic capabilities. The latest set of tests use the following combinations of SCM prerequisites:
 
 **Regression tests**
- - GNU compilers 11.4.0, Python 3.9.12, netCDF-c 4.7.3, netCDF-FORTRAN 4.5.3, bacio 2.4.1, sp 2.3.3, and w3emc 2.9.2
+ - GNU compilers 11.4.0, Python 3.9.12, netCDF-c 4.7.3, and netCDF-FORTRAN 4.5.3
 
 **Build tests**
 
-All tests use the same versions of NCEP-supported libraries: bacio 2.4.1, sp 2.3.3, and w3emc 2.9.2. Detailed information on these tests can be found in the definition files for these tests, stored in the SCM repository under ``ccpp-scm/.github/workflows``.
+Detailed information on these tests can be found in the definition files for these tests, stored in the SCM repository under ``ccpp-scm/.github/workflows``.

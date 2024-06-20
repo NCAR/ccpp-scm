@@ -17,6 +17,7 @@ VARIABLE_DEFINITION_FILES = [
     # actual variable definition files
     'ccpp/framework/src/ccpp_types.F90',
     'ccpp/physics/physics/hooks/machine.F',
+    'ccpp/physics/physics/tools/w3emc.F90',
     'ccpp/physics/physics/Radiation/RRTMG/radsw_param.f',
     'ccpp/physics/physics/Radiation/RRTMG/radlw_param.f',
     'ccpp/physics/physics/photochem/h2o_def.f',

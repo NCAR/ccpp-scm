@@ -17,9 +17,7 @@ jobs:
     # Environmental variables
     env:
       NETCDF:      /home/runner/netcdf
-      bacio_ROOT:  /home/runner/bacio
       sp_ROOT:     /home/runner/NCEPLIBS-sp
-      w3emc_ROOT:  /home/runner/myw3emc
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
       zlib_ROOT:   /home/runner/zlib
       HDF5_ROOT:   /home/runner/hdf5
@@ -185,23 +183,6 @@ jobs:
         make
         make install
 
-    - name: Cache bacio library v2.4.1
-      id: cache-bacio-fortran
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/bacio
-        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
-
-    - name: Install bacio library v2.4.1
-      if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
-      run: |
-        git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
-        cd bacio && mkdir build && cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${bacio_ROOT} ../
-        make -j2
-        make install
-        echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
-
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
       uses: actions/cache@v3
@@ -218,23 +199,6 @@ jobs:
         make -j2
         make install
         echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
-
-    - name: Cache w3emc library v2.9.2
-      id: cache-w3emc-fortran
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/myw3emc
-        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
-
-    - name: Install w3emc library v2.9.2
-      if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
-      run: |
-        git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
-        cd NCEPLIBS-w3emc && mkdir build && cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${w3emc_ROOT} ../
-        make -j2
-        make install
-        echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
     #######################################################################################
     # Build and run SCM regression tests (ccpp-scm/test/rt_test_cases.py)
