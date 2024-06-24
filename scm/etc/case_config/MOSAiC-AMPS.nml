@@ -1,0 +1,17 @@
+$case_config
+case_name = 'MOSAiC-AMPS',
+runtime = 604800.0,
+thermo_forcing_type = 2,
+mom_forcing_type = 3,
+relax_time = 3600.0,
+sfc_flux_spec = .false.,
+sfc_type = 2,
+sfc_roughness_length_cm = 0.02,
+reference_profile_choice = 1,
+year = 2019,
+month = 10,
+day = 31,
+hour = 0,
+column_area = 2.0E9,
+lsm_ics = .true.,
+$end

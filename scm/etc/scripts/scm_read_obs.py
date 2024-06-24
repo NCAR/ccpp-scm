@@ -6,6 +6,71 @@ import numpy as np
 import math
 import forcing_file_common as ffc
 
+def read_MOSAiC_obs(obs_file, time_slices, date):
+  obs_time_slice_indices = []
+
+  obs_fid = Dataset(obs_file, 'r')
+
+  obs_year = obs_fid.variables['year'][:]
+  obs_month = obs_fid.variables['month'][:]
+  obs_day = obs_fid.variables['day'][:]
+  obs_hour = obs_fid.variables['hour'][:]
+  obs_time = obs_fid.variables['time_offset'][:]
+
+  obs_date = []
+  for i in range(obs_hour.size):
+      obs_date.append(datetime.datetime(obs_year[i], obs_month[i], obs_day[i], obs_hour[i], 0, 0, 0))
+  obs_date = np.array(obs_date)
+
+  for time_slice in time_slices:
+      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
+      start_date_index = np.where(obs_date == start_date)[0][0]
+      end_date_index = np.where(obs_date == end_date)[0][0]
+      obs_time_slice_indices.append([start_date_index, end_date_index])
+
+#print(start_date, end_date, start_date_index, end_date_index, obs_date[start_date_index], obs_date[end_date_index])
+
+  #find the index corresponding to the start of the simulations
+  obs_start_index = np.where(obs_date == date[0][0])[0]
+  obs_time = obs_time - obs_time[obs_start_index]
+
+  obs_pres_l = obs_fid.variables['levels'][:]*100.0 #pressure levels in mb
+
+  obs_T = obs_fid.variables['T'][:]
+  obs_q = obs_fid.variables['q'][:]
+  obs_qi= obs_fid.variables['qi'][:]
+  obs_ql= obs_fid.variables['ql'][:]
+  obs_u = obs_fid.variables['u'][:]
+  obs_v = obs_fid.variables['v'][:]
+  obs_rad_net_srf = obs_fid.variables['rad_net_srf'][:]
+  obs_lw_dn_srf = obs_fid.variables['lw_dn_srf'][:]
+  obs_tsk = obs_fid.variables['T_skin'][:]
+  obs_shf = obs_fid.variables['SH'][:]  
+  obs_lhf = obs_fid.variables['LH'][:]
+  obs_t2m = obs_fid.variables['T_srf'][:]
+  obs_q2m = obs_fid.variables['q_srf'][:]
+
+  obs_time_h = obs_time/3600.0
+
+  Rd = 287.0
+  Rv = 461.0
+
+  e_s = 6.1078*np.exp(17.2693882*(obs_T - 273.16)/(obs_T - 35.86))*100.0 #Tetens formula produces e_s in mb (convert to Pa)
+  e = obs_q*obs_pres_l/(obs_q + (Rd/Rv)*(1.0 - obs_q)) #compute vapor pressure from specific humidity
+  obs_rh = np.clip(e/e_s, 0.0, 1.0)
+
+  return_dict = {'year': obs_year, 'month': obs_month, 'day': obs_day, 'hour': obs_hour,
+    'time': obs_time, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices,
+    'pres_l': obs_pres_l, 'T': obs_T, 'q': obs_q, 'rh': obs_rh, 'u': obs_u, 'v': obs_v, 'shf': obs_shf,
+    'lhf': obs_lhf, 't2m': obs_t2m, 'q2m': obs_q2m, 'time_h': obs_time_h, 'tsfc': obs_tsk,
+    'qv': obs_q, 'qi': obs_qi, 'ql': obs_ql, 'rad_net_srf': obs_rad_net_srf, 'sfc_dwn_lw': obs_lw_dn_srf}
+#    'lwp': obs_lwp, 'T_force_tend': obs_T_forcing, 'qv_force_tend': obs_q_forcing}
+
+  obs_fid.close()
+
+  return return_dict
+
 def read_twpice_obs(obs_file, time_slices, date):
   obs_time_slice_indices = []
 
