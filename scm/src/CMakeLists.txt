@@ -71,6 +71,10 @@ find_package(NetCDF REQUIRED COMPONENTS C Fortran)
 find_package(bacio REQUIRED)
 find_package(sp    REQUIRED)
 find_package(w3emc REQUIRED)
+find_package(MPI   REQUIRED)
+if(NOT MPI_Fortran_HAVE_F08_MODULE)
+  message(FATAL_ERROR "MPI_F08 Required")
+endif()
 
 find_package(MPI REQUIRED Fortran)
 if(NOT MPI_Fortran_HAVE_F08_MODULE)
@@ -98,7 +102,7 @@ endif()
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
-INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
+include_directories(${MPI_Fortran_INCLUDE_PATH})
 
 #------------------------------------------------------------------------------
 # Add required preprocessor flags for build type
