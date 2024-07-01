@@ -50,7 +50,7 @@ else()
     RESULT_VARIABLE return_code
     )
 endif()
-  
+
 # Check return code from CCPP prebuild.py
 if(return_code EQUAL 0)
   message (STATUS "CCPP prebuild step completed successfully")
@@ -71,6 +71,10 @@ find_package(NetCDF REQUIRED COMPONENTS C Fortran)
 find_package(bacio REQUIRED)
 find_package(sp    REQUIRED)
 find_package(w3emc REQUIRED)
+find_package(MPI   REQUIRED)
+if(NOT MPI_Fortran_HAVE_F08_MODULE)
+  message(FATAL_ERROR "MPI_F08 Required")
+endif()
 
 SET(CCPP_FRAMEWORK_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(CCPP_PHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
@@ -90,6 +94,7 @@ endif()
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
+include_directories(${MPI_Fortran_INCLUDE_PATH})
 
 #------------------------------------------------------------------------------
 # Add required preprocessor flags for build type
@@ -131,17 +136,22 @@ set(SIMDMULTIARCH   OFF CACHE BOOL "Enable multi-target SIMD instruction sets")
 
 #------------------------------------------------------------------------------
 # Set compile options
+if (32BIT)
+  add_definitions(-DSINGLE_PREC)
+  add_definitions(-DRTE_USE_SP)
+endif()
+
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
-  
+
   if(${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch -fallow-invalid-boz")
   endif()
-  
+
   if(NOT 32BIT)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-real-8 -fdefault-double-8")
   endif()
-  
+
   if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
     set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -ffpe-trap=invalid,zero,overflow -fbounds-check")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
@@ -149,7 +159,7 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
   endif()
-  
+
   set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
@@ -157,11 +167,11 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback -fpp -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -nowarn -sox -align array64byte -qno-opt-dynamic-align")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -qno-opt-dynamic-align -sox -fp-model source")
-  
+
   if(NOT 32BIT)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -real-size 64")
   endif()
-  
+
   if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
     set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fp-stack-check -fstack-protector-all -fpe0 -debug -ftrapuv -init=snan,arrays")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -ftrapuv")
@@ -184,7 +194,7 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=core-avx-i")
     endif()
   endif()
-  
+
   set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
@@ -202,7 +212,7 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
   if(NOT 32BIT)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -r8")
   endif()
-  
+
   if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
     set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -g")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g")
@@ -214,7 +224,7 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
   set(MPI_C_COMPILER mpicc)
   set(MPI_CXX_COMPILER mpicxx)
   set(MPI_Fortran_COMPILER mpif90)
-  
+
   set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
@@ -227,15 +237,17 @@ endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
 #------------------------------------------------------------------------------
 # Set flag for 32bit dynamics build
+
 if(32BIT)
   message(STATUS "Compile CCPP slow physics with 64-bit precision, fast physics with 32-bit precision")
   add_definitions(-DOVERLOAD_R4)
   if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-    set(CMAKE_Fortran_FLAGS_PHYSICS  "-real-size 64 -no-prec-div -no-prec-sqrt")
+    # set(CMAKE_Fortran_FLAGS_PHYSICS  "-real-size 64 -no-prec-div -no-prec-sqrt")
   elseif(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    set(CMAKE_Fortran_FLAGS_PHYSICS  "-fdefault-real-8 -fdefault-double-8")
+    # set(CMAKE_Fortran_FLAGS_PHYSICS  "-fdefault-real-8 -fdefault-double-8")
   endif()
   set(CMAKE_Fortran_FLAGS_DYNAMICS "")
+
 else()
   message(STATUS "Compile CCPP physics with 64-bit precision")
   remove_definitions(-DOVERLOAD_R8)
@@ -296,4 +308,3 @@ ADD_CUSTOM_COMMAND(
         COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_SOURCE_DIR}/run_scm.py
                 ${CMAKE_CURRENT_BINARY_DIR}/run_scm.py)
-

@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         fortran-compiler: [gfortran-11]
-        build-type:       [Release, Debug]
+        build-type:       [Release, Debug, SinglePrecision]
         py-version:       [3.9.12]
 
     # Environmental variables
@@ -172,15 +172,29 @@ jobs:
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
 
+    - name: Configure build with CMake (Single Precision)
+      if: matrix.build-type == 'SinglePrecision'
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites},${suites_ps} -D32BIT=1 ../src
+
     - name: Build SCM
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
 
     - name: Run SCM RTs
+      if: matrix.build-type != 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
+
+    - name: Run SCM Single Precision RTs
+      if: matrix.build-type == 'SinglePrecision'
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1
 
     - name: Gather SCM RT output
       run: |
