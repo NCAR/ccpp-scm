@@ -1969,6 +1969,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   if (trim(input_surfaceForcingLSM) == "lsm") then
     scm_input%input_ozone = input_ozone(:,active_init_time)
     scm_input%input_area = input_area(active_init_time)
+    scm_state%area       = input_area(active_init_time)
     
     scm_input%input_stddev   = input_stddev(active_init_time)
     scm_input%input_convexity= input_convexity(active_init_time)
