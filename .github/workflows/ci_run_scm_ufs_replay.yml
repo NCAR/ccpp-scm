@@ -23,7 +23,7 @@ jobs:
     #######################################################################################
 
     - name: Checkout SCM.
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
@@ -32,13 +32,13 @@ jobs:
       run: sudo apt-get update
 
     - name: Cache conda
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/conda_pkgs_dir
         key: conda-pkgs
 
     - name: Setup python.
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: env_ufsreplay
         environment-file: environment-ufsreplay.yml
@@ -51,7 +51,7 @@ jobs:
     #######################################################################################
 
     - name: Cache UWM regression test output.
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${dir_rt_cache}
         key: ufs-rt-files

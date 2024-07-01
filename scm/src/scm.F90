@@ -176,7 +176,8 @@ subroutine scm_main_sub()
   
   cdata%blk_no = 1
   cdata%thrd_no = 1
-  
+  cdata%thrd_cnt = 1
+
   call physics%associate(scm_state)
   call physics%set(scm_input_instance, scm_state)
   
