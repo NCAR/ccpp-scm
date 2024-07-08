@@ -14,7 +14,7 @@ import re
 import fv3_remap
 import xesmf
 from datetime import datetime, timedelta
-#from matplotlib import plot, ylim, xlim, show, xlabel, ylabel, grid
+import matplotlib.pyplot as plt 
 
 ###############################################################################
 # Global settings                                                             #
@@ -1864,8 +1864,10 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
     temp = np.zeros((n_filesA,nlevs,npts,npts))
     qv = np.zeros((n_filesA,nlevs,npts,npts))
     pres = np.zeros((n_filesA,nlevs))
+    presi = np.zeros((n_filesA,nlevs+1))
     pressfc = np.zeros((n_filesA,npts,npts))
     delz = np.zeros((n_filesA,nlevs,npts,npts))
+    #hgtsfc = np.zeros((n_filesA,npts,npts))
     
     # Read in 3D UFS history files
     for count, filename in enumerate(atm_filenames, start=1):
@@ -1888,40 +1890,9 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
                 qv[count-1,:,ii,jj]     = nc_file['spfh'][0,::-1,current_ii_index,current_jj_index]
                 pressfc[count-1,ii,jj]  = nc_file['pressfc'][0,current_ii_index,current_jj_index]
                 delz[count-1,:,ii,jj]   = -1*nc_file['delz'][0,::-1,current_ii_index,current_jj_index] #derive zh
+                #hgtsfc[count-1,ii,jj]   = nc_file['hgtsfc'][0,current_ii_index,current_jj_index]
         pres[count-1,:] = nc_file['pfull'][::-1]*100.0
-                    
-        #This only works for points with longitude far enough away from the prime meridian
-        # lon_data  = nc_file['lon'][neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        # lat_data  = nc_file['lat'][neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        # u_data    = nc_file['ugrd'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        # v_data    = nc_file['vgrd'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        # w_data    = nc_file['dzdt'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        # temp_data = nc_file['tmp'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        # qv_data   = nc_file['spfh'][0,::-1,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        # pres_data = nc_file['pfull'][::-1]*100.0
-        # pressfc_data = nc_file['pressfc'][0,neighbors[0,0,0]:neighbors[0,-1,-1]+1,neighbors[1,0,0]:neighbors[1,-1,-1]+1]
-        
-        # time.append(time_data)
-        # lon.append(lon_data)
-        # lat.append(lat_data)
-        # u_wind.append(u_data)
-        # v_wind.append(v_data)
-        # w_wind.append(w_data)
-        # temp.append(temp_data)
-        # qv.append(qv_data)
-        # pres.append(pres_data)
-        # pressfc.append(pressfc_data)
-        
-    # time = np.asarray(time)
-    # lon  = np.asarray(lon)
-    # lat  = np.asarray(lat)
-    # u_wind = np.asarray(u_wind)
-    # v_wind = np.asarray(v_wind)
-    # w_wind = np.asarray(w_wind)
-    # temp = np.asarray(temp)
-    # qv = np.asarray(qv)
-    # pres = np.asarray(pres)
-    # pressfc = np.asarray(pressfc)
+        presi[count-1,:] = nc_file['phalf'][::-1]*100.0
     
     #check for poor time resolution (e.g. if mean number of grid points traversed by the wind between data intervals is much larger than the number of grid points used for calculating the advective terms)
     # t=0
@@ -1986,19 +1957,7 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
             h_advec_qv[t,k] = -mean_u*dqdx - mean_v*dqdy #kg kg-1 s-1
             h_advec_u[t,k]  = -mean_u*dudx - mean_v*dudy #m s-1 s-1
             h_advec_v[t,k]  = -mean_u*dvdx - mean_v*dvdy #m s-1 s-1        
-        
-        
-                
-        # plot(w_wind[t,:,center,center],pres[t,:],"k.")
-        # #y_av = movingaverage(y, 10)
-        # plot(w_wind_smoothed_ma, pres[t,:],"r")
-        # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-        # xlim(np.min(w_wind[t,:,center,center]),np.max(w_wind[t,:,center,center]))
-        # xlabel("w")
-        # ylabel("p")
-        # grid(True)
-        # show()
-        
+            
         if (vertical_method == 1):
             v_advec_u[t,0] = 0.0
             v_advec_u[t,nlevs-1] = 0.0
@@ -2011,6 +1970,7 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
             for k in range(1, nlevs-1):
                  w_asc = max(smoothed_w[t,k], 0.0)
                  w_des = min(smoothed_w[t,k], 0.0)
+                 #noisy wind profiles necessitate using smoothed profiles; this doesn't appear to be needed for T and qv
                  gradient_T_asc = (temp[t,k,center,center] - temp[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
                  gradient_T_des = (temp[t,k+1,center,center] - temp[t,k,center,center])/(pres[t,k+1]-pres[t,k])
                  #gradient_T_asc = (smoothed_T[t,k,center,center] - smoothed_T[t,k-1,center,center])/(pres[t,k]-pres[t,k-1])
@@ -2039,108 +1999,42 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
         u_g = np.zeros((n_filesA,nlevs))
         v_g = np.zeros((n_filesA,nlevs))
         if (geos_wind_forcing):
-            #first calc height at the pressure levels (ignore variation in gravity for typical model levels; height ~= geopotential height)
-            zh = np.zeros((n_filesA,nlevs,npts,npts))
+            #calc geopotential at interface levels, starting from surface, convert to full pressure levels
+            phii = np.zeros((n_filesA,nlevs+1,npts,npts))
+            phil = np.zeros((n_filesA,nlevs,npts,npts))
             for ii in range(npts):
                 for jj in range(npts):
+                    phii[t,0,ii,jj] = 0.0#hgtsfc[t,ii,jj]*grav #don't need to include orography -- geostrophic winds should assume geopotential over the geoid
+                    for k in range(1,nlevs+1):
+                        phii[t,k,ii,jj] = phii[t,k-1,ii,jj] - rdgas*temp[t,k-1,ii,jj]*(1.0 + zvir*qv[t,k-1,ii,jj])*np.log(presi[t,k]/presi[t,k-1])
                     
-                    zh[t,0,ii,jj] = 0.5*delz[t,0,ii,jj]
-                    for k in range(1,nlevs):
-                        zh[t,k,ii,jj] = zh[t,k-1,ii,jj] + 0.5*delz[t,k-1,ii,jj] + 0.5*delz[t,k,ii,jj]
+                    for k in range(0,nlevs):
+                        phil[t,k,ii,jj] = 0.5*(phii[t,k,ii,jj] + phii[t,k+1,ii,jj])
             
             mean_lat = np.mean(lat[t,:,:])
             coriolis = 2.0*Omega*np.sin(mean_lat*deg_to_rad)
             for k in range(1,nlevs):
-                dZdx = centered_diff_derivative(zh[t,k,center,:],dx[center,:]*1.0E3)
-                dZdy = centered_diff_derivative(zh[t,k,:,center],dy[:,center]*1.0E3)
-                
-                u_g[t,k] = -grav/coriolis*dZdy
-                v_g[t,k] = grav/coriolis*dZdx
-            
-            # plot(u_g[t,:],pres[t,:],"r")
-            # plot(u_wind[t,:,center,center],pres[t,:],"b")
-            # xlabel("m/s")
-            # ylabel("p")
-            # grid(True)
-            # show()
-            # 
-            # plot(v_g[t,:],pres[t,:],"r")
-            # plot(v_wind[t,:,center,center],pres[t,:],"b")
-            # xlabel("m/s")
-            # ylabel("p")
-            # grid(True)
-            # show()
-            
-        
-#        if (False):
-#            plot(h_advec_T[t,:]*86400.0,pres[t,:],"r")
-#            # #y_av = movingaverage(y, 10)
-#            plot(v_advec_T[t,:]*86400.0,pres[t,:],"b")
-#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-#            xlim(86400.0*np.min(h_advec_T[t,:] + v_advec_T[t,:]),86400.0*np.max(h_advec_T[t,:] + v_advec_T[t,:]))
-#            xlabel("K day-1")
-#            ylabel("p")
-#            grid(True)
-#            show()
-#            
-#            plot(h_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"r")
-#            # #y_av = movingaverage(y, 10)
-#            plot(v_advec_qv[t,:]*86400.0*1.0E3,pres[t,:],"b")
-#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-#            xlim(86400.0*1.0E3*np.min(h_advec_qv[t,:] + v_advec_qv[t,:]),86400.0*1.0E3*np.max(h_advec_qv[t,:] + v_advec_qv[t,:]))
-#            xlabel("g kg-1 day-1")
-#            ylabel("p")
-#            grid(True)
-#            show()
-#            
-#            plot(h_advec_u[t,:]*86400.0,pres[t,:],"r")
-#            # #y_av = movingaverage(y, 10)
-#            plot(v_advec_u[t,:]*86400.0,pres[t,:],"b")
-#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-#            xlim(86400.0*np.min(h_advec_u[t,:] + v_advec_u[t,:]),86400.0*np.max(h_advec_u[t,:] + v_advec_u[t,:]))
-#            xlabel("u: m s-1 day-1")
-#            ylabel("p")
-#            grid(True)
-#            show()
-#            
-#            plot(h_advec_v[t,:]*86400.0,pres[t,:],"r")
-#            # #y_av = movingaverage(y, 10)
-#            plot(v_advec_v[t,:]*86400.0,pres[t,:],"b")
-#            # #plot(w_wind_smoothed_sf, pres[t,:],"b")
-#            xlim(86400.0*np.min(h_advec_v[t,:] + v_advec_v[t,:]),86400.0*np.max(h_advec_v[t,:] + v_advec_v[t,:]))
-#            xlabel("v: m s-1 day-1")
-#            ylabel("p")
-#            grid(True)
-#            show()
-        
-        
-        # grad_t   = np.gradient(temp[t,:,:,:]) #grad_t output is list of components (z, y, x); each axis array has dimensions of (levs,2*n_forcing_halo_points+1,2*n_forcing_halo_points+1); we're interested in middle point for each level
-        # grad_qv  = np.gradient(qv[t,:,:,:])
-        # grad_u   = np.gradient(u_wind[t,:,:,:])
-        # grad_v   = np.gradient(v_wind[t,:,:,:])
-        #grad_t_x = np.gradient(temp[t,0,:,:], axis=1)
-        #grad_t_y = np.gradient(temp[t,0,:,:], axis=0)
-        #print(temp[t,0,:,:])
-        #print(grad_t[0][0]) #dT in z direction at level 0
-        #print(grad_t[1][0]) #dT in y direction at level 0
-        #print(grad_t[2][0]) #dT in x direction at level 0
-        #exit()
-        #print('dx tot',grad_t[1])
-        #print('dy tot',grad_t[0])
-        
-        #print('dx',grad_t_x)
-        #print('dy',grad_t_y)
-    
-        #exit()    
+                dphidx = centered_diff_derivative(phil[t,k,center,:],dx[center,:]*1.0E3)
+                dphidy = centered_diff_derivative(phil[t,k,:,center],dy[:,center]*1.0E3)
+                                
+                u_g[t,k] = -dphidy/coriolis
+                v_g[t,k] = dphidx/coriolis
     
     if (save_comp_data):
         # Read in 2D UFS history files
-        vars2d  =[{"name":"spfh2m"},     {"name":"tmp2m"},    \
-                  {"name":"dswrf_ave"},  {"name":"ulwrf_ave"},\
-                  {"name":"lhtfl_ave"},  {"name":"shtfl_ave"},\
-                  {"name":"dswrf"},      {"name":"ulwrf"},\
-                  {"name":"lhtfl"},      {"name":"shtfl"},\
-                  {"name":"pwat"},       {"name":"vgrd10m"},\
+        phystends = [{"name":"dtend_temp_lw"},     {"name":"dtend_temp_sw"},  {"name":"dtend_temp_pbl"},   {"name":"dtend_temp_deepcnv"},\
+                     {"name":"dtend_temp_shalcnv"},{"name":"dtend_temp_mp"},  {"name":"dtend_temp_orogwd"},{"name":"dtend_temp_phys"},   \
+                     {"name":"dtend_u_pbl"},       {"name":"dtend_v_pbl"},    {"name":"dtend_u_orogwd"},   {"name":"dtend_v_orogwd"},    \
+                     {"name":"dtend_u_deepcnv"},   {"name":"dtend_v_deepcnv"},{"name":"dtend_u_shalcnv"},  {"name":"dtend_v_shalcnv"},   \
+                     {"name":"dtend_u_phys"},      {"name":"dtend_v_phys"},   {"name":"dtend_qv_pbl"},     {"name":"dtend_qv_deepcnv"},  \
+                     {"name":"dtend_qv_shalcnv"},  {"name":"dtend_qv_mp"},    {"name":"dtend_qv_phys"},    {"name":"dtend_poop"}]
+        for phystend in phystends: phystend["values"] = []
+
+        # Variables to be added to "UFS comparison file"
+        vars2d  =[{"name":"spfh2m"},    {"name":"tmp2m"},     {"name":"dswrf_ave"}, \
+                  {"name":"ulwrf_ave"}, {"name":"lhtfl_ave"}, {"name":"shtfl_ave"}, \
+                  {"name":"dswrf"},     {"name":"ulwrf"},     {"name":"lhtfl"},     \
+                  {"name":"shtfl"},     {"name":"pwat"},      {"name":"vgrd10m"},   \
                   {"name":"ugrd10m"}]
         for var2d in vars2d: var2d["values"] = []
         
@@ -2164,21 +2058,36 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
             logging.critical(message)
             raise Exception(message)
         
+        center_ii_index = neighbors[0,center,center]
+        center_jj_index = neighbors[1,center,center]
         for count, filename in enumerate(sfc_filenames, start=1):
             nc_file = Dataset('{0}/{1}'.format(dir,filename))
             nc_file.set_always_mask(False)
             
             for var2d in vars2d:
-                data = nc_file[var2d["name"]][0,:,:]
-                var2d["values"].append(data[i,j])
+                data = nc_file[var2d["name"]][0,center_ii_index,center_jj_index]
+                var2d["values"].append(data)
                 var2d["units"]     = nc_file[var2d["name"]].getncattr(name="units")
                 var2d["long_name"] = nc_file[var2d["name"]].getncattr(name="long_name")
+            
+            for phystend in phystends:
+                if phystend["name"] in nc_file.variables.keys():
+                    data = nc_file[phystend["name"]][0,::-1,center_ii_index,center_jj_index]
+                    phystend["values"].append(data[:])
+                    phystend["units"]     = nc_file[phystend["name"]].getncattr(name="units")
+                    phystend["long_name"] = nc_file[phystend["name"]].getncattr(name="long_name")
+                    phystend["missing"] = False
+                else:
+                    phystend["missing"] = True
 
             nc_file.close()
         
         # Convert to numpy arrays
         for var2d in vars2d:
             var2d["values"] = np.asarray(var2d["values"])
+        for phystend in phystends:
+            if (not phystend["missing"]):
+                phystend["values"] = np.asarray(phystend["values"])
     sec_in_hr = 3600.
     time[0]   = 0.
     forcing = {
@@ -2204,7 +2113,10 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
             "qv"  : qv    [:,:,center,center],
             "ua"  : u_wind[:,:,center,center],
             "va"  : v_wind[:,:,center,center],
-            "vars2d":vars2d}
+            "vars2d":vars2d,
+            "phystends":phystends}
+    else:
+        comp_data = {}
     
     
     return (forcing, comp_data)
@@ -3446,7 +3358,7 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
     return(fileOUT)
 
 ########################################################################################
-def write_comparison_file(comp_data, case_name, date, surface, forcing_method):
+def write_comparison_file(comp_data, case_name, date, surface):
     """Write UFS history file data to netCDF file for comparison"""
 
     wp = np.float64
@@ -3521,13 +3433,12 @@ def write_comparison_file(comp_data, case_name, date, surface, forcing_method):
         tempVar.long_name = var2d["long_name"]
         tempVar[:]        = var2d["values"]
 
-    if (forcing_method == 1 or forcing_method == 3):
-        for phystend in comp_data["phystends"]:
-            if (not phystend["missing"]):
-                tempVar           = nc_file.createVariable(phystend["name"], wp, ('time', 'lev',))
-                tempVar.units     = phystend["units"]
-                tempVar.long_name = phystend["long_name"]
-                tempVar[:]        = phystend["values"]
+    for phystend in comp_data["phystends"]:
+        if (not phystend["missing"]):
+            tempVar           = nc_file.createVariable(phystend["name"], wp, ('time', 'lev',))
+            tempVar.units     = phystend["units"]
+            tempVar.long_name = phystend["long_name"]
+            tempVar[:]        = phystend["values"]
             # end if
         # end for
     # end if
@@ -3612,7 +3523,7 @@ def main():
     # different file reads)
     
     if (error_msg):
-        print("ERROR: unknown grid orintation")
+        print("ERROR: unknown grid orientation")
         exit()
 
     if not date:
@@ -3655,7 +3566,7 @@ def main():
     # write them out to compare SCM output to (atmf for state variables and sfcf for physics 
     # tendencies)
     if (save_comp):
-        write_comparison_file(comp_data, case_name, date, surface_data, forcing_method)
+        write_comparison_file(comp_data, case_name, date, surface_data)
     
 if __name__ == '__main__':
     main()
