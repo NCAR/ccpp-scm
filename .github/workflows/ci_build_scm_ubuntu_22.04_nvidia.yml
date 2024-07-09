@@ -8,6 +8,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
         fortran-compiler: [nvfortran]
         build-type:       [Release]#, Debug]
@@ -21,8 +22,8 @@ jobs:
       sp_ROOT:     /home/runner/NCEPLIBS-sp
       w3emc_ROOT:  /home/runner/myw3emc
       SCM_ROOT:    /home/runner/work/ccpp-scm/ccpp-scm
-      zlib_ROOT:   /home/runner/zlib
       HDF5_ROOT:   /home/runner/hdf5
+      MPI_ROOT:    /home/runner/openmpi
       suites:      SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
       suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
 
@@ -118,70 +119,108 @@ jobs:
     # Install FORTRAN dependencies
     #######################################################################################
 
-    - name: Install zlib
-      env:
-        CFLAGS: -fPIC
+    - name: Install Curl and zlib
       run: |
-        wget https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz
-        tar -zxvf zlib-1.2.13.tar.gz
-        cd zlib-1.2.13
-        ./configure --prefix=${zlib_ROOT}
-        make
-        make install
-        echo "LD_LIBRARY_PATH=$zlib_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-
-    - name: Install HDF5
-      env:
-        CPPFLAGS: -I${zlib_ROOT}/include
-        LDFLAGS: -L${zlib_ROOT}/lib
-      run: |
-        wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_14_1-2.tar.gz
-        tar -zxvf hdf5-1_14_1-2.tar.gz
-        cd hdf5-hdf5-1_14_1-2
-        ./configure --prefix=${HDF5_ROOT} --with-zlib=${zlib_ROOT}
-        make -j4
-        make install
-        echo "LD_LIBRARY_PATH=$HDF5_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "PATH=$HDF5_ROOT/lib:$PATH" >> $GITHUB_ENV
-
-    - name: Install Curl
-      run: |
+        sudo apt-get update
         sudo apt-get install curl
         sudo apt-get install libssl-dev libcurl4-openssl-dev
+        sudo apt-get install zlib1g-dev
 
-    - name: Cache NetCDF C library
-      id: cache-netcdf-c
+    - name: Cache HDF5
+      id: cache-hdf5
       uses: actions/cache@v4
       with:
-        path: /home/runner/netcdf-c
-        key: cache-netcdf-c-${{matrix.fortran-compiler}}-key
+        path: /home/runner/hdf5
+        KEY: cache-hdf5-${{matrix.fortran-compiler}}-key
+
+    - name: Install HDF5
+      if: steps.cache-hdf5.outputs.cache-hit != 'true'
+      run: |
+        wget -q https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_14_1-2.tar.gz
+        tar zxf hdf5-1_14_1-2.tar.gz
+        cd hdf5-hdf5-1_14_1-2
+        ./configure --prefix=${HDF5_ROOT}
+        make -j
+        make install
+
+    - name: Setup HDF5 Paths
+      run: |
+        echo "LD_LIBRARY_PATH=$HDF5_ROOT/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=$HDF5_ROOT/bin:$PATH" >> $GITHUB_ENV
+
+    - name: Cache OpenMPI
+      id: cache-openmpi
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/openmpi
+        KEY: cache-openmpi-${{matrix.fortran-compiler}}-key
+
+    - name: Configure OpenMPI
+      if: steps.cache-openmpi.outputs.cache-hit != 'true'
+      run: |
+        cd ${HOME}
+        wget -q https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.gz
+        tar zxf openmpi-4.1.6.tar.gz
+        cd openmpi-4.1.6
+        CFLAGS=-fPIC CXXFLAGS=-fPIC FCFLAGS=-fPIC ./configure --prefix=${MPI_ROOT}
+
+    - name: Build OpenMPI
+      if: steps.cache-openmpi.outputs.cache-hit != 'true'
+      run: |
+        cd ${HOME}/openmpi-4.1.6
+        make -j
+
+    - name: Install OpenMPI
+      if: steps.cache-openmpi.outputs.cache-hit != 'true'
+      run: |
+        cd ${HOME}/openmpi-4.1.6
+        sudo make install -j
+
+    - name: Setup OpenMPI Paths
+      run: |
+        echo "PATH=${MPI_ROOT}/bin:$PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=${MPI_ROOT}/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+    - name: Check MPI Version
+      run: |
+        mpif90 --version
+
+    - name: Set environment for Nvidia compiler with MPI
+      run: |
+        echo "CC=$(which mpicc)" >> $GITHUB_ENV
+        echo "FC=$(which mpif90)" >> $GITHUB_ENV
+        echo "CMAKE_C_COMPILER=$(which mpicc)" >> $GITHUB_ENV
+        echo "CMAKE_Fortran_COMPILER=$(which mpif90)" >> $GITHUB_ENV
+
+    - name: Cache NetCDF library
+      id: cache-netcdf
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/netcdf
+        key: cache-netcdf-${{matrix.fortran-compiler}}-key
+
+    - name: Setup NetCDF Paths
+      run: |
+        echo "LD_LIBRARY_PATH=$NETCDF/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=$NETCDF/bin:$PATH" >> $GITHUB_ENV
 
     - name: Install NetCDF C library
-      if: steps.cache-netcdf-c.outputs.cache-hit != 'true'
+      if: steps.cache-netcdf.outputs.cache-hit != 'true'
       run: |
-        wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
-        tar -zvxf v4.7.4.tar.gz
+        wget -q https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
+        tar zxf v4.7.4.tar.gz
         cd netcdf-c-4.7.4
-        CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib" ./configure --prefix=${NETCDF}
+        CPPFLAGS="-I/home/runner/hdf5/include" LDFLAGS="-L/home/runner/hdf5/lib" ./configure --prefix=${NETCDF}
         make
         make install
-        echo "LD_LIBRARY_PATH=$NETCDF/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "PATH=$NETCDF/lib:$PATH" >> $GITHUB_ENV
-
-    - name: Cache NetCDF Fortran library
-      id: cache-netcdf-fortran
-      uses: actions/cache@v4
-      with:
-        path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
 
     - name: Install NetCDF Fortran library
-      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
+      if: steps.cache-netcdf.outputs.cache-hit != 'true'
       run: |
-        wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
-        tar -zvxf v4.6.1.tar.gz
+        wget -q https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz
+        tar zxf v4.6.1.tar.gz
         cd netcdf-fortran-4.6.1
-        FCFLAGS="-fPIC" FFLAGS="-fPIC" CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/zlib/include -I/home/runner/netcdf/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/zlib/lib -L/home/runner/netcdf/lib" ./configure --prefix=${NETCDF}
+        FCFLAGS="-fPIC" FFLAGS="-fPIC" CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/netcdf/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/netcdf/lib" ./configure --prefix=${NETCDF}
         make
         make install
 
@@ -198,7 +237,7 @@ jobs:
         git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
         cd bacio && mkdir build && cd build
         cmake -DCMAKE_INSTALL_PREFIX=${bacio_ROOT} ../
-        make -j2
+        make -j
         make install
         echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
 
@@ -215,7 +254,7 @@ jobs:
         git clone --branch v2.3.3 https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp
         cd NCEPLIBS-sp && mkdir build && cd build
         cmake -DCMAKE_INSTALL_PREFIX=${sp_ROOT} ../
-        make -j2
+        make -j
         make install
         echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
 
@@ -232,7 +271,7 @@ jobs:
         git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
         cd NCEPLIBS-w3emc && mkdir build && cd build
         cmake -DCMAKE_INSTALL_PREFIX=${w3emc_ROOT} ../
-        make -j2
+        make -j
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
@@ -249,7 +288,7 @@ jobs:
     - name: Build SCM.
       run: |
         cd ${SCM_ROOT}/scm/bin
-        make -j4
+        make -j
 
     - name: Download data for SCM
       run: |
