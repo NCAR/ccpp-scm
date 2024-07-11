@@ -1915,6 +1915,10 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
     v_advec_v   = np.zeros((n_filesA,nlevs))
     v_advec_T   = np.zeros((n_filesA,nlevs))
     v_advec_qv  = np.zeros((n_filesA,nlevs))
+    u_g         = np.zeros((n_filesA,nlevs))
+    v_g         = np.zeros((n_filesA,nlevs))
+    phii        = np.zeros((n_filesA,nlevs+1,npts,npts))
+    phil        = np.zeros((n_filesA,nlevs,npts,npts))
     for t in range(n_filesA):
         #velocities gets very noisy in the UFS above the tropopause; define a linear return-to-zero profile above some pressure
         k_p_top = np.where(pres[t,:] <= top_pres_for_forcing)[0][0]
@@ -1995,13 +1999,8 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
                  v_advec_T[t,k] = rho*grav*(w_asc*gradient_T_asc + w_des*gradient_T_des) + adiabatic_exp_comp_term
                  v_advec_qv[t,k] = rho*grav*(w_asc*gradient_qv_asc + w_des*gradient_qv_des)
          
-        
-        u_g = np.zeros((n_filesA,nlevs))
-        v_g = np.zeros((n_filesA,nlevs))
         if (geos_wind_forcing):
             #calc geopotential at interface levels, starting from surface, convert to full pressure levels
-            phii = np.zeros((n_filesA,nlevs+1,npts,npts))
-            phil = np.zeros((n_filesA,nlevs,npts,npts))
             for ii in range(npts):
                 for jj in range(npts):
                     phii[t,0,ii,jj] = 0.0#hgtsfc[t,ii,jj]*grav #don't need to include orography -- geostrophic winds should assume geopotential over the geoid
