@@ -101,7 +101,7 @@ subroutine output_init(scm_state, physics)
   call NetCDF_def_var(ncid, 'time_rad', NF90_FLOAT, "model elapsed time for either LW or SW radiation variables", "s", time_rad_var_id, (/ time_rad_id /))
 
   !> - Define the state variables
-  CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
+  CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id, scm_state)
   !> - Define the forcing variables
   CALL output_init_forcing(ncid, time_inst_id, hor_dim_id, vert_dim_id)
   
@@ -165,10 +165,12 @@ subroutine output_init(scm_state, physics)
   !> @}
 end subroutine output_init
 
-subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
+subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id, scm_state)
+  use scm_type_defs, only: scm_state_type
   use NetCDF_def, only : NetCDF_def_var
   
   integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id
+  type(scm_state_type), intent(in) :: scm_state
   
   integer :: dummy_id
   
@@ -187,7 +189,9 @@ subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_d
   call NetCDF_def_var(ncid, 'ql', NF90_FLOAT, "suspended resolved liquid cloud water on model layer centers",        "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
   call NetCDF_def_var(ncid, 'qi', NF90_FLOAT, "suspended resolved ice cloud water on model layer centers",           "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
   call NetCDF_def_var(ncid, 'qc', NF90_FLOAT, "suspended (resolved + SGS) total cloud water on model layer centers", "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
-  call NetCDF_def_var(ncid, 'sigmab', NF90_FLOAT, "updraft area fraction on model layer centers",                    "frac",     dummy_id, (/ hor_dim_id,                 time_inst_id /))
+  if (scm_state%sigmab_index > 0) then
+    call NetCDF_def_var(ncid, 'sigmab', NF90_FLOAT, "updraft area fraction at lowest model layer",                    "frac",     dummy_id, (/ hor_dim_id,                 time_inst_id /))
+  end if
   
 end subroutine output_init_state
 
@@ -498,7 +502,9 @@ subroutine output_append_state(ncid, scm_state, physics)
   call NetCDF_put_var(ncid, "v",       scm_state%state_v(:,:,1), scm_state%itt_out)
   call NetCDF_put_var(ncid, "ql",      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1), scm_state%itt_out)
   call NetCDF_put_var(ncid, "qi",      scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1), scm_state%itt_out)
-  call NetCDF_put_var(ncid, "sigmab",  scm_state%state_tracer(:,1,scm_state%sigmab_index,1), scm_state%itt_out)
+  if (scm_state%sigmab_index > 0) then
+    call NetCDF_put_var(ncid, "sigmab",  scm_state%state_tracer(:,1,scm_state%sigmab_index,1), scm_state%itt_out)
+  endif
   if (physics%model%do_mynnedmf) then
     call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
                                        scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1)   + &
