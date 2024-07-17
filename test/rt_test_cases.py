@@ -6,27 +6,27 @@ run_list = [\
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_HR3_RRTMGP"},                                                                         \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16"},                                                                                    \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_WoFS_v0"},                                                                                    \
-            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RRFS_v1"},                                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "twpice",                "suite": "SCM_GFS_v17_HR3"},                                                                                \
             {"case": "twpice",                "suite": "SCM_GFS_v17_HR3_RRTMGP"},                                                                         \
             {"case": "twpice",                "suite": "SCM_GFS_v16"},                                                                                    \
             {"case": "twpice",                "suite": "SCM_WoFS_v0"},                                                                                    \
-            {"case": "twpice",                "suite": "SCM_RRFS_v1"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "bomex",                 "suite": "SCM_GFS_v17_HR3"},                                                                                \
             {"case": "bomex",                 "suite": "SCM_GFS_v17_HR3_RRTMGP"},                                                                         \
             {"case": "bomex",                 "suite": "SCM_GFS_v16"},                                                                                    \
             {"case": "bomex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
-            {"case": "bomex",                 "suite": "SCM_RRFS_v1"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "astex",                 "suite": "SCM_GFS_v17_HR3"},                                                                                \
             {"case": "astex",                 "suite": "SCM_GFS_v17_HR3_RRTMGP"},                                                                         \
             {"case": "astex",                 "suite": "SCM_GFS_v16"},                                                                                    \
             {"case": "astex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
-            {"case": "astex",                 "suite": "SCM_RRFS_v1"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_HR3"},                                                                                \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_HR3_RRTMGP"},                                                                         \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_WoFS_v0"},                                                                                    \
-            {"case": "LASSO_2016051812",      "suite": "SCM_RRFS_v1"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_HRRR_gf"},                                                                                    \
             #----------------------------------------------------------------------------------------------------------------------------------------------
             # Unsupported suites (w/ supported cases)
             #----------------------------------------------------------------------------------------------------------------------------------------------
