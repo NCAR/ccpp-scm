@@ -258,7 +258,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     com = 'mkdir -p ' + PROCESSED_CASE_DIR
     logging.info(com)
     os.system(com)
-    fileOUT = os.path.join(PROCESSED_CASE_DIR, case_nml['case_config']['case_name'] + '_SCM_driver.nc')
+    fileOUT = os.path.join(PROCESSED_CASE_DIR, case_nml['case_config']['case_name'] + '_dephy' + '_SCM_driver.nc')
     
     nc_file = Dataset(fileOUT, 'w', format='NETCDF3_CLASSIC')
     nc_file.description = "Case data for {} from CCPP SCM".format(case_nml['case_config']['case_name'])
@@ -469,14 +469,6 @@ def write_SCM_case_file(case_nml, case_data, use_area):
             #logging.critical(message)
             #raise Exception(message)
     
-    if (case_nml['case_config']['sfc_flux_spec']):
-        nc_file.surface_forcing_temp = 'kinematic'
-        nc_file.surface_forcing_moisture = 'kinematic'
-        nc_file.surface_forcing_wind = 'z0'
-    else:
-        nc_file.surface_forcing_temp = 'ts'
-        nc_file.surface_forcing_wind = 'z0'
-    
     time_dim   = nc_file.createDimension('time', case_data._time.shape[0])
     timei_dim  = nc_file.createDimension('t0',    1)
     lev_dim    = nc_file.createDimension('lev',  case_data._levels.shape[0])
@@ -577,6 +569,21 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     ozone_var.standard_name      = 'mole_fraction_of_ozone_in_air'
     ozone_var[:]                 = case_data._ozone[:]
     
+    ps_forc_var                  = nc_file.createVariable('ps_forc', wp, ('time'))
+    ps_forc_var.units            = 'Pa'
+    ps_forc_var.standard_name    = 'forcing_surface_air_pressure'
+    ps_forc_var[:]               = case_data._p_surf[:]
+    
+    pa_forc_var                  = nc_file.createVariable('pa_forc', wp, ('time','lev'))
+    pa_forc_var.units            = 'Pa'
+    pa_forc_var.standard_name    = 'air_pressure_forcing'
+    pa_forc_var[:]               = case_data._levels[:]
+    
+    zh_forc_var                  = nc_file.createVariable('zh_forc', wp, ('time','lev'))
+    zh_forc_var.units            = 'm'
+    zh_forc_var.standard_name    = 'height_forcing'
+    zh_forc_var[:]               = case_data._height[:]
+    
     if (nc_file.adv_ta == forcing_on):
         message = 'adv_ta is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
         logging.critical()
@@ -674,29 +681,72 @@ def write_SCM_case_file(case_nml, case_data, use_area):
         vg_var.standard_name      = 'geostrophic_northward_wind'
         vg_var[:]                 = np.swapaxes(case_data._v_g[:],0,1)
         
-    if (nc_file.nudging_ua == forcing_on):
+    if (nc_file.nudging_ua != forcing_off):
         ua_nud_var                    = nc_file.createVariable('ua_nud', wp, ('time','lev'))
         ua_nud_var.units              = 'm s-1'
         ua_nud_var.standard_name      = 'nudging_eastward_wind'
         ua_nud_var[:]                 = np.swapaxes(case_data._u_nudge[:],0,1)
     
-    if (nc_file.nudging_va == forcing_on):
+    if (nc_file.nudging_va != forcing_off):
         va_nud_var                    = nc_file.createVariable('va_nud', wp, ('time','lev'))
         va_nud_var.units              = 'm s-1'
         va_nud_var.standard_name      = 'nudging_northward_wind'
         va_nud_var[:]                 = np.swapaxes(case_data._v_nudge[:],0,1)
     
-    if (nc_file.nudging_ta == forcing_on):
+    if (nc_file.nudging_ta != forcing_off):
         ta_nud_var                    = nc_file.createVariable('ta_nud', wp, ('time','lev'))
         ta_nud_var.units              = 'K'
         ta_nud_var.standard_name      = 'nudging_air_temperature'
         ta_nud_var[:]                 = np.swapaxes(case_data._T_nudge[:],0,1)
     
-    if (nc_file.nudging_qt == forcing_on):
+    if (nc_file.nudging_qt != forcing_off):
         qt_nud_var                    = nc_file.createVariable('qt_nud', wp, ('time','lev'))
         qt_nud_var.units              = 'kg kg-1'
         qt_nud_var.standard_name      = 'nudging_mass_fraction_of_water_in_air'
         qt_nud_var[:]                 = np.swapaxes(case_data._qt_nudge[:],0,1)
+    
+    if (case_nml['case_config']['sfc_flux_spec']):
+        nc_file.surface_forcing_temp = 'kinematic'
+        nc_file.surface_forcing_moisture = 'kinematic'
+        nc_file.surface_forcing_wind = 'z0'
+        
+        wpthetap_s_var                  = nc_file.createVariable('wpthetap_s', wp, ('time'))
+        wpthetap_s_var.units            = 'K m s-1'
+        wpthetap_s_var.standard_name    = 'surface_upward_potential_temperature_flux'
+        wpthetap_s_var[:]               = case_data._sh_flux_sfc[:]
+        
+        wpqtp_s_var                  = nc_file.createVariable('wpqvp_s', wp, ('time'))
+        wpqtp_s_var.units            = 'kg kg-1 m s-1'
+        wpqtp_s_var.standard_name    = 'surface_upward_specific_humidity_flux'
+        wpqtp_s_var[:]               = case_data._lh_flux_sfc[:]
+        
+        z0_var                  = nc_file.createVariable('z0', wp, ('time'))
+        z0_var.units            = 'm'
+        z0_var.standard_name    = 'surface_roughness_length_for_momentum_in_air'
+        z0_var[:]               = case_nml['case_config']['sfc_roughness_length_cm']*1.0E-2
+        
+        
+        ts_var                  = nc_file.createVariable('ts_forc', wp, ('time'))
+        ts_var.units            = 'K'
+        ts_var.standard_name    = 'forcing_surface_temperature'
+        if np.any(case_data._T_surf[:]):
+            ts_var[:]               = case_data._T_surf[:]
+        else:
+            ts_var[:]               = case_data._missing_value
+        
+    else:
+        nc_file.surface_forcing_temp = 'ts'
+        nc_file.surface_forcing_wind = 'z0'
+        
+        z0_var                  = nc_file.createVariable('z0', wp, ('time'))
+        z0_var.units            = 'm'
+        z0_var.standard_name    = 'surface_roughness_length_for_momentum_in_air'
+        z0_var[:]               = case_nml['case_config']['sfc_roughness_length_cm']*1.0E-2
+        
+        ts_var                  = nc_file.createVariable('ts_forc', wp, ('time'))
+        ts_var.units            = 'K'
+        ts_var.standard_name    = 'forcing_surface_temperature'
+        ts_var[:]               = case_data._T_surf[:]
     
     nc_file.close()
     
@@ -760,7 +810,7 @@ def write_SCM_nml_file(case_nml):
     nml = f90nml.namelist.Namelist(nml_dict)
     
     #print(nml)
-    nml.write(filename)
+    nml.write(filename, force=True)
     
     return(filename)
 

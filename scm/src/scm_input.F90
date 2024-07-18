@@ -2399,7 +2399,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_T_nudge = 1
+      scm_input%input_k_T_nudge(:) = 1
     end if
   else if (nudging_theta > 0) then
     !assume no cloud water since there is no associate [ql,qi]_nudge in the input?
@@ -2425,7 +2425,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_thil_nudge = 1
+      scm_input%input_k_thil_nudge(:) = 1
     end if
   else if (nudging_thetal > 0) then
     !assume no cloud water since there is no associate [ql,qi]_nudge in the input?
@@ -2451,7 +2451,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_thil_nudge = 1
+      scm_input%input_k_thil_nudge(:) = 1
     end if
   end if
   
@@ -2478,7 +2478,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_qt_nudge = 1
+      scm_input%input_k_qt_nudge(:) = 1
     end if
   else if (nudging_qt > 0) then
     do i=1, input_n_forcing_times
@@ -2503,7 +2503,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_qt_nudge = 1
+      scm_input%input_k_qt_nudge(:) = 1
     end if
   else if (nudging_rv > 0) then
     do i=1, input_n_forcing_times
@@ -2531,7 +2531,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_qt_nudge = 1
+      scm_input%input_k_qt_nudge(:) = 1
     end if
   else if (nudging_rt > 0) then
     do i=1, input_n_forcing_times
@@ -2559,7 +2559,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_qt_nudge = 1
+      scm_input%input_k_qt_nudge(:) = 1
     end if
   end if
   
@@ -2586,7 +2586,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_u_nudge = 1
+      scm_input%input_k_u_nudge(:) = 1
     end if
   end if
   
@@ -2613,7 +2613,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if
       end do
     else
-      scm_input%input_k_v_nudge = 1
+      scm_input%input_k_v_nudge(:) = 1
     end if
   end if
   
