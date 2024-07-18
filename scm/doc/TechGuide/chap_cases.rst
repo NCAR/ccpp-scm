@@ -128,35 +128,15 @@ arguments) are:
 
 .. _`case input`:
 
-Case input data file (CCPP-SCM format)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The initialization and forcing data for each case is stored in a NetCDF
-(version 4) file within the ``ccpp-scm/scm/data/processed_case_input`` directory. Each file has at least two
-dimensions (``time`` and ``levels``, potentially with additions for vertical snow and soil
-levels) and is organized into 3 groups: scalars, initial, and forcing.
-Not all fields are required for all cases. For example the fields ``sh_flux_sfc`` and ``lh_flux_sfc``
-are only needed if the variable ``sfc_flx_spec = .true.`` in the case configuration file
-and state nudging variables are only required if ``thermo_forcing_type = 3`` or ``mom_forcing_type = 3``
-. Using an active LSM (Noah, NoahMP, RUC) requires many more variables
-than are listed here. Example files for using with Noah and NoahMP LSMs
-are included in ``ccpp-scm/scm/data/processed_case_input/fv3_model_point_noah[mp].nc``.
-
-.. _`case input arm`:
-.. literalinclude:: arm_case_header.txt
-    :name: lst_case_input_netcdf_header_arm
-    :caption: example NetCDF file (CCPP-SCM format) header for case initialization and forcing data
- 
 Case input data file (DEPHY format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Development and Evaluation of Physics in atmospheric models (DEPHY)
 format is an internationally-adopted data format intended for use by SCM
-and LESs. The initialization and forcing data for each case is stored in
-a NetCDF (version 4) file, although these files are not by default
-included in the CCPP SCM repository. To access these cases you need to
-clone the DEPHY-SCM repository, and provide the DEPHY-SCM file location
-to the SCM. For example:
+and LESs. The initialization and forcing data for each case in the CCPP SCM
+repository is stored in a NetCDF (version 4) file. Additional cases in DEPHY
+format, not maintained by the DTC, can be cloned from the DEPHY-SCM repository,
+and run by providing the DEPHY-SCM file location to the SCM. For example:
 
 .. code:: bash
 
@@ -166,11 +146,14 @@ to the SCM. For example:
    ./run_scm.py -c MAGIC_LEG04A --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/MAGIC/LEG04A -v
 
 Each DEPHY file has three dimensions (``time``, ``t0``, ``levels``) and contains the initial
-conditions (``t0``, ``levels``) and forcing data (``time``, ``levels``). Just as when using the CCPP-SCM
-formatted inputs, :numref:`Subsection %s <case input>`, not all fields
-are required for all cases. More information on the DEPHY format
-requirements can be found at
-`DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__.
+conditions (``t0``, ``levels``) and forcing data (``time``, ``levels``). Not all fields
+are required for all cases. For example, the fields ``hfss`` and ``hfls`` are only needed if the
+global attributes ``surface_forcing_temp`` or ``surface_forcing_moisture`` are set to ``surface_flux``
+and state nudging variables are only required if the ``nudging_*`` terms in the global attributes
+are turned on. Using an active LSM (Noah, NoahMP, RUC) requires many more variables than are listed
+here. Example files for using with Noah and NoahMP LSMs are included in
+ccpp-scm/scm/data/processed_case_input/fv3_model_point_noah[mp].nc. More information on the DEPHY
+format requirements can be found at `DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__.
 
 .. _`case input dephy`:
 .. literalinclude:: dephy_case_header.txt
@@ -214,7 +197,7 @@ included for using UFS Atmosphere initial conditions:
 -  UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on
    Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (``fv3_model_point_noahmp.nc``)
 
-See :numref:`Section %s <UFSreplay>` for information on how to generate these
+See :numref:`Section %s <UFScasegen>` for information on how to generate these
 files for other locations and dates, given appropriate UFS Atmosphere
 initial conditions and output.
 
@@ -228,9 +211,8 @@ original format to the format that the SCM expects, listed above. An
 example of this type of script written in Python is included in ``ccpp-scm/scm/etc/scripts/twpice_forcing_file_generator.py``. The
 script reads in the data as supplied from its source, converts any
 necessary variables, and writes a NetCDF (version 4) file in the format
-described in subsections :numref:`Subsection %s <case input>` and
-:numref:`Subsection %s <case input dephy>`. For reference, the following
-formulas are used:
+described in subsection :numref:`Subsection %s <case input dephy>`.
+For reference, the following formulas are used:
 
 .. math:: \theta_{il} = \theta - \frac{\theta}{T}\left(\frac{L_v}{c_p}q_l + \frac{L_s}{c_p}q_i\right)
 
@@ -262,7 +244,7 @@ specified for the new case, one must also include a time series of the
 kinematic surface sensible heat flux (K m s\ :math:`^{-1}`) and
 kinematic surface latent heat flux (kg kg\ :math:`^{-1}` m
 s\ :math:`^{-1}`). The following variables are expected as 2-dimensional
-arrays (vertical levels first, time second): the geostrophic u (E-W) and
+arrays (time first, vertical levels second): the geostrophic u (E-W) and
 v (N-S) winds (m s\ :math:`^{-1}`), and the horizontal and vertical
 advective tendencies of :math:`\theta_{il}` (K s\ :math:`^{-1}`) and
 :math:`q_t` (kg kg\ :math:`^{-1}` s\ :math:`^{-1}`), the large scale
@@ -378,12 +360,12 @@ following steps:
    one) in ``ccpp-scm/scm/etc/case_config``. Be sure that the ``case_name`` variable points to the newly
    created/processed case input file from above.
 
-.. _`UFSreplay`:
+.. _`UFScasegen`:
 
-Using UFS Output to Create SCM Cases: UFS-Replay
-------------------------------------------------
+Using UFS Output to Create SCM Cases: UFS Case Generation
+---------------------------------------------------------
 
-.. _`pydepend_replay`:
+.. _`pydepend_casegen`:
 
 Python Dependencies
 ~~~~~~~~~~~~~~~~~~~
@@ -407,12 +389,12 @@ Activate environment:
 
   > conda activate env_ufsreplay
 
-.. _`ufsicgenerator`:
+.. _`ufscasegen`:
 
-UFS_IC_generator.py
-~~~~~~~~~~~~~~~~~~~
+UFS_case_gen.py
+~~~~~~~~~~~~~~~
 
-A script exists in ``scm/etc/scripts/UFS_IC_generator.py`` to read in UFS history (output) files and their
+A script exists in ``scm/etc/scripts/UFS_case_gen.py`` to read in UFS history (output) files and their
 initial conditions to generate a SCM case input data file, in DEPHY
 format.
 
@@ -421,7 +403,7 @@ format.
    ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
    DATE -i IN_DIR -g GRID_DIR -f FORCING_DIR -n
    CASE_NAME [-t {1,2,3,4,5,6,7}] [-a AREA] [-oc]
-   [-lam] [-sc] [-near]
+   [-lam] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
 
 Mandatory arguments:
 
@@ -462,20 +444,31 @@ Optional arguments:
 
 #. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint
 
+#. ``--forcing_method (-fm)``: method used to calculate forcing (1=total tendencies from UFS dycore,
+   2=advective terms calculated from UFS history files, 3=total time tendency terms calculated), default=2
+
+#. ``--vertical_method (-vm)``: method used to calculate vertical advective forcing (1=vertical advective
+   terms calculated from UFS history files and added to total, 2=smoothed vertical velocity provided), default=2
+
+#. ``--wind_nudge (-wn)``: flag to turn on wind nudging to UFS profiles
+
+#. ``--geostrophic (-geos)``: flag to turn on geostrophic wind forcing
+
 .. _`ufsforcingensemblegenerator`:
 
 UFS_forcing_ensemble_generator.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There is an additional script in ``scm/etc/scripts/UFS_forcing_ensemble_generator.py`` to create UFS-replay case(s) starting
+There is an additional script in ``scm/etc/scripts/UFS_forcing_ensemble_generator.py`` to create UFS-caseGen case(s) starting
 with output from UFS Weather Model (UWM) Regression Tests (RTs).
 
 .. code:: bash
 
    UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
    (-lonl LON_1 LON_2 -latl LAT_1 LAT_2 -nens NENSMEMBERS |
-   -lons [LON_LIST] -lats [LAT_LIST])
-   [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near]
+   -lons [LON_LIST] -lats [LAT_LIST] |
+   -fxy [LON_LAT_FILE])
+   [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
 
 Mandatory arguments:
 
@@ -490,6 +483,8 @@ Mandatory arguments:
 
    -  ``--lon_list (-lons)`` AND ``--lat_list (-lats)``: longitude and latitude of cases
 
+   -  ``--lonlat_file (fxy)``: file containing longitudes and latitudes
+
 Optional arguments:
 
 #. ``--timestep (-dt)``: SCM timestep, in seconds
@@ -502,6 +497,16 @@ Optional arguments:
 
 #. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint
 
+#. ``--forcing_method (-fm)``: method used to calculate forcing (1=total tendencies from UFS dycore,
+   2=advective terms calculated from UFS history files, 3=total time tendency terms calculated), default=2
+
+#. ``--vertical_method (-vm)``: method used to calculate vertical advective forcing (1=vertical advective
+   terms calculated from UFS history files and added to total, 2=smoothed vertical velocity provided), default=2
+
+#. ``--wind_nudge (-wn)``: flag to turn on wind nudging to UFS profiles
+
+#. ``--geostrophic (-geos)``: flag to turn on geostrophic wind forcing
+
 Examples to run from within the ``scm/etc/scripts`` directory to create SCM cases starting
 with the output from a UFS Weather Model regression test(s):
 
@@ -513,7 +518,7 @@ staged UWM RTs located at:
 
 .. _`example1`:
 
-Example 1: UFS-replay for single point
+Example 1: UFS-caseGen for single point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_c192``, for single point.
@@ -533,7 +538,7 @@ The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, whe
 
 .. _`example2`:
 
-Example 2: UFS-replay for list of points
+Example 2: UFS-caseGen for list of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_c384``, for multiple points.
@@ -562,7 +567,7 @@ number of points provided. The contents of the file should look like:
 
 .. _`example3`:
 
-Example 3: UFS-replay for an ensemble of points
+Example 3: UFS-caseGen for an ensemble of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_p8``, for an ensemble (10) of randomly selected points
