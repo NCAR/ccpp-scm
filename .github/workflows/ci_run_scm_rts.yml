@@ -208,7 +208,7 @@ jobs:
     - name: Download SCM RT baselines
       run: |
         cd ${dir_bl}
-        wget https://dtcenter.ucar.edu/ccpp/users/rt/rt-baselines-${{matrix.build-type}}.zip
+        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
         unzip rt-baselines-${{matrix.build-type}}.zip
 
     - name: Compare SCM RT output to baselines
@@ -217,7 +217,7 @@ jobs:
         ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: rt-plots-${{matrix.build-type}}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
