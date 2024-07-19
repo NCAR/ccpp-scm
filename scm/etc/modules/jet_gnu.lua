@@ -9,7 +9,7 @@ prepend_path("MODULEPATH","/mnt/lfs4/HFIP/hfv3gfs/role.epic/spack-stack/spack-st
 
 load("stack-gcc/9.2.0")
 load("stack-openmpi/3.1.4")
-load("stack-python/3.10.8")
+load("stack-python/3.10.13")
 load("py-f90nml")
 load("py-netcdf4/1.5.8")
 load("cmake/3.23.1")

@@ -11,7 +11,7 @@ prepend_path("MODULEPATH", "/work/noaa/epic/role-epic/spack-stack/orion/spack-st
 
 load("stack-intel/2022.0.2")
 load("stack-intel-oneapi-mpi/2021.5.1")
-load("stack-python/3.10.8")
+load("stack-python/3.10.13")
 load("py-f90nml")
 load("py-netcdf4/1.5.8")
 load("cmake/3.23.1")
