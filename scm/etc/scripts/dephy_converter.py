@@ -633,13 +633,19 @@ def write_SCM_case_file(case_nml, case_data, use_area):
         tnthetal_adv_var                    = nc_file.createVariable('tnthetal_adv', wp, ('time','lev'))
         tnthetal_adv_var.units              = 'K s-1'
         tnthetal_adv_var.standard_name      = 'tendency_of_air_liquid_potential_temperature_due_to_advection'
-        tnthetal_adv_var[:]                 = np.swapaxes(case_data._h_advec_thil[:] + case_data._v_advec_thil[:],0,1)
+        if (nc_file.forc_wap == forcing_on or nc_file.forc_wa == forcing_on):
+            tnthetal_adv_var[:]                 = np.swapaxes(case_data._h_advec_thil[:],0,1)
+        else:
+            tnthetal_adv_var[:]                 = np.swapaxes(case_data._h_advec_thil[:] + case_data._v_advec_thil[:],0,1)
     
     if (nc_file.adv_qt == forcing_on):
         tnqt_adv_var                    = nc_file.createVariable('tnqt_adv', wp, ('time','lev'))
         tnqt_adv_var.units              = 'kg kg-1 s-1'
         tnqt_adv_var.standard_name      = 'tendency_of_mass_fraction_of_water_in_air_due_to_advection'
-        tnqt_adv_var[:]                 = np.swapaxes(case_data._h_advec_qt[:] + case_data._v_advec_qt[:],0,1)
+        if (nc_file.forc_wap == forcing_on or nc_file.forc_wa == forcing_on):
+            tnqt_adv_var[:]                 = np.swapaxes(case_data._h_advec_qt[:],0,1)
+        else:
+            tnqt_adv_var[:]                 = np.swapaxes(case_data._h_advec_qt[:] + case_data._v_advec_qt[:],0,1)
     
     if (nc_file.adv_rv == forcing_on):
         message = 'adv_rv is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
