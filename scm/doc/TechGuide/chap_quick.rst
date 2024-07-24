@@ -491,10 +491,11 @@ To see the full list of available options, use the ``--help`` flag:
 
 The run script’s full set of options are described below, where optional abbreviations are included in brackets.
 If using the main branch, you should run the above command to ensure you have the most up-to-date list of options.
+There are no required arguments, but at least one of ``--case`` or ``--file`` must be specified.
 
 -  ``--case [-c]``
 
-   -  **This is the only required argument.** The provided argument should correspond to the name of a case in
+   -  The provided argument should correspond to the name of a case in
       ``../etc/case_config`` (without the ``.nml`` extension).
 
 -  ``--suite [-s]``
@@ -596,17 +597,15 @@ configuration files located in ``../etc/case_config`` (*without the .nml extensi
 specifying a suite other than the default, the suite name used must
 match the value of the suite name in one of the suite definition files
 located in ``../../ccpp/suites`` (Note: not the filename of the suite definition file). As
-part of the sixth CCPP release, the following suite names are supported:
+part of the seventh CCPP release, the following suite names are supported:
 
 #. SCM_GFS_v16
 
-#. SCM_GFS_v17p8
+#. SCM_GFS_v16_RRTMGP
 
-#. SCM_RAP
+#. SCM_GFS_v17_p8_ugwpv1
 
-#. SCM_HRRR
-
-#. SCM_RRFS_v1beta
+#. SCM_HRRR_gf
 
 #. SCM_WoFS_v0
 
