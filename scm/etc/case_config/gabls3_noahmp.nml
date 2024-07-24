@@ -1,19 +1,10 @@
-$case_config
-case_name = 'gabls3_noahmp',
-runtime = 86400,
-thermo_forcing_type = 2,
-mom_forcing_type = 2,
-relax_time = 7200.0,
-sfc_flux_spec = .false.,
-lsm_ics = .true.,
-do_spinup = .true.,
-spinup_timesteps = 12,
-sfc_roughness_length_cm = 15.0,
-sfc_type = 1,
-reference_profile_choice = 2,
-year = 2006,
-month = 7,
-day = 1,
-hour = 12,
-column_area = 1.45E8,
-$end
+&case_config
+    case_name = 'gabls3_noahmp'
+    column_area = 145000000.0
+    do_spinup = .true.
+    input_type = 1
+    lsm_ics = .true.
+    reference_profile_choice = 2
+    sfc_roughness_length_cm = 15.0
+    spinup_timesteps = 12
+/

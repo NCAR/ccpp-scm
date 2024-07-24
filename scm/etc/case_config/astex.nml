@@ -1,16 +1,7 @@
-$case_config
-case_name = 'astex',
-runtime = 144000,
-thermo_forcing_type = 2,
-mom_forcing_type = 2,
-relax_time = 7200.0,
-sfc_flux_spec = .false.,
-sfc_type = 0,
-sfc_roughness_length_cm = 0.02,
-reference_profile_choice = 1,
-year = 1992,
-month = 6,
-day = 13,
-hour = 0,
-column_area = 3.7E5,
-$end
+&case_config
+    case_name = 'astex'
+    column_area = 370000.0
+    input_type = 1
+    reference_profile_choice = 1
+    sfc_roughness_length_cm = 0.02
+/
