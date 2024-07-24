@@ -23,50 +23,15 @@ The ``case_config`` namelist expects the following parameters:
       This string must correspond to a dataset included in the directory
       ``ccpp-scm/scm/data/processed_case_input/`` (without the file extension).
 
--  ``runtime``
-
-   -  Specify the model runtime in seconds (integer). This should
-      correspond with the forcing dataset used. If a runtime is
-      specified that is longer than the supplied forcing, the forcing is
-      held constant at the last specified values.
-
--  ``thermo_forcing_type``
-
-   -  An integer representing how forcing for temperature and moisture
-      state variables is applied (1 :math:`=` total advective
-      tendencies, 2 :math:`=` horizontal advective tendencies with
-      prescribed vertical motion, 3 :math:`=` relaxation to observed
-      profiles with vertical motion prescribed)
-
--  ``mom_forcing_type``
-
-   -  An integer representing how forcing for horizontal momentum state
-      variables is applied (1 :math:`=` total advective tendencies; not
-      implemented yet, 2 :math:`=` horizontal advective tendencies with
-      prescribed vertical motion, 3 :math:`=` relaxation to observed
-      profiles with vertical motion prescribed)
-
 -  ``relax_time``
 
    -  A floating point number representing the timescale in seconds for
       the relaxation forcing (only used if ``thermo_forcing_type = 3`` or ``mom_forcing_type = 3``)
 
--  ``sfc_flux_spec``
-
-   -  A boolean set to ``.true.`` if surface flux are specified from the forcing
-      data (there is no need to have surface schemes in a suite
-      definition file if so)
-
 -  ``sfc_roughness_length_cm``
 
    -  Surface roughness length in cm for calculating surface-related
       fields from specified surface fluxes (only used if ``sfc_flux_spec`` is True).
-
--  ``sfc_type``
-
-   -  An integer representing the character of the surface (0 :math:`=`
-      sea surface, 1 :math:`=` land surface, 2 :math:`=` sea-ice
-      surface)
 
 -  ``reference_profile_choice``
 
@@ -74,22 +39,6 @@ The ``case_config`` namelist expects the following parameters:
       above the supplied initialization and forcing data (1 :math:`=`
       “McClatchey” profile, 2 :math:`=` mid-latitude summer standard
       atmosphere)
-
--  ``year``
-
-   -  An integer representing the year of the initialization time
-
--  ``month``
-
-   -  An integer representing the month of the initialization time
-
--  ``day``
-
-   -  An integer representing the day of the initialization time
-
--  ``hour``
-
-   -  An integer representing the hour of the initialization time
 
 -  ``column_area``
 
@@ -113,18 +62,28 @@ The ``case_config`` namelist expects the following parameters:
 
 -  ``input_type``
 
-   -  0 => original DTC format, 1 => DEPHY-SCM format.
+   -  1 => DEPHY-SCM format.
 
 Optional variables (that may be overridden via run script command line
 arguments) are:
 
+-  ``npz_type``
+
+   - Changes the type of FV3 vertical grid to produce (see src/scm_vgrid.F90 for
+     valid values), default=''.
+
 -  ``vert_coord_file``
 
-   -  File containing FV3 vertical grid coefficients.
+   -  File containing FV3 vertical grid coefficients, default=''.
 
 -  ``n_levels``
 
-   -  Specify the integer number of vertical levels.
+   -  Specify the integer number of vertical levels, default=127.
+
+-  ``dt``
+
+   - Specify the timestep to use (if different than the default specified in
+     ../../src/suite_info.py), default=600.
 
 .. _`case input`:
 
@@ -372,22 +331,22 @@ Python Dependencies
 
 The scripts here require a few python packages that may not be found by
 default in all python installations. There is a YAML file with the
-python environment needed to run the script in ``ccpp-scm/environment-ufsreplay.yml``. To create and activate
+python environment needed to run the script in ``ccpp-scm/environment-ufscasegen.yml``. To create and activate
 this environment using conda:
 
 Create environment (only once):
 
 .. code:: bash
 
-  > conda env create -f environment-ufsreplay.yml
+  > conda env create -f environment-ufscasegen.yml
 
-This will create the conda environment ``env_ufsreplay``
+This will create the conda environment ``env_ufscasegen``
 
 Activate environment:
 
 .. code:: bash
 
-  > conda activate env_ufsreplay
+  > conda activate env_ufscasegen
 
 .. _`ufscasegen`:
 
@@ -510,10 +469,10 @@ Optional arguments:
 Examples to run from within the ``scm/etc/scripts`` directory to create SCM cases starting
 with the output from a UFS Weather Model regression test(s):
 
-On the supported platforms Cheyenne (NCAR) and Hera (NOAA), there are
+On the supported platforms Derecho (NCAR) and Hera (NOAA), there are
 staged UWM RTs located at:
 
--  Cheyenne ``/glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs``
+-  Derecho ``/glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs``
 -  Hera ``/scratch1/BMC/gmtb/CCPP-SCM/UFS_RTs``
 
 .. _`example1`:
@@ -583,7 +542,7 @@ for more details.
 
 For the purposes of this example the ``control_p8`` test has already been rerun, but if
 starting from your own UWM RTs, you can rerun the UWM regression test,
-on Cheyenne for example, by running the following command in the RT
+on Derecho for example, by running the following command in the RT
 directory: ``qsub job_card``
 
 Now the cases can be generated with the following command:
