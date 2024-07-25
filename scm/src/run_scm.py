@@ -34,6 +34,7 @@ DEFAULT_BIN_DIR = 'scm/bin'
 # Default command string to run MPI apps (number of processes should be 1 since SCM is not set up to use more than 1 yet)
 DEFAULT_MPI_COMMAND = 'mpirun -np 1'
 
+
 # Copy executable to run directory if true (otherwise it will be linked)
 COPY_EXECUTABLE = False
 
@@ -120,7 +121,7 @@ parser.add_argument('--case_data_dir',    help='directory containing the case in
 parser.add_argument('--n_itt_out',        help='period of instantaneous output (number of timesteps)', required=False, type=int)
 parser.add_argument('--n_itt_diag',       help='period of diagnostic output (number of timesteps)', required=False, type=int)
 parser.add_argument('-dt', '--timestep',  help='timestep (s)', required=False, type=float)
-parser.add_argument('-a', '--actions',    help='if running from Github Actions this will select correct configuration', required=False, action='store_true')
+parser.add_argument('--stop_on_error',    help='when running multiple SCM runs, stop on first error', required=False, action='store_true')
 parser.add_argument('-v', '--verbose',    help='set logging level to debug and write log to file', action='count', default=0)
 parser.add_argument('-f', '--file',       help='name of file where SCM runs are defined')
 parser.add_argument('--mpi_command',      help='command used to invoke the executable via MPI (including options)', required=False)
@@ -191,14 +192,14 @@ def parse_arguments():
     bin_dir = args.bin_dir
     timestep = args.timestep
     mpi_command = args.mpi_command
-    github_actions = args.actions
+    stop_on_error = args.stop_on_error
 
     if not sdf:
         sdf = DEFAULT_SUITE
 
     return (file, case, sdf, namelist, tracers, gdb, runtime, runtime_mult, docker, \
             verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,   \
-            n_itt_diag, run_dir, bin_dir, timestep, mpi_command, github_actions)
+            n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -767,7 +768,7 @@ def copy_outdir(exp_dir):
 def main():
     (file, case, sdf, namelist, tracers, use_gdb, runtime, runtime_mult, docker, \
      verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,       \
-     n_itt_diag, run_dir, bin_dir, timestep, mpi_command, github_actions) = parse_arguments()
+     n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error) = parse_arguments()
 
     setup_logging(verbose)
 
@@ -884,8 +885,7 @@ def main():
             l_ignore_error = MULTIRUN_IGNORE_ERROR
         else:
             l_ignore_error = False
-        # need to correctly fail if running Github Actions
-        if github_actions:
+        if stop_on_error:
             l_ignore_error = False
 
         (status, time_elapsed) = launch_executable(use_gdb, gdb, mpi_command, ignore_error = l_ignore_error)

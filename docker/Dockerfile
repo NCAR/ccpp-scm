@@ -1,8 +1,10 @@
 FROM debian:12
 LABEL maintainer="Michael Kavulich <kavulich@ucar.edu>"
 
-# Set up base OS environment
+# arguments that can be passed in
+ARG PR_NUMBER
 
+# Set up base OS environment
 RUN apt-get -y update
 
 # Get "essential" tools and libraries
@@ -70,11 +72,20 @@ ENV sp_ROOT=/comsoftware/nceplibs
 ENV w3emc_ROOT=/comsoftware/nceplibs
 
 # Obtain CCPP SCM source code, build code, and download static data
-RUN cd /comsoftware \
-  && git clone --recursive -b main https://github.com/NCAR/ccpp-scm \
-  && mkdir /comsoftware/ccpp-scm/scm/bin
+RUN if [ -z "$PR_NUMBER" ]; then \
+        cd /comsoftware \
+        && git clone --recursive -b main https://github.com/NCAR/ccpp-scm; \
+    else \
+        cd /comsoftware \
+        && git clone https://github.com/NCAR/ccpp-scm \
+        && cd ccpp-scm \
+        && git fetch origin pull/${PR_NUMBER}/head:test_pr \
+        && git checkout test_pr \
+        && git submodule update --init --recursive; \
+    fi
 
-RUN cd /comsoftware/ccpp-scm/scm/bin \
+RUN mkdir /comsoftware/ccpp-scm/scm/bin \
+  && cd /comsoftware/ccpp-scm/scm/bin \
   && cmake ../src \
   && make -j
 
