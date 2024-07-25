@@ -703,7 +703,9 @@ module GFS_typedefs
                                                                         !< for use with internal file reads
     integer              :: input_nml_file_length    !< length (number of lines) in namelist for internal reads
     integer              :: logunit
-    real(kind=kind_phys) :: fhzero          !< hours between clearing of diagnostic buckets
+    real(kind=kind_phys) :: fhzero          !< hours between clearing of diagnostic buckets (current bucket)
+    real(kind=kind_phys) :: fhzero_array(2) !< array to hold the the hours between clearing of diagnostic buckets
+    real(kind=kind_phys) :: fhzero_fhour(2) !< the maximum forecast length for the hours between clearing of diagnostic buckets
     logical              :: ldiag3d         !< flag for 3d diagnostic fields
     logical              :: qdiag3d         !< flag for 3d tracer diagnostic fields
     logical              :: flag_for_gwd_generic_tend  !< true if GFS_GWD_generic should calculate tendencies
@@ -1121,6 +1123,7 @@ module GFS_typedefs
     logical              :: do_gsl_drag_ls_bl    !< flag for GSL drag (mesoscale GWD and blocking only)
     logical              :: do_gsl_drag_ss       !< flag for GSL drag (small-scale GWD only)
     logical              :: do_gsl_drag_tofd     !< flag for GSL drag (turbulent orog form drag only)
+    logical              :: do_gwd_opt_psl       !< flag for PSL drag (mesoscale GWD and blocking only)
     logical              :: do_ugwp_v1           !< flag for version 1 ugwp GWD
     logical              :: do_ugwp_v1_orog_only !< flag for version 1 ugwp GWD (orographic drag only)
     logical              :: do_ugwp_v1_w_gsldrag !< flag for version 1 ugwp with OGWD of GSL
@@ -1205,6 +1208,8 @@ module GFS_typedefs
     real(kind=kind_phys) :: ccwf(2)         !< multiplication factor for critical cloud
                                             !< workfunction for RAS
     real(kind=kind_phys) :: cdmbgwd(4)      !< multiplication factors for cdmb, gwd and NS gwd, tke based enhancement
+    real(kind=kind_phys) :: alpha_fd        !< alpha coefficient for turbulent orographic form drag
+    real(kind=kind_phys) :: psl_gwd_dx_factor  !< multiplication factors for grid spacing
     real(kind=kind_phys) :: sup             !< supersaturation in pdf cloud when t is very low
     real(kind=kind_phys) :: ctei_rm(2)      !< critical cloud top entrainment instability criteria
                                             !< (used if mstrat=.true.)
@@ -3317,6 +3322,8 @@ module GFS_typedefs
 
 !--- BEGIN NAMELIST VARIABLES
     real(kind=kind_phys) :: fhzero         = 0.0             !< hours between clearing of diagnostic buckets
+    real(kind=kind_phys) :: fhzero_array(1:2)  = 0.0         !< array with hours between clearing of diagnostic buckets
+    real(kind=kind_phys) :: fhzero_fhour(1:2)  = 0.0         !< the maximum forecast length for the hours between clearing of diagnostic buckets
     logical              :: ldiag3d        = .true.          !< flag for 3d diagnostic fields
     logical              :: qdiag3d        = .true.          !< flag for 3d tracer diagnostic fields
     logical              :: lssav          = .false.         !< logical flag for storing diagnostics
@@ -3638,6 +3645,7 @@ module GFS_typedefs
     logical              :: do_gsl_drag_ls_bl    = .false.      !< flag for GSL drag (mesoscale GWD and blocking only)
     logical              :: do_gsl_drag_ss       = .false.      !< flag for GSL drag (small-scale GWD only)
     logical              :: do_gsl_drag_tofd     = .false.      !< flag for GSL drag (turbulent orog form drag only)
+    logical              :: do_gwd_opt_psl       = .false.      !< flag for PSL drag (mesoscale GWD and blocking only)
     logical              :: do_ugwp_v1           = .false.      !< flag for version 1 ugwp GWD
     logical              :: do_ugwp_v1_orog_only = .false.      !< flag for version 1 ugwp GWD (orographic drag only)
     logical              :: do_ugwp_v1_w_gsldrag = .false.      !< flag for version 1 ugwp GWD (orographic drag only)
@@ -3742,6 +3750,8 @@ module GFS_typedefs
     real(kind=kind_phys) :: ccwf(2)        = (/1.0d0,1.0d0/)          !< multiplication factor for critical cloud
                                                                       !< workfunction for RAS
     real(kind=kind_phys) :: cdmbgwd(4)     = (/2.0d0,0.25d0,1.0d0,1.0d0/)   !< multiplication factors for cdmb, gwd, and NS gwd, tke based enhancement
+    real(kind=kind_phys) :: alpha_fd       = 12.0                     !< alpha coefficient for turbulent orographic form drag
+    real(kind=kind_phys) :: psl_gwd_dx_factor  = 6.0                  !< multiplication factors for grid spacing
     real(kind=kind_phys) :: sup            = 1.0                      !< supersaturation in pdf cloud (IMP_physics=98) when t is very low
                                                                       !< or ice super saturation in SHOC (when do_shoc=.true.)
     real(kind=kind_phys) :: ctei_rm(2)     = (/10.0d0,10.0d0/)        !< critical cloud top entrainment instability criteria
@@ -3987,9 +3997,9 @@ module GFS_typedefs
 
     NAMELIST /gfs_physics_nml/                                                              &
                           !--- general parameters
-                               fhzero, ldiag3d, qdiag3d, lssav, naux2d, dtend_select,       &
-                               naux3d, aux2d_time_avg, aux3d_time_avg, fhcyc,               &
-                               thermodyn_id, sfcpress_id,                                   &
+                               fhzero, fhzero_array, fhzero_fhour, ldiag3d, qdiag3d, lssav, &
+                               naux2d, dtend_select, naux3d, aux2d_time_avg,                &
+                               aux3d_time_avg, fhcyc, thermodyn_id, sfcpress_id,            &
                           !--- coupling parameters
                                cplflx, cplice, cplocn2atm, cplwav, cplwav2atm, cplaqm,      &
                                cplchm, cpllnd, cpllnd2atm, cpl_imp_mrg, cpl_imp_dbg,        &
@@ -4065,6 +4075,7 @@ module GFS_typedefs
                                gwd_opt, do_ugwp_v0, do_ugwp_v0_orog_only,                   &
                                do_ugwp_v0_nst_only,                                         &
                                do_gsl_drag_ls_bl, do_gsl_drag_ss, do_gsl_drag_tofd,         &
+                               do_gwd_opt_psl,                                              &
                                do_ugwp_v1, do_ugwp_v1_orog_only,  do_ugwp_v1_w_gsldrag,     &
                                ugwp_seq_update, var_ric, coef_ric_l, coef_ric_s, hurr_pbl,  &
                                do_myjsfc, do_myjpbl,                                        &
@@ -4073,7 +4084,9 @@ module GFS_typedefs
                                shinhong, do_ysu, dspheat, lheatstrg, lseaspray, cnvcld,     &
                                xr_cnvcld, random_clds, shal_cnv, imfshalcnv, imfdeepcnv,    &
                                isatmedmf, do_deep, jcap,                                    &
-                               cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
+                               cs_parm, flgmin, cgwf, ccwf, cdmbgwd, alpha_fd,              &
+                               psl_gwd_dx_factor,                                           &
+                               sup, ctei_rm, crtrh,                                         &
                                dlqf, rbcr, shoc_parm, psauras, prauras, wminras,            &
                                do_sppt, do_shum, do_skeb,                                   &
                                do_spp, n_var_spp,                                           &
@@ -4206,6 +4219,11 @@ module GFS_typedefs
     Model%fn_nml           = fn_nml
     Model%logunit          = logunit
     Model%fhzero           = fhzero
+    Model%fhzero_array     = fhzero_array
+    Model%fhzero_fhour     = fhzero_fhour
+    if( Model%fhzero_array(1) > 0. ) then
+      Model%fhzero = Model%fhzero_array(1)
+    endif
     Model%ldiag3d          = ldiag3d
     Model%qdiag3d          = qdiag3d
     if (qdiag3d .and. .not. ldiag3d) then
@@ -4964,6 +4982,8 @@ module GFS_typedefs
     Model%cgwf              = cgwf
     Model%ccwf              = ccwf
     Model%cdmbgwd           = cdmbgwd
+    Model%alpha_fd          = alpha_fd
+    Model%psl_gwd_dx_factor = psl_gwd_dx_factor
     Model%sup               = sup
     Model%ctei_rm           = ctei_rm
     Model%crtrh             = crtrh
@@ -5011,6 +5031,7 @@ module GFS_typedefs
     Model%do_gsl_drag_ls_bl    = do_gsl_drag_ls_bl
     Model%do_gsl_drag_ss       = do_gsl_drag_ss
     Model%do_gsl_drag_tofd     = do_gsl_drag_tofd
+    Model%do_gwd_opt_psl       = do_gwd_opt_psl
     Model%do_ugwp_v1           = do_ugwp_v1
     Model%do_ugwp_v1_orog_only = do_ugwp_v1_orog_only
     Model%do_ugwp_v1_w_gsldrag = do_ugwp_v1_w_gsldrag
@@ -5026,6 +5047,7 @@ module GFS_typedefs
        Model%do_gsl_drag_tofd     = .true.
        Model%do_gsl_drag_ss       = .true.
        Model%do_ugwp_v1_orog_only = .false.
+       Model%do_gwd_opt_psl       = .true.
     endif
 
     Model%do_myjsfc            = do_myjsfc
@@ -5676,6 +5698,10 @@ module GFS_typedefs
     Model%restart          = restart
     Model%lsm_cold_start   = .not. restart
     Model%hydrostatic      = hydrostatic
+    if (Model%me == Model%master) then
+      print *,'in atm phys init, phour=',Model%phour,'fhour=',Model%fhour,'zhour=',Model%zhour,'kdt=',Model%kdt
+    endif
+    
 
     if(Model%hydrostatic .and. Model%lightning_threat) then
       write(0,*) 'Turning off lightning threat index for hydrostatic run.'
@@ -6469,6 +6495,8 @@ module GFS_typedefs
       print *, ' nlunit            : ', Model%nlunit
       print *, ' fn_nml            : ', trim(Model%fn_nml)
       print *, ' fhzero            : ', Model%fhzero
+      print *, ' fhzero_array      : ', Model%fhzero_array
+      print *, ' fhzero_fhour      : ', Model%fhzero_fhour
       print *, ' ldiag3d           : ', Model%ldiag3d
       print *, ' qdiag3d           : ', Model%qdiag3d
       print *, ' lssav             : ', Model%lssav
@@ -6824,6 +6852,8 @@ module GFS_typedefs
       print *, ' cgwf              : ', Model%cgwf
       print *, ' ccwf              : ', Model%ccwf
       print *, ' cdmbgwd           : ', Model%cdmbgwd
+      print *, ' alpha_fd          : ', Model%alpha_fd
+      print *, ' psl_gwd_dx_factor : ', Model%psl_gwd_dx_factor
       print *, ' sup               : ', Model%sup
       print *, ' ctei_rm           : ', Model%ctei_rm
       print *, ' crtrh             : ', Model%crtrh
@@ -6844,6 +6874,7 @@ module GFS_typedefs
       print *, ' do_gsl_drag_ls_bl    : ', Model%do_gsl_drag_ls_bl
       print *, ' do_gsl_drag_ss       : ', Model%do_gsl_drag_ss
       print *, ' do_gsl_drag_tofd     : ', Model%do_gsl_drag_tofd
+      print *, ' do_gwd_opt_psl       : ', Model%do_gwd_opt_psl
       print *, ' do_ugwp_v1           : ', Model%do_ugwp_v1
       print *, ' do_ugwp_v1_orog_only : ', Model%do_ugwp_v1_orog_only
       print *, ' do_ugwp_v1_w_gsldrag : ', Model%do_ugwp_v1_w_gsldrag

@@ -34,9 +34,15 @@ p0           = 100000.0
 one_twelfth  = 1.0/12.0
 two_thirds   = 2.0/3.0
 
+use_oro_for_geos_wind = False  #use surface geopotential in the calculation of geostrophic winds (if True, the gradient of geopotential will include the surface geopotential height gradient)
+use_actual_geos_wind = False   #use geostrophic winds calculated from the large-scale UFS-modeled geopotential (the scale is determined by the modeled winds and the choice of critical Rossby number for which geostrophic balance is assumed to hold)
+critical_Rossby = 0.1          #the Rossby number under which geostrophic balance is assumed to be valid (a lower number means a larger horizontal area is required for a given wind speed); geostrophic balance can be assumed when Ro << 1.
+
+PBL_top_for_geos = 85000.0 # (Pa) when using the mean UFS-modeled winds as geostrophic winds, below this pressure, geostrophic winds return linearly to 0 at the surface
+
 missing_value = -9999.0 #9.99e20
 
-top_pres_for_forcing = 20000.0
+top_pres_for_forcing = 20000.0 # (Pa) pressure above which to vertically smooth wind profiles to handle noisy model output at upper UFS levels
 
 const_nudging_time = 3600.0
 
@@ -500,7 +506,6 @@ def find_loc_indices_UFS_history(loc, dir):
     theta = math.atan2(math.sin(math.radians(longitude[i,j] - loc[0]))*math.cos(math.radians(latitude[i,j])), math.cos(math.radians(loc[1]))*math.sin(math.radians(latitude[i,j])) - math.sin(math.radians(loc[1]))*math.cos(math.radians(latitude[i,j]))*math.cos(math.radians(longitude[i,j] - loc[0])))
     theta_deg = math.fmod((math.degrees(theta) + 360.0), 360.0)
     
-    halo_indices = np.zeros((1+2*n_forcing_halo_points,1+2*n_forcing_halo_points))
     if i < n_forcing_halo_points or i > latitude.shape[0]-1-n_forcing_halo_points:
         message = 'Chosen point too close to the poles for this algorithm'
         logging.critical(message)
@@ -665,11 +670,6 @@ def check_IC_hist_surface_compatibility(dir, i, j, surface_data, lam, old_chgres
         raise Exception(message)
     
     nc_file = Dataset('{0}/{1}'.format(dir,filename))
-    
-    #doublecheck this is correct point
-    #lon_in     = read_NetCDF_var(nc_file, "lon",     j, i)
-    #lat_in     = read_NetCDF_var(nc_file, "lat",     j, i)
-    #logging.debug('check_IC_hist_surface_compatibility lon/lat: {}/{}'.format(lon_in, lat_in))
     
     slmsk_hist = read_NetCDF_surface_var(nc_file, "land",     j, i, old_chgres, 0)
     
@@ -1829,7 +1829,7 @@ def search_in_dict(listin,name):
         if dictionary["name"] == name:
             return count
 
-def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, nlevs, lam, save_comp_data, vertical_method, geos_wind_forcing, wind_nudge):
+def expand_neighbors_for_geostrophic_balance(dir, hist_i, hist_j, neighbors, dx, dy, nlevs, lam):
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
@@ -1859,6 +1859,130 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
     time = np.zeros((n_filesA))
     u_wind = np.zeros((n_filesA,nlevs,npts,npts))
     v_wind = np.zeros((n_filesA,nlevs,npts,npts))
+    wind_speed = np.zeros((n_filesA,nlevs))
+    wind_speed_time_mean = np.zeros((nlevs))
+    
+    nc_file = Dataset('{0}/{1}'.format(dir,atm_filenames[0]))
+    nc_file.set_always_mask(False)
+    longitude_all = np.asarray(nc_file['lon'])
+    latitude_all  = np.asarray(nc_file['lat'])
+    nc_file.close()
+    
+    #determine average wind speeds in the existing forcing stencil
+    
+    # Read in 3D UFS history files
+    for count, filename in enumerate(atm_filenames, start=1):
+        nc_file = Dataset('{0}/{1}'.format(dir,filename))
+        nc_file.set_always_mask(False)
+        
+        time[count-1] = nc_file['time'][0]
+        
+        for ii in range(2*n_forcing_halo_points+1):
+            for jj in range(2*n_forcing_halo_points+1):
+                current_ii_index = neighbors[0,ii,jj]
+                current_jj_index = neighbors[1,ii,jj]
+                
+                lon[count-1,ii,jj]      = nc_file['lon'][current_ii_index,current_jj_index]
+                lat[count-1,ii,jj]      = nc_file['lat'][current_ii_index,current_jj_index]                
+                u_wind[count-1,:,ii,jj] = nc_file['ugrd'][0,::-1,current_ii_index,current_jj_index]
+                v_wind[count-1,:,ii,jj] = nc_file['vgrd'][0,::-1,current_ii_index,current_jj_index]
+        
+        for k in range(nlevs):
+            wind_speed[count-1,k] = np.sqrt(np.mean(u_wind[count-1,k,:,:])**2 + np.mean(v_wind[count-1,k,:,:]**2))
+        
+        nc_file.close()
+    
+    critical_geos_scale_npts = np.zeros((nlevs))
+    mean_lat = np.mean(lat[:,:,:])
+    coriolis = 2.0*Omega*np.sin(mean_lat*deg_to_rad)
+    grid_length_scale = np.sqrt(np.mean(dx)**2 + np.mean(dy)**2)*1.0E3
+    for k in range(nlevs):
+        wind_speed_time_mean[k] = np.mean(wind_speed[:,k])
+        critical_geos_scale = wind_speed_time_mean[k]/(coriolis*critical_Rossby)
+        critical_geos_scale_npts[k] = critical_geos_scale/grid_length_scale
+    floor = np.floor(np.mean(critical_geos_scale_npts))
+    ceiling = np.ceil(np.mean(critical_geos_scale_npts))
+    if (floor%2 == 1):
+        odd_pts = int(floor)
+    else:
+        odd_pts = int(ceiling)
+        
+    message = 'Need {} points for approximate geostrophic balance assuming a Rossby number of {}'.format(odd_pts, critical_Rossby)
+    logging.debug(message)
+    
+    n_geo_halo_points = int((odd_pts - 1)/2)
+    
+    if hist_i < n_geo_halo_points or hist_i > latitude_all.shape[0]-1-n_geo_halo_points:
+        message = 'There are not enough neighboring grid cells between the chosen point and the poles for calculation of geostrophic winds'
+        logging.critical(message)
+        raise Exception(message)
+    else:
+        #longitude = (n rows of latitude, 2*n columns of longitude), i index increases toward EAST; rows are circles of latitude, columns are meridians
+        #latitude  = (n rows of latitude, 2*n columns of longitude), j index increases toward NORTH; rows are circles of latitude, columns are meridians
+        new_neighbors = np.mgrid[-n_geo_halo_points:n_geo_halo_points+1,-n_geo_halo_points:n_geo_halo_points+1]
+        new_neighbors[0,:,:] = new_neighbors[0,:,:] + hist_i
+        new_neighbors[1,:,:] = new_neighbors[1,:,:] + hist_j
+        
+        
+        # the closest point is near the western edge of the prime meridian, but longitude should be cyclic, so get neighbors on the eastern/western side of the prime meridian as necessary
+        new_neighbors[1,:,:] = new_neighbors[1,:,:]%longitude_all.shape[1]
+    
+    new_neighbors = new_neighbors.astype(int) 
+    #message = 'orig neighbors',neighbors,latitude_all[neighbors[0,:,0],neighbors[1,0,:]],longitude_all[neighbors[0,:,0],neighbors[1,0,:]]
+    #logging.debug(message)
+    #message = 'new neighbors',new_neighbors,latitude_all[new_neighbors[0,:,0],new_neighbors[1,0,:]],longitude_all[new_neighbors[0,:,0],new_neighbors[1,0,:]]
+    #logging.debug(message)
+        
+    #calc dx, dy (n_forcing_halo_points*2 x n_forcing_halo_points*2)
+    new_dx = np.zeros((n_geo_halo_points*2+1,n_geo_halo_points*2))
+    new_dy = np.zeros((n_geo_halo_points*2,n_geo_halo_points*2+1))
+    for ii in range(2*n_geo_halo_points+1):
+         for jj in range(2*n_geo_halo_points):
+             current_ii_index = new_neighbors[0,ii,jj]
+             current_jj_index = new_neighbors[1,ii,jj]
+             eastern_jj_index = new_neighbors[1,ii,jj+1]
+             new_dx[ii,jj] = haversine_distance(latitude_all[current_ii_index,current_jj_index],longitude_all[current_ii_index,current_jj_index],latitude_all[current_ii_index,eastern_jj_index],longitude_all[current_ii_index,eastern_jj_index])
+        
+    for ii in range(2*n_geo_halo_points):
+         for jj in range(2*n_geo_halo_points+1):
+             current_ii_index  = new_neighbors[0,ii,jj]
+             northern_ii_index = new_neighbors[0,ii+1,jj]
+             current_jj_index  = new_neighbors[1,ii,jj]
+             new_dy[ii,jj] = haversine_distance(latitude_all[current_ii_index,current_jj_index],longitude_all[current_ii_index,current_jj_index],latitude_all[northern_ii_index,current_jj_index],longitude_all[northern_ii_index,current_jj_index])
+    
+    return (n_geo_halo_points, new_neighbors, new_dx, new_dy)
+
+def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, nlevs, lam, save_comp_data, vertical_method, geos_wind_forcing, wind_nudge, geo_pts, geo_neighbors, geo_dx, geo_dy, use_actual_geos_wind):
+    
+    # Determine UFS history file format (tiled/quilted)
+    if lam:
+        atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
+        sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
+    else:
+        atm_ftag = '*atmf*.nc'
+        sfc_ftag = '*sfcf*.nc'
+
+    # Get list of UFS history files with 3D ATMospheric state variables.
+    atm_filenames = []
+    for f_name in os.listdir(dir):
+       if fnmatch.fnmatch(f_name, atm_ftag):
+          atm_filenames.append(f_name)
+    if not atm_filenames:
+        message = 'No filenames matching the pattern {0} found in {1}'.                \
+                  format(atm_ftag,dir)
+        logging.critical(message)
+        raise Exception(message)
+    atm_filenames = sorted(atm_filenames)
+    n_filesA      = len(atm_filenames)
+    
+    npts  = 2*n_forcing_halo_points+1
+    npts_geo = 2*geo_pts+1
+        
+    lon = np.zeros((n_filesA,npts,npts))
+    lat = np.zeros((n_filesA,npts,npts))
+    time = np.zeros((n_filesA))
+    u_wind = np.zeros((n_filesA,nlevs,npts,npts))
+    v_wind = np.zeros((n_filesA,nlevs,npts,npts))
     w_wind = np.zeros((n_filesA,nlevs,npts,npts))
     temp = np.zeros((n_filesA,nlevs,npts,npts))
     qv = np.zeros((n_filesA,nlevs,npts,npts))
@@ -1866,7 +1990,10 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
     presi = np.zeros((n_filesA,nlevs+1))
     pressfc = np.zeros((n_filesA,npts,npts))
     delz = np.zeros((n_filesA,nlevs,npts,npts))
-    #hgtsfc = np.zeros((n_filesA,npts,npts))
+    if(geos_wind_forcing and use_actual_geos_wind):
+        temp_geo = np.zeros((n_filesA,nlevs,npts_geo,npts_geo))
+        qv_geo = np.zeros((n_filesA,nlevs,npts_geo,npts_geo))
+        hgtsfc = np.zeros((n_filesA,npts,npts))
     
     # Read in 3D UFS history files
     for count, filename in enumerate(atm_filenames, start=1):
@@ -1889,7 +2016,16 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
                 qv[count-1,:,ii,jj]     = nc_file['spfh'][0,::-1,current_ii_index,current_jj_index]
                 pressfc[count-1,ii,jj]  = nc_file['pressfc'][0,current_ii_index,current_jj_index]
                 delz[count-1,:,ii,jj]   = -1*nc_file['delz'][0,::-1,current_ii_index,current_jj_index] #derive zh
-                #hgtsfc[count-1,ii,jj]   = nc_file['hgtsfc'][0,current_ii_index,current_jj_index]
+            
+        if (geos_wind_forcing and use_actual_geos_wind):
+            for ii in range(npts_geo):
+                for jj in range(npts_geo):
+                    current_ii_index = geo_neighbors[0,ii,jj]
+                    current_jj_index = geo_neighbors[1,ii,jj]
+                    temp_geo[count-1,:,ii,jj]   = nc_file['tmp'][0,::-1,current_ii_index,current_jj_index]
+                    qv_geo[count-1,:,ii,jj]     = nc_file['spfh'][0,::-1,current_ii_index,current_jj_index]
+                    hgtsfc[count-1,ii,jj]       = nc_file['hgtsfc'][0,current_ii_index,current_jj_index]
+        
         pres[count-1,:] = nc_file['pfull'][::-1]*100.0
         presi[count-1,:] = nc_file['phalf'][::-1]*100.0
     
@@ -1914,6 +2050,15 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
     v_advec_v   = np.zeros((n_filesA,nlevs))
     v_advec_T   = np.zeros((n_filesA,nlevs))
     v_advec_qv  = np.zeros((n_filesA,nlevs))
+    t_advec_u   = np.zeros((n_filesA,nlevs))
+    t_advec_v   = np.zeros((n_filesA,nlevs))
+    t_advec_T   = np.zeros((n_filesA,nlevs))
+    t_advec_qv  = np.zeros((n_filesA,nlevs))
+    u_g         = np.zeros((n_filesA,nlevs))
+    v_g         = np.zeros((n_filesA,nlevs))
+    if(geos_wind_forcing and use_actual_geos_wind):
+        phii        = np.zeros((n_filesA,nlevs+1,npts_geo,npts_geo))
+        phil        = np.zeros((n_filesA,nlevs,npts_geo,npts_geo))
     for t in range(n_filesA):
         #velocities gets very noisy in the UFS above the tropopause; define a linear return-to-zero profile above some pressure
         k_p_top = np.where(pres[t,:] <= top_pres_for_forcing)[0][0]
@@ -1993,31 +2138,65 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
                  v_advec_v[t,k] = rho*grav*(w_asc*gradient_v_asc + w_des*gradient_v_des)
                  v_advec_T[t,k] = rho*grav*(w_asc*gradient_T_asc + w_des*gradient_T_des) + adiabatic_exp_comp_term
                  v_advec_qv[t,k] = rho*grav*(w_asc*gradient_qv_asc + w_des*gradient_qv_des)
-         
         
-        u_g = np.zeros((n_filesA,nlevs))
-        v_g = np.zeros((n_filesA,nlevs))
         if (geos_wind_forcing):
-            #calc geopotential at interface levels, starting from surface, convert to full pressure levels
-            phii = np.zeros((n_filesA,nlevs+1,npts,npts))
-            phil = np.zeros((n_filesA,nlevs,npts,npts))
-            for ii in range(npts):
-                for jj in range(npts):
-                    phii[t,0,ii,jj] = 0.0#hgtsfc[t,ii,jj]*grav #don't need to include orography -- geostrophic winds should assume geopotential over the geoid
-                    for k in range(1,nlevs+1):
-                        phii[t,k,ii,jj] = phii[t,k-1,ii,jj] - rdgas*temp[t,k-1,ii,jj]*(1.0 + zvir*qv[t,k-1,ii,jj])*np.log(presi[t,k]/presi[t,k-1])
-                    
-                    for k in range(0,nlevs):
-                        phil[t,k,ii,jj] = 0.5*(phii[t,k,ii,jj] + phii[t,k+1,ii,jj])
+            coriolis = 2.0*Omega*np.sin(lat[t,center,center]*deg_to_rad)
             
-            mean_lat = np.mean(lat[t,:,:])
-            coriolis = 2.0*Omega*np.sin(mean_lat*deg_to_rad)
-            for k in range(1,nlevs):
-                dphidx = centered_diff_derivative(phil[t,k,center,:],dx[center,:]*1.0E3)
-                dphidy = centered_diff_derivative(phil[t,k,:,center],dy[:,center]*1.0E3)
-                                
-                u_g[t,k] = -dphidy/coriolis
-                v_g[t,k] = dphidx/coriolis
+            if (use_actual_geos_wind):
+                #calc geopotential at interface levels, starting from surface, convert to full pressure levels
+                for ii in range(npts_geo):
+                     for jj in range(npts_geo):
+                         if (use_oro_for_geos_wind):
+                             phii[t,0,ii,jj] = hgtsfc[t,ii,jj]*grav
+                         else:
+                             phii[t,0,ii,jj] = 0.0 #don't need to include orography -- geostrophic winds should assume geopotential over the geoid
+                         for k in range(1,nlevs+1):
+                             phii[t,k,ii,jj] = phii[t,k-1,ii,jj] - rdgas*temp_geo[t,k-1,ii,jj]*(1.0 + zvir*qv_geo[t,k-1,ii,jj])*np.log(presi[t,k]/presi[t,k-1])
+                         
+                         for k in range(0,nlevs):
+                             phil[t,k,ii,jj] = 0.5*(phii[t,k,ii,jj] + phii[t,k+1,ii,jj])
+            
+                for k in range(1,nlevs):
+                    dphidx = np.zeros((npts_geo,npts_geo))
+                    dphidy = np.zeros((npts_geo,npts_geo))
+                    #valid points:
+                        #dphidx = np.zeros((npts_geo,npts_geo-2))
+                        #dphidy = np.zeros((npts_geo-2,npts_geo))
+                    for ii in range(0,npts_geo):
+                        for jj in range(1,npts_geo-1):
+                            dphidx[ii,jj] = centered_diff_derivative(phil[t,k,ii,jj-1:jj+2],geo_dx[ii,jj-1:jj+1]*1.0E3)
+                    mean_dphidx = np.mean(dphidx[0:npts_geo,1:npts_geo-1])
+                
+                    for ii in range(1,npts_geo-1):
+                        for jj in range(0,npts_geo):
+                            dphidy[ii,jj] = centered_diff_derivative(phil[t,k,ii-1:ii+2,jj],geo_dy[ii-1:ii+1,jj]*1.0E3)
+                    mean_dphidy = np.mean(dphidy[1:npts_geo-1,0:npts_geo])
+                
+                    u_g[t,k] = -mean_dphidy/coriolis
+                    v_g[t,k] = mean_dphidx/coriolis
+            else:
+                for k in range(0,nlevs):
+                    u_g[t,k] = np.mean(u_wind[t,k,:,:])
+                    v_g[t,k] = np.mean(v_wind[t,k,:,:])
+                k_pbl_top = np.where(pres[t,:] <= PBL_top_for_geos)[0][0]
+                u_g[t,0] = 0.0
+                v_g[t,0] = 0.0
+                for k in range(1,k_pbl_top):
+                    lifrac = (pres[t,k] - pres[t,0])/(pres[t,k_pbl_top] - pres[t,0])
+                    u_g[t,k] = lifrac*u_g[t,k_pbl_top]
+                    v_g[t,k] = lifrac*v_g[t,k_pbl_top]
+            
+    
+    if (vertical_method == 1):
+        t_advec_T[:,:] = h_advec_T[:,:] + v_advec_T[:,:]
+        t_advec_qv[:,:] = h_advec_qv[:,:] + v_advec_qv[:,:]
+        t_advec_u[:,:] = h_advec_u[:,:] + v_advec_u[:,:]
+        t_advec_v[:,:] = h_advec_v[:,:] + v_advec_v[:,:]
+    else:
+        t_advec_T[:,:] = h_advec_T[:,:]
+        t_advec_qv[:,:] = h_advec_qv[:,:]
+        t_advec_u[:,:] = h_advec_u[:,:]
+        t_advec_v[:,:] = h_advec_v[:,:]
     
     if (save_comp_data):
         # Read in 2D UFS history files
@@ -2094,10 +2273,10 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
         "wa":       smoothed_w,
         "ps_forc":  pressfc[:,center,center],
         "pa_forc":  pres,
-        "tnta_adv": h_advec_T[:,:] + v_advec_T[:,:],
-        "tnqv_adv": h_advec_qv[:,:] + v_advec_qv[:,:],
-        "tnua_adv": h_advec_u[:,:] + v_advec_u[:,:],
-        "tnva_adv": h_advec_v[:,:] + v_advec_v[:,:],
+        "tnta_adv": t_advec_T[:,:],
+        "tnqv_adv": t_advec_qv[:,:],
+        "tnua_adv": t_advec_u[:,:],
+        "tnva_adv": t_advec_v[:,:],
         "ug"      : u_g[:,:],
         "vg"      : v_g[:,:],
         "ua_nud"  : u_wind[:,:,center,center],
@@ -3014,10 +3193,8 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
     #
     nc_file.adv_ta            = forcing_on
     nc_file.adv_qv            = forcing_on
-    if (not geos_wind_forcing):
-        nc_file.adv_ua            = forcing_on
-        nc_file.adv_va            = forcing_on
-    #
+    nc_file.adv_ua            = forcing_on
+    nc_file.adv_va            = forcing_on
     nc_file.surface_forcing_temp     = 'none'
     nc_file.surface_forcing_moisture = 'none'
     nc_file.surface_forcing_wind     = 'none'
@@ -3545,7 +3722,15 @@ def main():
                                                                     grid_dir, tile, IC_i, IC_j, lam,\
                                                                     save_comp, exact_mode)
     elif forcing_method == 2:
-        (forcing_data, comp_data) = get_UFS_forcing_data_advective_tendency(forcing_dir, hist_i, hist_j, tile, neighbors, dx, dy, state_data["nlevs"], lam, save_comp, vertical_method, geos_wind_forcing, wind_nudge)
+        geo_pts = n_forcing_halo_points
+        geo_neighbors = ''
+        geo_dx = ''
+        geo_dy = ''
+        if (geos_wind_forcing and use_actual_geos_wind):
+            #need to check and potentially get more neighboring data for geostrophic wind (for low enough Rossby numbers where geostrophic balance can be assumed)
+            (geo_pts, geo_neighbors, geo_dx, geo_dy) = expand_neighbors_for_geostrophic_balance(forcing_dir, hist_i, hist_j, neighbors, dx, dy, state_data["nlevs"], lam)
+        (forcing_data, comp_data) = get_UFS_forcing_data_advective_tendency(forcing_dir, hist_i, hist_j, tile, neighbors, dx, dy, state_data["nlevs"], lam, save_comp, vertical_method, \
+                                                                            geos_wind_forcing, wind_nudge, geo_pts, geo_neighbors, geo_dx, geo_dy, use_actual_geos_wind)
     elif forcing_method == 3:
         exact_mode = False
         (forcing_data, comp_data, stateInit) = get_UFS_forcing_data(state_data["nlevs"], state_data,    \
