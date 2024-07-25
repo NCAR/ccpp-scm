@@ -1064,7 +1064,7 @@ module scm_type_defs
       !
       ! Orographical data (2D)
       !
-      if (scm_state%model_ics) then
+      if (scm_state%model_ics .or. scm_state%lsm_ics) then
         write(0,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_stddev,    physics%Sfcprop%hprime(i,1),  "stddev",    .true., missing_var(1))
         call conditionally_set_var(scm_input%input_convexity, physics%Sfcprop%hprime(i,2),  "convexity", .true., missing_var(2))
@@ -1202,8 +1202,14 @@ module scm_type_defs
       !
       ! Derive physics quantities using surface model ICs.
       !
+      print*,"SWALES SCM: scm_state%model_ics         = ",scm_state%model_ics
+      print*,"SWALES SCM: scm_state%lsm_ics           = ",scm_state%lsm_ics
+      print*,"SWALES SCM: physics%Sfcprop%stype(i)    = ",physics%Sfcprop%stype(i)
+      print*,"SWALES SCM: physics%Sfcprop%lakefrac(i) = ",physics%Sfcprop%lakefrac(i)
+      print*,"SWALES SCM: physics%Sfcprop%oro_uf(i)   = ",physics%Sfcprop%oro_uf(i)
+      print*,"SWALES SCM: min_lake_orog               = ",min_lake_orog
       if(scm_state%model_ics .or. scm_state%lsm_ics) then
-        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i)+0.5 <= 0) then
+        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i) <= 0) then
           physics%Sfcprop%landfrac(i) = real_zero
           physics%Sfcprop%stype(i) = 0
           if (physics%Sfcprop%lakefrac(i) > real_zero) then
