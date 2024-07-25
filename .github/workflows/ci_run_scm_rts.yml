@@ -1,3 +1,4 @@
+
 name: CI test to build and run SCM regression tests
 
 on: [pull_request, workflow_dispatch]
@@ -21,8 +22,8 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_RRFS_v1,SCM_GFS_v17_HR3,SCM_GFS_v17_HR3_RRTMGP
-      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_RRFS_v1_ps,SCM_GFS_v17_HR3_ps,SCM_GFS_v17_HR3_RRTMGP_ps
+      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf,SCM_GFS_v17_p8_ugwpv1,SCM_GFS_v16_RRTMGP
+      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_GFS_v16_RRTMGP_ps
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
 
@@ -32,7 +33,7 @@ jobs:
     # Initial
     #######################################################################################
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
@@ -41,7 +42,7 @@ jobs:
     # Python setup
     #######################################################################################
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{matrix.py-version}}
 
@@ -74,7 +75,7 @@ jobs:
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
@@ -91,7 +92,7 @@ jobs:
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
@@ -108,7 +109,7 @@ jobs:
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
@@ -128,7 +129,7 @@ jobs:
 
     - name: Cache NetCDF Fortran library
       id: cache-netcdf-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
@@ -208,7 +209,7 @@ jobs:
     - name: Download SCM RT baselines
       run: |
         cd ${dir_bl}
-        wget https://dtcenter.ucar.edu/ccpp/users/rt/rt-baselines-${{matrix.build-type}}.zip
+        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
         unzip rt-baselines-${{matrix.build-type}}.zip
 
     - name: Compare SCM RT output to baselines
@@ -217,13 +218,13 @@ jobs:
         ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: rt-plots-${{matrix.build-type}}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: rt-baselines-${{matrix.build-type}}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
