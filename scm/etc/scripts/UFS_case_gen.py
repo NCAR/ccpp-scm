@@ -14,7 +14,6 @@ import re
 import fv3_remap
 import xesmf
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt 
 
 ###############################################################################
 # Global settings                                                             #
@@ -1693,7 +1692,7 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
     if lam:
         nc_file = Dataset('{0}/{1}'.format(dir,'oro_data.nc'))
     else:
-        filename_pattern = 'oro*.tile{0}.nc'.format(tile)
+        filename_pattern = 'oro_data.tile{0}.nc'.format(tile)
         for f_name in os.listdir(dir):
            if fnmatch.fnmatch(f_name, filename_pattern):
               filename = f_name
