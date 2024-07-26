@@ -167,7 +167,6 @@ def execute(cmd, ignore_error = False):
         logging.critical(message)
         raise Exception('Execution of command "{0}" failed, exit code {1}\n'.format(cmd, status))
     else:
-        print("SHOULD PRINT ERROR MESSAGE: status and ignore error ==", status, ignore_error)
         logging.error(message)
     return (status, stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'), stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
 
@@ -767,11 +766,19 @@ def copy_outdir(exp_dir):
         shutil.rmtree(home_output_dir)
     shutil.copytree(exp_dir, home_output_dir)
 
-def print_error_report(error_logs, total_count):
-    case_l = len(max(error_logs[:,0], key=len))
-    suite_l = len(max(error_logs[:,1], key=len))
-    namelist_l = len(max(error_logs[:,2], key=len))
-    status_l = len(max(error_logs[:,3], key=len))
+
+def print_report_line(case_s, suite, namelist, max_str_lens):
+    case_l = max_str_lens.case
+    suite_l = max_str_lens.suite
+    namelist_l = max_str_lens.namelist
+    logging.info(f"| {case_s:<{case_l}} | {suite:<{suite_l}} | {namelist:<{namelist_l}} |")
+
+
+def print_error_report(error_logs, total_count, max_str_lens):
+    case_l = max_str_lens.case
+    suite_l = max_str_lens.suite
+    namelist_l = max_str_lens.namelist
+    status_l = max_str_lens.status
     # error_log contains header, subtracting 1 from error
     error_count = error_logs.shape[0] - 1
     passing_count = total_count - error_count
@@ -789,6 +796,32 @@ def print_error_report(error_logs, total_count):
             header_printed = True
     print("-" * column_width)
     print(f"[{error_count}/{total_count}] failed cases, [{passing_count}/{total_count}] passing cases")
+
+
+class MaxStrLengths:
+    def __init__(self, max_case_len, max_suite_len,
+                 max_namelist_len, max_status_len):
+        self.case = max_case_len
+        self.suite = max_suite_len
+        self.namelist = max_namelist_len
+        self.status = max_status_len
+
+
+def find_max_str_lengths(run_list):
+    max_case_len = 0
+    max_suite_len = 0
+    max_status_len = len('status')
+
+    # Loop through the list of dictionaries to find the longest lengths
+    for item in run_list:
+        max_case_len = max(max_case_len, len(item['case']))
+        max_suite_len = max(max_suite_len, len(item['suite']))
+
+    # add 6, e.g. diff between len('SCM_HRRR_gf') and len('input_HRRR_gf.nml')
+    max_namelist_len =  max_suite_len + 6
+    max_str_lens = MaxStrLengths(max_case_len, max_suite_len,
+                                 max_namelist_len, max_status_len)
+    return max_str_lens
 
 
 def main():
@@ -847,15 +880,19 @@ def main():
         if (namelist != None): run_list[0]["namelist"] = namelist
         if (tracers  != None): run_list[0]["tracers"]  = tracers
 
-    # Loop through all input "run dictionaires"
+
+    # setup variables
     error_logs = [["Failed Case", "Suite", "Namelist", "Status"]]
+    max_str_lens = find_max_str_lengths(run_list)
     failed_case = False
     irun = 0
+
+    # Loop through all input "run dictionaires"
     for run in run_list:
 
         #
         # Is this a "supported" SCM configuration?
-        # (e.g Do we have defualt namelist and tracer files for this suite?)
+        # (e.g Do we have default namelist and tracer files for this suite?)
         # If supported, copy default configuration, modify below if necessary.
         #
         active_suite = None
@@ -902,6 +939,7 @@ def main():
         #
         # Run the SCM case
         #
+        print_report_line(run["case"], run["suite"], active_suite.namelist, max_str_lens)
         logging.info('Executing process {0} of {1}: case={2}, suite={3}, namelist={4}'.format(
             irun, len(run_list), run["case"], run["suite"], active_suite.namelist))
         #
@@ -936,7 +974,7 @@ def main():
             copy_outdir(exp_dir)
 
     if (failed_case):
-        print_error_report(error_logs, len(run_list))
+        print_error_report(error_logs, len(run_list), max_str_lens)
         sys.exit(1)
 
 
