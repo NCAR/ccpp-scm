@@ -3,6 +3,7 @@
 import argparse
 import f90nml
 import logging
+import numpy as np
 import os
 import re
 import shutil
@@ -156,17 +157,18 @@ def execute(cmd, ignore_error = False):
                          stderr = subprocess.PIPE, shell = True)
     (stdout, stderr) = p.communicate()
     status = p.returncode
+    message = 'Execution of "{0}" returned with exit code {1}\n'.format(cmd, status)
+    message += '    stdout: "{0}"\n'.format(stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'))
+    message += '    stderr: "{0}"'.format(stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
+
     if status == 0:
-        message = 'Execution of "{0}" returned with exit code {1}\n'.format(cmd, status)
-        message += '    stdout: "{0}"\n'.format(stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'))
-        message += '    stderr: "{0}"'.format(stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
         logging.debug(message)
     elif not ignore_error:
-        message = 'Execution of command "{0}" failed, exit code {1}\n'.format(cmd, status)
-        message += '    stdout: "{0}"\n'.format(stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'))
-        message += '    stderr: "{0}"'.format(stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
         logging.critical(message)
         raise Exception('Execution of command "{0}" failed, exit code {1}\n'.format(cmd, status))
+    else:
+        print("SHOULD PRINT ERROR MESSAGE: status and ignore error ==", status, ignore_error)
+        logging.error(message)
     return (status, stdout.decode(encoding='ascii', errors='ignore').rstrip('\n'), stderr.decode(encoding='ascii', errors='ignore').rstrip('\n'))
 
 def parse_arguments():
@@ -765,6 +767,30 @@ def copy_outdir(exp_dir):
         shutil.rmtree(home_output_dir)
     shutil.copytree(exp_dir, home_output_dir)
 
+def print_error_report(error_logs, total_count):
+    case_l = len(max(error_logs[:,0], key=len))
+    suite_l = len(max(error_logs[:,1], key=len))
+    namelist_l = len(max(error_logs[:,2], key=len))
+    status_l = len(max(error_logs[:,3], key=len))
+    # error_log contains header, subtracting 1 from error
+    error_count = error_logs.shape[0] - 1
+    passing_count = total_count - error_count
+    header_printed = False
+    column_width = (case_l + suite_l + namelist_l + status_l + 13)
+
+    # print formatted asummary
+    print("Failure Summary:")
+    print("-" * column_width)
+    for error_log in error_logs:
+        case_s, suite, namelist, status = error_log
+        print(f"| {case_s:<{case_l}} | {suite:<{suite_l}} | {namelist:<{namelist_l}} | {status:<{status_l}} |")
+        if not header_printed:
+            print("-" * column_width)
+            header_printed = True
+    print("-" * column_width)
+    print(f"[{error_count}/{total_count}] failed cases, [{passing_count}/{total_count}] passing cases")
+
+
 def main():
     (file, case, sdf, namelist, tracers, use_gdb, runtime, runtime_mult, docker, \
      verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,       \
@@ -822,6 +848,8 @@ def main():
         if (tracers  != None): run_list[0]["tracers"]  = tracers
 
     # Loop through all input "run dictionaires"
+    error_logs = [["Failed Case", "Suite", "Namelist", "Status"]]
+    failed_case = False
     irun = 0
     for run in run_list:
 
@@ -894,13 +922,23 @@ def main():
             logging.info('Process "(case={0}, suite={1}, namelist={2}" completed successfully'. \
                          format(run["case"], run["suite"], active_suite.namelist))
         else:
-            logging.warning('Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'. \
-                            format( run["case"], run["suite"], active_suite.namelist, status))
+            failed_case = True
+            error_str = 'Process "(case={0}, suite={1}, namelist={2}" exited with code {3}'. \
+                        format( run["case"], run["suite"], active_suite.namelist, status)
+            logging.warning(error_str)
+            error_logs = np.append(error_logs,
+                                   [[run["case"], run["suite"], active_suite.namelist, status]],
+                                   axis=0)
         #
         if time_elapsed:
             logging.info('    Elapsed time: {0}s'.format(time_elapsed))
         if docker:
             copy_outdir(exp_dir)
+
+    if (failed_case):
+        print_error_report(error_logs, len(run_list))
+        sys.exit(1)
+
 
 if __name__ == '__main__':
     main()
