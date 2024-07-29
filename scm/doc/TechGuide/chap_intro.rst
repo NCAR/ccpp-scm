@@ -60,8 +60,6 @@ Minor
 -  Updated `Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/>`__, User's Guide, Technical Documentation, and
    online tutorials.
 
--  Generalized plotting and visualization tools.
-
 Limitations
 ~~~~~~~~~~~
 

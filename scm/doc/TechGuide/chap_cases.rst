@@ -88,12 +88,12 @@ arguments) are:
 
 -  ``spinup_timesteps``
 
-  - Number of timesteps to spin up when ``do_spinup`` is true
+   - Number of timesteps to spin up when ``do_spinup`` is true
 
 -  ``lsm_ics``
 
-  - Set to ``.true.`` when LSM initial conditions are included (but not all ICs from
-    another model)
+   - Set to ``.true.`` when LSM initial conditions are included (but not all ICs from
+     another model)
 
 .. _`case input`:
 

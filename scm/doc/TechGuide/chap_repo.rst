@@ -40,7 +40,7 @@ Cubed-Sphere (FV3) dynamical core.
 | ``├── docker``
 | ``│   └── Dockerfile`` - Contains Docker instructions for building the CCPP SCM image
 | ``├── environment-suite-sim.yml`` - Python environment dependency file for the CCPP Suite Simulator
-| ``├── environment-ufsreplay.yml`` - Python environment dependency file for the UFS Case Generator capability
+| ``├── environment-ufscasegen.yml`` - Python environment dependency file for the UFS Case Generator capability
 | ``├── environment.yml`` - Python environment dependency file for the SCM
 | ``├── scm``
 | ``│   ├── LICENSE.txt`` - Contains licensing information
