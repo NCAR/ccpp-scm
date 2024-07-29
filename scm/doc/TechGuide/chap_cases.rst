@@ -309,7 +309,7 @@ format.
 
 .. code:: bash
 
-   ./UFS_IC_generator.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
+   ./UFS_case_gen.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
    DATE -i IN_DIR -g GRID_DIR -f FORCING_DIR -n
    CASE_NAME [-t {1,2,3,4,5,6,7}] [-a AREA] [-oc]
    [-lam] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
@@ -434,7 +434,7 @@ UFS regression test, ``control_c192``, for single point.
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_c192/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
+   ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
@@ -454,7 +454,7 @@ UFS regression test, ``control_c384``, for multiple points.
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_c384/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37
+   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
@@ -499,7 +499,7 @@ Now the cases can be generated with the following command:
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs/control_p8/ -sc --C_RES 96 -dt 720 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10 -sdf SCM_GFS_v17_p8
+   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_p8_intel -sc --C_RES 96 -dt 720 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10 -sdf SCM_GFS_v17_p8
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
