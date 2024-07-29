@@ -14,19 +14,23 @@ import random
 # Argument list
 ###############################################################################
 parser = argparse.ArgumentParser()
-parser.add_argument('-d',    '--dir',           help='path to UFS Regression Test output', required=True)
-parser.add_argument('-n',    '--case_name',     help='name of case',                       required=True)
-parser.add_argument('-lonl', '--lon_limits',    help='longitude range, separated by a space', nargs=2,   type=float, required=False)
-parser.add_argument('-latl', '--lat_limits',    help='latitude range, separated by a space',  nargs=2,   type=float, required=False)
-parser.add_argument('-lons', '--lon_list',      help='longitudes, separated by a space',      nargs='*', type=float, required=False)
-parser.add_argument('-lats', '--lat_list',      help='latitudes, separated by a space',       nargs='*', type=float, required=False)
-parser.add_argument('-fxy',  '--lonlat_file',   help='file containing longitudes and latitude',nargs=1,              required=False)
-parser.add_argument('-nens', '--nensmembers',   help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
-parser.add_argument('-dt',   '--timestep',      help='SCM timestep, in seconds',                                      type=int,   default = 3600)
-parser.add_argument('-cres', '--C_RES',         help='UFS spatial resolution',                                        type=int,   default = 96)
-parser.add_argument('-sdf',  '--suite',         help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
-parser.add_argument('-sc',   '--save_comp',     help='flag to save a file with UFS data for comparisons',                         action='store_true')
-parser.add_argument('-near', '--use_nearest',   help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
+parser.add_argument('-d',    '--dir',            help='path to UFS Regression Test output', required=True)
+parser.add_argument('-n',    '--case_name',      help='name of case',                       required=True)
+parser.add_argument('-lonl', '--lon_limits',     help='longitude range, separated by a space', nargs=2,   type=float, required=False)
+parser.add_argument('-latl', '--lat_limits',     help='latitude range, separated by a space',  nargs=2,   type=float, required=False)
+parser.add_argument('-lons', '--lon_list',       help='longitudes, separated by a space',      nargs='*', type=float, required=False)
+parser.add_argument('-lats', '--lat_list',       help='latitudes, separated by a space',       nargs='*', type=float, required=False)
+parser.add_argument('-fxy',  '--lonlat_file',    help='file containing longitudes and latitude',nargs=1,              required=False)
+parser.add_argument('-nens', '--nensmembers',    help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
+parser.add_argument('-dt',   '--timestep',       help='SCM timestep, in seconds',                                      type=int,   default = 3600)
+parser.add_argument('-cres', '--C_RES',          help='UFS spatial resolution',                                        type=int,   default = 96)
+parser.add_argument('-sdf',  '--suite',          help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
+parser.add_argument('-sc',   '--save_comp',      help='flag to save a file with UFS data for comparisons',                           action='store_true')
+parser.add_argument('-near', '--use_nearest',    help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
+parser.add_argument('-fm',   '--forcing_method', help='method used to calculate forcing (1=total tendencies from UFS dycore, 2=advective terms calculated from UFS history files, 3=total time tendency terms calculated)', type=int, choices=range(1,4), default=2)
+parser.add_argument('-vm',   '--vertical_method',help='method used to calculate vertical advective forcing (1=vertical advective terms calculated from UFS history files and added to total, 2=smoothed vertical velocity provided)', type=int, choices=range(1,3), default=2)
+parser.add_argument('-wn',   '--wind_nudge',     help='flag to turn on wind nudging to UFS profiles',                                action='store_true')
+parser.add_argument('-geos', '--geostrophic',    help='flag to turn on geostrophic wind forcing',                                    action='store_true')
 
 ###############################################################################
 # Main program
@@ -134,10 +138,14 @@ def main():
                   {"name": "dt",          "values": str(args.timestep)}, \
                   {"name": "C_RES",       "values": str(args.C_RES)}]
 
-    # What, if any, options neeed to be passsed to UFS_IC_generator.py?
+    # What, if any, options neeed to be passsed to UFS_case_gen.py?
     com_config = ''
-    if args.save_comp:   com_config = com_config + ' -sc'
-    if args.use_nearest: com_config = com_config + ' -near'
+    if args.save_comp:       com_config = com_config + ' -sc'
+    if args.use_nearest:     com_config = com_config + ' -near'
+    if args.forcing_method:  com_config = com_config + ' -fm ' + str(args.forcing_method)
+    if args.vertical_method: com_config = com_config + ' -vm ' + str(args.vertical_method)
+    if args.wind_nudge:      com_config = com_config + ' -wn'
+    if args.geostrophic:     com_config = com_config + ' -geos'
 
     # Create inputs to SCM
     case_list    = ""
@@ -145,10 +153,10 @@ def main():
     count = 0
     run_list = []
     for pt in range(0,npts):
-        # Call UFS_IC_generator.py
+        # Call UFS_case_gen.py
         case_name     = args.case_name +"_n" + str(pt).zfill(3)
         file_scminput = "../../data/processed_case_input/"+case_name+"_SCM_driver.nc"
-        com = "./UFS_IC_generator.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
+        com = "./UFS_case_gen.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
               " -i " + args.dir_ic + " -g " + args.dir_grid + " -f " + args.dir_forcing + " -n " + case_name + com_config
         print(com)
         os.system(com)
@@ -211,12 +219,12 @@ def main():
     # Display run commands
     #
     ###########################################################################
-    print("-------------------------------------------------------------------------------------------")
+    print("#"*128)
     print("Command(s) to execute in ccpp-scm/scm/bin/: ")
     print(" ")
     print("./run_scm.py --npz_type gfs --file " + fileOUT + " --timestep " + str(args.timestep))
     print("")
-    print("-------------------------------------------------------------------------------------------")
+    print("#"*128)
 
 if __name__ == '__main__':
     main()
