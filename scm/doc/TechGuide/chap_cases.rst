@@ -23,15 +23,11 @@ The ``case_config`` namelist expects the following parameters:
       This string must correspond to a dataset included in the directory
       ``ccpp-scm/scm/data/processed_case_input/`` (without the file extension).
 
--  ``relax_time``
-
-   -  A floating point number representing the timescale in seconds for
-      the relaxation forcing (only used if ``thermo_forcing_type = 3`` or ``mom_forcing_type = 3``)
-
 -  ``sfc_roughness_length_cm``
 
    -  Surface roughness length in cm for calculating surface-related
-      fields from specified surface fluxes (only used if ``sfc_flux_spec`` is True).
+      fields from specified surface fluxes (only used if surface fluxes
+      are specified).
 
 -  ``reference_profile_choice``
 
@@ -84,6 +80,20 @@ arguments) are:
 
    - Specify the timestep to use (if different than the default specified in
      ../../src/suite_info.py), default=600.
+
+-  ``do_spinup``
+
+   - Set to ``.true.`` when allowing the model to spin up before the "official"
+     model integration starts. 
+
+-  ``spinup_timesteps``
+
+  - Number of timesteps to spin up when ``do_spinup`` is true
+
+-  ``lsm_ics``
+
+  - Set to ``.true.`` when LSM initial conditions are included (but not all ICs from
+    another model)
 
 .. _`case input`:
 
@@ -143,20 +153,25 @@ following observational field campaigns:
    (LASSO) for May 18, 2016 (with capability to run all LASSO dates -
    see :numref:`Section %s <lasso>`) continental shallow convection
 
+-  GEWEX Atmospheric Boundary Layer Study (GABLS3) for July 1, 2006
+   development of a nocturnal low-level jet
+
+-  Multidisciplinary drifting Observatory for the Study of Arctic Climate
+   expedition (MOSAiC)
+   -  SS: Strongly stably stratified boundary layer (March 2-10 2020)
+   -  AMPS: Arctic mixed-phase stratocumuluas cloud (Oct 31 - Nov 5 2019)
+
+-  Cold-Air Outbreaks in the Marine Boundary Layer Experiment (COMBLE) for
+   March 12, 2020 mixed phased clouds in the polar marine boundary layer
+
 For the ARM SGP case, several case configuration files representing
 different time periods of the observational dataset are included,
 denoted by a trailing letter. The LASSO case may be run with different
 forcing applied, so three case configuration files corresponding to
-these different forcing are included. In addition, two example cases are
-included for using UFS Atmosphere initial conditions:
+these different forcing are included.
 
--  UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on
-   Oct. 3, 2016 with Noah variables on the C96 FV3 grid (``fv3_model_point_noah.nc``)
-
--  UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on
-   Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (``fv3_model_point_noahmp.nc``)
-
-See :numref:`Section %s <UFScasegen>` for information on how to generate these
+In addition, cases can be generated from UFS initial conditions See
+:numref:`Section %s <UFScasegen>` for information on how to generate these
 files for other locations and dates, given appropriate UFS Atmosphere
 initial conditions and output.
 
@@ -166,11 +181,10 @@ How to set up new cases
 Setting up a new case involves preparing the two types of files listed
 above. For the case initialization and forcing data file, this typically
 involves writing a custom script or program to parse the data from its
-original format to the format that the SCM expects, listed above. An
-example of this type of script written in Python is included in ``ccpp-scm/scm/etc/scripts/twpice_forcing_file_generator.py``. The
-script reads in the data as supplied from its source, converts any
-necessary variables, and writes a NetCDF (version 4) file in the format
-described in subsection :numref:`Subsection %s <case input dephy>`.
+original format to the DEPHY format, listed above. Formatting for DEPHY
+is documented in the `DEPHY repository
+<https://github.com/GdR-DEPHY/DEPHY-SCM/blob/master/DEPHY-SCM_CommonFormat_v1.0.pdf>`__.
+
 For reference, the following formulas are used:
 
 .. math:: \theta_{il} = \theta - \frac{\theta}{T}\left(\frac{L_v}{c_p}q_l + \frac{L_s}{c_p}q_i\right)
@@ -186,67 +200,6 @@ specific humidity, :math:`q_v` is the water vapor specific humidity,
 :math:`q_l` is the suspended liquid water specific humidity, and
 :math:`q_i` is the suspended ice water specific humidity.
 
-As shown in the example NetCDF header, the SCM expects that the vertical
-dimension is pressure levels (index 1 is the surface) and the time
-dimension is in seconds. The initial conditions expected are the height
-of the pressure levels in meters, and arrays representing vertical
-columns of :math:`\theta_{il}` in K, :math:`q_t`, :math:`q_l`, and
-:math:`q_i` in kg kg\ :math:`^{-1}`, :math:`u` and :math:`v` in m
-s\ :math:`^{-1}`, turbulence kinetic energy in m\ :math:`^2`
-s\ :math:`^{-2}` and ozone mass mixing ratio in kg kg\ :math:`^{-1}`.
-
-For forcing data, the SCM expects a time series of the following
-variables: latitude and longitude in decimal degrees [in case the
-column(s) is moving in time (e.g., Lagrangian column)], the surface
-pressure (Pa) and surface temperature (K). If surface fluxes are
-specified for the new case, one must also include a time series of the
-kinematic surface sensible heat flux (K m s\ :math:`^{-1}`) and
-kinematic surface latent heat flux (kg kg\ :math:`^{-1}` m
-s\ :math:`^{-1}`). The following variables are expected as 2-dimensional
-arrays (time first, vertical levels second): the geostrophic u (E-W) and
-v (N-S) winds (m s\ :math:`^{-1}`), and the horizontal and vertical
-advective tendencies of :math:`\theta_{il}` (K s\ :math:`^{-1}`) and
-:math:`q_t` (kg kg\ :math:`^{-1}` s\ :math:`^{-1}`), the large scale
-vertical velocity (m s\ :math:`^{-1}`), large scale pressure vertical
-velocity (Pa s\ :math:`^{-1}`), the prescribed radiative heating rate (K
-s\ :math:`^{-1}`), and profiles of u, v, T, :math:`\theta_{il}` and
-:math:`q_t` to use for nudging.
-
-Although it is expected that all variables are in the NetCDF file, only
-those that are used with the chosen forcing method are required to be
-nonzero. For example, the following variables are required depending on
-the values of ``mom_forcing_type`` and ``thermo_forcing_type`` specified in the case configuration file:
-
--  ``mom_forcing_type = 1``
-
-   -  Not implemented yet
-
--  ``mom_forcing_type = 2``
-
-   -  geostrophic winds and large scale vertical velocity
-
--  ``mom_forcing_type = 3``
-
-   -  u and v nudging profiles
-
--  ``thermo_forcing_type = 1``
-
-   -  horizontal and vertical advective tendencies of
-      :math:`\theta_{il}` and :math:`q_t` and prescribed radiative
-      heating (can be zero if radiation scheme is active)
-
--  ``thermo_forcing_type = 2``
-
-   -  horizontal advective tendencies of :math:`\theta_{il}` and
-      :math:`q_t`, prescribed radiative heating (can be zero if
-      radiation scheme is active), and the large scale vertical pressure
-      velocity
-
--  ``thermo_forcing_type = 3``
-
-   -  :math:`\theta_{il}` and :math:`q_t` nudging profiles and the large
-      scale vertical pressure velocity
-
 For the case configuration file, it is most efficient to copy an
 existing file in ``ccpp-scm/scm/etc/case_config`` and edit it to suit one’s case. Recall from subsection
 :numref:`Subsection %s <case config>` that this file is used to configure
@@ -260,17 +213,14 @@ configured for the case (without the file extension). The parameter
 should be less than or equal to the length of the forcing data unless
 the desired behavior of the simulation is to proceed with the last
 specified forcing values after the length of the forcing data has been
-surpassed. The initial date and time should fall within the forcing
-period specified in the case input data file. If the case input data is
+surpassed. If the case input data is
 specified to a lower altitude than the vertical domain, the remainder of
 the column will be filled in with values from a reference profile. There
 is a tropical profile and mid-latitude summer profile provided, although
 one may add more choices by adding a data file to ``ccpp-scm/scm/data/processed_case_input`` and adding a parser
 section to the subroutine ``get_reference_profile`` in ``scm/src/scm_input.f90``. Surface fluxes can either be specified in
 the case input data file or calculated using a surface scheme using
-surface properties. If surface fluxes are specified from data, set ``sfc_flux_spec`` to ``.true.``
-and specify ``sfc_roughness_length_cm`` for the surface over which the column resides. Otherwise,`
-specify a ``sfc_type``. In addition, one must specify a ``column_area`` for each column.
+surface properties. In addition, one must specify a ``column_area`` for each column.
 
 To control the forcing method, one must choose how the momentum and
 scalar variable forcing are applied. The three methods of Randall and
