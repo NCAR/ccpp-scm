@@ -5,7 +5,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 begin
 
 ;Define constants
-  
+
   missing_value = -9999.0
   g     = 9.80665 ;gravity (m s-2)
   R_dry = 287.    ;ideal gas dry air constant (J kg-1 K-1)
@@ -24,7 +24,7 @@ begin
 ; Time, 01Jul2006 12:00:00 UTC - 02Jul2006 12:00:00 UTC
 ; Must be in seconds
   time           = fspan(0,86400,145)
-  time@long_name = "elapsed time since the beginning of the simulation" 
+  time@long_name = "elapsed time since the beginning of the simulation"
   time@units     = "s"
 
 ;  timb = fspan(0,86400,145)
@@ -52,7 +52,7 @@ begin
 
 ; Total water specific humidity (q) at heights listed above
   qt = (/ 9.3e-3, 9.3e-3, 8.5e-3, 8.4e-3, 8.3e-3, 8.2e-3, 8.1e-3, \
-          8.0e-3, 7.5e-3, 2.0e-3, 0.3e-3, 0.01e-3, 0.003e-3, 0. /) 
+          8.0e-3, 7.5e-3, 2.0e-3, 0.3e-3, 0.01e-3, 0.003e-3, 0. /)
   qt@long_name = "initial profile of total water specific humidity"
   qt@units     = "kg kg^-1"
 
@@ -96,7 +96,7 @@ begin
   end do
 
 ; Solve the hypsometric equation for p2 to attain each new pressure level
-; and fill the array (the variable to fill is levels, created above.) 
+; and fill the array (the variable to fill is levels, created above.)
 ; The value for levels(0) = p_surf(0)
   levels(0) = p_surf(0)
   do i=1,dimsizes(levels)-1,1
@@ -113,7 +113,7 @@ begin
 
 ; Calculate thetail. Because ql and qi are not given, this is not possible,
 ; so the initial profile of thetail will be assumed theta.
-; The remainder of the equation used in the gmtb-scm user's guide would be 
+; The remainder of the equation used in the gmtb-scm user's guide would be
 ; zero, leaving you with only theta.
   thetail           = theta
   thetail@long_name = "initial profile of ice-liquid water potential "+ \
@@ -135,10 +135,10 @@ begin
   v@long_name = "initial profile of N-S horizontal wind"
   v@units     = "m s^-1"
 
-; Use GLDAS to derive the sensible and latent heat flux for the Cabauw 
-; location, then you can compare the GLDAS H/Le to the given intial Bowen 
+; Use GLDAS to derive the sensible and latent heat flux for the Cabauw
+; location, then you can compare the GLDAS H/Le to the given intial Bowen
 ; ratio. Begin by reading in the data from each file.
-;  gl_dir = "/glade/scratch/damico/GLDAS_GABLS3/"
+;  gl_dir = "/path/to/GLDAS_GABLS3/"
 ;  gl_00  = addfile(gl_dir+"GLDAS_NOAH025_3H.A20060701.0000.021.nc4.SUB.nc4", \
 ;                   "r")
 
@@ -249,7 +249,7 @@ begin
   w_ls@units     = "m s^-1"
 
 ; Geostrophic winds are given at certain times but only at the surface.
-; Instructions from GABLS suggest interpolation to surface winds up to 
+; Instructions from GABLS suggest interpolation to surface winds up to
 ; 2000 m, and then constant from that point. This should be done for each
 ; time step. Starting with time.
   u_geo_spec = (/ -7.8, -7.8, -6.5, -5.0, -5.0, -6.5 /)
@@ -260,7 +260,7 @@ begin
   v_geo_t    = (/ 0, 21600, 39600, 54000, 64800, 86400 /)
   v_geo      = linint1(v_geo_t,v_geo_spec,False,time,0)
 
-; Interpolate with height, linearly, from the surface values above to -2.0 
+; Interpolate with height, linearly, from the surface values above to -2.0
 ; m s^-1 for u and 2.0 m s^-1 for v. Above 2000 m, geostrophic wind is
 ; constant with height (according to GABLS guide).
   u_g       = new((/ dimsizes(levels),dimsizes(time) /),float)
@@ -287,10 +287,10 @@ begin
   u_g@units     = "m s^-1"
   v_g@unit      = "m s^-1"
 
-; Horizontal temperature tendency due to advection, which can be converted to 
-; thetail tendency. The values are give; between 200-1000m, decreasing 
-; to zero down towards the surface and decreasing to zero from 1000m to 
-; 1500m, with zero entirely above. Once again, there needs to be 
+; Horizontal temperature tendency due to advection, which can be converted to
+; thetail tendency. The values are give; between 200-1000m, decreasing
+; to zero down towards the surface and decreasing to zero from 1000m to
+; 1500m, with zero entirely above. Once again, there needs to be
 ; interpolation in time and with height.
   T_advec_spec = (/ -2.5e-5,7.5e-5,   0.,   0. /)
   T_advec_time = (/       0, 46800,64800,86400 /)
@@ -316,10 +316,10 @@ begin
                               "horizontal advection"
   h_advec_thetail@units     = "K s^-1"
 
-; The last remaining variable given in the data that the gmtb-scm can 
-; use is horizontal specific humidity tendency. The values are given 
+; The last remaining variable given in the data that the gmtb-scm can
+; use is horizontal specific humidity tendency. The values are given
 ; between 200-1000m, decreasing to zero down towards the surface and
-; decreasing to zero from 1000m to 1500, with zero entirely above. Once 
+; decreasing to zero from 1000m to 1500, with zero entirely above. Once
 ; again, there needs to be interpolation in time and with height.
   h_advec_spec = (/ 0., 8.e-8, 0., -8.e-8, 0., 0. /)
   h_advec_time = (/ 0, 32400, 43200, 50400, 61200, 86400 /)
@@ -407,7 +407,7 @@ begin
   v_advec_thetail           = 0.
   v_advec_thetail@long_name = "prescribed theta_il tendency due to " + \
                               "vertical advection"
-  v_advec_thetail@units     = "K s^-1"                            
+  v_advec_thetail@units     = "K s^-1"
 
   v_advec_qt           = new((/ dimsizes(levels),dimsizes(time) /),float)
   v_advec_qt           = 0.
@@ -418,141 +418,141 @@ begin
 ; Noah LSM initialization
   slmsk = 1.0 ;corresponds to land from the UFS ICs
   slmsk@long_name = "land-sea-ice mask"
-  
-  tsfco = 305.0 
+
+  tsfco = 305.0
   tsfco@long_name = "sea surface temperature OR surface skin temperature over land OR sea ice surface skin temperature (depends on value of slmsk)"
   tsfco@units     = "K"
-  
+
   weasd = 0.0
   weasd@long_name = "water equivalent accumulated snow depth"
   weasd@units     = "mm"
-  
+
   tg3 = 283.15 ;corresponds to case specs
   tg3@units = "K"
   tg3@long_name = "deep soil temperature"
-  
+
   zorl = 15.0 ;(cm) from case specs
   zorl@long_name = "composite surface roughness length"
   zorl@units = "cm"
-  
+
   zorlw = zorl ;(cm) from case specs
   zorlw@long_name = "surface roughness length over ocean"
   zorlw@units = "cm"
-  
+
   alvsf = 0.23 ;corresponds to case specs
   alvsf@long_name = "60 degree vis albedo with strong cosz dependency"
-  
+
   alnsf = 0.23 ;corresponds to case specs
   alnsf@long_name = "60 degree nir albedo with strong cosz dependency"
-  
+
   alvwf = 0.23 ;corresponds to case specs
   alvwf@long_name = "60 degree vis albedo with weak cosz dependency"
-  
+
   alnwf = 0.23 ;corresponds to case specs
   alnwf@long_name = "60 degree nir albedo with weak cosz dependency"
-  
+
   facsf = 0.50556319952 ;corresponds to value from UFS ICs (static from fix files for C768)
   facsf@long_name = "fractional coverage with strong cosz dependency"
-  
+
   facwf = 0.49443680048 ;corresponds to value from UFS ICs (static from fix files for C768)
   facwf@long_name = "fractional coverage with weak cosz dependency"
-  
-  vegfrac = 0.75 ; the value of 100% specified in the case 
+
+  vegfrac = 0.75 ; the value of 100% specified in the case
                               ; specifications clashes with the maximum value
                               ; for this gridpoint from UFS ICs
   vegfrac@long_name = "vegetation fraction"
-  
+
   canopy = 0.5 ;corresponds to typical value for grassland in the growing season
   canopy@units = "kg m-2"
   canopy@long_name = "amount of water stored in canopy"
-  
+
   f10m = missing_value ;this is not required
   f10m@long_name = "ratio of sigma level 1 wind and 10m wind"
-  
+
   t2m = missing_value; this is not required
   t2m@long_name = "2-meter absolute temperature"
   t2m@units = "K"
-  
+
   q2m = missing_value; this is not required
   q2m@long_name = "2-meter specific humidity"
   q2m@units = "kg kg-1"
-  
-  vegtyp = 10 ;corresponds to the "grasslands" type for the IGBP (vegsrc=1) 
+
+  vegtyp = 10 ;corresponds to the "grasslands" type for the IGBP (vegsrc=1)
               ;dataset
   vegtyp@long_name = "vegetation type (1-12)"
-  
+
   soiltyp = 12 ;corresponds to "clay" soil type
   soiltyp@long_name = "soil type (1-12)"
-  
+
   ;derive friction velocity from known values
   wind1 = sqrt(u_specified(1)^2 + v_specified(1)^2)
   uustar = von_K*wind1/log(u_h(1)/(0.01*zorl))
   uustar@units = "m s-1"
   uustar@long_name = "friction velocity"
-  
+
   ffmm = missing_value ;this is not required
   ffmm@long_name = "Monin-Obukhov similarity function for momentum"
-  
+
   ffhh = missing_value ;this is not required
   ffhh@long_name = "Monin-Obukhov similarity function for heat"
-  
+
   hice = 0.0 ;corresponds to value from UFS ICs
   hice@units = "m"
   hice@long_name = "sea ice thickness"
-  
+
   fice = 0.0 ;corresponds to value from UFS ICs
   fice@long_name = "ice fraction"
-  
+
   tisfc = tsfco ; there is no ice, but this corresponds to the surface skin temperature
   tisfc@units = "K"
   tisfc@long_name = "ice surface temperature"
-  
+
   tprcp = missing_value; not required
   tprcp@units = "m"
   tprcp@long_name = "instantaneous total precipitation amount"
-  
+
   srflag = missing_value; not required
   srflag@long_name = "snow/rain flag for precipitation"
-  
+
   snwdph = 0.0 ;corresponds to case specs
   snwdph@units = "mm"
   snwdph@long_name = "water equivalent snow depth"
-  
+
   shdmin = 0.01 ; corresponds to minimum vegetation fraction from surface fixed data (is not actually used in Noah LSM)
   shdmin@long_name = "minimum vegetation fraction"
-  
+
   shdmax = 0.8 ; the maximum value from the surface fixed data is closer to 0.75 (is not actually used in Noah LSM)
   shdmax@long_name = "maximum vegetation fraction"
-  
+
   slopetyp = 1
   slopetyp@long_name = "slope type (1-9)"
-  
+
   snoalb = 0.728796124458 ;corresponds to value from UFS ICs (static from fix files for C768)
   snoalb@long_name = "maximum snow albedo"
-  
+
   sncovr = 0.0 ;corresponds to case specs
   sncovr@long_name = "snow area fraction"
-  
+
   tsfcl = tsfco
   tsfcl@long_name = "surface skin temperature over land"
   tsfcl@units     = "K"
-  
+
   zorll = zorl ;(cm) from case specs
   zorll@long_name = "surface roughness length over land"
   zorll@units = "cm"
-  
+
   zorli = zorl ;(cm) from case specs
   zorli@long_name = "surface roughness length over ice"
   zorli@units = "cm"
-  
+
   stc = (/ 292.55, 289.9, 285.35, 283.15 /)
   stc@units = "K"
   stc@long_name = "initial profile of soil temperature"
-  
+
   smc = (/ 0.33, 0.33, 0.33, 0.33 /)
   smc@units = "m3 m-3"
   smc@long_name = "initial profile of soil moisture"
-  
+
   slc = smc ;all liquid (no ice)
   slc@units = "m3 m-3"
   slc@long_name = "initial profile of soil liquid moisture"
@@ -594,7 +594,7 @@ begin
   filevardef(fo,"levels",typeof(levels),"levels")
   filevarattdef(fo,"levels",levels)
   fo->levels = (/ levels /)
-  
+
   filevardef(fo,"soil_depth",typeof(soil_depth),"nsoil")
   filevarattdef(fo,"soil_depth",soil_depth)
   fo->soil_depth = (/ soil_depth /)
@@ -615,7 +615,7 @@ begin
 
   filedimdef(g2,dimNames,dimSizes,dimUnlim)
   filedimdef(g3,dimNames,dimSizes,dimUnlim)
-  
+
   filevardef(g1,"lat",typeof(lat),"ncl_scalar")
   filevarattdef(g1,"lat",lat)
   g1->lat = lat
@@ -623,151 +623,151 @@ begin
   filevardef(g1,"lon",typeof(lon),"ncl_scalar")
   filevarattdef(g1,"lon",lon)
   g1->lon = lon
-  
+
   filevardef(g1,"slmsk",typeof(slmsk),"ncl_scalar")
   filevarattdef(g1,"slmsk",slmsk)
   g1->slmsk = slmsk
-  
+
   filevardef(g1,"tsfco",typeof(tsfco),"ncl_scalar")
   filevarattdef(g1,"tsfco",tsfco)
   g1->tsfco = tsfco
-  
+
   filevardef(g1,"weasd",typeof(weasd),"ncl_scalar")
   filevarattdef(g1,"weasd",weasd)
   g1->weasd = weasd
-  
+
   filevardef(g1,"tg3",typeof(tg3),"ncl_scalar")
   filevarattdef(g1,"tg3",tg3)
   g1->tg3 = tg3
-  
+
   filevardef(g1,"zorl",typeof(zorl),"ncl_scalar")
   filevarattdef(g1,"zorl",zorl)
   g1->zorl = zorl
-  
+
   filevardef(g1,"zorlw",typeof(zorlw),"ncl_scalar")
   filevarattdef(g1,"zorlw",zorlw)
   g1->zorlw = zorlw
-  
+
   filevardef(g1,"alvsf",typeof(alvsf),"ncl_scalar")
   filevarattdef(g1,"alvsf",alvsf)
   g1->alvsf = alvsf
-  
+
   filevardef(g1,"alnsf",typeof(alnsf),"ncl_scalar")
   filevarattdef(g1,"alnsf",alnsf)
   g1->alnsf = alnsf
-  
+
   filevardef(g1,"alvwf",typeof(alvwf),"ncl_scalar")
   filevarattdef(g1,"alvwf",alvwf)
   g1->alvwf = alvwf
-  
+
   filevardef(g1,"alnwf",typeof(alnwf),"ncl_scalar")
   filevarattdef(g1,"alnwf",alnwf)
   g1->alnwf = alnwf
-  
+
   filevardef(g1,"facsf",typeof(facsf),"ncl_scalar")
   filevarattdef(g1,"facsf",facsf)
   g1->facsf = facsf
-  
+
   filevardef(g1,"facwf",typeof(facwf),"ncl_scalar")
   filevarattdef(g1,"facwf",facwf)
   g1->facwf = facwf
-  
+
   filevardef(g1,"vegfrac",typeof(vegfrac),"ncl_scalar")
   filevarattdef(g1,"vegfrac",vegfrac)
   g1->vegfrac = vegfrac
-  
+
   filevardef(g1,"canopy",typeof(canopy),"ncl_scalar")
   filevarattdef(g1,"canopy",canopy)
   g1->canopy = canopy
-  
+
   filevardef(g1,"f10m",typeof(f10m),"ncl_scalar")
   filevarattdef(g1,"f10m",f10m)
   g1->f10m = f10m
-  
+
   filevardef(g1,"t2m",typeof(t2m),"ncl_scalar")
   filevarattdef(g1,"t2m",t2m)
   g1->t2m = t2m
-  
+
   filevardef(g1,"q2m",typeof(q2m),"ncl_scalar")
   filevarattdef(g1,"q2m",q2m)
   g1->q2m = q2m
-  
+
   filevardef(g1,"vegtyp",typeof(vegtyp),"ncl_scalar")
   filevarattdef(g1,"vegtyp",vegtyp)
   g1->vegtyp = vegtyp
-  
+
   filevardef(g1,"soiltyp",typeof(soiltyp),"ncl_scalar")
   filevarattdef(g1,"soiltyp",soiltyp)
   g1->soiltyp = soiltyp
-  
+
   filevardef(g1,"uustar",typeof(uustar),"ncl_scalar")
   filevarattdef(g1,"uustar",uustar)
   g1->uustar = uustar
-  
+
   filevardef(g1,"ffmm",typeof(ffmm),"ncl_scalar")
   filevarattdef(g1,"ffmm",ffmm)
   g1->ffmm = ffmm
-  
+
   filevardef(g1,"ffhh",typeof(ffhh),"ncl_scalar")
   filevarattdef(g1,"ffhh",ffhh)
   g1->ffhh = ffhh
-  
+
   filevardef(g1,"hice",typeof(hice),"ncl_scalar")
   filevarattdef(g1,"hice",hice)
   g1->hice = hice
-  
+
   filevardef(g1,"fice",typeof(fice),"ncl_scalar")
   filevarattdef(g1,"fice",fice)
   g1->fice = fice
-  
+
   filevardef(g1,"tisfc",typeof(tisfc),"ncl_scalar")
   filevarattdef(g1,"tisfc",tisfc)
   g1->tisfc = tisfc
-  
+
   filevardef(g1,"tprcp",typeof(tprcp),"ncl_scalar")
   filevarattdef(g1,"tprcp",tprcp)
   g1->tprcp = tprcp
-  
+
   filevardef(g1,"srflag",typeof(srflag),"ncl_scalar")
   filevarattdef(g1,"srflag",srflag)
   g1->srflag = srflag
-  
+
   filevardef(g1,"snwdph",typeof(snwdph),"ncl_scalar")
   filevarattdef(g1,"snwdph",snwdph)
   g1->snwdph = snwdph
-  
+
   filevardef(g1,"shdmin",typeof(shdmin),"ncl_scalar")
   filevarattdef(g1,"shdmin",shdmin)
   g1->shdmin = shdmin
-  
+
   filevardef(g1,"shdmax",typeof(shdmax),"ncl_scalar")
   filevarattdef(g1,"shdmax",shdmax)
   g1->shdmax = shdmax
-  
+
   filevardef(g1,"slopetyp",typeof(slopetyp),"ncl_scalar")
   filevarattdef(g1,"slopetyp",slopetyp)
   g1->slopetyp = slopetyp
-  
+
   filevardef(g1,"snoalb",typeof(snoalb),"ncl_scalar")
   filevarattdef(g1,"snoalb",snoalb)
   g1->snoalb = snoalb
-  
+
   filevardef(g1,"sncovr",typeof(sncovr),"ncl_scalar")
   filevarattdef(g1,"sncovr",sncovr)
   g1->sncovr = sncovr
-  
+
   filevardef(g1,"tsfcl",typeof(tsfcl),"ncl_scalar")
   filevarattdef(g1,"tsfcl",tsfcl)
   g1->tsfcl = tsfcl
-  
+
   filevardef(g1,"zorll",typeof(zorll),"ncl_scalar")
   filevarattdef(g1,"zorll",zorll)
   g1->zorll = zorll
-  
+
   filevardef(g1,"zorli",typeof(zorli),"ncl_scalar")
   filevarattdef(g1,"zorli",zorli)
   g1->zorli = zorli
-  
+
   filevardef(g2,"height",typeof(height),"levels")
   filevarattdef(g2,"height",height)
   g2->height = (/height/)
@@ -803,15 +803,15 @@ begin
   filevardef(g2,"ozone",typeof(ozone),"levels")
   filevarattdef(g2,"ozone",ozone)
   g2->ozone = (/ozone/)
-  
+
   filevardef(g2,"stc",typeof(stc),"nsoil")
   filevarattdef(g2,"stc",stc)
   g2->stc = (/stc/)
-  
+
   filevardef(g2,"smc",typeof(smc),"nsoil")
   filevarattdef(g2,"smc",smc)
   g2->smc = (/smc/)
-  
+
   filevardef(g2,"slc",typeof(slc),"nsoil")
   filevarattdef(g2,"slc",slc)
   g2->slc = (/slc/)
