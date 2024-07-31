@@ -1158,11 +1158,12 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   integer :: ncid, varID, allocate_status, ierr, i, k
   integer :: active_lon, active_lat, active_init_time
   CHARACTER(LEN=nf90_max_name) :: tmpName
+  CHARACTER(LEN=nf90_max_name) :: tmpUnits
   real(kind=sp), parameter :: p0 = 100000.0
   real(kind=sp) :: exner, exner_inv, rho, elapsed_sec, missing_value_eps
   real(kind=dp) :: rinc(5)
   integer :: jdat(1:8), idat(1:8) !(yr, mon, day, t-zone, hr, min, sec, mil-sec)
-  logical :: needed_for_lsm_ics, needed_for_model_ics
+  logical :: needed_for_lsm_ics, needed_for_model_ics, lev_in_altitude
 
   integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_snow, input_n_ice, input_n_soil
   
@@ -1182,7 +1183,17 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_lev),"nf90_inq_dim(lev)")
   !Check whether long_name = 'altitude', units='m' OR long_name = 'pressure', units='Pa'?
   !It may not matter, because 'lev' may not be needed when the IC pressure and height are BOTH already provided
-
+  call check(NF90_INQ_VARID(ncid,"lev",varID),"nf90_inq_varid(lev)")
+  call check(NF90_GET_ATT(ncid, varID, "units", tmpUnits),"nf90_get_att(units)")
+  if (adjustl(trim(tmpUnits)) == 'pa' .or. adjustl(trim(tmpUnits)) == 'Pa') then
+    lev_in_altitude = .false.
+  else if (adjustl(trim(tmpUnits)) == 'm') then
+    lev_in_altitude = .true.
+  else
+    write(0,'(a,i0,a)') "The variable 'lev' in the case data file had units different than 'm', 'pa', or 'Pa', but it is expected to be altitude in m or pressure in Pa. Stopping..."
+    STOP
+  end if
+  
   !### TO BE USED IF DEPHY-SCM can be extended to include model ICs ###
   !possible dimensions (if using model ICs)
   ierr = NF90_INQ_DIMID(ncid,"nsoil",varID)
@@ -1461,8 +1472,31 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   if (scm_state%model_ics) needed_for_model_ics = .True.
   
   !>  - Read in the initial profiles.
-  call NetCDF_read_var(ncid, "pa", .True., input_pres)
-  call NetCDF_read_var(ncid, "zh", .True., input_height)
+  
+  if (lev_in_altitude) then
+    call NetCDF_read_var(ncid, "pa", .True., input_pres)
+    !zh could be defined in addition to lev, use if so
+    call NetCDF_read_var(ncid, "zh", .False., input_height)
+    if (input_height(1,1) == missing_value) then
+      do i=1, input_n_init_times
+        do k=1, input_n_lev
+          input_height(k,i) = input_lev(k)
+        end do
+      end do
+    end if
+  else
+    call NetCDF_read_var(ncid, "zh", .True., input_height)
+    !pa could be defined in addition to lev, use if so
+    call NetCDF_read_var(ncid, "pa", .False., input_pres)
+    if (input_pres(1,1) == missing_value) then
+      do i=1, input_n_init_times
+        do k=1, input_n_lev
+          input_pres(k,i) = input_lev(k)
+        end do
+      end do
+    end if
+  end if
+  
   call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
   call NetCDF_read_var(ncid, "ua", .True., input_u)
   call NetCDF_read_var(ncid, "va", .True., input_v)
@@ -1580,8 +1614,23 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "lat",     .True., input_lat)
   call NetCDF_read_var(ncid, "lon",     .True., input_lon)  
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
-  call NetCDF_read_var(ncid, "zh_forc", .True., input_force_height)
-  call NetCDF_read_var(ncid, "pa_forc", .True., input_force_pres)
+  !zh_forc and pa_forc should be present according to the DEPHY standard; if not, assume that zh_forc = input_height and pa_forc = input_pres
+  call NetCDF_read_var(ncid, "zh_forc", .False., input_force_height)
+  if (input_force_height(1,1) == missing_value) then
+    do i=1, input_n_forcing_times
+      do k=1, input_n_lev
+        input_force_height(k,i) = input_height(k,1)
+      end do
+    end do
+  end if
+  call NetCDF_read_var(ncid, "pa_forc", .False., input_force_pres)
+  if (input_force_pres(1,1) == missing_value) then
+    do i=1, input_n_forcing_times
+      do k=1, input_n_lev
+        input_force_pres(k,i) = input_pres(k,1)
+      end do
+    end do
+  end if
   
   !conditionally read forcing vars (or set to missing); if the global attribute is set to expect a variable and it doesn't exist, stop the model
   call NetCDF_conditionally_read_var(adv_u,      "adv_ua",     "tnua_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_adv)
