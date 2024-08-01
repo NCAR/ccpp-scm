@@ -27,6 +27,7 @@ parser.add_argument('-cres', '--C_RES',          help='UFS spatial resolution', 
 parser.add_argument('-sdf',  '--suite',          help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
 parser.add_argument('-sc',   '--save_comp',      help='flag to save a file with UFS data for comparisons',                           action='store_true')
 parser.add_argument('-near', '--use_nearest',    help='flag to indicate using the nearest UFS history file gridpoint, no regridding',action='store_true')
+parser.add_argument('-lam',  '--lam',            help='flag to signal that the ICs and forcing is from a limited-area model run'    ,action='store_true')
 parser.add_argument('-fm',   '--forcing_method', help='method used to calculate forcing (1=total tendencies from UFS dycore, 2=advective terms calculated from UFS history files, 3=total time tendency terms calculated)', type=int, choices=range(1,4), default=2)
 parser.add_argument('-vm',   '--vertical_method',help='method used to calculate vertical advective forcing (1=vertical advective terms calculated from UFS history files and added to total, 2=smoothed vertical velocity provided)', type=int, choices=range(1,3), default=2)
 parser.add_argument('-wn',   '--wind_nudge',     help='flag to turn on wind nudging to UFS profiles',                                action='store_true')
@@ -142,6 +143,7 @@ def main():
     com_config = ''
     if args.save_comp:       com_config = com_config + ' -sc'
     if args.use_nearest:     com_config = com_config + ' -near'
+    if args.lam:             com_config = com_config + ' -lam'
     if args.forcing_method:  com_config = com_config + ' -fm ' + str(args.forcing_method)
     if args.vertical_method: com_config = com_config + ' -vm ' + str(args.vertical_method)
     if args.wind_nudge:      com_config = com_config + ' -wn'
