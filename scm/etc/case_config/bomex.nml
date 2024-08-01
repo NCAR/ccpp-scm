@@ -1,16 +1,7 @@
-$case_config
-case_name = 'bomex',
-runtime = 21600,
-thermo_forcing_type = 2,
-mom_forcing_type = 3,
-relax_time = 7200.0,
-sfc_flux_spec = .true.,
-sfc_roughness_length_cm = 0.012,
-sfc_type = 0,
-reference_profile_choice = 1,
-year = 1969,
-month = 6,
-day = 22,
-hour = 13,
-column_area = 2.0E9,
-$end
+&case_config
+    case_name = 'bomex'
+    column_area = 2000000000.0
+    input_type = 1
+    reference_profile_choice = 1
+    sfc_roughness_length_cm = 0.012
+/

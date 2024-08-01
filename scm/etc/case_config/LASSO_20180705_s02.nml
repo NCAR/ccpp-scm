@@ -1,16 +1,7 @@
-$case_config
-case_name = 'LASSO_20180705_s02',
-runtime = 54000,
-thermo_forcing_type = 2,
-mom_forcing_type = 3,
-relax_time = 7200.0,
-sfc_flux_spec = .true.,
-sfc_roughness_length_cm = 10.0
-sfc_type = 1,
-reference_profile_choice = 2,
-year = 2018,
-month = 7,
-day = 05,
-hour = 12,
-column_area = 2.0E9,
-$end
+&case_config
+    case_name = 'LASSO_20180705_s02'
+    column_area = 2000000000.0
+    input_type = 1
+    reference_profile_choice = 2
+    sfc_roughness_length_cm = 10.0
+/

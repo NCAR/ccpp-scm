@@ -1,7 +1,8 @@
 &case_config
-    case_name = 'astex'
-    column_area = 370000.0
+    case_name = 'MOSAiC-SS'
+    column_area = 2000000000.0
     input_type = 1
+    lsm_ics = .true.
     reference_profile_choice = 1
     sfc_roughness_length_cm = 0.02
 /

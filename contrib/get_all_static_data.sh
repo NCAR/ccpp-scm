@@ -21,7 +21,7 @@ for file in "${data_files[@]}"; do
     mkdir -p $BASEDIR/scm/data/$file
     cd $BASEDIR/scm/data/$file
     echo "Retrieving $file"
-    wget https://github.com/NCAR/ccpp-scm/releases/download/v6.0.0/${file}.tar.gz
+    wget https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0-beta/${file}.tar.gz
     tar -xf ${file}.tar.gz
     rm -f ${file}.tar.gz
 done

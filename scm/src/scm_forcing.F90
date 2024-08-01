@@ -155,7 +155,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
               scm_input%input_omega(scm_input%input_ntimes,:), scm_state%pres_l(i,:), scm_state%n_levels, &
               omega_bracket(1,:), top_index, 3)
             if (top_index < scm_state%n_levels .and. top_index > 0) then
-              w_ls_bracket(1,top_index+1:scm_state%n_levels) = 0.0!w_ls_bracket(1,top_index)
+              omega_bracket(1,top_index+1:scm_state%n_levels) = 0.0!w_ls_bracket(1,top_index)
             end if
             scm_state%omega(i,:) = omega_bracket(1,:)
           end do
