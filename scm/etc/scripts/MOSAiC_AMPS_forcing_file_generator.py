@@ -146,6 +146,9 @@ height = nc_fid.variables['height'][:]
 #height = ffc.get_height_from_pres(T_abs[:,0],levels,z_sfc)
 
 #the following variables are not in this forcing file, but are included in other cases
+soil_depth = np.zeros(4,dtype=float)
+soil_depth[:] = [0.1, 0.4, 1.0, 2.0]
+
 #rad_heating = nc_fid.variables['dT_dt_rad'][:] #K/s
 #rad_heating = np.swapaxes(rad_heating, 0, 1) #swap the time and levels axis
 rad_heating = np.zeros((levels.size,time.size),dtype=float)
@@ -163,29 +166,31 @@ stc      = tiice[0]
 smc      = 0.33
 slc      = 0.33
 hice     = 0.3
-slmsk    = 2.0
+slmsk    = 2.0    #sea ice
 tsfco    = T_surf[start_t_index]
-weasd    = 200.0
+weasd    = 200.0 #mm water equivalent snow depth
 fice     = 1.0
 tisfc    = tsfco
 snwdph   = 2.e-4
 tg3      = 271.35
 zorl     = 15.0
-alvsf    = 0.23
-alnsf    = 0.23
-alvwf    = 0.23
-alnwf    = 0.23
-facsf    = 0.5055632
-facwf    = 0.4944368
+alvsf    = 0.06
+alnsf    = 0.06
+alvwf    = 0.06
+alnwf    = 0.06
+facsf    = 0.0
+facwf    = 0.0
 vegfrac  = 0.0
 canopy   = 0.0
-vegtyp   = 10
-soiltyp  = 12
+vegtyp   = 0
+soiltyp  = 0
+scolor   = 1
 uustar   = 0.3828793
-shdmin   = 0.01
-shdmax   = 0.8
+shdmin   = 0.0
+shdmax   = 0.0
 slopetyp = 1
-snoalb   = 0.7287961
+snoalb   = 0.0
+sncovr   = 1.0
 
 # Open ozone file
 #f = open('../../data/raw_case_input/twpice_CRM_ozone.txt', 'r')
@@ -236,6 +241,12 @@ writefile_levels_var = writefile_fid.createVariable('levels', 'f4', ('levels',))
 writefile_levels_var[:] = levels
 writefile_levels_var.units = 'Pa'
 writefile_levels_var.description = 'pressure levels'
+
+writefile_soil_depth_dim = writefile_fid.createDimension('soil_depth', None)
+writefile_soil_depth_var = writefile_fid.createVariable('soil_depth', 'f4', ('soil_depth',))
+writefile_soil_depth_var[:] = soil_depth[:]
+writefile_soil_depth_var.units = 'm'
+writefile_soil_depth_var.description = 'soil depth'
 
 writefile_ice_thickness_dim = writefile_fid.createDimension('ice_thickness', None)
 writefile_ice_thickness_var = writefile_fid.createVariable('ice_thickness', 'f4', ('ice_thickness',))
@@ -302,6 +313,21 @@ writefile_zorl_var[:] = zorl
 writefile_zorl_var.units = 'cm'
 writefile_zorl_var.description = 'composite surface roughness length'
 
+writefile_zorll_var = writefile_scalar_grp.createVariable('zorll', 'f4')
+writefile_zorll_var[:] = zorl
+writefile_zorll_var.units = 'cm'
+writefile_zorll_var.description = 'surface roughness length over land'
+
+writefile_zorlw_var = writefile_scalar_grp.createVariable('zorlw', 'f4')
+writefile_zorlw_var[:] = zorl
+writefile_zorlw_var.units = 'cm'
+writefile_zorlw_var.description = 'surface roughness length over ocean'
+
+writefile_zorli_var = writefile_scalar_grp.createVariable('zorli', 'f4')
+writefile_zorli_var[:] = zorl
+writefile_zorli_var.units = 'cm'
+writefile_zorli_var.description = 'surface roughness length over ice'
+
 writefile_alvsf_var = writefile_scalar_grp.createVariable('alvsf', 'f4')
 writefile_alvsf_var[:] = alvsf
 writefile_alvsf_var.units = ''
@@ -352,6 +378,11 @@ writefile_soiltyp_var[:] = soiltyp
 writefile_soiltyp_var.units = ''
 writefile_soiltyp_var.description = 'soil type 1-12'
 
+writefile_scolor_var = writefile_scalar_grp.createVariable('scolor', 'f4')
+writefile_scolor_var[:] = scolor
+writefile_scolor_var.units = ''
+writefile_scolor_var.description = 'soil color'
+
 writefile_uustar_var = writefile_scalar_grp.createVariable('uustar', 'f4')
 writefile_uustar_var[:] = uustar
 writefile_uustar_var.units = 'm s-1'
@@ -377,6 +408,11 @@ writefile_snoalb_var[:] = snoalb
 writefile_snoalb_var.units = '1'
 writefile_snoalb_var.description = 'maximum snow albedo'
 
+writefile_sncovr_var = writefile_scalar_grp.createVariable('sncovr', 'f4')
+writefile_sncovr_var[:] = sncovr
+writefile_sncovr_var.units = '1'
+writefile_sncovr_var.description = 'surface snow area fraction'
+
 #initial group
 
 writefile_height_var = writefile_initial_grp.createVariable('height', 'f4', ('levels',))
@@ -389,17 +425,17 @@ writefile_tiice_var[:] = tiice
 writefile_tiice_var.units = 'K'
 writefile_tiice_var.description = 'initial profile of sea ice internal temperature'
 
-writefile_stc_var = writefile_initial_grp.createVariable('stc', 'f4')
+writefile_stc_var = writefile_initial_grp.createVariable('stc', 'f4', ('soil_depth',))
 writefile_stc_var[:] = stc
 writefile_stc_var.units = 'K'
 writefile_stc_var.description = 'initial profile of sea ice internal temperature'
 
-writefile_smc_var = writefile_initial_grp.createVariable('smc', 'f4')
+writefile_smc_var = writefile_initial_grp.createVariable('smc', 'f4', ('soil_depth',))
 writefile_smc_var[:] = smc
 writefile_smc_var.units = 'm3 m-3'
 writefile_smc_var.description = 'initial profile of soil moisture'
 
-writefile_slc_var = writefile_initial_grp.createVariable('slc', 'f4')
+writefile_slc_var = writefile_initial_grp.createVariable('slc', 'f4', ('soil_depth',))
 writefile_slc_var[:] = slc
 writefile_slc_var.units = 'm3 m-3'
 writefile_slc_var.description = 'initial profile of soil liquid water'

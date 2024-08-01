@@ -1376,7 +1376,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
                 nslsnw_dim = nc_file.createDimension('nsoil_plus_nsnow',case_data._snicexy.shape[0] + case_data._soil_depth.shape[0])
             
             if (case_data._tiice[0] != case_data._missing_value):
-                ice_dim    = nc_file.createDimension('nice',  case_data._tiice[0])
+                ice_dim    = nc_file.createDimension('nice',  case_data._tiice.shape[0])
     
     #
     timei_var                    = nc_file.createVariable('t0', wp, ('t0'))
@@ -2466,20 +2466,19 @@ def write_SCM_case_file(case_nml, case_data, use_area):
         else:
             ts_var[:]               = case_data._missing_value
     else:
-        if (nc_file.surface_forcing_lsm      != 'lsm'):
+        nc_file.surface_forcing_temp = 'ts'
+        nc_file.surface_forcing_wind = 'z0'
             
-            nc_file.surface_forcing_temp = 'ts'
-            nc_file.surface_forcing_wind = 'z0'
-            
-            z0_var                  = nc_file.createVariable('z0', wp, ('time'))
-            z0_var.units            = 'm'
-            z0_var.standard_name    = 'surface_roughness_length_for_momentum_in_air'
-            z0_var[:]               = case_nml['case_config']['sfc_roughness_length_cm']*1.0E-2
-            
-            ts_var                  = nc_file.createVariable('ts_forc', wp, ('time'))
-            ts_var.units            = 'K'
-            ts_var.standard_name    = 'forcing_surface_temperature'
-            ts_var[:]               = case_data._T_surf[:]
+        z0_var                  = nc_file.createVariable('z0', wp, ('time'))
+        z0_var.units            = 'm'
+        z0_var.standard_name    = 'surface_roughness_length_for_momentum_in_air'
+        z0_var[:]               = case_nml['case_config']['sfc_roughness_length_cm']*1.0E-2
+        
+        ts_var                  = nc_file.createVariable('ts_forc', wp, ('time'))
+        ts_var.units            = 'K'
+        ts_var.standard_name    = 'forcing_surface_temperature'
+        ts_var[:]               = case_data._T_surf[:]
+        
     
     nc_file.close()
     

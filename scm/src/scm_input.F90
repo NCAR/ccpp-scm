@@ -2195,7 +2195,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     else
       scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(:)
     end if
-  else if (trim(input_surfaceForcingLSM) == 'lsm') then
+  end if
+  
+  if (trim(input_surfaceForcingLSM) == 'lsm') then
     !these were considered required variables above, so they should not need to be checked for missing
     scm_input%input_stc   = input_stc(:,active_init_time)
     scm_input%input_smc   = input_smc(:,active_init_time)  
