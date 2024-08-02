@@ -214,11 +214,8 @@ However, we have provided an example procedure in
 The main downside to spack-stack is that it contains a large number of libraries and utilities used by the whole
 Unified Forecast System and related applications, only a minority of which are required for the SCM. Users may
 install libraries manually if they wish, but they will need to make sure the appropriate environment variables
-are set to the correct values so that the build system can find them, as described in the following chapter.
+are set to the correct values so that the build system can find them, as described in the following paragraphs.
 
-
-Setting up compilation environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For users on a pre-configured platform, you can load the spack-stack environment via one of the provided modules in ``scm/etc/modules/``.
 For example, users on the NSF NCAR machine Derecho who wish to use Intel compilers can do the following:
@@ -244,6 +241,19 @@ compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the lib
 provided Dockerfile in ``ccpp-scm/docker/``, so users can reference that file for guidance on how to install this software
 and set these variables.
 
+If libraries were installed via spack-stack, users can load modules similarly to those available on pre-configured platforms.
+For a user on MacOS, who has installed spack-stack with ``clang``/``gfortran`` compilers, they can set up the build environment
+by setting the SPACK_STACK_DIR variable to the appropriate path, and loading the module as on pre-configured platforms described above.
+
+::
+
+   export SPACK_STACK_DIR=[/path/to/spack-stack]
+   cd [path/to/ccpp-scm/]
+   module use scm/etc/modules/
+   module load macos_clang
+
+A module file is also provided for a generic linux platform with gnu compilers. For other platforms/combinations, you may be able
+to modify the provided modulefiles to work with your spack-stack install, otherwise reference the above procedure for manually installed libraries.
 
 Python requirements
 """""""""""""""""""""
