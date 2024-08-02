@@ -45,12 +45,12 @@ subroutine scm_main_sub()
   call MPI_INIT(ierr)
   if (ierr/=0) then
       write(*,*) 'An error occurred in MPI_INIT: ', ierr
-      stop 1
+      error stop
   end if
-  fcst_mpi_comm = MPI_COMM_WORLD  
+  fcst_mpi_comm = MPI_COMM_WORLD
 
   call get_config_nml(scm_state)
-  
+
   select case(scm_state%input_type)
     case(0)
       call get_case_init(scm_state, scm_input_instance)
@@ -58,9 +58,9 @@ subroutine scm_main_sub()
       call get_case_init_DEPHY(scm_state, scm_input_instance)
     case default
       write(*,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
-      stop
+      error stop
   end select
-  
+
   call get_reference_profile(scm_state, scm_reference)
 
   call get_FV3_vgrid(scm_input_instance, scm_state)
@@ -75,15 +75,15 @@ subroutine scm_main_sub()
   scm_state%itt = 1
 
   in_spinup = (scm_state%do_spinup .and. scm_state%itt <= scm_state%spinup_timesteps)
-  
+
   if (in_spinup) then
     call set_spinup_nudging(scm_state)
   end if
-  
+
   call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
   call physics%create(scm_state%n_cols)
-  
+
   !physics initialization section
 
   !set the array index of the time level of the state variables that the cdata
@@ -97,13 +97,13 @@ subroutine scm_main_sub()
     case default
       cdata_time_index = 2
   end select
-  
+
   !open a logfile
   if (physics%Init_parm%me == physics%Init_parm%master .and. physics%Init_parm%logunit>=0) then
     write (logfile_name, '(A7,I0.5,A4)') 'logfile.out'
     open(unit=physics%Init_parm%logunit, file=trim(scm_state%output_dir)//'/'//logfile_name, action='write', status='replace')
   end if
-  
+
   physics%Init_parm%fcst_mpi_comm   =  fcst_mpi_comm
   physics%Init_parm%levs = scm_state%n_levels
   physics%Init_parm%bdat(1) = scm_state%init_year
@@ -126,7 +126,7 @@ subroutine scm_main_sub()
   physics%Init_parm%hydrostatic = .true.
   physics%Init_parm%restart = .false.
   physics%Init_parm%nwat = scm_state%nwat
-  
+
   ! Allocate and initialize DDTs
   call GFS_suite_setup(physics%Model, physics%Statein, physics%Stateout,           &
                        physics%Sfcprop, physics%Coupling, physics%Grid,            &
@@ -134,7 +134,7 @@ subroutine scm_main_sub()
                        physics%Diag, physics%Interstitial, 1, 1,                   &
                        physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
                        scm_state%lat, scm_state%area)
-  
+
   !override radiation frequency
   if (scm_state%force_rad_T > 0) then
     !turn off radiation since it is already accounted for in the forcing
@@ -142,22 +142,22 @@ subroutine scm_main_sub()
     physics%Model%nsswr = -1
     physics%Model%nslwr = -1
   end if
-  
+
   !override fhzero in physics namelist if n_itt_diag is set in the case namelist
   if (scm_state%n_itt_diag >= 1) then
     physics%Model%nszero = scm_state%n_itt_diag
     physics%Model%fhzero = scm_state%n_itt_diag*scm_state%dt/3600.0
   end if
-    
+
   !check for problematic diagnostic and radiation periods
   if (mod(physics%Model%nszero,scm_state%n_itt_out) /= 0) then
     write(*,*) "***ERROR***: The diagnostic output period must be a multiple of the output period."
     write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhzero = ",physics%Model%fhzero
     write(*,*) "implying a diagnostic output period of ", physics%Model%nszero*scm_state%dt, "seconds."
     write(*,*) "The given output period in the case configuration namelist is ", scm_state%output_period,"seconds."
-    STOP
+    error stop
   end if
-  
+
   if (mod(physics%Model%nsswr,scm_state%n_itt_out) /= 0) then
     write(*,*) "***WARNING***: The shortwave radiation calling period is different than the output period."
     write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhswr = ",physics%Model%fhswr
@@ -165,7 +165,7 @@ subroutine scm_main_sub()
     write(*,*) "This will cause the effective output period of variables that are only given values during shortwave calls to be ",&
       lcm(scm_state%n_itt_out,physics%Model%nsswr)*scm_state%dt," seconds."
   end if
-  
+
   if (mod(physics%Model%nslwr,scm_state%n_itt_out) /= 0) then
     write(*,*) "***WARNING***: The longwave radiation calling period is different than the output period."
     write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhlwr = ",physics%Model%fhlwr
@@ -173,14 +173,14 @@ subroutine scm_main_sub()
     write(*,*) "This will cause the effective output period of variables that are only given values during longwave calls to be ",&
       lcm(scm_state%n_itt_out,physics%Model%nslwr)*scm_state%dt," seconds."
   end if
-  
+
   cdata%blk_no = 1
   cdata%thrd_no = 1
   cdata%thrd_cnt = 1
 
   call physics%associate(scm_state)
   call physics%set(scm_input_instance, scm_state)
-  
+
   ! When asked to calculate 3-dim. tendencies, set Stateout variables to
   ! Statein variables here in order to capture the first call to dycore
   if (physics%Model%ldiag3d) then
@@ -189,7 +189,7 @@ subroutine scm_main_sub()
     physics%Stateout%gt0 = physics%Statein%tgrs
     physics%Stateout%gq0 = physics%Statein%qgrs
   endif
-  
+
   !initialize the column's physics
 
   write(0,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
@@ -197,9 +197,9 @@ subroutine scm_main_sub()
   write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop 1
+      error stop
   end if
-  
+
   physics%Model%first_time_step = .true.
 
   call output_init(scm_state, physics)
@@ -212,7 +212,7 @@ subroutine scm_main_sub()
        scm_state%dt_now = scm_state%dt
        scm_state%model_time = scm_state%dt_now
      end if
-     
+
      call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
@@ -259,19 +259,19 @@ subroutine scm_main_sub()
           physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
                  + (physics%Statein%ugrs(i,:) - physics%Stateout%gu0(i,:))
         endif
-        
+
         idtend = physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics)
         if(idtend>=1) then
           physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
                  + (physics%Statein%vgrs(i,:) - physics%Stateout%gv0(i,:))
         endif
-        
+
         idtend = physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics)
         if(idtend>=1) then
           physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
                  + (physics%Statein%tgrs(i,:) - physics%Stateout%gt0(i,:))
         endif
-        
+
         if (physics%Model%qdiag3d) then
           do itrac=1,physics%Model%ntrac
             idtend = physics%Model%dtidx(itrac+100,physics%Model%index_of_process_non_physics)
@@ -283,13 +283,13 @@ subroutine scm_main_sub()
         endif
       endif
     end do
-    
+
     call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop 1
+        error stop
     end if
-    
+
     !--- determine if radiation diagnostics buckets need to be cleared
     if (nint(physics%Model%fhzero*3600) >= nint(max(physics%Model%fhswr,physics%Model%fhlwr))) then
       if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
@@ -301,22 +301,22 @@ subroutine scm_main_sub()
         call physics%Diag%rad_zero  (physics%Model)
       endif
     endif
-    
+
     !--- determine if physics diagnostics buckets need to be cleared
     if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
       call physics%Diag%phys_zero (physics%Model)
     endif
-    
+
     call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop 1
+        error stop
     end if
-    
+
     call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
         write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop 1
+        error stop
     end if
 
     !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
@@ -356,9 +356,9 @@ subroutine scm_main_sub()
 
   !prepare for time loop
   scm_state%n_timesteps = ceiling(scm_state%runtime/scm_state%dt) + scm_state%spinup_timesteps
-  
+
   scm_state%dt_now = scm_state%dt
-  
+
   !if (.not. in_spinup) then
     physics%Model%first_time_step = .false.
   !end if
@@ -371,7 +371,7 @@ subroutine scm_main_sub()
       in_spinup = .false.
       scm_state%itt = i - scm_state%spinup_timesteps
     end if
-        
+
     !>  - Calculate the elapsed model time.
     if (.not. in_spinup) then
       scm_state%model_time = scm_state%itt*scm_state%dt
@@ -392,7 +392,7 @@ subroutine scm_main_sub()
     end if
 
     call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
-    
+
     call calc_pres_exner_geopotential(1, scm_state)
 
     !zero out diagnostics output on EVERY time step - breaks diagnostics averaged over many timesteps
@@ -410,7 +410,7 @@ subroutine scm_main_sub()
       scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,scm_state%cloud_water_index,2)
       scm_state%state_tracer(:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,scm_state%ozone_index,2)
     end if
-    
+
     write(*,*) "itt = ",scm_state%itt
     write(*,*) "model time (s) = ",scm_state%model_time
     if (scm_state%lsm_ics .or. scm_state%model_ics) then
@@ -418,7 +418,7 @@ subroutine scm_main_sub()
       write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
       write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
     end if
-    
+
     if (.not. in_spinup) then
       call output_append(scm_state, physics)
     end if
@@ -428,13 +428,13 @@ subroutine scm_main_sub()
 
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop 1
+      error stop
   end if
-  
+
   call MPI_FINALIZE(ierr)
   if (ierr/=0) then
       write(*,*) 'An error occurred in MPI_FINALIZE: ', ierr
-      stop 1
+      error stop
   end if
 
 end subroutine scm_main_sub
