@@ -1,4 +1,4 @@
-CCPP Single Column Model (SCM) User and Technical Guide v6.0.0
+CCPP Single Column Model (SCM) User and Technical Guide v7.0.0
 ============================
 
 .. toctree::

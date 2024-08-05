@@ -34,7 +34,7 @@ The following steps are performed at the beginning of program execution:
    sets some variables within the ``scm_state`` derived type from the data that was
    read.
 
-#. Call ``get_case_init()`` (or ``get_case_init_DEPHY()`` if using the DEPHY format) in the ``scm_input`` module to read in the
+#. Call ``get_case_init_DEPHY()`` in the ``scm_input`` module to read in the
    case input data file (see :numref:`Section %s <case input>`). This subroutine
    also sets some variables within the ``scm_input`` derived type from the data that
    was read.

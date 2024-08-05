@@ -15,10 +15,10 @@ parameterizations (CCPP framework). In fact, this SCM serves as perhaps the simp
 example for using the CCPP and its framework in an atmospheric model.
 This version contains all parameterizations of NOAA’s evolved
 operational GFS v16 suite (implemented in 2021), plus additional
-developmental schemes. The schemes are grouped in six supported suites
+developmental schemes. The schemes are grouped in five supported suites
 described in detail in the `CCPP Scientific
-Documentation <https://dtcenter.ucar.edu/GMTB/v6.0.0/sci_doc/>`__
-(GFS_v16, GFS_v17p8, RAP, HRRR, and RRFS_v1beta, and WoFS_v0).
+Documentation <https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/>`__
+(GFS_v16, GFS_v16_RRTMGP, GFS_v17_p8_ugwpv1, HRRR_gf, and WoFS_v0).
 
 This document serves as both the User and Technical Guides for this
 model. It contains a Quick Start Guide with instructions for obtaining
@@ -35,39 +35,37 @@ through the CCPP infrastructure.
 Version Notes
 -------------
 
-The CCPP SCM v6.0.0 contains the following major and minor changes since
-v5.0.
+The CCPP SCM v7.0.0 contains the following major and minor changes since v6.0.
 
 Major
 
--  Inclusion of regression testing functionality
+-  Ability to generate SCM cases from UFS simulations using either derived forcings
+   or native forcings from the dynamical core.
 
--  Combine single- and multi-run capabilities into one script
+-  Support for single precision physics within the SCM.
 
 Minor
 
--  Add RUC LSM support
+-  Addition of new physics schemes; RRTMGP radiation and CLM Lake Model, along with
+   updates to existing schemes.
 
--  Add the GFS_v17p8, HRRR, RRFS_v1beta, and WoFS_v0 suites
+-  CCPP SCM support for the latest operational/research physics configurations used
+   across UFS applications, including the GFS_v17_p8_ugwpv1, GFS_v16_RRTMGP, and
+   HRRR_gf suites.
 
--  Update the vertical coordinate code to better match latest FV3
-   vertical coordinate code
+-  New SCM cases; MOSAiC-AMPS, MOSAiC-SS, COMBLE, and a catolog of cases in the
+   `GdR-DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__ repository that can be run
+   with CCPP SCM.
 
--  Simplify the case configuration namelists
-
--  Add greater flexibility for output location (outside of bin
-   directory)
+-  Updated `Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/>`__, User's Guide, Technical Documentation, and
+   online tutorials.
 
 Limitations
 ~~~~~~~~~~~
 
 This release bundle has some known limitations:
 
--  In the output file, temperature tendency variables all mistakenly
-   have the same description, although their variable names are correct.
-   This has been fixed in the development code.
-
--  Using the RRFS_v1beta, HRRR, and WoFS_v0 suites for cases where deep
+-  Using the HRRR_gf and WoFS_v0 suites for cases where deep
    convection is expected to be active will likely produce
    strange/unreliable results, unless the forcing has been modified to
    account for the deep convection. This is because forcing for existing
@@ -101,16 +99,12 @@ This release bundle has some known limitations:
       LSMs for the supplied cases over land points, there should be no
       technical reason why they cannot be used with LSMs, however.
 
--  As of this release, using the SCM over a land point with an LSM is
+-  Using the SCM over a land point with an LSM is
    possible through the use of UFS initial conditions (see 
-   :numref:`Section %s <UFSreplay>`). However, advective forcing terms
-   are unavailable as of this release, so only short integrations using
-   this configuration should be employed. Using dynamical tendencies
-   (advective forcing terms) from the UFS will be part of a future
-   release.
+   :numref:`Section %s <UFScasegen>`).
 
 -  There are several capabilities of the developmental code that have
    not been tested sufficiently to be considered part of the supported
-   release. Those include additional parameterizations. Users that want
-   to use experimental capabilities should refer to 
-   :numref:`Subsection %s <development_code>`.
+   release. Those include additional parameterizations and the CCPP
+   Suite Simulator. Users that want to use experimental capabilities
+   should refer to :numref:`Subsection %s <development_code>`.

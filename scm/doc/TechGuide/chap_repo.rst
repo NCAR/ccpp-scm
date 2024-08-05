@@ -23,41 +23,42 @@ Cubed-Sphere (FV3) dynamical core.
 
 | ``ccpp-scm/``
 | ``├── CMakeModules``
-| ``├── CODEOWNERS`` - list of code maintainers/developers who are automatically assigned to review Pull Requests on GitHub
+| ``├── CODEOWNERS`` - List of code maintainers/developers who are automatically assigned to review Pull Requests on GitHub
 | ``├── LICENSE``
 | ``├── README.md``
-| ``├── ccpp`` - contains the CCPP prebuild configuration file
-| ``│   ├── config``
+| ``├── ccpp``
+| ``│   ├── config`` - Contains the CCPP prebuild configuration file
 | ``│   ├── framework`` - Contains CCPP framework submodule. See https://github.com/NCAR/ccpp-framework for contents
 | ``│   ├── physics`` - Contains CCPP physics submodule. See https://github.com/NCAR/ccpp-physics for contents
-| ``│   ├── physics_namelists`` - contains physics namelist files associated with suites
-| ``│   └── suites`` - contains suite definition files
+| ``│   ├── physics_namelists`` - Contains physics namelist files associated with suites
+| ``│   └── suites`` - Contains suite definition files
 | ``├── contrib``
-| ``│   ├── get_all_static_data.sh`` - script for downloading/extracting the processed SCM case data
-| ``│   ├── get_mg_inccn_data.sh`` - script for downloading/extracting the Morrison-Gettelman data
-| ``│   └── get_thompson_tables.sh`` - script for downloading/extracting the Thompson lookup tables
+| ``│   ├── get_all_static_data.sh`` - Script for downloading/extracting the processed SCM case data
+| ``│   ├── get_mg_inccn_data.sh`` - Script for downloading/extracting the Morrison-Gettelman data
+| ``│   └── get_thompson_tables.sh`` - Script for downloading/extracting the Thompson lookup tables
+| ``│   └── get_aerosol_climo.sh`` - Script for downloading/extracting the GOCART climatological aerosol data
 | ``├── docker``
-| ``│   └── Dockerfile`` - contains Docker instructions for building the CCPP SCM image
+| ``│   └── Dockerfile`` - Contains Docker instructions for building the CCPP SCM image
 | ``├── environment-suite-sim.yml`` - Python environment dependency file for the CCPP Suite Simulator
-| ``├── environment-ufsreplay.yml`` - Python environment dependency file for the UFS Replay capability
+| ``├── environment-ufscasegen.yml`` - Python environment dependency file for the UFS Case Generator capability
 | ``├── environment.yml`` - Python environment dependency file for the SCM
 | ``├── scm``
 | ``│   ├── LICENSE.txt`` - Contains licensing information
 | ``│   ├── data`` - Directory where data is staged by scripts in the ``ccpp/contrib/`` directory
-| ``│   │   └── vert_coord_data`` - contains data to calculate vertical coordinates (from GSM-based GFS only)
+| ``│   │   └── vert_coord_data`` - Contains data to calculate vertical coordinates (from GSM-based GFS only)
 | ``│   ├── doc``
 | ``│   │   └── TechGuide`` - Contains source code and other files for this User’s/Technical Guide
-| ``│   ├── etc`` - contains case configuration, machine setup scripts, and plotting scripts
-| ``│   │   ├── CENTOS_docker_setup.sh`` - contains machine setup for Docker container
-| ``│   │   ├── case_config`` - contains case configuration files
-| ``│   │   ├── modules`` - contains module files for loading build environments on both pre-configured and custom platforms
-| ``│   │   ├── scm_qsub_example.py`` - example ``qsub`` (LSF) run script
-| ``│   │   ├── scm_slurm_example.py`` - example ``srun`` (SLURM) run script
+| ``│   ├── etc`` - Contains case configuration, machine setup scripts, and plotting scripts
+| ``│   │   ├── CENTOS_docker_setup.sh`` - Contains machine setup for Docker container
+| ``│   │   ├── case_config`` - Contains case configuration files
+| ``│   │   ├── modules`` - Contains module files for loading build environments on both pre-configured and custom platforms
+| ``│   │   ├── scm_qsub_example.py`` - Example ``qsub`` (LSF) run script
+| ``│   │   ├── scm_slurm_example.py`` - Example ``srun`` (SLURM) run script
 | ``│   │   ├── scripts`` - Python scripts for setting up cases, plotting, and the CCPP Suite Simulator
 | ``│   │   │   ├── ccpp_suite_sim`` - Python scripts for the CCPP Suite Simulator
-| ``│   │   │   ├── plot_configs`` - plot configuration files
-| ``│   │   └── tracer_config`` - tracer configuration files
-| ``│   └── src`` - source code for SCM infrastructure, Python run script, CMakeLists.txt for the SCM, example multirun setup files, suite_info.py
+| ``│   │   │   ├── plot_configs`` - Plot configuration files
+| ``│   │   └── tracer_config`` - Tracer configuration files
+| ``│   └── src`` - Source code for SCM infrastructure, Python run script, CMakeLists.txt for the SCM, example multirun setup files, suite_info.py
 | ``└── test`` - Contains scripts for regression testing, Continuous Integration tests
 
 Testing
