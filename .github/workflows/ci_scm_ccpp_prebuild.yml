@@ -11,13 +11,13 @@ jobs:
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
-    
+
     - name: Set up Python 3.8.5
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: 3.8.5
 

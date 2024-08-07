@@ -103,7 +103,7 @@ This release bundle has some known limitations:
 
 -  As of this release, using the SCM over a land point with an LSM is
    possible through the use of UFS initial conditions (see 
-   :numref:`Section %s <UFS ICs>`). However, advective forcing terms
+   :numref:`Section %s <UFSreplay>`). However, advective forcing terms
    are unavailable as of this release, so only short integrations using
    this configuration should be employed. Using dynamical tendencies
    (advective forcing terms) from the UFS will be part of a future

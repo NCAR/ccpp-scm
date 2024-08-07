@@ -1,0 +1,29 @@
+name: build_test_and_push_docker
+
+on: [pull_request,workflow_dispatch]
+
+env:
+  TEST_TAG: dtcenter/ccpp-scm:test
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and export test tag
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          load: true
+          tags: ${{ env.TEST_TAG }}
+      - name: Test
+        run: |
+          mkdir $HOME/output
+          chmod a+rw $HOME/output
+          docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d

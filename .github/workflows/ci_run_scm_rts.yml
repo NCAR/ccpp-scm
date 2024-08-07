@@ -1,3 +1,4 @@
+
 name: CI test to build and run SCM regression tests
 
 on: [pull_request, workflow_dispatch]
@@ -10,7 +11,7 @@ jobs:
     strategy:
       matrix:
         fortran-compiler: [gfortran-11]
-        build-type:       [Release, Debug]
+        build-type:       [Release, Debug, SinglePrecision]
         py-version:       [3.9.12]
 
     # Environmental variables
@@ -21,8 +22,8 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0
-      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps
+      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf,SCM_GFS_v17_p8_ugwpv1,SCM_GFS_v16_RRTMGP
+      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_GFS_v16_RRTMGP_ps
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
 
@@ -32,7 +33,7 @@ jobs:
     # Initial
     #######################################################################################
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
@@ -41,7 +42,7 @@ jobs:
     # Python setup
     #######################################################################################
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{matrix.py-version}}
 
@@ -51,7 +52,7 @@ jobs:
 
     - name: Install NetCDF Python libraries
       run: |
-        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
+        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml matplotlib
 
     - name: Update system packages
       run: sudo apt-get update
@@ -59,21 +60,22 @@ jobs:
     #######################################################################################
     # Install FORTRAN dependencies
     #######################################################################################
-    - name: Environment for gfortran compiler
-      if: contains(matrix.fortran-compiler, 'gnu')
-      run: |
-        echo "FC=gfortran-11" >> $GITHUB_ENV
-        echo "CC=gcc-11"      >> $GITHUB_ENV
 
-    - name: Environment for ifort compiler
-      if: contains(matrix.fortran-compiler, 'intel')
+    - name: Install openmpi
       run: |
-        echo "CC=icx"         >> $GITHUB_ENV
-        echo "FC=ifort"       >> $GITHUB_ENV
+        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
+        tar -xvf v4.1.6.tar.gz
+        cd ompi-4.1.6
+        ./autogen.pl
+        ./configure --prefix=/home/runner/ompi-4.1.6
+        make -j4
+        make install
+        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
@@ -90,7 +92,7 @@ jobs:
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
@@ -107,7 +109,7 @@ jobs:
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
@@ -127,7 +129,7 @@ jobs:
 
     - name: Cache NetCDF Fortran library
       id: cache-netcdf-fortran
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /home/runner/netcdf-fortran
         key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
@@ -142,6 +144,11 @@ jobs:
         sudo make install
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
 
+    - name: Environment for openmpi compiler
+      run: |
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
+
     #######################################################################################
     # Build SCM. Run regression tests.
     #######################################################################################
@@ -150,6 +157,7 @@ jobs:
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
+        ./contrib/get_aerosol_climo.sh
 
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
@@ -165,15 +173,29 @@ jobs:
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
 
+    - name: Configure build with CMake (Single Precision)
+      if: matrix.build-type == 'SinglePrecision'
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites},${suites_ps} -D32BIT=1 ../src
+
     - name: Build SCM
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
 
     - name: Run SCM RTs
+      if: matrix.build-type != 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
+
+    - name: Run SCM Single Precision RTs
+      if: matrix.build-type == 'SinglePrecision'
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1
 
     - name: Gather SCM RT output
       run: |
@@ -187,16 +209,22 @@ jobs:
     - name: Download SCM RT baselines
       run: |
         cd ${dir_bl}
-        wget ftp://ftp.rap.ucar.edu:/pub/ccpp-scm/rt-baselines-${{matrix.build-type}}.zip
+        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
         unzip rt-baselines-${{matrix.build-type}}.zip
 
     - name: Compare SCM RT output to baselines
       run: |
         cd ${SCM_ROOT}/test
-        ./cmp_rt2bl.py --build_type ${{matrix.build-type}} --dir_rt ${dir_rt} --dir_bl ${dir_bl}
+        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
+
+    - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
+      uses: actions/upload-artifact@v4
+      with:
+        name: rt-plots-${{matrix.build-type}}
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: rt-baselines-${{matrix.build-type}}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
