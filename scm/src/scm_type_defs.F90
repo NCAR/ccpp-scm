@@ -34,9 +34,6 @@ module scm_type_defs
 
   character(len = 80) :: clear_char = ''
 
-  type(ccpp_t),       target :: cdata
-  type(physics_type), target :: physics
-
 !> \section arg_table_physics_type
 !! \htmlinclude physics_type.html
 !!
@@ -61,6 +58,9 @@ module scm_type_defs
       procedure :: set => physics_set
   end type physics_type
 
+  type(ccpp_t),       target :: cdata
+  type(physics_type), target :: physics
+  
 !> \section arg_table_scm_state_type
 !! \htmlinclude scm_state_type.html
 !!   

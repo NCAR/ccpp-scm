@@ -5,66 +5,6 @@ project(scm
         LANGUAGES C Fortran)
 set(PROJECT "CCPP-SCM")
 
-####################################################################
-# Begin CCPP prebuild step                                         #
-####################################################################
-if(DEFINED CCPP_SUITES)
-  if (${CCPP_SUITES} MATCHES "ALL")
-    message("Calling CCPP code generator (ccpp_prebuild.py) for all available suites ...")
-  else()
-    set(_ccpp_suites_arg "--suites=${CCPP_SUITES}")
-    message("Calling CCPP code generator (ccpp_prebuild.py) for suites ${_ccpp_suites_arg} ...")
-  endif()
-  unset(CCPP_SUITES CACHE)
-else()
-  execute_process(
-    COMMAND scm/src/suite_info.py
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    OUTPUT_VARIABLE suite_string
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    set(_ccpp_suites_arg "--suites=${suite_string}")
-    message("Calling CCPP code generator (ccpp_prebuild.py) for SUPPORTED suites ${_ccpp_suites_arg} ...")
-endif()
-# Run CCPP prebuild.py
-message (STATUS "Running ccpp_prebuild.py for CCPP")
-# Make the directories where the ccpp_prebuild.py script wants to write caps and make snippets
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ccpp/physics/physics)
-if (NOT EXISTS "${CMAKE_SOURCE_DIR}/../../ccpp/framework/scripts/ccpp_prebuild.py")
-  message( FATAL_ERROR "ccpp_prebuild.py script does not exist, did you check out the code recursively?" )
-endif()
-if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py ${_ccpp_suites_arg} --builddir=${CMAKE_CURRENT_BINARY_DIR} --debug --verbose
-    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
-    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    RESULT_VARIABLE return_code
-    )
-else()
-  execute_process(
-    COMMAND ccpp/framework/scripts/ccpp_prebuild.py --config=ccpp/config/ccpp_prebuild_config.py ${_ccpp_suites_arg} --builddir=${CMAKE_CURRENT_BINARY_DIR}
-    OUTPUT_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.out
-    ERROR_FILE ${PROJECT_BINARY_DIR}/ccpp_prebuild.err
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    RESULT_VARIABLE return_code
-    )
-endif()
-  
-# Check return code from CCPP prebuild.py
-if(return_code EQUAL 0)
-  message (STATUS "CCPP prebuild step completed successfully")
-else(return_code EQUAL 0)
-  message (FATAL_ERROR "CCPP prebuild step failed, check ccpp_prebuild.out/ccpp_prebuild.err")
-endif(return_code EQUAL 0)
-####################################################################
-# End CCPP prebuild step                                           #
-####################################################################
-
-ENABLE_LANGUAGE(Fortran)
-include(CMakeForceCompiler)
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../../CMakeModules/Modules)
-
 #------------------------------------------------------------------------------
 #
 # Set where the CCPP Framework lives
@@ -287,6 +227,12 @@ MESSAGE(STATUS "CCPP capgen step complete")
 ####################################################################
 # End CCPP capgen step                                             #
 ####################################################################
+
+ENABLE_LANGUAGE(Fortran)
+
+include(CMakeForceCompiler)
+
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../../CMakeModules/Modules)
 
 find_package(NetCDF REQUIRED COMPONENTS C Fortran)
 find_package(bacio REQUIRED)
