@@ -5,12 +5,10 @@ the NOAA RDHPC machine Orion using Intel-2021.5.0
 
 whatis([===[Loads libraries needed for building the CCPP SCM on Orion with Intel compilers ]===])
 
-prepend_path("MODULEPATH", "/work/noaa/epic/role-epic/spack-stack/orion/modulefiles")
+prepend_path("MODULEPATH", "/work/noaa/epic/role-epic/spack-stack/orion/spack-stack-1.6.0/envs/unified-env-rocky9/install/modulefiles/Core")
 
-prepend_path("MODULEPATH", "/work/noaa/epic/role-epic/spack-stack/orion/spack-stack-1.5.1/envs/unified-env/install/modulefiles/Core")
-
-load("stack-intel/2022.0.2")
-load("stack-intel-oneapi-mpi/2021.5.1")
+load("stack-intel/2021.9.0")
+load("stack-intel-oneapi-mpi/2021.9.0")
 load("stack-python/3.10.13")
 load("py-f90nml")
 load("py-netcdf4/1.5.8")
