@@ -10,9 +10,9 @@
   imp_physics  = 8
   iovr         = 3
   ltaerosol    = .false.
-  lradar       = .true.
+  lradar       = .false.
   ttendlim     = -999
-  dt_inner     = 150
+  dt_inner     = 720
   sedi_semi    = .true.
   decfl        = 10
   oz_phys      = .false.
@@ -32,16 +32,18 @@
   do_ugwp_v0_orog_only = .false.
   do_ugwp_v0_nst_only  = .false.
   do_gsl_drag_ls_bl    = .true.
-  do_gsl_drag_ss       = .true.
+  do_gsl_drag_ss       = .false.
+  do_gwd_opt_psl       = .true.
+  psl_gwd_dx_factor    = 6.0
   do_gsl_drag_tofd     = .true.
   do_ugwp_v1_orog_only = .false.
   min_lakeice  = 0.15
-  min_seaice   = 1.0e-6
-  use_cice_alb = .true.
+  min_seaice   = 0.15
+  use_cice_alb = .false.
   pdfcld       = .false.
-  fhswr        = 1200.
-  fhlwr        = 1200.
-  progsigma    = .true.
+  fhswr        = 3600.
+  fhlwr        = 3600.
+  progsigma    = .false.
   betascu      = 8.0
   betamcu      = 1.0
   betadcu      = 2.0
@@ -63,7 +65,7 @@
   hybedmf      = .false.
   satmedmf     = .true.
   isatmedmf    = 1
-  lheatstrg    = .true.
+  lheatstrg    = .false.
   lseaspray    = .true.
   random_clds  = .false.
   trans_trac   = .true.
@@ -71,7 +73,7 @@
   imfshalcnv   = 2
   imfdeepcnv   = 2
   ras          = .false.
-  cdmbgwd      = 2.5,7.5,1.0,1.0
+  cdmbgwd      = 20.0,2.5,1.0,1.0
   prslrd0      = 0.
   ivegsrc      = 1
   isot         = 1
@@ -83,6 +85,7 @@
   iopt_run     = 1
   iopt_sfc     = 3
   iopt_trs     = 2
+  iopt_diag    = 2
   iopt_frz     = 1
   iopt_inf     = 1
   iopt_rad     = 3
@@ -91,7 +94,7 @@
   iopt_tbot    = 2
   iopt_stc     = 3
   debug        = .false.
-  nstf_name    = 2,0,0,0,0
+  nstf_name    = 2,1,0,0,0
   nst_anl      = .true.
   psautco      = 0.0008,0.0005
   prautco      = 0.00015,0.00015
@@ -101,9 +104,15 @@
   do_sppt      = .false.
   do_shum      = .false.
   do_skeb      = .false.
+  iaufhrs      = -1
+  iau_delthrs  = 0
+  iau_inc_files= ''
+  iau_drymassfixer = .false.
+  use_med_flux = .false.
   do_RRTMGP          = .false.
   doGP_cldoptics_LUT = .true.
   doGP_lwscat        = .true.
+  doGP_sgs_cnv       = .true.
   active_gases = 'h2o_co2_o3_n2o_ch4_o2'
   ngases = 6
   rrtmgp_root = '../../ccpp/physics/physics/rte-rrtmgp/'
@@ -121,7 +130,9 @@
   cplice       = .false.
   cplwav       = .false.
   cplwav2atm   = .false.
-  do_ca        = .false.
+  cpllnd       = .false.
+  cpllnd2atm   = .false.
+  do_ca        = .true.
   ca_global    = .false.
   ca_sgs       = .true.
   nca          = 1
@@ -132,7 +143,10 @@
   nthresh      = 18
   ca_trigger   = .true.
   nspinup      = 1
-  iseed_ca     = 1448371824
+  iseed_ca     = 12345
+  lndp_type    = 0
+  n_var_lndp   = 0
+  fscav_aero   = "*:0.3","so2:0.0","msa:0.0","dms:0.0","nh3:0.4","nh4:0.6","bc1:0.6","bc2:0.6","oc1:0.4","oc2:0.4","dust1:0.6","dust2:0.6","dust3:0.6","dust4:0.6","dust5:0.6","seas1:0.5","seas2:0.5","seas3:0.5","seas4:0.5","seas5:0.5"
 /
 
 &cires_ugwp_nml
