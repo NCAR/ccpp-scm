@@ -433,7 +433,7 @@ def get_case_nml(case_name):
     
     filename = os.path.join(CASE_NML_DIR, case_name + '.nml')
     
-    print(filename)
+    logging.debug(filename)
     
     error = False
     nml = ''
