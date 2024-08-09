@@ -780,9 +780,6 @@ def print_report(logs, total_count, max_str_lens,
     suite_l = max_str_lens.suite
     namelist_l = max_str_lens.namelist
     status_l = max_str_lens.status
-    # error_log contains header, subtracting 1 from error
-    error_count = logs.shape[0] - 1
-    passing_count = total_count - error_count
     header_printed = False
     column_width = (case_l + suite_l + namelist_l + status_l + 13)
 
@@ -799,10 +796,14 @@ def print_report(logs, total_count, max_str_lens,
         if not header_printed:
             print("-" * column_width)
             header_printed = True
+
     print("-" * column_width)
     if (passing):
+        # error_log contains header, subtracting 1 from error
+        passing_count = logs.shape[0] - 1
         print(f"[{passing_count}/{total_count}] passing cases")
     if (failing):
+        error_count = logs.shape[0] - 1
         print(f"[{error_count}/{total_count}] failed cases")
 
 
