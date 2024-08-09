@@ -1,16 +1,7 @@
-$case_config
-case_name = 'arm_sgp_summer_1997_X',
-runtime = 2505600,
-thermo_forcing_type = 1,
-mom_forcing_type = 3,
-relax_time = 7200.0,
-sfc_flux_spec = .true.,
-sfc_roughness_length_cm = 10.0
-sfc_type = 1,
-reference_profile_choice = 2,
-year = 1997,
-month = 6,
-day = 18,
-hour = 23,
-column_area = 2.0E9,
-$end
+&case_config
+    case_name = 'arm_sgp_summer_1997_X'
+    column_area = 2000000000.0
+    input_type = 1
+    reference_profile_choice = 2
+    sfc_roughness_length_cm = 10.0
+/

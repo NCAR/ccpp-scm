@@ -502,7 +502,7 @@ class Experiment(object):
                 nc_fid = Dataset(os.path.join(SCM_ROOT, self._case_data_dir) + '/' + self._case + '_SCM_driver.nc' , 'r')
                 surfaceForcing = nc_fid.getncattr('surface_forcing_temp')
                 nc_fid.close()
-                if (surfaceForcing.lower() == 'flux' or surfaceForcing.lower() == 'surface_flux'):
+                if (surfaceForcing.lower() == 'kinematic' or surfaceForcing.lower() == 'surface_flux'):
                     surface_flux_spec = True
         except KeyError:
             # if not using DEPHY format, check to see if surface fluxes are specified in the case configuration file (default is False)

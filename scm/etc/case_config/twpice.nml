@@ -1,16 +1,7 @@
-$case_config
-case_name = 'twpice',
-runtime = 2138400,
-thermo_forcing_type = 2,
-mom_forcing_type = 3,
-relax_time = 7200.0,
-sfc_flux_spec = .false.,
-sfc_type = 0,
-sfc_roughness_length_cm = 0.02,
-reference_profile_choice = 1,
-year = 2006,
-month = 1,
-day = 19,
-hour = 3,
-column_area = 2.0E9,
-$end
+&case_config
+    case_name = 'twpice'
+    column_area = 2000000000.0
+    input_type = 1
+    reference_profile_choice = 1
+    sfc_roughness_length_cm = 0.02
+/

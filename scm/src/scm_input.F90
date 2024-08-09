@@ -1573,8 +1573,11 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "landfrac",  needed_for_model_ics, input_landfrac)
   call NetCDF_read_var(ncid, "lakefrac",  needed_for_model_ics, input_lakefrac)
   call NetCDF_read_var(ncid, "lakedepth", needed_for_model_ics, input_lakedepth)
+<<<<<<< HEAD
   call NetCDF_read_var(ncid, "vegtype_frac", needed_for_model_ics, input_vegtype_frac)
   call NetCDF_read_var(ncid, "soiltype_frac", needed_for_model_ics, input_soiltype_frac)
+=======
+>>>>>>> dephy_conversion
     
   !NSST variables
   call NetCDF_read_var(ncid, "tref",    needed_for_model_ics, input_tref)
