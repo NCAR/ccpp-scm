@@ -33,6 +33,7 @@ DEFAULT_NUDGING_TIMESCALE = 7200.0 #s
 parser = argparse.ArgumentParser()
 parser.add_argument('-n',   '--case_name',       help='name of case',         required=True)
 parser.add_argument('-a',   '--use_area',        help='use column_area namelist attribute as forcing_scale',  action='store_true')
+parser.add_argument('-d',   '--debug',           help='enable debugging output', action='store_true')
 
 
 ########################################################################################
@@ -41,18 +42,18 @@ parser.add_argument('-a',   '--use_area',        help='use column_area namelist 
 def parse_arguments():
     """Parse command line arguments"""
     args           = parser.parse_args()
-    case_name      = args.case_name
-    use_area       = args.use_area
-
         
-    return (case_name, use_area)
+    return (args.case_name, args.use_area, args.debug)
 
 ########################################################################################
 #
 ########################################################################################
-def setup_logging():
+def setup_logging(debug):
     """Sets up the logging module."""
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=LOGLEVEL)
+    if debug:
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    else:
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 class Case_Data(object):
     def __init__(self, name, missing_value, time, levels, soil_depth, lat, lon, slmsk, vegsrc, vegtyp, soiltyp, \
@@ -2282,7 +2283,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_ta == forcing_on):
         message = 'adv_ta is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnta_adv_var                    = nc_file.createVariable('tnta_adv', wp, ('time','lev'))
         # tnta_adv_var.units              = 'K s-1'
@@ -2291,7 +2292,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
         
     if (nc_file.adv_qv == forcing_on):
         message = 'adv_qv is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnqv_adv_var                    = nc_file.createVariable('tnqv_adv', wp, ('time','lev'))
         # tnqv_adv_var.units              = 'kg kg-1 s-1'
@@ -2300,7 +2301,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_ua == forcing_on):
         message = 'adv_ua is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnua_adv_var                    = nc_file.createVariable('tnua_adv', wp, ('time','lev'))
         # tnua_adv_var.units              = 'm s-2'
@@ -2309,7 +2310,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_va == forcing_on):
         message = 'adv_va is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnva_adv_var                    = nc_file.createVariable('tnva_adv', wp, ('time','lev'))
         # tnva_adv_var.units              = 'm s-2'
@@ -2318,7 +2319,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_theta == forcing_on):
         message = 'adv_theta is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tntheta_adv_var                    = nc_file.createVariable('tntheta_adv', wp, ('time','lev'))
         # tntheta_adv_var.units              = 'K s-1'
@@ -2345,7 +2346,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_rv == forcing_on):
         message = 'adv_rv is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnrv_adv_var                    = nc_file.createVariable('tnrv_adv', wp, ('time','lev'))
         # tnrv_adv_var.units              = 'kg kg-1 s-1'
@@ -2354,7 +2355,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_rt == forcing_on):
         message = 'adv_rt is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnrt_adv_var                    = nc_file.createVariable('tnrt_adv', wp, ('time','lev'))
         # tnrt_adv_var.units              = 'kg kg-1 s-1'
