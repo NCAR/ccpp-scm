@@ -1317,7 +1317,7 @@ module scm_type_defs
       ! NSSTM variables
       !
       if (physics%Model%nstf_name(1) > 0) then
-        if (physics%Model%nstf_name(2) == 1 .or. .not. (scm_state%model_ics .or. scm_state%lsm_ics)) then
+        if (physics%Model%nstf_name(2) == 1 .or. .not. (scm_state%model_ics)) then
           physics%Sfcprop%tref(i)    = physics%Sfcprop%tsfco(i)
           physics%Sfcprop%z_c(i)     = real_zero
           physics%Sfcprop%c_0(i)     = real_zero
