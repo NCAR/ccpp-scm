@@ -11,7 +11,7 @@ use :: ccpp_static_api,                      &
        only: ccpp_physics_timestep_init,     &
              ccpp_physics_run,               &
              ccpp_physics_timestep_finalize
-             
+
 
 implicit none
 
@@ -78,10 +78,9 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
       if (scm_state%input_type == 0) then
         call apply_forcing_leapfrog(scm_state)
       else
-        write(*,*) 'The application of forcing terms from the DEPHY file format has not been implemented for the leapfrog time scheme.'
-        stop
+        error stop 'The application of forcing terms from the DEPHY file format has not been implemented for the leapfrog time scheme.'
       end if
-      
+
     case default
       if (scm_state%input_type == 0) then
         call apply_forcing_forward_Euler(scm_state, in_spinup)
@@ -108,19 +107,19 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
         physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
                + (physics%Statein%ugrs(i,:) - physics%Stateout%gu0(i,:))
       endif
-      
+
       idtend = physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics)
       if(idtend>=1) then
         physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
                + (physics%Statein%vgrs(i,:) - physics%Stateout%gv0(i,:))
       endif
-      
+
       idtend = physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics)
       if(idtend>=1) then
         physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
                + (physics%Statein%tgrs(i,:) - physics%Stateout%gt0(i,:))
       endif
-      
+
       if (physics%Model%qdiag3d) then
         do itrac=1,physics%Model%ntrac
           idtend = physics%Model%dtidx(itrac+100,physics%Model%index_of_process_non_physics)
@@ -132,13 +131,13 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
       endif
     endif
   enddo
-  
+
   call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop
+      error stop trim(cdata%errmsg)
   end if
-  
+
   !--- determine if radiation diagnostics buckets need to be cleared
   if (nint(physics%Model%fhzero*3600) >= nint(max(physics%Model%fhswr,physics%Model%fhlwr))) then
     if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
@@ -150,22 +149,22 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
       call physics%Diag%rad_zero  (physics%Model)
     endif
   endif
-  
+
   !--- determine if physics diagnostics buckets need to be cleared
   if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
     call physics%Diag%phys_zero (physics%Model)
   endif
-  
+
   call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop
+      error stop trim(cdata%errmsg)
   end if
 
   call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
   if (ierr/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-      stop
+      error stop trim(cdata%errmsg)
   end if
 
   !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)

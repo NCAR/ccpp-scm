@@ -69,7 +69,7 @@ subroutine get_config_nml(scm_state)
 
   character(len=character_length)    :: physics_suite !< name of the physics suite name (currently only GFS_operational supported)
   character(len=character_length)    :: physics_nml
-  
+
   character(len=character_length), allocatable, dimension(:) :: tracer_names
   integer,                         allocatable, dimension(:) :: tracer_types
 
@@ -82,7 +82,7 @@ subroutine get_config_nml(scm_state)
     lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
     sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, &
     column_area, input_type
-    
+
   NAMELIST /physics_config/ physics_suite, physics_nml
 
   !>  \section get_config_alg Algorithm
@@ -121,12 +121,12 @@ subroutine get_config_nml(scm_state)
   hour = 3
   min = 0
   input_type = 0
-  
+
   open(unit=10, file=experiment_namelist, status='old', action='read', iostat=ioerror)
   if(ioerror /= 0) then
     write(*,'(a,i0)') 'There was an error opening the file ' // experiment_namelist // &
                       '; error code = ', ioerror
-    STOP
+    error stop "error opening namelist"
   else
     read(10, NML=case_config, iostat=ioerror)
   end if
@@ -134,7 +134,7 @@ subroutine get_config_nml(scm_state)
   if(ioerror /= 0) then
     write(*,'(a,i0)') 'There was an error reading the namelist case_config in the file '&
                       // experiment_namelist // '; error code = ',ioerror
-    STOP
+    error stop "error opening namelist"
   end if
 
   !The current implementation of GFS physics does not support more than one column, since radiation sub schemes use
@@ -142,10 +142,9 @@ subroutine get_config_nml(scm_state)
   !the code crashes in GFS_initialize_scm_run and later in radiation_gases.f, because it tries to allocate module
   !variables that are already allocated. For now, throw an error and abort.
   if (n_columns>1) then
-    write(*,'(a)') 'The current implementation does not allow to run more than one column at a time.'
-    STOP
+    error stop "The current implementation does not allow to run more than one column at a time."
   end if
-  
+
   !read in the physics suite and namelist
   read(10, NML=physics_config, iostat=ioerror)
   close(10)
@@ -158,9 +157,9 @@ subroutine get_config_nml(scm_state)
     case default
       n_time_levels = 2
   end select
-  
+
   call get_tracers(tracer_names, tracer_types)
-  
+
   call scm_state%create(n_columns, n_levels, n_soil, n_snow, n_time_levels, tracer_names, tracer_types)
 
   scm_state%experiment_name = experiment_name
@@ -201,7 +200,7 @@ subroutine get_config_nml(scm_state)
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
   scm_state%input_type = input_type
-  
+
   deallocate(tracer_names)
 !> @}
 end subroutine get_config_nml
@@ -214,7 +213,7 @@ subroutine get_case_init(scm_state, scm_input)
   use NetCDF_read, only: NetCDF_read_var, check, missing_value
   type(scm_state_type), intent(in) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
-  
+
   integer                     :: input_nlev !< number of levels in the input file
   integer                     :: input_nsoil !< number of soil levels in the input file
   integer                     :: input_nsnow !< number of snow levels in the input file
@@ -225,9 +224,9 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_lat !< column latitude (deg)
   real(kind=dp)               :: input_lon !< column longitude (deg)
   real(kind=dp)               :: input_area    !< surface area [m^2]
-  
+
   integer                     :: input_vegsrc !< vegetation source
-  
+
   real(kind=dp)               :: input_slmsk   !< sea land ice mask [0,1,2]
   real(kind=dp)               :: input_tsfco !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
   real(kind=dp)               :: input_weasd !< water equivalent accumulated snow depth (mm)
@@ -278,14 +277,14 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_albdifvis_ice !<
   real(kind=dp)               :: input_albdifnir_ice !<
   real(kind=dp)               :: input_zorlwav   !< surface roughness length from wave model (cm)
-  
+
   real(kind=dp), allocatable  :: input_stc(:) !< soil temperature (K)
-  real(kind=dp), allocatable  :: input_smc(:) !< total soil moisture content (fraction)  
+  real(kind=dp), allocatable  :: input_smc(:) !< total soil moisture content (fraction)
   real(kind=dp), allocatable  :: input_slc(:) !< liquid soil moisture content (fraction)
   real(kind=dp), allocatable  :: input_tiice(:)   !< sea ice internal temperature (K)
 
   real(kind=dp)               :: input_stddev !< standard deviation of subgrid orography (m)
-  real(kind=dp)               :: input_convexity !< convexity of subgrid orography 
+  real(kind=dp)               :: input_convexity !< convexity of subgrid orography
   real(kind=dp)               :: input_ol1 !< fraction of grid box with subgrid orography higher than critical height 1
   real(kind=dp)               :: input_ol2 !< fraction of grid box with subgrid orography higher than critical height 2
   real(kind=dp)               :: input_ol3 !< fraction of grid box with subgrid orography higher than critical height 3
@@ -333,13 +332,13 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_deeprechxy !< recharge to or from the water table when deep (m)
   real(kind=dp)               :: input_rechxy !< recharge to or from the water table when shallow (m)
   real(kind=dp)               :: input_snowxy !< number of snow layers
-  
+
   real(kind=dp), allocatable  :: input_snicexy(:) !< snow layer ice (mm)
   real(kind=dp), allocatable  :: input_snliqxy(:) !< snow layer liquid (mm)
   real(kind=dp), allocatable  :: input_tsnoxy(:) !< snow temperature (K)
   real(kind=dp), allocatable  :: input_smoiseq(:) !< equilibrium soil water content (m3 m-3)
   real(kind=dp), allocatable  :: input_zsnsoxy(:) !< layer bottom depth from snow surface (m)
-  
+
   real(kind=dp)               :: input_tref !< sea surface reference temperature for NSST (K)
   real(kind=dp)               :: input_z_c !< sub-layer cooling thickness for NSST (m)
   real(kind=dp)               :: input_c_0 !< coefficient 1 to calculate d(Tz)/d(Ts) for NSST
@@ -358,7 +357,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_ifd !< index to start DTM run for NSST
   real(kind=dp)               :: input_dt_cool !< sub-layer cooling amount for NSST (K)
   real(kind=dp)               :: input_qrain !< sensible heat due to rainfall for NSST (W)
-  
+
   real(kind=dp)               :: input_wetness !< normalized soil wetness for RUC LSM
   real(kind=dp)               :: input_clw_surf_land !< cloud condensed water mixing ratio at surface over land for RUC LSM (kg kg-1)
   real(kind=dp)               :: input_clw_surf_ice !< cloud condensed water mixing ratio at surface over ice for RUC LSM (kg kg-1)
@@ -374,13 +373,13 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_sfalb_ice
   real(kind=dp)               :: input_emis_ice
   real(kind=dp)               :: input_lai !< leaf area index for RUC LSM
-  
+
   real(kind=dp), allocatable  :: input_tslb(:)    !< soil temperature for RUC LSM (K)
   real(kind=dp), allocatable  :: input_smois(:)   !< volume fraction of soil moisture for RUC LSM (frac)
   real(kind=dp), allocatable  :: input_sh2o(:)    !< volume fraction of unfrozen soil moisture for RUC LSM (frac)
   real(kind=dp), allocatable  :: input_smfr(:)    !< volume fraction of frozen soil moisture for RUC LSM (frac)
   real(kind=dp), allocatable  :: input_flfr(:)    !< flag for frozen soil physics
-  
+
   ! dimension variables
   !real(kind=dp), allocatable  :: input_pres_i(:) !< interface pressures
   !real(kind=dp), allocatable  :: input_pres_l(:) !< layer pressures
@@ -397,7 +396,7 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_v(:) !< north-south horizontal wind profile (m s^-1)
   real(kind=dp), allocatable  :: input_tke(:) !< TKE profile (m^2 s^-2)
   real(kind=dp), allocatable  :: input_ozone(:) !< ozone profile (kg kg^-1)
-  
+
   real(kind=dp), allocatable  :: input_pres_surf(:) !< time-series of surface pressure (Pa)
   real(kind=dp), allocatable  :: input_T_surf(:) !< time-series of surface temperature (K)
 
@@ -418,7 +417,7 @@ subroutine get_case_init(scm_state, scm_input)
 
   real(kind=dp), allocatable  :: input_sh_flux_sfc(:) !< time-series of surface sensible heat flux (K m s^-1)
   real(kind=dp), allocatable  :: input_lh_flux_sfc(:) !< time-series of surface latent heat flux (kg kg^-1 m s^-1)
-  
+
   CHARACTER(LEN=nf90_max_name)      :: tmpName
   integer                           :: ncid, varID, grp_ncid, allocate_status,ierr
   real(kind=dp)                     :: nc_missing_value
@@ -428,21 +427,21 @@ subroutine get_case_init(scm_state, scm_input)
 
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
   call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'.nc',nf90_nowrite,ncid),"nf90_open()")
-  
+
   !> - Read in missing value from file (replace module variable if present)
   ierr = NF90_GET_ATT(ncid, NF90_GLOBAL, 'missing_value', nc_missing_value)
   if(ierr == NF90_NOERR) then
     missing_value = nc_missing_value
   end if
-  
+
   !> - Get the dimensions (global group).
-  
+
   !required dimensions
   call check(NF90_INQ_DIMID(ncid,"levels",varID),"nf90_inq_dimid(levels)")
   call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nlev),"nf90_inq_dim(levels)")
   call check(NF90_INQ_DIMID(ncid,"time",varID),"inq_dimid(time)")
   call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_ntimes),"nf90_inq_dim(time)")
-  
+
   !possible dimensions (if using model ICs)
   ierr = NF90_INQ_DIMID(ncid,"nsoil",varID)
   if(ierr /= NF90_NOERR) then
@@ -490,15 +489,15 @@ subroutine get_case_init(scm_state, scm_input)
   !>  - Allocate the initial profiles (required). One of thetail or temp is required.
   allocate(input_thetail(input_nlev), input_temp(input_nlev), input_qt(input_nlev), input_ql(input_nlev), input_qi(input_nlev), &
     input_u(input_nlev), input_v(input_nlev), input_tke(input_nlev), input_ozone(input_nlev), stat=allocate_status)
-  
+
   !>  - Read in the initial profiles. The variable names in all input files are expected to be identical.
-  
+
   !Either thetail or T must be present
   call NetCDF_read_var(grp_ncid, "thetail", .False., input_thetail)
   call NetCDF_read_var(grp_ncid, "temp", .False., input_temp)
   if (maxval(input_thetail) < 0 .and. maxval(input_temp) < 0) then
     write(*,*) "One of thetail or temp variables must be present in ",trim(adjustl(scm_state%case_name))//'.nc',". Stopping..."
-    STOP
+    error stop "One of thetail or temp variables"
   end if
   call NetCDF_read_var(grp_ncid, "qt",    .True., input_qt   )
   call NetCDF_read_var(grp_ncid, "ql",    .True., input_ql   )
@@ -507,7 +506,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "v",     .True., input_v    )
   call NetCDF_read_var(grp_ncid, "tke",   .True., input_tke  )
   call NetCDF_read_var(grp_ncid, "ozone", .True., input_ozone)
-  
+
   !possible initial profiles
   !needed for Noah LSM and others (when running with model ICs)
   allocate(input_stc(input_nsoil), input_smc(input_nsoil), input_slc(input_nsoil), &
@@ -515,7 +514,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "stc", .False., input_stc)
   call NetCDF_read_var(grp_ncid, "smc", .False., input_smc)
   call NetCDF_read_var(grp_ncid, "slc", .False., input_slc)
-  
+
   !needed for NoahMP LSM (when running with model ICs)
   allocate(input_snicexy(input_nsnow), input_snliqxy(input_nsnow), input_tsnoxy(input_nsnow), &
      input_smoiseq(input_nsoil), input_zsnsoxy(input_nsnow + input_nsoil))
@@ -524,11 +523,11 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "tsnoxy",  .False., input_tsnoxy )
   call NetCDF_read_var(grp_ncid, "smoiseq", .False., input_smoiseq)
   call NetCDF_read_var(grp_ncid, "zsnsoxy", .False., input_zsnsoxy)
-  
+
   !needed for fractional grid (when running with model ICs)
   allocate(input_tiice(input_nice))
   call NetCDF_read_var(grp_ncid, "tiice", .False., input_tiice)
-  
+
   !needed for RUC LSM (when running with model ICs)
   allocate(input_tslb(input_nsoil), input_smois(input_nsoil), input_sh2o(input_nsoil), &
       input_smfr(input_nsoil), input_flfr(input_nsoil))
@@ -537,16 +536,16 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "sh2o",  .False., input_sh2o )
   call NetCDF_read_var(grp_ncid, "smfr",  .False., input_smfr )
   call NetCDF_read_var(grp_ncid, "flfr",  .False., input_flfr )
-  
+
   !>  - Find group ncid for scalar group.
   call check(NF90_INQ_GRP_NCID(ncid,"scalars",grp_ncid),"nf90_inq_grp_ncid(scalars)")
-  
+
   !required
   call NetCDF_read_var(grp_ncid, "lat", .True., input_lat)
   call NetCDF_read_var(grp_ncid, "lon", .True., input_lon)
   !time data in file ignored?
   call NetCDF_read_var(grp_ncid, "area", .False., input_area)
-  
+
   !possible scalars
   !Noah LSM parameters (when running with model ICs)
   call NetCDF_read_var(grp_ncid, "vegsrc",  .False., input_vegsrc   )
@@ -600,7 +599,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "albdifvis_ice", .False., input_albdifvis_ice)
   call NetCDF_read_var(grp_ncid, "albdifnir_ice", .False., input_albdifnir_ice)
   call NetCDF_read_var(grp_ncid, "zorlwav", .False., input_zorlwav)
-  
+
   !orographic parameters
   call NetCDF_read_var(grp_ncid, "stddev",    .False., input_stddev)
   call NetCDF_read_var(grp_ncid, "convexity", .False., input_convexity)
@@ -621,7 +620,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "landfrac",  .False., input_landfrac)
   call NetCDF_read_var(grp_ncid, "lakefrac",  .False., input_lakefrac)
   call NetCDF_read_var(grp_ncid, "lakedepth", .False., input_lakedepth)
-  
+
   !NoahMP parameters
   call NetCDF_read_var(grp_ncid, "tvxy",      .False., input_tvxy)
   call NetCDF_read_var(grp_ncid, "tgxy",      .False., input_tgxy)
@@ -652,7 +651,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "deeprechxy",.False., input_deeprechxy)
   call NetCDF_read_var(grp_ncid, "rechxy",    .False., input_rechxy)
   call NetCDF_read_var(grp_ncid, "snowxy",    .False., input_snowxy)
-  
+
   !NSST variables
   call NetCDF_read_var(grp_ncid, "tref",    .False., input_tref)
   call NetCDF_read_var(grp_ncid, "z_c",     .False., input_z_c)
@@ -672,7 +671,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "ifd",     .False., input_ifd)
   call NetCDF_read_var(grp_ncid, "dt_cool", .False., input_dt_cool)
   call NetCDF_read_var(grp_ncid, "qrain",   .False., input_qrain)
-  
+
   !RUC LSM variables
   call NetCDF_read_var(grp_ncid, "wetness",          .False., input_wetness)
   call NetCDF_read_var(grp_ncid, "clw_surf_land",    .False., input_clw_surf_land)
@@ -688,7 +687,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
   call NetCDF_read_var(grp_ncid, "emis_ice",         .False., input_emis_ice)
   call NetCDF_read_var(grp_ncid, "lai",              .False., input_lai)
-  
+
   !> - Read in the forcing data.
 
   !>  - Find group ncid for forcing group.
@@ -711,7 +710,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "T_surf", .True., input_T_surf)
   call NetCDF_read_var(grp_ncid, "sh_flux_sfc", .False., input_sh_flux_sfc)
   call NetCDF_read_var(grp_ncid, "lh_flux_sfc", .False., input_lh_flux_sfc)
-  
+
   call NetCDF_read_var(grp_ncid, "w_ls", .True., input_w_ls)
   call NetCDF_read_var(grp_ncid, "omega", .True., input_omega)
   call NetCDF_read_var(grp_ncid, "u_g", .True., input_u_g)
@@ -766,26 +765,26 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_T_nudge = input_T_nudge
   scm_input%input_thil_nudge = input_thil_nudge
   scm_input%input_qt_nudge = input_qt_nudge
-  
-  scm_input%input_stc   = input_stc  
-  scm_input%input_smc   = input_smc  
-  scm_input%input_slc   = input_slc  
-  
+
+  scm_input%input_stc   = input_stc
+  scm_input%input_smc   = input_smc
+  scm_input%input_slc   = input_slc
+
   scm_input%input_snicexy    = input_snicexy
   scm_input%input_snliqxy    = input_snliqxy
   scm_input%input_tsnoxy     = input_tsnoxy
   scm_input%input_smoiseq    = input_smoiseq
   scm_input%input_zsnsoxy    = input_zsnsoxy
-  
+
   scm_input%input_tiice      = input_tiice
   scm_input%input_tslb       = input_tslb
   scm_input%input_smois      = input_smois
   scm_input%input_sh2o       = input_sh2o
   scm_input%input_smfr       = input_smfr
   scm_input%input_flfr       = input_flfr
-  
+
   scm_input%input_vegsrc   = input_vegsrc
-  
+
   scm_input%input_slmsk    = input_slmsk
   scm_input%input_canopy   = input_canopy
   scm_input%input_hice     = input_hice
@@ -846,7 +845,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_albdifvis_ice = input_albdifvis_ice
   scm_input%input_albdifnir_ice = input_albdifnir_ice
   scm_input%input_zorlwav  = input_zorlwav
-  
+
   scm_input%input_stddev   = input_stddev
   scm_input%input_convexity= input_convexity
   scm_input%input_oa1      = input_oa1
@@ -866,7 +865,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_landfrac = input_landfrac
   scm_input%input_lakefrac = input_lakefrac
   scm_input%input_lakedepth= input_lakedepth
-  
+
   scm_input%input_tvxy = input_tvxy
   scm_input%input_tgxy = input_tgxy
   scm_input%input_tahxy = input_tahxy
@@ -896,7 +895,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_deeprechxy = input_deeprechxy
   scm_input%input_rechxy = input_rechxy
   scm_input%input_snowxy = input_snowxy
-  
+
   scm_input%input_tref    = input_tref
   scm_input%input_z_c     = input_z_c
   scm_input%input_c_0     = input_c_0
@@ -915,9 +914,9 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_ifd     = input_ifd
   scm_input%input_dt_cool = input_dt_cool
   scm_input%input_qrain   = input_qrain
-  
+
   scm_input%input_area     = input_area
-  
+
   scm_input%input_wetness         = input_wetness
   scm_input%input_clw_surf_land   = input_clw_surf_land
   scm_input%input_clw_surf_ice    = input_clw_surf_ice
@@ -932,29 +931,29 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck
   scm_input%input_emis_ice        = input_emis_ice
   scm_input%input_lai             = input_lai
-  
+
 !> @}
 end subroutine get_case_init
 
 subroutine get_case_init_DEPHY(scm_state, scm_input)
   !corresponds to the DEPHY-SCM specs, version 1
-  
+
   use scm_type_defs, only : scm_state_type, scm_input_type
   use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check, missing_value, missing_value_int
   use scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_rd
   use scm_utils, only: find_vertical_index_pressure, find_vertical_index_height
-  
+
   type(scm_state_type), intent(inout) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
-  
+
   ! dimension variables
   real(kind=dp), allocatable  :: input_t0(:) !< input initialization times (seconds since global attribute "startdate")
   real(kind=dp), allocatable  :: input_time(:) !< input forcing times (seconds since the beginning of the case)
   real(kind=dp), allocatable  :: input_lev(:) !< corresponds to either pressure or height (depending on attribute) - why is this needed when both pressure and height also provided in ICs?
-  
+
   !non-standard dimensions (may or may not exist in the file)
   real(kind=dp), allocatable :: input_soil(:) !< soil depth
-  
+
   ! global attributes
   character(len=19)    :: char_startDate, char_endDate !format YYYY-MM-DD HH:MM:SS
   integer :: init_year, init_month, init_day, init_hour, init_min, init_sec, end_year, end_month, end_day, end_hour, end_min, end_sec
@@ -966,7 +965,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp) :: p_nudging_temp, p_nudging_theta, p_nudging_thetal, p_nudging_qv, p_nudging_qt, p_nudging_rv, p_nudging_rt, p_nudging_u, p_nudging_v
   character(len=5) :: input_surfaceType
   character(len=12) :: input_surfaceForcingWind='',input_surfaceForcingMoist='',input_surfaceForcingLSM='',input_surfaceForcingTemp=''
-  
+
   ! initial variables (IC = Initial Condition)
   real(kind=dp), allocatable :: input_lat(:) !< column latitude (deg)
   real(kind=dp), allocatable :: input_lon(:) !< column longitude (deg)
@@ -989,11 +988,11 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp), allocatable :: input_ri(:,:) !< IC ice water mixing ratio profile (kg kg^-1)
   real(kind=sp), allocatable :: input_rh(:,:) !< IC relative humidity profile (%)
   real(kind=sp), allocatable :: input_tke(:,:) !< IC TKE profile (m^2 s^-2)
-  
+
   ! Model ICs (extension of DEPHY format)
   real(kind=dp), allocatable  :: input_ozone(:,:)   !< ozone profile (kg kg^-1)
   real(kind=dp), allocatable  :: input_stc(:,:)     !< soil temperature (K)
-  real(kind=dp), allocatable  :: input_smc(:,:)     !< total soil moisture content (fraction)  
+  real(kind=dp), allocatable  :: input_smc(:,:)     !< total soil moisture content (fraction)
   real(kind=dp), allocatable  :: input_slc(:,:)     !< liquid soil moisture content (fraction)
   real(kind=dp), allocatable  :: input_snicexy(:,:) !< snow layer ice (mm)
   real(kind=dp), allocatable  :: input_snliqxy(:,:) !< snow layer liquid (mm)
@@ -1006,7 +1005,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_sh2o(:,:)    !< volume fraction of unfrozen soil moisture for RUC LSM (frac)
   real(kind=dp), allocatable  :: input_smfr(:,:)    !< volume fraction of frozen soil moisture for RUC LSM (frac)
   real(kind=dp), allocatable  :: input_flfr(:,:)    !< flag for frozen soil physics
-  
+
   real(kind=dp), allocatable  :: input_area(:)      !< surface area [m^2]
   real(kind=dp), allocatable  :: input_tsfco(:) !< input sea surface temperature OR surface skin temperature over land OR surface skin temperature over ice (depending on slmsk) (K)
   integer      , allocatable  :: input_vegsrc(:) !< vegetation source
@@ -1045,9 +1044,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_zorll(:)   !< surface roughness length over land (cm)
   real(kind=dp), allocatable  :: input_zorli(:)   !< surface roughness length over ice (cm)
   real(kind=dp), allocatable  :: input_zorlw(:)   !< surface roughness length from wave model (cm)
-  
+
   real(kind=dp), allocatable  :: input_stddev(:) !< standard deviation of subgrid orography (m)
-  real(kind=dp), allocatable  :: input_convexity(:) !< convexity of subgrid orography 
+  real(kind=dp), allocatable  :: input_convexity(:) !< convexity of subgrid orography
   real(kind=dp), allocatable  :: input_ol1(:) !< fraction of grid box with subgrid orography higher than critical height 1
   real(kind=dp), allocatable  :: input_ol2(:) !< fraction of grid box with subgrid orography higher than critical height 2
   real(kind=dp), allocatable  :: input_ol3(:) !< fraction of grid box with subgrid orography higher than critical height 3
@@ -1097,7 +1096,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_deeprechxy(:) !< recharge to or from the water table when deep (m)
   real(kind=dp), allocatable  :: input_rechxy(:) !< recharge to or from the water table when shallow (m)
   real(kind=dp), allocatable  :: input_snowxy(:) !< number of snow layers
-  
+
   real(kind=dp), allocatable  :: input_tref(:) !< sea surface reference temperature for NSST (K)
   real(kind=dp), allocatable  :: input_z_c(:) !< sub-layer cooling thickness for NSST (m)
   real(kind=dp), allocatable  :: input_c_0(:) !< coefficient 1 to calculate d(Tz)/d(Ts) for NSST
@@ -1116,23 +1115,23 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_ifd(:) !< index to start DTM run for NSST
   real(kind=dp), allocatable  :: input_dt_cool(:) !< sub-layer cooling amount for NSST (K)
   real(kind=dp), allocatable  :: input_qrain(:) !< sensible heat due to rainfall for NSST (W)
-  
+
   real(kind=dp), allocatable  :: input_wetness(:)         !< normalized soil wetness for RUC LSM
   real(kind=dp), allocatable  :: input_lai(:)             !< leaf area index for RUC LSM
-  real(kind=dp), allocatable  :: input_clw_surf_land(:)   !< cloud condensed water mixing ratio at surface over land for RUC LSM 
+  real(kind=dp), allocatable  :: input_clw_surf_land(:)   !< cloud condensed water mixing ratio at surface over land for RUC LSM
   real(kind=dp), allocatable  :: input_clw_surf_ice(:)    !< cloud condensed water mixing ratio at surface over ice for RUC LSM
-  real(kind=dp), allocatable  :: input_qwv_surf_land(:)   !< water vapor mixing ratio at surface over land for RUC LSM 
-  real(kind=dp), allocatable  :: input_qwv_surf_ice(:)    !< water vapor mixing ratio at surface over ice for RUC LSM 
-  real(kind=dp), allocatable  :: input_tsnow_land(:)      !< snow temperature at the bottom of the first snow layer over land for RUC LSM 
-  real(kind=dp), allocatable  :: input_tsnow_ice(:)       !< snow temperature at the bottom of the first snow layer over ice for RUC LSM 
-  real(kind=dp), allocatable  :: input_snowfallac_land(:) !< run-total snow accumulation on the ground over land for RUC LSM 
-  real(kind=dp), allocatable  :: input_snowfallac_ice(:)  !< run-total snow accumulation on the ground over ice for RUC LSM 
+  real(kind=dp), allocatable  :: input_qwv_surf_land(:)   !< water vapor mixing ratio at surface over land for RUC LSM
+  real(kind=dp), allocatable  :: input_qwv_surf_ice(:)    !< water vapor mixing ratio at surface over ice for RUC LSM
+  real(kind=dp), allocatable  :: input_tsnow_land(:)      !< snow temperature at the bottom of the first snow layer over land for RUC LSM
+  real(kind=dp), allocatable  :: input_tsnow_ice(:)       !< snow temperature at the bottom of the first snow layer over ice for RUC LSM
+  real(kind=dp), allocatable  :: input_snowfallac_land(:) !< run-total snow accumulation on the ground over land for RUC LSM
+  real(kind=dp), allocatable  :: input_snowfallac_ice(:)  !< run-total snow accumulation on the ground over ice for RUC LSM
   real(kind=dp), allocatable  :: input_sncovr_ice(:)      !<
   real(kind=dp), allocatable  :: input_sfalb_lnd(:)       !<
   real(kind=dp), allocatable  :: input_sfalb_lnd_bck(:)   !<
   real(kind=dp), allocatable  :: input_sfalb_ice(:)       !<
   real(kind=dp), allocatable  :: input_emis_ice(:)        !<
-  
+
   ! forcing variables
   real(kind=sp), allocatable :: input_force_pres_surf(:) !< forcing surface pressure (Pa)
   real(kind=sp), allocatable :: input_force_height(:,:) !< forcing height levels (m)
@@ -1171,7 +1170,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=sp), allocatable :: input_force_rt_nudging(:,:)
   real(kind=sp), allocatable :: input_force_u_nudging(:,:)
   real(kind=sp), allocatable :: input_force_v_nudging(:,:)
-  
+
   integer :: ncid, varID, allocate_status, ierr, i, k
   integer :: active_lon, active_lat, active_init_time
   CHARACTER(LEN=nf90_max_name) :: tmpName
@@ -1185,12 +1184,12 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_snow, input_n_ice, input_n_soil, input_nvegcat, input_nsoilcat
   
   missing_value_eps = missing_value + 0.01
-  
+
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
   call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'_SCM_driver.nc',nf90_nowrite,ncid),"nf90_open()")
-  
+
   !> - Get the dimensions.
-  
+
   !required dimensions
   call check(NF90_INQ_DIMID(ncid,"t0",varID),"nf90_inq_dimid(t0)")
   call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_init_times),"nf90_inq_dim(t0)")
@@ -1258,23 +1257,23 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   !> - Read in global attributes
 
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'start_date', .True., char_startDate)
-    
+
   read(char_startDate(1:4),'(i4)')   init_year
   read(char_startDate(6:7),'(i2)')   init_month
   read(char_startDate(9:10),'(i2)')  init_day
   read(char_startDate(12:13),'(i2)') init_hour
   read(char_startDate(15:16),'(i2)') init_min
   read(char_startDate(18:19),'(i2)') init_sec
-  
+
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'end_date', .True., char_endDate)
-  
+
   read(char_endDate(1:4),'(i4)')   end_year
   read(char_endDate(6:7),'(i2)')   end_month
   read(char_endDate(9:10),'(i2)')  end_day
   read(char_endDate(12:13),'(i2)') end_hour
   read(char_endDate(15:16),'(i2)') end_min
   read(char_endDate(18:19),'(i2)') end_sec
-  
+
   !compare init time to what was in case config file? replace?
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_ua',             .False., adv_u)
   call NetCDF_read_att(ncid, NF90_GLOBAL, 'adv_va',             .False., adv_v)
@@ -1367,8 +1366,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_smfr    (input_n_soil, input_n_init_times), &
              input_flfr    (input_n_soil, input_n_init_times), &
              stat=allocate_status)
-             
-             
+
+
     !variables without vertical extent
     allocate(input_area      (          input_n_init_times), &
              input_tsfco     (          input_n_init_times), &
@@ -1432,7 +1431,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_soiltype_frac (input_nsoilcat, input_n_init_times),&
              stat=allocate_status)
     allocate(input_tvxy      (          input_n_init_times), &
-             input_tgxy      (          input_n_init_times), & 
+             input_tgxy      (          input_n_init_times), &
              input_tahxy     (          input_n_init_times), &
              input_canicexy  (          input_n_init_times), &
              input_canliqxy  (          input_n_init_times), &
@@ -1458,8 +1457,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_fastcpxy  (          input_n_init_times), &
              input_smcwtdxy  (          input_n_init_times), &
              input_deeprechxy(          input_n_init_times), &
-             input_rechxy    (          input_n_init_times), & 
-             input_snowxy    (          input_n_init_times), & 
+             input_rechxy    (          input_n_init_times), &
+             input_snowxy    (          input_n_init_times), &
              stat=allocate_status)
     allocate(input_tref      (          input_n_init_times), &
              input_z_c       (          input_n_init_times), &
@@ -1531,12 +1530,12 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
   call NetCDF_read_var(ncid, "ua", .True., input_u)
   call NetCDF_read_var(ncid, "va", .True., input_v)
-  
+
   !one of the following should be present, but not all, hence they are not requried
   call NetCDF_read_var(ncid, "ta", .False., input_temp)
   call NetCDF_read_var(ncid, "theta", .False., input_theta)
   call NetCDF_read_var(ncid, "thetal", .False., input_thetal)
-  
+
   !one or more of the following should be present, but not all, hence they are not requried
   call NetCDF_read_var(ncid, "qv",  .False., input_qv)
   call NetCDF_read_var(ncid, "qt",  .False., input_qt)
@@ -1599,7 +1598,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   
   
   !> - Allocate the forcing variables.
-  
+
   !allocate all, but conditionally read forcing variables given global atts; set unused forcing variables to missing
 
   allocate(input_lat                  (input_n_forcing_times),              &
@@ -1645,7 +1644,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     stat=allocate_status)
 
   call NetCDF_read_var(ncid, "lat",     .True., input_lat)
-  call NetCDF_read_var(ncid, "lon",     .True., input_lon)  
+  call NetCDF_read_var(ncid, "lon",     .True., input_lon)
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
   !zh_forc and pa_forc should be present according to the DEPHY standard; if not, assume that zh_forc = input_height and pa_forc = input_pres
   call NetCDF_read_var(ncid, "zh_forc", .False., input_force_height)
@@ -1680,12 +1679,12 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_conditionally_read_var(rad_thetal, "rad_thetal", "tnthetal_rad", trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_thetal_rad)
   !need to also handle the case when rad_[temp,theta,thetal]_char = 'adv' (make sure [temp,theta,thetal]_adv is not missing)
   !need to also turn off radiation when radiation is being forced (put in a warning that this is not supported for now?)
-  
+
   call NetCDF_conditionally_read_var(forc_w,     "forc_w",   "wa",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_w)
   call NetCDF_conditionally_read_var(forc_omega, "forc_wap", "wap",   trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_omega)
   call NetCDF_conditionally_read_var(forc_geo,   "forc_geo", "ug",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_g)
   call NetCDF_conditionally_read_var(forc_geo,   "forc_geo", "vg",    trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_g)
-  
+
   call NetCDF_conditionally_read_var(nudging_u,      "nudging_u",      "ua_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_nudging)
   call NetCDF_conditionally_read_var(nudging_v,      "nudging_v",      "va_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_nudging)
   call NetCDF_conditionally_read_var(nudging_temp,   "nudging_temp",   "ta_nud",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_temp_nudging)
@@ -1841,12 +1840,12 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call scm_input%create(input_n_forcing_times, input_n_lev, input_n_soil, input_n_snow, input_n_ice, input_nvegcat, input_nsoilcat)
   
   !fill the scm_input DDT
-  
+
   !There may need to be logic to control which of the lon, lat, and init_times to use in the future, but for now, just take the first
   active_lon = 1
   active_lat = 1
   active_init_time = 1
-  
+
   rinc(1:5)   = 0
   idat = 0
   jdat = 0
@@ -1864,7 +1863,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   jdat(7) = end_sec
   call w3difdat(jdat,idat,4,rinc)
   elapsed_sec = rinc(4)
-  
+
   !the following variables replace what is in the case configuration file
   scm_state%init_year = init_year
   scm_state%init_month = init_month
@@ -1872,14 +1871,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   scm_state%init_hour = init_hour
   scm_state%init_min = init_min
   scm_state%runtime = elapsed_sec
-  
+
   scm_input%input_time = input_time
   scm_input%input_pres_surf(1) = input_pres_surf(active_init_time) !perhaps input_pres_surf should only be equal to input_force_pres_surf?
   scm_input%input_pres = input_pres(:,active_init_time)
   scm_input%input_u = input_u(:,active_init_time)
   scm_input%input_v = input_v(:,active_init_time)
   scm_input%input_tke = input_tke(:,active_init_time)
-  
+
   !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
   if ((maxval(input_qv(:,active_init_time)) < 0 .and. &
        maxval(input_qt(:,active_init_time)) < 0) .and. &
@@ -1910,7 +1909,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
        end do
      end if
   end if
-  
+
   !make sure that one of qv or qt (and rv or rt due to above conversion) is present (add support for rh later)
   if (maxval(input_qv(:,active_init_time)) >= 0) then
     if (maxval(input_qt(:,active_init_time)) >= 0) then
@@ -1930,7 +1929,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
             scm_input%input_qi(k) = max(0.0, scm_input%input_qt(k) - scm_input%input_qv(k) - scm_input%input_ql(k))
           end do
         end if !qi test
-      else 
+      else
         if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, qt, qi, but no ql
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_qt = input_qt(:,active_init_time)
@@ -1966,7 +1965,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           do k=1, input_n_lev
             scm_input%input_qt(k) = max(0.0, scm_input%input_qv(k) + scm_input%input_ql(k))
           end do
-          scm_input%input_qi = 0.0          
+          scm_input%input_qi = 0.0
         end if ! qi test
       else
         if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, no qt, no ql, qi
@@ -2023,9 +2022,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else
     !no qv or qt
     write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported moisture variables (qv, qt, rv, rt) were missing. Stopping...'
-    stop
+    error stop "Aall of the supported moisture variables (qv, qt, rv, rt) were missing"
   end if
-  
+
   !make sure that at least one of temp, theta, thetal is present;
   !the priority for use is temp, thetal, theta
   if (maxval(input_temp(:,active_init_time)) > 0) then
@@ -2053,13 +2052,13 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_temp = missing_value
   else
     write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
-    stop
+    error stop "All of the supported temperature variables (temp, theta, thetal) were missing"
   end if
 
   if (trim(input_surfaceForcingLSM) == "lsm") then
     scm_input%input_ozone = input_ozone(:,active_init_time)
     scm_input%input_area = input_area(active_init_time)
-    
+
     scm_input%input_stddev   = input_stddev(active_init_time)
     scm_input%input_convexity= input_convexity(active_init_time)
     scm_input%input_oa1      = input_oa1(active_init_time)
@@ -2106,24 +2105,24 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   end if
   scm_input%input_lat = input_lat(active_lat)
   scm_input%input_lon = input_lon(active_lon)
-  
+
   scm_input%input_pres_surf = input_force_pres_surf(:)
-  
+
   do i=1, input_n_forcing_times
     scm_input%input_pres_forcing(i,:) = input_force_pres(:,i)
   end do
-    
+
   if (input_SurfaceType == 'ocean') then
     scm_state%sfc_type = 0.0
   else if (input_SurfaceType == 'land') then
     scm_state%sfc_type = 1.0
   end if
   !no sea ice type?
-  
+
   if (input_surfaceForcingTemp == 'ts') then
     if (maxval(input_force_ts) < 0) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
-      stop
+      error stop "The global attribute surfaceForcing indicates that the variable ts should be present, but it is missing"
     else
       !overwrite sfc_flux_spec
       scm_state%sfc_flux_spec = .false.
@@ -2134,7 +2133,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     !overwrite sfc_flux_spec
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 0
-    
+
     if (maxval(input_force_ts) < 0) then
       !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
       if (maxval(scm_input%input_temp) > 0) then
@@ -2151,11 +2150,11 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     else
       scm_input%input_T_surf = input_force_ts(:)
     end if
-    
+
     !kinematic surface fluxes are specified (but may need to be converted)
     if (maxval(input_force_wpthetap(:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
-      stop
+      error stop "The global attribute surfaceForcing indicates that the variable wpthetap should be present, but it is missing."
     else
       !convert from theta to T
       do i=1, input_n_forcing_times
@@ -2163,7 +2162,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         scm_input%input_sh_flux_sfc_kin(i) = exner*input_force_wpthetap(i)
       end do
     end if
-    
+
     !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
     if ((maxval(input_force_wpqvp(:)) < missing_value_eps .and. &
          maxval(input_force_wpqtp(:)) < missing_value_eps) .and. &
@@ -2182,10 +2181,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
          end do
        end if
     end if
-    
+
     if (maxval(input_force_wpqvp(:)) < missing_value_eps .and. maxval(input_force_wpqtp(:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
-      stop
+      error stop "The global attribute surfaceForcing indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing."
     else
       if (maxval(input_force_wpqvp(:)) > missing_value_eps) then !use wpqvp if available
         scm_input%input_lh_flux_sfc_kin = input_force_wpqvp(:)
@@ -2198,7 +2197,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     !overwrite sfc_flux_spec
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 1
-    
+
     if (maxval(input_force_ts) < 0) then
       !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
       if (maxval(scm_input%input_temp) > 0) then
@@ -2215,18 +2214,18 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     else
       scm_input%input_T_surf = input_force_ts(:)
     end if
-    
-    
+
+
     if (maxval(input_force_sfc_sens_flx(:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
-      stop
+      error stop "The global attribute surfaceForcing in indicates that the variable sfc_sens_flx should be present, but it is missing."
     else
       scm_input%input_sh_flux_sfc = input_force_sfc_sens_flx(:)
     end if
-    
+
     if (maxval(input_force_sfc_lat_flx(:)) < missing_value_eps) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
-      stop
+      error stop "The global attribute surfaceForcing indicates that the variable sfc_lat_flx should be present, but it is missing."
     else
       scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(:)
     end if
@@ -2235,22 +2234,22 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   if (trim(input_surfaceForcingLSM) == 'lsm') then
     !these were considered required variables above, so they should not need to be checked for missing
     scm_input%input_stc   = input_stc(:,active_init_time)
-    scm_input%input_smc   = input_smc(:,active_init_time)  
-    scm_input%input_slc   = input_slc(:,active_init_time)  
-    
+    scm_input%input_smc   = input_smc(:,active_init_time)
+    scm_input%input_slc   = input_slc(:,active_init_time)
+
     scm_input%input_snicexy    = input_snicexy(:,active_init_time)
     scm_input%input_snliqxy    = input_snliqxy(:,active_init_time)
     scm_input%input_tsnoxy     = input_tsnoxy(:,active_init_time)
     scm_input%input_smoiseq    = input_smoiseq(:,active_init_time)
     scm_input%input_zsnsoxy    = input_zsnsoxy(:,active_init_time)
-    
+
     scm_input%input_tiice      = input_tiice(:,active_init_time)
     scm_input%input_tslb       = input_tslb(:,active_init_time)
     scm_input%input_smois      = input_smois(:,active_init_time)
     scm_input%input_sh2o       = input_sh2o(:,active_init_time)
     scm_input%input_smfr       = input_smfr(:,active_init_time)
     scm_input%input_flfr       = input_flfr(:,active_init_time)
-    
+
     scm_input%input_vegsrc   = input_vegsrc(active_init_time)
     scm_input%input_vegtyp   = REAL(input_vegtyp(active_init_time), kind=dp)
     scm_input%input_soiltyp  = REAL(input_soiltyp(active_init_time), kind=dp)
@@ -2288,7 +2287,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_zorll    = input_zorll(active_init_time)
     scm_input%input_zorli    = input_zorli(active_init_time)
     scm_input%input_zorlw    = input_zorlw(active_init_time)
-    
+
     scm_input%input_tvxy     = input_tvxy(active_init_time)
     scm_input%input_tgxy     = input_tgxy(active_init_time)
     scm_input%input_tahxy    = input_tahxy(active_init_time)
@@ -2333,7 +2332,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck(active_init_time)
     scm_input%input_emis_ice        = input_emis_ice(active_init_time)
   end if
-  
+
   if (input_surfaceForcingWind == 'z0') then
     scm_state%surface_momentum_control = 0
     scm_state%sfc_roughness_length_cm = input_z0*100.0 !convert from m to cm
@@ -2341,9 +2340,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     !not supported
     scm_state%surface_momentum_control = 1
     write(*,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported. Stopping ...'
-    stop
+    error stop "The global attribute surfaceForcingWind indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported."
   end if
-  
+
   if (forc_omega > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_omega(i,:) = input_force_omega(:,i)
@@ -2375,7 +2374,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_geo = .true.
   end if
-  
+
   if (adv_temp > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_tot_advec_T(i,:) = input_force_temp_adv(:,i)
@@ -2392,7 +2391,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     scm_state%force_adv_T = 3
   end if
-  
+
   if (adv_qv > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_tot_advec_qv(i,:) = input_force_qv_adv(:,i)
@@ -2424,26 +2423,26 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
     scm_state%force_adv_qv = .true.
   end if
-  
+
   if (adv_u > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_tot_advec_u(i,:) = input_force_u_adv(:,i)
     end do
     scm_state%force_adv_u = .true.
   end if
-  
+
   if (adv_v > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_tot_advec_v(i,:) = input_force_v_adv(:,i)
     end do
     scm_state%force_adv_v = .true.
   end if
-  
+
   if (char_rad_temp == 'adv' .or. char_rad_theta == 'adv' .or. char_rad_thetal == 'adv') then
     scm_state%force_rad_T = 4
     if (scm_state%force_adv_T == 0) then
       write(*,*) 'The global attribute rad_temp, rad_theta, or rad_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that radiative forcing is included in the advection term, but there is no advection term. Stopping ...'
-      stop
+      error stop "The global attribute rad_temp, rad_theta, or rad_thetal indicates that radiative forcing is included in the advection term, but there is no advection term."
     end if
   else if (rad_temp > 0) then
     do i=1, input_n_forcing_times
@@ -2469,7 +2468,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else
     scm_state%force_rad_T = 0
   end if
-  
+
   if (nudging_temp > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_T_nudge(i,:) = input_force_temp_nudging(:,i)
@@ -2484,7 +2483,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_T_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_temp > 0) then 
+    else if (z_nudging_temp > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_temp, input_force_height(:,i), scm_input%input_k_T_nudge(i))
         if (scm_input%input_k_T_nudge(i) < 0) then
@@ -2510,7 +2509,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_thil_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_theta > 0) then 
+    else if (z_nudging_theta > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_theta, input_force_height(:,i), scm_input%input_k_thil_nudge(i))
         if (scm_input%input_k_thil_nudge(i) < 0) then
@@ -2536,7 +2535,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_thil_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_thetal > 0) then 
+    else if (z_nudging_thetal > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_thetal, input_force_height(:,i), scm_input%input_k_thil_nudge(i))
         if (scm_input%input_k_thil_nudge(i) < 0) then
@@ -2548,7 +2547,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_k_thil_nudge(:) = 1
     end if
   end if
-  
+
   if (nudging_qv > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_qt_nudge(i,:) = input_force_qv_nudging(:,i)
@@ -2563,7 +2562,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_qt_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_qv > 0) then 
+    else if (z_nudging_qv > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_qv, input_force_height(:,i), scm_input%input_k_qt_nudge(i))
         if (scm_input%input_k_qt_nudge(i) < 0) then
@@ -2588,7 +2587,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_qt_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_qt > 0) then 
+    else if (z_nudging_qt > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_qt, input_force_height(:,i), scm_input%input_k_qt_nudge(i))
         if (scm_input%input_k_qt_nudge(i) < 0) then
@@ -2616,7 +2615,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_qt_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_rv > 0) then 
+    else if (z_nudging_rv > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_rv, input_force_height(:,i), scm_input%input_k_qt_nudge(i))
         if (scm_input%input_k_qt_nudge(i) < 0) then
@@ -2644,7 +2643,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_qt_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_rt > 0) then 
+    else if (z_nudging_rt > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_rt, input_force_height(:,i), scm_input%input_k_qt_nudge(i))
         if (scm_input%input_k_qt_nudge(i) < 0) then
@@ -2656,7 +2655,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_k_qt_nudge(:) = 1
     end if
   end if
-  
+
   if (nudging_u > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_u_nudge(i,:) = input_force_u_nudging(:,i)
@@ -2671,8 +2670,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_u_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_u > 0) then 
-      do i=1, input_n_forcing_times 
+    else if (z_nudging_u > 0) then
+      do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_u, input_force_height(:,i), scm_input%input_k_u_nudge(i))
         if (scm_input%input_k_u_nudge(i) < 0) then
           !if the vertical index is not found (when it is less than 0), set the nudging index to the top of the input profile so that nudging is turned off
@@ -2683,7 +2682,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_k_u_nudge(:) = 1
     end if
   end if
-  
+
   if (nudging_v > 0) then
     do i=1, input_n_forcing_times
       scm_input%input_v_nudge(i,:) = input_force_v_nudging(:,i)
@@ -2698,7 +2697,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_k_v_nudge(i) = input_n_lev
         end if
       end do
-    else if (z_nudging_v > 0) then 
+    else if (z_nudging_v > 0) then
       do i=1, input_n_forcing_times
         call find_vertical_index_height(z_nudging_v, input_force_height(:,i), scm_input%input_k_v_nudge(i))
         if (scm_input%input_k_v_nudge(i) < 0) then
@@ -2710,14 +2709,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_k_v_nudge(:) = 1
     end if
   end if
-  
+
 end subroutine get_case_init_DEPHY
 
 !> Subroutine to get reference profile to use above the case data (temporarily hard-coded profile)
 subroutine get_reference_profile(scm_state, scm_reference)
   use scm_type_defs, only : scm_state_type, scm_reference_type
   use NetCDF_read, only: check
-  
+
   type(scm_state_type), target, intent(in) :: scm_state
   type(scm_reference_type), target, intent(inout) :: scm_reference
 
@@ -2740,7 +2739,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
       if(ioerror /= 0) then
         write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
           Error code = ',ioerror
-        stop
+        error stop "There was an error opening the file McCprofiles.dat in the processed_case_input directory."
       endif
 
       ! find number of records
@@ -2850,7 +2849,7 @@ subroutine get_tracers(tracer_names, tracer_types)
     else
         write(*,'(a,i0)') 'There was an error opening the file ' // FILE_NAME // &
                           '; error code = ', rc
-        stop
+        error stop "Error opening tracers file"
     end if
 
     close (fu)

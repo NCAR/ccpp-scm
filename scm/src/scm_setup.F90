@@ -31,34 +31,34 @@ subroutine set_state(scm_input, scm_reference, scm_state)
   real(kind=dp), dimension(scm_input%input_nlev) :: input_qv, input_T
   real(kind=dp), parameter :: p0 = 1.0E5
   real(kind=dp) :: deg_to_rad_const
-  
+
   deg_to_rad_const = con_pi/180.0
 
   !> \section set_state_alg Algorithm
   !! @{
-  
+
   !> - Set the longitude and latitude and convert from degrees to radians
   do i=1, scm_state%n_cols
     scm_state%lon(i) = scm_input%input_lon*deg_to_rad_const
     scm_state%lat(i) = scm_input%input_lat*deg_to_rad_const
   end do
-  
-  
+
+
 
   !> - \todo When patching in a reference sounding, need to handle the case when the reference sounding is too short; patch_in_ref
   !! checks for the case, but as of now, it just extrapolates where it needs to and returns an error code; error should be handled
   !! here or passed up to the main program.
 
-  
+
   if (.NOT. scm_state%model_ics) then ! not a model
-     
+
      if (scm_state%input_type == 0) then
        !> - Calculate water vapor from total water, suspended liquid water, and suspended ice.
        input_qv = scm_input%input_qt - scm_input%input_ql - scm_input%input_qi
      else
        input_qv = scm_input%input_qv
      end if
-     
+
      !> - For each column, interpolate the water vapor to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_qv, scm_state%pres_l(i,:), &
@@ -70,7 +70,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
            scm_state%state_tracer(i,:,scm_state%water_vapor_index,1), grid_error)
        end if
      end do
-   
+
      if (scm_state%input_type == 0) then
        !> - Calculate the input absolute temperature from input pressure, theta_il, ql, and qi.
        input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
@@ -83,7 +83,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
            (con_hfus/con_cp)*scm_input%input_qi)
        end if
      end if
-   
+
      !> - For each column, interpolate the temperature to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_T, scm_state%pres_l(i,:), &
@@ -94,7 +94,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
            scm_reference%ref_T, scm_state%pres_l(i,:), scm_state%n_levels, scm_state%state_T(i,:,1), grid_error)
        end if
      end do
-   
+
      !> - For each column, interpolate the u-wind to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_u, scm_state%pres_l(i,:), &
@@ -106,7 +106,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
          end do
        end if
      end do
-   
+
      !> - For each column, interpolate the v-wind to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_v, scm_state%pres_l(i,:), &
@@ -118,7 +118,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
          end do
        end if
      end do
-   
+
      !> - For each column, interpolate the ozone to the model grid.
      if(scm_state%ozone_index > 0) then
        do i=1, scm_state%n_cols
@@ -132,7 +132,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
          end if
        end do
      end if
-   
+
      !> - For each column, interpolate the cloud liquid water to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_ql, scm_state%pres_l(i,:), &
@@ -142,7 +142,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
          scm_state%state_tracer(i,last_index_init+1:,scm_state%cloud_water_index,1) = 0.0
        end if
      end do
-     
+
      !> - For each column, interpolate the cloud ice water to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, scm_input%input_qi, scm_state%pres_l(i,:), &
@@ -160,14 +160,14 @@ subroutine set_state(scm_input, scm_reference, scm_state)
         scm_state%state_T(i,:,1) = scm_input%input_temp(:)
         scm_state%state_tracer(i,:,scm_state%water_vapor_index,1)=scm_input%input_qt
         scm_state%state_tracer(i,:,scm_state%ozone_index,1)=scm_input%input_ozone
-        scm_state%area(i) = scm_input%input_area    
-        
+        scm_state%area(i) = scm_input%input_area
+
         if (scm_input%input_pres_i(1).GT. 0.0) then ! pressure are read in, overwrite values
            scm_state%pres_i(i,:)=scm_input%input_pres_i
            scm_state%pres_l(i,:)=scm_input%input_pres_l
         endif
      enddo
-     
+
    endif
      !> @}
 end subroutine set_state
@@ -291,8 +291,8 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                                  GFS_radtend_type,  GFS_diag_type
   use CCPP_typedefs,       only: GFS_interstitial_type
   use physcons,            only: pi => con_pi
-  
-  
+
+
   !use cldwat2m_micro,      only: ini_micro
   !use aer_cloud,           only: aer_cloud_init
   !use module_ras,          only: ras_init
@@ -312,13 +312,13 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_init_type),                       intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: ntasks, nthreads, n_cols
-  
+
   real(kind=dp), dimension(n_cols), intent(in) :: lon, lat, area
-  
+
   real(kind=dp), parameter  :: rad2deg = 180.0_dp/pi
-  
+
   integer :: i
-  
+
   !--- set control properties (including namelist read)
   call Model%init (Init_parm%nlunit, Init_parm%fn_nml,             &
                    Init_parm%me, Init_parm%master,                 &
@@ -336,7 +336,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%fcst_mpi_comm, ntasks, nthreads)
 
   !--- initialize DDTs
-  
+
     call Statein%create(n_cols, Model)
     call Stateout%create(n_cols, Model)
     call Sfcprop%create(n_cols, Model)
@@ -349,10 +349,10 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
     call Diag%create(n_cols, Model)
     !--- internal representation of interstitials for CCPP physics
     call Interstitial%create(n_cols, Model)
-    
+
     !--- populate the grid components
     !call GFS_grid_populate (Grid(i), Init_parm%xlon, Init_parm%xlat, Init_parm%area)
-    
+
     do i=1, n_cols
      Grid%xlon(i)   = lon(i)
      Grid%xlat(i)   = lat(i)
@@ -363,7 +363,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
      Grid%area(i)   = area(i)
      Grid%dx(i)     = sqrt(area(i))
     end do
-    
+
 
   !--- initialize Morrison-Gettleman microphysics
   !if (Model%ncld == 2) then
@@ -377,17 +377,17 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   !--- lsidea initialization
   if (Model%lsidea) then
     print *,' LSIDEA is active but needs to be reworked for FV3 - shutting down'
-    stop
+    error stop
     !--- NEED TO get the logic from the old phys/gloopb.f initialization area
   endif
-  
+
   if(Model%do_ca)then
     print *,'Cellular automata cannot be used when CCPP is turned on until'
     print *,'the stochastic physics pattern generation code has been pulled'
     print *,'out of the FV3 repository and updated with the CCPP version.'
-    stop
+    error stop
   endif
-  
+
   !--- sncovr may not exist in ICs from chgres.
   !--- FV3GFS handles this as part of the IC ingest
   !--- this not is placed here to alert users to the need to study

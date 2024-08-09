@@ -39,10 +39,10 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
     tot_advec_theta_bracket(2,scm_state%n_levels), tot_advec_thetal_bracket(2,scm_state%n_levels), tot_advec_qv_bracket(2,scm_state%n_levels), &
     tot_advec_u_bracket(2,scm_state%n_levels), tot_advec_v_bracket(2,scm_state%n_levels) !< forcing terms that "bracket" around the model time
   real(kind=dp) :: rho
-  
+
   !> \section interpolate_forcing_alg Algorithm
   !! @{
-  
+
   if (in_spinup) then
     do i=1, scm_state%n_cols
       scm_state%pres_surf(i) = scm_input%input_pres_surf(1)
@@ -56,15 +56,15 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
     end do
     return
   end if
-  
+
   !> - Check for the case where the elapsed model time extends beyond the supplied forcing.
   if(scm_state%model_time >= scm_input%input_time(scm_input%input_ntimes)) then
     !>  - If so, hold the forcing terms constant at the last supplied values. The forcing still needs to be interpolated to the grid.
     write(*,*) "The model_time has exceeded the specifed period of forcing. Forcing will now be held constant at the last &
       specified values."
-      
+
       if(scm_state%input_type == 0) then
-      
+
         !>  - For all forcing terms, call interpolate_to_grid_centers from \ref utils for each variable. This subroutine returns the last vertical index calculated in case forcing terms above the case input needs to be specified.
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, &
@@ -107,7 +107,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, &
             scm_input%input_v_advec_qt(scm_input%input_ntimes,:), scm_state%pres_l(i,:), scm_state%n_levels, &
             v_advec_qt_bracket(1,:), top_index, 3)
-  
+
           !>  - If the input forcing file does not reach to the model domain top, fill in values above the input forcing file domain with those from the top level.
           if (top_index < scm_state%n_levels .AND. top_index.GT.0) then
             w_ls_bracket(1,top_index+1:scm_state%n_levels) = 0.0!w_ls_bracket(1,top_index)
@@ -125,7 +125,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             v_advec_thil_bracket(1,top_index+1:scm_state%n_levels) = v_advec_thil_bracket(1,top_index)
             v_advec_qt_bracket(1,top_index+1:scm_state%n_levels) = v_advec_qt_bracket(1,top_index)
           end if
-  
+
           !>  - For this case, no time interpolation is necessary; just set the forcing terms to the vertically-interpolated values.
           scm_state%w_ls(i,:) = w_ls_bracket(1,:)
           scm_state%omega(i,:) = omega_bracket(1,:)
@@ -141,7 +141,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%h_advec_qt(i,:) = h_advec_qt_bracket(1,:)
           scm_state%v_advec_thil(i,:) = v_advec_thil_bracket(1,:)
           scm_state%v_advec_qt(i,:) = v_advec_qt_bracket(1,:)
-          
+
           !>  - Set the surface parameters to the last available data.
           scm_state%pres_surf(i) = scm_input%input_pres_surf(scm_input%input_ntimes)
           scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
@@ -172,7 +172,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%w_ls(i,:) = w_ls_bracket(1,:)
           end do
         end if
-      
+
         if (scm_state%force_geo) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), &
@@ -187,7 +187,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%v_g(i,:) = v_g_bracket(1,:)
           end do
         end if
-      
+
         if (scm_state%force_adv_T == 1) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), &
@@ -219,7 +219,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%tot_advec_thetal(i,:) = tot_advec_thetal_bracket(1,:)
           end do
         end if
-        
+
         if (scm_state%force_adv_qv) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), &
@@ -231,7 +231,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%tot_advec_qv(i,:) = tot_advec_qv_bracket(1,:)
           end do
         end if
-        
+
         if (scm_state%force_adv_u) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_tot_advec_u(scm_input%input_ntimes,:), &
@@ -242,7 +242,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%tot_advec_u(i,:) = tot_advec_u_bracket(1,:)
           end do
         end if
-        
+
         if (scm_state%force_adv_v) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_tot_advec_v(scm_input%input_ntimes,:), &
@@ -253,7 +253,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%tot_advec_v(i,:) = tot_advec_v_bracket(1,:)
           end do
         end if
-        
+
         if (scm_state%force_nudging_t == 1) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_T_nudge(scm_input%input_ntimes,:), &
@@ -264,7 +264,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%T_nudge(i,:) = T_nudge_bracket(1,:)
             call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_T_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_T_k(i))
           end do
-          
+
         else if (scm_state%force_nudging_T == 2 .or. scm_state%force_nudging_T == 3) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_thil_nudge(scm_input%input_ntimes,:), &
@@ -276,7 +276,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_thil_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_T_k(i))
           end do
         end if
-        
+
         if (scm_state%force_nudging_qv) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_qt_nudge(scm_input%input_ntimes,:), &
@@ -288,7 +288,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_qt_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_qv_k(i))
           end do
         end if
-        
+
         if (scm_state%force_nudging_u) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_u_nudge(scm_input%input_ntimes,:), &
@@ -300,7 +300,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_u_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_u_k(i))
           end do
         end if
-        
+
         if (scm_state%force_nudging_v) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_v_nudge(scm_input%input_ntimes,:), &
@@ -312,7 +312,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             call find_vertical_index_pressure(scm_input%input_pres_forcing(scm_input%input_ntimes,scm_input%input_k_v_nudge(scm_input%input_ntimes)), scm_state%pres_l(i,:), scm_state%force_nudging_v_k(i))
           end do
         end if
-        
+
         if (scm_state%force_rad_T == 1 .or. scm_state%force_rad_T == 2 .or. scm_state%force_rad_T == 3) then
           do i=1, scm_state%n_cols
             call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(scm_input%input_ntimes,:), scm_input%input_dT_dt_rad(scm_input%input_ntimes,:), &
@@ -323,14 +323,14 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%dT_dt_rad(i,:) = dT_dt_rad_bracket(1,:)
           end do
         end if
-        
+
         if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2) then
           !skin temperature is needed if surface fluxes are specified (for calculating bulk Richardson number in the specified surface flux scheme) and for simple ocean scheme
           do i=1, scm_state%n_cols
             scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
           end do
         end if
-        
+
         if (scm_state%surface_thermo_control == 0) then
           do i=1, scm_state%n_cols
             scm_state%sh_flux(i) = scm_input%input_sh_flux_sfc_kin(scm_input%input_ntimes)
@@ -344,11 +344,11 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             scm_state%lh_flux(i) = (1.0/(con_hvap*rho))*scm_input%input_lh_flux_sfc(scm_input%input_ntimes)
           end do
         end if
-        
+
         do i=1, scm_state%n_cols
           scm_state%pres_surf(i) = scm_input%input_pres_surf(scm_input%input_ntimes)
         end do
-        
+
       end if
   else
   !> - When the model elapsed time is within the time-frame specified by the input forcing, the forcing must be interpolated in time and space.
@@ -362,9 +362,9 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
         exit
       end if
     end do
-    
+
     if(scm_state%input_type == 0) then
-    
+
       do i=1, scm_state%n_cols
         !>  - For all forcing terms, call interpolate_to_grid_centers from \ref utils for each variable for each time level that "bracket" around
         !>    the current model time. This subroutine returns the last vertical index calculated in case forcing terms above the case input needs
@@ -499,7 +499,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%omega(i,:) = (1.0 - lifrac)*omega_bracket(1,:) + lifrac*omega_bracket(2,:)
         end do
       end if
-      
+
       if (scm_state%force_w) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_w_ls(low_t_index,:), &
@@ -513,7 +513,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%w_ls(i,:) = (1.0 - lifrac)*w_ls_bracket(1,:) + lifrac*w_ls_bracket(2,:)
         end do
       end if
-      
+
       if (scm_state%force_geo) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_u_g(low_t_index,:), &
@@ -534,7 +534,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%v_g(i,:) = (1.0 - lifrac)*v_g_bracket(1,:) + lifrac*v_g_bracket(2,:)
         end do
       end if
-      
+
       if (scm_state%force_adv_T == 1) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_tot_advec_t(low_t_index,:), &
@@ -572,7 +572,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%tot_advec_thetal(i,:) = (1.0 - lifrac)*tot_advec_thetal_bracket(1,:) + lifrac*tot_advec_thetal_bracket(2,:)
         end do
       end if
-      
+
       if (scm_state%force_adv_qv) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_tot_advec_qv(low_t_index,:), &
@@ -586,7 +586,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%tot_advec_qv(i,:) = (1.0 - lifrac)*tot_advec_qv_bracket(1,:) + lifrac*tot_advec_qv_bracket(2,:)
         end do
       end if
-      
+
       if (scm_state%force_adv_u) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_tot_advec_u(low_t_index,:), &
@@ -600,7 +600,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%tot_advec_u(i,:) = (1.0 - lifrac)*tot_advec_u_bracket(1,:) + lifrac*tot_advec_u_bracket(2,:)
         end do
       end if
-      
+
       if (scm_state%force_adv_v) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_tot_advec_v(low_t_index,:), &
@@ -614,7 +614,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%tot_advec_v(i,:) = (1.0 - lifrac)*tot_advec_v_bracket(1,:) + lifrac*tot_advec_v_bracket(2,:)
         end do
       end if
-        
+
       if (scm_state%force_nudging_t == 1) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_T_nudge(low_t_index,:), &
@@ -642,7 +642,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           call find_vertical_index_pressure(scm_input%input_pres_forcing(low_t_index,scm_input%input_k_thil_nudge(low_t_index)), scm_state%pres_l(i,:), scm_state%force_nudging_T_k(i))
         end do
       end if
-      
+
       if (scm_state%force_nudging_qv) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_qt_nudge(low_t_index,:), &
@@ -657,7 +657,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           call find_vertical_index_pressure(scm_input%input_pres_forcing(low_t_index,scm_input%input_k_qt_nudge(low_t_index)), scm_state%pres_l(i,:), scm_state%force_nudging_qv_k(i))
         end do
       end if
-      
+
       if (scm_state%force_nudging_u) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_u_nudge(low_t_index,:), &
@@ -672,7 +672,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           call find_vertical_index_pressure(scm_input%input_pres_forcing(low_t_index,scm_input%input_k_u_nudge(low_t_index)), scm_state%pres_l(i,:), scm_state%force_nudging_u_k(i))
         end do
       end if
-      
+
       if (scm_state%force_nudging_v) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_v_nudge(low_t_index,:), &
@@ -687,7 +687,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           call find_vertical_index_pressure(scm_input%input_pres_forcing(low_t_index,scm_input%input_k_v_nudge(low_t_index)), scm_state%pres_l(i,:), scm_state%force_nudging_v_k(i))
         end do
       end if
-      
+
       if (scm_state%force_rad_T == 1 .or. scm_state%force_rad_T == 2 .or. scm_state%force_rad_T == 3) then
         do i=1, scm_state%n_cols
           call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres_forcing(low_t_index,:), scm_input%input_dT_dt_rad(low_t_index,:), &
@@ -701,14 +701,14 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%dT_dt_rad(i,:) = (1.0 - lifrac)*dT_dt_rad_bracket(1,:) + lifrac*dT_dt_rad_bracket(2,:)
         end do
       end if
-      
+
       if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2) then
         !skin temperature is needed if surface fluxes are specified (for calculating bulk Richardson number in the specified surface flux scheme) and for simple ocean scheme
         do i=1, scm_state%n_cols
           scm_state%T_surf(i) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
         end do
       end if
-      
+
       if (scm_state%surface_thermo_control == 0) then
         do i=1, scm_state%n_cols
           scm_state%sh_flux(i) = (1.0 - lifrac)*scm_input%input_sh_flux_sfc_kin(low_t_index) + &
@@ -726,7 +726,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
             lifrac*scm_input%input_lh_flux_sfc(low_t_index+1))
         end do
       end if
-      
+
       do i=1, scm_state%n_cols
         !Interpolate the surface parameters in time.
         scm_state%pres_surf(i) = (1.0 - lifrac)*scm_input%input_pres_surf(low_t_index) + &
@@ -792,7 +792,7 @@ subroutine apply_forcing_leapfrog(scm_state)
   select case(scm_state%mom_forcing_type)
     case (1)
       write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
-      stop
+      error stop
     case (2)
       !> - Calculate change in state momentum variables due to vertical advection (subsidence).
 
@@ -935,12 +935,12 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
   integer :: i,k
   real(kind=dp) :: f_coriolis, grav_inv, g_over_cp, omega_plus, omega_minus, dth_dp_plus, dth_dp_minus, &
     dqv_dp_plus, dqv_dp_minus, spinup_relax_time
-  
+
   !> \section apply_leapfrog_forcing_alg Algorithm
   !! @{
-  
+
   spinup_relax_time = scm_state%dt
-  
+
   grav_inv = 1.0/con_g
   g_over_cp = con_g/con_cp
 
@@ -971,7 +971,7 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
       zi(i,scm_state%n_levels+1) = scm_state%geopotential_i(i,scm_state%n_levels+1)*grav_inv
     end do
   !end if
-  
+
   if (in_spinup) then
     do i=1, scm_state%n_cols
       do k=1, scm_state%n_levels
@@ -991,10 +991,10 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
     select case(scm_state%mom_forcing_type)
       case (1)
         write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
-        stop
+        error stop
       case (2)
         !> - Calculate change in state momentum variables due to vertical advection (subsidence).
-        
+
         !>  - Calculate tendencies due to vertical advection using same discretization as in previous GFS SCM implmentation (staggered central difference)
         !!    \f[
         !!    \frac{\partial x}{\partial t}|_{vert. advection} = \frac{w_{k+1}\left(x_{k+1} - x_{k}\right) + w_k\left(x_k - x_{k-1}\right)}{-2\left(z_{k+1}-z_{k}\right)}
@@ -1014,7 +1014,7 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
             scm_state%v_force_tend(i,1) = -w_ls_i(i,2)*(old_v(i,2) - old_v(i,1))/(zi(i,2)-zi(i,1))
             scm_state%v_force_tend(i,scm_state%n_levels) = -w_ls_i(i,scm_state%n_levels)*&
             (old_v(i,scm_state%n_levels) - old_v(i,scm_state%n_levels-1))/(zi(i,scm_state%n_levels+1)-zi(i,scm_state%n_levels))
-            
+
             !> - Add forcing due to geostrophic wind
             !>  - Calculate Coriolis parameter.
             f_coriolis = 2.0*con_omega*sin(scm_state%lat(i))
@@ -1037,7 +1037,7 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
           scm_state%u_force_tend = 0.0
           scm_state%v_force_tend = 0.0
         end select
-        
+
         select case (scm_state%thermo_forcing_type)
         case (1)
           do i=1, scm_state%n_cols
@@ -1061,7 +1061,7 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
               scm_state%qv_force_tend(i,k) = -omega_plus*dqv_dp_minus - omega_minus*dqv_dp_plus
               scm_state%T_force_tend(i,k) = scm_state%exner_l(i,k)*(-omega_plus*dth_dp_minus - omega_minus*dth_dp_plus)
             end do
-            
+
             !> - Add forcing due to prescribed radiation and horizontal advection
             do k=1, scm_state%n_levels
               scm_state%T_force_tend(i,k) = scm_state%T_force_tend(i,k) + scm_state%dT_dt_rad(i,k) + &
@@ -1077,7 +1077,7 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
               scm_state%T_force_tend(i,k) = (scm_state%T_nudge(i,k) - old_T(i,k))/scm_state%relax_time
               scm_state%qv_force_tend(i,k) = (scm_state%qt_nudge(i,k) - old_qv(i,k))/scm_state%relax_time
             end do
-            
+
             do k=2, scm_state%n_levels-1
               !upstream scheme (for boundaries, assume vertical derivatives are 0 => no vertical advection)
               omega_plus = MAX(scm_state%omega(i,k), 0.0)
@@ -1120,28 +1120,28 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
 
   type(scm_state_type), intent(inout) :: scm_state
   logical, intent(in) :: in_spinup
-  
+
   real(kind=dp) :: old_u(scm_state%n_cols, scm_state%n_levels), old_v(scm_state%n_cols, scm_state%n_levels), &
     old_T(scm_state%n_cols, scm_state%n_levels), old_qv(scm_state%n_cols, scm_state%n_levels)
   real(kind=dp) :: theta(scm_state%n_cols, scm_state%n_levels)
-  
+
   real(kind=dp) :: spinup_relax_time, omega_asc, omega_des, w_asc, w_des, gradient_asc, gradient_des, rho, adiabatic_exp_comp_term, &
                    f_coriolis
-  
+
   integer :: i,k
-  
-  logical :: use_theta  !formulations using potential temperature don't need adiabatic expansion/compression term (simpler), 
+
+  logical :: use_theta  !formulations using potential temperature don't need adiabatic expansion/compression term (simpler),
                         !but reqires conversion to/from since absolute temperature is state variable
-  
+
   use_theta = .false.
   spinup_relax_time = scm_state%dt
-  
+
   !Save old state variables
   old_u = scm_state%state_u(:,:,1)
   old_v = scm_state%state_v(:,:,1)
   old_T = scm_state%state_T(:,:,1)
   old_qv = scm_state%state_tracer(:,:,scm_state%water_vapor_index,1)
-  
+
   if (use_theta) then
     theta = old_T/scm_state%exner_l(:,:)
   end if
@@ -1151,7 +1151,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
   scm_state%v_force_tend = 0.0
   scm_state%T_force_tend = 0.0
   scm_state%qv_force_tend = 0.0
-  
+
   if (in_spinup) then
     do i=1, scm_state%n_cols
       do k=1, scm_state%n_levels
@@ -1194,7 +1194,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end if !use_theta
       end if !force_sub_for_T
-      
+
       if (scm_state%force_sub_for_qv) then
         do i=1, scm_state%n_cols
           do k=2, scm_state%n_levels-1
@@ -1206,7 +1206,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end do
       end if
-      
+
       if (scm_state%force_sub_for_u) then
         do i=1, scm_state%n_cols
           do k=2, scm_state%n_levels-1
@@ -1218,7 +1218,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end do
       end if
-      
+
       if (scm_state%force_sub_for_v) then
         do i=1, scm_state%n_cols
           do k=2, scm_state%n_levels-1
@@ -1230,7 +1230,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end do
       end if
-      
+
     else if (scm_state%force_w) then
       if (scm_state%force_sub_for_T) then
         if (use_theta) then
@@ -1258,7 +1258,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end if !use_theta
       end if !force_sub_for_T
-      
+
       if (scm_state%force_sub_for_qv) then
         do i=1, scm_state%n_cols
           do k=2, scm_state%n_levels-1
@@ -1271,7 +1271,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end do
       end if
-      
+
       if (scm_state%force_sub_for_u) then
         do i=1, scm_state%n_cols
           do k=2, scm_state%n_levels-1
@@ -1284,7 +1284,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end do
       end if
-      
+
       if (scm_state%force_sub_for_v) then
         do i=1, scm_state%n_cols
           do k=2, scm_state%n_levels-1
@@ -1297,12 +1297,12 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
           end do
         end do
       end if
-      
+
     end if !force_omega or force_w
-    
+
     if (scm_state%force_geo) then
       !Add forcing due to geostrophic wind
-      
+
       !Calculate Coriolis parameter.
       do i=1, scm_state%n_cols
         f_coriolis = 2.0*con_omega*sin(scm_state%lat(i))
@@ -1313,7 +1313,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if !force_geo
-    
+
     if (scm_state%force_adv_T == 1) then
       !advection term is in terms of absolute temperature
       do i=1, scm_state%n_cols
@@ -1336,7 +1336,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_adv_qv) then
       do i=1, scm_state%n_cols
         do k=1, scm_state%n_levels
@@ -1344,7 +1344,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_adv_u) then
       do i=1, scm_state%n_cols
         do k=1, scm_state%n_levels
@@ -1352,7 +1352,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_adv_v) then
       do i=1, scm_state%n_cols
         do k=1, scm_state%n_levels
@@ -1360,7 +1360,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_nudging_t == 1) then
       do i=1, scm_state%n_cols
         do k=scm_state%force_nudging_T_k(i), scm_state%n_levels
@@ -1375,7 +1375,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_nudging_qv) then
       do i=1, scm_state%n_cols
         do k=scm_state%force_nudging_qv_k(i), scm_state%n_levels
@@ -1383,7 +1383,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_nudging_u) then
       do i=1, scm_state%n_cols
         do k=scm_state%force_nudging_u_k(i), scm_state%n_levels
@@ -1391,7 +1391,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_nudging_v) then
       do i=1, scm_state%n_cols
         do k=scm_state%force_nudging_v_k(i), scm_state%n_levels
@@ -1399,7 +1399,7 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
     if (scm_state%force_rad_T == 1 .or. scm_state%force_rad_T == 2 .or. scm_state%force_rad_T == 3) then
       do i=1, scm_state%n_cols
         do k=1, scm_state%n_levels
@@ -1407,9 +1407,9 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         end do
       end do
     end if
-    
+
   end if !in_spinup
-  
+
   do i=1, scm_state%n_cols
     do k=1, scm_state%n_levels
       !> - Update the state variables using the forward Euler scheme:
@@ -1424,23 +1424,23 @@ subroutine apply_forcing_DEPHY(scm_state, in_spinup)
         scm_state%dt*(scm_state%qv_force_tend(i,k))
     end do
   end do
-  
+
 end subroutine apply_forcing_DEPHY
 
 subroutine set_spinup_nudging(scm_state)
   use scm_type_defs, only: scm_state_type
 
   type(scm_state_type), intent(inout) :: scm_state
-  
+
   integer :: i
-  
+
   do i=1, scm_state%n_cols
     scm_state%u_nudge(i,:) = scm_state%state_u(i,:,1)
     scm_state%v_nudge(i,:) = scm_state%state_v(i,:,1)
     scm_state%T_nudge(i,:) = scm_state%state_T(i,:,1)
     scm_state%qt_nudge(i,:) = scm_state%state_tracer(i,:,scm_state%water_vapor_index,1)
   end do
-  
+
 end subroutine set_spinup_nudging
 
 !> @}

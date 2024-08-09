@@ -4,6 +4,7 @@ on: [pull_request,workflow_dispatch]
 
 env:
   TEST_TAG: dtcenter/ccpp-scm:test
+  PR_NUMBER: ${{ github.event.number }}
 
 jobs:
   docker:
@@ -22,6 +23,7 @@ jobs:
           file: docker/Dockerfile
           load: true
           tags: ${{ env.TEST_TAG }}
+          build-args: PR_NUMBER=${{ github.event.number }}
       - name: Test
         run: |
           mkdir $HOME/output
