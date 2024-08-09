@@ -445,7 +445,7 @@ def get_case_nml(case_name):
     return (nml, error)
 
 def get_case_data(case_name):
-    """Returns proprietery CCPP SCM case data in NetCDF Dataset format"""
+    """Returns proprietary CCPP SCM case data in NetCDF Dataset format"""
     
     #TODO: need to handle LSM ICs
     
