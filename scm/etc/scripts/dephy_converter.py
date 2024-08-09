@@ -907,7 +907,7 @@ def get_case_data(case_name):
         except KeyError:
             w_0 = missing_value
         try:
-            w_d = scalars_grp.variables['w_0'][:]
+            w_d = scalars_grp.variables['w_d'][:]
         except KeyError:
             w_d = missing_value
         try:
