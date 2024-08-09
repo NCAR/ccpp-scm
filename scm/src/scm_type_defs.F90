@@ -180,6 +180,8 @@ module scm_type_defs
     integer                           :: input_nsoil !< number of soil levels in the input file
     integer                           :: input_nsnow !< number of snow layers in the input file
     integer                           :: input_nice !< number of sea ice layers in the input file
+    integer                           :: input_nvegcat !< number of vegetation type categories
+    integer                           :: input_nsoilcat !< number of soil type categories
     integer                           :: input_ntimes !< number of times in the input file where forcing is available
     real(kind=dp)                     :: input_lat !< latitude of column center
     real(kind=dp)                     :: input_lon !< longitude of column center
@@ -262,6 +264,8 @@ module scm_type_defs
     real(kind=dp)                     :: input_landfrac !< fraction of horizontal grid area occupied by land
     real(kind=dp)                     :: input_lakefrac !< fraction of horizontal grid area occupied by lake
     real(kind=dp)                     :: input_lakedepth !< lake depth (m)
+    real(kind=dp), allocatable        :: input_vegtype_frac(:) !< fraction of horizontal grid area occupied by given vegetation category
+    real(kind=dp), allocatable        :: input_soiltype_frac(:) !< fraction of horizontal grid area occupied by given soil category
     
     real(kind=dp)                     :: input_tvxy !< vegetation temperature (K)
     real(kind=dp)                     :: input_tgxy !< ground temperature for Noahmp (K)
@@ -668,14 +672,16 @@ module scm_type_defs
     
   end subroutine scm_state_create
 
-  subroutine scm_input_create(scm_input, ntimes, nlev, nsoil, nsnow, nice)
+  subroutine scm_input_create(scm_input, ntimes, nlev, nsoil, nsnow, nice, nvegcat, nsoilcat)
     class(scm_input_type)             :: scm_input
-    integer, intent(in)               :: ntimes, nlev, nsoil, nsnow, nice
+    integer, intent(in)               :: ntimes, nlev, nsoil, nsnow, nice, nvegcat, nsoilcat
     
     scm_input%input_nlev   = nlev
     scm_input%input_nsoil  = nsoil
     scm_input%input_nsnow  = nsnow
     scm_input%input_nice   = nice
+    scm_input%input_nvegcat = nvegcat
+    scm_input%input_nsoilcat = nsoilcat
     scm_input%input_ntimes = ntimes
     
     scm_input%input_lat    = real_zero
@@ -762,6 +768,10 @@ module scm_type_defs
     scm_input%input_landfrac     = real_zero
     scm_input%input_lakefrac     = real_zero
     scm_input%input_lakedepth    = real_zero
+    allocate(scm_input%input_vegtype_frac(nvegcat))
+    scm_input%input_vegtype_frac = real_zero
+    allocate(scm_input%input_soiltype_frac(nsoilcat))
+    scm_input%input_soiltype_frac = real_zero
     
     scm_input%input_tvxy       = real_zero
     scm_input%input_tgxy       = real_zero
@@ -1082,8 +1092,13 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_elvmax,    physics%Sfcprop%hprime(i,14), "elvmax",    .true., missing_var(14))
         call conditionally_set_var(scm_input%input_oro,       physics%Sfcprop%oro(i),       "oro",       .true., missing_var(15))
         call conditionally_set_var(scm_input%input_oro_uf,    physics%Sfcprop%oro_uf(i),    "oro_uf",    (physics%Model%do_ugwp .and. physics%Model%nmtvr == 14), missing_var(16))
-                
-        n = 19
+        call conditionally_set_var(scm_input%input_landfrac,  physics%Sfcprop%landfrac(i),  "landfrac",  physics%Model%frac_grid, missing_var(17))
+        call conditionally_set_var(scm_input%input_lakefrac,  physics%Sfcprop%lakefrac(i),  "lakefrac",  (physics%Model%lkm == 1), missing_var(18))
+        call conditionally_set_var(scm_input%input_lakedepth, physics%Sfcprop%lakedepth(i), "lakedepth", (physics%Model%lkm == 1), missing_var(19))
+        call conditionally_set_var(scm_input%input_vegtype_frac(:), physics%Sfcprop%vegtype_frac(i,:), "vegtype_frac", .true., missing_var(20))
+        call conditionally_set_var(scm_input%input_soiltype_frac(:), physics%Sfcprop%soiltype_frac(i,:), "soiltype_frac", .true., missing_var(21))
+        
+        n = 21
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
           write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
@@ -1093,20 +1108,6 @@ module scm_type_defs
         end if
         missing_var = .false.
       end if
-      
-      ! Variables found in orographic dataset but needed for non-orographic reasons (e.g. lake model, fractional grid)
-      call conditionally_set_var(scm_input%input_landfrac,  physics%Sfcprop%landfrac(i),  "landfrac",  physics%Model%frac_grid, missing_var(1))
-      call conditionally_set_var(scm_input%input_lakefrac,  physics%Sfcprop%lakefrac(i),  "lakefrac",  (physics%Model%lkm == 1), missing_var(2))
-      call conditionally_set_var(scm_input%input_lakedepth, physics%Sfcprop%lakedepth(i), "lakedepth", (physics%Model%lkm == 1), missing_var(3))
-      n = 3
-      if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-        write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) lake-related or fractional grid-related variables. This may lead to crashes or other strange behavior."
-        write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
-        do j=1, n
-          if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
-        end do
-      end if
-      missing_var = .false.
       
       !
       ! Surface data (2D)
@@ -1214,7 +1215,7 @@ module scm_type_defs
       ! Derive physics quantities using surface model ICs.
       !
       if(scm_state%model_ics .or. scm_state%lsm_ics) then
-        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i) <= 0) then
+        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i)+0.5 <= 0) then
           physics%Sfcprop%landfrac(i) = real_zero
           physics%Sfcprop%stype(i) = 0
           if (physics%Sfcprop%lakefrac(i) > real_zero) then
