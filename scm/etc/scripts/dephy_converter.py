@@ -51,9 +51,9 @@ def parse_arguments():
 def setup_logging(debug):
     """Sets up the logging module."""
     if debug:
-        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-    else:
         logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 class Case_Data(object):
     def __init__(self, name, missing_value, time, levels, soil_depth, lat, lon, slmsk, vegsrc, vegtyp, soiltyp, \
@@ -2521,10 +2521,9 @@ def write_SCM_nml_file(case_nml):
 #
 ########################################################################################    
 def main():
-    setup_logging()
+    (case_name, use_area, debug) = parse_arguments()
     
-    #read in arguments
-    (case_name, use_area) = parse_arguments()
+    setup_logging(debug)
     
     (case_nml, error) = get_case_nml(case_name)
     if (error):
@@ -2546,7 +2545,6 @@ def main():
     logging.debug("Created {}".format(fileOUT))
     
     write_SCM_nml_file(case_nml)
-    #logging.debug("Created {}".format(nmlOUT))
     
 if __name__ == '__main__':
     main()
