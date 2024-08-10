@@ -20,8 +20,8 @@ CASE_NML_DIR = '../case_config'
 PROCESSED_CASE_DIR = '../../data/processed_case_input'
 
 # For developers: set logging level to DEBUG for additional output
-LOGLEVEL = logging.DEBUG
-#LOGLEVEL = logging.INFO
+#LOGLEVEL = logging.DEBUG
+LOGLEVEL = logging.INFO
 
 DEFAULT_MISSING_VALUE = -9999.0
 DEFAULT_NUDGING_TIMESCALE = 7200.0 #s
