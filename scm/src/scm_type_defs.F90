@@ -1082,10 +1082,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_elvmax,    physics%Sfcprop%hprime(i,14), "elvmax",    .true., missing_var(14))
         call conditionally_set_var(scm_input%input_oro,       physics%Sfcprop%oro(i),       "oro",       .true., missing_var(15))
         call conditionally_set_var(scm_input%input_oro_uf,    physics%Sfcprop%oro_uf(i),    "oro_uf",    (physics%Model%do_ugwp .and. physics%Model%nmtvr == 14), missing_var(16))
-        call conditionally_set_var(scm_input%input_landfrac,  physics%Sfcprop%landfrac(i),  "landfrac",  physics%Model%frac_grid, missing_var(17))
-        call conditionally_set_var(scm_input%input_lakefrac,  physics%Sfcprop%lakefrac(i),  "lakefrac",  (physics%Model%lkm == 1), missing_var(18))
-        call conditionally_set_var(scm_input%input_lakedepth, physics%Sfcprop%lakedepth(i), "lakedepth", (physics%Model%lkm == 1), missing_var(19))
-        
+                
         n = 19
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
@@ -1096,6 +1093,20 @@ module scm_type_defs
         end if
         missing_var = .false.
       end if
+      
+      ! Variables found in orographic dataset but needed for non-orographic reasons (e.g. lake model, fractional grid)
+      call conditionally_set_var(scm_input%input_landfrac,  physics%Sfcprop%landfrac(i),  "landfrac",  physics%Model%frac_grid, missing_var(1))
+      call conditionally_set_var(scm_input%input_lakefrac,  physics%Sfcprop%lakefrac(i),  "lakefrac",  (physics%Model%lkm == 1), missing_var(2))
+      call conditionally_set_var(scm_input%input_lakedepth, physics%Sfcprop%lakedepth(i), "lakedepth", (physics%Model%lkm == 1), missing_var(3))
+      n = 3
+      if ( i==1 .and. ANY( missing_var(1:n) ) ) then
+        write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) lake-related or fractional grid-related variables. This may lead to crashes or other strange behavior."
+        write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+        do j=1, n
+          if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+        end do
+      end if
+      missing_var = .false.
       
       !
       ! Surface data (2D)
@@ -1203,7 +1214,7 @@ module scm_type_defs
       ! Derive physics quantities using surface model ICs.
       !
       if(scm_state%model_ics .or. scm_state%lsm_ics) then
-        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i)+0.5 <= 0) then
+        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i) <= 0) then
           physics%Sfcprop%landfrac(i) = real_zero
           physics%Sfcprop%stype(i) = 0
           if (physics%Sfcprop%lakefrac(i) > real_zero) then

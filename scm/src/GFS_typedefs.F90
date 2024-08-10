@@ -2,7 +2,7 @@ module GFS_typedefs
 
    use mpi_f08
    use machine,                  only: kind_phys, kind_dbl_prec, kind_sngl_prec
-     
+
    use module_radsw_parameters,  only: topfsw_type, sfcfsw_type
    use module_radlw_parameters,  only: topflw_type, sfcflw_type
    use h2o_def,                  only: levh2o, h2o_coeff
@@ -541,14 +541,14 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: evap_lnd(:)            => null()   !< sfc latent heat flux over land, converted to evaporative flux
     real (kind=kind_phys), pointer :: hflx_lnd(:)            => null()   !< sfc sensible heat flux over land
     real (kind=kind_phys), pointer :: ep_lnd(:)              => null()   !< sfc up pot latent heat flux over land
-    real (kind=kind_phys), pointer :: t2mmp_lnd(:)           => null()   !< 2 meter temperature over land 
+    real (kind=kind_phys), pointer :: t2mmp_lnd(:)           => null()   !< 2 meter temperature over land
     real (kind=kind_phys), pointer :: q2mp_lnd(:)            => null()   !< 2 meter spec humidity over land
     real (kind=kind_phys), pointer :: gflux_lnd(:)           => null()   !< soil heat flux over land
     real (kind=kind_phys), pointer :: runoff_lnd(:)          => null()   !< surface runoff over land
     real (kind=kind_phys), pointer :: drain_lnd(:)           => null()   !< subsurface runoff over land
     real (kind=kind_phys), pointer :: cmm_lnd(:)             => null()   !< surface drag wind speed for momentum
-    real (kind=kind_phys), pointer :: chh_lnd(:)             => null()   !< surface drag mass flux for heat and moisture 
-    real (kind=kind_phys), pointer :: zvfun_lnd(:)           => null()   !< function of surface roughness length and green vegetation fraction 
+    real (kind=kind_phys), pointer :: chh_lnd(:)             => null()   !< surface drag mass flux for heat and moisture
+    real (kind=kind_phys), pointer :: zvfun_lnd(:)           => null()   !< function of surface roughness length and green vegetation fraction
 
 !--- outgoing accumulated quantities
     real (kind=kind_phys), pointer :: rain_cpl  (:)  => null()   !< total rain precipitation
@@ -754,7 +754,7 @@ module GFS_typedefs
     logical              :: cplaqm          !< default no cplaqm collection
     logical              :: cplchm          !< default no cplchm collection
     logical              :: cpllnd          !< default no cpllnd collection
-    logical              :: cpllnd2atm      !< default no lnd->atm coupling 
+    logical              :: cpllnd2atm      !< default no lnd->atm coupling
     logical              :: rrfs_sd         !< default no rrfs_sd collection
     logical              :: use_cice_alb    !< default .false. - i.e. don't use albedo imported from the ice model
     logical              :: cpl_imp_mrg     !< default no merge import with internal forcings
@@ -1225,8 +1225,8 @@ module GFS_typedefs
 
     real(kind=kind_phys) :: rbcr            !< Critical Richardson Number in the PBL scheme
     real(kind=kind_phys) :: betascu         !< Tuning parameter for prog. closure shallow clouds
-    real(kind=kind_phys) :: betamcu         !< Tuning parameter for prog. closure midlevel clouds 
-    real(kind=kind_phys) :: betadcu         !< Tuning parameter for prog. closure deep clouds 
+    real(kind=kind_phys) :: betamcu         !< Tuning parameter for prog. closure midlevel clouds
+    real(kind=kind_phys) :: betadcu         !< Tuning parameter for prog. closure deep clouds
 
     !--- MYNN parameters/switches
     logical              :: do_mynnedmf
@@ -3075,7 +3075,7 @@ module GFS_typedefs
       Coupling%slmsk_cpl   = clear_val  !< pointer to sfcprop%slmsk
     endif
 
-    ! -- Coupling options to retrive land fluxes from external land component 
+    ! -- Coupling options to retrive land fluxes from external land component
     if (Model%cpllnd .and. Model%cpllnd2atm) then
       allocate (Coupling%sncovr1_lnd (IM))
       allocate (Coupling%qsurf_lnd   (IM))
@@ -4003,7 +4003,7 @@ module GFS_typedefs
                           !--- coupling parameters
                                cplflx, cplice, cplocn2atm, cplwav, cplwav2atm, cplaqm,      &
                                cplchm, cpllnd, cpllnd2atm, cpl_imp_mrg, cpl_imp_dbg,        &
-                               rrfs_sd, use_cice_alb,                                       & 
+                               rrfs_sd, use_cice_alb,                                       &
 #ifdef IDEA_PHYS
                                lsidea, weimer_model, f107_kp_size, f107_kp_interval,        &
                                f107_kp_skip_size, f107_kp_data_size, f107_kp_read_in_start, &
@@ -4192,7 +4192,7 @@ module GFS_typedefs
     inquire (file=trim(fn_nml), exist=exists)
     if (.not. exists) then
       write(6,*) 'GFS_namelist_read:: namelist file: ',trim(fn_nml),' does not exist'
-      stop
+      error stop
     else
       open (unit=nlunit, file=fn_nml, action='READ', status='OLD', iostat=ios)
     endif
@@ -4228,7 +4228,7 @@ module GFS_typedefs
     Model%qdiag3d          = qdiag3d
     if (qdiag3d .and. .not. ldiag3d) then
       write(0,*) 'Logic error in GFS_typedefs.F90: qdiag3d requires ldiag3d'
-      stop
+      error stop
     endif
     Model%flag_for_gwd_generic_tend = .true.
     Model%flag_for_pbl_generic_tend = .true.
@@ -4255,12 +4255,12 @@ module GFS_typedefs
        else
           write(0,*) 'CCPP suite simulator turned on, but error encountered loading data.'
           write(0,*) errmsg
-          stop
+          error stop
        endif
        if(.not. qdiag3d .and. .not. ldiag3d) then
           write(0,*) 'CCPP suite simulator turned on, but qdiag3d and/or ldiag3d are not set to .true.'
           write(0,*) errmsg
-          stop
+          error stop
        endif
     endif
 
@@ -4340,11 +4340,11 @@ module GFS_typedefs
     !
     if (naux2d>naux2dmax) then
       write(0,*) "Error, number of requested auxiliary 2d arrays exceeds the maximum defined in GFS_typedefs.F90"
-      stop
+      error stop
     endif
     if (naux3d>naux3dmax) then
       write(0,*) "Error, number of requested auxiliary 3d arrays exceeds the maximum defined in GFS_typedefs.F90"
-      stop
+      error stop
     endif
     Model%naux2d           = naux2d
     Model%naux3d           = naux3d
@@ -4358,7 +4358,7 @@ module GFS_typedefs
     end if
     if (any(aux2d_time_avg) .or. any(aux3d_time_avg)) then
       write(0,*) "Error, the SCM has not implemented time averaging of diagnostics in GFS_typedefs.F90"
-      stop
+      error stop
     end if
 
     Model%fhcyc            = fhcyc
@@ -4397,7 +4397,7 @@ module GFS_typedefs
     ! Model%cplflx == .true.  and Model%cplice == .false. (HAFS FV3ATM-HYCOM)
     if (Model%cplice .and. .not. Model%cplflx) then
       print *,' Logic error: Model%cplflx==.false. and Model%cplice==.true. is currently not supported - shutting down'
-      stop
+      error stop
     endif
     Model%cplocn2atm       = cplocn2atm
     Model%cplwav           = cplwav
@@ -4451,7 +4451,7 @@ module GFS_typedefs
     Model%lsidea           = lsidea
     if (Model%lsidea) then
       print *,' LSIDEA is active but needs to be reworked for FV3 - shutting down'
-      stop
+      error stop
     endif
 #ifdef IDEA_PHYS
 !--- integrated dynamics through earth's atmosphere
@@ -4490,7 +4490,7 @@ module GFS_typedefs
       Model%levr           = levs
     else if (levr > levs) then
       write(0,*) "Logic error, number of radiation levels (levr) cannot exceed number of model levels (levs)"
-      stop
+      error stop
     else
       Model%levr           = levr
     endif
@@ -4498,11 +4498,11 @@ module GFS_typedefs
 
     if (isubc_sw < 0 .or. isubc_sw > 2) then
        write(0,'(a,i0)') 'ERROR: shortwave cloud-sampling (isubc_sw) scheme selected not valid: ',isubc_sw
-       stop
+       error stop
     endif
     if (isubc_lw < 0 .or. isubc_lw > 2) then
        write(0,'(a,i0)') 'ERROR: longwave cloud-sampling (isubc_lw) scheme selected not valid: ',isubc_lw
-       stop
+       error stop
     endif
 
 
@@ -4510,7 +4510,7 @@ module GFS_typedefs
         (iovr .ne. Model%iovr_max)  .and. (iovr .ne. Model%iovr_dcorr)   .and.       &
         (iovr .ne. Model%iovr_exp)  .and. (iovr .ne. Model%iovr_exprand)) then
        write(0,'(a,i0)') 'ERROR: cloud-overlap (iovr) scheme selected not valid: ',iovr
-       stop
+       error stop
     endif
 
     if ((isubc_sw == 0 .or. isubc_lw == 0) .and. iovr > 2 ) then
@@ -4615,16 +4615,16 @@ module GFS_typedefs
        ! RRTMGP incompatible with levr /= levs
        if (Model%levr /= Model%levs) then
           write(0,*) "Logic error, RRTMGP only works with levr = levs"
-          stop
+          error stop
        end if
        ! RRTMGP LW scattering calculation not supported w/ RRTMG cloud-optics
        if (Model%doGP_lwscat .and. Model%doG_cldoptics) then
           write(0,*) "Logic error, RRTMGP Longwave cloud-scattering not supported with RRTMG cloud-optics."
-          stop
+          error stop
        end if
        if (Model%doGP_sgs_mynn .and. .not. do_mynnedmf) then
           write(0,*) "Logic error, RRTMGP flag doGP_sgs_mynn only works with do_mynnedmf=.true."
-          stop
+          error stop
        endif
        if (Model%doGP_sgs_cnv .or. Model%doGP_sgs_mynn) then
           write(0,*) "RRTMGP explicit cloud scheme being used."
@@ -4635,7 +4635,7 @@ module GFS_typedefs
 
        if (Model%doGP_cldoptics_PADE .and. Model%doGP_cldoptics_LUT) then
           write(0,*) "Logic error, Both RRTMGP cloud-optics options cannot be selected. "
-          stop
+          error stop
        end if
        if (.not. Model%doGP_cldoptics_PADE .and. .not. Model%doGP_cldoptics_LUT .and. .not. Model%doG_cldoptics) then
           write(0,*) "Logic error, No option for cloud-optics scheme provided. Using RRTMG cloud-optics"
@@ -4644,7 +4644,7 @@ module GFS_typedefs
        if (Model%rrtmgp_nGptsSW  .lt. 0 .or. Model%rrtmgp_nGptsLW  .lt. 0 .or. &
            Model%rrtmgp_nBandsSW .lt. 0 .or. Model%rrtmgp_nBandsLW .lt. 0) then
           write(0,*) "Logic error, RRTMGP spectral dimensions (bands/gpts) need to be provided."
-          stop
+          error stop
        endif
        else
           if (Model%use_LW_jacobian) then
@@ -4660,7 +4660,7 @@ module GFS_typedefs
     if (.not.lwhtr .or. .not.swhtr) then
       write(0,*) "Logic error, the CCPP version of RRTMG lwrad/swrad require the output" // &
              " of the lw/sw heating rates to be turned on (namelist options lwhtr and swhtr)"
-      stop
+      error stop
     end if
 
 !--- microphysical switch
@@ -4723,7 +4723,7 @@ module GFS_typedefs
     Model%mraerosol        = mraerosol
     if (Model%ltaerosol .and. Model%mraerosol) then
       write(0,*) 'Logic error: Only one Thompson aerosol option can be true, either ltaerosol or mraerosol)'
-      stop
+      error stop
     end if
     Model%lradar           = lradar
     Model%nsfullradar_diag = nsfullradar_diag
@@ -4754,7 +4754,7 @@ module GFS_typedefs
     Model%rdlai = rdlai
     if (Model%rdlai .and. .not. Model%lsm == Model%lsm_ruc) then
       write(0,*) 'Logic error: rdlai = .true. only works with RUC LSM'
-      stop
+      error stop
     end if
 
     ! Set surface layers for CCPP physics
@@ -4772,7 +4772,7 @@ module GFS_typedefs
     if (Model%lsm==Model%lsm_noah .or. Model%lsm==Model%lsm_noahmp) then
       if (Model%lsoil_lsm/=4) then
         write(0,*) 'Error in GFS_typedefs.F90, number of soil layers must be 4 for Noah/NoahMP'
-        stop
+        error stop
       end if
       Model%zs  = (/-0.1_kind_phys, -0.4_kind_phys, -1.0_kind_phys, -2.0_kind_phys/)
       Model%dzs = (/ 0.1_kind_phys,  0.3_kind_phys,  0.6_kind_phys,  1.0_kind_phys/)
@@ -4785,7 +4785,7 @@ module GFS_typedefs
     if (Model%lsm==Model%lsm_ruc) then
       if (Model%lsoil_lsm/=9) then
         write(0,*) 'Error in GFS_typedefs.F90, number of soil layers must be 9 for RUC'
-        stop
+        error stop
       end if
     end if
 
@@ -4795,12 +4795,12 @@ module GFS_typedefs
     if (Model%lsm==Model%lsm_noah .or. Model%lsm==Model%lsm_noahmp) then
       if (kice/=2) then
         write(0,*) 'Error in GFS_typedefs.F90, number of ice model layers must be 2 for Noah/NoahMP/Noah_WRFv4'
-        stop
+        error stop
       end if
     elseif (Model%lsm==Model%lsm_ruc) then
       if (kice/=9) then
         write(0,*) 'Error in GFS_typedefs.F90, number of ice model layers must be 9 for RUC'
-        stop
+        error stop
       end if
     end if
 
@@ -4813,7 +4813,7 @@ module GFS_typedefs
     if (Model%lsm==Model%lsm_noahmp) then
       if (lsnow_lsm/=3) then
         write(0,*) 'Logic error: NoahMP expects the maximum number of snow layers to be exactly 3 (see sfc_noahmp_drv.f)'
-        stop
+        error stop
       else
         Model%lsnow_lsm        = lsnow_lsm
         ! Set lower bound for LSM model, runs from negative (above surface) to surface (zero)
@@ -4843,7 +4843,7 @@ module GFS_typedefs
       !see GFS_MP_generic_post.F90; exticeden is only compatible with GFDL,
       !Thompson, or NSSL MP
       print *,' Using exticeden = T is only valid when using GFDL, Thompson, or NSSL microphysics.'
-      stop
+      error stop
     end if
 ! GFDL surface layer options
     Model%lcurr_sf         = lcurr_sf
@@ -4917,19 +4917,19 @@ module GFS_typedefs
 !HWRF physics suite
     if (hwrf_samfdeep .and. imfdeepcnv/=2) then
        write(*,*) 'Logic error: hwrf_samfdeep requires imfdeepcnv=2'
-       stop
+       error stop
     end if
     if (hwrf_samfshal .and. imfshalcnv/=2) then
        write(*,*) 'Logic error: hwrf_samfshal requires imfshalcnv=2'
-       stop
+       error stop
     end if
     Model%hwrf_samfdeep = hwrf_samfdeep
     Model%hwrf_samfshal = hwrf_samfshal
 
-    !--prognostic closure - moisture coupling                                                                                 
+    !--prognostic closure - moisture coupling
     if ((progsigma .and. imfdeepcnv/=2) .and. (progsigma .and. imfdeepcnv/=5)) then
        write(*,*) 'Logic error: progsigma requires imfdeepcnv=2 or 5'
-       stop
+       error stop
     end if
     Model%progsigma = progsigma
     Model%betascu = betascu
@@ -4938,7 +4938,7 @@ module GFS_typedefs
 
     if (oz_phys .and. oz_phys_2015) then
        write(*,*) 'Logic error: can only use one ozone physics option (oz_phys or oz_phys_2015), not both. Exiting.'
-       stop
+       error stop
     end if
     Model%oz_phys          = oz_phys
     Model%oz_phys_2015     = oz_phys_2015
@@ -5556,7 +5556,7 @@ module GFS_typedefs
                write(0,*) 'NSSL micro: error! CCN is OFF (nssl_ccn_on = F) but ntccn > 1.'
                write(0,*) 'Should  either remove ccn_nc from field_table or set nssl_ccn_on = .true.'
               ENDIF
-              stop
+              error stop
             ENDIF
           Model%ntccn = -99
           Model%ntccna = -99
@@ -5565,7 +5565,7 @@ module GFS_typedefs
             write(*,*) 'NSSL micro: error! CCN is ON but ntccn < 1. Must have ccn_nc in field_table if nssl_ccn_on=T'
             write(0,*) 'NSSL micro: error! CCN is ON but ntccn < 1. Must have ccn_nc in field_table if nssl_ccn_on=T'
           ENDIF
-          stop
+          error stop
         ELSE
           if (Model%me == Model%master) then
             write(*,*) 'NSSL micro: CCN is ON'
@@ -5601,7 +5601,7 @@ module GFS_typedefs
              write(0,*) 'missing needed tracers for NSSL hail! nthl > 1 but either volume or number is not in field_table'
              write(0,*) 'nthv, nthnc = ', Model%nthv, Model%nthnc
            ENDIF
-           stop
+           error stop
         ENDIF
       ENDIF
 
@@ -5620,21 +5620,21 @@ module GFS_typedefs
           write(*,*) 'NSSL micro: CCN is ON'
         ENDIF
       ENDIF
-      
+
       ! add checks for nssl_3moment
-      IF ( ( Model%nssl_3moment ) ) THEN 
+      IF ( ( Model%nssl_3moment ) ) THEN
         IF ( Model%ntrz < 1 ) THEN
           write(*,*) 'NSSL micro: 3-moment is ON, but rain_ref tracer is missing'
-          stop
+          error stop
         ENDIF
         IF ( Model%ntgz < 1 ) THEN
           write(*,*) 'NSSL micro: 3-moment is ON, but graupel_ref tracer is missing'
-          stop
+          error stop
         ENDIF
         IF ( nssl_hail_on ) THEN
         IF ( Model%nthz < 1 ) THEN
           write(*,*) 'NSSL micro: 3-moment is ON, but hail_ref tracer is missing'
-          stop
+          error stop
         ENDIF
         ENDIF
       ENDIF
@@ -5646,7 +5646,7 @@ module GFS_typedefs
              Model%ntcw < 1 .or. Model%ntlnc < 1      &
              ) THEN
           if (Model%me == Model%master)  write(0,*) 'missing needed tracers for NSSL!'
-           stop
+           error stop
         ENDIF
 
 
@@ -5762,7 +5762,7 @@ module GFS_typedefs
     if (do_shoc) then
       if (Model%imp_physics == Model%imp_physics_thompson) then
         print *,'SHOC is not currently compatible with Thompson MP -- shutting down'
-        stop
+        error stop
       endif
       Model%nshoc_3d   = 3
       Model%nshoc_2d   = 0
@@ -5781,7 +5781,7 @@ module GFS_typedefs
     if (Model%do_mynnedmf) then
       if (Model%do_shoc .or. Model%hybedmf .or. Model%satmedmf) then
           print *,' Logic error: MYNN EDMF cannot be run with SHOC, HEDMF or SATMEDMF'
-          stop
+          error stop
       end if
 !      Model%shal_cnv   = .false.
 !      Model%imfshalcnv = -1
@@ -5827,14 +5827,14 @@ module GFS_typedefs
 
       elseif (Model%lsm == 0) then
         print *,' OSU no longer supported - job aborted'
-        stop
+        error stop
       elseif (Model%lsm == Model%lsm_noahmp) then
         if (Model%ivegsrc /= 1) then
           print *,'Vegetation type must be IGBP if Noah MP is used'
-          stop
+          error stop
         elseif (Model%isot /= 1) then
           print *,'Soil type must be STATSGO if Noah MP is used'
-          stop
+          error stop
         endif
         print *, 'New Noah MP Land Surface Model will be used'
         print *, 'The Physics options are'
@@ -5863,7 +5863,7 @@ module GFS_typedefs
         print *,' add_fire_heat_flux = ',add_fire_heat_flux
       else
         print *,' Unsupported LSM type - job aborted - lsm=',Model%lsm
-        stop
+        error stop
       endif
 
 !      if (Model%lsm == Model%lsm_noahmp .and. Model%iopt_snf == 4) then
@@ -5908,7 +5908,7 @@ module GFS_typedefs
         if ( (Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .or. Model%imfshalcnv == Model%imfshalcnv_ntiedtke) .and. &
             .not. (Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .and. Model%imfshalcnv == Model%imfshalcnv_ntiedtke) ) then
             write(0,*) "Logic error: if NTDK deep convection is used, must also use NTDK shallow convection (and vice versa)"
-            stop
+            error stop
         end if
 
         if (.not. Model%cscnv) then
@@ -6048,7 +6048,7 @@ module GFS_typedefs
       Model%npsdelt  = 2
       if (nwat /= 2) then
         print *,' Zhao-Carr MP requires nwat to be set to 2 - job aborted'
-        stop
+        error stop
       end if
       if (Model%me == Model%master) print *,' Using Zhao/Carr/Sundqvist Microphysics'
 
@@ -6069,7 +6069,7 @@ module GFS_typedefs
       Model%nseffr  = 3
       if (nwat /= 4) then
         print *,' Ferrier-Aligo MP requires nwat to be set to 4 - job aborted'
-        stop
+        error stop
       end if
       if (Model%me == Model%master) print *,' Using Ferrier-Aligo MP scheme', &
                                           ' microphysics', &
@@ -6077,7 +6077,7 @@ module GFS_typedefs
 
     elseif (Model%imp_physics == Model%imp_physics_wsm6) then !WSM6 microphysics
       print *,' Error, WSM6 no longer supported - job aborted'
-      stop
+      error stop
       !Model%npdf3d  = 0
       !Model%num_p3d = 3
       !Model%num_p2d = 1
@@ -6101,7 +6101,7 @@ module GFS_typedefs
       ENDIF
       if ( nwat /= 6+i ) then
         print *,' NSSL MP requires nwat to be set to ', 6+i,' - job aborted, nssl_hail_on = ',nssl_hail_on
-        stop
+        error stop
       end if
       Model%nleffr = 1
       Model%nieffr = 2
@@ -6132,11 +6132,11 @@ module GFS_typedefs
       Model%nseffr  = 3
       if (nwat /= 6) then
         print *,' Thompson MP requires nwat to be set to 6 - job aborted'
-        stop
+        error stop
       end if
       if (.not. Model%effr_in) then
         print *,' Thompson MP requires effr_in to be set to .true. - job aborted'
-        stop
+        error stop
       end if
       if (Model%me == Model%master) print *,' Using Thompson double moment microphysics', &
                                           ' ltaerosol = ',Model%ltaerosol, &
@@ -6168,7 +6168,7 @@ module GFS_typedefs
       endif
       if (nwat /= 6 .and. Model%fprcp >= 2) then
         print *,' Morrison-Gettelman MP requires nwat to be set to 6 - job aborted'
-        stop
+        error stop
       end if
       if (Model%me == Model%master)                                                                 &
          print *,' Using Morrison-Gettelman double moment microphysics',                            &
@@ -6208,14 +6208,14 @@ module GFS_typedefs
       Model%shcnvcw = .false.
       if (nwat /= 6) then
         print *,' GFDL MP requires nwat to be set to 6 - job aborted'
-        stop
+        error stop
       end if
       if (Model%me == Model%master) print *,' avg_max_length=',Model%avg_max_length
       if (Model%me == Model%master) print *,' Using GFDL Cloud Microphysics'
 
     else
       if (Model%me == Model%master) print *,'Wrong imp_physics value. Job abort.'
-      stop
+      error stop
     endif
 
     if(Model%ras     .or. Model%cscnv)  Model%cnvcld = .false.
@@ -6349,7 +6349,7 @@ module GFS_typedefs
              write(0,'(A,F12.4,A)') 'radar_tten_limits(1) = ',radar_tten_limits(1),' <-- lower limit'
              write(0,'(A,F12.4,A)') 'radar_tten_limits(2) = ',radar_tten_limits(2),' <-- upper limit'
              write(0,*) "If you do not want me to apply the prescribed tendencies, just say so! Remove fh_dfi_radar from your namelist."
-             stop
+             error stop
           endif
        else
           !o! Rejoice !o! Radar_tten_limits had lower and upper bounds.
