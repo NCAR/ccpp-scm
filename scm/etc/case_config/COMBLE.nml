@@ -6,4 +6,4 @@ do_spinup = .false.,
 spinup_timesteps = 0,
 reference_profile_choice = 2,
 column_area = 1.45E8,
-$end
+/
