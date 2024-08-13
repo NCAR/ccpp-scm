@@ -220,14 +220,7 @@ are set to the correct values so that the build system can find them, as describ
 Setting up compilation environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For users on a pre-configured platform, you can load the spack-stack environment via one of the provided modules in ``scm/etc/modules/``.
-For example, users on the NSF NCAR machine Derecho who wish to use Intel compilers can do the following:
-
-::
-
-   cd [path/to/ccpp-scm/]
-   module use scm/etc/modules/
-   module load derecho_intel
+For users on a pre-configured platform, the spack-stack environment can be loaded via one of the provided modules in ``scm/etc/modules/`` as described in :numref:`Section %s <use_preconfigured_platforms>`.
 
 Additionally, for users who have installed spack-stack on their own MacOS or Linux machine can use the provided ``macos_clang``
 or ``linux_gnu`` modules.
