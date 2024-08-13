@@ -195,6 +195,9 @@ def parse_arguments():
     mpi_command = args.mpi_command
     stop_on_error = args.stop_on_error
 
+    if not case and not file:
+        parser.error('Either "--case" or "--file" must be specified. Use "--help" for more information.')
+
     if not sdf:
         sdf = DEFAULT_SUITE
 

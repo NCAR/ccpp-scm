@@ -501,7 +501,6 @@ To see the full list of available options, use the ``--help`` flag:
 
 The run script’s full set of options are described below, where optional abbreviations are included in brackets.
 If using the main branch, you should run the above command to ensure you have the most up-to-date list of options.
-There are no required arguments, but at least one of ``--case`` or ``--file`` must be specified.
 
 -  ``--case [-c]``
 
