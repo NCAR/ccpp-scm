@@ -1380,7 +1380,6 @@ if(len(scm_datasets) > 1):
             else:
                 y_max_val = profiles_mean['y_max']
             y_lim_val = [y_min_val, y_max_val]
-            
             #plot mean profiles
             for k in range(len(profiles_mean['vars'])):
                 #get the python variable associated with the vars listed in the config file
