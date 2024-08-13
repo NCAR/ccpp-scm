@@ -1517,7 +1517,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "hur", .False., input_rh)
   call NetCDF_read_var(ncid, "tke", .False., input_tke)
   
-  
   call NetCDF_read_var(ncid, "o3",      .False.,  input_ozone)
   call NetCDF_read_var(ncid, "area",    .False.,  input_area)
     
