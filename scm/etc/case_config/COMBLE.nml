@@ -1,0 +1,9 @@
+$case_config
+case_name = 'COMBLE',
+input_type = 1
+lsm_ics = .false.,
+do_spinup = .false.,
+spinup_timesteps = 0,
+reference_profile_choice = 2,
+column_area = 1.45E8,
+/
