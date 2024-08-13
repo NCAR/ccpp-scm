@@ -20,8 +20,8 @@ CASE_NML_DIR = '../case_config'
 PROCESSED_CASE_DIR = '../../data/processed_case_input'
 
 # For developers: set logging level to DEBUG for additional output
-LOGLEVEL = logging.DEBUG
-#LOGLEVEL = logging.INFO
+#LOGLEVEL = logging.DEBUG
+LOGLEVEL = logging.INFO
 
 DEFAULT_MISSING_VALUE = -9999.0
 DEFAULT_NUDGING_TIMESCALE = 7200.0 #s
@@ -33,6 +33,7 @@ DEFAULT_NUDGING_TIMESCALE = 7200.0 #s
 parser = argparse.ArgumentParser()
 parser.add_argument('-n',   '--case_name',       help='name of case',         required=True)
 parser.add_argument('-a',   '--use_area',        help='use column_area namelist attribute as forcing_scale',  action='store_true')
+parser.add_argument('-d',   '--debug',           help='enable debugging output', action='store_true')
 
 
 ########################################################################################
@@ -41,18 +42,18 @@ parser.add_argument('-a',   '--use_area',        help='use column_area namelist 
 def parse_arguments():
     """Parse command line arguments"""
     args           = parser.parse_args()
-    case_name      = args.case_name
-    use_area       = args.use_area
-
         
-    return (case_name, use_area)
+    return (args.case_name, args.use_area, args.debug)
 
 ########################################################################################
 #
 ########################################################################################
-def setup_logging():
+def setup_logging(debug):
     """Sets up the logging module."""
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=LOGLEVEL)
+    if debug:
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 class Case_Data(object):
     def __init__(self, name, missing_value, time, levels, soil_depth, lat, lon, slmsk, vegsrc, vegtyp, soiltyp, \
@@ -251,218 +252,188 @@ class Case_Data(object):
         self._lh_flux_sfc = lh_flux_sfc
     
     def __repr__(self):
-        return "Case_Data \n Globals: \n" \
-                "  name:% s \n" \
-                "  missing_value:% s \n" \
-                " Dimensions: \n" \
-                "  time:% s \n" \
-                "  levels: % s \n" \
-                "  soil_depth: % s \n" \
-                " Scalars: \n" \
-                "  lat: % s \n" \
-                "  lon: % s \n" \
-                "  area: % s \n" \
-                "  slmsk: % s \n" \
-                "  vegsrc: % s \n" \
-                "  vegtyp: % s \n" \
-                "  soiltyp: % s \n" \
-                "  scolor: % s \n" \
-                "  slopetyp: % s \n" \
-                "  tsfco: % s \n" \
-                "  vegfrac: % s \n" \
-                "  shdmin: % s \n" \
-                "  shdmax: % s \n" \
-                "  canopy: % s \n" \
-                "  hice: % s \n" \
-                "  fice: % s \n" \
-                "  tisfc: % s \n" \
-                "  snowd: % s \n" \
-                "  snoalb: % s \n" \
-                "  tg3: % s \n" \
-                "  uustar: % s \n" \
-                "  alvsf: % s \n" \
-                "  alnsf: % s \n" \
-                "  alvwf: % s \n" \
-                "  alnwf: % s \n" \
-                "  facsf: % s \n" \
-                "  facwf: % s \n" \
-                "  weasd: % s \n" \
-                "  f10m: % s \n" \
-                "  t2m: % s \n" \
-                "  q2m: % s \n" \
-                "  ffmm: % s \n" \
-                "  ffhh: % s \n" \
-                "  tprcp: % s \n" \
-                "  srflag: % s \n" \
-                "  sncovr: % s \n" \
-                "  tsfcl: % s \n" \
-                "  zorl: % s \n" \
-                "  zorll: % s \n" \
-                "  zorli: % s \n" \
-                "  zorlw: % s \n" \
-                "  zorlwav: % s \n" \
-                "  tvxy: % s \n" \
-                "  tgxy: % s \n" \
-                "  tahxy: % s \n" \
-                "  canicexy: % s \n" \
-                "  canliqxy: % s \n" \
-                "  eahxy: % s \n" \
-                "  cmxy: % s \n" \
-                "  chxy: % s \n" \
-                "  fwetxy: % s \n" \
-                "  sneqvoxy: % s \n" \
-                "  alboldxy: % s \n" \
-                "  qsnowxy: % s \n" \
-                "  wslakexy: % s \n" \
-                "  taussxy: % s \n" \
-                "  waxy: % s \n" \
-                "  wtxy: % s \n" \
-                "  zwtxy: % s \n" \
-                "  xlaixy: % s \n" \
-                "  xsaixy: % s \n" \
-                "  lfmassxy: % s \n" \
-                "  stmassxy: % s \n" \
-                "  rtmassxy: % s \n" \
-                "  woodxy: % s \n" \
-                "  stblcpxy: % s \n" \
-                "  fastcpxy: % s \n" \
-                "  smcwtdxy: % s \n" \
-                "  deeprechxy: % s \n" \
-                "  rechxy: % s \n" \
-                "  snowxy: % s \n" \
-                "  wetness: % s \n" \
-                "  clw_surf_land: % s \n" \
-                "  clw_surf_ice: % s \n" \
-                "  qwv_surf_land: % s \n" \
-                "  qwv_surf_ice: % s \n" \
-                "  tsnow_land: % s \n" \
-                "  tsnow_ice: % s \n" \
-                "  snowfallac_land: % s \n" \
-                "  snowfallac_ice: % s \n" \
-                "  sncovr_ice: % s \n" \
-                "  sfalb_lnd: % s \n" \
-                "  sfalb_lnd_bck: % s \n" \
-                "  emis_ice: % s \n" \
-                "  lai: % s \n" \
-                "  stddev: % s \n" \
-                "  convexity: % s \n" \
-                "  oa1: % s \n" \
-                "  oa2: % s \n" \
-                "  oa3: % s \n" \
-                "  oa4: % s \n" \
-                "  ol1: % s \n" \
-                "  ol2: % s \n" \
-                "  ol3: % s \n" \
-                "  ol4: % s \n" \
-                "  theta_oro: % s \n" \
-                "  gamma: % s \n" \
-                "  sigma: % s \n" \
-                "  elvmax: % s \n" \
-                "  oro: % s \n" \
-                "  oro_uf: % s \n" \
-                "  landfrac: % s \n" \
-                "  lakefrac: % s \n" \
-                "  lakedepth: % s \n" \
-                "  tref: % s \n" \
-                "  z_c: % s \n" \
-                "  c_0: % s \n" \
-                "  c_d: % s \n" \
-                "  w_0: % s \n" \
-                "  w_d: % s \n" \
-                "  xt: % s \n" \
-                "  xs: % s \n" \
-                "  xu: % s \n" \
-                "  xv: % s \n" \
-                "  xz: % s \n" \
-                "  zm: % s \n" \
-                "  xtts: % s \n" \
-                "  xzts: % s \n" \
-                "  d_conv: % s \n" \
-                "  ifd: % s \n" \
-                "  dt_cool: % s \n" \
-                "  qrain: % s \n" \
-                " Initial: \n" \
-                "  height: % s \n" \
-                "  theta_il: % s \n" \
-                "  t: % s \n" \
-                "  qt: % s \n" \
-                "  ql: % s \n" \
-                "  qi: % s \n" \
-                "  u: % s \n" \
-                "  v: % s \n" \
-                "  tke: %s \n" \
-                "  ozone: %s \n" \
-                "  stc: %s \n" \
-                "  smc: %s \n" \
-                "  slc: %s \n" \
-                "  snicexy: % s \n" \
-                "  snliqxy: % s \n" \
-                "  tsnoxy: % s \n" \
-                "  smoiseq: % s \n" \
-                "  zsnsoxy: % s \n" \
-                "  tiice: % s \n" \
-                "  tslb: % s \n" \
-                "  smois: % s \n" \
-                "  sh2o: % s \n" \
-                "  smfr: % s \n" \
-                "  flfr: % s \n" \
-                " Forcing: \n" \
-                "  p_surf: %s \n" \
-                "  T_surf: %s \n" \
-                "  w_ls (time avg): %s \n" \
-                "  omega (time avg): %s \n" \
-                "  u_g (time avg): %s \n" \
-                "  v_g (time avg): %s \n" \
-                "  u_nudge (time avg): %s \n" \
-                "  v_nudge (time avg): %s \n" \
-                "  T_nudge (time avg): %s \n" \
-                "  thil_nudge (time avg): %s \n" \
-                "  qt_nudge (time avg): %s \n" \
-                "  dT_dt_rad (time avg): %s \n" \
-                "  h_advec_thil (time avg): %s \n" \
-                "  v_advec_thil (time avg): %s \n" \
-                "  h_advec_qt (time avg): %s \n" \
-                "  v_advec_qt (time avg): %s \n" \
-                "  sh_flux_sfc: %s \n" \
-                "  lh_flux_sfc: %s \n" \
-                  % (self._name, self._missing_value, self._time, self._levels,
-                     self._soil_depth, self._lat, self._lon, self._area, self._slmsk, self._vegsrc, 
-                     self._vegtyp, self._soiltyp, self._scolor,
-                     self._slopetyp, self._tsfco, self._vegfrac, self._shdmin, 
-                     self._shdmax, self._canopy, self._hice, self._fice, self._tisfc, self._snowd, self._snoalb,
-                     self._tg3, self._uustar, self._alvsf, self._alnsf, self._alvwf, self._alnwf, self._facsf, self._facwf,
-                     self._weasd, self._f10m, self._t2m, self._q2m, self._ffmm, self._ffhh,
-                     self._tprcp, self._srflag, self._sncovr, self._tsfcl, self._zorl, self._zorll, self._zorli, self._zorlw, self._zorlwav,
-                     self._tvxy, self._tgxy, self._tahxy, self._canicexy, self._canliqxy, self._eahxy,
-                     self._cmxy, self._chxy, self._fwetxy, self._sneqvoxy, self._alboldxy, self._qsnowxy, self._wslakexy, self._taussxy,
-                     self._waxy, self._wtxy, self._zwtxy, self._xlaixy, self._xsaixy, self._lfmassxy, self._stmassxy, self._rtmassxy, 
-                     self._woodxy, self._stblcpxy, self._fastcpxy, self._smcwtdxy, self._deeprechxy, self._rechxy, self._snowxy,
-                     self._wetness, self._clw_surf_land, self._clw_surf_ice, self._qwv_surf_land, self._qwv_surf_ice, self._tsnow_land, self._tsnow_ice,
-                     self._snowfallac_land, self._snowfallac_ice, self._sncovr_ice, self._sfalb_lnd, self._sfalb_lnd_bck, self._emis_ice, self._lai, 
-                     self._stddev, self._convexity, self._oa1, self._oa2, self._oa3, self._oa4, self._ol1, self._ol2, self._ol3, self._ol4,
-                     self._theta_oro, self._gamma, self._sigma, self._elvmax, self._oro, self._oro_uf, self._landfrac, self._lakefrac, self._lakedepth,
-                     self._tref, self._z_c, self._c_0, self._c_d, self._w_0, self._w_d, self._xt, self._xs, self._xu, self._xv, self._xz, self._zm, 
-                     self._xtts, self._xzts, self._d_conv, self._ifd, self._dt_cool, self._qrain, 
-                     self._height, self._theta_il, self._t,
-                     self._qt, self._ql, self._qi, self._u, self._v,
-                     self._tke, self._ozone, self._stc, self._smc, self._slc, self._snicexy, self._snliqxy, self._tsnoxy, 
-                     self._smoiseq, self._zsnsoxy, self._tiice, self._tslb, self._smois, self._sh2o, self._smfr, self._flfr, 
-                     self._p_surf, self._T_surf, np.mean(self._w_ls, axis=1),
-                     np.mean(self._omega, axis=1), np.mean(self._u_g, axis=1),
-                     np.mean(self._v_g, axis=1), np.mean(self._u_nudge, axis=1),
-                     np.mean(self._v_nudge, axis=1), np.mean(self._T_nudge, axis=1),
-                     np.mean(self._thil_nudge, axis=1),np.mean(self._qt_nudge, axis=1),
-                     np.mean(self._dT_dt_rad, axis=1),
-                     np.mean(self._h_advec_thil, axis=1),np.mean(self._v_advec_thil, axis=1),
-                     np.mean(self._h_advec_qt, axis=1),np.mean(self._v_advec_qt, axis=1),
-                     self._sh_flux_sfc, self._lh_flux_sfc)
+        return f"""Case_Data
+        Globals:
+         name: {self._name}
+         missing_value: {self._missing_value}
+        Dimensions:
+         time: {self._time} 
+         levels: {self._levels} 
+         soil_depth: {self._soil_depth} 
+        Scalars:
+         lat: {self._lat} 
+         lon: {self._lon} 
+         area: {self._area} 
+         slmsk: {self._slmsk} 
+         vegsrc: {self._vegsrc} 
+         vegtyp: {self._vegtyp} 
+         soiltyp: {self._soiltyp} 
+         scolor: {self._scolor} 
+         slopetyp: {self._slopetyp} 
+         tsfco: {self._tsfco} 
+         vegfrac: {self._vegfrac} 
+         shdmin: {self._shdmin} 
+         shdmax: {self._shdmax} 
+         canopy: {self._canopy} 
+         hice: {self._hice} 
+         fice: {self._fice} 
+         tisfc: {self._tisfc} 
+         snowd: {self._snowd} 
+         snoalb: {self._snoalb} 
+         tg3: {self._tg3} 
+         uustar: {self._uustar} 
+         alvsf: {self._alvsf} 
+         alnsf: {self._alnsf} 
+         alvwf: {self._alvwf} 
+         alnwf: {self._alnwf} 
+         facsf: {self._facsf} 
+         facwf: {self._facwf} 
+         weasd: {self._weasd} 
+         f10m: {self._f10m} 
+         t2m: {self._t2m} 
+         q2m: {self._q2m} 
+         ffmm: {self._ffmm} 
+         ffhh: {self._ffhh} 
+         tprcp: {self._tprcp} 
+         srflag: {self._srflag} 
+         sncovr: {self._sncovr} 
+         tsfcl: {self._tsfcl} 
+         zorl: {self._zorl} 
+         zorll: {self._zorll} 
+         zorli: {self._zorli} 
+         zorlw: {self._zorlw} 
+         zorlwav: {self._zorlwav} 
+         tvxy: {self._tvxy} 
+         tgxy: {self._tgxy} 
+         tahxy: {self._tahxy} 
+         canicexy: {self._canicexy} 
+         canliqxy: {self._canliqxy} 
+         eahxy: {self._eahxy} 
+         cmxy: {self._cmxy} 
+         chxy: {self._chxy} 
+         fwetxy: {self._fwetxy} 
+         sneqvoxy: {self._sneqvoxy} 
+         alboldxy: {self._alboldxy} 
+         qsnowxy: {self._qsnowxy} 
+         wslakexy: {self._wslakexy} 
+         taussxy: {self._taussxy} 
+         waxy: {self._waxy} 
+         wtxy: {self._wtxy} 
+         zwtxy: {self._zwtxy} 
+         xlaixy: {self._xlaixy} 
+         xsaixy: {self._xsaixy} 
+         lfmassxy: {self._lfmassxy} 
+         stmassxy: {self._stmassxy} 
+         rtmassxy: {self._rtmassxy} 
+         woodxy: {self._woodxy} 
+         stblcpxy: {self._stblcpxy} 
+         fastcpxy: {self._fastcpxy} 
+         smcwtdxy: {self._smcwtdxy} 
+         deeprechxy: {self._deeprechxy} 
+         rechxy: {self._rechxy} 
+         snowxy: {self._snowxy} 
+         wetness: {self._wetness} 
+         clw_surf_land: {self._clw_surf_land} 
+         clw_surf_ice: {self._clw_surf_ice} 
+         qwv_surf_land: {self._qwv_surf_land} 
+         qwv_surf_ice: {self._qwv_surf_ice} 
+         tsnow_land: {self._tsnow_land} 
+         tsnow_ice: {self._tsnow_ice} 
+         snowfallac_land: {self._snowfallac_land} 
+         snowfallac_ice: {self._snowfallac_ice} 
+         sncovr_ice: {self._sncovr_ice} 
+         sfalb_lnd: {self._sfalb_lnd} 
+         sfalb_lnd_bck: {self._sfalb_lnd_bck} 
+         emis_ice: {self._emis_ice} 
+         lai: {self._lai} 
+         stddev: {self._stddev} 
+         convexity: {self._convexity} 
+         oa1: {self._oa1} 
+         oa2: {self._oa2} 
+         oa3: {self._oa3} 
+         oa4: {self._oa4} 
+         ol1: {self._ol1} 
+         ol2: {self._ol2} 
+         ol3: {self._ol3} 
+         ol4: {self._ol4} 
+         theta_oro: {self._theta_oro} 
+         gamma: {self._gamma} 
+         sigma: {self._sigma} 
+         elvmax: {self._elvmax} 
+         oro: {self._oro} 
+         oro_uf: {self._oro_uf} 
+         landfrac: {self._landfrac} 
+         lakefrac: {self._lakefrac} 
+         lakedepth: {self._lakedepth} 
+         tref: {self._tref} 
+         z_c: {self._z_c} 
+         c_0: {self._c_0} 
+         c_d: {self._c_d} 
+         w_0: {self._w_0} 
+         w_d: {self._w_d} 
+         xt: {self._xt} 
+         xs: {self._xs} 
+         xu: {self._xu} 
+         xv: {self._xv} 
+         xz: {self._xz} 
+         zm: {self._zm} 
+         xtts: {self._xtts} 
+         xzts: {self._xzts} 
+         d_conv: {self._d_conv} 
+         ifd: {self._ifd} 
+         dt_cool: {self._dt_cool} 
+         qrain: {self._qrain} 
+        Initial: 
+         height: {self._height} 
+         theta_il: {self._theta_il} 
+         t: {self._t} 
+         qt: {self._qt} 
+         ql: {self._ql} 
+         qi: {self._qi} 
+         u: {self._u} 
+         v: {self._v} 
+         tke: {self._tke} 
+         ozone: {self._ozone} 
+         stc: {self._stc} 
+         smc: {self._smc} 
+         slc: {self._slc} 
+         snicexy: {self._snicexy} 
+         snliqxy: {self._snliqxy} 
+         tsnoxy: {self._tsnoxy} 
+         smoiseq: {self._smoiseq} 
+         zsnsoxy: {self._zsnsoxy} 
+         tiice: {self._tiice} 
+         tslb: {self._tslb} 
+         smois: {self._smois} 
+         sh2o: {self._sh2o} 
+         smfr: {self._smfr} 
+         flfr: {self._flfr} 
+        Forcing: 
+         p_surf: {self._p_surf} 
+         T_surf: {self._T_surf} 
+         w_ls (time avg): {np.mean(self._w_ls, axis=1)} 
+         omega (time avg): {np.mean(self._omega, axis=1)} 
+         u_g (time avg): {np.mean(self._u_g, axis=1)} 
+         v_g (time avg): {np.mean(self._v_g, axis=1)} 
+         u_nudge (time avg): {np.mean(self._u_nudge, axis=1)} 
+         v_nudge (time avg): {np.mean(self._v_nudge, axis=1)} 
+         T_nudge (time avg): {np.mean(self._T_nudge, axis=1)} 
+         thil_nudge (time avg): {np.mean(self._thil_nudge, axis=1)} 
+         qt_nudge (time avg): {np.mean(self._qt_nudge, axis=1)}
+         dT_dt_rad (time avg): {np.mean(self._dT_dt_rad, axis=1)}
+         h_advec_thil (time avg): {np.mean(self._h_advec_thil, axis=1)}
+         v_advec_thil (time avg): {np.mean(self._v_advec_thil, axis=1)}
+         h_advec_qt (time avg): {np.mean(self._h_advec_qt, axis=1)}
+         v_advec_qt (time avg): {np.mean(self._v_advec_qt, axis=1)}
+         sh_flux_sfc: {self._sh_flux_sfc}
+         lh_flux_sfc: {self._lh_flux_sfc}"""
 
 def get_case_nml(case_name):
     """Returns case configuration Fortran namelist"""
     
     filename = os.path.join(CASE_NML_DIR, case_name + '.nml')
     
-    print(filename)
+    logging.debug(filename)
     
     error = False
     nml = ''
@@ -474,7 +445,7 @@ def get_case_nml(case_name):
     return (nml, error)
 
 def get_case_data(case_name):
-    """Returns proprietery CCPP SCM case data in NetCDF Dataset format"""
+    """Returns proprietary CCPP SCM case data in NetCDF Dataset format"""
     
     #TODO: need to handle LSM ICs
     
@@ -936,7 +907,7 @@ def get_case_data(case_name):
         except KeyError:
             w_0 = missing_value
         try:
-            w_d = scalars_grp.variables['w_0'][:]
+            w_d = scalars_grp.variables['w_d'][:]
         except KeyError:
             w_d = missing_value
         try:
@@ -2312,7 +2283,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_ta == forcing_on):
         message = 'adv_ta is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnta_adv_var                    = nc_file.createVariable('tnta_adv', wp, ('time','lev'))
         # tnta_adv_var.units              = 'K s-1'
@@ -2321,7 +2292,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
         
     if (nc_file.adv_qv == forcing_on):
         message = 'adv_qv is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnqv_adv_var                    = nc_file.createVariable('tnqv_adv', wp, ('time','lev'))
         # tnqv_adv_var.units              = 'kg kg-1 s-1'
@@ -2330,7 +2301,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_ua == forcing_on):
         message = 'adv_ua is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnua_adv_var                    = nc_file.createVariable('tnua_adv', wp, ('time','lev'))
         # tnua_adv_var.units              = 'm s-2'
@@ -2339,7 +2310,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_va == forcing_on):
         message = 'adv_va is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnva_adv_var                    = nc_file.createVariable('tnva_adv', wp, ('time','lev'))
         # tnva_adv_var.units              = 'm s-2'
@@ -2348,7 +2319,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_theta == forcing_on):
         message = 'adv_theta is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tntheta_adv_var                    = nc_file.createVariable('tntheta_adv', wp, ('time','lev'))
         # tntheta_adv_var.units              = 'K s-1'
@@ -2375,7 +2346,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_rv == forcing_on):
         message = 'adv_rv is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnrv_adv_var                    = nc_file.createVariable('tnrv_adv', wp, ('time','lev'))
         # tnrv_adv_var.units              = 'kg kg-1 s-1'
@@ -2384,7 +2355,7 @@ def write_SCM_case_file(case_nml, case_data, use_area):
     
     if (nc_file.adv_rt == forcing_on):
         message = 'adv_rt is turned on, but is not implemented in the proprietery CCPP SCM case format and cannot be used.'
-        logging.critical()
+        logging.critical(message)
         raise Exception(message)
         # tnrt_adv_var                    = nc_file.createVariable('tnrt_adv', wp, ('time','lev'))
         # tnrt_adv_var.units              = 'kg kg-1 s-1'
@@ -2550,10 +2521,9 @@ def write_SCM_nml_file(case_nml):
 #
 ########################################################################################    
 def main():
-    setup_logging()
+    (case_name, use_area, debug) = parse_arguments()
     
-    #read in arguments
-    (case_name, use_area) = parse_arguments()
+    setup_logging(debug)
     
     (case_nml, error) = get_case_nml(case_name)
     if (error):
@@ -2575,7 +2545,6 @@ def main():
     logging.debug("Created {}".format(fileOUT))
     
     write_SCM_nml_file(case_nml)
-    #logging.debug("Created {}".format(nmlOUT))
     
 if __name__ == '__main__':
     main()

@@ -1546,13 +1546,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "rl",  .False., input_rl)
   call NetCDF_read_var(ncid, "ri",  .False., input_ri)
   call NetCDF_read_var(ncid, "hur", .False., input_rh)
- 
   call NetCDF_read_var(ncid, "tke", .False., input_tke)
-  
   
   call NetCDF_read_var(ncid, "o3",      .False.,  input_ozone)
   call NetCDF_read_var(ncid, "area",    .False.,  input_area)
-    
   !orographic parameters
   call NetCDF_read_var(ncid, "stddev",    needed_for_model_ics, input_stddev)
   call NetCDF_read_var(ncid, "convexity", needed_for_model_ics, input_convexity)
