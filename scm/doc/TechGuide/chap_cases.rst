@@ -351,7 +351,8 @@ Optional arguments:
 
 #. ``--save_comp (-sc)``: flag to create UFS reference file for comparison
 
-#. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint
+#. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint for calculation 
+   of forcing; only valid for use with -fm=1 or -fm=3
 
 #. ``--forcing_method (-fm)``: method used to calculate forcing (1=total tendencies from UFS dycore,
    2=advective terms calculated from UFS history files, 3=total time tendency terms calculated), default=2
@@ -362,6 +363,27 @@ Optional arguments:
 #. ``--wind_nudge (-wn)``: flag to turn on wind nudging to UFS profiles
 
 #. ``--geostrophic (-geos)``: flag to turn on geostrophic wind forcing
+
+Notes Regarding Implemented Forcing Methods
+
+The ``--forcing_method`` option hides some complexity that should be understood when running this script since 
+each method has a particular use case and produces potentially very different forcing terms. Forcing method 1 is 
+designed to be used in concert with the three-dimensional UFS. I.e., the UFS must be run with diagnostic tendencies 
+activated so that the `nophysics` term is calculated and output for all grid points. This diagnostic term 
+represents the tendency produced for each state variable by the UFS between calls to the "slow" physics. This 
+includes the tendency due to advection, but also any tendencies due to other non-physics processes, e.g. "fast"
+physics, coupling to external components, data assimilation, etc. Within the SCM, this diagnostic is used as the 
+forcing term for each state variable. Although one can achieve results as close as possible between a UFS column 
+and the single column model using this method, it will NOT be bit-for-bit for many reasons. Some of these reasons
+include: diagnostic output is not typically instantaneous for every timestep, the UFS' vertical coordinate is 
+semi-Lagrangian and includes a remapping step as the surface pressure changes for each column, whereas the SCM
+uses a Eulerian vertical coordinate without the vertical remapping step, and some interpolation happens in the
+UFS_case_gen.py script due to the UFS initial conditions and history files using different grids. This method
+can only be used when the UFS has been configured and run with the anticipation of running the SCM using this
+forcing method afterward because it requires considerable extra disk space for the additional output.
+
+
+
 
 .. _`ufsforcingensemblegenerator`:
 
