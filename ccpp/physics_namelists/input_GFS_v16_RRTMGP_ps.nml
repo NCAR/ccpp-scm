@@ -50,7 +50,7 @@
     ldiag3d = .true.
     ldiag_ugwp = .false.
     lgfdlmprad = .true.
-    lheatstrg = .true.
+    lheatstrg = .false.
     lndp_type = 0
     lsm = 1
     lsoil = 4

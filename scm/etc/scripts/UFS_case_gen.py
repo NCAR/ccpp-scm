@@ -56,6 +56,8 @@ dist_method = 'haversine' #faster
 missing_variable_snow_layers = 3
 missing_variable_soil_layers = 4
 missing_variable_ice_layers = 2
+missing_variable_vegetation_categories = 20
+missing_variable_soil_categories = 16
 
 # Path to the directory containing processed case input files
 PROCESSED_CASE_DIR = '../../data/processed_case_input'
@@ -1686,7 +1688,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
 ########################################################################################
 #
 ########################################################################################
-def get_UFS_oro_data(dir, tile, i, j, lam):
+def get_UFS_oro_data(dir, tile, i, j, lam, old_chgres):
     """Get the orographic data for the given tile and indices"""
     
     if lam:
@@ -1721,6 +1723,9 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
     #lake variables (optional)
     lake_frac_in  = read_NetCDF_var(nc_file, "lake_frac",  i, j)
     lake_depth_in = read_NetCDF_var(nc_file, "lake_depth", i, j)
+    
+    vegtype_frac_in  = read_NetCDF_surface_var(nc_file, "vegetation_type_pct",  i, j, old_chgres, missing_variable_vegetation_categories)
+    soiltype_frac_in  = read_NetCDF_surface_var(nc_file, "soil_type_pct",  i, j, old_chgres, missing_variable_soil_categories)
 
     #
     nc_file.close()
@@ -1744,7 +1749,9 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
            "oro_uf":    orog_raw_in,
            "landfrac":  land_frac_in,
            "lakefrac":  lake_frac_in,
-           "lakedepth": lake_depth_in}
+           "lakedepth": lake_depth_in,
+           "vegtype_frac": vegtype_frac_in,
+           "soiltype_frac": soiltype_frac_in}
 
     return oro
 
@@ -3208,6 +3215,8 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
     snow_dim   = nc_file.createDimension('nsnow', len(surface["snicexy"]))
     nslsnw_dim = nc_file.createDimension('nsoil_plus_nsnow',len(surface["snicexy"]) + len(surface["stc"]))
     ice_dim    = nc_file.createDimension('nice',  len(surface["tiice"]))
+    vegcat_dim = nc_file.createDimension('nvegcat', len(oro["vegtype_frac"]))
+    soilcat_dim =nc_file.createDimension('nsoilcat', len(oro["soiltype_frac"]))
     
     #
     timei_var                    = nc_file.createVariable('t0', wp, ('t0'))
@@ -3388,7 +3397,9 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
                 {"name": "oro_uf",       "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "unfiltered orography"}, \
                 {"name": "landfrac",     "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "fraction of horizontal grid area occupied by land"}, \
                 {"name": "lakefrac",     "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "fraction of horizontal grid area occupied by lake", "default_value":0}, \
-                {"name": "lakedepth",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "lake depth", "default_value":0}]
+                {"name": "lakedepth",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "lake depth", "default_value":0},
+                {"name": "vegtype_frac", "type":wp, "dimd": ('t0', 'nvegcat'),  "units": "none",    "desc": "fraction of horizontal grid area occupied by given vegetation category"},
+                {"name": "soiltype_frac","type":wp, "dimd": ('t0', 'nsoilcat'), "units": "none",    "desc": "fraction of horizontal grid area occupied by given soil category"}]
     #
     var_nsst = [{"name": "tref",         "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sea surface reference temperature for NSST"}, \
                 {"name": "z_c",          "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sub-layer cooling thickness for NSST"}, \
@@ -3682,7 +3693,7 @@ def main():
     check_IC_hist_surface_compatibility(forcing_dir, hist_i, hist_j, surface_data, lam, old_chgres, tile)
     
     #read in orographic data for the initial conditions at the IC point
-    oro_data = get_UFS_oro_data(in_dir, tile, IC_i, IC_j, lam)
+    oro_data = get_UFS_oro_data(in_dir, tile, IC_i, IC_j, lam, old_chgres)
     
     #read in the initial condition profiles
     

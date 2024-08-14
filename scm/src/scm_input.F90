@@ -13,6 +13,8 @@ implicit none
 integer :: missing_snow_layers = 3
 integer :: missing_soil_layers = 4
 integer :: missing_ice_layers = 2
+integer :: missing_nvegcat = 20
+integer :: missing_nsoilcat = 16
 
 contains
 
@@ -218,6 +220,7 @@ subroutine get_case_init(scm_state, scm_input)
   integer                     :: input_nice !< number of sea ice levels in the input file
   integer                     :: input_ntimes !< number of times represented in the input file
   integer                     :: input_nsoil_plus_nsnow !< number of combined snow and soil levels in the input file
+  integer                     :: input_nvegcat, input_nsoilcat
   real(kind=dp)               :: input_lat !< column latitude (deg)
   real(kind=dp)               :: input_lon !< column longitude (deg)
   real(kind=dp)               :: input_area    !< surface area [m^2]
@@ -458,7 +461,19 @@ subroutine get_case_init(scm_state, scm_input)
   else
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nice),"nf90_inq_dim(nice)")
   end if
-
+  ierr = NF90_INQ_DIMID(ncid,"nvegcat",varID)
+  if(ierr /= NF90_NOERR) then
+    input_nvegcat = missing_nvegcat
+  else
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nvegcat),"nf90_inq_dim(nvegcat)")
+  end if
+  ierr = NF90_INQ_DIMID(ncid,"nsoilcat",varID)
+  if(ierr /= NF90_NOERR) then
+    input_nsoilcat = missing_nsoilcat
+  else
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsoilcat),"nf90_inq_dim(nsoilcat)")
+  end if
+  
   !> - Allocate the dimension variables.
   allocate(input_pres(input_nlev),input_time(input_ntimes), stat=allocate_status)
 
@@ -713,8 +728,8 @@ subroutine get_case_init(scm_state, scm_input)
 
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
 
-  call scm_input%create(input_ntimes, input_nlev, input_nsoil, input_nsnow, input_nice)
-
+  call scm_input%create(input_ntimes, input_nlev, input_nsoil, input_nsnow, input_nice, input_nvegcat, input_nsoilcat)
+    
   ! GJF already done in scm_input%create routine
   !scm_input%input_nlev = input_nlev
   !scm_input%input_ntimes = input_ntimes
@@ -1049,7 +1064,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_landfrac(:) !< fraction of horizontal grid area occupied by land
   real(kind=dp), allocatable  :: input_lakefrac(:) !< fraction of horizontal grid area occupied by lake
   real(kind=dp), allocatable  :: input_lakedepth(:) !< lake depth (m)
-
+  real(kind=dp), allocatable  :: input_vegtype_frac(:,:) !< fraction of horizontal grid area occupied by given vegetation category
+  real(kind=dp), allocatable  :: input_soiltype_frac(:,:) !< fraction of horizontal grid area occupied by given soil category
+  
   real(kind=dp), allocatable  :: input_tvxy(:) !< vegetation temperature (K)
   real(kind=dp), allocatable  :: input_tgxy(:) !< ground temperature for Noahmp (K)
   real(kind=dp), allocatable  :: input_tahxy(:) !< canopy air temperature (K)
@@ -1164,8 +1181,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   integer :: jdat(1:8), idat(1:8) !(yr, mon, day, t-zone, hr, min, sec, mil-sec)
   logical :: needed_for_lsm_ics, needed_for_model_ics, lev_in_altitude
 
-  integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_snow, input_n_ice, input_n_soil
-
+  integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_snow, input_n_ice, input_n_soil, input_nvegcat, input_nsoilcat
+  
   missing_value_eps = missing_value + 0.01
 
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
@@ -1213,7 +1230,19 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_n_ice),"nf90_inq_dim(nice)")
   end if
-
+  ierr = NF90_INQ_DIMID(ncid,"nvegcat",varID)
+  if(ierr /= NF90_NOERR) then
+    input_nvegcat = missing_nvegcat
+  else
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nvegcat),"nf90_inq_dim(nvegcat)")
+  end if
+  ierr = NF90_INQ_DIMID(ncid,"nsoilcat",varID)
+  if(ierr /= NF90_NOERR) then
+    input_nsoilcat = missing_nsoilcat
+  else
+    call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsoilcat),"nf90_inq_dim(nsoilcat)")
+  end if  
+  
   !> - Allocate the dimension variables.
   allocate(input_t0    (input_n_init_times),                                        &
            input_time  (input_n_forcing_times),                                     &
@@ -1398,6 +1427,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_landfrac  (          input_n_init_times), &
              input_lakefrac  (          input_n_init_times), &
              input_lakedepth (          input_n_init_times), &
+             input_vegtype_frac (input_nvegcat, input_n_init_times), &
+             input_soiltype_frac (input_nsoilcat, input_n_init_times),&
              stat=allocate_status)
     allocate(input_tvxy      (          input_n_init_times), &
              input_tgxy      (          input_n_init_times), &
@@ -1539,6 +1570,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "landfrac",  needed_for_model_ics, input_landfrac)
   call NetCDF_read_var(ncid, "lakefrac",  needed_for_model_ics, input_lakefrac)
   call NetCDF_read_var(ncid, "lakedepth", needed_for_model_ics, input_lakedepth)
+  call NetCDF_read_var(ncid, "vegtype_frac", needed_for_model_ics, input_vegtype_frac)
+  call NetCDF_read_var(ncid, "soiltype_frac", needed_for_model_ics, input_soiltype_frac)
     
   !NSST variables
   call NetCDF_read_var(ncid, "tref",    needed_for_model_ics, input_tref)
@@ -1800,9 +1833,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   
   
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
-
-  call scm_input%create(input_n_forcing_times, input_n_lev, input_n_soil, input_n_snow, input_n_ice)
-
+  
+  call scm_input%create(input_n_forcing_times, input_n_lev, input_n_soil, input_n_snow, input_n_ice, input_nvegcat, input_nsoilcat)
+  
   !fill the scm_input DDT
 
   !There may need to be logic to control which of the lon, lat, and init_times to use in the future, but for now, just take the first
@@ -2042,7 +2075,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_landfrac = input_landfrac(active_init_time)
     scm_input%input_lakefrac = input_lakefrac(active_init_time)
     scm_input%input_lakedepth= input_lakedepth(active_init_time)
-
+    scm_input%input_vegtype_frac = input_vegtype_frac(:,active_init_time)
+    scm_input%input_soiltype_frac = input_soiltype_frac(:,active_init_time)
+    
     scm_input%input_tref    = input_tref(active_init_time)
     scm_input%input_z_c     = input_z_c(active_init_time)
     scm_input%input_c_0     = input_c_0(active_init_time)

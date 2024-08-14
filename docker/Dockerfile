@@ -102,9 +102,11 @@ RUN cd /comsoftware/ccpp-scm/ \
 #USER comuser
 
 # Set working directory
-WORKDIR /comsoftware/ccpp-scm/scm/bin
+WORKDIR /comsoftware/ccpp-scm/
 ENV SCM_WORK=/comsoftware
 ENV SCM_ROOT=/comsoftware/ccpp-scm/
 
 # For interactive use, vim mouse settings are infuriating
 RUN echo "set mouse=" > ~/.vimrc
+
+ENTRYPOINT ["sh", "-c", "./contrib/get_aerosol_climo.sh && cd /comsoftware/ccpp-scm/scm/bin"]

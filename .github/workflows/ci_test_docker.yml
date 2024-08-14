@@ -28,4 +28,4 @@ jobs:
         run: |
           mkdir $HOME/output
           chmod a+rw $HOME/output
-          docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d
+          docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "mpirun -np 1 --allow-run-as-root" -d

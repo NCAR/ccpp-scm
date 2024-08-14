@@ -553,7 +553,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       do k=1, km+1
         pres_i(:,k) = scm_state%a_k(k) + scm_state%b_k(k)*p_ref
         scm_state%si(:,k) = scm_state%a_k(k)*pres_sfc_inv + scm_state%b_k(k)
-        scm_state%exner_i(:,k) = (scm_state%pres_i(:,k)/1.0E5)**con_rocp
+        scm_state%exner_i(:,k) = (pres_i(:,k)/1.0E5)**con_rocp
       end do
       scm_state%pres_i = pres_i
 

@@ -291,10 +291,12 @@ jobs:
         make -j
 
     - name: Download data for SCM
+      if: contains(matrix.enable-gpu-acc, 'False')
       run: |
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
+        ./contrib/get_aerosol_climo.sh
 
     - name: Run SCM RTs (w/o GPU)
       if: contains(matrix.enable-gpu-acc, 'False')
