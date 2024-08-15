@@ -135,6 +135,7 @@ module scm_type_defs
     real(kind=dp)                           :: dt !< physics time step (s)
     real(kind=dp)                           :: dt_now !< time step currently being used (if it changes due to time-stepping scheme)
     real(kind=dp)                           :: runtime !< total runtime (s)
+    real(kind=dp)                           :: runtime_mult !< runtime multiplier
     real(kind=dp)                           :: output_period !< how often output is written (s)
     real(kind=dp)                           :: relax_time !< time scale for hor. wind nudging (s)
     real(kind=dp)                           :: deg_to_rad_const !< conversion constant from degrees to radians
@@ -561,6 +562,7 @@ module scm_type_defs
     scm_state%dt = real_zero
     scm_state%dt_now = real_zero
     scm_state%runtime = real_zero
+    scm_state%runtime_mult = 1.0
     scm_state%output_period = real_zero
     scm_state%relax_time = real_zero
     scm_state%deg_to_rad_const = real_zero

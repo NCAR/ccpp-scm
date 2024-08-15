@@ -41,6 +41,7 @@ subroutine get_config_nml(scm_state)
   character(len=character_length)    :: case_name !< name of case initialization and forcing dataset
   real(kind=dp)        :: dt !< time step in seconds
   real(kind=dp)        :: runtime !< total runtime in seconds
+  real(kind=dp)        :: runtime_mult !< runtime multiplier
   integer              :: n_itt_out !< multiple of timestep for writing output
   integer              :: n_itt_diag !< multiple of timestep for resetting diagnostics (overwrites fhzero from physics namelist if present)
   integer              :: n_levels !< number of model levels (currently only 64 supported)
@@ -77,7 +78,7 @@ subroutine get_config_nml(scm_state)
 
   CHARACTER(LEN=*), parameter :: experiment_namelist = 'input_experiment.nml'
 
-  NAMELIST /case_config/ npz_type, vert_coord_file, case_name, dt, runtime, n_itt_out, n_itt_diag, &
+  NAMELIST /case_config/ npz_type, vert_coord_file, case_name, dt, runtime, runtime_mult, n_itt_out, n_itt_diag, &
     n_levels, output_dir, thermo_forcing_type, model_ics, &
     lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
     sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, &
@@ -95,7 +96,8 @@ subroutine get_config_nml(scm_state)
   case_name = 'twpice'
   dt = 600.0
   time_scheme = 1
-  runtime = 2138400.0
+  runtime = 0.0
+  runtime_mult = 1.0
   n_itt_out = 1
   n_itt_diag = -999
   n_levels = 127
@@ -179,6 +181,7 @@ subroutine get_config_nml(scm_state)
   scm_state%n_itt_out = n_itt_out
   scm_state%n_itt_diag = n_itt_diag
   scm_state%runtime = runtime
+  scm_state%runtime_mult = runtime_mult
   scm_state%time_scheme = time_scheme
   scm_state%init_year = year
   scm_state%init_month = month
@@ -211,7 +214,7 @@ end subroutine get_config_nml
 subroutine get_case_init(scm_state, scm_input)
   use scm_type_defs, only : scm_state_type, scm_input_type
   use NetCDF_read, only: NetCDF_read_var, check, missing_value
-  type(scm_state_type), intent(in) :: scm_state
+  type(scm_state_type), intent(inout) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
 
   integer                     :: input_nlev !< number of levels in the input file
@@ -932,6 +935,9 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_emis_ice        = input_emis_ice
   scm_input%input_lai             = input_lai
 
+  if (scm_state%runtime_mult /= 1.0) then
+    scm_state%runtime = scm_state%runtime*scm_state%runtime_mult
+  end if
 !> @}
 end subroutine get_case_init
 
@@ -1867,7 +1873,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   scm_state%init_day = init_day
   scm_state%init_hour = init_hour
   scm_state%init_min = init_min
-  scm_state%runtime = elapsed_sec
+  if (scm_state%runtime > 0.0) then
+    !runtime is provided in the case configuration namelist - should override what is in the DEPHY file
+    if (scm_state%runtime_mult /= 1.0) then
+      scm_state%runtime = scm_state%runtime*scm_state%runtime_mult
+    end if
+  else
+    scm_state%runtime = elapsed_sec*scm_state%runtime_mult
+  end if
 
   scm_input%input_time = input_time
   scm_input%input_pres_surf(1) = input_pres_surf(active_init_time) !perhaps input_pres_surf should only be equal to input_force_pres_surf?
