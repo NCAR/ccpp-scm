@@ -261,7 +261,7 @@ class Experiment(object):
 
         if runtime_mult:
             self._runtime_mult = runtime_mult
-            message = 'Existing case namelist runtime multiplied by {0}'.format(self._runtime_mult)
+            message = 'Existing case namelist or DEPHY runtime multiplied by {0}'.format(self._runtime_mult)
             logging.debug(message)
         else:
             self._runtime_mult = None
@@ -460,11 +460,9 @@ class Experiment(object):
                 message = 'The --runtime_mult argument must be greater than 0 ({0} was entered)'.format(self._runtime_mult)
                 logging.critical(message)
                 raise Exception(message)
-            try:
-                old_runtime = case_nml['case_config']['runtime']
-                case_nml['case_config']['runtime'] = old_runtime*self._runtime_mult
-            except KeyError:
-                logging.info('The runtime multiplier argument was set, but the runtime is not set in {0} '.format(self._namelist))
+            else:
+                case_nml['case_config']['runtime_mult'] = self._runtime_mult
+                    
         # If the number of levels is specified, set the namelist value
         if self._levels:
             case_nml['case_config']['n_levels'] = self._levels

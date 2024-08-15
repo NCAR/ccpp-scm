@@ -24,7 +24,7 @@ else()
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(_ccpp_suites_arg "--suites=${suite_string}")
-    message("Calling CCPP code generator (ccpp_prebuild.py) for SUPPORTED suites ${_ccpp_suites_arg} ...")
+    message("Calling CCPP code generator (ccpp_prebuild.py) for suites listed in scm/src/suite_info.py: ${_ccpp_suites_arg}.")
 endif()
 # Run CCPP prebuild.py
 message (STATUS "Running ccpp_prebuild.py for CCPP")
