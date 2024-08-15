@@ -369,7 +369,8 @@ Notes Regarding Implemented Forcing Methods
 The ``--forcing_method`` option hides some complexity that should be understood when running this script since 
 each method has a particular use case and produces potentially very different forcing terms. Forcing method 1 is 
 designed to be used in concert with the three-dimensional UFS. I.e., the UFS must be run with diagnostic tendencies 
-activated so that the `nophysics` term is calculated and output for all grid points. This diagnostic term 
+activated so that the `nophysics` term is calculated and output for all grid points 
+(see https://ccpp-techdoc.readthedocs.io/en/latest/ParamSpecificOutput.html#tendencies). This diagnostic term 
 represents the tendency produced for each state variable by the UFS between calls to the "slow" physics. This 
 includes the tendency due to advection, but also any tendencies due to other non-physics processes, e.g. "fast"
 physics, coupling to external components, data assimilation, etc. Within the SCM, this diagnostic is used as the 
@@ -382,8 +383,44 @@ UFS_case_gen.py script due to the UFS initial conditions and history files using
 can only be used when the UFS has been configured and run with the anticipation of running the SCM using this
 forcing method afterward because it requires considerable extra disk space for the additional output.
 
+The `--forcing_method` 2 option is the most general in the sense that the same method could apply to any three-dimensional 
+model output. For a given column, it uses a configurable number of neighboring grid points to calculate the horizontal 
+advective tendencies using the horizontal components of the three-dimensional wind and horizontal derivatives of the 
+state variables. Note that the script performs some smoothing in the vertical profiles used to calculate the advective 
+terms in order to eliminate small-scale noise in the forcing terms and the derivatives are calculated using a second- or
+fourth-order centered difference scheme, depending on the number of neighboring points used. Vertical advective terms 
+are calculated based on the specification of `--vertical_method` (-vm). For vertical_method 1, the vertical advective 
+terms are calculated from the history files using UFS vertical velocities and the same modeled smoothed vertical profiles 
+of the state variables using the upstream scheme. Note that while the horizontal terms use neighboring points, the vertical 
+advective terms only use the central, chosen column. This method is sometimes referred to as "total advective forcing" and
+tends to be less "responsive" to the SCM-modeled state. I.e., a SCM run using vertical method 2 has a greater chance of 
+deviating from the UFS column state and not being able to "recover". For this reason, vertical method 2 is often used 
+in the literature, whereby the vertical velocity profile from the three-dimensional model is provided as forcing to the SCM
+and the vertical advective terms are calculated during the SCM integration using the SCM-modeled state variable profiles.
 
+The final forcing method, 3, uses the three-dimensional history files to calculate profiles of the total time-rate of change
+of the state variables to use as forcing for the SCM. Note that this is tantamount to strongly nudging the SCM state to the 
+UFS state and already intrinsically includes both the physics and dynamics tendencies. While a simulation using this forcing 
+is more-or-less guaranteed to produce a SCM simulation that closely matches the three-dimensional output of the state variables,
+it strongly minimizes the contribution of physics in the SCM simulation. Indeed, an SCM simulation without running a physics suite 
+at all would still be expected to closely track the mean state of the three-dimensional column, so this method will likely be of 
+limited use for physics studies.
 
+Forcing the horizontal components of the wind can be notoriously difficult in SCMs, and the most straightforward method is to 
+simply nudge them to the three-dimensional modeled state. This method is achieved by using the `--wind_nudge` (-wn) option and uses a nudging 
+timescale of one hour. It should be possible to calculate a nudging timescale based on the magnitude of the wind in the neighboring 
+grid cells, although this is not implemented yet.
+
+The second method to force the horizontal wind components is to calculate the geostrophic wind using the "large scale" pressure 
+gradient from the three-dimensional model. This is achieved by using the `--geostrophic` (-geos) option. What qualifies as large 
+enough of a horizontal gridscale to achieve geostrophic balance is when the Rossby number is much less than one. The script uses a 
+configurable Rossby number (around 0.1) to expand the number of neighboring grid points such that geostrophic balance can be assumed 
+given the particular UFS history file grid. The geostrophic winds are calculated using the horizontal geopotential gradient and the 
+local latitude-dependent Coriolis parameter. From the PBL top downward, the geostrophic winds are assumed to go to zero. In testing 
+with this method, if the initial horizontal winds have a significant ageostrophic component (the initial condition winds are 
+appreciably different than the calculated geostrophic winds), this often leads to spurious clockwise turning of the mean modeled winds 
+with time. An option exists within the script to assume that the mean three-dimensional winds are, in fact, identical to the 
+geostrophic winds as well. Using this option eliminates any spurious turning.
 
 .. _`ufsforcingensemblegenerator`:
 
