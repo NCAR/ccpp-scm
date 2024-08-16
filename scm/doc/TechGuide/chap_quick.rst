@@ -860,12 +860,12 @@ Running the Docker image
 
 #. To run the SCM, you can run the Docker container that was just
    created and give it the same run commands as discussed in :numref:`Section %s <singlerunscript>`
-   **Be sure to remember to include the ``-d``
-   include the option for all run commands**. For example,
+   **Be sure to remember to include the ``-d`` and ``--mpi_command "mpirun -np 1 --allow-run-as-root"`` 
+   options for all run commands**. For example,
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice -d
+      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice --mpi_command "mpirun -np 1 --allow-run-as-root" -d
 
    will run through the TWPICE case using the default suite and namelist
    and put the output in the shared directory.
@@ -878,7 +878,7 @@ Running the Docker image
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d
+      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "mpirun -np 1 --allow-run-as-root" -d
 
    The options included in the above ``run`` commands are the following:
 
