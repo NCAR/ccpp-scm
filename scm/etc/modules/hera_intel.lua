@@ -9,10 +9,10 @@ prepend_path("MODULEPATH", "/scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-s
 
 load("stack-intel/2021.5.0")
 load("stack-intel-oneapi-mpi/2021.5.1")
-load("cmake/3.23.1")
 load("stack-python/3.10.13")
 load("py-f90nml")
 load("py-netcdf4/1.5.8")
+load("cmake/3.23.1")
 
 load("netcdf-c/4.9.2")
 load("netcdf-fortran/4.6.1")

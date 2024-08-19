@@ -461,12 +461,15 @@ def find_lon_lat_of_indices(indices, dir, tile, lam):
 ########################################################################################
 #
 ########################################################################################
-def find_loc_indices_UFS_history(loc, dir):
+def find_loc_indices_UFS_history(loc, dir, lam):
     """Find the nearest neighbor UFS history file grid point given a lon/lat pair"""
     #returns the indices of the nearest neighbor point in the given tile, the lon/lat of the nearest neighbor, 
     #and the distance (m) from the given point to the nearest neighbor grid cell
-    
-    filename_pattern = 'atmf000.nc'
+
+    if lam:
+        filename_pattern = 'dynf000.nc'
+    else: 
+        filename_pattern = 'atmf000.nc'
     
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
@@ -659,7 +662,7 @@ def check_IC_hist_surface_compatibility(dir, i, j, surface_data, lam, old_chgres
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        filename_pattern = '*sfcf000.tile{}.nc'.format(tile)
+        filename_pattern = '*phyf000.nc'
     else:
         filename_pattern = '*sfcf000.nc'
     
@@ -740,7 +743,7 @@ def get_IC_data_from_UFS_history(dir, i, j, lam, tile):
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        filename_pattern = '*atmf000.tile{}.nc'.format(tile)
+        filename_pattern = '*dynf000.nc'
     else:
         filename_pattern = '*atmf000.nc'
     
@@ -1963,8 +1966,8 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
-        sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
+        atm_ftag = '*dynf*.nc'
+        sfc_ftag = '*phyf*.nc'
     else:
         atm_ftag = '*atmf*.nc'
         sfc_ftag = '*sfcf*.nc'
@@ -2315,8 +2318,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
 
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
-        sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
+        atm_ftag = '*dynf*.nc'
+        sfc_ftag = '*phyf*.nc'
     else:
         atm_ftag = '*atmf*.nc'
         sfc_ftag = '*sfcf*.nc'
@@ -3636,9 +3639,12 @@ def write_comparison_file(comp_data, case_name, date, surface):
 ########################################################################################
 #
 ########################################################################################
-def find_date(forcing_dir):
-    
-    atm_ftag = '*atmf*.nc'
+def find_date(forcing_dir, lam):
+
+    if lam:
+        atm_ftag = '*dynf*.nc'
+    else:    
+        atm_ftag = '*atmf*.nc'
     
     atm_filenames = []
     for f_name in os.listdir(forcing_dir):
@@ -3679,7 +3685,7 @@ def main():
      old_chgres, lam, save_comp, use_nearest, forcing_method, vertical_method, geos_wind_forcing, wind_nudge) = parse_arguments()
     
     #find indices corresponding to both UFS history files and initial condition (IC) files
-    (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir)
+    (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir, lam)
     
     (IC_i, IC_j, tile, IC_lon, IC_lat, IC_dist_min, angle_to_IC_point) = find_loc_indices_UFS_IC(location, grid_dir, lam, tile, indices)
         
@@ -3715,7 +3721,7 @@ def main():
 
     if not date:
         # date was not included on command line; look in atmf* file for initial date
-        date = find_date(forcing_dir)
+        date = find_date(forcing_dir, lam)
     
     #get grid cell area if not given
     if not area:
