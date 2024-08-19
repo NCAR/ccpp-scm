@@ -12,10 +12,10 @@ prepend_path("MODULEPATH", "/scratch2/NCEPDEV/stmp1/role.epic/spack-stack/spack-
 
 load("stack-gcc/13.3.0")
 load("stack-openmpi/4.1.6")
-load("cmake/3.23.1")
 load("stack-python/3.10.13")
 load("py-f90nml")
 load("py-netcdf4/1.5.8")
+load("cmake/3.23.1")
 
 load("netcdf-c/4.9.2")
 load("netcdf-fortran/4.6.1")

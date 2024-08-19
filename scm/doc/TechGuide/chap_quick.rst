@@ -214,13 +214,24 @@ However, we have provided an example procedure in
 The main downside to spack-stack is that it contains a large number of libraries and utilities used by the whole
 Unified Forecast System and related applications, only a minority of which are required for the SCM. Users may
 install libraries manually if they wish, but they will need to make sure the appropriate environment variables
-are set to the correct values so that the build system can find them, as described in the following chapter.
+are set to the correct values so that the build system can find them, as described in the following paragraphs.
 
 
+<<<<<<< HEAD
 Setting up compilation environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For users on a pre-configured platform, the spack-stack environment can be loaded via one of the provided modules in ``scm/etc/modules/`` as described in :numref:`Section %s <use_preconfigured_platforms>`.
+=======
+For users on a pre-configured platform, you can load the spack-stack environment via one of the provided modules in ``scm/etc/modules/``.
+For example, users on the NSF NCAR machine Derecho who wish to use Intel compilers can do the following:
+
+::
+
+   cd [path/to/ccpp-scm/]
+   module use scm/etc/modules/
+   module load derecho_intel
+>>>>>>> feature/modulefile_updates
 
 Additionally, for users who have installed spack-stack on their own MacOS or Linux machine can use the provided ``macos_clang``
 or ``linux_gnu`` modules.
@@ -237,6 +248,19 @@ compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the lib
 provided Dockerfile in ``ccpp-scm/docker/``, so users can reference that file for guidance on how to install this software
 and set these variables.
 
+If libraries were installed via spack-stack, users can load modules similarly to those available on pre-configured platforms.
+For a user on MacOS, who has installed spack-stack with ``clang``/``gfortran`` compilers, they can set up the build environment
+by setting the SPACK_STACK_DIR variable to the appropriate path, and loading the module as on pre-configured platforms described above.
+
+::
+
+   export SPACK_STACK_DIR=[/path/to/spack-stack]
+   cd [path/to/ccpp-scm/]
+   module use scm/etc/modules/
+   module load macos_clang
+
+A module file is also provided for a generic linux platform with gnu compilers. For other platforms/combinations, you may be able
+to modify the provided modulefiles to work with your spack-stack install, otherwise reference the above procedure for manually installed libraries.
 
 Python requirements
 """""""""""""""""""""
@@ -487,7 +511,7 @@ If using the main branch, you should run the above command to ensure you have th
 
 -  ``--case [-c]``
 
-   -  **This is the only required argument.** The provided argument should correspond to the name of a case in
+   -  The provided argument should correspond to the name of a case in
       ``../etc/case_config`` (without the ``.nml`` extension).
 
 -  ``--suite [-s]``
@@ -589,7 +613,11 @@ configuration files located in ``../etc/case_config`` (*without the .nml extensi
 specifying a suite other than the default, the suite name used must
 match the value of the suite name in one of the suite definition files
 located in ``../../ccpp/suites`` (Note: not the filename of the suite definition file). As
+<<<<<<< HEAD
 part of the CCPP SCM v7.0.0 release, the following suite names are supported:
+=======
+part of the seventh CCPP release, the following suite names are supported:
+>>>>>>> feature/modulefile_updates
 
 #. SCM_GFS_v16
 
