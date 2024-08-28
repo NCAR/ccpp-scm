@@ -422,6 +422,16 @@ appreciably different than the calculated geostrophic winds), this often leads t
 with time. An option exists within the script to assume that the mean three-dimensional winds are, in fact, identical to the 
 geostrophic winds as well. Using this option eliminates any spurious turning.
 
+Writing UFS Comparison Data
+
+The `--save_comp` (or `-sc`) options allow one to write out the UFS data for the chosen column in NetCDF format. The profiles of the state variables 
+`u`, `v`, `T`, and `q_v` are written out for the given point for each history file time. In addition, a collection of other 
+diagnostics like profiles of physics tendencies and scalar surface variables are saved and written. One can include any variable that is
+provided in the UFS history files, although the specific variables are hard-coded in the `UFS_case_gen.py` file which will require editing
+to change. The file with comparison data is automatically written out to the `scm/data/comparison_data` directory, although this is controlled
+by the `COMPARISON_DATA_DIR` global variable in the `UFS_case_gen.py` script. The filename is a concatenation of the case name (specified by the 
+`--case_name (-n)` argument) and `_comp_data.nc`.
+
 .. _`ufsforcingensemblegenerator`:
 
 UFS_forcing_ensemble_generator.py
