@@ -298,6 +298,21 @@ Activate environment:
 
   > conda activate env_ufscasegen
 
+.. note::
+  
+It may be possible for conda to fail to solve for the environment when attempting to use the yml file. It 
+should still be possible to create the same environment manually:
+.. code:: bash
+
+  > conda create --name env_ufscasegen
+  > conda install -n env_ufscasegen --channel=conda-forge python=3.8.5
+  > conda install -n env_ufscasegen --channel=conda-forge netcdf4
+  > conda install -n env_ufscasegen --channel=conda-forge f90nml
+  > conda install -n env_ufscasegen --channel=conda-forge xarray
+  > conda install -n env_ufscasegen --channel=conda-forge numpy
+  > conda install -n env_ufscasegen --channel=conda-forge shapely
+  > conda install -n env_ufscasegen --channel=conda-forge xesmf
+
 .. _`ufscasegen`:
 
 UFS_case_gen.py
