@@ -297,10 +297,8 @@ Activate environment:
 .. code:: bash
 
   > conda activate env_ufscasegen
-
-.. note::
   
-It may be possible for conda to fail to solve for the environment when attempting to use the yml file. It 
+Note that it may be possible for conda to fail to solve for the environment when attempting to use the yml file. It 
 should still be possible to create the same environment manually:
 
 .. code:: bash
