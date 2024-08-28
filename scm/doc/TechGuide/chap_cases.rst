@@ -453,7 +453,8 @@ UFS_forcing_ensemble_generator.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There is an additional script in ``scm/etc/scripts/UFS_forcing_ensemble_generator.py`` to create UFS-caseGen case(s) starting
-with output from UFS Weather Model (UWM) Regression Tests (RTs).
+with output from UFS Weather Model (UWM) Regression Tests (RTs). This script provides a wrapper for ``UFS_case_gen.py`` for
+generating multiple cases at once.
 
 .. code:: bash
 
@@ -514,11 +515,12 @@ staged UWM RTs located at:
 Example 1: UFS-caseGen for single point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-UFS regression test, ``control_c192``, for single point.
+UFS regression test, ``control_c192``, for a single point using calculated horizontal advective tendencies,
+supplying the vertical velocity for the vertical advective terms and nudging the horizontal winds:
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
+   ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34 -fm 2 -vm 2 -wn
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
@@ -534,11 +536,11 @@ The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, whe
 Example 2: UFS-caseGen for list of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-UFS regression test, ``control_c384``, for multiple points.
+UFS regression test, ``control_c384``, for multiple points assuming the same forcing method as above:
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37
+   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37 -fm 2 -vm 2 -wn
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
