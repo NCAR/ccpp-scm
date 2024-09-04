@@ -32,10 +32,6 @@ DEFAULT_RUN_DIR = 'scm/run'
 # Path to default bin directory (relative to scm_root)
 DEFAULT_BIN_DIR = 'scm/bin'
 
-# Default command string to run MPI apps (number of processes should be 1 since SCM is not set up to use more than 1 yet)
-DEFAULT_MPI_COMMAND = 'mpirun -np 1'
-
-
 # Copy executable to run directory if true (otherwise it will be linked)
 COPY_EXECUTABLE = False
 
@@ -125,7 +121,7 @@ parser.add_argument('-dt', '--timestep',  help='timestep (s)', required=False, t
 parser.add_argument('--stop_on_error',    help='when running multiple SCM runs, stop on first error', required=False, action='store_true')
 parser.add_argument('-v', '--verbose',    help='set logging level to debug and write log to file', action='count', default=0)
 parser.add_argument('-f', '--file',       help='name of file where SCM runs are defined')
-parser.add_argument('--mpi_command',      help='command used to invoke the executable via MPI (including options)', required=False)
+parser.add_argument('--mpi_command',      help='command used to invoke the executable via MPI (including options)', required=False, default=False)
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -465,7 +461,7 @@ class Experiment(object):
                 raise Exception(message)
             else:
                 case_nml['case_config']['runtime_mult'] = self._runtime_mult
-                    
+
         # If the number of levels is specified, set the namelist value
         if self._levels:
             case_nml['case_config']['n_levels'] = self._levels
@@ -727,13 +723,16 @@ class Experiment(object):
 
 def launch_executable(use_gdb, gdb, mpi_command, ignore_error = False):
     """Configure model run command and pass control to shell/gdb"""
+
+    # If mpi_command flag not passed default to '' to allow it to run on login nodes
+    if not mpi_command:
+        mpi_command = ''
     if use_gdb:
-        if not mpi_command:
-            mpi_command = DEFAULT_MPI_COMMAND + ' xterm -e '
+        if mpi_command != '' and ('xterm' not in mpi_command):
+            logging.info("run_scm.py debug flag adds 'xterm -e' to MPI command")
+            mpi_command += ' xterm -e '
         cmd = '(cd {scm_run} && {mpi_command} {gdb} {executable})'.format(scm_run=SCM_RUN, mpi_command=mpi_command, gdb=gdb, executable=EXECUTABLE)
     else:
-        if not mpi_command:
-            mpi_command = DEFAULT_MPI_COMMAND
         cmd = '(cd {scm_run} && time {mpi_command} {executable})'.format(scm_run=SCM_RUN, mpi_command=mpi_command, executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
     time.sleep(1)
