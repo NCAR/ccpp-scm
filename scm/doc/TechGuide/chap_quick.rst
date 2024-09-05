@@ -216,13 +216,6 @@ Unified Forecast System and related applications, only a minority of which are r
 install libraries manually if they wish, but they will need to make sure the appropriate environment variables
 are set to the correct values so that the build system can find them, as described in the following paragraphs.
 
-
-<<<<<<< HEAD
-Setting up compilation environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For users on a pre-configured platform, the spack-stack environment can be loaded via one of the provided modules in ``scm/etc/modules/`` as described in :numref:`Section %s <use_preconfigured_platforms>`.
-=======
 For users on a pre-configured platform, you can load the spack-stack environment via one of the provided modules in ``scm/etc/modules/``.
 For example, users on the NSF NCAR machine Derecho who wish to use Intel compilers can do the following:
 
@@ -231,7 +224,6 @@ For example, users on the NSF NCAR machine Derecho who wish to use Intel compile
    cd [path/to/ccpp-scm/]
    module use scm/etc/modules/
    module load derecho_intel
->>>>>>> feature/modulefile_updates
 
 Additionally, for users who have installed spack-stack on their own MacOS or Linux machine can use the provided ``macos_clang``
 or ``linux_gnu`` modules.
@@ -613,11 +605,7 @@ configuration files located in ``../etc/case_config`` (*without the .nml extensi
 specifying a suite other than the default, the suite name used must
 match the value of the suite name in one of the suite definition files
 located in ``../../ccpp/suites`` (Note: not the filename of the suite definition file). As
-<<<<<<< HEAD
-part of the CCPP SCM v7.0.0 release, the following suite names are supported:
-=======
 part of the seventh CCPP release, the following suite names are supported:
->>>>>>> feature/modulefile_updates
 
 #. SCM_GFS_v16
 
