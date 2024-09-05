@@ -1,4 +1,4 @@
-name: scm_py37_tutorial
+name: env_scm_analysis
 
 dependencies:
   - conda-forge::python=3.7
