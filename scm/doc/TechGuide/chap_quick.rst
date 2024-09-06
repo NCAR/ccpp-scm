@@ -594,6 +594,12 @@ If using the main branch, you should run the above command to ensure you have th
    -  Use this to specify the timestep to use (if different than the
       default specified in ``../src/suite_info.py``).
 
+-  ``--mpi_command``
+
+   -  Provide argument to define the MPI command that will be invoked.
+      Default MPI command is ``mpirun -np 1``.
+      (Note: to run on a Derecho login node the empty argument ``--mpi_command ''`` is required.)
+
 -  ``--verbose [-v]``
 
    -  Use this option to see additional debugging output from the run
@@ -876,7 +882,7 @@ Running the Docker image
 
 #. To run the SCM, you can run the Docker container that was just
    created and give it the same run commands as discussed in :numref:`Section %s <singlerunscript>`
-   **Be sure to remember to include the ``-d`` and ``--mpi_command "mpirun -np 1 --allow-run-as-root"`` 
+   **Be sure to remember to include the ``-d`` and ``--mpi_command "mpirun -np 1 --allow-run-as-root"``
    options for all run commands**. For example,
 
    .. code:: bash
