@@ -121,7 +121,7 @@ parser.add_argument('-dt', '--timestep',  help='timestep (s)', required=False, t
 parser.add_argument('--stop_on_error',    help='when running multiple SCM runs, stop on first error', required=False, action='store_true')
 parser.add_argument('-v', '--verbose',    help='set logging level to debug and write log to file', action='count', default=0)
 parser.add_argument('-f', '--file',       help='name of file where SCM runs are defined')
-parser.add_argument('--mpi_command',      help='command used to invoke the executable via MPI (including options)', required=False, default='')
+parser.add_argument('--mpi_command',      help='command used to invoke the executable via MPI (including options)', required=False, default='mpirun -np 1')
 
 ###############################################################################
 # Functions and subroutines                                                   #
