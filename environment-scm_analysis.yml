@@ -5,3 +5,5 @@ dependencies:
   - conda-forge::netcdf4
   - conda-forge::f90nml
   - conda-forge::configobj
+  - conda-forge::matplotlib
+  - conda-forge::pandas
