@@ -1,4 +1,5 @@
-name: CI test to run SCM ccpp_prebuild script
+# CI test to run SCM ccpp_prebuild script
+name: build
 
 on: [push, pull_request, workflow_dispatch]
 
