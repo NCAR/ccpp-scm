@@ -76,17 +76,6 @@ module GFS_typedefs
 !    GFS_cldprop_type        !< cloud fields needed by radiation from physics
 !    GFS_radtend_type        !< radiation tendencies needed in physics
 !    GFS_diag_type           !< fields targetted for diagnostic output
-!  type(GFS_init_type)     :: GFS_init_type
-!  type(GFS_statein_type)  :: GFS_statein_type
-!  type(GFS_stateout_type) :: GFS_stateout_type
-!  type(GFS_sfcprop_type)  :: GFS_sfcprop_type
-!  type(GFS_coupling_type) :: GFS_coupling_type
-!  type(GFS_control_type)  :: GFS_control_type
-!  type(GFS_grid_type)     :: GFS_grid_type
-!  type(GFS_tbd_type)      :: GFS_tbd_type
-!  type(GFS_cldprop_type)  :: GFS_cldprop_type
-!  type(GFS_radtend_type)  :: GFS_radtend_type
-!  type(GFS_diag_type)     :: GFS_diag_type
 
 !--------------------------------------------------------------------------------
 ! GFS_init_type
@@ -2208,12 +2197,24 @@ module GFS_typedefs
 ! PUBLIC ENTITIES
 !----------------
 
-  public GFS_init_type
-  public GFS_statein_type,  GFS_stateout_type, GFS_sfcprop_type, &
-         GFS_coupling_type
-  public GFS_control_type,  GFS_grid_type,     GFS_tbd_type, &
-         GFS_cldprop_type,  GFS_radtend_type,  GFS_diag_type
-
+  type(GFS_init_type)     :: GFS_init_type_instance
+  type(GFS_statein_type)  :: GFS_statein_type_instance
+  type(GFS_stateout_type) :: GFS_stateout_type_instance
+  type(GFS_sfcprop_type)  :: GFS_sfcprop_type_instance
+  type(GFS_coupling_type) :: GFS_coupling_type_instance
+  type(GFS_control_type)  :: GFS_control_type_instance
+  type(GFS_grid_type)     :: GFS_grid_type_instance
+  type(GFS_tbd_type)      :: GFS_tbd_type_instance
+  type(GFS_cldprop_type)  :: GFS_cldprop_type_instance
+  type(GFS_radtend_type)  :: GFS_radtend_type_instance
+  type(GFS_diag_type)     :: GFS_diag_type_instance
+  
+  public GFS_init_type_instance
+  public GFS_statein_type_instance,  GFS_stateout_type_instance, GFS_sfcprop_type_instance, &
+         GFS_coupling_type_instance
+  public GFS_control_type_instance,  GFS_grid_type_instance,     GFS_tbd_type_instance, &
+         GFS_cldprop_type_instance,  GFS_radtend_type_instance,  GFS_diag_type_instance
+  
 !*******************************************************************************************
   CONTAINS
 

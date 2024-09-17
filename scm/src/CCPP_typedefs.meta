@@ -3014,3 +3014,9 @@
   units = count
   dimensions = ()
   type = integer
+[GFS_interstitial_type_instance]
+  standard_name = GFS_interstitial_type_instance
+  long_name = instance of type GFS_interstitial_type
+  units = DDT
+  dimensions = ()
+  type = GFS_interstitial_type

@@ -10158,72 +10158,72 @@
 [ccpp-arg-table]
   name = GFS_typedefs
   type = module
-#[GFS_init_type]
-#  standard_name = GFS_init_type
-#  long_name = definition of type GFS_init_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_init_type
-#[GFS_cldprop_type]
-#  standard_name = GFS_cldprop_type
-#  long_name = definition of type GFS_cldprop_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_cldprop_type
-#[GFS_control_type]
-#  standard_name = GFS_control_type
-#  long_name = definition of type GFS_control_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_control_type
-#[GFS_coupling_type]
-#  standard_name = GFS_coupling_type
-#  long_name = definition of type GFS_coupling_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_coupling_type
-#[GFS_diag_type]
-#  standard_name = GFS_diag_type
-#  long_name = definition of type GFS_diag_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_diag_type
-#[GFS_grid_type]
-#  standard_name = GFS_grid_type
-#  long_name = definition of type GFS_grid_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_grid_type
-#[GFS_radtend_type]
-#  standard_name = GFS_radtend_type
-#  long_name = definition of type GFS_radtend_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_radtend_type
-#[GFS_sfcprop_type]
-#  standard_name = GFS_sfcprop_type
-#  long_name = definition of type GFS_sfcprop_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_sfcprop_type
-#[GFS_statein_type]
-#  standard_name = GFS_statein_type
-#  long_name = definition of type GFS_statein_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_statein_type
-#[GFS_stateout_type]
-#  standard_name = GFS_stateout_type
-#  long_name = definition of type GFS_stateout_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_stateout_type
-#[GFS_tbd_type]
-#  standard_name = GFS_tbd_type
-#  long_name = definition of type GFS_tbd_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_tbd_type
+[GFS_init_type]
+  standard_name = GFS_init_type_instance
+  long_name = definition of type GFS_init_type
+  units = DDT
+  dimensions = ()
+  type = GFS_init_type
+[GFS_cldprop_type_instance]
+  standard_name = GFS_cldprop_type_instance
+  long_name = definition of type GFS_cldprop_type
+  units = DDT
+  dimensions = ()
+  type = GFS_cldprop_type
+[GFS_control_type_instance]
+  standard_name = GFS_control_type_instance
+  long_name = instance of type GFS_control_type
+  units = DDT
+  dimensions = ()
+  type = GFS_control_type
+[GFS_coupling_type_instance]
+  standard_name = GFS_coupling_type_instance
+  long_name = definition of type GFS_coupling_type
+  units = DDT
+  dimensions = ()
+  type = GFS_coupling_type
+[GFS_diag_type_instance]
+  standard_name = GFS_diag_type_instance
+  long_name = definition of type GFS_diag_type
+  units = DDT
+  dimensions = ()
+  type = GFS_diag_type
+[GFS_grid_type_instance]
+  standard_name = GFS_grid_type_instance
+  long_name = definition of type GFS_grid_type
+  units = DDT
+  dimensions = ()
+  type = GFS_grid_type
+[GFS_radtend_type_instance]
+  standard_name = GFS_radtend_type_instance
+  long_name = definition of type GFS_radtend_type
+  units = DDT
+  dimensions = ()
+  type = GFS_radtend_type
+[GFS_sfcprop_type_instance]
+  standard_name = GFS_sfcprop_type_instance
+  long_name = definition of type GFS_sfcprop_type
+  units = DDT
+  dimensions = ()
+  type = GFS_sfcprop_type
+[GFS_statein_type_instance]
+  standard_name = GFS_statein_type_instance
+  long_name = definition of type GFS_statein_type
+  units = DDT
+  dimensions = ()
+  type = GFS_statein_type
+[GFS_stateout_type_instance]
+  standard_name = GFS_stateout_type_instance
+  long_name = definition of type GFS_stateout_type
+  units = DDT
+  dimensions = ()
+  type = GFS_stateout_type
+[GFS_tbd_type_instance]
+  standard_name = GFS_tbd_type_instance
+  long_name = definition of type GFS_tbd_type
+  units = DDT
+  dimensions = ()
+  type = GFS_tbd_type
 [LTP]
   standard_name = extra_top_layer
   long_name = extra top layer for radiation

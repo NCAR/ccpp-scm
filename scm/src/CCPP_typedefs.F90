@@ -17,8 +17,6 @@ module CCPP_typedefs
 
     implicit none
 
-!    type(GFS_interstitial_type) :: GFS_interstitial_type
-
     ! To ensure that these values match what's in the physics, array
     ! sizes are compared in the auto-generated physics caps in debug mode
     ! from module_radiation_aerosols
@@ -451,6 +449,8 @@ module CCPP_typedefs
       procedure :: phys_reset  => gfs_interstitial_phys_reset !<   reset array data for physics
 
   end type GFS_interstitial_type
+
+  type(GFS_interstitial_type) :: GFS_interstitial_type_instance
 
 contains
 
