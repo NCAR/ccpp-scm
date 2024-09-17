@@ -1,3 +1,4 @@
+########################################################################
 [ccpp-table-properties]
   name = scm_state_type
   type = ddt
@@ -104,7 +105,7 @@
   type = GFS_interstitial_type
 [Init_parm]
   standard_name = GFS_init_type_instance
-  long_name = definition of type GFS_init_type
+  long_name = instance of derived type GFS_init_type
   units = DDT
   dimensions = ()
   type = GFS_init_type
@@ -112,29 +113,39 @@
 ########################################################################
 [ccpp-table-properties]
   name = scm_type_defs
-  type = module
+  type = host
+  dependencies = GFS_typedefs.F90,CCPP_typedefs.F90,ccpp_config.F90
   dependencies = scm_kinds.F90,scm_utils.F90
-  dependencies = GFS_typedefs.F90,CCPP_typedefs.F90
-  dependencies = ../../ccpp/physics/physics/hooks/machine.F
 
 [ccpp-arg-table]
   name = scm_type_defs
-  type = module
-[physics_type]
+  type = host
+[physics]
   standard_name = physics_type
-  long_name = definition of type physics_type
+  long_name = instance of derived data type physics_type
   units = DDT
   dimensions = ()
   type = physics_type
-#[physics]
-#  standard_name = physics_type_instance
-#  long_name = instance of derived data type physics_type
-#  units = DDT
-#  dimensions = ()
-#  type = physics_type
-#[cdata]
-#  standard_name = ccpp_t_instance
-#  long_name = instance of derived data type ccpp_t
-#  units = DDT
-#  dimensions = ()
-#  type = ccpp_t
+  intent = inout
+[ccpp_cfg]
+  standard_name = ccpp_configuration_instance
+  long_name = instance of derived data type ccpp_config
+  units = DDT
+  dimensions = ()
+  type = ty_ccpp_config
+  intent = in
+[errflg]
+  standard_name = ccpp_error_code
+  long_name = error code for error handling in CCPP
+  units = 1
+  dimensions = ()
+  type = integer
+  intent = out
+[errmsg]
+  standard_name = ccpp_error_message
+  long_name = error message for error handling in CCPP
+  units = none
+  dimensions = ()
+  type = character
+  kind = len=512
+  intent = out

@@ -18,10 +18,9 @@ get_filename_component(CCPP_ROOT "${TEST_ROOT}" DIRECTORY)
 # Paths should be relative to CMAKE_SOURCE_DIR (this file's directory)
 #
 #------------------------------------------------------------------------------
-LIST(APPEND SCHEME_FILES "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/scm/bin/scheme_files2.txt")
-LIST(APPEND HOST_FILES  "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/scm/bin/host_files2.txt")
-LIST(APPEND SUITE_FILES "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/ccpp/suites/suite_SCM_GFS_v16.xml")
-LIST(APPEND TYPEDEF_FILES "/home/Dustin.Swales/Projects/framework/capgen/capgen_in_scm/ccpp-scm/scm/bin/typedef_files.txt")
+LIST(APPEND SCHEME_FILES "${CCPP_ROOT}/ccpp/config/scheme_files.txt")
+LIST(APPEND HOST_FILES   "${CCPP_ROOT}/ccpp/config/host_files.txt")
+LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v16.xml")
 # HOST is the name of the executable we will build.
 # We assume there are files ${HOST}.meta and ${HOST}.F90 in CMAKE_SOURCE_DIR
 SET(HOST "${CMAKE_PROJECT_NAME}")
@@ -257,6 +256,7 @@ endif()
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
+include_directories(${MPI_Fortran_INCLUDE_PATH})
 
 #------------------------------------------------------------------------------
 # Add required preprocessor flags for build type
@@ -271,6 +271,9 @@ ADD_DEFINITIONS(-DCCPP)
 #------------------------------------------------------------------------------
 # Add host-model specific preprocessor flag (needed for some physics schemes)
 ADD_DEFINITIONS(-DSCM)
+
+ADD_DEFINITIONS(-DMPI)
+
 
 #------------------------------------------------------------------------------
 # Add model-specific flags for C/C++/Fortran preprocessor

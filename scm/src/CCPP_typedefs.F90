@@ -19,8 +19,6 @@ module CCPP_typedefs
 
 !    type(GFS_interstitial_type) :: GFS_interstitial_type
 
-    private
-
     ! To ensure that these values match what's in the physics, array
     ! sizes are compared in the auto-generated physics caps in debug mode
     ! from module_radiation_aerosols

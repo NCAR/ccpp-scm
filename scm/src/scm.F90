@@ -16,32 +16,40 @@ subroutine scm_main_sub()
   use scm_output
   use scm_type_defs
   use mpi_f08
+  use ccpp_config, only: ty_ccpp_config
 
-  use :: ccpp_static_api,                      &
-         only: ccpp_physics_init,              &
-               ccpp_physics_timestep_init,     &
-               ccpp_physics_run,               &
-               ccpp_physics_timestep_finalize, &
-               ccpp_physics_finalize
-
+  use :: SCM_ccpp_cap,  only: &
+          ccpp_physics_init              => SCM_ccpp_physics_initialize,       &
+          ccpp_physics_timestep_init     => SCM_ccpp_physics_timestep_initial, &
+          ccpp_physics_run               => SCM_ccpp_physics_run,              &
+          ccpp_physics_timestep_finalize => SCM_ccpp_physics_timestep_final,   &
+          ccpp_physics_finalize          => SCM_ccpp_physics_finalize,         &
+          ccpp_physics_suite_part_list
 
   implicit none
 
-  type(scm_state_type), target :: scm_state
-  type(scm_input_type), target :: scm_input_instance
+  type(scm_state_type),     target :: scm_state
+  type(scm_input_type),     target :: scm_input_instance
   type(scm_reference_type), target :: scm_reference
+  type(physics_type),       target :: physics
+  type(ty_ccpp_config),     target :: ccpp_cfg
+  type(MPI_Comm)                   :: fcst_mpi_comm
+  integer             :: i, j, kdt_rad, idtend, itrac
+  real(kind=8)        :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
+  integer             :: jdat(1:8)
+  integer             :: cdata_time_index
+  integer             :: ierr
+  character(len=16)   :: logfile_name
+  logical             :: in_spinup
+  integer             :: ccpp_errflg
+  character(len=512)  :: ccpp_errmsg
+  character(len=128), allocatable :: ccpp_suite_parts(:)
+  integer             :: isuite_part
 
-  type(MPI_Comm)           :: fcst_mpi_comm
-
-  integer      :: i, j, kdt_rad, idtend, itrac
-  real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
-  integer      :: jdat(1:8)
-
-  integer                           :: cdata_time_index
-  integer                           :: ierr
-  character(len=16) :: logfile_name
-  logical                           :: in_spinup
-
+  ! Initialize error handling variables.
+  ccpp_errflg = 0
+  ccpp_errmsg = ''
+  
   call MPI_INIT(ierr)
   if (ierr/=0) then
       write(*,*) 'An error occurred in MPI_INIT: ', ierr
@@ -64,8 +72,6 @@ subroutine scm_main_sub()
   call get_reference_profile(scm_state, scm_reference)
 
   call get_FV3_vgrid(scm_input_instance, scm_state)
-
-  !allocate(cdata_cols(scm_state%n_cols))
 
   call set_state(scm_input_instance, scm_reference, scm_state)
 
@@ -174,9 +180,9 @@ subroutine scm_main_sub()
       lcm(scm_state%n_itt_out,physics%Model%nslwr)*scm_state%dt," seconds."
   end if
   
-  cdata%blk_no = 1
-  cdata%thrd_no = 1
-  cdata%thrd_cnt = 1
+  ccpp_cfg%blk_no   = 1
+  ccpp_cfg%thrd_no  = 1
+  ccpp_cfg%thrd_cnt = 1
 
   call physics%associate(scm_state)
   call physics%set(scm_input_instance, scm_state)
@@ -191,12 +197,20 @@ subroutine scm_main_sub()
   endif
   
   !initialize the column's physics
-
+  write(0,'(a,i0,a)') "Calling ccpp_physics_suite_part_list with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
+  call ccpp_physics_suite_part_list(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                                    part_list  = ccpp_suite_parts, &
+                                    errmsg     = ccpp_errmsg,      &
+                                    errflg     = ccpp_errflg)
   write(0,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
-  call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
-  write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
-  if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_init(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                         physics    = physics,     &
+                         ccpp_cfg   = ccpp_cfg,    &
+                         errflg     = ccpp_errflg, &
+                         errmsg     = ccpp_errmsg)
+  write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ccpp_errflg=", ccpp_errflg
+  if (ccpp_errflg/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(ccpp_errmsg) // '. Exiting...'
       stop 1
   end if
   
@@ -218,7 +232,7 @@ subroutine scm_main_sub()
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
      !pass in state variables to be modified by forcing and physics
-     call do_time_step(scm_state, physics, cdata, in_spinup)
+     call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg)
 
   else if (scm_state%time_scheme == 2) then
   !   !if using the leapfrog scheme, we initialize by taking one half forward time step and one half (unfiltered) leapfrog time step to get to the end of the first time step
@@ -284,9 +298,13 @@ subroutine scm_main_sub()
       endif
     end do
     
-    call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-    if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
+    call ccpp_physics_timestep_init(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                                    physics    = physics,     &
+                                    ccpp_cfg   = ccpp_cfg,    &
+                                    errflg     = ccpp_errflg, &
+                                    errmsg     = ccpp_errmsg)
+    if (ccpp_errflg/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_errmsg) // '. Exiting...'
         stop 1
     end if
     
@@ -306,16 +324,27 @@ subroutine scm_main_sub()
     if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
       call physics%Diag%phys_zero (physics%Model)
     endif
+
+    do isuite_part=1,ccpp_suite_parts
+       call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                             suite_part = ccpp_suite_parts(isuite_part), &
+                             physics    = physics,     &
+                             ccpp_cfg   = ccpp_cfg,    &
+                             errflg     = ccpp_errflg, &
+                             errmsg     = ccpp_errmsg)
+       if (ccpp_errflg/=0) then
+          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_errmsg) // '. Exiting...'
+          stop 1
+       end if
+    end do
     
-    call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-    if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
-        stop 1
-    end if
-    
-    call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-    if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
+    call ccpp_physics_timestep_finalize(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                                        physics    = physics,     &
+                                        ccpp_cfg   = ccpp_cfg,    &
+                                        errflg     = ccpp_errflg, &
+                                        errmsg     = ccpp_errmsg)
+    if (ccpp_errflg/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_errmsg) // '. Exiting...'
         stop 1
     end if
 
@@ -340,7 +369,7 @@ subroutine scm_main_sub()
     scm_state%state_tracer(:,:,:,1) = scm_state%temp_tracer(:,:,:,1)
 
     !go forward one leapfrog time step
-    call do_time_step(scm_state, physics, cdata, in_spinup)
+    call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg)
 
     !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
     call filter(scm_state)
@@ -400,7 +429,7 @@ subroutine scm_main_sub()
     !call physics%Diag%phys_zero(physics%Model)
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(scm_state, physics, cdata, in_spinup)
+    call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg
 
     if (scm_state%time_scheme == 2) then
       !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
@@ -424,10 +453,14 @@ subroutine scm_main_sub()
     end if
   end do
 
-  call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
-
-  if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_finalize(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                             physics    = physics,     &
+                             ccpp_cfg   = ccpp_cfg,    &
+                             errflg     = ccpp_errflg, &
+                             errmsg     = ccpp_errmsg)
+  
+  if (ccpp_errflg/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(ccpp_errmsg) // '. Exiting...'
       stop 1
   end if
   

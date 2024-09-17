@@ -5,12 +5,12 @@ module scm_time_integration
 
 use scm_kinds, only: sp, dp, qp
 use scm_forcing
+use ccpp_config, only: ty_ccpp_config
 
-use ccpp_types,        only: ccpp_t
-use :: ccpp_static_api,                      &
-       only: ccpp_physics_timestep_init,     &
-             ccpp_physics_run,               &
-             ccpp_physics_timestep_finalize
+use :: SCM_ccpp_cap,  only: &
+        ccpp_physics_timestep_init     => SCM_ccpp_physics_timestep_initial, &
+        ccpp_physics_run               => SCM_ccpp_physics_run,              &
+        ccpp_physics_timestep_finalize => SCM_ccpp_physics_timestep_final
              
 
 implicit none
@@ -53,13 +53,15 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, physics, cdata, in_spinup)
+subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg)
   use scm_type_defs, only: scm_state_type, physics_type
 
-  type(scm_state_type), intent(inout)          :: scm_state
-  type(physics_type), intent(inout)            :: physics
-  type(ccpp_t), intent(inout)                  :: cdata
-  logical, intent(in)                          :: in_spinup
+  type(scm_state_type), intent(inout) :: scm_state
+  type(physics_type),   intent(inout) :: physics
+  type(ty_ccpp_config), intent(inout) :: ccpp_cfg
+  logical,              intent(in)    :: in_spinup
+  integer,              intent(inout) :: ccpp_errflg
+  character(len=512),   intent(inout) :: ccpp_errmsg
 
   integer :: i, ierr, kdt_rad, idtend, itrac
 
@@ -133,9 +135,9 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
     endif
   enddo
   
-  call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-  if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_timestep_init(suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), physics=physics, ccpp_cfg=ccpp_cfg, errflg=ccpp_errflg, errmsg=ccpp_errmsg)
+  if (ccpp_errflg/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_errmsg) // '. Exiting...'
       stop
   end if
   
@@ -160,15 +162,15 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   call physics%Interstitial%rad_reset(physics%Model)
   call physics%Interstitial%phys_reset(physics%Model)
 
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-  if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_run(suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), physics=physics, ccpp_cfg=ccpp_cfg, errflg=ccpp_errflg, errmsg=ccpp_errmsg)
+  if (ccpp_errflg/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_errmsg) // '. Exiting...'
       stop
   end if
 
-  call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-  if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_timestep_finalize(suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), physics=physics, ccpp_cfg=ccpp_cfg, errflg=ccpp_errflg, errmsg=ccpp_errmsg)
+  if (ccpp_errflg/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_errmsg) // '. Exiting...'
       stop
   end if
 

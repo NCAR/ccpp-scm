@@ -2858,12 +2858,6 @@
 [ccpp-arg-table]
   name = CCPP_typedefs
   type = module
-#[GFS_interstitial_type]
-#  standard_name = GFS_interstitial_type
-#  long_name = definition of type GFS_interstitial_type
-#  units = DDT
-#  dimensions = ()
-#  type = GFS_interstitial_type
 [icld_cfrac]
   standard_name = index_for_cloud_fraction_in_cloud_data_array
   long_name = index for cloud fraction in cloud data array
