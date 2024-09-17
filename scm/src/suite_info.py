@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import sys, os
+
+#DEFAULT_SUITE_BEHAVIOR = 'supported'
+DEFAULT_SUITE_BEHAVIOR = 'regression_test'
+
 class suite(object):
   
     DEFAULT_MAX_TIMESTEP = 1800.0
@@ -43,7 +48,7 @@ class suite(object):
       
 suite_list = []
 suite_list.append(suite('SCM_GFS_v16',           'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, True ))
-suite_list.append(suite('SCM_GFS_v17_p8_ugwpv1', 'tracers_GFS_v17_p8.txt',               'input_GFS_v17_p8_ugwpv1.nml',       600.0, 600.0,  True ))
+suite_list.append(suite('SCM_GFS_v17_p8_ugwpv1', 'tracers_GFS_v17_p8_ugwpv1.txt',        'input_GFS_v17_p8_ugwpv1.nml',       600.0, 600.0,  True ))
 suite_list.append(suite('SCM_RAP',               'tracers_RAP.txt',                      'input_RAP.nml',                     600.0, 600.0 , True ))
 suite_list.append(suite('SCM_HRRR_gf',           'tracers_HRRR_gf.txt',                  'input_HRRR_gf.nml',                 600.0, 600.0 , True ))
 suite_list.append(suite('SCM_WoFS_v0',           'tracers_WoFS_v0.txt',                  'input_WoFS_v0.nml',                 600.0, 600.0 , True ))
@@ -72,9 +77,34 @@ def main():
     
     #print supported suites separated by commas
     suite_string = ''
-    for s in suite_list:
-        if s._supported:
-            suite_string += s._name + ',' + s._name + '_ps' + ','  
+    
+    if DEFAULT_SUITE_BEHAVIOR == 'regression_test':
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        sys.path.insert(1, dir_path + '/../../test/')
+        
+        rt_suite_list = []
+        
+        import rt_test_cases
+        import rt_test_cases_sp
+        import rt_test_cases_nvidia
+        
+        for item in rt_test_cases.run_list:
+            rt_suite_list.append(item.get("suite"))
+        
+        for item in rt_test_cases_sp.run_list:
+            rt_suite_list.append(item.get("suite"))
+        
+        for item in rt_test_cases_nvidia.run_list:
+            rt_suite_list.append(item.get("suite"))
+        
+        unique_suite_list = list(set(rt_suite_list))
+        
+        for s in unique_suite_list:    
+            suite_string += s + ',' + s + '_ps' + ','
+    else:
+        for s in suite_list:
+            if s._supported:
+                suite_string += s._name + ',' + s._name + '_ps' + ','  
     print(suite_string[:-1])
 
 if __name__ == '__main__':

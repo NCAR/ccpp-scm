@@ -856,6 +856,8 @@ if(obs_compare and obs_file):
         obs_dict = sro.read_LASSO_obs(obs_file, time_slices, date_inst)
     elif('gabls3' in case_name.strip()):
         obs_dict = sro.read_gabls3_obs(obs_file, time_slices, date_inst)
+    elif('MOSAiC' in case_name.strip()):
+        obs_dict = sro.read_MOSAiC_obs(obs_file, time_slices, date_inst)
 
 try:
     os.makedirs(plot_dir)
@@ -1378,7 +1380,6 @@ if(len(scm_datasets) > 1):
             else:
                 y_max_val = profiles_mean['y_max']
             y_lim_val = [y_min_val, y_max_val]
-
             #plot mean profiles
             for k in range(len(profiles_mean['vars'])):
                 #get the python variable associated with the vars listed in the config file

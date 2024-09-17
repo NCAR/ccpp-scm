@@ -40,8 +40,8 @@ jobs:
     - name: Setup python.
       uses: conda-incubator/setup-miniconda@v3
       with:
-        activate-environment: env_ufsreplay
-        environment-file: environment-ufsreplay.yml
+        activate-environment: env_ufscasegen
+        environment-file: environment-ufscasegen.yml
         use-only-tar-bz2: true
         auto-activate-base: true
         auto-update-conda: true

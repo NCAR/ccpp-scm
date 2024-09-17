@@ -36,16 +36,16 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
 
 ! local
       real(kind=dp)               :: pres_sfc_inv, p_ref, ak_tmp, bk_tmp
-      
+
       real:: p0=1000.E2
       real:: pc=200.E2
-      
+
       real :: pint = 100.E2
       real :: stretch_fac = 1.03
       integer :: auto_routine = 0
-      
+
       integer  k, last_index, mid_index, ierr, dummy, n_levels_file
-      
+
       character(len=80)     :: line
       character(len=16)     :: file_format
       integer :: nx, ny
@@ -55,13 +55,13 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       ! single and double precision runs
       real(kind_scm_sp), parameter :: zero_sp = 0.0
       real(kind_scm_sp), allocatable :: pres_l_row_sp(:)
-      
+
 #include "fv_eta.h"
-      
+
       km = scm_state%n_levels
       ptop = 1.
 ! Definition: press(i,j,k) = ak(k) + bk(k) * ps(i,j)
-      
+
       if (trim(scm_state%npz_type) == 'superC' .or. trim(scm_state%npz_type) == 'superK') then
         auto_routine = 1
         select case (km)
@@ -99,33 +99,33 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
              auto_routine = 2
         end select
       else if (trim(scm_state%npz_type) == 'input') then
-        
+
         !> - Open the appropriate file.
         open(unit=1, file=scm_state%vert_coord_file, status='old', action='read', iostat=ierr)
         if(ierr /= 0) then
           write(*,*) 'There was an error opening the file ', scm_state%vert_coord_file, ' in the run directory. &
             Error code = ',ierr
-          stop
+          error stop
         endif
-        
+
         !> The file being read in must have the following format:
         !!       include a single line description: number of coefficients, number of layers
         !!       ak/bk pairs, with each pair occupying a single line
         !!       the pairs must be ordered from surface to TOA
         !!       the pairs define the interfaces of the grid to create levels-1 layer
-        
-        !> - The first line contains the number of coefficients and number of levels 
+
+        !> - The first line contains the number of coefficients and number of levels
         read(1,*) dummy, n_levels_file
         if (n_levels_file /= scm_state%n_levels) then
           write(*,*) 'There is a mismatch in the number of levels expected and the number of coefficients supplied in the file ',scm_state%vert_coord_file
-          stop
+          error stop
         end if
-        !> - Read in the coefficient data. 
+        !> - Read in the coefficient data.
         do k=1, km+1
           read(1,*)  scm_state%a_k(k), scm_state%b_k(k)
         end do
         close(1)
-        
+
         ! flip scm_state%a_k, scm_state%b_k in vertical (a_k and b_k are expected to be TOA-to-surface at this point)
         mid_index = (km+1)/2
         last_index = km+1
@@ -138,7 +138,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             scm_state%b_k(last_index) = bk_tmp
             last_index = last_index - 1
         end do
-        
+
       else
         select case (km)
           case (5,10) ! does this work????
@@ -217,7 +217,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             pint = 100.E2
             stretch_fac = 1.035
             auto_routine = 1
-          case (47) 
+          case (47)
             if (trim(scm_state%npz_type) == 'lowtop') then
               ptop = 100.
               stretch_fac = 1.035
@@ -504,7 +504,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             endif
         end select
       endif ! superC/superK
-      
+
       select case (auto_routine)
         case (1)
           call var_hi(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, stretch_fac)
@@ -519,7 +519,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
         case (6)
           call var_gfs(km, scm_state%a_k, scm_state%b_k, ptop, ks, pint, stretch_fac)
       end select
-      
+
       call check_eta_levels (scm_state%a_k, scm_state%b_k)
 
       if (verbose) then
@@ -528,7 +528,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
             write(*,'(I4, F13.5, F13.5, F11.2)') k, scm_state%a_k(k), scm_state%b_k(k), 1000.E2*scm_state%b_k(k) + scm_state%a_k(k)
          enddo
       endif
-      
+
       !> - Calculate interface pressures, sigma, and exner function.
 
       ! flip scm_state%a_k, scm_state%b_k in vertical
@@ -553,7 +553,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
       do k=1, km+1
         pres_i(:,k) = scm_state%a_k(k) + scm_state%b_k(k)*p_ref
         scm_state%si(:,k) = scm_state%a_k(k)*pres_sfc_inv + scm_state%b_k(k)
-        scm_state%exner_i(:,k) = (scm_state%pres_i(:,k)/1.0E5)**con_rocp
+        scm_state%exner_i(:,k) = (pres_i(:,k)/1.0E5)**con_rocp
       end do
       scm_state%pres_i = pres_i
 
@@ -905,7 +905,7 @@ subroutine var_hi2(km, ak, bk, ptop, ks, pint, s_rate)
 
 
 end subroutine var_hi2
- 
+
 subroutine var_les(km, ak, bk, ptop, ks, pint, s_rate)
   implicit none
   integer, intent(in):: km
@@ -1065,7 +1065,7 @@ subroutine var_les(km, ak, bk, ptop, ks, pint, s_rate)
 800 format(1x,5(1x,f9.4))
 
 end subroutine var_les
- 
+
 subroutine mount_waves(km, ak, bk, ptop, ks, pint)
   integer, intent(in):: km
   real,    intent(out):: ak(km+1), bk(km+1)
@@ -1586,7 +1586,7 @@ subroutine check_eta_levels(ak, bk)
       enddo
    endif
    write(*,*) 'FV3 check_eta_levels: ak/bk pairs do not provide a monotonic vertical coordinate'
-   stop
+   error stop
  endif
 
 end subroutine check_eta_levels

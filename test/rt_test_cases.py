@@ -27,6 +27,17 @@ run_list = [\
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_WoFS_v0"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            {"case": "COMBLE",                "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "COMBLE",                "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "gabls3",                "suite": "SCM_GFS_v16"},                                                                                    \
             #----------------------------------------------------------------------------------------------------------------------------------------------
             # Unsupported suites (w/ supported cases)
             #----------------------------------------------------------------------------------------------------------------------------------------------

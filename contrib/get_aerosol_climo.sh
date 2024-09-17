@@ -20,7 +20,7 @@ data_files=("FV3_aeroclim1" "FV3_aeroclim2" "FV3_aeroclim3" "FV3_aeroclim_optics
 cd $BASEDIR/scm/data/physics_input_data/
 for file in "${data_files[@]}"; do
     echo "Retrieving $file.tar.gz"
-    wget https://github.com/NCAR/ccpp-scm/releases/download/v6.0.0/${file}.tar.gz
+    wget https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0-beta/${file}.tar.gz
     tar -xvf ${file}.tar.gz
     rm -f ${file}.tar.gz
 done

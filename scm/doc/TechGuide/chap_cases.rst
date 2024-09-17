@@ -23,50 +23,11 @@ The ``case_config`` namelist expects the following parameters:
       This string must correspond to a dataset included in the directory
       ``ccpp-scm/scm/data/processed_case_input/`` (without the file extension).
 
--  ``runtime``
-
-   -  Specify the model runtime in seconds (integer). This should
-      correspond with the forcing dataset used. If a runtime is
-      specified that is longer than the supplied forcing, the forcing is
-      held constant at the last specified values.
-
--  ``thermo_forcing_type``
-
-   -  An integer representing how forcing for temperature and moisture
-      state variables is applied (1 :math:`=` total advective
-      tendencies, 2 :math:`=` horizontal advective tendencies with
-      prescribed vertical motion, 3 :math:`=` relaxation to observed
-      profiles with vertical motion prescribed)
-
--  ``mom_forcing_type``
-
-   -  An integer representing how forcing for horizontal momentum state
-      variables is applied (1 :math:`=` total advective tendencies; not
-      implemented yet, 2 :math:`=` horizontal advective tendencies with
-      prescribed vertical motion, 3 :math:`=` relaxation to observed
-      profiles with vertical motion prescribed)
-
--  ``relax_time``
-
-   -  A floating point number representing the timescale in seconds for
-      the relaxation forcing (only used if ``thermo_forcing_type = 3`` or ``mom_forcing_type = 3``)
-
--  ``sfc_flux_spec``
-
-   -  A boolean set to ``.true.`` if surface flux are specified from the forcing
-      data (there is no need to have surface schemes in a suite
-      definition file if so)
-
 -  ``sfc_roughness_length_cm``
 
    -  Surface roughness length in cm for calculating surface-related
-      fields from specified surface fluxes (only used if ``sfc_flux_spec`` is True).
-
--  ``sfc_type``
-
-   -  An integer representing the character of the surface (0 :math:`=`
-      sea surface, 1 :math:`=` land surface, 2 :math:`=` sea-ice
-      surface)
+      fields from specified surface fluxes (only used if surface fluxes
+      are specified).
 
 -  ``reference_profile_choice``
 
@@ -74,22 +35,6 @@ The ``case_config`` namelist expects the following parameters:
       above the supplied initialization and forcing data (1 :math:`=`
       “McClatchey” profile, 2 :math:`=` mid-latitude summer standard
       atmosphere)
-
--  ``year``
-
-   -  An integer representing the year of the initialization time
-
--  ``month``
-
-   -  An integer representing the month of the initialization time
-
--  ``day``
-
-   -  An integer representing the day of the initialization time
-
--  ``hour``
-
-   -  An integer representing the hour of the initialization time
 
 -  ``column_area``
 
@@ -113,50 +58,54 @@ The ``case_config`` namelist expects the following parameters:
 
 -  ``input_type``
 
-   -  0 => original DTC format, 1 => DEPHY-SCM format.
+   -  1 => DEPHY-SCM format.
 
 Optional variables (that may be overridden via run script command line
 arguments) are:
 
+-  ``npz_type``
+
+   - Changes the type of FV3 vertical grid to produce (see src/scm_vgrid.F90 for
+     valid values), default=''.
+
 -  ``vert_coord_file``
 
-   -  File containing FV3 vertical grid coefficients.
+   -  File containing FV3 vertical grid coefficients, default=''.
 
 -  ``n_levels``
 
-   -  Specify the integer number of vertical levels.
+   -  Specify the integer number of vertical levels, default=127.
+
+-  ``dt``
+
+   - Specify the timestep to use (if different than the default specified in
+     ../../src/suite_info.py), default=600.
+
+-  ``do_spinup``
+
+   - Set to ``.true.`` when allowing the model to spin up before the "official"
+     model integration starts. 
+
+-  ``spinup_timesteps``
+
+   - Number of timesteps to spin up when ``do_spinup`` is true
+
+-  ``lsm_ics``
+
+   - Set to ``.true.`` when LSM initial conditions are included (but not all ICs from
+     another model)
 
 .. _`case input`:
-
-Case input data file (CCPP-SCM format)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The initialization and forcing data for each case is stored in a NetCDF
-(version 4) file within the ``ccpp-scm/scm/data/processed_case_input`` directory. Each file has at least two
-dimensions (``time`` and ``levels``, potentially with additions for vertical snow and soil
-levels) and is organized into 3 groups: scalars, initial, and forcing.
-Not all fields are required for all cases. For example the fields ``sh_flux_sfc`` and ``lh_flux_sfc``
-are only needed if the variable ``sfc_flx_spec = .true.`` in the case configuration file
-and state nudging variables are only required if ``thermo_forcing_type = 3`` or ``mom_forcing_type = 3``
-. Using an active LSM (Noah, NoahMP, RUC) requires many more variables
-than are listed here. Example files for using with Noah and NoahMP LSMs
-are included in ``ccpp-scm/scm/data/processed_case_input/fv3_model_point_noah[mp].nc``.
-
-.. _`case input arm`:
-.. literalinclude:: arm_case_header.txt
-    :name: lst_case_input_netcdf_header_arm
-    :caption: example NetCDF file (CCPP-SCM format) header for case initialization and forcing data
 
 Case input data file (DEPHY format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Development and Evaluation of Physics in atmospheric models (DEPHY)
 format is an internationally-adopted data format intended for use by SCM
-and LESs. The initialization and forcing data for each case is stored in
-a NetCDF (version 4) file, although these files are not by default
-included in the CCPP SCM repository. To access these cases you need to
-clone the DEPHY-SCM repository, and provide the DEPHY-SCM file location
-to the SCM. For example:
+and LESs. The initialization and forcing data for each case in the CCPP SCM
+repository is stored in a NetCDF (version 4) file. Additional cases in DEPHY
+format, not maintained by the DTC, can be cloned from the DEPHY-SCM repository,
+and run by providing the DEPHY-SCM file location to the SCM. For example:
 
 .. code:: bash
 
@@ -166,11 +115,14 @@ to the SCM. For example:
    ./run_scm.py -c MAGIC_LEG04A --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/MAGIC/LEG04A -v
 
 Each DEPHY file has three dimensions (``time``, ``t0``, ``levels``) and contains the initial
-conditions (``t0``, ``levels``) and forcing data (``time``, ``levels``). Just as when using the CCPP-SCM
-formatted inputs, :numref:`Subsection %s <case input>`, not all fields
-are required for all cases. More information on the DEPHY format
-requirements can be found at
-`DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__.
+conditions (``t0``, ``levels``) and forcing data (``time``, ``levels``). Not all fields
+are required for all cases. For example, the fields ``hfss`` and ``hfls`` are only needed if the
+global attributes ``surface_forcing_temp`` or ``surface_forcing_moisture`` are set to ``surface_flux``
+and state nudging variables are only required if the ``nudging_*`` terms in the global attributes
+are turned on. Using an active LSM (Noah, NoahMP, RUC) requires many more variables than are listed
+here. Example files for using with Noah and NoahMP LSMs are included in
+ccpp-scm/scm/data/processed_case_input/fv3_model_point_noah[mp].nc. More information on the DEPHY
+format requirements can be found at `DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__.
 
 .. _`case input dephy`:
 .. literalinclude:: dephy_case_header.txt
@@ -201,20 +153,25 @@ following observational field campaigns:
    (LASSO) for May 18, 2016 (with capability to run all LASSO dates -
    see :numref:`Section %s <lasso>`) continental shallow convection
 
+-  GEWEX Atmospheric Boundary Layer Study (GABLS3) for July 1, 2006
+   development of a nocturnal low-level jet
+
+-  Multidisciplinary drifting Observatory for the Study of Arctic Climate
+   expedition (MOSAiC)
+   -  SS: Strongly stably stratified boundary layer (March 2-10 2020)
+   -  AMPS: Arctic mixed-phase stratocumuluas cloud (Oct 31 - Nov 5 2019)
+
+-  Cold-Air Outbreaks in the Marine Boundary Layer Experiment (COMBLE) for
+   March 12, 2020 mixed phased clouds in the polar marine boundary layer
+
 For the ARM SGP case, several case configuration files representing
 different time periods of the observational dataset are included,
 denoted by a trailing letter. The LASSO case may be run with different
 forcing applied, so three case configuration files corresponding to
-these different forcing are included. In addition, two example cases are
-included for using UFS Atmosphere initial conditions:
+these different forcing are included.
 
--  UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on
-   Oct. 3, 2016 with Noah variables on the C96 FV3 grid (``fv3_model_point_noah.nc``)
-
--  UFS initial conditions for 38.1 N, 98.5 W (central Kansas) for 00Z on
-   Oct. 3, 2016 with NoahMP variables on the C96 FV3 grid (``fv3_model_point_noahmp.nc``)
-
-See :numref:`Section %s <UFSreplay>` for information on how to generate these
+In addition, cases can be generated from UFS initial conditions See
+:numref:`Section %s <UFScasegen>` for information on how to generate these
 files for other locations and dates, given appropriate UFS Atmosphere
 initial conditions and output.
 
@@ -224,13 +181,11 @@ How to set up new cases
 Setting up a new case involves preparing the two types of files listed
 above. For the case initialization and forcing data file, this typically
 involves writing a custom script or program to parse the data from its
-original format to the format that the SCM expects, listed above. An
-example of this type of script written in Python is included in ``ccpp-scm/scm/etc/scripts/twpice_forcing_file_generator.py``. The
-script reads in the data as supplied from its source, converts any
-necessary variables, and writes a NetCDF (version 4) file in the format
-described in subsections :numref:`Subsection %s <case input>` and
-:numref:`Subsection %s <case input dephy>`. For reference, the following
-formulas are used:
+original format to the DEPHY format, listed above. Formatting for DEPHY
+is documented in the `DEPHY repository
+<https://github.com/GdR-DEPHY/DEPHY-SCM/blob/master/DEPHY-SCM_CommonFormat_v1.0.pdf>`__.
+
+For reference, the following formulas are used:
 
 .. math:: \theta_{il} = \theta - \frac{\theta}{T}\left(\frac{L_v}{c_p}q_l + \frac{L_s}{c_p}q_i\right)
 
@@ -245,67 +200,6 @@ specific humidity, :math:`q_v` is the water vapor specific humidity,
 :math:`q_l` is the suspended liquid water specific humidity, and
 :math:`q_i` is the suspended ice water specific humidity.
 
-As shown in the example NetCDF header, the SCM expects that the vertical
-dimension is pressure levels (index 1 is the surface) and the time
-dimension is in seconds. The initial conditions expected are the height
-of the pressure levels in meters, and arrays representing vertical
-columns of :math:`\theta_{il}` in K, :math:`q_t`, :math:`q_l`, and
-:math:`q_i` in kg kg\ :math:`^{-1}`, :math:`u` and :math:`v` in m
-s\ :math:`^{-1}`, turbulence kinetic energy in m\ :math:`^2`
-s\ :math:`^{-2}` and ozone mass mixing ratio in kg kg\ :math:`^{-1}`.
-
-For forcing data, the SCM expects a time series of the following
-variables: latitude and longitude in decimal degrees [in case the
-column(s) is moving in time (e.g., Lagrangian column)], the surface
-pressure (Pa) and surface temperature (K). If surface fluxes are
-specified for the new case, one must also include a time series of the
-kinematic surface sensible heat flux (K m s\ :math:`^{-1}`) and
-kinematic surface latent heat flux (kg kg\ :math:`^{-1}` m
-s\ :math:`^{-1}`). The following variables are expected as 2-dimensional
-arrays (vertical levels first, time second): the geostrophic u (E-W) and
-v (N-S) winds (m s\ :math:`^{-1}`), and the horizontal and vertical
-advective tendencies of :math:`\theta_{il}` (K s\ :math:`^{-1}`) and
-:math:`q_t` (kg kg\ :math:`^{-1}` s\ :math:`^{-1}`), the large scale
-vertical velocity (m s\ :math:`^{-1}`), large scale pressure vertical
-velocity (Pa s\ :math:`^{-1}`), the prescribed radiative heating rate (K
-s\ :math:`^{-1}`), and profiles of u, v, T, :math:`\theta_{il}` and
-:math:`q_t` to use for nudging.
-
-Although it is expected that all variables are in the NetCDF file, only
-those that are used with the chosen forcing method are required to be
-nonzero. For example, the following variables are required depending on
-the values of ``mom_forcing_type`` and ``thermo_forcing_type`` specified in the case configuration file:
-
--  ``mom_forcing_type = 1``
-
-   -  Not implemented yet
-
--  ``mom_forcing_type = 2``
-
-   -  geostrophic winds and large scale vertical velocity
-
--  ``mom_forcing_type = 3``
-
-   -  u and v nudging profiles
-
--  ``thermo_forcing_type = 1``
-
-   -  horizontal and vertical advective tendencies of
-      :math:`\theta_{il}` and :math:`q_t` and prescribed radiative
-      heating (can be zero if radiation scheme is active)
-
--  ``thermo_forcing_type = 2``
-
-   -  horizontal advective tendencies of :math:`\theta_{il}` and
-      :math:`q_t`, prescribed radiative heating (can be zero if
-      radiation scheme is active), and the large scale vertical pressure
-      velocity
-
--  ``thermo_forcing_type = 3``
-
-   -  :math:`\theta_{il}` and :math:`q_t` nudging profiles and the large
-      scale vertical pressure velocity
-
 For the case configuration file, it is most efficient to copy an
 existing file in ``ccpp-scm/scm/etc/case_config`` and edit it to suit one’s case. Recall from subsection
 :numref:`Subsection %s <case config>` that this file is used to configure
@@ -319,17 +213,14 @@ configured for the case (without the file extension). The parameter
 should be less than or equal to the length of the forcing data unless
 the desired behavior of the simulation is to proceed with the last
 specified forcing values after the length of the forcing data has been
-surpassed. The initial date and time should fall within the forcing
-period specified in the case input data file. If the case input data is
+surpassed. If the case input data is
 specified to a lower altitude than the vertical domain, the remainder of
 the column will be filled in with values from a reference profile. There
 is a tropical profile and mid-latitude summer profile provided, although
 one may add more choices by adding a data file to ``ccpp-scm/scm/data/processed_case_input`` and adding a parser
 section to the subroutine ``get_reference_profile`` in ``scm/src/scm_input.f90``. Surface fluxes can either be specified in
 the case input data file or calculated using a surface scheme using
-surface properties. If surface fluxes are specified from data, set ``sfc_flux_spec`` to ``.true.``
-and specify ``sfc_roughness_length_cm`` for the surface over which the column resides. Otherwise,`
-specify a ``sfc_type``. In addition, one must specify a ``column_area`` for each column.
+surface properties. In addition, one must specify a ``column_area`` for each column.
 
 To control the forcing method, one must choose how the momentum and
 scalar variable forcing are applied. The three methods of Randall and
@@ -378,39 +269,39 @@ following steps:
    one) in ``ccpp-scm/scm/etc/case_config``. Be sure that the ``case_name`` variable points to the newly
    created/processed case input file from above.
 
-.. _`UFSreplay`:
+.. _`UFScasegen`:
 
-Using UFS Output to Create SCM Cases: UFS-Replay
-------------------------------------------------
+Using UFS Output to Create SCM Cases: UFS Case Generation
+---------------------------------------------------------
 
-.. _`pydepend_replay`:
+.. _`pydepend_casegen`:
 
 Python Dependencies
 ~~~~~~~~~~~~~~~~~~~
 
 The scripts here require a few python packages that may not be found by
 default in all python installations. There is a YAML file with the
-python environment needed to run the script in ``ccpp-scm/environment-ufsreplay.yml``. To create and activate
+python environment needed to run the script in ``ccpp-scm/environment-ufscasegen.yml``. To create and activate
 this environment using conda:
 
 Create environment (only once):
 
 .. code:: bash
 
-  > conda env create -f environment-ufsreplay.yml
+  > conda env create -f environment-ufscasegen.yml
 
-This will create the conda environment ``env_ufsreplay``
+This will create the conda environment ``env_ufscasegen``
 
 Activate environment:
 
 .. code:: bash
 
-  > conda activate env_ufsreplay
+  > conda activate env_ufscasegen
 
-.. _`ufsicgenerator`:
+.. _`ufscasegen`:
 
 UFS_case_gen.py
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 A script exists in ``scm/etc/scripts/UFS_case_gen.py`` to read in UFS history (output) files and their
 initial conditions to generate a SCM case input data file, in DEPHY
@@ -421,7 +312,7 @@ format.
    ./UFS_case_gen.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
    DATE -i IN_DIR -g GRID_DIR -f FORCING_DIR -n
    CASE_NAME [-t {1,2,3,4,5,6,7}] [-a AREA] [-oc]
-   [-lam] [-sc] [-near]
+   [-lam] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
 
 Mandatory arguments:
 
@@ -460,22 +351,92 @@ Optional arguments:
 
 #. ``--save_comp (-sc)``: flag to create UFS reference file for comparison
 
-#. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint
+#. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint for calculation 
+   of forcing; only valid for use with -fm=1 or -fm=3
+
+#. ``--forcing_method (-fm)``: method used to calculate forcing (1=total tendencies from UFS dycore,
+   2=advective terms calculated from UFS history files, 3=total time tendency terms calculated), default=2
+
+#. ``--vertical_method (-vm)``: method used to calculate vertical advective forcing (1=vertical advective
+   terms calculated from UFS history files and added to total, 2=smoothed vertical velocity provided), default=2
+
+#. ``--wind_nudge (-wn)``: flag to turn on wind nudging to UFS profiles
+
+#. ``--geostrophic (-geos)``: flag to turn on geostrophic wind forcing
+
+Notes Regarding Implemented Forcing Methods
+
+The ``--forcing_method`` option hides some complexity that should be understood when running this script since 
+each method has a particular use case and produces potentially very different forcing terms. Forcing method 1 is 
+designed to be used in concert with the three-dimensional UFS. I.e., the UFS must be run with diagnostic tendencies 
+activated so that the `nophysics` term is calculated and output for all grid points 
+(see https://ccpp-techdoc.readthedocs.io/en/latest/ParamSpecificOutput.html#tendencies). This diagnostic term 
+represents the tendency produced for each state variable by the UFS between calls to the "slow" physics. This 
+includes the tendency due to advection, but also any tendencies due to other non-physics processes, e.g. "fast"
+physics, coupling to external components, data assimilation, etc. Within the SCM, this diagnostic is used as the 
+forcing term for each state variable. Although one can achieve results as close as possible between a UFS column 
+and the single column model using this method, it will NOT be bit-for-bit for many reasons. Some of these reasons
+include: diagnostic output is not typically instantaneous for every timestep, the UFS' vertical coordinate is 
+semi-Lagrangian and includes a remapping step as the surface pressure changes for each column, whereas the SCM
+uses a Eulerian vertical coordinate without the vertical remapping step, and some interpolation happens in the
+UFS_case_gen.py script due to the UFS initial conditions and history files using different grids. This method
+can only be used when the UFS has been configured and run with the anticipation of running the SCM using this
+forcing method afterward because it requires considerable extra disk space for the additional output.
+
+The `--forcing_method` 2 option is the most general in the sense that the same method could apply to any three-dimensional 
+model output. For a given column, it uses a configurable number of neighboring grid points to calculate the horizontal 
+advective tendencies using the horizontal components of the three-dimensional wind and horizontal derivatives of the 
+state variables. Note that the script performs some smoothing in the vertical profiles used to calculate the advective 
+terms in order to eliminate small-scale noise in the forcing terms and the derivatives are calculated using a second- or
+fourth-order centered difference scheme, depending on the number of neighboring points used. Vertical advective terms 
+are calculated based on the specification of `--vertical_method` (-vm). For vertical_method 1, the vertical advective 
+terms are calculated from the history files using UFS vertical velocities and the same modeled smoothed vertical profiles 
+of the state variables using the upstream scheme. Note that while the horizontal terms use neighboring points, the vertical 
+advective terms only use the central, chosen column. This method is sometimes referred to as "total advective forcing" and
+tends to be less "responsive" to the SCM-modeled state. I.e., a SCM run using vertical method 2 has a greater chance of 
+deviating from the UFS column state and not being able to "recover". For this reason, vertical method 2 is often used 
+in the literature, whereby the vertical velocity profile from the three-dimensional model is provided as forcing to the SCM
+and the vertical advective terms are calculated during the SCM integration using the SCM-modeled state variable profiles.
+
+The final forcing method, 3, uses the three-dimensional history files to calculate profiles of the total time-rate of change
+of the state variables to use as forcing for the SCM. Note that this is tantamount to strongly nudging the SCM state to the 
+UFS state and already intrinsically includes both the physics and dynamics tendencies. While a simulation using this forcing 
+is more-or-less guaranteed to produce a SCM simulation that closely matches the three-dimensional output of the state variables,
+it strongly minimizes the contribution of physics in the SCM simulation. Indeed, an SCM simulation without running a physics suite 
+at all would still be expected to closely track the mean state of the three-dimensional column, so this method will likely be of 
+limited use for physics studies.
+
+Forcing the horizontal components of the wind can be notoriously difficult in SCMs, and the most straightforward method is to 
+simply nudge them to the three-dimensional modeled state. This method is achieved by using the `--wind_nudge` (-wn) option and uses a nudging 
+timescale of one hour. It should be possible to calculate a nudging timescale based on the magnitude of the wind in the neighboring 
+grid cells, although this is not implemented yet.
+
+The second method to force the horizontal wind components is to calculate the geostrophic wind using the "large scale" pressure 
+gradient from the three-dimensional model. This is achieved by using the `--geostrophic` (-geos) option. What qualifies as large 
+enough of a horizontal gridscale to achieve geostrophic balance is when the Rossby number is much less than one. The script uses a 
+configurable Rossby number (around 0.1) to expand the number of neighboring grid points such that geostrophic balance can be assumed 
+given the particular UFS history file grid. The geostrophic winds are calculated using the horizontal geopotential gradient and the 
+local latitude-dependent Coriolis parameter. From the PBL top downward, the geostrophic winds are assumed to go to zero. In testing 
+with this method, if the initial horizontal winds have a significant ageostrophic component (the initial condition winds are 
+appreciably different than the calculated geostrophic winds), this often leads to spurious clockwise turning of the mean modeled winds 
+with time. An option exists within the script to assume that the mean three-dimensional winds are, in fact, identical to the 
+geostrophic winds as well. Using this option eliminates any spurious turning.
 
 .. _`ufsforcingensemblegenerator`:
 
 UFS_forcing_ensemble_generator.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There is an additional script in ``scm/etc/scripts/UFS_forcing_ensemble_generator.py`` to create UFS-replay case(s) starting
+There is an additional script in ``scm/etc/scripts/UFS_forcing_ensemble_generator.py`` to create UFS-caseGen case(s) starting
 with output from UFS Weather Model (UWM) Regression Tests (RTs).
 
 .. code:: bash
 
    UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
    (-lonl LON_1 LON_2 -latl LAT_1 LAT_2 -nens NENSMEMBERS |
-   -lons [LON_LIST] -lats [LAT_LIST])
-   [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near]
+   -lons [LON_LIST] -lats [LAT_LIST] |
+   -fxy [LON_LAT_FILE])
+   [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
 
 Mandatory arguments:
 
@@ -490,6 +451,8 @@ Mandatory arguments:
 
    -  ``--lon_list (-lons)`` AND ``--lat_list (-lats)``: longitude and latitude of cases
 
+   -  ``--lonlat_file (fxy)``: file containing longitudes and latitudes
+
 Optional arguments:
 
 #. ``--timestep (-dt)``: SCM timestep, in seconds
@@ -502,18 +465,28 @@ Optional arguments:
 
 #. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint
 
+#. ``--forcing_method (-fm)``: method used to calculate forcing (1=total tendencies from UFS dycore,
+   2=advective terms calculated from UFS history files, 3=total time tendency terms calculated), default=2
+
+#. ``--vertical_method (-vm)``: method used to calculate vertical advective forcing (1=vertical advective
+   terms calculated from UFS history files and added to total, 2=smoothed vertical velocity provided), default=2
+
+#. ``--wind_nudge (-wn)``: flag to turn on wind nudging to UFS profiles
+
+#. ``--geostrophic (-geos)``: flag to turn on geostrophic wind forcing
+
 Examples to run from within the ``scm/etc/scripts`` directory to create SCM cases starting
 with the output from a UFS Weather Model regression test(s):
 
 On the supported platforms Derecho (NCAR) and Hera (NOAA), there are
 staged UWM RTs located at:
 
--  Derecho ``/glade/derecho/scratch/epicufsrt/FV3_RT/``
+-  Derecho ``/glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs``
 -  Hera ``/scratch1/BMC/gmtb/CCPP-SCM/UFS_RTs``
 
 .. _`example1`:
 
-Example 1: UFS-replay for single point
+Example 1: UFS-caseGen for single point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_c192``, for single point.
@@ -533,7 +506,7 @@ The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, whe
 
 .. _`example2`:
 
-Example 2: UFS-replay for list of points
+Example 2: UFS-caseGen for list of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_c384``, for multiple points.
@@ -562,7 +535,7 @@ number of points provided. The contents of the file should look like:
 
 .. _`example3`:
 
-Example 3: UFS-replay for an ensemble of points
+Example 3: UFS-caseGen for an ensemble of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_p8``, for an ensemble (10) of randomly selected points

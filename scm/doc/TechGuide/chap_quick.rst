@@ -25,7 +25,7 @@ Clone the source using
 
 .. code:: bash
 
-   git clone --recursive -b v6.0.0 https://github.com/NCAR/ccpp-scm
+   git clone --recursive -b v7.0.0 https://github.com/NCAR/ccpp-scm
 
 The ``--recursive`` option is required to retrieve the ccpp-physics and ccpp-framework code,
 which are stored in separate repositories and linked to the SCM repository as submodules.
@@ -129,7 +129,7 @@ Beyond the standard shell scripts, the build
 system relies on use of the Python scripting language, along with cmake,
 GNU make and date.
 
-For the latest release, the minimum required Python version is 3.8, and CMake requires a minimum version of 3.14.
+For the latest release, the minimum required Python version is 3.10, and CMake requires a minimum version of 3.23.
 While exact minimum required versions of other prerequisites have not been established, users can reference the
 list of Continuous Integration tests run on the CCPP SCM repository (see :numref:`Section %s <continuous integration>`)
 for examples of known working configurations.
@@ -137,7 +137,7 @@ for examples of known working configurations.
 Spack-stack
 ^^^^^^^^^^^^
 
-A joint effort between NOAA's Unified Forecast System (UFS) and Joint Effort for Data assimilation Integration (JEDI).
+This is a joint effort between NOAA's Unified Forecast System (UFS) and Joint Effort for Data assimilation Integration (JEDI).
 It is designed to be a comprehensive, all-in-one package containing prerequisite libraries and tools needed for all
 software in the UFS ecosystem, including the CCPP SCM. As of the version 7, installing spack-stack is the main
 supported method of installing the prerequisites needed for building the SCM. The latest version of the SCM is meant
@@ -146,11 +146,11 @@ contains the following set of libraries needed for building the SCM:
 
  - Netcdf-c (v4.9.2)
 
- - Netcdf-FORTRAN (v4.6.0)
+ - Netcdf-FORTRAN (v4.6.1)
 
  - BACIO (v2.4.1) - Binary I/O Library
 
- - SP (v2.3.3) - Spectral Transformation Library
+ - SP (v2.5.0) - Spectral Transformation Library
 
  - W3EMC (2.10.0) - GRIB decoder and encoder library
 
@@ -203,7 +203,7 @@ Installing Libraries on Non-preconfigured Platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For users on supported platforms such as generic Linux or macOS systems
-that have not been preconfigured, installing ``spack-stack`` (see :ref:`Section %s <spack-stack>`)
+that have not been preconfigured, installing ``spack-stack`` (see :numref:`Section %s <spack-stack>`)
 is highly recommended, as it provides all the necessary prerequisite libraries needed for installing the SCM.
 
 The CCPP/SCM team does not support spack-stack, so users with questions or requiring help with spack-stack installation
@@ -214,12 +214,15 @@ However, we have provided an example procedure in
 The main downside to spack-stack is that it contains a large number of libraries and utilities used by the whole
 Unified Forecast System and related applications, only a minority of which are required for the SCM. Users may
 install libraries manually if they wish, but they will need to make sure the appropriate environment variables
-are set to the correct values so that the build system can find them, as described in the following chapter.
+are set to the correct values so that the build system can find them, as described in the following paragraphs.
 
 
+<<<<<<< HEAD
 Setting up compilation environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+For users on a pre-configured platform, the spack-stack environment can be loaded via one of the provided modules in ``scm/etc/modules/`` as described in :numref:`Section %s <use_preconfigured_platforms>`.
+=======
 For users on a pre-configured platform, you can load the spack-stack environment via one of the provided modules in ``scm/etc/modules/``.
 For example, users on the NSF NCAR machine Derecho who wish to use Intel compilers can do the following:
 
@@ -228,6 +231,7 @@ For example, users on the NSF NCAR machine Derecho who wish to use Intel compile
    cd [path/to/ccpp-scm/]
    module use scm/etc/modules/
    module load derecho_intel
+>>>>>>> feature/modulefile_updates
 
 Additionally, for users who have installed spack-stack on their own MacOS or Linux machine can use the provided ``macos_clang``
 or ``linux_gnu`` modules.
@@ -244,12 +248,25 @@ compilers (``CC``, ``CXX``, ``FC``), as well as the root directories for the lib
 provided Dockerfile in ``ccpp-scm/docker/``, so users can reference that file for guidance on how to install this software
 and set these variables.
 
+If libraries were installed via spack-stack, users can load modules similarly to those available on pre-configured platforms.
+For a user on MacOS, who has installed spack-stack with ``clang``/``gfortran`` compilers, they can set up the build environment
+by setting the SPACK_STACK_DIR variable to the appropriate path, and loading the module as on pre-configured platforms described above.
+
+::
+
+   export SPACK_STACK_DIR=[/path/to/spack-stack]
+   cd [path/to/ccpp-scm/]
+   module use scm/etc/modules/
+   module load macos_clang
+
+A module file is also provided for a generic linux platform with gnu compilers. For other platforms/combinations, you may be able
+to modify the provided modulefiles to work with your spack-stack install, otherwise reference the above procedure for manually installed libraries.
 
 Python requirements
 """""""""""""""""""""
 
 The SCM build system invokes the ``ccpp_prebuild.py`` script, and so the Python environment must be set up prior to building.
-As mentioned earlier, a minimum Python version of 3.8 is required. Additionally, there are a few non-default modules required for the SCM to
+As mentioned earlier, a minimum Python version of 3.10 is required. Additionally, there are a few non-default modules required for the SCM to
 function: ``f90nml`` (`documentation <https://f90nml.readthedocs.io/en/latest/index.html>`__) and
 ``netcdf4`` (`documentation <https://unidata.github.io/netcdf4-python/>`__). Users can test if these are installed using this command in
 the shell:
@@ -281,8 +298,8 @@ Compiling SCM with CCPP
 -----------------------
 
 The first step in compiling the CCPP and SCM is to properly setup your
-user environment as described in
-sections :numref:`%s <use_preconfigured_platforms>` and :numref:`Section %s <setup_supported_platforms>`.
+user environment as described in :numref:`Section %s <use_preconfigured_platforms>`
+and :numref:`Section %s <setup_supported_platforms>`.
 
 Following this step, the top level build system will use ``cmake`` to query system
 parameters, execute the CCPP prebuild script to match the physics
@@ -443,12 +460,12 @@ execute the following scripts:
 If the download step fails, make sure that your system’s firewall does
 not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
 ``physics_input_data.tar.gz``, ``processed_case_input.tar.gz``, and ``raw_case_input.tar.gz``
-from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v6.0.0>`__ using your browser and manually extract its
+from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v7.0.0>`__ using your browser and manually extract its
 contents in the directory ``scm/data``. Similarly, do the same for
 ``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
 to ``scm/data/physics_input_data/``.
 
-New with the SCM v7 release, static data is available for running cases with GOCART climatological aerosols (where the value of ``iaer`` in the ``&gfs_physics_nml`` namelist starts with 1; see the `CCPP Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v6.0.0/sci_doc/_c_c_p_psuite_nml_desp.html>`__ for more information); one example of this is with the default namelist settings for the GFS_v17_p8_ugwpv1 suite. This dataset is very large (~12 GB), so it is recommended only to download it if you will be using it.
+New with the SCM v7 release, static data is available for running cases with GOCART climatological aerosols (where the value of ``iaer`` in the ``&gfs_physics_nml`` namelist starts with 1; see the `CCPP Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/_c_c_p_psuite_nml_desp.html>`__ for more information); one example of this is with the default namelist settings for the GFS_v17_p8_ugwpv1 scheme. This dataset is very large (~12 GB), so it is recommended only to download it if you will be using it.
 
 .. code:: bash
 
@@ -494,7 +511,7 @@ If using the main branch, you should run the above command to ensure you have th
 
 -  ``--case [-c]``
 
-   -  **This is the only required argument.** The provided argument should correspond to the name of a case in
+   -  The provided argument should correspond to the name of a case in
       ``../etc/case_config`` (without the ``.nml`` extension).
 
 -  ``--suite [-s]``
@@ -596,17 +613,19 @@ configuration files located in ``../etc/case_config`` (*without the .nml extensi
 specifying a suite other than the default, the suite name used must
 match the value of the suite name in one of the suite definition files
 located in ``../../ccpp/suites`` (Note: not the filename of the suite definition file). As
-part of the sixth CCPP release, the following suite names are supported:
+<<<<<<< HEAD
+part of the CCPP SCM v7.0.0 release, the following suite names are supported:
+=======
+part of the seventh CCPP release, the following suite names are supported:
+>>>>>>> feature/modulefile_updates
 
 #. SCM_GFS_v16
 
-#. SCM_GFS_v17p8
+#. SCM_GFS_v16_RRTMGP
 
-#. SCM_RAP
+#. SCM_GFS_v17_p8_ugwpv1
 
-#. SCM_HRRR
-
-#. SCM_RRFS_v1beta
+#. SCM_HRRR_gf
 
 #. SCM_WoFS_v0
 
@@ -620,7 +639,7 @@ the SCM, especially when invoking ``cmake`` with the ``-DOPENMP=ON`` option.
 
 Also note that some cases require specified surface fluxes. Special
 suite definition files that correspond to the suites listed above have
-been created and use the ``*_prescribed_surface`` decoration. It is not necessary to specify this
+been created and use the ``*_ps`` decoration. It is not necessary to specify this
 filename decoration when specifying the suite name. If the ``spec_sfc_flux`` variable in
 the configuration file of the case being run is set to ``.true.``, the run script
 will automatically use the special suite definition file that
@@ -684,7 +703,7 @@ result in a runtime error in all supported suites.
 
 #. q_rimef
 
-A NetCDF output file is generated in an output directory located named
+A NetCDF output file is generated in an output directory named
 with the case and suite within the run directory. If using a Docker
 container, all output is copied to the directory in container space for
 volume-mounting purposes. Any standard NetCDF file viewing or analysis
@@ -710,7 +729,7 @@ from the ``bin`` directory.
 Additional details regarding the SCM may be found in the remainder of
 this guide. More information on the CCPP can be found in the CCPP
 Technical Documentation available at
-https://ccpp-techdoc.readthedocs.io/en/v6.0.0/.
+https://ccpp-techdoc.readthedocs.io/en/v7.0.0/.
 
 .. _docker:
 
@@ -756,7 +775,7 @@ internet search.
 Building the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Dockerfile builds CCPP SCM v6.0.0 from source using the GNU
+The Dockerfile builds CCPP SCM v7.0.0 from source using the GNU
 compiler.
 
 The CCPP SCM has a number of system requirements and necessary libraries
@@ -801,7 +820,7 @@ and then executing the following steps:
    Inspect the Dockerfile if you would like to see details for how the
    image is built. The image will contain SCM prerequisite software from
    DTC, the SCM and CCPP code, and a pre-compiled executable for the SCM
-   with the 6 supported suites for the SCM. To view
+   with the 5 supported suites for the SCM. To view
 
    .. code:: bash
 
@@ -820,7 +839,7 @@ following from the terminal where Docker is run:
 
 .. code:: bash
 
-   docker pull dtcenter/ccpp-scm:v6.0.0
+   docker pull dtcenter/ccpp-scm:v7.0.0
 
 To verify that it exists afterward, run
 
@@ -869,12 +888,12 @@ Running the Docker image
 
 #. To run the SCM, you can run the Docker container that was just
    created and give it the same run commands as discussed in :numref:`Section %s <singlerunscript>`
-   **Be sure to remember to include the ``-d``
-   include the option for all run commands**. For example,
+   **Be sure to remember to include the ``-d`` and ``--mpi_command "mpirun -np 1 --allow-run-as-root"`` 
+   options for all run commands**. For example,
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice -d
+      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice --mpi_command "mpirun -np 1 --allow-run-as-root" -d
 
    will run through the TWPICE case using the default suite and namelist
    and put the output in the shared directory.
@@ -887,7 +906,7 @@ Running the Docker image
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d
+      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "mpirun -np 1 --allow-run-as-root" -d
 
    The options included in the above ``run`` commands are the following:
 
@@ -898,7 +917,7 @@ Running the Docker image
    -  ``-v`` specifies the volume mount from host directory (outside container)
       to inside the container. Using volumes allows you to share data
       between the host machine and container. For running the SCM, the
-      output is being mounted from inside the container to the on the
+      output is being mounted from inside the container to the
       host machine. Upon exiting the container, data mounted to the host
       machine will still be accessible.
 
@@ -908,7 +927,7 @@ Running the Docker image
    .. note::
      If you are using a prebuilt image from Dockerhub, substitute
      the name of the image that was pulled from Dockerhub in the commands
-     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v6.0.0``.
+     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v7.0.0``.
 
 #. To use the SCM interactively, run non-default configurations, create
    plots, or even develop code, issue the following command:

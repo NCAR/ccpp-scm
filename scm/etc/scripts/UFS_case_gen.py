@@ -56,6 +56,8 @@ dist_method = 'haversine' #faster
 missing_variable_snow_layers = 3
 missing_variable_soil_layers = 4
 missing_variable_ice_layers = 2
+missing_variable_vegetation_categories = 20
+missing_variable_soil_categories = 16
 
 # Path to the directory containing processed case input files
 PROCESSED_CASE_DIR = '../../data/processed_case_input'
@@ -459,12 +461,15 @@ def find_lon_lat_of_indices(indices, dir, tile, lam):
 ########################################################################################
 #
 ########################################################################################
-def find_loc_indices_UFS_history(loc, dir):
+def find_loc_indices_UFS_history(loc, dir, lam):
     """Find the nearest neighbor UFS history file grid point given a lon/lat pair"""
     #returns the indices of the nearest neighbor point in the given tile, the lon/lat of the nearest neighbor, 
     #and the distance (m) from the given point to the nearest neighbor grid cell
-    
-    filename_pattern = 'atmf000.nc'
+
+    if lam:
+        filename_pattern = 'dynf000.nc'
+    else: 
+        filename_pattern = 'atmf000.nc'
     
     for f_name in os.listdir(dir):
        if fnmatch.fnmatch(f_name, filename_pattern):
@@ -657,7 +662,7 @@ def check_IC_hist_surface_compatibility(dir, i, j, surface_data, lam, old_chgres
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        filename_pattern = '*sfcf000.tile{}.nc'.format(tile)
+        filename_pattern = '*phyf000.nc'
     else:
         filename_pattern = '*sfcf000.nc'
     
@@ -738,7 +743,7 @@ def get_IC_data_from_UFS_history(dir, i, j, lam, tile):
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        filename_pattern = '*atmf000.tile{}.nc'.format(tile)
+        filename_pattern = '*dynf000.nc'
     else:
         filename_pattern = '*atmf000.nc'
     
@@ -1686,7 +1691,7 @@ def get_UFS_surface_data(dir, tile, i, j, old_chgres, lam):
 ########################################################################################
 #
 ########################################################################################
-def get_UFS_oro_data(dir, tile, i, j, lam):
+def get_UFS_oro_data(dir, tile, i, j, lam, old_chgres):
     """Get the orographic data for the given tile and indices"""
     
     if lam:
@@ -1721,6 +1726,9 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
     #lake variables (optional)
     lake_frac_in  = read_NetCDF_var(nc_file, "lake_frac",  i, j)
     lake_depth_in = read_NetCDF_var(nc_file, "lake_depth", i, j)
+    
+    vegtype_frac_in  = read_NetCDF_surface_var(nc_file, "vegetation_type_pct",  i, j, old_chgres, missing_variable_vegetation_categories)
+    soiltype_frac_in  = read_NetCDF_surface_var(nc_file, "soil_type_pct",  i, j, old_chgres, missing_variable_soil_categories)
 
     #
     nc_file.close()
@@ -1744,7 +1752,9 @@ def get_UFS_oro_data(dir, tile, i, j, lam):
            "oro_uf":    orog_raw_in,
            "landfrac":  land_frac_in,
            "lakefrac":  lake_frac_in,
-           "lakedepth": lake_depth_in}
+           "lakedepth": lake_depth_in,
+           "vegtype_frac": vegtype_frac_in,
+           "soiltype_frac": soiltype_frac_in}
 
     return oro
 
@@ -1956,8 +1966,8 @@ def get_UFS_forcing_data_advective_tendency(dir, i, j, tile, neighbors, dx, dy, 
     
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
-        sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
+        atm_ftag = '*dynf*.nc'
+        sfc_ftag = '*phyf*.nc'
     else:
         atm_ftag = '*atmf*.nc'
         sfc_ftag = '*sfcf*.nc'
@@ -2308,8 +2318,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
 
     # Determine UFS history file format (tiled/quilted)
     if lam:
-        atm_ftag = 'atmf*.tile{0}.nc'.format(tile)
-        sfc_ftag = 'sfcf*.tile{0}.nc'.format(tile)
+        atm_ftag = '*dynf*.nc'
+        sfc_ftag = '*phyf*.nc'
     else:
         atm_ftag = '*atmf*.nc'
         sfc_ftag = '*sfcf*.nc'
@@ -3208,6 +3218,8 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
     snow_dim   = nc_file.createDimension('nsnow', len(surface["snicexy"]))
     nslsnw_dim = nc_file.createDimension('nsoil_plus_nsnow',len(surface["snicexy"]) + len(surface["stc"]))
     ice_dim    = nc_file.createDimension('nice',  len(surface["tiice"]))
+    vegcat_dim = nc_file.createDimension('nvegcat', len(oro["vegtype_frac"]))
+    soilcat_dim =nc_file.createDimension('nsoilcat', len(oro["soiltype_frac"]))
     
     #
     timei_var                    = nc_file.createVariable('t0', wp, ('t0'))
@@ -3388,7 +3400,9 @@ def write_SCM_case_file(state, surface, oro, forcing, init, case, date, forcing_
                 {"name": "oro_uf",       "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "unfiltered orography"}, \
                 {"name": "landfrac",     "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "fraction of horizontal grid area occupied by land"}, \
                 {"name": "lakefrac",     "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "fraction of horizontal grid area occupied by lake", "default_value":0}, \
-                {"name": "lakedepth",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "lake depth", "default_value":0}]
+                {"name": "lakedepth",    "type":wp, "dimd": ('t0'),             "units": "none",    "desc": "lake depth", "default_value":0},
+                {"name": "vegtype_frac", "type":wp, "dimd": ('t0', 'nvegcat'),  "units": "none",    "desc": "fraction of horizontal grid area occupied by given vegetation category"},
+                {"name": "soiltype_frac","type":wp, "dimd": ('t0', 'nsoilcat'), "units": "none",    "desc": "fraction of horizontal grid area occupied by given soil category"}]
     #
     var_nsst = [{"name": "tref",         "type":wp, "dimd": ('t0'),             "units": "K",       "desc": "sea surface reference temperature for NSST"}, \
                 {"name": "z_c",          "type":wp, "dimd": ('t0'),             "units": "m",       "desc": "sub-layer cooling thickness for NSST"}, \
@@ -3625,9 +3639,12 @@ def write_comparison_file(comp_data, case_name, date, surface):
 ########################################################################################
 #
 ########################################################################################
-def find_date(forcing_dir):
-    
-    atm_ftag = '*atmf*.nc'
+def find_date(forcing_dir, lam):
+
+    if lam:
+        atm_ftag = '*dynf*.nc'
+    else:    
+        atm_ftag = '*atmf*.nc'
     
     atm_filenames = []
     for f_name in os.listdir(forcing_dir):
@@ -3668,7 +3685,7 @@ def main():
      old_chgres, lam, save_comp, use_nearest, forcing_method, vertical_method, geos_wind_forcing, wind_nudge) = parse_arguments()
     
     #find indices corresponding to both UFS history files and initial condition (IC) files
-    (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir)
+    (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir, lam)
     
     (IC_i, IC_j, tile, IC_lon, IC_lat, IC_dist_min, angle_to_IC_point) = find_loc_indices_UFS_IC(location, grid_dir, lam, tile, indices)
         
@@ -3682,7 +3699,7 @@ def main():
     check_IC_hist_surface_compatibility(forcing_dir, hist_i, hist_j, surface_data, lam, old_chgres, tile)
     
     #read in orographic data for the initial conditions at the IC point
-    oro_data = get_UFS_oro_data(in_dir, tile, IC_i, IC_j, lam)
+    oro_data = get_UFS_oro_data(in_dir, tile, IC_i, IC_j, lam, old_chgres)
     
     #read in the initial condition profiles
     
@@ -3704,7 +3721,7 @@ def main():
 
     if not date:
         # date was not included on command line; look in atmf* file for initial date
-        date = find_date(forcing_dir)
+        date = find_date(forcing_dir, lam)
     
     #get grid cell area if not given
     if not area:

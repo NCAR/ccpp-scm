@@ -5,6 +5,7 @@ project(scm
         LANGUAGES C Fortran)
 set(PROJECT "CCPP-SCM")
 
+
 #------------------------------------------------------------------------------
 #
 # Set where the CCPP Framework lives

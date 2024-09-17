@@ -4,6 +4,7 @@ on: [pull_request,workflow_dispatch]
 
 env:
   TEST_TAG: dtcenter/ccpp-scm:test
+  PR_NUMBER: ${{ github.event.number }}
 
 jobs:
   docker:
@@ -22,8 +23,9 @@ jobs:
           file: docker/Dockerfile
           load: true
           tags: ${{ env.TEST_TAG }}
+          build-args: PR_NUMBER=${{ github.event.number }}
       - name: Test
         run: |
           mkdir $HOME/output
           chmod a+rw $HOME/output
-          docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 -d
+          docker run --rm -v $HOME/output:/home ${{ env.TEST_TAG }} ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "mpirun -np 1 --allow-run-as-root" -d

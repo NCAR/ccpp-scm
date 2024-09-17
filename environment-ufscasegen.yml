@@ -1,4 +1,4 @@
-name: env_ufsreplay
+name: env_ufscasegen
 
 dependencies:
   - conda-forge::python=3.8.5
