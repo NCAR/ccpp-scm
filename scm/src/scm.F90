@@ -14,7 +14,8 @@ subroutine scm_main_sub()
   use scm_forcing
   use scm_time_integration
   use scm_output
-  use scm_type_defs
+  use scm_type_defs, only: physics_type, scm_state_type, scm_input_type, scm_reference_type
+  use ccpp_config,   only: ty_ccpp_config
   use mpi_f08
   use ccpp_config, only: ty_ccpp_config
 
@@ -232,7 +233,7 @@ subroutine scm_main_sub()
      if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
 
      !pass in state variables to be modified by forcing and physics
-     call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg)
+     call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg, ccpp_suite_parts)
 
   else if (scm_state%time_scheme == 2) then
   !   !if using the leapfrog scheme, we initialize by taking one half forward time step and one half (unfiltered) leapfrog time step to get to the end of the first time step
@@ -324,7 +325,7 @@ subroutine scm_main_sub()
       call physics%Diag%phys_zero (physics%Model)
     endif
 
-    do isuite_part=1,ccpp_suite_parts
+    do isuite_part=1,len(ccpp_suite_parts)
        call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                              suite_part = ccpp_suite_parts(isuite_part), &
                              physics    = physics,     &
@@ -368,7 +369,7 @@ subroutine scm_main_sub()
     scm_state%state_tracer(:,:,:,1) = scm_state%temp_tracer(:,:,:,1)
 
     !go forward one leapfrog time step
-    call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg)
+    call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg, ccpp_suite_parts)
 
     !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
     call filter(scm_state)
@@ -428,7 +429,7 @@ subroutine scm_main_sub()
     !call physics%Diag%phys_zero(physics%Model)
 
     !pass in state variables to be modified by forcing and physics
-    call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg
+    call do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg, ccpp_suite_parts)
 
     if (scm_state%time_scheme == 2) then
       !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics

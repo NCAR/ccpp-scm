@@ -52,7 +52,7 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg)
+subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg, ccpp_suite_parts)
   use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout) :: scm_state
@@ -61,8 +61,9 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, cc
   logical,              intent(in)    :: in_spinup
   integer,              intent(inout) :: ccpp_errflg
   character(len=512),   intent(inout) :: ccpp_errmsg
+  character(len=128),   intent(in)    :: ccpp_suite_parts(:)
 
-  integer :: i, ierr, kdt_rad, idtend, itrac
+  integer :: i, ierr, kdt_rad, idtend, itrac, isuite_part
 
   !> \section do_time_step_alg Algorithm
   !! @{
@@ -133,7 +134,11 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, cc
     endif
   enddo
   
-  call ccpp_physics_timestep_init(suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), physics=physics, ccpp_cfg=ccpp_cfg, errflg=ccpp_errflg, errmsg=ccpp_errmsg)
+  call ccpp_physics_timestep_init(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                                  physics    = physics, &
+                                  ccpp_cfg   = ccpp_cfg, &
+                                  errflg     = ccpp_errflg, &
+                                  errmsg     = ccpp_errmsg)
   if (ccpp_errflg/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_errmsg) // '. Exiting...'
       error stop trim(ccpp_errmsg)
@@ -155,18 +160,25 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, cc
   if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
     call physics%Diag%phys_zero (physics%Model)
   endif
-  
-  !--- Reset interstitials
-  call physics%Interstitial%rad_reset(physics%Model)
-  call physics%Interstitial%phys_reset(physics%Model)
 
-  call ccpp_physics_run(suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), physics=physics, ccpp_cfg=ccpp_cfg, errflg=ccpp_errflg, errmsg=ccpp_errmsg)
-  if (ccpp_errflg/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_errmsg) // '. Exiting...'
-      error stop trim(ccpp_errmsg)
-  end if
+  do isuite_part=1,len(ccpp_suite_parts)
+     call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                           suite_part = ccpp_suite_parts(isuite_part), &
+                           physics    = physics, &
+                           ccpp_cfg   = ccpp_cfg, &
+                           errflg     = ccpp_errflg, &
+                           errmsg     = ccpp_errmsg)
+     if (ccpp_errflg/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_errmsg) // '. Exiting...'
+        error stop trim(ccpp_errmsg)
+     end if
+  enddo
 
-  call ccpp_physics_timestep_finalize(suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), physics=physics, ccpp_cfg=ccpp_cfg, errflg=ccpp_errflg, errmsg=ccpp_errmsg)
+  call ccpp_physics_timestep_finalize(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                                      physics    = physics, &
+                                      ccpp_cfg   = ccpp_cfg, &
+                                      errflg     = ccpp_errflg, &
+                                      errmsg     = ccpp_errmsg)
   if (ccpp_errflg/=0) then
       write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_errmsg) // '. Exiting...'
       error stop trim(ccpp_errmsg)
