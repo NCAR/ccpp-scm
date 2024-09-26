@@ -450,8 +450,6 @@ module CCPP_typedefs
 
   end type GFS_interstitial_type
 
-  type(GFS_interstitial_type) :: GFS_interstitial_type_instance
-
 contains
 
 !----------------------

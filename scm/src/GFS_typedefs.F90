@@ -2197,24 +2197,12 @@ module GFS_typedefs
 ! PUBLIC ENTITIES
 !----------------
 
-  type(GFS_init_type)     :: GFS_init_type_instance
-  type(GFS_statein_type)  :: GFS_statein_type_instance
-  type(GFS_stateout_type) :: GFS_stateout_type_instance
-  type(GFS_sfcprop_type)  :: GFS_sfcprop_type_instance
-  type(GFS_coupling_type) :: GFS_coupling_type_instance
-  type(GFS_control_type)  :: GFS_control_type_instance
-  type(GFS_grid_type)     :: GFS_grid_type_instance
-  type(GFS_tbd_type)      :: GFS_tbd_type_instance
-  type(GFS_cldprop_type)  :: GFS_cldprop_type_instance
-  type(GFS_radtend_type)  :: GFS_radtend_type_instance
-  type(GFS_diag_type)     :: GFS_diag_type_instance
-  
-  public GFS_init_type_instance
-  public GFS_statein_type_instance,  GFS_stateout_type_instance, GFS_sfcprop_type_instance, &
-         GFS_coupling_type_instance
-  public GFS_control_type_instance,  GFS_grid_type_instance,     GFS_tbd_type_instance, &
-         GFS_cldprop_type_instance,  GFS_radtend_type_instance,  GFS_diag_type_instance
-  
+  public GFS_init_type
+  public GFS_statein_type,  GFS_stateout_type, GFS_sfcprop_type, &
+         GFS_coupling_type
+  public GFS_control_type,  GFS_grid_type,     GFS_tbd_type, &
+         GFS_cldprop_type,  GFS_radtend_type,  GFS_diag_type
+
 !*******************************************************************************************
   CONTAINS
 
@@ -3297,7 +3285,7 @@ module GFS_typedefs
     use physcons,         only: con_rerth, con_pi, con_p0, rhowater
     use mersenne_twister, only: random_setseed, random_number
     use parse_tracers,    only: get_tracer_index
-!    use GFS_ccpp_suite_sim_pre, only: load_ccpp_suite_sim
+    use GFS_ccpp_suite_sim_pre, only: load_ccpp_suite_sim
 !
     implicit none
 

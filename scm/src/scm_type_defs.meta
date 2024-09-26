@@ -38,73 +38,73 @@
   name = physics_type
   type = ddt
 [Model]
-  standard_name = GFS_control_type_instance
+  standard_name = GFS_control_type
   long_name = instance of derived type GFS_control_type
   units = DDT
   dimensions = ()
   type = GFS_control_type
 [Cldprop]
-  standard_name = GFS_cldprop_type_instance
+  standard_name = GFS_cldprop_type
   long_name = instance of derived type GFS_cldprop_type
   units = DDT
   dimensions = ()
   type = GFS_cldprop_type
 [Coupling]
-  standard_name = GFS_coupling_type_instance
+  standard_name = GFS_coupling_type
   long_name = instance of derived type GFS_coupling_type
   units = DDT
   dimensions = ()
   type = GFS_coupling_type
 [Diag]
-  standard_name = GFS_diag_type_instance
+  standard_name = GFS_diag_type
   long_name = instance of derived type GFS_diag_type
   units = DDT
   dimensions = ()
   type = GFS_diag_type
 [Grid]
-  standard_name = GFS_grid_type_instance
+  standard_name = GFS_grid_type
   long_name = instance of derived type GFS_grid_type
   units = DDT
   dimensions = ()
   type = GFS_grid_type
 [Radtend]
-  standard_name = GFS_radtend_type_instance
+  standard_name = GFS_radtend_type
   long_name = instance of derived type GFS_radtend_type
   units = DDT
   dimensions = ()
   type = GFS_radtend_type
 [Sfcprop]
-  standard_name = GFS_sfcprop_type_instance
+  standard_name = GFS_sfcprop_type
   long_name = instance of derived type GFS_sfcprop_type
   units = DDT
   dimensions = ()
   type = GFS_sfcprop_type
 [Statein]
-  standard_name = GFS_statein_type_instance
+  standard_name = GFS_statein_type
   long_name = instance of derived type GFS_statein_type
   units = DDT
   dimensions = ()
   type = GFS_statein_type
 [Stateout]
-  standard_name = GFS_stateout_type_instance
+  standard_name = GFS_stateout_type
   long_name = instance of derived type GFS_stateout_type
   units = DDT
   dimensions = ()
   type = GFS_stateout_type
 [Tbd]
-  standard_name = GFS_tbd_type_instance
+  standard_name = GFS_tbd_type
   long_name = instance of derived type GFS_tbd_type
   units = DDT
   dimensions = ()
   type = GFS_tbd_type
 [Interstitial]
-  standard_name = GFS_interstitial_type_instance
+  standard_name = GFS_interstitial_type
   long_name = instance of derived type GFS_interstitial_type
   units = DDT
   dimensions = ()
   type = GFS_interstitial_type
 [Init_parm]
-  standard_name = GFS_init_type_instance
+  standard_name = GFS_init_type
   long_name = instance of derived type GFS_init_type
   units = DDT
   dimensions = ()
@@ -122,14 +122,14 @@
   type = host
 [physics]
   standard_name = physics_type
-  long_name = instance of derived data type physics_type
+  long_name = definition of derived data type physics_type
   units = DDT
   dimensions = ()
   type = physics_type
   intent = inout
 [ccpp_cfg]
-  standard_name = ccpp_configuration_instance
-  long_name = instance of derived data type ccpp_config
+  standard_name = ccpp_configuration
+  long_name = definition of derived data type ccpp_config
   units = DDT
   dimensions = ()
   type = ty_ccpp_config
