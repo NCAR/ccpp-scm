@@ -5,7 +5,6 @@ project(scm
         LANGUAGES C Fortran)
 set(PROJECT "CCPP-SCM")
 
-
 #------------------------------------------------------------------------------
 #
 # Set where the CCPP Framework lives
@@ -39,22 +38,6 @@ SET(CCPP_CAP_FILES "${CMAKE_BINARY_DIR}/ccpp" CACHE
   STRING "Location of CCPP-generated cap files")
 
 SET(CCPP_FRAMEWORK ${CCPP_ROOT}/ccpp/framework/scripts)
-
-# Use rpaths on MacOSX
-set(CMAKE_MACOSX_RPATH 1)
-
-#------------------------------------------------------------------------------
-# Set a default build type if none was specified
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    #message(STATUS "Setting build type to 'Debug' as none was specified.")
-    #set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
-    message(STATUS "Setting build type to 'Release' as none was specified.")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-                 "MinSizeRel" "RelWithDebInfo")
-endif()
 
 ADD_COMPILE_OPTIONS(-O0)
 
@@ -241,19 +224,6 @@ find_package(w3emc REQUIRED)
 
 SET(CCPP_FRAMEWORK_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/framework)
 SET(CCPP_PHYSICS_SRC ${CMAKE_SOURCE_DIR}/../../ccpp/physics)
-
-# Use rpaths on MacOSX
-set(CMAKE_MACOSX_RPATH 1)
-
-#------------------------------------------------------------------------------
-# Set a default build type if none was specified
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    message(STATUS "Setting build type to 'Release' as none was specified.")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
-endif()
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp/physics)
