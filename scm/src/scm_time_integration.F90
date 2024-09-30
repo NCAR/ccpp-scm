@@ -161,9 +161,9 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, cc
     call physics%Diag%phys_zero (physics%Model)
   endif
 
-  do isuite_part=1,len(ccpp_suite_parts)
+  do isuite_part=1,size(ccpp_suite_parts)
      call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
-                           suite_part = ccpp_suite_parts(isuite_part), &
+                           suite_part = trim(trim(adjustl(ccpp_suite_parts(isuite_part)))), &
                            physics    = physics, &
                            ccpp_cfg   = ccpp_cfg, &
                            errflg     = ccpp_errflg, &

@@ -12,6 +12,7 @@ set(PROJECT "CCPP-SCM")
 #------------------------------------------------------------------------------
 get_filename_component(TEST_ROOT "${CMAKE_SOURCE_DIR}" DIRECTORY)
 get_filename_component(CCPP_ROOT "${TEST_ROOT}" DIRECTORY)
+
 #------------------------------------------------------------------------------
 #
 # Create list of SCHEME_FILES, HOST_FILES, and SUITE_FILES
@@ -21,9 +22,6 @@ get_filename_component(CCPP_ROOT "${TEST_ROOT}" DIRECTORY)
 LIST(APPEND SCHEME_FILES "${CCPP_ROOT}/ccpp/config/scheme_files.txt")
 LIST(APPEND HOST_FILES   "${CCPP_ROOT}/ccpp/config/host_files.txt")
 LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v16.xml")
-# HOST is the name of the executable we will build.
-# We assume there are files ${HOST}.meta and ${HOST}.F90 in CMAKE_SOURCE_DIR
-SET(HOST "${CMAKE_PROJECT_NAME}")
 
 #------------------------------------------------------------------------------
 #
@@ -39,25 +37,30 @@ SET(CCPP_CAP_FILES "${CMAKE_BINARY_DIR}/ccpp" CACHE
 
 SET(CCPP_FRAMEWORK ${CCPP_ROOT}/ccpp/framework/scripts)
 
-ADD_COMPILE_OPTIONS(-O0)
+# DJS2024: Haven't tested Capgen in DEBUG mode wtih SCM. *ToDo*
+#ADD_COMPILE_OPTIONS(-O0)
 
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   MESSAGE(STATUS "gfortran being used.")
-  ADD_COMPILE_OPTIONS(-fcheck=all)
-  ADD_COMPILE_OPTIONS(-fbacktrace)
-  ADD_COMPILE_OPTIONS(-ffpe-trap=zero)
-  ADD_COMPILE_OPTIONS(-finit-real=nan)
   ADD_COMPILE_OPTIONS(-ggdb)
-  ADD_COMPILE_OPTIONS(-ffree-line-length-none)
+  ADD_COMPILE_OPTIONS(-fbacktrace)
   ADD_COMPILE_OPTIONS(-cpp)
+  ADD_COMPILE_OPTIONS(-fcray-pointer)
+  ADD_COMPILE_OPTIONS(-ffree-line-length-none)
+  ADD_COMPILE_OPTIONS(-fno-range-check)
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   MESSAGE(STATUS "ifort being used.")
-  #ADD_COMPILE_OPTIONS(-check all)
-  ADD_COMPILE_OPTIONS(-fpe0)
-  ADD_COMPILE_OPTIONS(-warn)
   ADD_COMPILE_OPTIONS(-traceback)
-  ADD_COMPILE_OPTIONS(-debug extended)
   ADD_COMPILE_OPTIONS(-fpp)
+  ADD_COMPILE_OPTIONS(-g)
+  ADD_COMPILE_OPTIONS(-fno-alias)
+  ADD_COMPILE_OPTIONS(-auto)
+  ADD_COMPILE_OPTIONS(-safe-cray-ptr)
+  ADD_COMPILE_OPTIONS(-ftz)
+  ADD_COMPILE_OPTIONS(-assume byterecl)
+  ADD_COMPILE_OPTIONS(-nowarn)
+  ADD_COMPILE_OPTIONS(-sox)
+  ADD_COMPILE_OPTIONS(-align)
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message (WARNING "This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags SHOULD be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
@@ -381,24 +384,24 @@ SET(scm_source_files scm.F90
             scm_output.F90
 )
 
-ADD_EXECUTABLE(ccpp_scm ${scm_source_files} ${CCPP_CAPS})
+ADD_EXECUTABLE(scm ${scm_source_files} ${CCPP_CAPS})
 
 if(OPENMP)
-  TARGET_LINK_LIBRARIES(ccpp_scm PUBLIC OpenMP::OpenMP_Fortran)
+  TARGET_LINK_LIBRARIES(scm PUBLIC OpenMP::OpenMP_Fortran)
 endif()
-TARGET_LINK_LIBRARIES(ccpp_scm NetCDF::NetCDF_Fortran)
-TARGET_LINK_LIBRARIES(ccpp_scm bacio::bacio_4)
-TARGET_LINK_LIBRARIES(ccpp_scm sp::sp_d)
-TARGET_LINK_LIBRARIES(ccpp_scm w3emc::w3emc_d)
-TARGET_LINK_LIBRARIES(ccpp_scm ccpp_framework)
-TARGET_LINK_LIBRARIES(ccpp_scm ccpp_physics)
+TARGET_LINK_LIBRARIES(scm NetCDF::NetCDF_Fortran)
+TARGET_LINK_LIBRARIES(scm bacio::bacio_4)
+TARGET_LINK_LIBRARIES(scm sp::sp_d)
+TARGET_LINK_LIBRARIES(scm w3emc::w3emc_d)
+TARGET_LINK_LIBRARIES(scm ccpp_framework)
+TARGET_LINK_LIBRARIES(scm ccpp_physics)
 
-SET_TARGET_PROPERTIES(ccpp_scm PROPERTIES
-                               COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
-                               LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
+SET_TARGET_PROPERTIES(scm PROPERTIES
+                          COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
+                          LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
 
 ADD_CUSTOM_COMMAND(
-        TARGET ccpp_scm POST_BUILD
+        TARGET scm POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_SOURCE_DIR}/run_scm.py
                 ${CMAKE_CURRENT_BINARY_DIR}/run_scm.py)

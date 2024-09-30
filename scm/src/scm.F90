@@ -325,7 +325,7 @@ subroutine scm_main_sub()
       call physics%Diag%phys_zero (physics%Model)
     endif
 
-    do isuite_part=1,len(ccpp_suite_parts)
+    do isuite_part=1,size(ccpp_suite_parts)
        call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                              suite_part = ccpp_suite_parts(isuite_part), &
                              physics    = physics,     &

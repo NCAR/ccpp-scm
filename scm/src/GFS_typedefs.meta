@@ -5919,9 +5919,27 @@
   units = count
   dimensions = ()
   type = integer
+[nstf_name]
+  standard_name = configurations_for_nsstm
+  long_name = NSSTM configuration
+  units = flag
+  dimensions = (5)
+  type = integer
 [nstf_name(index_to_control_for_nsstm)]
   standard_name = control_for_nsstm
   long_name = NSSTM flag: off/uncoupled/coupled=0/1/2
+  units = flag
+  dimensions = ()
+  type = integer
+[nstf_name(index_for_nsstm_spinup)]
+  standard_name = control_for_nsstm_spinup
+  long_name = NSSTM control for spinup
+  units = flag
+  dimensions = ()
+  type = integer
+[nstf_name(index_for_nsstm_analysis)]
+  standard_name = control_for_nsstm_analysis
+  long_name = NSSTM control for analysis
   units = flag
   dimensions = ()
   type = integer
