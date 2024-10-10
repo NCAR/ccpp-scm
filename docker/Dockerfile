@@ -74,7 +74,7 @@ ENV w3emc_ROOT=/comsoftware/nceplibs
 # Obtain CCPP SCM source code, build code, and download static data
 RUN if [ -z "$PR_NUMBER" ]; then \
         cd /comsoftware \
-        && git clone --recursive -b main https://github.com/NCAR/ccpp-scm; \
+        && git clone --recursive -b release/public-v7 https://github.com/NCAR/ccpp-scm; \
     else \
         cd /comsoftware \
         && git clone https://github.com/NCAR/ccpp-scm \
