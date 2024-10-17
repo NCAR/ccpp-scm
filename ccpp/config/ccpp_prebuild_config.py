@@ -19,8 +19,8 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/hooks/machine.F',
     'ccpp/physics/physics/Radiation/RRTMG/radsw_param.f',
     'ccpp/physics/physics/Radiation/RRTMG/radlw_param.f',
-    'ccpp/physics/physics/photochem/h2o_def.f',
     'ccpp/physics/physics/photochem/module_ozphys.F90',
+    'ccpp/physics/physics/photochem/module_h2ophys.F90',
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90',
     'scm/src/CCPP_typedefs.F90',
     'scm/src/GFS_typedefs.F90',
@@ -48,6 +48,10 @@ TYPEDEFS_NEW_METADATA = {
     'module_ozphys' : {
         'module_ozphys' : '',
         'ty_ozphys'     : '',
+        },
+    'module_h2ophys' : {
+        'module_h2ophys' : '',
+        'ty_h2ophys'     : '',
         },
     'CCPP_typedefs' : {
         'GFS_interstitial_type' : 'physics%Interstitial(cdata%thrd_no)',
@@ -96,6 +100,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_SCNV_generic_post.F90'        ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_debug.F90'                    ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_phys_time_vary.scm.F90'       ,
+    'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_photochemistry.F90'           ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rad_time_vary.scm.F90'        ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_radiation_surface.F90'        ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmg_post.F90'               ,
@@ -164,7 +169,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/GWD/gwdc_post.f',
     'ccpp/physics/physics/GWD/gwdps.f',
     'ccpp/physics/physics/GWD/rayleigh_damp.f',
-    'ccpp/physics/physics/photochem/h2ophys.f',
+    'ccpp/physics/physics/photochem/module_h2ophys.F90',
     'ccpp/physics/physics/photochem/module_ozphys.F90',
     'ccpp/physics/physics/MP/Ferrier_Aligo/mp_fer_hires.F90',
     'ccpp/physics/physics/MP/GFDL/gfdl_cloud_microphys.F90',
