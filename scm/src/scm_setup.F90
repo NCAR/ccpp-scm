@@ -308,7 +308,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_cldprop_type),                    intent(inout) :: Cldprop
   type(GFS_radtend_type),                    intent(inout) :: Radtend
   type(GFS_diag_type),                       intent(inout) :: Diag
-  type(GFS_interstitial_type),               intent(inout) :: Interstitial
+  type(GFS_interstitial_type),               intent(inout) :: Interstitial(:)
   type(GFS_init_type),                       intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: ntasks, nthreads, n_cols
@@ -337,18 +337,23 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
 
   !--- initialize DDTs
 
-    call Statein%create(n_cols, Model)
-    call Stateout%create(n_cols, Model)
-    call Sfcprop%create(n_cols, Model)
-    call Coupling%create(n_cols, Model)
-    call Grid%create(n_cols, Model)
-    call Tbd%create(n_cols, Model)
-    call Cldprop%create(n_cols, Model)
-    call Radtend%create(n_cols, Model)
+    call Statein%create(Model)
+    call Stateout%create(Model)
+    call Sfcprop%create(Model)
+    call Coupling%create(Model)
+    call Grid%create(Model)
+    call Tbd%create(Model)
+    call Cldprop%create(Model)
+    call Radtend%create(Model)
     !--- internal representation of diagnostics
-    call Diag%create(n_cols, Model)
+    call Diag%create(Model)
     !--- internal representation of interstitials for CCPP physics
-    call Interstitial%create(n_cols, Model)
+    if (nthreads == 1) then
+      call Interstitial(1)%create(n_cols, Model)
+    else
+      print *,' CCPP SCM is only set up to use one thread - shutting down'
+      error stop
+    end if
 
     !--- populate the grid components
     !call GFS_grid_populate (Grid(i), Init_parm%xlon, Init_parm%xlat, Init_parm%area)
