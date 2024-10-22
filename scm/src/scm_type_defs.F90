@@ -427,7 +427,7 @@ module scm_type_defs
     type(GFS_cldprop_type)                   :: Cldprop
     type(GFS_radtend_type)                   :: Radtend
     type(GFS_diag_type)                      :: Diag
-    type(GFS_interstitial_type)              :: Interstitial
+    type(GFS_interstitial_type), allocatable :: Interstitial(:)
     type(GFS_init_type)                      :: Init_parm
 
     contains
@@ -947,15 +947,17 @@ module scm_type_defs
 
   end subroutine scm_reference_create
 
-  subroutine physics_create(physics, n_columns)
+  subroutine physics_create(physics, n_columns, n_threads)
     class(physics_type) :: physics
-    integer, intent(in) :: n_columns
+    integer, intent(in) :: n_columns, n_threads
     
     real(kind=kind_phys) :: kind_phys_zero
 
     integer :: i
     integer, dimension(8) :: zeroes_8
-
+    
+    allocate(physics%Interstitial(n_threads))
+    
     zeroes_8(:) = int_zero
     kind_phys_zero = real_zero
 
@@ -1129,7 +1131,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_facwf,     physics%Sfcprop%facwf(i),  "facwf",    .true.,  missing_var(11))
         call conditionally_set_var(scm_input%input_vegfrac,   physics%Sfcprop%vfrac(i),  "vegfrac",  .true.,  missing_var(12))
         !GJF: is this needed anymore (not in FV3GFS_io)?
-        physics%Interstitial%sigmaf(i) = min(physics%Sfcprop%vfrac(i),0.01)
+        physics%Interstitial(1)%sigmaf(i) = min(physics%Sfcprop%vfrac(i),0.01)
         call conditionally_set_var(scm_input%input_canopy,    physics%Sfcprop%canopy(i), "canopy",   .true.,  missing_var(13))
         call conditionally_set_var(scm_input%input_f10m,      physics%Sfcprop%f10m(i),   "f10m",     .false., missing_var(14))
         call conditionally_set_var(scm_input%input_t2m,       physics%Sfcprop%t2m(i),    "t2m",      physics%Model%cplflx, missing_var(15))
