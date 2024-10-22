@@ -248,7 +248,7 @@ subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id,
   call NetCDF_def_var(ncid, 't2m', NF90_FLOAT, "2-m temperature", "K", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'q2m', NF90_FLOAT, "2-m specific humidity", "kg kg-1", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'ustar', NF90_FLOAT, "surface friction velocity", "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'tsfc', NF90_FLOAT, "surface skin temperature", "m s-1K", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'tsfc', NF90_FLOAT, "surface skin temperature", "K", dummy_id, (/ hor_dim_id, time_inst_id /))
   
 end subroutine output_init_sfcprop
 
