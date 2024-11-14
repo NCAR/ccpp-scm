@@ -1882,6 +1882,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%runtime = elapsed_sec*scm_state%runtime_mult
   end if
 
+  scm_input%input_area = input_area(active_init_time)
   scm_input%input_time = input_time
   scm_input%input_pres_surf(1) = input_pres_surf(active_init_time) !perhaps input_pres_surf should only be equal to input_force_pres_surf?
   scm_input%input_pres = input_pres(:,active_init_time)
@@ -2067,7 +2068,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
   if (trim(input_surfaceForcingLSM) == "lsm") then
     scm_input%input_ozone = input_ozone(:,active_init_time)
-    scm_input%input_area = input_area(active_init_time)
 
     scm_input%input_stddev   = input_stddev(active_init_time)
     scm_input%input_convexity= input_convexity(active_init_time)
