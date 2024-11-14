@@ -44,7 +44,9 @@ subroutine set_state(scm_input, scm_reference, scm_state)
   end do
 
   do i=1, scm_state%n_cols
-    scm_state%area(i) = scm_input%input_area
+    if (scm_state%area(i) == 0) then
+      scm_state%area(i) = scm_input%input_area
+    end if
   end do
 
   !> - \todo When patching in a reference sounding, need to handle the case when the reference sounding is too short; patch_in_ref
