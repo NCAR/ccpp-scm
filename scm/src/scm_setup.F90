@@ -43,7 +43,9 @@ subroutine set_state(scm_input, scm_reference, scm_state)
     scm_state%lat(i) = scm_input%input_lat*deg_to_rad_const
   end do
 
-
+  do i=1, scm_state%n_cols
+    scm_state%area(i) = scm_input%input_area
+  end do
 
   !> - \todo When patching in a reference sounding, need to handle the case when the reference sounding is too short; patch_in_ref
   !! checks for the case, but as of now, it just extrapolates where it needs to and returns an error code; error should be handled
@@ -160,7 +162,6 @@ subroutine set_state(scm_input, scm_reference, scm_state)
         scm_state%state_T(i,:,1) = scm_input%input_temp(:)
         scm_state%state_tracer(i,:,scm_state%water_vapor_index,1)=scm_input%input_qt
         scm_state%state_tracer(i,:,scm_state%ozone_index,1)=scm_input%input_ozone
-        scm_state%area(i) = scm_input%input_area
 
         if (scm_input%input_pres_i(1).GT. 0.0) then ! pressure are read in, overwrite values
            scm_state%pres_i(i,:)=scm_input%input_pres_i
