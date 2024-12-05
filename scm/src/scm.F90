@@ -14,7 +14,7 @@ subroutine scm_main_sub()
   use scm_forcing
   use scm_time_integration
   use scm_output
-  use scm_type_defs, only: physics_type, scm_state_type, scm_input_type, scm_reference_type
+  use scm_type_defs, only: physics, scm_state_type, scm_input_type, scm_reference_type
   use ccpp_config,   only: ty_ccpp_config
   use mpi_f08
   use ccpp_config, only: ty_ccpp_config
@@ -32,7 +32,6 @@ subroutine scm_main_sub()
   type(scm_state_type),     target :: scm_state
   type(scm_input_type),     target :: scm_input_instance
   type(scm_reference_type), target :: scm_reference
-  type(physics_type),       target :: physics
   type(ty_ccpp_config),     target :: ccpp_cfg
   type(MPI_Comm)                   :: fcst_mpi_comm
   integer             :: i, j, kdt_rad, idtend, itrac

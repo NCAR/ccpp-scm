@@ -5913,13 +5913,18 @@ module GFS_typedefs
         endif
       endif
 
+      Model%instf_opt    = instf_opt
+      Model%instf_spinup = instf_spinup
+      Model%instf_anlys  = instf_anlys
+      Model%instf_zs1_lb = instf_zs1_lb
+      Model%instf_zs2_ub = instf_zs2_ub
       if (Model%nstf_name(1) > 0 ) then
         print *,' NSSTM is active '
-        print *,' nstf_name(1)=',Model%nstf_name(instf_opt)
-        print *,' nstf_name(2)=',Model%nstf_name(instf_spinup)
-        print *,' nstf_name(3)=',Model%nstf_name(instf_anlys)
-        print *,' nstf_name(4)=',Model%nstf_name(instf_zs1_lb)
-        print *,' nstf_name(5)=',Model%nstf_name(instf_zs2_ub)
+        print *,' nstf_name(1)=',Model%nstf_name(Model%instf_opt)
+        print *,' nstf_name(2)=',Model%nstf_name(Model%instf_spinup)
+        print *,' nstf_name(3)=',Model%nstf_name(Model%instf_anlys)
+        print *,' nstf_name(4)=',Model%nstf_name(Model%instf_zs1_lb)
+        print *,' nstf_name(5)=',Model%nstf_name(Model%instf_zs2_ub)
       endif
       if (Model%do_deep) then
         ! Consistency check for NTDK convection: deep and shallow convection are bundled
@@ -7243,8 +7248,10 @@ module GFS_typedefs
 
 !--- aerosol fields
     ! DH* allocate only for MG? *DH
-    allocate (Tbd%aer_nm  (IM,Model%levs,Model%ntrcaer))
-    Tbd%aer_nm = clear_val
+    if (Model%iaerclm) then
+       allocate (Tbd%aer_nm  (IM,Model%levs,Model%ntrcaer))
+       Tbd%aer_nm = clear_val
+    endif
 
 !--- tau_amf for  NGWs
     ! DH* allocate only for UGWP ? *DH

@@ -3,7 +3,7 @@ ccpp/physics/physics/hooks/physcons.F90
 ccpp/physics/physics/tools/get_prs_fv3.F90
 ccpp/physics/physics/tools/get_phi_fv3.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90
-ccpp/physics/physics/photochem/h2o_def.f
+ccpp/physics/physics/photochem/module_h2ophys.F90
 ccpp/physics/physics/photochem/module_ozphys.F90
 ccpp/physics/physics/Radiation/RRTMG/radlw_param.f
 ccpp/physics/physics/Radiation/RRTMG/radsw_param.f
@@ -107,9 +107,9 @@ ccpp/physics/physics/PBL/MYJ/myjpbl_wrapper.F90
 ccpp/physics/physics/MP/GFDL/gfdl_cloud_microphys.F90
 ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_gscond.f
 ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_precpd.f
-ccpp/physics/physics/MP/Morrison_Gettelmanm_micro.F90
-ccpp/physics/physics/MP/Morrison_Gettelmanm_micro_pre.F90
-ccpp/physics/physics/MP/Morrison_Gettelmanm_micro_post.F90
+ccpp/physics/physics/MP/Morrison_Gettelman/m_micro.F90
+ccpp/physics/physics/MP/Morrison_Gettelman/m_micro_pre.F90
+ccpp/physics/physics/MP/Morrison_Gettelman/m_micro_post.F90
 ccpp/physics/physics/MP/Thompson/mp_thompson_pre.F90
 ccpp/physics/physics/MP/Thompson/mp_thompson.F90
 ccpp/physics/physics/MP/Thompson/mp_thompson_post.F90
@@ -133,4 +133,3 @@ ccpp/physics/physics/SFC_Models/SeaIce/CICE/sfc_cice.f
 ccpp/physics/physics/SFC_Models/Lake/Flake/flake_driver.F90
 ccpp/physics/physics/smoke_dust/rrfs_smoke_wrapper.F90
 ccpp/physics/physics/smoke_dust/rrfs_smoke_postpbl.F90
-ccpp/physics/physics/photochem/h2ophys.f

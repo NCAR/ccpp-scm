@@ -8024,6 +8024,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_aerosol_tracers_MG)
   type = real
   kind = kind_phys
+  active = (flag_for_aerosol_input_MG_radiation)
 [aod_gf]
   standard_name = aerosol_optical_depth_for_grell_freitas_deep_convection
   long_name = aerosol optical depth used in Grell-Freitas Convective Parameterization
