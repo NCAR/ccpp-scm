@@ -34,7 +34,7 @@ subroutine scm_main_sub()
   type(scm_reference_type), target :: scm_reference
   type(ty_ccpp_config),     target :: ccpp_cfg
   type(MPI_Comm)                   :: fcst_mpi_comm
-  integer             :: i, j, kdt_rad, idtend, itrac
+  integer             :: i, j, kdt_rad, idtend, itrac, n_tasks, n_threads
   real(kind=8)        :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer             :: jdat(1:8)
   integer             :: cdata_time_index
@@ -49,13 +49,15 @@ subroutine scm_main_sub()
   ! Initialize error handling variables.
   ccpp_errflg = 0
   ccpp_errmsg = ''
-  
+
   call MPI_INIT(ierr)
   if (ierr/=0) then
       write(*,*) 'An error occurred in MPI_INIT: ', ierr
       error stop
   end if
   fcst_mpi_comm = MPI_COMM_WORLD
+  n_tasks   = 1
+  n_threads = 1
 
   call get_config_nml(scm_state)
 
@@ -88,7 +90,7 @@ subroutine scm_main_sub()
 
   call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
-  call physics%create(scm_state%n_cols)
+  call physics%create(scm_state%n_cols, n_threads)
 
   !physics initialization section
 
@@ -137,7 +139,7 @@ subroutine scm_main_sub()
   call GFS_suite_setup(physics%Model, physics%Statein, physics%Stateout,           &
                        physics%Sfcprop, physics%Coupling, physics%Grid,            &
                        physics%Tbd, physics%Cldprop, physics%Radtend,              &
-                       physics%Diag, physics%Interstitial, 1, 1,                   &
+                       physics%Diag, physics%Interstitial, n_tasks, n_threads,     &
                        physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
                        scm_state%lat, scm_state%area)
 
@@ -179,10 +181,11 @@ subroutine scm_main_sub()
     write(*,*) "This will cause the effective output period of variables that are only given values during longwave calls to be ",&
       lcm(scm_state%n_itt_out,physics%Model%nslwr)*scm_state%dt," seconds."
   end if
-  
+
   ccpp_cfg%blk_no   = 1
   ccpp_cfg%thrd_no  = 1
   ccpp_cfg%thrd_cnt = 1
+  ccpp_cfg%chunk_no = 1
 
   call physics%associate(scm_state)
   call physics%set(scm_input_instance, scm_state)
@@ -442,9 +445,9 @@ subroutine scm_main_sub()
     write(*,*) "itt = ",scm_state%itt
     write(*,*) "model time (s) = ",scm_state%model_time
     if (scm_state%lsm_ics .or. scm_state%model_ics) then
-      write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
-      write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
-      write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
+      write(*,*) "Bowen ratio: ",physics%Interstitial(1)%dtsfc1(1)/physics%Interstitial(1)%dqsfc1(1)
+      write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial(1)%dtsfc1(1)
+      write(*,*) "latent heat flux (W m-2): ",physics%Interstitial(1)%dqsfc1(1)
     end if
 
     if (.not. in_spinup) then

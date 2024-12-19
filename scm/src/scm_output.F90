@@ -90,7 +90,7 @@ subroutine output_init(scm_state, physics)
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="hor_dim_layer",LEN=scm_state%n_cols,DIMID=hor_dim_id),"nf90_def_dim(hor_dim_layer)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_layer",LEN=scm_state%n_levels,DIMID=vert_dim_id),"nf90_def_dim(vert_dim_layer)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_interface",LEN=scm_state%n_levels+1,DIMID=vert_dim_i_id),"nf90_def_dim(vert_dim_interface)")
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_rad",LEN=physics%Interstitial%lmk,DIMID=vert_dim_rad_id),"nf90_def_dim(vert_dim_rad)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_rad",LEN=physics%Interstitial(1)%lmk,DIMID=vert_dim_rad_id),"nf90_def_dim(vert_dim_rad)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_soil",LEN=physics%Model%lsoil_lsm,DIMID=vert_dim_soil_id),"nf90_def_dim(vert_dim_soil)")
 
   !> - Define the dimension variables.
@@ -248,7 +248,7 @@ subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id,
   call NetCDF_def_var(ncid, 't2m', NF90_FLOAT, "2-m temperature", "K", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'q2m', NF90_FLOAT, "2-m specific humidity", "kg kg-1", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'ustar', NF90_FLOAT, "surface friction velocity", "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
-  call NetCDF_def_var(ncid, 'tsfc', NF90_FLOAT, "surface skin temperature", "m s-1K", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'tsfc', NF90_FLOAT, "surface skin temperature", "K", dummy_id, (/ hor_dim_id, time_inst_id /))
   
 end subroutine output_init_sfcprop
 
@@ -600,29 +600,29 @@ subroutine output_append_interstitial_inst(ncid, scm_state, physics)
     type(scm_state_type), intent(in) :: scm_state
     type(physics_type), intent(in) :: physics
     
-    call NetCDF_put_var(ncid, "tau_u",   physics%Interstitial%dusfc1(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "tau_v",   physics%Interstitial%dvsfc1(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "tau_u",   physics%Interstitial(1)%dusfc1(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "tau_v",   physics%Interstitial(1)%dvsfc1(:), scm_state%itt_out)
     if (physics%model%imfdeepcnv >= 0 .or. physics%model%imfshalcnv >= 0) then
       call NetCDF_put_var(ncid, "upd_mf",  physics%Tbd%ud_mf(:,:), scm_state%itt_out)
     end if
-    call NetCDF_put_var(ncid, "dwn_mf",  physics%Interstitial%dd_mf(:,:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "det_mf",  physics%Interstitial%dt_mf(:,:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "dwn_mf",  physics%Interstitial(1)%dd_mf(:,:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "det_mf",  physics%Interstitial(1)%dt_mf(:,:), scm_state%itt_out)
     
-    call NetCDF_put_var(ncid, "sfc_up_lw_land",     physics%Interstitial%adjsfculw_land(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_up_lw_ice",      physics%Interstitial%adjsfculw_ice(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_up_lw_water",    physics%Interstitial%adjsfculw_water(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_up_sw_dir_nir",  physics%Interstitial%adjnirbmu(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_up_sw_dif_nir",  physics%Interstitial%adjnirdfu(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_up_sw_dir_vis",  physics%Interstitial%adjvisbmu(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_up_sw_dif_vis",  physics%Interstitial%adjvisdfu(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_dwn_sw_dir_nir", physics%Interstitial%adjnirbmd(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_dwn_sw_dif_nir", physics%Interstitial%adjnirdfd(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_dwn_sw_dir_vis", physics%Interstitial%adjvisbmd(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "sfc_dwn_sw_dif_vis", physics%Interstitial%adjvisdfd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_lw_land",     physics%Interstitial(1)%adjsfculw_land(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_lw_ice",      physics%Interstitial(1)%adjsfculw_ice(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_lw_water",    physics%Interstitial(1)%adjsfculw_water(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dir_nir",  physics%Interstitial(1)%adjnirbmu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dif_nir",  physics%Interstitial(1)%adjnirdfu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dir_vis",  physics%Interstitial(1)%adjvisbmu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_up_sw_dif_vis",  physics%Interstitial(1)%adjvisdfu(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dir_nir", physics%Interstitial(1)%adjnirbmd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dif_nir", physics%Interstitial(1)%adjnirdfd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dir_vis", physics%Interstitial(1)%adjvisbmd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "sfc_dwn_sw_dif_vis", physics%Interstitial(1)%adjvisdfd(:), scm_state%itt_out)
     
-    call NetCDF_put_var(ncid, "mp_prcp_inst",    physics%Interstitial%prcpmp(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "dcnv_prcp_inst",  physics%Interstitial%raincd(:), scm_state%itt_out)
-    call NetCDF_put_var(ncid, "scnv_prcp_inst",  physics%Interstitial%raincs(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "mp_prcp_inst",    physics%Interstitial(1)%prcpmp(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "dcnv_prcp_inst",  physics%Interstitial(1)%raincd(:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "scnv_prcp_inst",  physics%Interstitial(1)%raincs(:), scm_state%itt_out)
 
 end subroutine output_append_interstitial_inst
 
@@ -634,15 +634,15 @@ subroutine output_append_interstitial_rad(ncid, scm_state, physics)
     type(scm_state_type), intent(in) :: scm_state
     type(physics_type), intent(in) :: physics
     
-    call NetCDF_put_var(ncid, "rad_cloud_fraction", physics%Interstitial%clouds(:,:,1), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_cloud_lwp",      physics%Interstitial%clouds(:,:,2), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_eff_rad_ql",     physics%Interstitial%clouds(:,:,3), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_cloud_iwp",      physics%Interstitial%clouds(:,:,4), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_eff_rad_qi",     physics%Interstitial%clouds(:,:,5), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_cloud_rwp",      physics%Interstitial%clouds(:,:,6), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_eff_rad_qr",     physics%Interstitial%clouds(:,:,7), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_cloud_swp",      physics%Interstitial%clouds(:,:,8), scm_state%itt_rad)
-    call NetCDF_put_var(ncid, "rad_eff_rad_qs",     physics%Interstitial%clouds(:,:,9), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_fraction", physics%Interstitial(1)%clouds(:,:,1), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_lwp",      physics%Interstitial(1)%clouds(:,:,2), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_ql",     physics%Interstitial(1)%clouds(:,:,3), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_iwp",      physics%Interstitial(1)%clouds(:,:,4), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qi",     physics%Interstitial(1)%clouds(:,:,5), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_rwp",      physics%Interstitial(1)%clouds(:,:,6), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qr",     physics%Interstitial(1)%clouds(:,:,7), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_cloud_swp",      physics%Interstitial(1)%clouds(:,:,8), scm_state%itt_rad)
+    call NetCDF_put_var(ncid, "rad_eff_rad_qs",     physics%Interstitial(1)%clouds(:,:,9), scm_state%itt_rad)
 
 end subroutine output_append_interstitial_rad
 

@@ -101,7 +101,7 @@
   standard_name = GFS_interstitial_type
   long_name = instance of derived type GFS_interstitial_type
   units = DDT
-  dimensions = ()
+  dimensions = (number_of_openmp_threads)
   type = GFS_interstitial_type
 [Init_parm]
   standard_name = GFS_init_type
