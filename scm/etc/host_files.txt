@@ -1,0 +1,13 @@
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/framework/src/ccpp_types.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/physics/physics/machine.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/physics/physics/ozne_def.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/physics/physics/h2o_def.meta
+#/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/physics/physics/module_ccpp_suite_simulator.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/physics/physics/radlw_param.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/ccpp/physics/physics/radsw_param.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/src/GFS_typedefs.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/src/CCPP_typedefs.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/src/scm_kinds.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/src/scm_type_defs.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/src/scm_physical_constants.meta
+/glade/u/home/dswales/Projects/framework/capgen/capgen_in_SCM/ccpp-scm/scm/src/scm_utils.meta
