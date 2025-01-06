@@ -22,6 +22,9 @@ parser.add_argument('-lons', '--lon_list',       help='longitudes, separated by 
 parser.add_argument('-lats', '--lat_list',       help='latitudes, separated by a space',       nargs='*', type=float, required=False)
 parser.add_argument('-fxy',  '--lonlat_file',    help='file containing longitudes and latitude',nargs=1,              required=False)
 parser.add_argument('-nens', '--nensmembers',    help='number of SCM UFS ensemble memebers to create',                 type=int,   required=False)
+parser.add_argument('-tile', '--tile',           help='FV3 native grid tile',                                          type=int,   required=False)
+parser.add_argument('-is',   '--i_list',         help='list of i-indices for the given tile of the FV3 native grid, separated by a space', nargs='*', type=int, required=False)
+parser.add_argument('-js',   '--j_list',         help='list of j-indices for the given tile of the FV3 native grid, separated by a space', nargs='*', type=int, required=False)
 parser.add_argument('-dt',   '--timestep',       help='SCM timestep, in seconds',                                      type=int,   default = 3600)
 parser.add_argument('-cres', '--C_RES',          help='UFS spatial resolution',                                        type=int,   default = 96)
 parser.add_argument('-sdf',  '--suite',          help='CCPP suite definition file to use for ensemble',                            default = 'SCM_GFS_v16')
@@ -69,6 +72,15 @@ def main():
             npts = len(args.lon_list)
         else:
             print("ERROR: Number of longitude/latitudes are inconsistent")
+            exit()
+    elif (args.i_list and args.j_list):
+        if (len(args.i_list) == len(args.j_list)):
+            npts = len(args.i_list)
+        else:
+            print("ERROR: Number of i/j indices are inconsistent")
+            exit()
+        if not args.tile:
+            print("ERROR: Must provide a tile number for the given i/j indices")
             exit()
         # end if
     # end if
@@ -121,11 +133,15 @@ def main():
         lat_list = lines[1]
         lats = eval(lat_list)
         npts = len(lons)
+    elif (args.i_list and args.j_list):
+        i_indices = np.asarray(args.i_list)
+        j_indices = np.asarray(args.j_list)
     else:
         print("ERROR: Must provide input points in one of the following formats:")
         print("  Using -nens [] -lonl [] -latl []  (e.g. -nens 20 -lonl 30 40 -latl 30 35)")
         print("  Using -lons [] -lats []           (e.g. -lons 203 204 205 -lats 30 30 30)")
         print("  Using -fxy                        (e.g. -fxy lonlat.txt w/ -lons [] -lats [])")
+        print("  Using -tile [] -is [] -js []      (e.g. -tile 5 -is 5 6 7 -js 40 40 40)")
         exit()
     # end if
     
@@ -158,7 +174,11 @@ def main():
         # Call UFS_case_gen.py
         case_name     = args.case_name +"_n" + str(pt).zfill(3)
         file_scminput = "../../data/processed_case_input/"+case_name+"_SCM_driver.nc"
-        com = "./UFS_case_gen.py -l " +str(lons[pt]) + " " + str(lats[pt]) + \
+        if(lons and lats):
+            loc_string = "-l " +str(lons[pt]) + " " + str(lats[pt])
+        else:
+            loc_string = "-ij " + str(i_indices[pt]) + " " + str(j_indices[pt]) + "-t " + str(args.tile)
+        com = "./UFS_case_gen.py " + loc_string + \
               " -i " + args.dir_ic + " -g " + args.dir_grid + " -f " + args.dir_forcing + " -n " + case_name + com_config
         print(com)
         os.system(com)
