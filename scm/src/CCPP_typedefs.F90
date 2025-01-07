@@ -704,12 +704,16 @@ contains
        allocate (Interstitial%precip_overlap_param (IM, Model%levs))
        allocate (Interstitial%fluxlwUP_allsky      (IM, Model%levs+1))
        allocate (Interstitial%fluxlwDOWN_allsky    (IM, Model%levs+1))
-       allocate (Interstitial%fluxlwUP_clrsky      (IM, Model%levs+1))
-       allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
        allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
        allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
-       allocate (Interstitial%fluxswUP_clrsky      (IM, Model%levs+1))
-       allocate (Interstitial%fluxswDOWN_clrsky    (IM, Model%levs+1))
+       if (Model%lwhtr) then
+          allocate (Interstitial%fluxlwUP_clrsky   (IM, Model%levs+1))
+          allocate (Interstitial%fluxlwDOWN_clrsky (IM, Model%levs+1))
+       endif
+       if (Model%swhtr) then
+          allocate (Interstitial%fluxswUP_clrsky   (IM, Model%levs+1))
+          allocate (Interstitial%fluxswDOWN_clrsky (IM, Model%levs+1))
+       endif
        allocate (Interstitial%aerosolslw           (IM, Model%levs, Model%rrtmgp_nBandsLW, NF_AELW))
        allocate (Interstitial%aerosolssw           (IM, Model%levs, Model%rrtmgp_nBandsSW, NF_AESW))
        allocate (Interstitial%cld_frac             (IM, Model%levs))
@@ -1120,12 +1124,16 @@ contains
       Interstitial%precip_overlap_param = clear_val
       Interstitial%fluxlwUP_allsky      = clear_val
       Interstitial%fluxlwDOWN_allsky    = clear_val
-      Interstitial%fluxlwUP_clrsky      = clear_val
-      Interstitial%fluxlwDOWN_clrsky    = clear_val
       Interstitial%fluxswUP_allsky      = clear_val
       Interstitial%fluxswDOWN_allsky    = clear_val
-      Interstitial%fluxswUP_clrsky      = clear_val
-      Interstitial%fluxswDOWN_clrsky    = clear_val
+      if (Model%lwhtr) then
+         Interstitial%fluxlwUP_clrsky   = clear_val
+         Interstitial%fluxlwDOWN_clrsky = clear_val
+      endif
+      if (Model%swhtr) then
+         Interstitial%fluxswUP_clrsky   = clear_val
+         Interstitial%fluxswDOWN_clrsky = clear_val
+      endif
       Interstitial%aerosolslw           = clear_val
       Interstitial%aerosolssw           = clear_val
       Interstitial%cld_frac             = clear_val

@@ -22,6 +22,10 @@ get_filename_component(CCPP_ROOT "${TEST_ROOT}" DIRECTORY)
 LIST(APPEND SCHEME_FILES "${CCPP_ROOT}/ccpp/config/scheme_files.txt")
 LIST(APPEND HOST_FILES   "${CCPP_ROOT}/ccpp/config/host_files.txt")
 LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v16.xml")
+#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v16_RRTMGP.xml")
+#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v17_p8_ugwpv1.xml")
+#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_HRRR_gf.xml")
+#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_WoFS_v0.xml")
 
 #------------------------------------------------------------------------------
 #
@@ -389,6 +393,7 @@ SET(scm_source_files scm.F90
             scm_output.F90
 )
 
+message(STATUS "${CCPP_CAPS}")
 ADD_EXECUTABLE(scm ${scm_source_files} ${CCPP_CAPS})
 
 if(OPENMP)

@@ -17,8 +17,7 @@ subroutine scm_main_sub()
   use scm_type_defs, only: physics, scm_state_type, scm_input_type, scm_reference_type
   use ccpp_config,   only: ty_ccpp_config
   use mpi_f08
-  use ccpp_config, only: ty_ccpp_config
-
+  
   use :: SCM_ccpp_cap,  only: &
           ccpp_physics_init              => SCM_ccpp_physics_initialize,       &
           ccpp_physics_timestep_init     => SCM_ccpp_physics_timestep_initial, &
