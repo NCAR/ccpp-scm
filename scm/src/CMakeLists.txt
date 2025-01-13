@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.14)
 
 project(scm
@@ -15,17 +16,32 @@ get_filename_component(CCPP_ROOT "${TEST_ROOT}" DIRECTORY)
 
 #------------------------------------------------------------------------------
 #
-# Create list of SCHEME_FILES, HOST_FILES, and SUITE_FILES
+# Create list of SCHEME_FILES and HOST_FILES
 # Paths should be relative to CMAKE_SOURCE_DIR (this file's directory)
 #
 #------------------------------------------------------------------------------
 LIST(APPEND SCHEME_FILES "${CCPP_ROOT}/ccpp/config/scheme_files.txt")
 LIST(APPEND HOST_FILES   "${CCPP_ROOT}/ccpp/config/host_files.txt")
-LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v16.xml")
-#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v16_RRTMGP.xml")
-#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_GFS_v17_p8_ugwpv1.xml")
-#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_HRRR_gf.xml")
-#LIST(APPEND SUITE_FILES  "${CCPP_ROOT}/ccpp/suites/suite_SCM_WoFS_v0.xml")
+
+#------------------------------------------------------------------------------
+#
+# Which Suites are we building with?
+#
+#------------------------------------------------------------------------------ 
+if(DEFINED CCPP_SUITES)
+  set(suite_string ${CCPP_SUITES})
+  message(STATUS "Calling CCPP code generator (ccpp_capgen.py) for suites ${suite_string} ...")
+  unset(CCPP_SUITES CACHE)
+else()
+  execute_process(
+    COMMAND scm/src/suite_info.py
+    WORKING_DIRECTORY ${CCPP_ROOT}
+    OUTPUT_VARIABLE suite_string
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+    set(_ccpp_suites_arg "--suites=${suite_string}")
+    message(STATUS "Calling CCPP code generator (ccpp_capgen.py) for suites listed in scm/src/suite_info.py: ${_ccpp_suites_arg}.")
+endif()
 
 #------------------------------------------------------------------------------
 #
@@ -40,9 +56,6 @@ SET(CCPP_CAP_FILES "${CMAKE_BINARY_DIR}/ccpp" CACHE
   STRING "Location of CCPP-generated cap files")
 
 SET(CCPP_FRAMEWORK ${CCPP_ROOT}/ccpp/framework/scripts)
-
-# DJS2024: Haven't tested Capgen in DEBUG mode wtih SCM. *ToDo*
-#ADD_COMPILE_OPTIONS(-O0)
 
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   MESSAGE(STATUS "gfortran being used.")
@@ -104,10 +117,6 @@ FOREACH(FILE ${SCHEME_FILENAMES})
   # Set character seperator
   MATH(EXPR FCOUNT "${FCOUNT}+1")
   set(SEPERATOR "")
-#  if (${FCOUNT} EQUAL ${NSCHEME_FILES})
-#    set(SEPERATOR "")
-#  endif()
-  # Source file list
   string(CONCAT SCHEME_FILENAME ${CCPP_ROOT} "/" ${FILE} ${SEPERATOR} )
   string(REGEX REPLACE "\n$" "" SCHEME_FILENAME "${SCHEME_FILENAME}")
   list(APPEND SCHEME_SOURCE ${SCHEME_FILENAME})
@@ -136,9 +145,6 @@ FOREACH(FILE ${HOST_FILENAMES})
   # Set character seperator
   MATH(EXPR FCOUNT "${FCOUNT}+1")
   set(SEPERATOR "")
-#  if (${FCOUNT} EQUAL ${NHOST_FILES})
-#    set(SEPERATOR "")
-#  endif()
   string(CONCAT HOST_FILENAME ${CCPP_ROOT} "/" ${FILE} ${SEPERATOR} )
   list(APPEND HOST_SOURCE ${HOST_FILENAME})
   #
@@ -150,11 +156,22 @@ string(REPLACE ";" "," HOST_METADATA "${HOST_METADATA}")
 
 #------------------------------------------------------------------------------
 #
+# Create SDF list from ${suite_string), which is provided via the command line,
+# or comes from scm/src/suite_info.py
+#
+#------------------------------------------------------------------------------
+string(REPLACE "," ";" suite_string "${suite_string}")
+set(suite_list ${suite_string})
+FOREACH(suite ${suite_list})
+  list(APPEND SUITES "${CCPP_ROOT}/ccpp/suites/suite_${suite}.xml")
+ENDFOREACH(suite)
+string(REPLACE ";" "," SUITES "${SUITES}")
+
+#------------------------------------------------------------------------------
+#
 # Run ccpp_capgen
 #
 #------------------------------------------------------------------------------
-
-string(REPLACE ";" "," SUITE_XML "${SUITE_FILES}")
 
 set(CAPGEN_CMD "${CCPP_FRAMEWORK}/ccpp_capgen.py")
 list(APPEND CAPGEN_CMD "--host-files")
@@ -162,7 +179,7 @@ list(APPEND CAPGEN_CMD ${HOST_METADATA})
 list(APPEND CAPGEN_CMD "--scheme-files")
 list(APPEND CAPGEN_CMD ${SCHEME_METADATA})
 list(APPEND CAPGEN_CMD "--suites")
-list(APPEND CAPGEN_CMD "${SUITE_XML}")
+list(APPEND CAPGEN_CMD "${SUITES}")
 list(APPEND CAPGEN_CMD "--host-name")
 list(APPEND CAPGEN_CMD "SCM")
 list(APPEND CAPGEN_CMD "--output-root")
@@ -194,27 +211,6 @@ if (RES EQUAL 0)
   MESSAGE(STATUS "CCPP cap generation completed")
 else(RES EQUAL 0)
   MESSAGE(FATAL_ERROR "CCPP cap generation FAILED: result = ${RES}")
-endif(RES EQUAL 0)
-
-#------------------------------------------------------------------------------
-#
-# Retrieve the list of files from datatable.xml and set to CCPP_CAPS
-#
-#------------------------------------------------------------------------------
-set(DTABLE_CMD "${CCPP_FRAMEWORK}/ccpp_datafile.py")
-list(APPEND DTABLE_CMD "${CCPP_CAP_FILES}/datatable.xml")
-list(APPEND DTABLE_CMD "--ccpp-files")
-list(APPEND DTABLE_CMD "--separator=\\;")
-string(REPLACE ";" " " DTABLE_STRING "${DTABLE_CMD}")
-MESSAGE(STATUS "Running: ${DTABLE_STRING}")
-EXECUTE_PROCESS(COMMAND ${DTABLE_CMD} OUTPUT_VARIABLE CCPP_CAPS
-                RESULT_VARIABLE RES
-                OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE)
-message(STATUS "CCPP_CAPS = ${CCPP_CAPS}")
-if (RES EQUAL 0)
-  MESSAGE(STATUS "CCPP cap files retrieved")
-else(RES EQUAL 0)
-  MESSAGE(FATAL_ERROR "CCPP cap file retrieval FAILED: result = ${RES}")
 endif(RES EQUAL 0)
 
 MESSAGE(STATUS "CCPP capgen step complete")
@@ -393,8 +389,9 @@ SET(scm_source_files scm.F90
             scm_output.F90
 )
 
-message(STATUS "${CCPP_CAPS}")
-ADD_EXECUTABLE(scm ${scm_source_files} ${CCPP_CAPS})
+include(${CCPP_ROOT}/scm/bin/ccpp/physics/CCPP_CAPS.cmake)
+include(${CCPP_ROOT}/scm/src/CCPP_STATIC_API.cmake)
+ADD_EXECUTABLE(scm ${scm_source_files} ${API})
 
 if(OPENMP)
   TARGET_LINK_LIBRARIES(scm PUBLIC OpenMP::OpenMP_Fortran)
