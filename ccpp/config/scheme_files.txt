@@ -1,4 +1,3 @@
-ccpp/physics/physics/hooks/machine.f
 ccpp/physics/physics/hooks/physcons.F90
 ccpp/physics/physics/tools/get_prs_fv3.F90
 ccpp/physics/physics/tools/get_phi_fv3.F90
@@ -132,5 +131,6 @@ ccpp/physics/physics/SFC_Models/Ocean/sfc_ocean.F
 ccpp/physics/physics/SFC_Models/SeaIce/CICE/sfc_sice.f
 ccpp/physics/physics/SFC_Models/SeaIce/CICE/sfc_cice.f
 ccpp/physics/physics/SFC_Models/Lake/Flake/flake_driver.F90
+ccpp/physics/physics/SFC_Models/Lake/CLM/clm_lake.f90
 ccpp/physics/physics/smoke_dust/rrfs_smoke_wrapper.F90
 ccpp/physics/physics/smoke_dust/rrfs_smoke_postpbl.F90
