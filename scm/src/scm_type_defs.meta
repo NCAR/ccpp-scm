@@ -97,6 +97,12 @@
   units = DDT
   dimensions = ()
   type = GFS_tbd_type
+#[Interstitial]
+#  standard_name = GFS_interstitial_type_all_threads
+#  long_name = instance of derived type GFS_interstitial_type
+#  units = DDT
+#  dimensions = (ccpp_thread_count)
+#  type = GFS_interstitial_type
 [Interstitial(ccpp_thread_number)]
   standard_name = GFS_interstitial_type
   long_name = instance of derived type GFS_interstitial_type
@@ -134,18 +140,3 @@
   dimensions = ()
   type = ty_ccpp_config
   intent = in
-[errflg]
-  standard_name = ccpp_error_code
-  long_name = error code for error handling in CCPP
-  units = 1
-  dimensions = ()
-  type = integer
-  intent = out
-[errmsg]
-  standard_name = ccpp_error_message
-  long_name = error message for error handling in CCPP
-  units = none
-  dimensions = ()
-  type = character
-  kind = len=512
-  intent = out

@@ -3612,24 +3612,6 @@
   units = count
   dimensions = ()
   type = integer
-[nchunks]
-  standard_name = ccpp_chunk_extent
-  long_name = number of chunks of array data used in run phase
-  units = count
-  dimensions = ()
-  type = integer
-[chunk_begin]
-  standard_name = horizontal_loop_begin
-  long_name = first index for horizontal loop extent in run phase
-  units = index
-  dimensions = (ccpp_chunk_number)
-  type = integer
-[chunk_end]
-  standard_name = horizontal_loop_end
-  long_name = last index for horizontal loop extent in run phase
-  units = index
-  dimensions = (ccpp_chunk_number)
-  type = integer
 [tile_num]
   standard_name = index_of_cubed_sphere_tile
   long_name = tile number
@@ -3818,6 +3800,18 @@
 [levrp1]
   standard_name = vertical_interface_dimension_for_radiation
   long_name = number of vertical levels for radiation calculations + 1
+  units = count
+  dimensions = ()
+  type = integer
+[lmk]
+  standard_name = adjusted_vertical_layer_dimension_for_radiation
+  long_name = adjusted number of vertical layers for radiation
+  units = count
+  dimensions = ()
+  type = integer
+[lmp]
+  standard_name = adjusted_vertical_level_dimension_for_radiation
+  long_name = adjusted number of vertical levels for radiation
   units = count
   dimensions = ()
   type = integer
@@ -4080,6 +4074,18 @@
   units = flag
   dimensions = ()
   type = logical
+[nbdlw]
+  standard_name = number_of_aerosol_bands_for_longwave_radiation
+  long_name = number of aerosol bands for longwave radiation
+  units = count
+  dimensions = ()
+  type = integer
+[nbdsw]
+  standard_name = number_of_aerosol_bands_for_shortwave_radiation
+  long_name = number of aerosol bands for shortwave radiation
+  units = count
+  dimensions = ()
+  type = integer
 [active_gases]
   standard_name = active_gases_used_by_RRTMGP
   long_name = active gases used by RRTMGP

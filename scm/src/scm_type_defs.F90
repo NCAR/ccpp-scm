@@ -58,8 +58,6 @@ module scm_type_defs
 
   type(physics_type),   target :: physics
   type(ty_ccpp_config), target :: ccpp_cfg
-  integer             :: errflg = 0
-  character(len=512)  :: errmsg = ''
 
 !> \section arg_table_scm_state_type
 !! \htmlinclude scm_state_type.html

@@ -3,8 +3,8 @@ module GFS_typedefs
    use mpi_f08
    use machine,                  only: kind_phys, kind_dbl_prec, kind_sngl_prec
 
-   use module_radsw_parameters,  only: topfsw_type, sfcfsw_type
-   use module_radlw_parameters,  only: topflw_type, sfcflw_type
+   use module_radsw_parameters,  only: topfsw_type, sfcfsw_type, NBDSW
+   use module_radlw_parameters,  only: topflw_type, sfcflw_type, NBDLW
    use module_ozphys,            only: ty_ozphys
    use module_h2ophys,           only: ty_h2ophys
    use module_ccpp_suite_simulator, only: base_physics_process
@@ -758,9 +758,9 @@ module GFS_typedefs
     integer,     pointer :: blksz(:)        !< for explicit data blocking: block sizes of all blocks
     integer              :: ncols           !< total number of columns for all blocks
     !
-    integer              :: nchunks         !< number of chunks of an array that are used in the CCPP run phase
-    integer,     pointer :: chunk_begin(:)  !< first indices of chunks of an array for the CCPP run phase
-    integer,     pointer :: chunk_end(:)    !< last indices of chunks of an array for the CCPP run phase
+!    integer              :: nchunks         !< number of chunks of an array that are used in the CCPP run phase
+!    integer,     pointer :: chunk_begin(:)  !< first indices of chunks of an array for the CCPP run phase
+!    integer,     pointer :: chunk_end(:)    !< last indices of chunks of an array for the CCPP run phase
     !
     integer              :: fire_aux_data_levels !< vertical levels of fire auxiliary data
 
@@ -810,6 +810,8 @@ module GFS_typedefs
     integer              :: nhfrad          !< number of timesteps for which to call radiation on physics timestep (coldstarts)
     integer              :: levr            !< number of vertical levels for radiation calculations
     integer              :: levrp1          !< number of vertical levels for radiation calculations plus one
+    integer              :: lmk             !< number of vertical levels for radiation calculations, when adding extra layers
+    integer              :: lmp             !< number of vertical levels for radiation calculations plus one, when adding extra layers
     integer              :: nfxr            !< second dimension for fluxr diagnostic variable (radiation)
     logical              :: iaerclm         !< flag for initializing aerosol data
     integer              :: ntrcaer         !< number of aerosol tracers for Morrison-Gettelman microphysics
@@ -885,6 +887,8 @@ module GFS_typedefs
     logical              :: lrseeds         !< flag to use host-provided random seeds
     integer              :: nrstreams       !< number of random number streams in host-provided random seed array
     logical              :: lextop          !< flag for using an extra top layer for radiation
+    integer              :: nbdlw
+    integer              :: nbdsw
 
     ! RRTMGP
     logical              :: do_RRTMGP               !< Use RRTMGP
@@ -3496,6 +3500,9 @@ module GFS_typedefs
     logical              :: lrseeds           = .false.      !< flag to use host-provided random seeds
     integer              :: nrstreams         = 2            !< number of random number streams in host-provided random seed array
     logical              :: lextop            = .false.      !< flag for using an extra top layer for radiation
+    integer              :: nbdlw             = 16           !< number of RRTMG Longwave bands
+    integer              :: nbdsw             = 14           !< number of RRTMG Shortwave bands
+    
     ! RRTMGP
     logical              :: do_RRTMGP           = .false.    !< Use RRTMGP?
     character(len=128)   :: active_gases        = ''         !< Character list of active gases used in RRTMGP
@@ -4454,15 +4461,15 @@ module GFS_typedefs
     Model%blksz            = blksz
     Model%ncols            = sum(Model%blksz)
     ! DH*
-    Model%nchunks          = size(blksz)
-    allocate(Model%chunk_begin(Model%nchunks))
-    allocate(Model%chunk_end(Model%nchunks))
-    Model%chunk_begin(1) = 1
-    Model%chunk_end(1) = Model%chunk_begin(1) + blksz(1) - 1
-    do i=2,Model%nchunks
-        Model%chunk_begin(i) = Model%chunk_end(i-1) + 1
-        Model%chunk_end(i) = Model%chunk_begin(i) + blksz(i) - 1
-    end do
+!    Model%nchunks          = size(blksz)
+!    allocate(Model%chunk_begin(Model%nchunks))
+!    allocate(Model%chunk_end(Model%nchunks))
+!    Model%chunk_begin(1) = 1
+!    Model%chunk_end(1) = Model%chunk_begin(1) + blksz(1) - 1
+!    do i=2,Model%nchunks
+!        Model%chunk_begin(i) = Model%chunk_end(i-1) + 1
+!        Model%chunk_end(i) = Model%chunk_begin(i) + blksz(i) - 1
+!    end do
     
 !--- coupling parameters
     Model%cplflx           = cplflx
@@ -4572,6 +4579,8 @@ module GFS_typedefs
       Model%levr           = levr
     endif
     Model%levrp1           = Model%levr + 1
+    Model%lmk              = Model%levr + LTP
+    Model%lmp              = Model%levr + 1 + LTP
 
     if (isubc_sw < 0 .or. isubc_sw > 2) then
        write(0,'(a,i0)') 'ERROR: shortwave cloud-sampling (isubc_sw) scheme selected not valid: ',isubc_sw
@@ -4651,6 +4660,8 @@ module GFS_typedefs
     Model%lrseeds          = lrseeds
     Model%nrstreams        = nrstreams
     Model%lextop           = (ltp > 0)
+    Model%nbdlw            = NBDLW
+    Model%nbdsw            = NBDSW
 
     ! RRTMGP
     Model%do_RRTMGP           = do_RRTMGP

@@ -1340,18 +1340,6 @@
   units = count
   dimensions = ()
   type = integer
-[lmk]
-  standard_name = adjusted_vertical_layer_dimension_for_radiation
-  long_name = adjusted number of vertical layers for radiation
-  units = count
-  dimensions = ()
-  type = integer
-[lmp]
-  standard_name = adjusted_vertical_level_dimension_for_radiation
-  long_name = adjusted number of vertical levels for radiation
-  units = count
-  dimensions = ()
-  type = integer
 [mbota]
   standard_name = model_layer_number_at_cloud_base
   long_name = vertical indices for low, middle and high cloud bases
@@ -1369,18 +1357,6 @@
   long_name = vertical indices for low, middle and high cloud tops
   units = index
   dimensions = (horizontal_loop_extent,3)
-  type = integer
-[nbdlw]
-  standard_name = number_of_aerosol_bands_for_longwave_radiation
-  long_name = number of aerosol bands for longwave radiation
-  units = count
-  dimensions = ()
-  type = integer
-[nbdsw]
-  standard_name = number_of_aerosol_bands_for_shortwave_radiation
-  long_name = number of aerosol bands for shortwave radiation
-  units = count
-  dimensions = ()
   type = integer
 [ncgl]
   standard_name = local_graupel_number_concentration
@@ -1446,12 +1422,6 @@
   units = count
   dimensions = ()
   type = integer
-[nf_albd]
-  standard_name = number_of_components_for_surface_albedo
-  long_name = number of IR/VIS/UV compinents for surface albedo
-  units = count
-  dimensions = ()
-  type = integer
 [nn]
   standard_name = number_of_tracers_for_convective_transport
   long_name = number of tracers for convective transport
@@ -1467,12 +1437,6 @@
 [nscav]
   standard_name = number_of_tracers_scavenged
   long_name = number of tracers scavenged
-  units = count
-  dimensions = ()
-  type = integer
-[nspc1]
-  standard_name = number_of_species_for_aerosol_optical_depth
-  long_name = number of species for output aerosol optical depth plus total
   units = count
   dimensions = ()
   type = integer
@@ -3011,6 +2975,18 @@
 [igas_cfc113]
   standard_name = index_for_volume_mixing_ratio_of_cfc113_in_gasvmr_array
   long_name = index for volume mixing ratio cfc113
+  units = count
+  dimensions = ()
+  type = integer
+[nspc1]
+  standard_name = number_of_species_for_aerosol_optical_depth
+  long_name = number of species for output aerosol optical depth plus total
+  units = count
+  dimensions = ()
+  type = integer
+[nf_albd]
+  standard_name = number_of_components_for_surface_albedo
+  long_name = number of IR/VIS/UV compinents for surface albedo
   units = count
   dimensions = ()
   type = integer

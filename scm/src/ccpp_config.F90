@@ -26,13 +26,17 @@ module ccpp_config
 !!
   type :: ty_ccpp_config
      ! CCPP-internal variables for physics schemes
-     integer             :: loop_cnt      = CCPP_DEFAULT_LOOP_CNT
-     integer             :: loop_max      = CCPP_DEFAULT_LOOP_MAX
-     integer             :: blk_no        = CCPP_DEFAULT_BLOCK_NUMBER
-     integer             :: chunk_no      = CCPP_DEFAULT_CHUNK_NUMBER
-     integer             :: thrd_no       = CCPP_DEFAULT_THREAD_NUMBER
-     integer             :: thrd_cnt      = CCPP_DEFAULT_THREAD_COUNT
-     integer             :: ccpp_instance = 1
+     integer            :: loop_cnt      = CCPP_DEFAULT_LOOP_CNT
+     integer            :: loop_max      = CCPP_DEFAULT_LOOP_MAX
+     integer            :: blk_no        = CCPP_DEFAULT_BLOCK_NUMBER
+     integer            :: chunk_no      = CCPP_DEFAULT_CHUNK_NUMBER
+     integer            :: thrd_no       = CCPP_DEFAULT_THREAD_NUMBER
+     integer            :: thrd_cnt      = CCPP_DEFAULT_THREAD_COUNT
+     integer            :: ccpp_instance = 1
+     integer            :: ccpp_errflg   = 0
+     character(len=512) :: ccpp_errmsg   = ''
+     integer :: chunk_begin = 1
+     integer :: chunk_end   = 1
    contains
      procedure :: initialized  => ccpp_cfg_initialized
   end type ty_ccpp_config

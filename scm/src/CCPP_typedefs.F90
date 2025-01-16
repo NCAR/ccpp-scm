@@ -11,8 +11,8 @@ module CCPP_typedefs
     use GFS_typedefs,             only: clear_val, LTP
 
     ! Physics type defininitions needed for interstitial DDTs
-    use module_radsw_parameters,  only: profsw_type, cmpfsw_type, NBDSW
-    use module_radlw_parameters,  only: proflw_type, NBDLW
+    use module_radsw_parameters,  only: profsw_type, cmpfsw_type
+    use module_radlw_parameters,  only: proflw_type
     use GFS_typedefs,             only: GFS_control_type
 
     implicit none
@@ -25,8 +25,6 @@ module CCPP_typedefs
     integer :: iaer_tau      = 1
     integer :: iaer_ssa      = 2
     integer :: iaer_g        = 3 
-    integer, parameter :: NSPC    = 5
-    integer, parameter :: NSPC1   = NSPC + 1
     ! from module_radiation_clouds
     integer, parameter :: NF_CLDS = 9
     integer :: icld_cfrac    = 1
@@ -50,12 +48,15 @@ module CCPP_typedefs
     integer :: igas_cfc22    = 8
     integer :: igas_ccl4     = 9
     integer :: igas_cfc113   = 10 
-   ! from module_radiation_surface
+    ! from module_radiation_surface
     integer, parameter :: NF_ALBD = 4
     integer :: ialb_nirdir   = 1
     integer :: ialb_nirdif   = 2
     integer :: ialb_uvvisdir = 3
     integer :: ialb_uvvisdif = 4
+    !
+    integer, parameter :: NSPC  = 5
+    integer, parameter :: NSPC1 = NSPC + 1
 
     ! GFS_interstitial_type         !< fields required to replace interstitial code in GFS_{physics,radiation}_driver.F90 in CCPP
     public GFS_interstitial_type
@@ -220,13 +221,9 @@ module CCPP_typedefs
     integer,               pointer      :: ktop(:)            => null()  !<
     integer                             :: latidxprnt                    !<
     integer                             :: levi                          !<
-    integer                             :: lmk                           !<
-    integer                             :: lmp                           !<
     integer,               pointer      :: mbota(:,:)         => null()  !<
     logical                             :: mg3_as_mg2                    !<
     integer,               pointer      :: mtopa(:,:)         => null()  !<
-    integer                             :: nbdlw                         !<
-    integer                             :: nbdsw                         !<
     real (kind=kind_phys), pointer      :: ncgl(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: ncpi(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: ncpl(:,:)          => null()  !<
@@ -236,11 +233,9 @@ module CCPP_typedefs
     integer                             :: nday                          !<
     integer                             :: nf_aelw                       !<
     integer                             :: nf_aesw                       !<
-    integer                             :: nf_albd                       !<
     integer                             :: nn                            !<
     integer                             :: nsamftrac                     !<
     integer                             :: nscav                         !<
-    integer                             :: nspc1                         !<
     integer                             :: ntcwx                         !<
     integer                             :: ntiwx                         !<
     integer                             :: ntrwx                         !<
@@ -551,8 +546,8 @@ contains
     allocate (Interstitial%ecan            (IM))
     allocate (Interstitial%etran           (IM))
     allocate (Interstitial%edir            (IM))
-    allocate (Interstitial%faerlw          (IM,Model%levr+LTP,NBDLW,NF_AELW))
-    allocate (Interstitial%faersw          (IM,Model%levr+LTP,NBDSW,NF_AESW))
+    allocate (Interstitial%faerlw          (IM,Model%levr+LTP,Model%NBDLW,NF_AELW))
+    allocate (Interstitial%faersw          (IM,Model%levr+LTP,Model%NBDSW,NF_AESW))
     allocate (Interstitial%ffhh_ice        (IM))
     allocate (Interstitial%ffhh_land       (IM))
     allocate (Interstitial%ffhh_water      (IM))
@@ -831,14 +826,8 @@ contains
     Interstitial%ipr              = min(IM,10)
     Interstitial%latidxprnt       = 1
     Interstitial%levi             = Model%levs+1
-    Interstitial%lmk              = Model%levr+LTP
-    Interstitial%lmp              = Model%levr+1+LTP
-    Interstitial%nbdlw            = NBDLW
-    Interstitial%nbdsw            = NBDSW
     Interstitial%nf_aelw          = NF_AELW
     Interstitial%nf_aesw          = NF_AESW
-    Interstitial%nf_albd          = NF_ALBD
-    Interstitial%nspc1            = NSPC1
     if (Model%oz_phys .or. Model%oz_phys_2015) then
       Interstitial%oz_coeffp5     = Model%oz_coeff+5
     else

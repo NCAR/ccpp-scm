@@ -52,15 +52,13 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, ccpp_errmsg, ccpp_suite_parts)
+subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_suite_parts)
   use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout) :: scm_state
   type(physics_type),   intent(inout) :: physics
   type(ty_ccpp_config), intent(inout) :: ccpp_cfg
   logical,              intent(in)    :: in_spinup
-  integer,              intent(inout) :: ccpp_errflg
-  character(len=512),   intent(inout) :: ccpp_errmsg
   character(len=128),   intent(in)    :: ccpp_suite_parts(:)
 
   integer :: i, ierr, kdt_rad, idtend, itrac, isuite_part
@@ -136,12 +134,10 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, cc
   
   call ccpp_physics_timestep_init(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                                   physics    = physics, &
-                                  ccpp_cfg   = ccpp_cfg, &
-                                  errflg     = ccpp_errflg, &
-                                  errmsg     = ccpp_errmsg)
-  if (ccpp_errflg/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_errmsg) // '. Exiting...'
-      error stop trim(ccpp_errmsg)
+                                  ccpp_cfg   = ccpp_cfg)
+  if (ccpp_cfg%ccpp_errflg/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+      error stop trim(ccpp_cfg%ccpp_errmsg)
   end if
 
   !--- determine if radiation diagnostics buckets need to be cleared
@@ -165,23 +161,19 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_errflg, cc
      call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                            suite_part = trim(trim(adjustl(ccpp_suite_parts(isuite_part)))), &
                            physics    = physics, &
-                           ccpp_cfg   = ccpp_cfg, &
-                           errflg     = ccpp_errflg, &
-                           errmsg     = ccpp_errmsg)
-     if (ccpp_errflg/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_errmsg) // '. Exiting...'
-        error stop trim(ccpp_errmsg)
+                           ccpp_cfg   = ccpp_cfg)
+     if (ccpp_cfg%ccpp_errflg/=0) then
+        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+        error stop trim(ccpp_cfg%ccpp_errmsg)
      end if
   enddo
 
   call ccpp_physics_timestep_finalize(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                                       physics    = physics, &
-                                      ccpp_cfg   = ccpp_cfg, &
-                                      errflg     = ccpp_errflg, &
-                                      errmsg     = ccpp_errmsg)
-  if (ccpp_errflg/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_errmsg) // '. Exiting...'
-      error stop trim(ccpp_errmsg)
+                                      ccpp_cfg   = ccpp_cfg)
+  if (ccpp_cfg%ccpp_errflg/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+      error stop trim(ccpp_cfg%ccpp_errmsg)
   end if
 
   !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)

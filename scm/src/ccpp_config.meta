@@ -59,6 +59,31 @@
   units = index
   dimensions = ()
   type = integer
+[chunk_begin]
+  standard_name = horizontal_loop_begin
+  long_name = first index for horizontal loop extent in run phase
+  units = index
+  dimensions = ()
+  type = integer
+[chunk_end]
+  standard_name = horizontal_loop_end
+  long_name = last index for horizontal loop extent in run phase
+  units = index
+  dimensions = ()
+  type = integer
+[ccpp_errmsg]
+  standard_name = ccpp_error_message
+  long_name = Error message for error handling in CCPP
+  units = none
+  dimensions = ()
+  type = character
+  kind = len=512
+[ccpp_errflg]
+  standard_name = ccpp_error_code
+  long_name = Error flag for error handling in CCPP
+  units = 1
+  dimensions = ()
+  type = integer
 
 ########################################################################
 [ccpp-table-properties]
