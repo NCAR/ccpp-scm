@@ -34,7 +34,7 @@ ACCOUNT = "ENTER_ACCOUNT_NUMBER"
 WALLTIME = "walltime=00:20:00"
 PROCESSORS = "select=1:ncpus=1"
 QUEUE = "develop"
-COMMAND = "./run_scm.py -c twpice"
+COMMAND = "cd $PBS_O_WORKDIR; ./run_scm.py -c twpice"
 EMAIL_ADDR = MY_EMAIL
 SERIAL_MEM = "512M"
 WORKING_DIR = os.path.dirname(os.path.abspath(__file__))

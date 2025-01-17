@@ -43,7 +43,11 @@ subroutine set_state(scm_input, scm_reference, scm_state)
     scm_state%lat(i) = scm_input%input_lat*deg_to_rad_const
   end do
 
-
+  do i=1, scm_state%n_cols
+    if (scm_state%area(i) == 0) then
+      scm_state%area(i) = scm_input%input_area
+    end if
+  end do
 
   !> - \todo When patching in a reference sounding, need to handle the case when the reference sounding is too short; patch_in_ref
   !! checks for the case, but as of now, it just extrapolates where it needs to and returns an error code; error should be handled
@@ -160,7 +164,6 @@ subroutine set_state(scm_input, scm_reference, scm_state)
         scm_state%state_T(i,:,1) = scm_input%input_temp(:)
         scm_state%state_tracer(i,:,scm_state%water_vapor_index,1)=scm_input%input_qt
         scm_state%state_tracer(i,:,scm_state%ozone_index,1)=scm_input%input_ozone
-        scm_state%area(i) = scm_input%input_area
 
         if (scm_input%input_pres_i(1).GT. 0.0) then ! pressure are read in, overwrite values
            scm_state%pres_i(i,:)=scm_input%input_pres_i
@@ -308,7 +311,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_cldprop_type),                    intent(inout) :: Cldprop
   type(GFS_radtend_type),                    intent(inout) :: Radtend
   type(GFS_diag_type),                       intent(inout) :: Diag
-  type(GFS_interstitial_type),               intent(inout) :: Interstitial
+  type(GFS_interstitial_type),               intent(inout) :: Interstitial(:)
   type(GFS_init_type),                       intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: ntasks, nthreads, n_cols
@@ -337,18 +340,23 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
 
   !--- initialize DDTs
 
-    call Statein%create(n_cols, Model)
-    call Stateout%create(n_cols, Model)
-    call Sfcprop%create(n_cols, Model)
-    call Coupling%create(n_cols, Model)
-    call Grid%create(n_cols, Model)
-    call Tbd%create(n_cols, Model)
-    call Cldprop%create(n_cols, Model)
-    call Radtend%create(n_cols, Model)
+    call Statein%create(Model)
+    call Stateout%create(Model)
+    call Sfcprop%create(Model)
+    call Coupling%create(Model)
+    call Grid%create(Model)
+    call Tbd%create(Model)
+    call Cldprop%create(Model)
+    call Radtend%create(Model)
     !--- internal representation of diagnostics
-    call Diag%create(n_cols, Model)
+    call Diag%create(Model)
     !--- internal representation of interstitials for CCPP physics
-    call Interstitial%create(n_cols, Model)
+    if (nthreads == 1) then
+      call Interstitial(1)%create(n_cols, Model)
+    else
+      print *,' CCPP SCM is only set up to use one thread - shutting down'
+      error stop
+    end if
 
     !--- populate the grid components
     !call GFS_grid_populate (Grid(i), Init_parm%xlon, Init_parm%xlat, Init_parm%area)
