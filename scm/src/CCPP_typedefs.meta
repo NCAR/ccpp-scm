@@ -959,7 +959,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[fscavv]
+[fscav]
   standard_name = fraction_of_tracer_scavenged
   long_name = fraction of the tracer (aerosols) that is scavenged by convection
   units = km-1
@@ -1745,7 +1745,7 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[runofff]
+[runoff]
   standard_name = surface_runoff_flux
   long_name = surface runoff flux
   units = kg m-2 s-1
@@ -2239,7 +2239,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[zmtbb]
+[zmtb]
   standard_name = height_of_mountain_blocking
   long_name = height of mountain blocking drag
   units = m
@@ -2278,14 +2278,14 @@
   type = real
   kind = kind_phys
   active = (flag_for_unified_gravity_wave_physics_diagnostics .or. flag_for_ugwp_version_0 .or. flag_for_ugwp_version_0_nonorographic_gwd .or. flag_for_ugwp_version_1)
-[zlwbb]
+[zlwb]
   standard_name = height_of_low_level_wave_breaking
   long_name = height of low level wave breaking
   units = m
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[zogww]
+[zogw]
   standard_name = height_of_launch_level_of_orographic_gravity_wave
   long_name = height of launch level of orographic gravity wave
   units = m
@@ -2299,35 +2299,35 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_tofdi]
+[tau_tofd]
   standard_name = instantaneous_momentum_flux_due_to_turbulent_orographic_form_drag
   long_name = instantaneous momentum flux due to TOFD
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_mtbi]
+[tau_mtb]
   standard_name = instantaneous_momentum_flux_due_to_mountain_blocking_drag
   long_name = instantaneous momentum flux due to mountain blocking drag
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_ogwi]
+[tau_ogw]
   standard_name = instantaneous_momentum_flux_due_to_orographic_gravity_wave_drag
   long_name = instantaneous momentum flux due to orographic gravity wave drag
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_ossi]
+[tau_oss]
   standard_name = momentum_flux_due_to_subgrid_scale_orographic_gravity_wave_drag
   long_name = momentum flux or stress due to SSO including OBL-OSS-OFD
   units = Pa
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-[tau_ngwi]
+[tau_ngw]
   standard_name = instantaneous_momentum_flux_due_to_nonstationary_gravity_wave
   long_name = instantaneous momentum flux due to nonstationary gravity waves
   units = Pa

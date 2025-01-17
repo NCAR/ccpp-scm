@@ -171,7 +171,7 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: fm10_water(:)      => null()  !<
     real (kind=kind_phys)               :: frain                         !<
     real (kind=kind_phys), pointer      :: frland(:)          => null()  !<
-    real (kind=kind_phys), pointer      :: fscavv(:)          => null()  !<
+    real (kind=kind_phys), pointer      :: fscav(:)           => null()  !<
     real (kind=kind_phys), pointer      :: fswtr(:)           => null()  !<
     real (kind=kind_phys), pointer      :: gabsbdlw(:)        => null()  !<
     real (kind=kind_phys), pointer      :: gabsbdlw_ice(:)    => null()  !<
@@ -277,7 +277,7 @@ module CCPP_typedefs
     logical                             :: max_hourly_reset              !<
     logical                             :: ext_diag_thompson_reset       !<
     real (kind=kind_phys), pointer      :: rhc(:,:)           => null()  !<
-    real (kind=kind_phys), pointer      :: runofff(:)         => null()  !<
+    real (kind=kind_phys), pointer      :: runoff(:)          => null()  !<
     real (kind=kind_phys), pointer      :: save_q(:,:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: save_t(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: save_tcp(:,:)      => null()  !<
@@ -349,16 +349,16 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: dtdt_ngw(:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: kdis_ngw(:,:)      => null()  !<
 
-    real (kind=kind_phys), pointer      :: tau_ossi(: )       => null()  !< instantaneous momentum flux due to OSS
-    real (kind=kind_phys), pointer      :: tau_tofdi(:)       => null()  !< instantaneous momentum flux due to TOFD
-    real (kind=kind_phys), pointer      :: tau_mtbi(:)        => null()  !< instantaneous momentum of mountain blocking drag
-    real (kind=kind_phys), pointer      :: tau_ogwi(:)        => null()  !< instantaneous momentum flux of OGWs
-    real (kind=kind_phys), pointer      :: tau_ngwi(:)        => null()  !< instantaneous momentum flux of NGWs
+    real (kind=kind_phys), pointer      :: tau_oss(: )        => null()  !< instantaneous momentum flux due to OSS
+    real (kind=kind_phys), pointer      :: tau_tofd(:)        => null()  !< instantaneous momentum flux due to TOFD
+    real (kind=kind_phys), pointer      :: tau_mtb(:)         => null()  !< instantaneous momentum of mountain blocking drag
+    real (kind=kind_phys), pointer      :: tau_ogw(:)         => null()  !< instantaneous momentum flux of OGWs
+    real (kind=kind_phys), pointer      :: tau_ngw(:)         => null()  !< instantaneous momentum flux of NGWs
 
     real (kind=kind_phys), pointer      :: zngw(:)            => null()  !< launch levels of NGWs
-    real (kind=kind_phys), pointer      :: zmtbb(:)           => null()  !< mountain blocking height
-    real (kind=kind_phys), pointer      :: zlwbb(:)           => null()  !< low level wave breaking height
-    real (kind=kind_phys), pointer      :: zogww(:)           => null()  !< height of OGW-launch
+    real (kind=kind_phys), pointer      :: zmtb(:)            => null()  !< mountain blocking height
+    real (kind=kind_phys), pointer      :: zlwb(:)            => null()  !< low level wave breaking height
+    real (kind=kind_phys), pointer      :: zogw(:)            => null()  !< height of OGW-launch
 
     real (kind=kind_phys), pointer      :: dudt_mtb(:,:)      => null()  !< daily aver u-wind tend due to mountain blocking
     real (kind=kind_phys), pointer      :: dudt_tms(:,:)      => null()  !< daily aver u-wind tend due to TMS
@@ -567,7 +567,7 @@ contains
     allocate (Interstitial%fm10_land       (IM))
     allocate (Interstitial%fm10_water      (IM))
     allocate (Interstitial%frland          (IM))
-    allocate (Interstitial%fscavv          (Interstitial%nscav))
+    allocate (Interstitial%fscav           (Interstitial%nscav))
     allocate (Interstitial%fswtr           (Interstitial%nscav))
     allocate (Interstitial%gabsbdlw        (IM))
     allocate (Interstitial%gabsbdlw_ice    (IM))
@@ -628,7 +628,7 @@ contains
     allocate (Interstitial%rb_land         (IM))
     allocate (Interstitial%rb_water        (IM))
     allocate (Interstitial%rhc             (IM,Model%levs))
-    allocate (Interstitial%runofff         (IM))
+    allocate (Interstitial%runoff          (IM))
     allocate (Interstitial%save_q          (IM,Model%levs,Model%ntrac))
     allocate (Interstitial%save_t          (IM,Model%levs))
     allocate (Interstitial%save_tcp        (IM,Model%levs))
@@ -751,16 +751,16 @@ contains
     end if
 
 ! UGWP common
-    allocate (Interstitial%tau_mtbi        (IM))
-    allocate (Interstitial%tau_ogwi        (IM))
-    allocate (Interstitial%tau_tofdi       (IM))
-    allocate (Interstitial%tau_ngwi        (IM))
-    allocate (Interstitial%tau_ossi        (IM))
+    allocate (Interstitial%tau_mtb         (IM))
+    allocate (Interstitial%tau_ogw         (IM))
+    allocate (Interstitial%tau_tofd        (IM))
+    allocate (Interstitial%tau_ngw         (IM))
+    allocate (Interstitial%tau_oss         (IM))
     allocate (Interstitial%dudt_mtb        (IM,Model%levs))
     allocate (Interstitial%dudt_tms        (IM,Model%levs))
-    allocate (Interstitial%zmtbb           (IM)           )
-    allocate (Interstitial%zlwbb           (IM)           )
-    allocate (Interstitial%zogww           (IM)           )
+    allocate (Interstitial%zmtb            (IM)           )
+    allocate (Interstitial%zlwb            (IM)           )
+    allocate (Interstitial%zogw            (IM)           )
     allocate (Interstitial%zngw            (IM)           )
 
 ! CIRES UGWP v1
@@ -1265,7 +1265,7 @@ contains
     Interstitial%fm10_land       = Model%huge
     Interstitial%fm10_water      = Model%huge
     Interstitial%frland          = clear_val
-    Interstitial%fscavv          = clear_val
+    Interstitial%fscav           = clear_val
     Interstitial%fswtr           = clear_val
     Interstitial%gabsbdlw        = clear_val
     Interstitial%gabsbdlw_ice    = clear_val
@@ -1314,7 +1314,7 @@ contains
     Interstitial%rb_land         = Model%huge
     Interstitial%rb_water        = Model%huge
     Interstitial%rhc             = clear_val
-    Interstitial%runofff         = clear_val
+    Interstitial%runoff          = clear_val
     Interstitial%save_q          = clear_val
     Interstitial%save_t          = clear_val
     Interstitial%save_tcp        = clear_val
@@ -1363,16 +1363,16 @@ contains
     Interstitial%ztmax_water     = clear_val
 
 ! UGWP common
-    Interstitial%tau_mtbi        = clear_val
-    Interstitial%tau_ogwi        = clear_val
-    Interstitial%tau_tofdi       = clear_val
-    Interstitial%tau_ngwi        = clear_val
-    Interstitial%tau_ossi        = clear_val
+    Interstitial%tau_mtb         = clear_val
+    Interstitial%tau_ogw         = clear_val
+    Interstitial%tau_tofd        = clear_val
+    Interstitial%tau_ngw         = clear_val
+    Interstitial%tau_oss         = clear_val
     Interstitial%dudt_mtb        = clear_val
     Interstitial%dudt_tms        = clear_val
-    Interstitial%zmtbb           = clear_val
-    Interstitial%zlwbb           = clear_val
-    Interstitial%zogww           = clear_val
+    Interstitial%zmtb            = clear_val
+    Interstitial%zlwb            = clear_val
+    Interstitial%zogw            = clear_val
     Interstitial%zngw            = clear_val
 
 ! CIRES UGWP v1
