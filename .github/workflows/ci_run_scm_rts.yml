@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         fortran-compiler: [gfortran-11]
-        build-type:       [Release]#, Debug, SinglePrecision]
+        build-type:       [Release, Debug, SinglePrecision]
         py-version:       [3.9.12]
 
     # Environmental variables
