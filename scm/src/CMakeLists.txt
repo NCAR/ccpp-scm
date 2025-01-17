@@ -57,31 +57,6 @@ SET(CCPP_CAP_FILES "${CMAKE_BINARY_DIR}/ccpp" CACHE
 
 SET(CCPP_FRAMEWORK ${CCPP_ROOT}/ccpp/framework/scripts)
 
-if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-  MESSAGE(STATUS "gfortran being used.")
-  ADD_COMPILE_OPTIONS(-ggdb)
-  ADD_COMPILE_OPTIONS(-fbacktrace)
-  ADD_COMPILE_OPTIONS(-cpp)
-  ADD_COMPILE_OPTIONS(-fcray-pointer)
-  ADD_COMPILE_OPTIONS(-ffree-line-length-none)
-  ADD_COMPILE_OPTIONS(-fno-range-check)
-elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
-  MESSAGE(STATUS "ifort being used.")
-  ADD_COMPILE_OPTIONS(-traceback)
-  ADD_COMPILE_OPTIONS(-fpp)
-  ADD_COMPILE_OPTIONS(-g)
-  ADD_COMPILE_OPTIONS(-fno-alias)
-  ADD_COMPILE_OPTIONS(-auto)
-  ADD_COMPILE_OPTIONS(-safe-cray-ptr)
-  ADD_COMPILE_OPTIONS(-ftz)
-  ADD_COMPILE_OPTIONS(-assume byterecl)
-  ADD_COMPILE_OPTIONS(-nowarn)
-  ADD_COMPILE_OPTIONS(-sox)
-  ADD_COMPILE_OPTIONS(-align)
-else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-  message (WARNING "This program has only been compiled with gfortran and ifort. If another compiler is needed, the appropriate flags SHOULD be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
-endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
-
 #------------------------------------------------------------------------------
 # CMake Modules
 # Set the CMake module path
