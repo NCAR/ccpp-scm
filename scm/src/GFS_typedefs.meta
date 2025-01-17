@@ -5771,19 +5771,19 @@
   dimensions = (2)
   type = real
   kind = kind_phys
-[icrtrh_sfc]
+[crtrh_sfc]
   standard_name = index_for_critical_relative_humidity_at_surface
   long_name = index for critical relative humidity at the surface
   units = count
   dimensions = ()
   type = integer
-[icrtrh_pbl]
+[crtrh_pbl]
   standard_name = index_for_critical_relative_humidity_at_pbl_top
   long_name = index for critical relative humidity at the PBL top
   units = count
   dimensions = ()
   type = integer
-[icrtrh_toa]
+[crtrh_toa]
   standard_name = index_for_critical_relative_humidity_at_toa
   long_name = index for critical relative humidity at the top of atmosphere
   units = count

@@ -18,7 +18,7 @@ module GFS_typedefs
 
    ! This will be set later in GFS_Control%initialize, since
    ! it depends on the runtime config (Model%aero_in)
-   integer, private  :: ntrcaer_loc
+   integer, private  :: ntrcaer
 
    ! If these are changed to >99, need to adjust formatting string in GFS_diagnostics.F90 (and names in diag_tables)
    integer, parameter :: naux2dmax = 20 !< maximum number of auxiliary 2d arrays in output (for debugging)
@@ -28,6 +28,7 @@ module GFS_typedefs
    integer, parameter :: dfi_radar_max_intervals_plus_one = 5
 
    real(kind=kind_phys), parameter :: limit_unspecified = 1e12 !< special constant for "namelist value was not provided" in radar-derived temperature tendency limit range
+
 
 !> \section arg_table_GFS_typedefs
 !! \htmlinclude GFS_typedefs.html
@@ -83,7 +84,6 @@ module GFS_typedefs
 !   This container is the minimum set of data required from the dycore/atmosphere
 !   component to allow proper initialization of the GFS physics
 !--------------------------------------------------------------------------------
-
 !! \section arg_table_GFS_init_type
 !! \htmlinclude GFS_init_type.html
 !!
@@ -683,6 +683,7 @@ module GFS_typedefs
     character(len=44) :: desc
     character(len=32) :: unit
   end type dtend_var_label
+
 !----------------------------------------------------------------
 ! dtend_process_label
 !  Information about second dimension of dtidx
@@ -757,11 +758,6 @@ module GFS_typedefs
     integer              :: nblks           !< for explicit data blocking: number of blocks
     integer,     pointer :: blksz(:)        !< for explicit data blocking: block sizes of all blocks
     integer              :: ncols           !< total number of columns for all blocks
-    !
-!    integer              :: nchunks         !< number of chunks of an array that are used in the CCPP run phase
-!    integer,     pointer :: chunk_begin(:)  !< first indices of chunks of an array for the CCPP run phase
-!    integer,     pointer :: chunk_end(:)    !< last indices of chunks of an array for the CCPP run phase
-    !
     integer              :: fire_aux_data_levels !< vertical levels of fire auxiliary data
 
 !--- coupling parameters
@@ -1240,9 +1236,9 @@ module GFS_typedefs
                                             !< (used if mstrat=.true.)
     real(kind=kind_phys) :: crtrh(3)        !< critical relative humidity at the surface
                                             !< PBL top and at the top of the atmosphere
-    integer              :: icrtrh_sfc = 1  !< Index into crtrh for surface 
-    integer              :: icrtrh_pbl = 2  !< Index into crtrh for PBL top
-    integer              :: icrtrh_toa = 3  !< Index into crtrh for TOA
+    integer              :: crtrh_sfc = 1   !< Index into crtrh for surface
+    integer              :: crtrh_pbl = 2   !< Index into crtrh for PBL top
+    integer              :: crtrh_toa = 3   !< Index into crtrh for TOA
     real(kind=kind_phys) :: dlqf(2)         !< factor for cloud condensate detrainment
                                             !< from cloud edges for RAS
     real(kind=kind_phys) :: psauras(2)      !< [in] auto conversion coeff from ice to snow in ras
@@ -2219,7 +2215,6 @@ module GFS_typedefs
 !----------------
 ! PUBLIC ENTITIES
 !----------------
-
   public GFS_init_type
   public GFS_statein_type,  GFS_stateout_type, GFS_sfcprop_type, &
          GFS_coupling_type
@@ -4460,16 +4455,6 @@ module GFS_typedefs
     allocate(Model%blksz(1:Model%nblks))
     Model%blksz            = blksz
     Model%ncols            = sum(Model%blksz)
-    ! DH*
-!    Model%nchunks          = size(blksz)
-!    allocate(Model%chunk_begin(Model%nchunks))
-!    allocate(Model%chunk_end(Model%nchunks))
-!    Model%chunk_begin(1) = 1
-!    Model%chunk_end(1) = Model%chunk_begin(1) + blksz(1) - 1
-!    do i=2,Model%nchunks
-!        Model%chunk_begin(i) = Model%chunk_end(i-1) + 1
-!        Model%chunk_end(i) = Model%chunk_begin(i) + blksz(i) - 1
-!    end do
     
 !--- coupling parameters
     Model%cplflx           = cplflx
@@ -4621,11 +4606,11 @@ module GFS_typedefs
     Model%iaerclm          = iaerclm
     if (iaer/1000 == 1 .or. Model%iccn == 2) then
       Model%iaerclm = .true.
-      ntrcaer_loc = ntrcaerm
+      ntrcaer = ntrcaerm
     else if (iaer/1000 == 2) then
-      ntrcaer_loc = ntrcaerm
+      ntrcaer = ntrcaerm
     else
-      ntrcaer_loc = 1
+      ntrcaer = 1
     endif
     Model%lalw1bd          = lalw1bd
     Model%iaerflg          = iaerflg
@@ -4637,7 +4622,7 @@ module GFS_typedefs
     Model%co2gbl_file      = co2gbl_file
     Model%co2usr_file      = co2usr_file
     Model%co2cyc_file      = co2cyc_file
-    Model%ntrcaer          = ntrcaer_loc
+    Model%ntrcaer          = ntrcaer
     Model%idcor            = idcor
     Model%dcorr_con        = dcorr_con
     Model%icliq_sw         = icliq_sw
