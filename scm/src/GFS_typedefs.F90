@@ -3,8 +3,8 @@ module GFS_typedefs
    use mpi_f08
    use machine,                  only: kind_phys, kind_dbl_prec, kind_sngl_prec
 
-   use module_radsw_parameters,  only: topfsw_type, sfcfsw_type
-   use module_radlw_parameters,  only: topflw_type, sfcflw_type
+   use module_radsw_parameters,  only: topfsw_type, sfcfsw_type, NBDSW
+   use module_radlw_parameters,  only: topflw_type, sfcflw_type, NBDLW
    use module_ozphys,            only: ty_ozphys
    use module_h2ophys,           only: ty_h2ophys
    use module_ccpp_suite_simulator, only: base_physics_process
@@ -25,6 +25,7 @@ module GFS_typedefs
    integer, parameter :: naux3dmax = 20 !< maximum number of auxiliary 3d arrays in output (for debugging)
 
    integer, parameter :: dfi_radar_max_intervals = 4 !< Number of radar-derived temperature tendency and/or convection suppression intervals. Do not change.
+   integer, parameter :: dfi_radar_max_intervals_plus_one = 5
 
    real(kind=kind_phys), parameter :: limit_unspecified = 1e12 !< special constant for "namelist value was not provided" in radar-derived temperature tendency limit range
 
@@ -55,6 +56,9 @@ module GFS_typedefs
   ! LTP=0: no extra top layer
   integer, parameter :: LTP = 0   ! no extra top layer
   !integer, parameter :: LTP = 1   ! add an extra top layer
+
+  ! Index for surface
+  integer, parameter :: isfc_gfs = 1
 
 !----------------
 ! Data Containers
@@ -245,6 +249,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: snodi  (:)   => null()  !< snow depth over ice
     real (kind=kind_phys), pointer :: weasdi (:)   => null()  !< weasd over ice
     real (kind=kind_phys), pointer :: hprime (:,:) => null()  !< orographic metrics
+    integer                        :: isubgrd_sigma = 1       !< Index into hprime for standard deviation of subgrid orography
     real (kind=kind_phys), pointer :: dust12m_in  (:,:,:) => null()  !< fengsha dust input
     real (kind=kind_phys), pointer :: emi_in (:,:) => null()  !< anthropogenic background input
     real (kind=kind_phys), pointer :: smoke_RRFS(:,:,:) => null()  !< RRFS fire input hourly
@@ -501,7 +506,7 @@ module GFS_typedefs
 
     ! RRTMGP
     real (kind=kind_phys), pointer :: fluxlwUP_jac(:,:)       => null()  !< RRTMGP Jacobian of upward longwave all-sky flux
-    real (kind=kind_phys), pointer :: htrlw(:,:)              => null()  !< RRTMGP updated LW heating rate
+    real (kind=kind_phys), pointer :: hrlw(:,:)               => null()  !< RRTMGP updated LW heating rate
     real (kind=kind_phys), pointer :: tsfc_radtime(:)         => null()  !< RRTMGP surface temperature on radiation timestep
     real (kind=kind_phys), pointer :: fluxlwUP_radtime(:,:)   => null()  !< RRTMGP upward   longwave  all-sky flux profile
     real (kind=kind_phys), pointer :: fluxlwDOWN_radtime(:,:) => null()  !< RRTMGP downward  longwave  all-sky flux profile
@@ -670,6 +675,9 @@ module GFS_typedefs
 ! dtend_var_label
 !  Information about first dimension of dtidx
 !----------------------------------------------------------------
+!! \section arg_table_dtend_var_label
+!! \htmlinclude dtend_var_label.html
+!!
   type dtend_var_label
     character(len=20) :: name
     character(len=44) :: desc
@@ -680,6 +688,9 @@ module GFS_typedefs
 ! dtend_process_label
 !  Information about second dimension of dtidx
 !----------------------------------------------------------------
+!! \section arg_table_dtend_process_label
+!! \htmlinclude dtend_process_label.html
+!!
   type dtend_process_label
     character(len=20) :: name
     character(len=44) :: desc
@@ -704,7 +715,7 @@ module GFS_typedefs
     integer              :: nthreads        !< OpenMP threads available for physics
     integer              :: nlunit          !< unit for namelist
     character(len=64)    :: fn_nml          !< namelist filename for surface data cycling
-    character(len=:), pointer, dimension(:) :: input_nml_file => null() !< character string containing full namelist
+    character(len=256), pointer, dimension(:) :: input_nml_file => null() !< character string containing full namelist
                                                                         !< for use with internal file reads
     integer              :: input_nml_file_length    !< length (number of lines) in namelist for internal reads
     integer              :: logunit
@@ -747,11 +758,6 @@ module GFS_typedefs
     integer              :: nblks           !< for explicit data blocking: number of blocks
     integer,     pointer :: blksz(:)        !< for explicit data blocking: block sizes of all blocks
     integer              :: ncols           !< total number of columns for all blocks
-    !
-    integer              :: nchunks         !< number of chunks of an array that are used in the CCPP run phase
-    integer,     pointer :: chunk_begin(:)  !< first indices of chunks of an array for the CCPP run phase
-    integer,     pointer :: chunk_end(:)    !< last indices of chunks of an array for the CCPP run phase
-    !
     integer              :: fire_aux_data_levels !< vertical levels of fire auxiliary data
 
 !--- coupling parameters
@@ -800,6 +806,8 @@ module GFS_typedefs
     integer              :: nhfrad          !< number of timesteps for which to call radiation on physics timestep (coldstarts)
     integer              :: levr            !< number of vertical levels for radiation calculations
     integer              :: levrp1          !< number of vertical levels for radiation calculations plus one
+    integer              :: lmk             !< number of vertical levels for radiation calculations, when adding extra layers
+    integer              :: lmp             !< number of vertical levels for radiation calculations plus one, when adding extra layers
     integer              :: nfxr            !< second dimension for fluxr diagnostic variable (radiation)
     logical              :: iaerclm         !< flag for initializing aerosol data
     integer              :: ntrcaer         !< number of aerosol tracers for Morrison-Gettelman microphysics
@@ -875,6 +883,8 @@ module GFS_typedefs
     logical              :: lrseeds         !< flag to use host-provided random seeds
     integer              :: nrstreams       !< number of random number streams in host-provided random seed array
     logical              :: lextop          !< flag for using an extra top layer for radiation
+    integer              :: nbdlw
+    integer              :: nbdsw
 
     ! RRTMGP
     logical              :: do_RRTMGP               !< Use RRTMGP
@@ -968,7 +978,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: tcrf
 !
     integer              :: num_dfi_radar      !< number of timespans with radar-prescribed temperature tendencies
-    real (kind=kind_phys) :: fh_dfi_radar(1+dfi_radar_max_intervals)   !< begin+end of timespans to receive radar-prescribed temperature tendencies
+    real (kind=kind_phys) :: fh_dfi_radar(dfi_radar_max_intervals_plus_one)   !< begin+end of timespans to receive radar-prescribed temperature tendencies
     logical              :: do_cap_suppress    !< enable convection suppression in GF scheme if fh_dfi_radar is specified
     real (kind=kind_phys) :: radar_tten_limits(2) !< radar_tten values outside this range (min,max) are discarded
     integer              :: ix_dfi_radar(dfi_radar_max_intervals) = -1 !< Index within dfi_radar_tten of each timespan (-1 means "none")
@@ -1028,9 +1038,9 @@ module GFS_typedefs
 
     !--- land/surface model parameters
     integer              :: lsm             !< flag for land surface model lsm=1 for noah lsm
-    integer              :: lsm_noah=1      !< flag for NOAH land surface model
-    integer              :: lsm_noahmp=2    !< flag for NOAH land surface model
-    integer              :: lsm_ruc=3       !< flag for RUC land surface model
+    integer              :: ilsm_noah=1     !< flag for NOAH land surface model
+    integer              :: ilsm_noahmp=2   !< flag for NOAH land surface model
+    integer              :: ilsm_ruc=3      !< flag for RUC land surface model
     integer              :: lsoil           !< number of soil layers
     integer              :: ivegsrc         !< ivegsrc = 0   => USGS,
                                             !< ivegsrc = 1   => IGBP (20 category)
@@ -1226,6 +1236,9 @@ module GFS_typedefs
                                             !< (used if mstrat=.true.)
     real(kind=kind_phys) :: crtrh(3)        !< critical relative humidity at the surface
                                             !< PBL top and at the top of the atmosphere
+    integer              :: crtrh_sfc = 1   !< Index into crtrh for surface
+    integer              :: crtrh_pbl = 2   !< Index into crtrh for PBL top
+    integer              :: crtrh_toa = 3   !< Index into crtrh for TOA
     real(kind=kind_phys) :: dlqf(2)         !< factor for cloud condensate detrainment
                                             !< from cloud edges for RAS
     real(kind=kind_phys) :: psauras(2)      !< [in] auto conversion coeff from ice to snow in ras
@@ -1309,12 +1322,12 @@ module GFS_typedefs
     integer              :: lsea
     integer              :: nstf_name(5)    !< flag 0 for no nst  1 for uncoupled nst  and 2 for coupled NST
                                             !< nstf_name contains the NSST related parameters
-                                            !< nstf_name(1) : 0 = NSSTM off, 1 = NSSTM on but uncoupled
-                                            !<                2 = NSSTM on and coupled
-                                            !< nstf_name(2) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
-                                            !< nstf_name(3) : 1 = NSST analysis on, 0 = NSSTM analysis off
-                                            !< nstf_name(4) : zsea1 in mm
-                                            !< nstf_name(5) : zsea2 in mm
+    integer              :: instf_opt       !< nstf_name(instf_opt)    : 0 = NSSTM off, 1 = NSSTM on but uncoupled
+                                            !<                           2 = NSSTM on and coupled
+    integer              :: instf_spinup    !< nstf_name(instf_spinup) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
+    integer              :: instf_anlys     !< nstf_name(instf_anlys)  : 1 = NSST analysis on, 0 = NSSTM analysis off
+    integer              :: instf_zs1_lb    !< nstf_name(instf_zs1_lb) : lower bounds (in mm)
+    integer              :: instf_zs2_ub    !< nstf_name(instf_zs2_ub) : upper bounds (in mm)
 !--- fractional grid
     logical              :: frac_grid       !< flag for fractional grid
     logical              :: frac_ice        !< flag for fractional ice when fractional grid is not in use
@@ -2504,13 +2517,13 @@ module GFS_typedefs
     allocate (Sfcprop%weasd  (IM))
     allocate (Sfcprop%sncovr (IM))
     allocate (Sfcprop%sncovr_ice (IM))
-    if (Model%use_cice_alb .or. Model%lsm == Model%lsm_ruc) then
+    if (Model%use_cice_alb .or. Model%lsm == Model%ilsm_ruc) then
       allocate (Sfcprop%albdirvis_ice (IM))
       allocate (Sfcprop%albdifvis_ice (IM))
       allocate (Sfcprop%albdirnir_ice (IM))
       allocate (Sfcprop%albdifnir_ice (IM))
     endif
-    if (Model%lsm == Model%lsm_ruc) then
+    if (Model%lsm == Model%ilsm_ruc) then
       allocate (Sfcprop%sfalb_lnd (IM))
       allocate (Sfcprop%sfalb_ice (IM))
       allocate (Sfcprop%sfalb_lnd_bck (IM))
@@ -2529,13 +2542,13 @@ module GFS_typedefs
     Sfcprop%weasd  = clear_val
     Sfcprop%sncovr = clear_val
     Sfcprop%sncovr_ice = clear_val
-    if (Model%use_cice_alb .or. Model%lsm == Model%lsm_ruc) then
+    if (Model%use_cice_alb .or. Model%lsm == Model%ilsm_ruc) then
       Sfcprop%albdirvis_ice = clear_val
       Sfcprop%albdifvis_ice = clear_val
       Sfcprop%albdirnir_ice = clear_val
       Sfcprop%albdifnir_ice = clear_val
     endif
-    if (Model%lsm == Model%lsm_ruc) then
+    if (Model%lsm == Model%ilsm_ruc) then
       Sfcprop%sfalb_lnd     = clear_val
       Sfcprop%sfalb_ice     = clear_val
       Sfcprop%sfalb_lnd_bck = clear_val
@@ -2598,21 +2611,21 @@ module GFS_typedefs
       Sfcprop%dt_cool = zero
       Sfcprop%qrain   = zero
     endif
-    if (Model%lsm == Model%lsm_noah .or. Model%lsm == Model%lsm_noahmp) then
+    if (Model%lsm == Model%ilsm_noah .or. Model%lsm == Model%ilsm_noahmp) then
       allocate (Sfcprop%rca      (IM))
       Sfcprop%rca        = clear_val
     end if
-    if (Model%lsm == Model%lsm_noah) then
+    if (Model%lsm == Model%ilsm_noah) then
       allocate (Sfcprop%xlaixy   (IM))
       Sfcprop%xlaixy     = clear_val
     end if
-    if (Model%lsm == Model%lsm_ruc .or. Model%lsm == Model%lsm_noahmp .or. &
+    if (Model%lsm == Model%ilsm_ruc .or. Model%lsm == Model%ilsm_noahmp .or. &
          (Model%lkm>0 .and. Model%iopt_lake==Model%iopt_lake_clm)) then
      allocate(Sfcprop%raincprv  (IM))
      allocate(Sfcprop%rainncprv (IM))
      Sfcprop%raincprv   = clear_val
      Sfcprop%rainncprv  = clear_val
-     if (Model%lsm == Model%lsm_ruc .or. Model%lsm == Model%lsm_noahmp) then
+     if (Model%lsm == Model%ilsm_ruc .or. Model%lsm == Model%ilsm_noahmp) then
       allocate(Sfcprop%iceprv    (IM))
       allocate(Sfcprop%snowprv   (IM))
       allocate(Sfcprop%graupelprv(IM))
@@ -2623,7 +2636,7 @@ module GFS_typedefs
     end if
 ! Noah MP allocate and init when used
 !
-    if (Model%lsm == Model%lsm_noahmp ) then
+    if (Model%lsm == Model%ilsm_noahmp ) then
 
       allocate (Sfcprop%snowxy   (IM))
       allocate (Sfcprop%tvxy     (IM))
@@ -2718,7 +2731,7 @@ module GFS_typedefs
     allocate(Sfcprop%semisbase(IM))
     Sfcprop%semisbase = clear_val
 
-    if (Model%lsm == Model%lsm_ruc) then
+    if (Model%lsm == Model%ilsm_ruc) then
        ! For land surface models with different numbers of levels than the four NOAH levels
        allocate (Sfcprop%wetness         (IM))
        allocate (Sfcprop%sh2o            (IM,Model%lsoil_lsm))
@@ -2940,12 +2953,12 @@ module GFS_typedefs
        allocate (Coupling%fluxlwUP_radtime   (IM, Model%levs+1))
        allocate (Coupling%fluxlwDOWN_radtime (IM, Model%levs+1))
        allocate (Coupling%fluxlwUP_jac       (IM, Model%levs+1))
-       allocate (Coupling%htrlw              (IM, Model%levs))
+       allocate (Coupling%hrlw               (IM, Model%levs))
        allocate (Coupling%tsfc_radtime       (IM))
        Coupling%fluxlwUP_radtime   = clear_val
        Coupling%fluxlwDOWN_radtime = clear_val
        Coupling%fluxlwUP_jac       = clear_val
-       Coupling%htrlw              = clear_val
+       Coupling%hrlw               = clear_val
        Coupling%tsfc_radtime       = clear_val
     endif
 
@@ -3482,6 +3495,9 @@ module GFS_typedefs
     logical              :: lrseeds           = .false.      !< flag to use host-provided random seeds
     integer              :: nrstreams         = 2            !< number of random number streams in host-provided random seed array
     logical              :: lextop            = .false.      !< flag for using an extra top layer for radiation
+    integer              :: nbdlw             = 16           !< number of RRTMG Longwave bands
+    integer              :: nbdsw             = 14           !< number of RRTMG Shortwave bands
+    
     ! RRTMGP
     logical              :: do_RRTMGP           = .false.    !< Use RRTMGP?
     character(len=128)   :: active_gases        = ''         !< Character list of active gases used in RRTMGP
@@ -3848,12 +3864,17 @@ module GFS_typedefs
     logical              :: nst_anl        = .false.         !< flag for NSSTM analysis in gcycle/sfcsub
     integer              :: lsea           = 0
     integer              :: nstf_name(5)   = (/0,0,1,0,5/)   !< flag 0 for no nst  1 for uncoupled nst  and 2 for coupled NST
-                                                             !< nstf_name(1) : 0 = NSSTM off, 1 = NSSTM on but uncoupled
-                                                             !<                2 = NSSTM on and coupled
-                                                             !< nstf_name(2) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
-                                                             !< nstf_name(3) : 1 = NSSTM analysis on, 0 = NSSTM analysis off
-                                                             !< nstf_name(4) : zsea1 in mm
-                                                             !< nstf_name(5) : zsea2 in mm
+                                                             !< nstf_name(instf_opt)    : 0 = NSSTM off, 1 = NSSTM on but uncoupled
+                                                             !<                           2 = NSSTM on and coupled
+                                                             !< nstf_name(instf_spinup) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
+                                                             !< nstf_name(instf_anlys)  : 1 = NSSTM analysis on, 0 = NSSTM analysis off
+                                                             !< nstf_name(instf_zs1_lb) : lower bounds (in mm)
+                                                             !< nstf_name(instf_zs2_ub) : upper bounds (in mm)
+    integer              :: instf_opt    = 1
+    integer              :: instf_spinup = 2
+    integer              :: instf_anlys  = 3
+    integer              :: instf_zs1_lb = 4
+    integer              :: instf_zs2_ub = 5
 !--- fractional grid
     logical              :: frac_grid       = .false.         !< flag for fractional grid
     logical              :: frac_ice        = .true.          !< flag for lake fractional ice when fractional grid is not in use
@@ -4434,16 +4455,6 @@ module GFS_typedefs
     allocate(Model%blksz(1:Model%nblks))
     Model%blksz            = blksz
     Model%ncols            = sum(Model%blksz)
-    ! DH*
-    Model%nchunks          = size(blksz)
-    allocate(Model%chunk_begin(Model%nchunks))
-    allocate(Model%chunk_end(Model%nchunks))
-    Model%chunk_begin(1) = 1
-    Model%chunk_end(1) = Model%chunk_begin(1) + blksz(1) - 1
-    do i=2,Model%nchunks
-        Model%chunk_begin(i) = Model%chunk_end(i-1) + 1
-        Model%chunk_end(i) = Model%chunk_begin(i) + blksz(i) - 1
-    end do
     
 !--- coupling parameters
     Model%cplflx           = cplflx
@@ -4553,6 +4564,8 @@ module GFS_typedefs
       Model%levr           = levr
     endif
     Model%levrp1           = Model%levr + 1
+    Model%lmk              = Model%levr + LTP
+    Model%lmp              = Model%levr + 1 + LTP
 
     if (isubc_sw < 0 .or. isubc_sw > 2) then
        write(0,'(a,i0)') 'ERROR: shortwave cloud-sampling (isubc_sw) scheme selected not valid: ',isubc_sw
@@ -4632,6 +4645,8 @@ module GFS_typedefs
     Model%lrseeds          = lrseeds
     Model%nrstreams        = nrstreams
     Model%lextop           = (ltp > 0)
+    Model%nbdlw            = NBDLW
+    Model%nbdsw            = NBDSW
 
     ! RRTMGP
     Model%do_RRTMGP           = do_RRTMGP
@@ -4810,7 +4825,7 @@ module GFS_typedefs
 
     ! Flag to read leaf area index from input files (initial conditions)
     Model%rdlai = rdlai
-    if (Model%rdlai .and. .not. Model%lsm == Model%lsm_ruc) then
+    if (Model%rdlai .and. .not. Model%lsm == Model%ilsm_ruc) then
       write(0,*) 'Logic error: rdlai = .true. only works with RUC LSM'
       error stop
     end if
@@ -4827,20 +4842,20 @@ module GFS_typedefs
     ! Allocate variables to store depth/thickness of soil layers
     allocate (Model%zs (Model%lsoil_lsm))
     allocate (Model%dzs(Model%lsoil_lsm))
-    if (Model%lsm==Model%lsm_noah .or. Model%lsm==Model%lsm_noahmp) then
+    if (Model%lsm==Model%ilsm_noah .or. Model%lsm==Model%ilsm_noahmp) then
       if (Model%lsoil_lsm/=4) then
         write(0,*) 'Error in GFS_typedefs.F90, number of soil layers must be 4 for Noah/NoahMP'
         error stop
       end if
       Model%zs  = (/-0.1_kind_phys, -0.4_kind_phys, -1.0_kind_phys, -2.0_kind_phys/)
       Model%dzs = (/ 0.1_kind_phys,  0.3_kind_phys,  0.6_kind_phys,  1.0_kind_phys/)
-    elseif (Model%lsm==Model%lsm_ruc) then
+    elseif (Model%lsm==Model%ilsm_ruc) then
       Model%zs  = clear_val
       Model%dzs = clear_val
     end if
     ! *DH
 
-    if (Model%lsm==Model%lsm_ruc) then
+    if (Model%lsm==Model%ilsm_ruc) then
       if (Model%lsoil_lsm/=9) then
         write(0,*) 'Error in GFS_typedefs.F90, number of soil layers must be 9 for RUC'
         error stop
@@ -4850,12 +4865,12 @@ module GFS_typedefs
     ! Set number of ice model layers
     Model%kice      = kice
 
-    if (Model%lsm==Model%lsm_noah .or. Model%lsm==Model%lsm_noahmp) then
+    if (Model%lsm==Model%ilsm_noah .or. Model%lsm==Model%ilsm_noahmp) then
       if (kice/=2) then
         write(0,*) 'Error in GFS_typedefs.F90, number of ice model layers must be 2 for Noah/NoahMP/Noah_WRFv4'
         error stop
       end if
-    elseif (Model%lsm==Model%lsm_ruc) then
+    elseif (Model%lsm==Model%ilsm_ruc) then
       if (kice/=9) then
         write(0,*) 'Error in GFS_typedefs.F90, number of ice model layers must be 9 for RUC'
         error stop
@@ -4868,7 +4883,7 @@ module GFS_typedefs
     Model%pores    = clear_val
     Model%resid    = clear_val
     !
-    if (Model%lsm==Model%lsm_noahmp) then
+    if (Model%lsm==Model%ilsm_noahmp) then
       if (lsnow_lsm/=3) then
         write(0,*) 'Logic error: NoahMP expects the maximum number of snow layers to be exactly 3 (see sfc_noahmp_drv.f)'
         error stop
@@ -4938,7 +4953,7 @@ module GFS_typedefs
     Model%iopt_inf         = iopt_inf
     Model%iopt_rad         = iopt_rad
     Model%iopt_alb         = iopt_alb
-    if (Model%lsm==Model%lsm_noahmp .and. Model%exticeden .and. iopt_snf == 4) then
+    if (Model%lsm==Model%ilsm_noahmp .and. Model%exticeden .and. iopt_snf == 4) then
       Model%iopt_snf         = 5
     else
       Model%iopt_snf         = iopt_snf
@@ -5888,7 +5903,7 @@ module GFS_typedefs
       elseif (Model%lsm == 0) then
         print *,' OSU no longer supported - job aborted'
         error stop
-      elseif (Model%lsm == Model%lsm_noahmp) then
+      elseif (Model%lsm == Model%ilsm_noahmp) then
         if (Model%ivegsrc /= 1) then
           print *,'Vegetation type must be IGBP if Noah MP is used'
           error stop
@@ -5913,7 +5928,7 @@ module GFS_typedefs
         print *,'iopt_stc   =  ', Model%iopt_stc
         print *,'iopt_trs   =  ', Model%iopt_trs
         print *,'iopt_diag  =  ', Model%iopt_diag
-      elseif (Model%lsm == Model%lsm_ruc) then
+      elseif (Model%lsm == Model%ilsm_ruc) then
         print *,' RUC Land Surface Model used'
         print *, 'The Physics options are'
         print *,' mosaic_lu   =  ',mosaic_lu
@@ -5926,7 +5941,7 @@ module GFS_typedefs
         error stop
       endif
 
-!      if (Model%lsm == Model%lsm_noahmp .and. Model%iopt_snf == 4) then
+!      if (Model%lsm == Model%ilsm_noahmp .and. Model%iopt_snf == 4) then
 !        if (Model%imp_physics /= Model%imp_physics_gfdl) stop 'iopt_snf == 4 must use GFDL MP'
 !      endif
 
@@ -5954,13 +5969,18 @@ module GFS_typedefs
         endif
       endif
 
+      Model%instf_opt    = instf_opt
+      Model%instf_spinup = instf_spinup
+      Model%instf_anlys  = instf_anlys
+      Model%instf_zs1_lb = instf_zs1_lb
+      Model%instf_zs2_ub = instf_zs2_ub
       if (Model%nstf_name(1) > 0 ) then
         print *,' NSSTM is active '
-        print *,' nstf_name(1)=',Model%nstf_name(1)
-        print *,' nstf_name(2)=',Model%nstf_name(2)
-        print *,' nstf_name(3)=',Model%nstf_name(3)
-        print *,' nstf_name(4)=',Model%nstf_name(4)
-        print *,' nstf_name(5)=',Model%nstf_name(5)
+        print *,' nstf_name(1)=',Model%nstf_name(Model%instf_opt)
+        print *,' nstf_name(2)=',Model%nstf_name(Model%instf_spinup)
+        print *,' nstf_name(3)=',Model%nstf_name(Model%instf_anlys)
+        print *,' nstf_name(4)=',Model%nstf_name(Model%instf_zs1_lb)
+        print *,' nstf_name(5)=',Model%nstf_name(Model%instf_zs2_ub)
       endif
       if (Model%do_deep) then
         ! Consistency check for NTDK convection: deep and shallow convection are bundled
@@ -6807,7 +6827,7 @@ module GFS_typedefs
       print *, ' lsoil             : ', Model%lsoil
       print *, ' rdlai             : ', Model%rdlai
       print *, ' lsoil_lsm         : ', Model%lsoil_lsm
-      if (Model%lsm==Model%lsm_noahmp) then
+      if (Model%lsm==Model%ilsm_noahmp) then
         print *, ' lsnow_lsm         : ', Model%lsnow_lsm
         print *, ' lsnow_lsm_lbound  : ', Model%lsnow_lsm_lbound
         print *, ' lsnow_lsm_ubound  : ', Model%lsnow_lsm_ubound
@@ -6828,7 +6848,7 @@ module GFS_typedefs
       print *, ' isot              : ', Model%isot
       print *, ' nsoilcat          : ', Model%nsoilcat
 
-      if (Model%lsm == Model%lsm_noahmp) then
+      if (Model%lsm == Model%ilsm_noahmp) then
         print *, ' Noah MP LSM is used, the options are'
         print *, ' iopt_dveg         : ', Model%iopt_dveg
         print *, ' iopt_crs          : ', Model%iopt_crs
@@ -6844,7 +6864,7 @@ module GFS_typedefs
         print *, ' iopt_stc          : ', Model%iopt_stc
         print *, ' iopt_trs          : ', Model%iopt_trs
         print *, ' iopt_diag         : ', Model%iopt_diag
-      elseif (Model%lsm == Model%lsm_ruc) then
+      elseif (Model%lsm == Model%ilsm_ruc) then
         print *,' RUC Land Surface Model used'
         print *, 'The Physics options are'
         print *,' mosaic_lu   =  ',Model%mosaic_lu
@@ -7286,8 +7306,11 @@ module GFS_typedefs
     Tbd%ccn_nm = clear_val
 
 !--- aerosol fields
-    allocate (Tbd%aer_nm  (IM,Model%levs,ntrcaer))
-    Tbd%aer_nm = clear_val
+    ! DH* allocate only for MG? *DH
+    if (Model%iaerclm) then
+       allocate (Tbd%aer_nm  (IM,Model%levs,Model%ntrcaer))
+       Tbd%aer_nm = clear_val
+    endif
 
 !--- tau_amf for  NGWs
     allocate (Tbd%tau_amf(im) )
@@ -7855,7 +7878,7 @@ module GFS_typedefs
     allocate (Diag%frozrb  (IM))
     allocate (Diag%tsnowp  (IM))
     allocate (Diag%tsnowpb (IM))
-    if (.not. Model%lsm == Model%lsm_ruc) then
+    if (.not. Model%lsm == Model%ilsm_ruc) then
       allocate (Diag%wet1    (IM))
     end if
     allocate (Diag%sr       (IM))
@@ -7865,7 +7888,7 @@ module GFS_typedefs
     allocate (Diag%tdoms    (IM))
     allocate (Diag%zmtnblck (IM))
 
-    if(Model%lsm == Model%lsm_noahmp) then
+    if(Model%lsm == Model%ilsm_noahmp) then
       allocate (Diag%paha    (IM))
       allocate (Diag%twa     (IM))
       allocate (Diag%pahi    (IM))
@@ -8173,7 +8196,7 @@ module GFS_typedefs
     Diag%epi        = zero
     Diag%smcwlt2    = zero
     Diag%smcref2    = zero
-    if (.not. Model%lsm == Model%lsm_ruc) then
+    if (.not. Model%lsm == Model%ilsm_ruc) then
       Diag%wet1       = zero
     end if
     Diag%sr         = zero
@@ -8183,7 +8206,7 @@ module GFS_typedefs
     Diag%tdoms      = zero
     Diag%zmtnblck   = zero
 
-    if(Model%lsm == Model%lsm_noahmp)then
+    if(Model%lsm == Model%ilsm_noahmp)then
       Diag%paha       = zero
       Diag%twa        = zero
       Diag%pahi       = zero
