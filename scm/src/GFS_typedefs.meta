@@ -3752,6 +3752,72 @@
   long_name = initial date with different size and ordering
   units = none
   dimensions = (4)
+  type = integer 
+[tend_opt_swrad]
+  standard_name = control_for_application_method_of_shortwave_radiation_tendencies
+  long_name = control for application method of shortwave radiation tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_lwrad]
+  standard_name = control_for_application_method_of_longwave_radiation_tendencies
+  long_name = control for application method of longwave radiation tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_rad_scaler]
+  standard_name = control_for_application_method_of_radiation_timescaler_tendencies
+  long_name = control for application method of radiation timescaler tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_surface]
+  standard_name = control_for_application_method_of_surface_scheme_tendencies
+  long_name = control for application method of surface scheme tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_pbl]
+  standard_name = control_for_application_method_of_planetary_boundary_layer_tendencies
+  long_name = control for application method of planetary boundary layer tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_gwd]
+  standard_name = control_for_application_method_of_gravity_wave_drag_tendencies
+  long_name = control for application method of gravity wave drag tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_photochem]
+  standard_name = control_for_application_method_of_photochemistry_tendencies
+  long_name = control for application method of photochemistry tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_deep_conv]
+  standard_name = control_for_application_method_of_deep_convection_tendencies
+  long_name = control for application method of deep convection tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_shal_conv]
+  standard_name = control_for_application_method_of_shallow_convection_tendencies
+  long_name = control for application method of shallow convection tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_mp]
+  standard_name = control_for_application_method_of_microphysics_tendencies
+  long_name = control for application method of microphysics tendencies
+  units = 1
+  dimensions = ()
+  type = integer
+[tend_opt_stoch]
+  standard_name = control_for_application_method_of_stochastic_physics_tendencies
+  long_name = control for application method of stochastic physics tendencies
+  units = 1
+  dimensions = ()
   type = integer
 [nsswr]
   standard_name = number_of_timesteps_between_shortwave_radiation_calls
