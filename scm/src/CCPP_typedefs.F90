@@ -282,6 +282,10 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: stress_land(:)     => null()  !<
     real (kind=kind_phys), pointer      :: stress_water(:)    => null()  !<
     real (kind=kind_phys), pointer      :: t2mmp(:)           => null()  !<
+    real (kind=kind_phys), pointer      :: ten_q(:,:,:)       => null()
+    real (kind=kind_phys), pointer      :: ten_t(:,:)         => null()
+    real (kind=kind_phys), pointer      :: ten_u(:,:)         => null()
+    real (kind=kind_phys), pointer      :: ten_v(:,:)         => null()
     real (kind=kind_phys), pointer      :: theta(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tlvl(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tlyr(:,:)          => null()  !<
@@ -630,6 +634,10 @@ contains
     allocate (Interstitial%stress_ice      (IM))
     allocate (Interstitial%stress_land     (IM))
     allocate (Interstitial%stress_water    (IM))
+    allocate (Interstitial%ten_q           (IM,Model%levs,Model%ntrac))
+    allocate (Interstitial%ten_t           (IM,Model%levs))
+    allocate (Interstitial%ten_u           (IM,Model%levs))
+    allocate (Interstitial%ten_v           (IM,Model%levs))
     allocate (Interstitial%theta           (IM))
     allocate (Interstitial%tlvl            (IM,Model%levr+1+LTP))
     allocate (Interstitial%tlyr            (IM,Model%levr+LTP))
@@ -1312,6 +1320,10 @@ contains
     Interstitial%stress_ice      = Model%huge
     Interstitial%stress_land     = Model%huge
     Interstitial%stress_water    = Model%huge
+    Interstitial%ten_q           = clear_val
+    Interstitial%ten_t           = clear_val
+    Interstitial%ten_u           = clear_val
+    Interstitial%ten_v           = clear_val
     Interstitial%theta           = clear_val
     Interstitial%tprcp_ice       = Model%huge
     Interstitial%tprcp_land      = Model%huge
