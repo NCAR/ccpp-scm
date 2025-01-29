@@ -22,6 +22,7 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/photochem/module_ozphys.F90',
     'ccpp/physics/physics/photochem/module_h2ophys.F90',
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90',
+    'ccpp/physics/physics/MP/pumas/PUMAS/micro_pumas_diags.F90',
     'scm/src/CCPP_typedefs.F90',
     'scm/src/GFS_typedefs.F90',
     'scm/src/scm_kinds.F90',
@@ -52,6 +53,10 @@ TYPEDEFS_NEW_METADATA = {
     'module_h2ophys' : {
         'module_h2ophys' : '',
         'ty_h2ophys'     : '',
+        },
+    'micro_pumas_diags' : {
+        'micro_pumas_diags' : '',
+#        'proc_rates_type'   : '',
         },
     'CCPP_typedefs' : {
         'GFS_interstitial_type' : 'physics%Interstitial(cdata%thrd_no)',
@@ -183,6 +188,9 @@ SCHEME_FILES = [
     'ccpp/physics/physics/MP/Thompson/mp_thompson_post.F90',
     'ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_gscond.f',
     'ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_precpd.f',
+    'ccpp/physics/physics/MP/pumas/PUMAS/micro_pumas_ccpp.F90',
+    'ccpp/physics/physics/MP/pumas/mp_pumas_pre.F90',
+    'ccpp/physics/physics/MP/pumas/mp_pumas_post.F90',
     'ccpp/physics/physics/PBL/HEDMF/hedmf.f',
     'ccpp/physics/physics/PBL/SHOC/moninshoc.f',
     'ccpp/physics/physics/PBL/SHOC/shoc.F90',
