@@ -3540,6 +3540,18 @@
   units = count
   dimensions = ()
   type = integer
+[micro_nlev]
+  standard_name = microphysics_vertical_layer_dimension
+  long_name = vertical layer dimension used by microphysics
+  units = count
+  dimensions = ()
+  type = integer
+[micro_nlevp1]
+  standard_name = microphysics_vertical_interface_dimension
+  long_name = vertical interface dimension used by microphysics
+  units = count
+  dimensions = ()
+  type = integer
 [lonr]
   standard_name = number_of_equatorial_longitude_points
   long_name = number of global points in x-dir (i) along the equator
@@ -3604,6 +3616,12 @@
   standard_name = horizontal_loop_end
   long_name = last index for horizontal loop extent in run phase
   units = index
+  dimensions = ()
+  type = integer
+[ix_micro]
+  standard_name = microphysics_horizontal_loop_extent
+  long_name = horizontal loop extent used in microphysics
+  units = count
   dimensions = ()
   type = integer
 [tile_num]

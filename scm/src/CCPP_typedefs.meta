@@ -1364,6 +1364,104 @@
   units = flag
   dimensions = ()
   type = logical
+[micro_accre_enhan]
+  standard_name = microphysics_accretion_enhancement_factor
+  long_name = microphysics accretion enhancement factor
+  units = 1
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_numice_tend]
+  standard_name = mass_number_concentration_of_cloud_ice_wrt_moist_air_and_condensed_water
+  long_name = mass number concentration of cloud ice wrt moist air and condensed water
+  units = kg-1 s-1
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_numliq_tend]
+  standard_name = mass_number_concentration_of_cloud_liquid_water_wrt_moist_air_and_condensed_water
+  long_name = mass number concentration of cloud liquid water wrt moist air and condensed water
+  units = kg-1 s-1
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_pmid]
+  standard_name = microphysics_air_pressure
+  long_name = microphysics air pressure
+  units = Pa
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_pint]
+  standard_name = microphysics_air_pressure_at_interfaces
+  long_name = microphysics air pressure at interfaces
+  units = Pa
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_pdel]
+  standard_name = microphysics_air_pressure_thickness
+  long_name = microphysics air pressure thickness
+  units = Pa
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_airT]
+  standard_name = microphysics_air_temperature
+  long_name = microphysics air temperature of new state
+  units = K
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_refl10cm]
+  standard_name = microphysics_analytic_radar_reflectivity_at_10_cm_wavelength
+  long_name = microphysics analytic radar reflectivity at 10 cm wavelength
+  units = dBZ
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_arefl]
+  standard_name = microphysics_analytic_radar_reflectivity_at_94_GHz
+  long_name = microphysics analytic radar reflectivity at 94 GHz
+  units = dBZ
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_refl]
+  standard_name = microphysics_analytic_radar_reflectivity_at_94_GHz_in_precipitating_fraction_of_gridcell
+  long_name = microphysics analytic radar reflectivity at 94 GHz in precipitating fraction of gridcell
+  units = dBZ
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_acsrfl]
+  standard_name = microphysics_analytic_radar_reflectivity_at_94_GHz_with_cloudsat_thresholds
+  long_name = microphysics analytic radar reflectivity at 94 GHz with CloudSat thresholds
+  units = dBZ
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_csrfl]
+  standard_name = microphysics_analytic_radar_reflectivity_at_94_GHz_with_cloudsat_thresholds_in_precipitating_fraction_of_gridcell
+  long_name = microphysics analytic radar reflectivity at 94 GHz with CloudSat thresholds in precipitating fraction of gridcell
+  units = dBZ
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_reflz10cm]
+  standard_name = microphysics_analytic_radar_reflectivity_z_factor_at_10_cm_wavelength
+  long_name = microphysics analytic radar reflectivity z factor at 10 cm wavelength
+  units = mm6 m-3
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[micro_areflz]
+  standard_name = microphysics_analytic_radar_reflectivity_z_factor_at_94_GHz
+  long_name = microphysics analytic radar reflectivity z factor at 94 GHz
+  units = mm6 m-3
+  dimensions = (microphysics_horizontal_loop_extent, microphysics_vertical_layer_dimension)
+  type = real
+  kind = kind_phys
 [mtopa]
   standard_name = model_layer_number_at_cloud_top
   long_name = vertical indices for low, middle and high cloud tops

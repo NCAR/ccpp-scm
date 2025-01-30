@@ -739,6 +739,8 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: bk(:)  !< from surface (k=1) to TOA (k=levs)
     integer              :: levsp1          !< number of vertical levels plus one
     integer              :: levsm1          !< number of vertical levels minus one
+    integer              :: micro_nlev      !< vertical layer dimension used by microphysics
+    integer              :: micro_nlevp1    !< vertical interface dimension used by microphysics
     integer              :: cnx             !< number of points in the i-dir for this cubed-sphere face
     integer              :: cny             !< number of points in the j-dir for this cubed-sphere face
     integer              :: lonr            !< number of global points in x-dir (i) along the equator
@@ -747,6 +749,7 @@ module GFS_typedefs
     integer              :: nblks           !< for explicit data blocking: number of blocks
     integer,     pointer :: blksz(:)        !< for explicit data blocking: block sizes of all blocks
     integer              :: ncols           !< total number of columns for all blocks
+    integer              :: ix_micro        !< horizontal loop extent used in microphysics
     !
     integer              :: nchunks         !< number of chunks of an array that are used in the CCPP run phase
     integer,     pointer :: chunk_begin(:)  !< first indices of chunks of an array for the CCPP run phase
@@ -4461,6 +4464,8 @@ module GFS_typedefs
     Model%bk               = bk
     Model%levsp1           = Model%levs + 1
     Model%levsm1           = Model%levs - 1
+    Model%micro_nlev       = Model%levs
+    Model%micro_nlevp1     = Model%levs + 1
     Model%cnx              = cnx
     Model%cny              = cny
     Model%lonr             = gnx         ! number longitudinal points
@@ -4469,6 +4474,7 @@ module GFS_typedefs
     allocate(Model%blksz(1:Model%nblks))
     Model%blksz            = blksz
     Model%ncols            = sum(Model%blksz)
+    Model%ix_micro         = 1 !!!!!!!! only for SCM for hackathon
     ! DH*
     Model%nchunks          = size(blksz)
     allocate(Model%chunk_begin(Model%nchunks))
