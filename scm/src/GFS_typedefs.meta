@@ -7263,6 +7263,26 @@
   units = flag
   dimensions = ()
   type = logical
+[iulog]
+  standard_name = log_output_unit
+  long_name = log output unit
+  units = 1
+  dimensions = ()
+  type = integer
+[micro_mg_homog_size]
+  standard_name = homogeneous_freezing_radius
+  long_name = radius of drops homogeneously frozen in MG microphysics
+  units = m
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_max_nicons]
+  standard_name = maximum_ice_number_concentration
+  long_name = maximum allowed ice number concentration for MG microphysics
+  units = m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [do_ccpp_suite_sim]
   standard_name = flag_for_CCPP_suite_simulator
   long_name = flag for ccpp suite simulator

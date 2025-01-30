@@ -1664,6 +1664,10 @@ module GFS_typedefs
     logical              :: micro_mg_icenuc_use_meyers !< use temperature dependent ice nucleation from Meyers 1992 for PUMAS microphysics
     logical              :: micro_mg_evap_rhthrsh_ifs !< Do not evaporate precipitation until RH below 90% as done in the for PUMAS microphysics
 
+    real(kind=kind_phys) :: micro_mg_homog_size !< radius of drops homogeneously frozen in MG microphysics
+    real(kind=kind_phys) :: micro_mg_max_nicons !< maximum allowed ice number concentration for MG microphysics
+    integer              :: iulog !< log output unit
+
 !--- CCPP suite simulator
     logical                                :: do_ccpp_suite_sim  !
     integer                                :: nphys_proc          !
