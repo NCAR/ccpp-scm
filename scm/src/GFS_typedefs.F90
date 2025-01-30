@@ -786,6 +786,7 @@ module GFS_typedefs
 !--- calendars and time parameters and activation triggers
     real(kind=kind_phys) :: dtp             !< physics timestep in seconds
     real(kind=kind_phys) :: dtf             !< dynamics timestep in seconds
+    real(kind=kind_phys) :: dtm             !< microphysics timestep in seconds
     integer              :: nscyc           !< trigger for surface data cycling
     integer              :: nszero          !< trigger for zeroing diagnostic buckets
     integer              :: idat(1:8)       !< initialization date and time
@@ -1663,6 +1664,15 @@ module GFS_typedefs
     logical              :: micro_mg_evap_scl_ifs !< if True Apply 0.3 scaling factor to evaporation of precipitation for PUMAS microphysics
     logical              :: micro_mg_icenuc_use_meyers !< use temperature dependent ice nucleation from Meyers 1992 for PUMAS microphysics
     logical              :: micro_mg_evap_rhthrsh_ifs !< Do not evaporate precipitation until RH below 90% as done in the for PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_homog_size !< radius of drops homogeneously frozen in PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_max_nicons !< maximum allowed ice number concentration for PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_nrnst !< rain concentration constant for PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_nsnst !< snow concentration constant for PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_iaccr_factor !< scaling factor for ice accretion in PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_vtrmi_factor !< scaling factor for cloud ice fall speed in PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_effi_factor !< scaling factor for ice effective radition used by radiation
+    real(kind=kind_phys) :: micro_mg_vtrms_factor !< scaling factor for snow fall speed in PUMAS microphysics
+    
 
 !--- CCPP suite simulator
     logical                                :: do_ccpp_suite_sim  !
@@ -4544,6 +4554,7 @@ module GFS_typedefs
 !--- calendars and time parameters and activation triggers
     Model%dtp              = dt_phys
     Model%dtf              = dt_dycore
+    Model%dtm              = Model%dtp
     Model%nscyc            = nint(Model%fhcyc*con_hr/Model%dtp)
     Model%nszero           = nint(Model%fhzero*con_hr/Model%dtp)
     Model%idat(1:8)        = idat(1:8)
@@ -5779,6 +5790,14 @@ module GFS_typedefs
     Model%micro_mg_evap_scl_ifs     = .false. !!!!!!!
     Model%micro_mg_icenuc_use_meyers = .false. !!!!!!!
     Model%micro_mg_evap_rhthrsh_ifs = .false. !!!!!!!
+    Model%micro_mg_homog_size       = 25.0E-6_kind_phys
+    Model%micro_mg_max_nicons       = 1.0E8_kind_phys
+    Model%micro_mg_nrnst            = 1.0_kind_phys !!!!!!!
+    Model%micro_mg_nsnst            = 1.0_kind_phys !!!!!!!
+    Model%micro_mg_iaccr_factor     = 1.0_kind_phys
+    Model%micro_mg_vtrmi_factor     = 1.0_kind_phys
+    Model%micro_mg_effi_factor      = 1.0_kind_phys
+    Model%micro_mg_vtrms_factor     = 1.0_kind_phys
     
 !--- quantities to be used to derive phy_f*d totals
     Model%nshoc_2d         = nshoc_2d
