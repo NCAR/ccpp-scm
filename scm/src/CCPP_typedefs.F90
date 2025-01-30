@@ -202,9 +202,7 @@ module CCPP_typedefs
     integer,               pointer      :: mbota(:,:)         => null()  !<
     logical                             :: mg3_as_mg2                    !<
     real (kind=kind_phys), pointer      :: micro_accre_enhan => null()
-    real (kind=kind_phys), pointer      :: micro_numice_tend => null()
-    real (kind=kind_phys), pointer      :: micro_numliq_tend => null()
-    real (kind=kind_phys), pointer      :: micro_pmid_in     => null()
+    real (kind=kind_phys), pointer      :: micro_pmid        => null()
     real (kind=kind_phys), pointer      :: micro_pint        => null()
     real (kind=kind_phys), pointer      :: micro_pdel        => null()
     real (kind=kind_phys), pointer      :: micro_airT        => null()
@@ -215,6 +213,95 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: micro_csrfl       => null()
     real (kind=kind_phys), pointer      :: micro_reflz10cm   => null()
     real (kind=kind_phys), pointer      :: micro_areflz      => null()
+    real (kind=kind_phys), pointer      :: micro_ncai        => null()
+    real (kind=kind_phys), pointer      :: micro_ncal        => null()
+    real (kind=kind_phys), pointer      :: micro_airq        => null() 
+    real (kind=kind_phys), pointer      :: micro_cldliq      => null()
+    real (kind=kind_phys), pointer      :: micro_cldice      => null()
+    real (kind=kind_phys), pointer      :: micro_numliq      => null() 
+    real (kind=kind_phys), pointer      :: micro_numice      => null()
+    real (kind=kind_phys), pointer      :: init_micro_rainliq     => null()
+    real (kind=kind_phys), pointer      :: init_micro_snowice     => null()
+    real (kind=kind_phys), pointer      :: micro_numrain     => null()
+    real (kind=kind_phys), pointer      :: micro_numsnow     => null()
+    real (kind=kind_phys), pointer      :: init_micro_graupice    => null()
+    real (kind=kind_phys), pointer      :: micro_numgraup    => null()
+    real (kind=kind_phys), pointer      :: micro_relvar      => null()
+    real (kind=kind_phys), pointer      :: micro_strat_cldfrc => null()
+    real (kind=kind_phys), pointer      :: micro_strat_liq_cldfrc => null()
+    real (kind=kind_phys), pointer      :: micro_strat_ice_cldfrc => null()
+    real (kind=kind_phys), pointer      :: micro_qsatfac => null()
+    real (kind=kind_phys), pointer      :: micro_naai => null()
+    real (kind=kind_phys), pointer      :: micro_npccn => null()
+    real (kind=kind_phys), pointer      :: micro_rndst => null()
+    real (kind=kind_phys), pointer      :: micro_nacon => null()
+    real (kind=kind_phys), pointer      :: micro_snowice_tend_external => null()
+    real (kind=kind_phys), pointer      :: micro_numsnow_tend_external => null()
+    real (kind=kind_phys), pointer      :: micro_effi_external => null()
+    real (kind=kind_phys), pointer      :: micro_frzimm=> null()
+    real (kind=kind_phys), pointer      :: micro_frzcnt=> null()
+    real (kind=kind_phys), pointer      :: micro_frzdep=> null()
+    real (kind=kind_phys), pointer      :: micro_qcsinksum_rate1ord => null()
+    real (kind=kind_phys), pointer      :: micro_airT_tend => null()
+    real (kind=kind_phys), pointer      :: micro_airq_tend => null()
+    real (kind=kind_phys), pointer      :: micro_cldliq_tend => null()
+    real (kind=kind_phys), pointer      :: micro_cldice_tend => null()
+    real (kind=kind_phys), pointer      :: micro_numliq_tend => null()
+    real (kind=kind_phys), pointer      :: micro_numice_tend => null()
+    real (kind=kind_phys), pointer      :: micro_rainliq_tend => null()
+    real (kind=kind_phys), pointer      :: micro_snowice_tend => null()
+    real (kind=kind_phys), pointer      :: micro_numrain_tend => null()
+    real (kind=kind_phys), pointer      :: micro_numsnow_tend => null()
+    real (kind=kind_phys), pointer      :: micro_graupice_tend => null()
+    real (kind=kind_phys), pointer      :: micro_numgraup_tend => null()
+    real (kind=kind_phys), pointer      :: micro_effc => null()
+    real (kind=kind_phys), pointer      :: micro_effc_fn => null()
+    real (kind=kind_phys), pointer      :: micro_effi => null()
+    real (kind=kind_phys), pointer      :: micro_sadice => null()
+    real (kind=kind_phys), pointer      :: micro_sadsnow => null()
+    real (kind=kind_phys), pointer      :: micro_prect => null()
+    real (kind=kind_phys), pointer      :: micro_preci => null()
+    real (kind=kind_phys), pointer      :: micro_prec_evap => null()
+    real (kind=kind_phys), pointer      :: micro_am_evap_st => null()
+    real (kind=kind_phys), pointer      :: micro_prec_prod => null()
+    real (kind=kind_phys), pointer      :: micro_cmeice => null()
+    real (kind=kind_phys), pointer      :: micro_deffi => null()
+    real (kind=kind_phys), pointer      :: micro_pgamrad => null()
+    real (kind=kind_phys), pointer      :: micro_lamcrad => null()
+    real (kind=kind_phys), pointer      :: micro_snowice_in_prec => null()
+    real (kind=kind_phys), pointer      :: micro_scaled_diam_snow => null()
+    real (kind=kind_phys), pointer      :: micro_graupice_in_prec => null()
+    real (kind=kind_phys), pointer      :: micro_numgraup_vol_in_prec => null()
+    real (kind=kind_phys), pointer      :: micro_scaled_diam_graup => null()
+    real (kind=kind_phys), pointer      :: micro_lflx => null()
+    real (kind=kind_phys), pointer      :: micro_iflx => null()
+    real (kind=kind_phys), pointer      :: micro_gflx => null()
+    real (kind=kind_phys), pointer      :: micro_rflx => null()
+    real (kind=kind_phys), pointer      :: micro_sflx => null()
+    real (kind=kind_phys), pointer      :: micro_rainliq_in_prec => null()
+    real (kind=kind_phys), pointer      :: micro_reff_rain => null()
+    real (kind=kind_phys), pointer      :: micro_reff_snow => null()
+    real (kind=kind_phys), pointer      :: micro_reff_grau => null()
+    real (kind=kind_phys), pointer      :: micro_numrain_vol_in_prec => null()
+    real (kind=kind_phys), pointer      :: micro_numsnow_vol_in_prec => null()
+    real (kind=kind_phys), pointer      :: micro_frefl => null()
+    real (kind=kind_phys), pointer      :: micro_fcsrfl => null() 
+    real (kind=kind_phys), pointer      :: micro_rercld => null()
+    real (kind=kind_phys), pointer      :: micro_rainliq => null()
+    real (kind=kind_phys), pointer      :: micro_snowice => null()
+    real (kind=kind_phys), pointer      :: micro_numrain_vol => null()
+    real (kind=kind_phys), pointer      :: micro_numsnow_vol => null()
+    real (kind=kind_phys), pointer      :: micro_diam_rain => null()
+    real (kind=kind_phys), pointer      :: micro_diam_snow => null()
+    real (kind=kind_phys), pointer      :: micro_graupice => null()
+    real (kind=kind_phys), pointer      :: micro_numgraup_vol => null()
+    real (kind=kind_phys), pointer      :: micro_diam_graup => null()
+    real (kind=kind_phys), pointer      :: micro_freq_graup => null()
+    real (kind=kind_phys), pointer      :: micro_freq_snow => null()
+    real (kind=kind_phys), pointer      :: micro_freq_rain => null()
+    real (kind=kind_phys), pointer      :: micro_frac_ice => null()
+    real (kind=kind_phys), pointer      :: micro_frac_cldliq_tend => null()
+    real (kind=kind_phys), pointer      :: micro_rain_evap => null()
     integer,               pointer      :: mtopa(:,:)         => null()  !<
     integer                             :: nbdlw                         !<
     integer                             :: nbdsw                         !<
@@ -249,6 +336,7 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: plyr(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: prcpmp(:)          => null()  !<
     real (kind=kind_phys), pointer      :: prnum(:,:)         => null()  !<
+    type (proc_rates_type), pointer     :: micro_proc_rates              !<
     real (kind=kind_phys), pointer      :: q2mp(:)            => null()  !<
     real (kind=kind_phys), pointer      :: qgl(:,:)           => null()  !<
     real (kind=kind_phys), pointer      :: qicn(:,:)          => null()  !<
@@ -606,7 +694,7 @@ contains
     allocate (Interstitial%micro_accre_enhan(IM,Model%micro_nlev))
     allocate (Interstitial%micro_numice_tend(IM,Model%micro_nlev))
     allocate (Interstitial%micro_numliq_tend(IM,Model%micro_nlev))
-    allocate (Interstitial%micro_pmid_in(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_pmid(IM,Model%micro_nlev))
     allocate (Interstitial%micro_pint(IM,Model%micro_nlev))
     allocate (Interstitial%micro_pdel(IM,Model%micro_nlev))
     allocate (Interstitial%micro_airT(IM,Model%micro_nlev))
@@ -617,6 +705,95 @@ contains
     allocate (Interstitial%micro_csrfl(IM,Model%micro_nlev))
     allocate (Interstitial%micro_reflz10cm(IM,Model%micro_nlev))
     allocate (Interstitial%micro_areflz(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_ncai(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_ncal(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_airq(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_cldliq(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_cldice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numliq(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numice(IM,Model%micro_nlev))
+    allocate (Interstitial%init_micro_rainliq(IM,Model%micro_nlev))
+    allocate (Interstitial%init_micro_snowice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numrain(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numsnow(IM,Model%micro_nlev))
+    allocate (Interstitial%init_micro_graupice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numgraup(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_relvar(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_strat_cldfrc(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_strat_liq_cldfrc(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_strat_ice_cldfrc(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_qsatfac(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_naai(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_npccn(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_rndst(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_nacon(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_snowice_tend_external(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numsnow_tend_external(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_effi_external(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_frzimm(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_frzcnt(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_frzdep(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_qcsinksum_rate1ord(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_airT_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_airq_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_cldliq_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_cldice_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numliq_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numice_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_rainliq_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_snowice_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numrain_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numsnow_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_graupice_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numgraup_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_effc(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_effc_fn(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_effi(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_sadice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_sadsnow(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_prect(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_preci(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_prec_evap(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_am_evap_st(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_prec_prod(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_cmeice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_deffi(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_pgamrad(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_lamcrad(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_snowice_in_prec(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_scaled_diam_snow(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_graupice_in_prec(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numgraup_vol_in_prec(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_scaled_diam_graup(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_lflx(IM,Model%micro_nlevp1))
+    allocate (Interstitial%micro_iflx(IM,Model%micro_nlevp1))
+    allocate (Interstitial%micro_gflx(IM,Model%micro_nlevp1))
+    allocate (Interstitial%micro_rflx(IM,Model%micro_nlevp1))
+    allocate (Interstitial%micro_sflx(IM,Model%micro_nlevp1))
+    allocate (Interstitial%micro_rainliq_in_prec(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_reff_rain(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_reff_snow(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_reff_grau(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numrain_vol_in_prec(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numsnow_vol_in_prec(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_frefl(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_fcsrfl(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_rercld(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_rainliq(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_snowice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numrain_vol(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numsnow_vol(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_diam_rain(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_diam_snow(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_graupice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numgraup_vol(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_diam_graup(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_freq_graup(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_freq_snow(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_freq_rain(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_frac_ice(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_frac_cldliq_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_rain_evap(IM,Model%micro_nlev))
     allocate (Interstitial%mtopa           (IM,3))
     allocate (Interstitial%oa4             (IM,4))
     allocate (Interstitial%oc              (IM))
@@ -1091,7 +1268,7 @@ contains
     Interstitial%micro_accre_enhan = clear_val
     Interstitial%micro_numice_tend = clear_val
     Interstitial%micro_numliq_tend = clear_val
-    Interstitial%micro_pmid_in     = clear_val
+    Interstitial%micro_pmid        = clear_val
     Interstitial%micro_pint        = clear_val
     Interstitial%micro_pdel        = clear_val
     Interstitial%micro_airT        = clear_val
@@ -1102,6 +1279,95 @@ contains
     Interstitial%micro_csrfl       = clear_val
     Interstitial%micro_reflz10cm   = clear_val
     Interstitial%micro_areflz      = clear_val
+    Interstitial%micro_ncai        = clear_val
+    Interstitial%micro_ncal        = clear_val
+    Interstitial%micro_airq        = clear_val
+    Interstitial%micro_cldliq      = clear_val 
+    Interstitial%micro_cldice      = clear_val
+    Interstitial%micro_numliq      = clear_val
+    Interstitial%micro_numice      = clear_val
+    Interstitial%init_micro_rainliq     = clear_val
+    Interstitial%init_micro_snowice     = clear_val
+    Interstitial%micro_numrain     = clear_val
+    Interstitial%micro_numsnow     = clear_val
+    Interstitial%init_micro_graupice    = clear_val
+    Interstitial%micro_numgraup    = clear_val
+    Interstitial%micro_relvar      = clear_val
+    Interstitial%micro_strat_cldfrc = clear_val
+    Interstitial%micro_strat_liq_cldfrc = clear_val
+    Interstitial%micro_strat_ice_cldfrc = clear_val
+    Interstitial%micro_qsatfac = clear_val
+    Interstitial%micro_naai = clear_val
+    Interstitial%micro_npccn = clear_val
+    Interstitial%micro_rndst = clear_val
+    Interstitial%micro_nacon = clear_val
+    Interstitial%micro_snowice_tend_external = clear_val
+    Interstitial%micro_numsnow_tend_external = clear_val
+    Interstitial%micro_effi_external = clear_val
+    Interstitial%micro_frzimm = clear_val
+    Interstitial%micro_frzcnt = clear_val
+    Interstitial%micro_frzdep = clear_val
+    Interstitial%micro_qcsinksum_rate1ord = clear_val
+    Interstitial%micro_airT_tend = clear_val
+    Interstitial%micro_airq_tend = clear_val
+    Interstitial%micro_cldliq_tend = clear_val
+    Interstitial%micro_cldice_tend = clear_val
+    Interstitial%micro_numliq_tend = clear_val
+    Interstitial%micro_numice_tend = clear_val
+    Interstitial%micro_rainliq_tend = clear_val
+    Interstitial%micro_snowice_tend = clear_val
+    Interstitial%micro_numrain_tend = clear_val
+    Interstitial%micro_numsnow_tend = clear_val
+    Interstitial%micro_graupice_tend = clear_val
+    Interstitial%micro_numgraup_tend = clear_val
+    Interstitial%micro_effc = clear_val
+    Interstitial%micro_effc_fn = clear_val
+    Interstitial%micro_effi = clear_val
+    Interstitial%micro_sadice = clear_val
+    Interstitial%micro_sadsnow = clear_val
+    Interstitial%micro_prect = clear_val
+    Interstitial%micro_preci = clear_val
+    Interstitial%micro_prec_evap = clear_val
+    Interstitial%micro_am_evap_st = clear_val
+    Interstitial%micro_prec_prod = clear_val
+    Interstitial%micro_cmeice = clear_val
+    Interstitial%micro_deffi = clear_val
+    Interstitial%micro_pgamrad = clear_val
+    Interstitial%micro_lamcrad = clear_val
+    Interstitial%micro_snowice_in_prec = clear_val
+    Interstitial%micro_scaled_diam_snow = clear_val
+    Interstitial%micro_graupice_in_prec = clear_val
+    Interstitial%micro_numgraup_vol_in_prec = clear_val
+    Interstitial%micro_scaled_diam_graup = clear_val
+    Interstitial%micro_lflx = clear_val
+    Interstitial%micro_iflx = clear_val
+    Interstitial%micro_gflx = clear_val
+    Interstitial%micro_rflx = clear_val
+    Interstitial%micro_sflx = clear_val
+    Interstitial%micro_rainliq_in_prec = clear_val
+    Interstitial%micro_reff_rain = clear_val
+    Interstitial%micro_reff_snow = clear_val
+    Interstitial%micro_reff_grau = clear_val
+    Interstitial%micro_numrain_vol_in_prec = clear_val
+    Interstitial%micro_numsnow_vol_in_prec = clear_val
+    Interstitial%micro_frefl = clear_val
+    Interstitial%micro_fcsrfl = clear_val
+    Interstitial%micro_rercld = clear_val
+    Interstitial%micro_rainliq = clear_val
+    Interstitial%micro_snowice = clear_val
+    Interstitial%micro_numrain_vol = clear_val
+    Interstitial%micro_numsnow_vol = clear_val
+    Interstitial%micro_diam_rain = clear_val
+    Interstitial%micro_diam_snow = clear_val
+    Interstitial%micro_graupice = clear_val
+    Interstitial%micro_numgraup_vol = clear_val
+    Interstitial%micro_diam_graup = clear_val
+    Interstitial%micro_freq_graup = clear_val
+    Interstitial%micro_freq_snow = clear_val
+    Interstitial%micro_freq_rain = clear_val
+    Interstitial%micro_frac_ice = clear_val
+    Interstitial%micro_frac_cldliq_tend = clear_val
+    Interstitial%micro_rain_evap = clear_val
     Interstitial%mtopa        = 0
     Interstitial%nday         = 0
     Interstitial%olyr         = clear_val
