@@ -8,7 +8,6 @@ module GFS_typedefs
    use module_ozphys,            only: ty_ozphys
    use module_h2ophys,           only: ty_h2ophys
    use module_ccpp_suite_simulator, only: base_physics_process
-
    implicit none
 
    ! To ensure that these values match what's in the physics, array
@@ -1649,12 +1648,12 @@ module GFS_typedefs
     real(kind=kind_phys) :: micro_mg_autocon_fact !< KK2000 autonconverion enhancement factor for PUMAS microphysics
     real(kind=kind_phys) :: micro_mg_autocon_lwp_exp !< KK2000 autonconverion lwp (qc) exponent in PUMAS microphysics
     real(kind=kind_phys) :: micro_mg_autocon_nd_exp !< KK2000 autonconverion nd exponent in PUMAS microphysics
-    character(len=*)     :: control_for_warm_rain_method !< warm rain method (KK2000,sb2001,tau,emulated)
+    character(len=256)   :: control_for_warm_rain_method !< warm rain method (KK2000,sb2001,tau,emulated)
     logical              :: micro_mg_implicit_fall !< use implicit calculation for fall speed for PUMAS microphysics
     integer              :: micro_dust_nbins !< number of dust particle size bins
-    character(len=*)     :: stochastic_emulated_filename_input_scale !< emulated stochastic collection filename for input scaling
-    character(len=*)     :: stochastic_emulated_filename_output_scale !< emulated stochastic collection filename for output scaling
-    character(len=*)     :: stochastic_emulated_filename_quantile !< emulated stochastic collection filename for quantiles
+    character(len=256)   :: stochastic_emulated_filename_input_scale !< emulated stochastic collection filename for input scaling
+    character(len=256)   :: stochastic_emulated_filename_output_scale !< emulated stochastic collection filename for output scaling
+    character(len=256)   :: stochastic_emulated_filename_quantile !< emulated stochastic collection filename for quantiles
     logical              :: micro_mg_accre_sees_auto !< KK200 accretion sees newely formed rain for PUMAS microphysics
     logical              :: micro_mg_ifs_sed !< Use constant sedimentation of all species for PUMAS microphysics
     logical              :: micro_mg_precip_fall_corr !< ensure non-zero precipitation fallspeed for PUMAS microphysics

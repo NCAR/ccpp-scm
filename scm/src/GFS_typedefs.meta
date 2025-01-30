@@ -7182,7 +7182,7 @@
   units = none
   dimensions = ()
   type = character
-  kind = len=*
+  kind = len=256
 [micro_mg_implicit_fall]
   standard_name = do_implicit_fall_speed_calc
   long_name = use implicit calculation for fall speed for MG microphysics
@@ -7201,21 +7201,21 @@
   units = none
   dimensions = ()
   type = character
-  kind = len=*
+  kind = len=256
 [stochastic_emulated_filename_output_scale]
   standard_name = filename_of_emulated_stochastic_collection_output_scalings
   long_name = emulated stochastic collection filename for output scaling
   units = none
   dimensions = ()
   type = character
-  kind = len=*
+  kind = len=256
 [stochastic_emulated_filename_quantile]
   standard_name = filename_of_emulated_stochastic_collection_quantiles
   long_name = emulated stochastic collection filename for quantiles
   units = none
   dimensions = ()
   type = character
-  kind = len=*
+  kind = len=256
 [micro_mg_accre_sees_auto]
   standard_name = flag_for_accretion_sees_autoconverted_condensate
   long_name = KK200 accretion sees newely formed rain for MG microphysics

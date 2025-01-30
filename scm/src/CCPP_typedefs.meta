@@ -3574,6 +3574,7 @@
   relative_path = ../../ccpp/physics/physics
   dependencies = hooks/machine.F,photochem/module_ozphys.F90
   dependencies = Radiation/RRTMG/radlw_param.f,Radiation/RRTMG/radsw_param.f
+  dependencies = MP/pumas/PUMAS/micro_pumas_diags.F90
 
 [ccpp-arg-table]
   name = CCPP_typedefs
