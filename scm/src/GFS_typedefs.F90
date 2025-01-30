@@ -1648,7 +1648,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: micro_mg_autocon_fact !< KK2000 autonconverion enhancement factor for PUMAS microphysics
     real(kind=kind_phys) :: micro_mg_autocon_lwp_exp !< KK2000 autonconverion lwp (qc) exponent in PUMAS microphysics
     real(kind=kind_phys) :: micro_mg_autocon_nd_exp !< KK2000 autonconverion nd exponent in PUMAS microphysics
-    character(len=256)   :: control_for_warm_rain_method !< warm rain method (KK2000,sb2001,tau,emulated)
+    character(len=256)   :: micro_mg_warm_rain !< warm rain method (KK2000,sb2001,tau,emulated)
     logical              :: micro_mg_implicit_fall !< use implicit calculation for fall speed for PUMAS microphysics
     integer              :: micro_dust_nbins !< number of dust particle size bins
     character(len=256)   :: stochastic_emulated_filename_input_scale !< emulated stochastic collection filename for input scaling
@@ -5777,7 +5777,7 @@ module GFS_typedefs
     Model%micro_mg_autocon_fact     = 0.01_kind_phys
     Model%micro_mg_autocon_lwp_exp  = 2.47_kind_phys
     Model%micro_mg_autocon_nd_exp   = -1.1_kind_phys
-    Model%control_for_warm_rain_method = 'kk2000'
+    Model%micro_mg_warm_rain = 'kk2000'
     Model%micro_mg_implicit_fall    = .true.
     Model%micro_dust_nbins          = 1  !!!!!!!
     Model%stochastic_emulated_filename_input_scale  = '' !!!!!!!!
