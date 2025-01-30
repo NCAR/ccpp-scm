@@ -3417,7 +3417,7 @@
 [logunit]
   standard_name = iounit_of_log
   long_name = fortran unit number for logfile
-  units = none
+  units = 1
   dimensions = ()
   type = integer
 [ldiag3d]
@@ -3540,6 +3540,18 @@
   units = count
   dimensions = ()
   type = integer
+[micro_nlev]
+  standard_name = microphysics_vertical_layer_dimension
+  long_name = vertical layer dimension used by microphysics
+  units = count
+  dimensions = ()
+  type = integer
+[micro_nlevp1]
+  standard_name = microphysics_vertical_interface_dimension
+  long_name = vertical interface dimension used by microphysics
+  units = count
+  dimensions = ()
+  type = integer
 [lonr]
   standard_name = number_of_equatorial_longitude_points
   long_name = number of global points in x-dir (i) along the equator
@@ -3604,6 +3616,12 @@
   standard_name = horizontal_loop_end
   long_name = last index for horizontal loop extent in run phase
   units = index
+  dimensions = ()
+  type = integer
+[ix_micro]
+  standard_name = microphysics_horizontal_loop_extent
+  long_name = horizontal loop extent used in microphysics
+  units = count
   dimensions = ()
   type = integer
 [tile_num]
@@ -3737,6 +3755,13 @@
 [dtf]
   standard_name = timestep_for_dynamics
   long_name = dynamics timestep
+  units = s
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[dtm]
+  standard_name = timestep_for_microphysics
+  long_name = microphysics time step
   units = s
   dimensions = ()
   type = real
@@ -7263,6 +7288,62 @@
   units = flag
   dimensions = ()
   type = logical
+[micro_mg_homog_size]
+  standard_name = homogeneous_freezing_radius
+  long_name = radius of drops homogeneously frozen in MG microphysics
+  units = m
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_max_nicons]
+  standard_name = maximum_ice_number_concentration
+  long_name = maximum allowed ice number concentration for MG microphysics
+  units = m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_nrnst]
+  standard_name = prescribed_rain_number_concentration
+  long_name = rain concentration constant for MG microphysics
+  units = m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_nsnst_in]
+  standard_name = prescribed_snow_number_concentration
+  long_name = snow concentration constant for MG microphysics
+  units = m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_iaccr_factor]
+  standard_name = scaling_factor_for_ice_accretion
+  long_name = scaling factor for ice accretion in MG microphysics
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_vtrmi_factor]
+  standard_name = scaling_factor_for_ice_fall_speed
+  long_name = scaling factor for cloud ice fall speed in MG microphysics
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_effi_factor]
+  standard_name = scaling_factor_for_ice_in_radiation
+  long_name = scaling factor for ice effective radition used by radiation
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[micro_mg_vtrms_factor]
+  standard_name = scaling_factor_for_snow_fall_speed
+  long_name = scaling factor for snow fall speed in MG microphysics
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [do_ccpp_suite_sim]
   standard_name = flag_for_CCPP_suite_simulator
   long_name = flag for ccpp suite simulator

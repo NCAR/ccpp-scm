@@ -201,6 +201,20 @@ module CCPP_typedefs
     integer                             :: lmp                           !<
     integer,               pointer      :: mbota(:,:)         => null()  !<
     logical                             :: mg3_as_mg2                    !<
+    real (kind=kind_phys), pointer      :: micro_accre_enhan => null()
+    real (kind=kind_phys), pointer      :: micro_numice_tend => null()
+    real (kind=kind_phys), pointer      :: micro_numliq_tend => null()
+    real (kind=kind_phys), pointer      :: micro_pmid_in     => null()
+    real (kind=kind_phys), pointer      :: micro_pint        => null()
+    real (kind=kind_phys), pointer      :: micro_pdel        => null()
+    real (kind=kind_phys), pointer      :: micro_airT        => null()
+    real (kind=kind_phys), pointer      :: micro_refl10cm    => null() 
+    real (kind=kind_phys), pointer      :: micro_arefl       => null()
+    real (kind=kind_phys), pointer      :: micro_refl        => null()
+    real (kind=kind_phys), pointer      :: micro_acsrfl      => null()
+    real (kind=kind_phys), pointer      :: micro_csrfl       => null()
+    real (kind=kind_phys), pointer      :: micro_reflz10cm   => null()
+    real (kind=kind_phys), pointer      :: micro_areflz      => null()
     integer,               pointer      :: mtopa(:,:)         => null()  !<
     integer                             :: nbdlw                         !<
     integer                             :: nbdsw                         !<
@@ -589,6 +603,20 @@ contains
     allocate (Interstitial%kpbl            (IM))
     allocate (Interstitial%ktop            (IM))
     allocate (Interstitial%mbota           (IM,3))
+    allocate (Interstitial%micro_accre_enhan(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numice_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_numliq_tend(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_pmid_in(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_pint(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_pdel(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_airT(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_refl10cm(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_arefl(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_refl(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_acsrfl(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_csrfl(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_reflz10cm(IM,Model%micro_nlev))
+    allocate (Interstitial%micro_areflz(IM,Model%micro_nlev))
     allocate (Interstitial%mtopa           (IM,3))
     allocate (Interstitial%oa4             (IM,4))
     allocate (Interstitial%oc              (IM))
@@ -1060,6 +1088,20 @@ contains
     Interstitial%kd           = 0
     Interstitial%kt           = 0
     Interstitial%mbota        = 0
+    Interstitial%micro_accre_enhan = clear_val
+    Interstitial%micro_numice_tend = clear_val
+    Interstitial%micro_numliq_tend = clear_val
+    Interstitial%micro_pmid_in     = clear_val
+    Interstitial%micro_pint        = clear_val
+    Interstitial%micro_pdel        = clear_val
+    Interstitial%micro_airT        = clear_val
+    Interstitial%micro_refl10cm    = clear_val
+    Interstitial%micro_arefl       = clear_val
+    Interstitial%micro_refl        = clear_val
+    Interstitial%micro_acsrfl      = clear_val
+    Interstitial%micro_csrfl       = clear_val
+    Interstitial%micro_reflz10cm   = clear_val
+    Interstitial%micro_areflz      = clear_val
     Interstitial%mtopa        = 0
     Interstitial%nday         = 0
     Interstitial%olyr         = clear_val
