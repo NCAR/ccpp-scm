@@ -1640,6 +1640,30 @@ module GFS_typedefs
     integer          :: levh2o         !< Number of vertical layers in stratospheric h2o data.
     integer          :: h2o_coeff      !< Number of coefficients in stratospheric h2o data.
 
+!--- PUMAS
+    real(kind=kind_phys) :: micro_mg_accre_enhan_fact !< KK2000 accretion enhancement factor for PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_autocon_fact !< KK2000 autonconverion enhancement factor for PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_autocon_lwp_exp !< KK2000 autonconverion lwp (qc) exponent in PUMAS microphysics
+    real(kind=kind_phys) :: micro_mg_autocon_nd_exp !< KK2000 autonconverion nd exponent in PUMAS microphysics
+    character(len=*)     :: control_for_warm_rain_method !< warm rain method (KK2000,sb2001,tau,emulated)
+    logical              :: micro_mg_implicit_fall !< use implicit calculation for fall speed for PUMAS microphysics
+    integer              :: micro_dust_nbins !< number of dust particle size bins
+    character(len=*)     :: stochastic_emulated_filename_input_scale !< emulated stochastic collection filename for input scaling
+    character(len=*)     :: stochastic_emulated_filename_output_scale !< emulated stochastic collection filename for output scaling
+    character(len=*)     :: stochastic_emulated_filename_quantile !< emulated stochastic collection filename for quantiles
+    logical              :: micro_mg_accre_sees_auto !< KK200 accretion sees newely formed rain for PUMAS microphysics
+    logical              :: micro_mg_ifs_sed !< Use constant sedimentation of all species for PUMAS microphysics
+    logical              :: micro_mg_precip_fall_corr !< ensure non-zero precipitation fallspeed for PUMAS microphysics
+    logical              :: use_hetfrz_classnuc !< flag for heterogeneous freezing for PUMAS microphysics
+    logical              :: micro_mg_evap_sed_off !< true for sedimenting condensate does not evaporate for PUMAS microphys
+    logical              :: micro_mg_nrcons !< flag for constant rain concentration for PUMAS microphysics
+    logical              :: micro_mg_nscons !< flag for constant snow concentration for PUMAS microphysics
+    logical              :: micro_mg_rainfreeze_ifs !< Freeze rain at 0C for PUMAS microphysics
+    logical              :: micro_mg_icenuc_rh_off !< If .true., remove RH threshold from ice nucelation calculation for PUMAS microphysics
+    logical              :: micro_mg_evap_scl_ifs !< if True Apply 0.3 scaling factor to evaporation of precipitation for PUMAS microphysics
+    logical              :: micro_mg_icenuc_use_meyers !< use temperature dependent ice nucleation from Meyers 1992 for PUMAS microphysics
+    logical              :: micro_mg_evap_rhthrsh_ifs !< Do not evaporate precipitation until RH below 90% as done in the for PUMAS microphysics
+
 !--- CCPP suite simulator
     logical                                :: do_ccpp_suite_sim  !
     integer                                :: nphys_proc          !
@@ -1653,6 +1677,7 @@ module GFS_typedefs
     integer                                :: iactive_u           !
     integer                                :: iactive_v           !
     integer                                :: iactive_q           !
+    
 
     contains
       procedure :: init            => control_initialize
@@ -5730,6 +5755,30 @@ module GFS_typedefs
        Model%levh2o    = 1
        Model%h2o_coeff = 1
     end if
+    
+    !--- PUMAS; all default values come from https://github.com/ESCOMP/CAM/blob/cam_development/bld/namelist_files/namelist_defaults_cam.xml
+    Model%micro_mg_accre_enhan_fact = 1.0_kind_phys
+    Model%micro_mg_autocon_fact     = 0.01_kind_phys
+    Model%micro_mg_autocon_lwp_exp  = 2.47_kind_phys
+    Model%micro_mg_autocon_nd_exp   = -1.1_kind_phys
+    Model%control_for_warm_rain_method = 'kk2000'
+    Model%micro_mg_implicit_fall    = .true.
+    Model%micro_dust_nbins          = 1  !!!!!!!
+    Model%stochastic_emulated_filename_input_scale  = '' !!!!!!!!
+    Model%stochastic_emulated_filename_output_scale = '' !!!!!!!!
+    Model%stochastic_emulated_filename_quantile     = '' !!!!!!!!
+    Model%micro_mg_accre_sees_auto  = .true.
+    Model%micro_mg_ifs_sed          = .false. !!!!!!!
+    Model%micro_mg_precip_fall_corr = .true.
+    Model%use_hetfrz_classnuc       = .true.
+    Model%micro_mg_evap_sed_off     = .false. !!!!!!!
+    Model%micro_mg_nrcons           = .false. !!!!!!!
+    Model%micro_mg_nscons           = .false. !!!!!!!
+    Model%micro_mg_rainfreeze_ifs   = .false. !!!!!!!
+    Model%micro_mg_icenuc_rh_off    = .false. !!!!!!!
+    Model%micro_mg_evap_scl_ifs     = .false. !!!!!!!
+    Model%micro_mg_icenuc_use_meyers = .false. !!!!!!!
+    Model%micro_mg_evap_rhthrsh_ifs = .false. !!!!!!!
     
 !--- quantities to be used to derive phy_f*d totals
     Model%nshoc_2d         = nshoc_2d
