@@ -11,27 +11,52 @@ module CCPP_typedefs
     use GFS_typedefs,             only: clear_val, LTP
 
     ! Physics type defininitions needed for interstitial DDTs
-    use module_radsw_parameters,  only: profsw_type, cmpfsw_type, NBDSW
-    use module_radlw_parameters,  only: proflw_type, NBDLW
+    use module_radsw_parameters,  only: profsw_type, cmpfsw_type
+    use module_radlw_parameters,  only: proflw_type
     use GFS_typedefs,             only: GFS_control_type
 
     implicit none
-
-    private
 
     ! To ensure that these values match what's in the physics, array
     ! sizes are compared in the auto-generated physics caps in debug mode
     ! from module_radiation_aerosols
     integer, parameter :: NF_AESW = 3
     integer, parameter :: NF_AELW = 3
-    integer, parameter :: NSPC    = 5
-    integer, parameter :: NSPC1   = NSPC + 1
+    integer :: iaer_tau      = 1
+    integer :: iaer_ssa      = 2
+    integer :: iaer_g        = 3 
     ! from module_radiation_clouds
     integer, parameter :: NF_CLDS = 9
+    integer :: icld_cfrac    = 1
+    integer :: icld_lwp      = 2
+    integer :: icld_reliq    = 3
+    integer :: icld_iwp      = 4
+    integer :: icld_reice    = 5
+    integer :: icld_rwp      = 6
+    integer :: icld_rerain   = 7
+    integer :: icld_swp      = 8
+    integer :: icld_resnow   = 9
     ! from module_radiation_gases
     integer, parameter :: NF_VGAS = 10
+    integer :: igas_co2      = 1
+    integer :: igas_n2o      = 2
+    integer :: igas_ch4      = 3
+    integer :: igas_o2       = 4
+    integer :: igas_co       = 5
+    integer :: igas_cfc11    = 6
+    integer :: igas_cfc12    = 7
+    integer :: igas_cfc22    = 8
+    integer :: igas_ccl4     = 9
+    integer :: igas_cfc113   = 10 
     ! from module_radiation_surface
     integer, parameter :: NF_ALBD = 4
+    integer :: ialb_nirdir   = 1
+    integer :: ialb_nirdif   = 2
+    integer :: ialb_uvvisdir = 3
+    integer :: ialb_uvvisdif = 4
+    !
+    integer, parameter :: NSPC  = 5
+    integer, parameter :: NSPC1 = NSPC + 1
 
     ! GFS_interstitial_type         !< fields required to replace interstitial code in GFS_{physics,radiation}_driver.F90 in CCPP
     public GFS_interstitial_type
@@ -40,7 +65,6 @@ module CCPP_typedefs
 !! \htmlinclude GFS_interstitial_type.html
 !!
   type GFS_interstitial_type
-
     real (kind=kind_phys), pointer      :: adjsfculw_land(:)  => null()  !<
     real (kind=kind_phys), pointer      :: adjsfculw_ice(:)   => null()  !<
     real (kind=kind_phys), pointer      :: adjsfculw_water(:) => null()  !<
@@ -197,13 +221,9 @@ module CCPP_typedefs
     integer,               pointer      :: ktop(:)            => null()  !<
     integer                             :: latidxprnt                    !<
     integer                             :: levi                          !<
-    integer                             :: lmk                           !<
-    integer                             :: lmp                           !<
     integer,               pointer      :: mbota(:,:)         => null()  !<
     logical                             :: mg3_as_mg2                    !<
     integer,               pointer      :: mtopa(:,:)         => null()  !<
-    integer                             :: nbdlw                         !<
-    integer                             :: nbdsw                         !<
     real (kind=kind_phys), pointer      :: ncgl(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: ncpi(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: ncpl(:,:)          => null()  !<
@@ -213,11 +233,9 @@ module CCPP_typedefs
     integer                             :: nday                          !<
     integer                             :: nf_aelw                       !<
     integer                             :: nf_aesw                       !<
-    integer                             :: nf_albd                       !<
     integer                             :: nn                            !<
     integer                             :: nsamftrac                     !<
     integer                             :: nscav                         !<
-    integer                             :: nspc1                         !<
     integer                             :: ntcwx                         !<
     integer                             :: ntiwx                         !<
     integer                             :: ntrwx                         !<
@@ -528,8 +546,8 @@ contains
     allocate (Interstitial%ecan            (IM))
     allocate (Interstitial%etran           (IM))
     allocate (Interstitial%edir            (IM))
-    allocate (Interstitial%faerlw          (IM,Model%levr+LTP,NBDLW,NF_AELW))
-    allocate (Interstitial%faersw          (IM,Model%levr+LTP,NBDSW,NF_AESW))
+    allocate (Interstitial%faerlw          (IM,Model%levr+LTP,Model%NBDLW,NF_AELW))
+    allocate (Interstitial%faersw          (IM,Model%levr+LTP,Model%NBDSW,NF_AESW))
     allocate (Interstitial%ffhh_ice        (IM))
     allocate (Interstitial%ffhh_land       (IM))
     allocate (Interstitial%ffhh_water      (IM))
@@ -681,12 +699,16 @@ contains
        allocate (Interstitial%precip_overlap_param (IM, Model%levs))
        allocate (Interstitial%fluxlwUP_allsky      (IM, Model%levs+1))
        allocate (Interstitial%fluxlwDOWN_allsky    (IM, Model%levs+1))
-       allocate (Interstitial%fluxlwUP_clrsky      (IM, Model%levs+1))
-       allocate (Interstitial%fluxlwDOWN_clrsky    (IM, Model%levs+1))
        allocate (Interstitial%fluxswUP_allsky      (IM, Model%levs+1))
        allocate (Interstitial%fluxswDOWN_allsky    (IM, Model%levs+1))
-       allocate (Interstitial%fluxswUP_clrsky      (IM, Model%levs+1))
-       allocate (Interstitial%fluxswDOWN_clrsky    (IM, Model%levs+1))
+       if (Model%lwhtr) then
+          allocate (Interstitial%fluxlwUP_clrsky   (IM, Model%levs+1))
+          allocate (Interstitial%fluxlwDOWN_clrsky (IM, Model%levs+1))
+       endif
+       if (Model%swhtr) then
+          allocate (Interstitial%fluxswUP_clrsky   (IM, Model%levs+1))
+          allocate (Interstitial%fluxswDOWN_clrsky (IM, Model%levs+1))
+       endif
        allocate (Interstitial%aerosolslw           (IM, Model%levs, Model%rrtmgp_nBandsLW, NF_AELW))
        allocate (Interstitial%aerosolssw           (IM, Model%levs, Model%rrtmgp_nBandsSW, NF_AESW))
        allocate (Interstitial%cld_frac             (IM, Model%levs))
@@ -794,7 +816,7 @@ contains
        allocate (Interstitial%ncpi (IM,Model%levs))
        allocate (Interstitial%ncpl (IM,Model%levs))
     end if
-    if (Model%lsm == Model%lsm_noahmp) then
+    if (Model%lsm == Model%ilsm_noahmp) then
        allocate (Interstitial%t2mmp (IM))
        allocate (Interstitial%q2mp  (IM))
     end if
@@ -804,14 +826,8 @@ contains
     Interstitial%ipr              = min(IM,10)
     Interstitial%latidxprnt       = 1
     Interstitial%levi             = Model%levs+1
-    Interstitial%lmk              = Model%levr+LTP
-    Interstitial%lmp              = Model%levr+1+LTP
-    Interstitial%nbdlw            = NBDLW
-    Interstitial%nbdsw            = NBDSW
     Interstitial%nf_aelw          = NF_AELW
     Interstitial%nf_aesw          = NF_AESW
-    Interstitial%nf_albd          = NF_ALBD
-    Interstitial%nspc1            = NSPC1
     if (Model%oz_phys .or. Model%oz_phys_2015) then
       Interstitial%oz_coeffp5     = Model%oz_coeff+5
     else
@@ -1097,12 +1113,16 @@ contains
       Interstitial%precip_overlap_param = clear_val
       Interstitial%fluxlwUP_allsky      = clear_val
       Interstitial%fluxlwDOWN_allsky    = clear_val
-      Interstitial%fluxlwUP_clrsky      = clear_val
-      Interstitial%fluxlwDOWN_clrsky    = clear_val
       Interstitial%fluxswUP_allsky      = clear_val
       Interstitial%fluxswDOWN_allsky    = clear_val
-      Interstitial%fluxswUP_clrsky      = clear_val
-      Interstitial%fluxswDOWN_clrsky    = clear_val
+      if (Model%lwhtr) then
+         Interstitial%fluxlwUP_clrsky   = clear_val
+         Interstitial%fluxlwDOWN_clrsky = clear_val
+      endif
+      if (Model%swhtr) then
+         Interstitial%fluxswUP_clrsky   = clear_val
+         Interstitial%fluxswDOWN_clrsky = clear_val
+      endif
       Interstitial%aerosolslw           = clear_val
       Interstitial%aerosolssw           = clear_val
       Interstitial%cld_frac             = clear_val
@@ -1408,7 +1428,7 @@ contains
        Interstitial%ncpi      = clear_val
        Interstitial%ncpl      = clear_val
     end if
-    if (Model%lsm == Model%lsm_noahmp) then
+    if (Model%lsm == Model%ilsm_noahmp) then
        Interstitial%t2mmp     = clear_val
        Interstitial%q2mp      = clear_val
     end if
