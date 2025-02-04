@@ -8,6 +8,8 @@ module GFS_typedefs
    use module_ozphys,            only: ty_ozphys
    use module_h2ophys,           only: ty_h2ophys
    use module_ccpp_suite_simulator, only: base_physics_process
+   use land_iau_mod,             only: land_iau_external_data_type, land_iau_control_type, &
+                                       land_iau_state_type, land_iau_mod_set_control
 
    implicit none
 
@@ -474,6 +476,11 @@ module GFS_typedefs
 
     !--- For smoke and dust auxiliary inputs
     real (kind=kind_phys), pointer :: fire_in   (:,:)   => null()  !< fire auxiliary inputs
+
+    !--- Land IAU DDTs
+    type(land_iau_external_data_type) :: land_iau_data
+    type(land_iau_control_type)       :: land_iau_control
+    type(land_iau_state_type)         :: land_iau_state
 
     contains
       procedure :: create  => sfcprop_create  !<   allocate array data
@@ -1640,6 +1647,19 @@ module GFS_typedefs
     integer          :: levh2o         !< Number of vertical layers in stratospheric h2o data.
     integer          :: h2o_coeff      !< Number of coefficients in stratospheric h2o data.
 
+! !--- Land IAU
+!   !> land iau setting read from namelist
+!     logical               :: do_land_iau               
+!     real(kind=kind_phys)  :: land_iau_delthrs                  
+!     character(len=240)    :: land_iau_inc_files(7)             
+!     real(kind=kind_phys)  :: land_iau_fhrs(7)              
+!     logical               :: land_iau_filter_increments 
+!     integer               :: lsoil_incr 
+!     logical               :: land_iau_upd_stc
+!     logical               :: land_iau_upd_slc 
+!     logical               :: land_iau_do_stcsmc_adjustment 
+!     real(kind=kind_phys)  :: land_iau_min_T_increment
+
 !--- CCPP suite simulator
     logical                                :: do_ccpp_suite_sim  !
     integer                                :: nphys_proc          !
@@ -2304,6 +2324,9 @@ module GFS_typedefs
     class(GFS_sfcprop_type)            :: Sfcprop
     type(GFS_control_type), intent(in) :: Model
     integer :: IM
+    
+    character(len=512)                 :: errmsg
+    integer                            :: errflg
 
     IM = Model%ncols
 
@@ -2872,7 +2895,21 @@ module GFS_typedefs
       Sfcprop%evap_fire = zero
       Sfcprop%smoke_fire = zero
     endif
+    
+    ! land iau control setting
+    call land_iau_mod_set_control(Sfcprop%land_iau_control, &
+            Model%fn_nml, Model%input_nml_file, Model%me, Model%master, &
+            Model%isc,  Model%jsc,  Model%nx,  Model%ny,  Model%tile_num,  Model%nblks,  Model%blksz, &
+            Model%lsoil, Model%lsnow_lsm, Model%dtp, Model%fhour, errmsg, errflg)
 
+    if (errflg/=0) then
+      if (Model%me==Model%master) then
+        write(0,'(a)') "Error inside sfcprop_create"
+        write(0,'(a)') trim(errmsg)
+        stop
+      endif
+    endif
+    
   end subroutine sfcprop_create
 
 
@@ -4011,6 +4048,18 @@ module GFS_typedefs
     real(kind=kind_phys) :: radar_tten_limits(2) = (/ limit_unspecified, limit_unspecified /)
     integer :: itime
 
+! !> land iau setting read from namelist
+  !   logical               :: do_land_iau                   = .false.
+  !   real(kind=kind_phys)  :: land_iau_delthrs              = 0           
+  !   character(len=240)    :: land_iau_inc_files(7)         = ''          
+  !   real(kind=kind_phys)  :: land_iau_fhrs(7)              = -1          
+  !   logical               :: land_iau_filter_increments    = .false.     
+  !   integer               :: lsoil_incr                    = 4
+  !   logical               :: land_iau_upd_stc              = .false.
+  !   logical               :: land_iau_upd_slc              = .false.
+  !   logical               :: land_iau_do_stcsmc_adjustment = .false.
+  !   real(kind=kind_phys)  :: land_iau_min_T_increment      = 0.0001
+
 !--- END NAMELIST VARIABLES
 
     NAMELIST /gfs_physics_nml/                                                              &
@@ -4170,6 +4219,12 @@ module GFS_typedefs
                                lightning_threat,                                            &
                           !--- CCPP suite simulator
                                do_ccpp_suite_sim
+                          ! !--- land_iau_nml
+                          !      do_land_iau, land_iau_delthrs, land_iau_inc_files,           & 
+                          !      land_iau_fhrs, land_iau_filter_increments, lsoil_incr,       &
+                          !      land_iau_upd_stc, land_iau_upd_slc,                          &
+                          !      land_iau_do_stcsmc_adjustment, land_iau_min_T_increment                        
+
 
 !--- other parameters
     integer :: nctp    =  0                !< number of cloud types in CS scheme
@@ -6332,6 +6387,18 @@ module GFS_typedefs
       endif
     endif
 !--- END CODE FROM GLOOPB
+
+! !---Land IAU Settings
+!     Model%do_land_iau = do_land_iau
+!     Model%iau_delthrs = land_iau_delthrs
+!     Model%iau_inc_files = land_iau_inc_files
+!     Model%iaufhrs = land_iau_fhrs   
+!     Model%iau_filter_increments = land_iau_filter_increments
+!     Model%lsoil_incr = lsoil_incr
+!     Model%upd_stc = land_iau_upd_stc
+!     Model%upd_slc = land_iau_upd_slc
+!     Model%do_stcsmc_adjustment = land_iau_do_stcsmc_adjustment
+!     Model%min_T_increment = land_iau_min_T_increment
 
     call Model%print ()
 
