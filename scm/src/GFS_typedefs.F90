@@ -800,6 +800,8 @@ module GFS_typedefs
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     integer              :: idate(4)        !< initial date with different size and ordering
                                             !< (hr, mon, day, yr)
+    logical              :: gfs_phys_time_vary_is_init=.false. !< GFS_phys_time_vary interstitial initialization flag 
+
 !--- radiation control parameters
     real(kind=kind_phys) :: fhswr           !< frequency for shortwave radiation (secs)
     real(kind=kind_phys) :: fhlwr           !< frequency for longwave radiation (secs)
@@ -1026,7 +1028,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: dt_inner        !< time step for the inner loop in s
     logical              :: sedi_semi       !< flag for semi Lagrangian sedi of rain
     integer              :: decfl           !< deformed CFL factor
-    logical              :: thpsnmp_is_init !< Local scheme initialization flag
+    logical              :: thompson_mp_is_init=.false. !< Local scheme initialization flag
 
     !--- GFDL microphysical paramters
     logical              :: lgfdlmprad      !< flag for GFDL mp scheme and radiation consistency
@@ -1216,6 +1218,7 @@ module GFS_typedefs
     integer              :: ichoice         = 0 !< flag for closure of C3/GF deep convection
     integer              :: ichoicem        = 13!< flag for closure of C3/GF mid convection
     integer              :: ichoice_s       = 3 !< flag for closure of C3/GF shallow convection
+    logical              :: gf_coldstart     !< flag for cold start GF 
     integer              :: conv_cf_opt      !< option for convection scheme cloud fraction computation
                                              !< 0: Chaboureau-Bechtold
                                              !< 1: Xu-Randall
@@ -3996,6 +3999,7 @@ module GFS_typedefs
     integer              :: ichoice         = 0 !< flag for closure of C3/GF deep convection
     integer              :: ichoicem        = 13!< flag for closure of C3/GF mid convection
     integer              :: ichoice_s       = 3 !< flag for closure of C3/GF shallow convection
+    logical              :: gf_coldstart  = .false.   !< flag for cold start GF 
 
 !-- chem nml variables for RRFS-SD
     real(kind=kind_phys) :: dust_drylimit_factor  = 1.0
@@ -4225,7 +4229,7 @@ module GFS_typedefs
                                do_smoke_transport,smoke_conv_wet_coef,n_dbg_lines,          &
                                add_fire_moist_flux, sc_factor,                              &
                           !--- C3/GF closures
-                               ichoice,ichoicem,ichoice_s,                                  &
+                               ichoice,ichoicem,ichoice_s,gf_coldstart,                     &
                           !--- (DFI) time ranges with radar-prescribed microphysics tendencies
                           !          and (maybe) convection suppression
                                fh_dfi_radar, radar_tten_limits, do_cap_suppress,            &
@@ -4237,8 +4241,8 @@ module GFS_typedefs
                           !      do_land_iau, land_iau_delthrs, land_iau_inc_files,           & 
                           !      land_iau_fhrs, land_iau_filter_increments, lsoil_incr,       &
                           !      land_iau_upd_stc, land_iau_upd_slc,                          &
-                          !      land_iau_do_stcsmc_adjustment, land_iau_min_T_increment                        
-
+                          !      land_iau_do_stcsmc_adjustment, land_iau_min_T_increment                                    
+   
 
 !--- other parameters
     integer :: nctp    =  0                !< number of cloud types in CS scheme
@@ -4549,6 +4553,7 @@ module GFS_typedefs
     Model%ichoice_s = ichoice_s
     Model%ichoicem  = ichoicem
     Model%ichoice   = ichoice
+    Model%gf_coldstart  = gf_coldstart
 
 !--- integrated dynamics through earth's atmosphere
     Model%lsidea           = lsidea
@@ -6663,6 +6668,7 @@ module GFS_typedefs
         print*,'ichoice_s          : ', Model%ichoice_s
         print*,'ichoicem           : ', Model%ichoicem
         print*,'ichoice            : ', Model%ichoice
+        print*,'gf_coldstart       : ', Model%gf_coldstart
       endif
       if(model%rrfs_sd) then
         print *, ' '
