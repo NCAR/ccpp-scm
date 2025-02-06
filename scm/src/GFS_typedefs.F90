@@ -3604,7 +3604,6 @@ module GFS_typedefs
     real(kind=kind_phys) :: dt_inner       = -999.0             !< time step for the inner loop
     logical              :: sedi_semi      = .false.            !< flag for semi Lagrangian sedi of rain
     integer              :: decfl          = 8                  !< deformed CFL factor
-    logical              :: thpsnmp_is_init = .false.           !< Local scheme initialization flag 
 
     !--- GFDL microphysical parameters
     logical              :: lgfdlmprad     = .false.            !< flag for GFDLMP radiation interaction
