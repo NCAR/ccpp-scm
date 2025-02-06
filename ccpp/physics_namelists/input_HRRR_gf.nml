@@ -117,7 +117,7 @@
     sfclay_compute_flux = .true.
     shal_cnv = .false.
     smoke_conv_wet_coef = 0.5, 0.5, 0.5
-    smoke_forecast = 1
+    hwp_method = 1
     swhtr = .true.
     thsfc_loc = .false.
     trans_trac = .true.
