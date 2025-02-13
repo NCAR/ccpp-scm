@@ -516,6 +516,7 @@ module GFS_typedefs
     !--- In (physics only)
     real (kind=kind_phys), pointer :: sfcdsw(:)      => null()   !< total sky sfc downward sw flux ( w/m**2 )
                                                                  !< GFS_radtend_type%sfcfsw%dnfxc
+    real (kind=kind_phys), pointer :: sfcdswc(:)     => null()   !< total sky sfc downward sw flux assuming clear sky conditions( w/m**2 )
     real (kind=kind_phys), pointer :: sfcnsw(:)      => null()   !< total sky sfc netsw flx into ground(w/m**2)
                                                                  !< difference of dnfxc & upfxc from GFS_radtend_type%sfcfsw
     real (kind=kind_phys), pointer :: sfcdlw(:)      => null()   !< total sky sfc downward lw flux ( w/m**2 )
@@ -800,7 +801,7 @@ module GFS_typedefs
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     integer              :: idate(4)        !< initial date with different size and ordering
                                             !< (hr, mon, day, yr)
-    logical              :: gfs_phys_time_vary_is_init=.false. !< GFS_phys_time_vary interstitial initialization flag 
+    logical              :: gfs_phys_time_vary_is_init=.false. !< GFS_phys_time_vary interstitial initialization flag
 
 !--- radiation control parameters
     real(kind=kind_phys) :: fhswr           !< frequency for shortwave radiation (secs)
@@ -1218,7 +1219,7 @@ module GFS_typedefs
     integer              :: ichoice         = 0 !< flag for closure of C3/GF deep convection
     integer              :: ichoicem        = 13!< flag for closure of C3/GF mid convection
     integer              :: ichoice_s       = 3 !< flag for closure of C3/GF shallow convection
-    logical              :: gf_coldstart     !< flag for cold start GF 
+    logical              :: gf_coldstart     !< flag for cold start GF
     integer              :: conv_cf_opt      !< option for convection scheme cloud fraction computation
                                              !< 0: Chaboureau-Bechtold
                                              !< 1: Xu-Randall
@@ -1626,9 +1627,9 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: si(:)  !< vertical sigma coordinate for model initialization
     real(kind=kind_phys)          :: sec    !< seconds since model initialization
 
-!--- Increment grid    
+!--- Increment grid
     logical              :: increment_file_on_native_grid ! increment on native grid else Gaussian grid
-    
+
 !--- IAU
     integer              :: iau_offset
     real(kind=kind_phys) :: iau_delthrs     ! iau time interval (to scale increments) in hours
@@ -1659,15 +1660,15 @@ module GFS_typedefs
 
 ! !--- Land IAU
 !   !> land iau setting read from namelist
-!     logical               :: do_land_iau               
-!     real(kind=kind_phys)  :: land_iau_delthrs                  
-!     character(len=240)    :: land_iau_inc_files(7)             
-!     real(kind=kind_phys)  :: land_iau_fhrs(7)              
-!     logical               :: land_iau_filter_increments 
-!     integer               :: lsoil_incr 
+!     logical               :: do_land_iau
+!     real(kind=kind_phys)  :: land_iau_delthrs
+!     character(len=240)    :: land_iau_inc_files(7)
+!     real(kind=kind_phys)  :: land_iau_fhrs(7)
+!     logical               :: land_iau_filter_increments
+!     integer               :: lsoil_incr
 !     logical               :: land_iau_upd_stc
-!     logical               :: land_iau_upd_slc 
-!     logical               :: land_iau_do_stcsmc_adjustment 
+!     logical               :: land_iau_upd_slc
+!     logical               :: land_iau_do_stcsmc_adjustment
 !     real(kind=kind_phys)  :: land_iau_min_T_increment
 
 !--- CCPP suite simulator
@@ -2040,6 +2041,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dlwsfci(:)     => null()   !< instantaneous sfc dnwd lw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: ulwsfci(:)     => null()   !< instantaneous sfc upwd lw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: dswsfci(:)     => null()   !< instantaneous sfc dnwd sw flux ( w/m**2 )
+    real (kind=kind_phys), pointer :: dswsfcci(:)    => null()   !< instantaneous sfc dnwd sw flux ( w/m**2 ) (clear-sky)
     real (kind=kind_phys), pointer :: nswsfci(:)     => null()   !< instantaneous sfc net dnwd sw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: uswsfci(:)     => null()   !< instantaneous sfc upwd sw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: dusfci (:)     => null()   !< instantaneous u component of surface stress
@@ -2919,7 +2921,7 @@ module GFS_typedefs
         stop
       endif
     endif
-    
+
   end subroutine sfcprop_create
 
 
@@ -2956,11 +2958,13 @@ module GFS_typedefs
     Coupling%visbmui = clear_val
     Coupling%visdfui = clear_val
 
+    allocate (Coupling%sfcdswc (IM))
     allocate (Coupling%sfcdsw (IM))
     allocate (Coupling%sfcnsw (IM))
     allocate (Coupling%sfcdlw (IM))
     allocate (Coupling%sfculw (IM))
 
+    Coupling%sfcdswc = clear_val
     Coupling%sfcdsw = clear_val
     Coupling%sfcnsw = clear_val
     Coupling%sfcdlw = clear_val
@@ -3951,7 +3955,7 @@ module GFS_typedefs
 
 !--- Increment grid
     logical               :: increment_file_on_native_grid = .false. ! increment on native grid else Gaussian grid
-    
+
 !--- IAU options
     real(kind=kind_phys)  :: iau_delthrs      = 0           !< iau time interval (to scale increments)
     character(len=240)    :: iau_inc_files(7) = ''          !< list of increment files
@@ -3998,7 +4002,7 @@ module GFS_typedefs
     integer              :: ichoice         = 0 !< flag for closure of C3/GF deep convection
     integer              :: ichoicem        = 13!< flag for closure of C3/GF mid convection
     integer              :: ichoice_s       = 3 !< flag for closure of C3/GF shallow convection
-    logical              :: gf_coldstart  = .false.   !< flag for cold start GF 
+    logical              :: gf_coldstart  = .false.   !< flag for cold start GF
 
 !-- chem nml variables for RRFS-SD
     real(kind=kind_phys) :: dust_drylimit_factor  = 1.0
@@ -4066,10 +4070,10 @@ module GFS_typedefs
 
   ! !> land iau setting read from namelist
   !   logical               :: do_land_iau                   = .false.
-  !   real(kind=kind_phys)  :: land_iau_delthrs              = 0           
-  !   character(len=240)    :: land_iau_inc_files(7)         = ''          
-  !   real(kind=kind_phys)  :: land_iau_fhrs(7)              = -1          
-  !   logical               :: land_iau_filter_increments    = .false.     
+  !   real(kind=kind_phys)  :: land_iau_delthrs              = 0
+  !   character(len=240)    :: land_iau_inc_files(7)         = ''
+  !   real(kind=kind_phys)  :: land_iau_fhrs(7)              = -1
+  !   logical               :: land_iau_filter_increments    = .false.
   !   integer               :: lsoil_incr                    = 4
   !   logical               :: land_iau_upd_stc              = .false.
   !   logical               :: land_iau_upd_slc              = .false.
@@ -4086,7 +4090,7 @@ module GFS_typedefs
                           !--- coupling parameters
                                cplflx, cplice, cplocn2atm, cplwav, cplwav2atm, cplaqm,      &
                                cplchm, cpllnd, cpllnd2atm, cpl_imp_mrg, cpl_imp_dbg,        &
-                               cpl_fire, rrfs_sd, use_cice_alb,                             & 
+                               cpl_fire, rrfs_sd, use_cice_alb,                             &
 #ifdef IDEA_PHYS
                                lsidea, weimer_model, f107_kp_size, f107_kp_interval,        &
                                f107_kp_skip_size, f107_kp_data_size, f107_kp_read_in_start, &
@@ -4237,11 +4241,11 @@ module GFS_typedefs
                           !--- CCPP suite simulator
                                do_ccpp_suite_sim
                           ! !--- land_iau_nml
-                          !      do_land_iau, land_iau_delthrs, land_iau_inc_files,           & 
+                          !      do_land_iau, land_iau_delthrs, land_iau_inc_files,           &
                           !      land_iau_fhrs, land_iau_filter_increments, lsoil_incr,       &
                           !      land_iau_upd_stc, land_iau_upd_slc,                          &
-                          !      land_iau_do_stcsmc_adjustment, land_iau_min_T_increment                                    
-   
+                          !      land_iau_do_stcsmc_adjustment, land_iau_min_T_increment
+
 
 !--- other parameters
     integer :: nctp    =  0                !< number of cloud types in CS scheme
@@ -5777,7 +5781,7 @@ module GFS_typedefs
        Model%levh2o    = 1
        Model%h2o_coeff = 1
     end if
-    
+
 !--- quantities to be used to derive phy_f*d totals
     Model%nshoc_2d         = nshoc_2d
     Model%nshoc_3d         = nshoc_3d
@@ -5808,7 +5812,7 @@ module GFS_typedefs
     if (Model%me == Model%master) then
       print *,'in atm phys init, phour=',Model%phour,'fhour=',Model%fhour,'zhour=',Model%zhour,'kdt=',Model%kdt
     endif
-    
+
 
     if(Model%hydrostatic .and. Model%lightning_threat) then
       write(0,*) 'Turning off lightning threat index for hydrostatic run.'
@@ -6413,7 +6417,7 @@ module GFS_typedefs
 !     Model%do_land_iau = do_land_iau
 !     Model%iau_delthrs = land_iau_delthrs
 !     Model%iau_inc_files = land_iau_inc_files
-!     Model%iaufhrs = land_iau_fhrs   
+!     Model%iaufhrs = land_iau_fhrs
 !     Model%iau_filter_increments = land_iau_filter_increments
 !     Model%lsoil_incr = lsoil_incr
 !     Model%upd_stc = land_iau_upd_stc
@@ -7902,6 +7906,7 @@ module GFS_typedefs
     allocate (Diag%dlwsfci (IM))
     allocate (Diag%ulwsfci (IM))
     allocate (Diag%dswsfci (IM))
+    allocate (Diag%dswsfcci(IM))
     allocate (Diag%nswsfci (IM))
     allocate (Diag%uswsfci (IM))
     allocate (Diag%dusfci  (IM))
@@ -8216,6 +8221,7 @@ module GFS_typedefs
     Diag%dlwsfci    = zero
     Diag%ulwsfci    = zero
     Diag%dswsfci    = zero
+    Diag%dswsfcci   = zero
     Diag%nswsfci    = zero
     Diag%uswsfci    = zero
     Diag%dusfci     = zero
