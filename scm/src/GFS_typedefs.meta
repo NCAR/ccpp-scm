@@ -2494,6 +2494,13 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
+[sfcdswc]
+  standard_name = surface_downwelling_shortwave_flux_on_radiation_timestep_assuming_clear_sky
+  long_name = total sky sfc downward sw flux assuming clear sky conditions
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
 [sfcnsw]
   standard_name = surface_net_downwelling_shortwave_flux_on_radiation_timestep
   long_name = total sky sfc netsw flx into ground
@@ -2925,7 +2932,7 @@
   active = ((flag_for_surface_flux_coupling .or. do_fire_coupling) .and. do_mediator_atmosphere_ocean_fluxes)
 [sncovr1_lnd]
   standard_name = surface_snow_area_fraction_over_land_from_land
-  long_name = surface snow area fraction over land for coupling 
+  long_name = surface snow area fraction over land for coupling
   units = frac
   dimensions = (horizontal_dimension)
   type = real
@@ -9276,6 +9283,13 @@
   long_name = surface downwelling shortwave flux at current time
   units = W m-2
   dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[dswsfcci]
+  standard_name = surface_downwelling_shortwave_flux_assuming_clear_sky
+  long_name = surface downwelling shortwave flux at current time assuming clear sky
+  units = W m-2
+  dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
 [nswsfci]
