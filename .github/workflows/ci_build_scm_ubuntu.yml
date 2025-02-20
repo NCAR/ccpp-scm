@@ -1,4 +1,4 @@
-name: CI test to build the CCPP-SCM on ubuntu v22.04
+name: build the CCPP-SCM on latest Ubuntu runner
 
 on: [pull_request,workflow_dispatch]
 
@@ -6,12 +6,12 @@ jobs:
   build_scm:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        fortran-compiler: [gfortran-10, gfortran-11, gfortran-12]
+        fortran-compiler: [gfortran-12, gfortran-14]
         build-type:       [Release, Debug]
-        py-version:       [3.7.13, 3.9.12]
+        py-version:       [3.11.7, '3.x']
 
     # Environmental variables
     env:
@@ -73,7 +73,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/bacio
-        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-${{matrix.py-version}}-key
 
     - name: Install bacio library v2.4.1
       if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
@@ -90,7 +90,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/NCEPLIBS-sp
-        key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-${{matrix.py-version}}-key
 
     - name: Install SP-library v2.3.3
       if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
@@ -107,7 +107,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/myw3emc
-        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-${{matrix.py-version}}-key
 
     - name: Install w3emc library v2.9.2
       if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
@@ -129,7 +129,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-${{matrix.py-version}}-key
 
     - name: Install NetCDF Fortran library
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
