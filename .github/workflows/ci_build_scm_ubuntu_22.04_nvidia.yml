@@ -1,4 +1,4 @@
-name: CI test to build the CCPP-SCM on ubuntu v22.04
+name: build the CCPP-SCM on ubuntu v22.04
 
 on: [pull_request,workflow_dispatch]
 
@@ -6,14 +6,14 @@ jobs:
 
   build_scm:
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         fortran-compiler: [nvfortran]
         build-type:       [Release]#, Debug]
         enable-gpu-acc:   [False, True]
-        py-version:       [3.7.13, 3.9.12]
+        py-version:       [3.10.16]
 
     # Environmental variables
     env:
