@@ -1,4 +1,4 @@
-name: build the CCPP-SCM on latest Ubuntu runner
+name: build the CCPP-SCM with Nvidia
 
 on: [pull_request,workflow_dispatch]
 
@@ -91,9 +91,9 @@ jobs:
         NVCOMPILERS: /home/runner/hpc_sdk
         NVARCH: Linux_x86_64
         NVYEAR: 2025
-        NVVERSION: "25.1"
+        NVVERSION: 25.1
         CUDA_VERSION: 12.6
-        NVVERSION_PACKED: ${{ replace(env.NVVERSION, '.', '') }}
+        NVVERSION_PACKED: 251 # Manually take NVVERSION and remove . because funcationality not in actions
         NVHPC_SILENT: true
         NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
         NVHPC_INSTALL_TYPE: network
@@ -102,7 +102,8 @@ jobs:
         mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
         wget -q https://developer.download.nvidia.com/hpc-sdk/${NVVERSION}/nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
         tar xpzf nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
-        nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz/install
+        ls
+        nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}/install
         export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/${NVVERSION}/compilers/bin
         export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/${NVVERSION}/compilers/man
         echo "The nvfortran installed is:"
