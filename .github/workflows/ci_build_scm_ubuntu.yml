@@ -1,4 +1,4 @@
-name: CI test to build the CCPP-SCM on ubuntu v22.04
+name: build the CCPP-SCM on latest Ubuntu runner
 
 on: [pull_request,workflow_dispatch]
 
@@ -6,12 +6,12 @@ jobs:
   build_scm:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         fortran-compiler: [gfortran-10, gfortran-11, gfortran-12]
         build-type:       [Release, Debug]
-        py-version:       [3.7.13, 3.9.12]
+        py-version:       [3.9.21, 3.12.9]
 
     # Environmental variables
     env:

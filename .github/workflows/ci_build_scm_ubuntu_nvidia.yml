@@ -1,4 +1,4 @@
-name: build the CCPP-SCM on ubuntu v22.04
+name: build the CCPP-SCM on latest Ubuntu runner
 
 on: [pull_request,workflow_dispatch]
 
@@ -11,8 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         fortran-compiler: [nvfortran]
-        build-type:       [Release]#, Debug]
-        enable-gpu-acc:   [False, True]
+        build-type:       [Release] #, Debug]
+        enable-gpu-acc:   [False] #, True] # GPUs aren't available for testing
         py-version:       [3.10.16]
 
     # Environmental variables
@@ -90,30 +90,31 @@ jobs:
       env:
         NVCOMPILERS: /home/runner/hpc_sdk
         NVARCH: Linux_x86_64
+        NVYEAR: 2025
+        NVVERSION: "25.1"
+        CUDA_VERSION: 12.6
+        NVVERSION_PACKED: ${{ replace(env.NVVERSION, '.', '') }}
         NVHPC_SILENT: true
         NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
         NVHPC_INSTALL_TYPE: network
         NVHPC_INSTALL_LOCAL_DIR: /home/runner/hpc_sdk
       run: |
         mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
-        wget -q https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-        tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-        nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
-        export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
-        export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
+        wget -q https://developer.download.nvidia.com/hpc-sdk/${NVVERSION}/nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
+        tar xpzf nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
+        nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz/install
+        export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/${NVVERSION}/compilers/bin
+        export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/${NVVERSION}/compilers/man
         echo "The nvfortran installed is:"
         nvfortran --version
         echo "The path to nvfortran is:"
         command -v nvfortran
         echo "Removing tarball"
-        rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-
-    - name: Set environment for Nvidia compiler.
-      run: |
-        echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
-        echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
-        echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
-        echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
+        rm nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
+        echo "CC=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "FC=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvfortran" >> $GITHUB_ENV
+        echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvfortran" >> $GITHUB_ENV
 
     #######################################################################################
     # Install FORTRAN dependencies
