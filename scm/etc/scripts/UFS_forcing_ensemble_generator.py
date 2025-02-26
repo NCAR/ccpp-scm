@@ -174,10 +174,10 @@ def main():
         # Call UFS_case_gen.py
         case_name     = args.case_name +"_n" + str(pt).zfill(3)
         file_scminput = "../../data/processed_case_input/"+case_name+"_SCM_driver.nc"
-        if(lons and lats):
+        if('lons' in locals() and 'lats' in locals()):
             loc_string = "-l " +str(lons[pt]) + " " + str(lats[pt])
         else:
-            loc_string = "-ij " + str(i_indices[pt]) + " " + str(j_indices[pt]) + "-t " + str(args.tile)
+            loc_string = "-ij " + str(i_indices[pt]) + " " + str(j_indices[pt]) + " -t " + str(args.tile)
         com = "./UFS_case_gen.py " + loc_string + \
               " -i " + args.dir_ic + " -g " + args.dir_grid + " -f " + args.dir_forcing + " -n " + case_name + com_config
         print(com)
