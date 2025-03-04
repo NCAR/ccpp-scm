@@ -16,6 +16,7 @@ public
   real(kind=kind_phys),parameter:: con_omega  =7.2921e-5
   real(kind=kind_phys),parameter:: con_p0     =1.01325e+5
 
+  real(kind=kind_phys),parameter:: con_rgas   =8.314472_kind_phys
   real(kind=kind_phys),parameter:: con_rd     =2.8705e+2
   real(kind=kind_phys),parameter:: con_rv     =4.6150e+2
   real(kind=kind_phys),parameter:: con_cp     =1.0046e+3
@@ -37,7 +38,10 @@ public
   real(kind=kind_phys),parameter:: con_epsm1  =con_rd/con_rv-1._kind_phys
   real(kind=kind_phys),parameter:: con_1ovg   =1._kind_phys/con_g
 
-  real(kind=kind_phys),parameter:: karman = 0.4_kind_phys
+  real(kind=kind_phys),parameter:: con_avgd   =6.0221415e23_kind_phys
+  real(kind=kind_phys),parameter:: con_amd    =28.9644_kind_phys                   !< molecular wght of dry air (\f$g/mol\f$)
+  real(kind=kind_phys),parameter:: con_amw    =18.0154_kind_phys
+  real(kind=kind_phys),parameter:: karman     =0.4_kind_phys
   
   real(kind=kind_phys),parameter:: cimin      =0.15
   !> minimum rain amount

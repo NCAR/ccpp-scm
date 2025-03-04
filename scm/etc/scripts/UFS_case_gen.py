@@ -583,7 +583,8 @@ def find_loc_indices_UFS_IC(loc, dir, lam, tile, indices):
         logging.debug(message)
     
     #find index of closest point in the tile if indices are not specified
-    theta = 0.0
+    theta = missing_value
+    dist_min = missing_value
     if not indices:
         (tile_j, tile_i, point_lon, point_lat, dist_min, theta) = find_loc_indices(loc, dir, tile, lam)
         message = 'nearest IC file indices in tile {} - (i,j): ({},{})'.format(tile, tile_i, tile_j)
@@ -595,7 +596,7 @@ def find_loc_indices_UFS_IC(loc, dir, lam, tile, indices):
         tile_i = indices[0]
         tile_j = indices[1]
         #still need to grab the lon/lat if the tile and indices are supplied
-        (point_lon, point_lat) = find_lon_lat_of_indices(indices, grid_dir, tile, lam)
+        (point_lon, point_lat) = find_lon_lat_of_indices(indices, dir, tile, lam)
         
         message = 'This index has a central longitude/latitude of [{0},{1}]'.format(point_lon,point_lat)
         logging.debug(message)
@@ -643,16 +644,19 @@ def get_initial_lon_lat_grid(dir, tile, lam):
     
     return (longitude, latitude)    
 
-def compare_hist_and_IC_points(location, hist_lon, hist_lat, IC_lon, IC_lat, hist_dist, angle_to_hist_point, IC_dist, angle_to_IC_point):
+def compare_hist_and_IC_points(location, indices, tile, hist_lon, hist_lat, IC_lon, IC_lat, hist_dist, angle_to_hist_point, IC_dist, angle_to_IC_point):
     #determine distance and angle from IC point to hist point
     dist = haversine_distance(IC_lat,IC_lon,hist_lat,hist_lon)
     theta = math.atan2(math.sin(math.radians(hist_lon - IC_lon))*math.cos(math.radians(hist_lat)), math.cos(math.radians(IC_lat))*math.sin(math.radians(hist_lat)) - math.sin(math.radians(IC_lat))*math.cos(math.radians(hist_lat))*math.cos(math.radians(hist_lon - IC_lon)))
     theta_deg = math.fmod((math.degrees(theta) + 360.0), 360.0)
     
     message = 'Location summary'
-    message += '\n The location as entered is {} deg E {} deg N'.format(location[0],location[1])
+    if indices:
+        message += '\n The location as entered is i={} and j={} in tile {}'.format(indices[0],indices[1],tile)
+    else:
+        message += '\n The location as entered is {} deg E {} deg N'.format(location[0],location[1])
     message += '\n The closest point in the UFS history file is {} deg E {} deg N, or {} km away at a bearing of {} deg'.format(hist_lon, hist_lat, hist_dist, angle_to_hist_point)
-    message += '\n The closest point in the UFS IC files (native grid) is {} deg E {} deg N, or {} km away at a bearing of {} deg'.format(IC_lon, IC_lat, IC_dist, angle_to_IC_point)
+    message += '\n The closest point in the UFS IC files (native grid) is {} deg E {} deg N, or {} km away at a bearing of {} deg'.format(IC_lon, IC_lat, IC_dist if not indices else "0", angle_to_IC_point if not indices else "N/A")
     message += '\n Therefore, the history point (used to define the SCM grid column) is {} km away from the closest UFS native grid poing at a bearing of {} deg'.format(dist, theta_deg)
     logging.info(message)
      
@@ -3685,12 +3689,15 @@ def main():
      old_chgres, lam, save_comp, use_nearest, forcing_method, vertical_method, geos_wind_forcing, wind_nudge) = parse_arguments()
     
     #find indices corresponding to both UFS history files and initial condition (IC) files
-    (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir, lam)
-    
     (IC_i, IC_j, tile, IC_lon, IC_lat, IC_dist_min, angle_to_IC_point) = find_loc_indices_UFS_IC(location, grid_dir, lam, tile, indices)
+    
+    if indices:
+        location = (IC_lon, IC_lat)
+    
+    (hist_i, hist_j, hist_lon, hist_lat, hist_dist_min, angle_to_hist_point, neighbors, dx, dy) = find_loc_indices_UFS_history(location, forcing_dir, lam)
         
     #compare the locations of the found history file point and UFS IC point
-    compare_hist_and_IC_points(location, hist_lon, hist_lat, IC_lon, IC_lat, hist_dist_min, angle_to_hist_point, IC_dist_min, angle_to_IC_point)
+    compare_hist_and_IC_points(location, indices, tile, hist_lon, hist_lat, IC_lon, IC_lat, hist_dist_min, angle_to_hist_point, IC_dist_min, angle_to_IC_point)
     
     #read in surface data for the intial conditions at the IC point
     surface_data = get_UFS_surface_data(in_dir, tile, IC_i, IC_j, old_chgres, lam)
