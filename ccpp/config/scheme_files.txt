@@ -2,6 +2,7 @@ ccpp/physics/physics/hooks/physcons.F90
 ccpp/physics/physics/tools/get_prs_fv3.F90
 ccpp/physics/physics/tools/get_phi_fv3.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90
+ccpp/physics/physics/SFC_Models/Land/Noahmp/lnd_iau_mod.F90
 ccpp/physics/physics/photochem/module_h2ophys.F90
 ccpp/physics/physics/photochem/module_ozphys.F90
 ccpp/physics/physics/Radiation/RRTMG/radlw_param.f
