@@ -2425,18 +2425,21 @@
   units = mixed
   dimensions = ()
   type = land_iau_external_data_type
+  active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
 [land_iau_control]
   standard_name = land_data_assimilation_control
   long_name = land data assimilation control
   units = mixed
   dimensions = ()
   type = land_iau_control_type
+  active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
 [land_iau_state]
   standard_name = land_data_assimilation_interpolated_data
   long_name = land data assimilation space- and time-interpolated
   units = mixed
   dimensions = ()
   type = land_iau_state_type
+  active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
 
 ########################################################################
 [ccpp-table-properties]
@@ -4104,6 +4107,12 @@
   units = count
   dimensions = ()
   type = integer
+[nscav]
+  standard_name = number_of_tracers_scavenged
+  long_name = number of tracers scavenged
+  units = count
+  dimensions = ()
+  type = integer
 [lextop]
   standard_name = do_extra_top_layer_for_radiation
   long_name = use an extra top layer for radiation
@@ -4924,6 +4933,13 @@
   units = flag
   dimensions = ()
   type = logical
+[nsfullradar_diag]
+  standard_name = interval_for_resetting_thompson_radar_diagnostics
+  long_name = seconds between resetting radar reflectivity calculation
+  units = s
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [ttendlim]
   standard_name = max_tendency_of_air_potential_temperature_due_to_large_scale_precipitation
   long_name = temperature tendency limiter per physics time step
@@ -10350,6 +10366,13 @@
   units = count
   dimensions = ()
   type = integer
+[clear_val]
+  standard_name = constant_zero
+  long_name = constant for zero
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [isfc_gfs]
   standard_name = surface_index_used_in_gfs
   long_name = surface index for GFS applications

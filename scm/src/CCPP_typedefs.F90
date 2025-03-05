@@ -233,7 +233,6 @@ module CCPP_typedefs
     integer                             :: nf_aesw                       !<
     integer                             :: nn                            !<
     integer                             :: nsamftrac                     !<
-    integer                             :: nscav                         !<
     integer                             :: ntcwx                         !<
     integer                             :: ntiwx                         !<
     integer                             :: ntrwx                         !<
@@ -557,8 +556,8 @@ contains
     allocate (Interstitial%fm10_land       (IM))
     allocate (Interstitial%fm10_water      (IM))
     allocate (Interstitial%frland          (IM))
-    allocate (Interstitial%fscav           (Interstitial%nscav))
-    allocate (Interstitial%fswtr           (Interstitial%nscav))
+    allocate (Interstitial%fscav           (Model%nscav))
+    allocate (Interstitial%fswtr           (Model%nscav))
     allocate (Interstitial%gabsbdlw        (IM))
     allocate (Interstitial%gabsbdlw_ice    (IM))
     allocate (Interstitial%gabsbdlw_land   (IM))
@@ -896,8 +895,6 @@ contains
         endif
       endif
     endif
-
-    Interstitial%nscav = Model%ntrac - Model%ncnd + 2
 
     if (Interstitial%nvdiff == Model%ntrac) then
       Interstitial%ntcwx = Model%ntcw

@@ -1419,12 +1419,6 @@
   units = count
   dimensions = ()
   type = integer
-[nscav]
-  standard_name = number_of_tracers_scavenged
-  long_name = number of tracers scavenged
-  units = count
-  dimensions = ()
-  type = integer
 [ntcwx]
   standard_name = index_for_liquid_cloud_condensate_vertical_diffusion_tracer
   long_name = index for liquid cloud condensate in the vertically diffused tracer array
