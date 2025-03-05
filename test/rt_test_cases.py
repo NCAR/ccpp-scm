@@ -68,3 +68,4 @@ run_list = [\
             {"case": "LASSO_2016051812",      "suite": "SCM_RRFS_v1beta"},                                                                                \
             {"case": "LASSO_2016051812",      "suite": "SCM_RAP"},                                                                                        \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v15p2"}]
+
