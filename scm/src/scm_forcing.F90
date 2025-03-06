@@ -61,7 +61,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
   if(scm_state%model_time >= scm_input%input_time(scm_input%input_ntimes)) then
     !>  - If so, hold the forcing terms constant at the last supplied values. The forcing still needs to be interpolated to the grid.
     write(*,*) "The model_time has exceeded the specifed period of forcing. Forcing will now be held constant at the last &
-      specified values."
+      &specified values."
 
       if(scm_state%input_type == 0) then
 

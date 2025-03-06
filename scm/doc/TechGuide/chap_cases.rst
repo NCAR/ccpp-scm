@@ -460,7 +460,8 @@ generating multiple cases at once.
    UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
    (-lonl LON_1 LON_2 -latl LAT_1 LAT_2 -nens NENSMEMBERS |
    -lons [LON_LIST] -lats [LAT_LIST] |
-   -fxy [LON_LAT_FILE])
+   -fxy [LON_LAT_FILE] |
+   -tile [TILE_NUMBER] -is [I_INDEX_LIST] -js [J_INDEX_LIST])
    [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
 
 Mandatory arguments:
@@ -477,6 +478,8 @@ Mandatory arguments:
    -  ``--lon_list (-lons)`` AND ``--lat_list (-lats)``: longitude and latitude of cases
 
    -  ``--lonlat_file (fxy)``: file containing longitudes and latitudes
+   
+   -  ``--tile (-tile) `` AND ``--i_list (-is)`` AND ``--j_list (-js)``: tile, i- and j-indices of cases
 
 Optional arguments:
 

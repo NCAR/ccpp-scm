@@ -51,6 +51,7 @@ run_list = [\
             {"case": "twpice",                "suite": "SCM_RRFS_v1beta"},                                                                                \
             {"case": "twpice",                "suite": "SCM_RAP"},                                                                                        \
             {"case": "twpice",                "suite": "SCM_GFS_v15p2"},                                                                                  \
+            {"case": "twpice",                "suite": "SCM_GFS_v15p2_ntiedtke"},                                                                         \
             {"case": "bomex",                 "suite": "SCM_GFS_v17_p8"},                                                                                 \
             {"case": "bomex",                 "suite": "SCM_HRRR"},                                                                                       \
             {"case": "bomex",                 "suite": "SCM_RRFS_v1beta"},                                                                                \

@@ -476,7 +476,7 @@ subroutine get_case_init(scm_state, scm_input)
   else
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsoilcat),"nf90_inq_dim(nsoilcat)")
   end if
-  
+
   !> - Allocate the dimension variables.
   allocate(input_pres(input_nlev),input_time(input_ntimes), stat=allocate_status)
 
@@ -732,7 +732,7 @@ subroutine get_case_init(scm_state, scm_input)
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
 
   call scm_input%create(input_ntimes, input_nlev, input_nsoil, input_nsnow, input_nice, input_nvegcat, input_nsoilcat)
-    
+
   ! GJF already done in scm_input%create routine
   !scm_input%input_nlev = input_nlev
   !scm_input%input_ntimes = input_ntimes
@@ -1072,7 +1072,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_lakedepth(:) !< lake depth (m)
   real(kind=dp), allocatable  :: input_vegtype_frac(:,:) !< fraction of horizontal grid area occupied by given vegetation category
   real(kind=dp), allocatable  :: input_soiltype_frac(:,:) !< fraction of horizontal grid area occupied by given soil category
-  
+
   real(kind=dp), allocatable  :: input_tvxy(:) !< vegetation temperature (K)
   real(kind=dp), allocatable  :: input_tgxy(:) !< ground temperature for Noahmp (K)
   real(kind=dp), allocatable  :: input_tahxy(:) !< canopy air temperature (K)
@@ -1188,7 +1188,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   logical :: needed_for_lsm_ics, needed_for_model_ics, lev_in_altitude
 
   integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_snow, input_n_ice, input_n_soil, input_nvegcat, input_nsoilcat
-  
+
   missing_value_eps = missing_value + 0.01
 
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
@@ -1215,7 +1215,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     write(0,'(a,i0,a)') "The variable 'lev' in the case data file had units different than 'm', 'pa', or 'Pa', but it is expected to be altitude in m or pressure in Pa. Stopping..."
     STOP
   end if
-  
+
   !### TO BE USED IF DEPHY-SCM can be extended to include model ICs ###
   !possible dimensions (if using model ICs)
   ierr = NF90_INQ_DIMID(ncid,"nsoil",varID)
@@ -1247,8 +1247,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     input_nsoilcat = missing_nsoilcat
   else
     call check(NF90_INQUIRE_DIMENSION(ncid, varID, tmpName, input_nsoilcat),"nf90_inq_dim(nsoilcat)")
-  end if  
-  
+  end if
+
   !> - Allocate the dimension variables.
   allocate(input_t0    (input_n_init_times),                                        &
            input_time  (input_n_forcing_times),                                     &
@@ -1501,14 +1501,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_sfalb_ice       (          input_n_init_times), &
              input_emis_ice        (          input_n_init_times), &
              stat=allocate_status)
-  
+
   needed_for_lsm_ics = .False.
   needed_for_model_ics = .False.
   if (scm_state%lsm_ics .or. trim(input_surfaceForcingLSM) == "lsm") needed_for_lsm_ics = .True.
   if (scm_state%model_ics) needed_for_model_ics = .True.
-  
+
   !>  - Read in the initial profiles.
-  
+
   if (lev_in_altitude) then
     call NetCDF_read_var(ncid, "pa", .True., input_pres)
     !zh could be defined in addition to lev, use if so
@@ -1532,7 +1532,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       end do
     end if
   end if
-  
+
   call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
   call NetCDF_read_var(ncid, "ua", .True., input_u)
   call NetCDF_read_var(ncid, "va", .True., input_v)
@@ -1553,7 +1553,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "ri",  .False., input_ri)
   call NetCDF_read_var(ncid, "hur", .False., input_rh)
   call NetCDF_read_var(ncid, "tke", .False., input_tke)
-  
+
   call NetCDF_read_var(ncid, "o3",      .False.,  input_ozone)
   call NetCDF_read_var(ncid, "area",    .False.,  input_area)
   !orographic parameters
@@ -1578,7 +1578,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "lakedepth", needed_for_model_ics, input_lakedepth)
   call NetCDF_read_var(ncid, "vegtype_frac", needed_for_model_ics, input_vegtype_frac)
   call NetCDF_read_var(ncid, "soiltype_frac", needed_for_model_ics, input_soiltype_frac)
-    
+
   !NSST variables
   call NetCDF_read_var(ncid, "tref",    needed_for_model_ics, input_tref)
   call NetCDF_read_var(ncid, "z_c",     needed_for_model_ics, input_z_c)
@@ -1598,8 +1598,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "ifd",     needed_for_model_ics, input_ifd)
   call NetCDF_read_var(ncid, "dt_cool", needed_for_model_ics, input_dt_cool)
   call NetCDF_read_var(ncid, "qrain",   needed_for_model_ics, input_qrain)
-  
-  
+
+
   !> - Allocate the forcing variables.
 
   !allocate all, but conditionally read forcing variables given global atts; set unused forcing variables to missing
@@ -1666,7 +1666,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       end do
     end do
   end if
-  
+
   !conditionally read forcing vars (or set to missing); if the global attribute is set to expect a variable and it doesn't exist, stop the model
   call NetCDF_conditionally_read_var(adv_u,      "adv_ua",     "tnua_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_u_adv)
   call NetCDF_conditionally_read_var(adv_v,      "adv_va",     "tnva_adv",     trim(adjustl(scm_state%case_name))//'.nc', ncid, input_force_v_adv)
@@ -1735,13 +1735,13 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   !
   ! Surface forcing Model LSM ICs
   !
-  
+
   call NetCDF_read_var(ncid, "stc",     .False., input_stc)
   call NetCDF_read_var(ncid, "smc",     .False., input_smc)
   call NetCDF_read_var(ncid, "slc",     .False., input_slc)
-  
+
   call NetCDF_read_var(ncid, "tiice",   .False., input_tiice)
-     
+
   call NetCDF_read_var(ncid, "vegsrc",   .False., input_vegsrc   )
   call NetCDF_read_var(ncid, "vegtyp",   .False., input_vegtyp   )
   call NetCDF_read_var(ncid, "soiltyp",  .False., input_soiltyp  )
@@ -1779,14 +1779,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "zorll",    .False., input_zorll)
   call NetCDF_read_var(ncid, "zorli",    .False., input_zorli)
   call NetCDF_read_var(ncid, "zorlw",    .False., input_zorlw)
- 
+
   !NoahMP parameters
   call NetCDF_read_var(ncid, "snicexy", .False., input_snicexy)
   call NetCDF_read_var(ncid, "snliqxy", .False., input_snliqxy)
   call NetCDF_read_var(ncid, "tsnoxy",  .False., input_tsnoxy )
   call NetCDF_read_var(ncid, "smoiseq", .False., input_smoiseq)
   call NetCDF_read_var(ncid, "zsnsoxy", .False., input_zsnsoxy)
-  
+
   call NetCDF_read_var(ncid, "tvxy",      .False., input_tvxy)
   call NetCDF_read_var(ncid, "tgxy",      .False., input_tgxy)
   call NetCDF_read_var(ncid, "tahxy",     .False., input_tahxy)
@@ -1836,12 +1836,12 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
   call NetCDF_read_var(ncid, "emis_ice",         .False., input_emis_ice)
   call NetCDF_read_var(ncid, "lai",              .False., input_lai)
-  
-  
+
+
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
-  
+
   call scm_input%create(input_n_forcing_times, input_n_lev, input_n_soil, input_n_snow, input_n_ice, input_nvegcat, input_nsoilcat)
-  
+
   !fill the scm_input DDT
 
   !There may need to be logic to control which of the lon, lat, and init_times to use in the future, but for now, just take the first
@@ -1882,6 +1882,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%runtime = elapsed_sec*scm_state%runtime_mult
   end if
 
+  scm_input%input_area = input_area(active_init_time)
   scm_input%input_time = input_time
   scm_input%input_pres_surf(1) = input_pres_surf(active_init_time) !perhaps input_pres_surf should only be equal to input_force_pres_surf?
   scm_input%input_pres = input_pres(:,active_init_time)
@@ -2067,7 +2068,6 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
   if (trim(input_surfaceForcingLSM) == "lsm") then
     scm_input%input_ozone = input_ozone(:,active_init_time)
-    scm_input%input_area = input_area(active_init_time)
 
     scm_input%input_stddev   = input_stddev(active_init_time)
     scm_input%input_convexity= input_convexity(active_init_time)
@@ -2090,7 +2090,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_lakedepth= input_lakedepth(active_init_time)
     scm_input%input_vegtype_frac = input_vegtype_frac(:,active_init_time)
     scm_input%input_soiltype_frac = input_soiltype_frac(:,active_init_time)
-    
+
     scm_input%input_tref    = input_tref(active_init_time)
     scm_input%input_z_c     = input_z_c(active_init_time)
     scm_input%input_c_0     = input_c_0(active_init_time)
@@ -2240,7 +2240,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(:)
     end if
   end if
-  
+
   if (trim(input_surfaceForcingLSM) == 'lsm') then
     !these were considered required variables above, so they should not need to be checked for missing
     scm_input%input_stc   = input_stc(:,active_init_time)
@@ -2748,7 +2748,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
       open(unit=1, file='McCProfiles.dat', status='old', action='read', iostat=ioerror)
       if(ioerror /= 0) then
         write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
-          Error code = ',ioerror
+          &Error code = ',ioerror
         error stop "There was an error opening the file McCprofiles.dat in the processed_case_input directory."
       endif
 

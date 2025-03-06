@@ -380,4 +380,4 @@ called ‘smoke’.
    physics (``ccpp-scm/scm/src/GFS_typedefs.F90/GFS_stateout_type/gq0``). If the tracer needs to be part of these arrays, there are
    a few additional steps to take. If you need help, please post on the
    support forum at:
-   https://dtcenter.org/forum/ccpp-user-support/ccpp-single-column-model.
+   https://github.com/NCAR/ccpp-scm/discussions

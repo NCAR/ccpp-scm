@@ -104,7 +104,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
         open(unit=1, file=scm_state%vert_coord_file, status='old', action='read', iostat=ierr)
         if(ierr /= 0) then
           write(*,*) 'There was an error opening the file ', scm_state%vert_coord_file, ' in the run directory. &
-            Error code = ',ierr
+            &Error code = ',ierr
           error stop
         endif
 

@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
-from suite_info import suite_list
+from suite_info import suite, suite_list
 from netCDF4 import Dataset
 import importlib
 
@@ -901,7 +901,6 @@ def main():
 
     # Loop through all input "run dictionaires"
     for run in run_list:
-
         #
         # Is this a "supported" SCM configuration?
         # (e.g Do we have default namelist and tracer files for this suite?)
