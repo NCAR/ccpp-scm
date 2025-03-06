@@ -41,6 +41,9 @@ run_list = [\
             #----------------------------------------------------------------------------------------------------------------------------------------------
             # Unsupported suites (w/ supported cases)
             #----------------------------------------------------------------------------------------------------------------------------------------------
+            {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_GFS_v16_no_nsst"},                                                                          \
+            {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_GFS_v17_p8_ugwpv1_no_nsst"},                                                                \
+            {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_RRFS_v1beta_no_nsst"},                                                                      \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8"},                                                                                 \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR"},                                                                                       \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RRFS_v1beta"},                                                                                \

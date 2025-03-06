@@ -74,6 +74,8 @@ suite_list.append(suite('SCM_GSD_v1',            'tracers_gsd.txt',             
 suite_list.append(suite('SCM_RRFS_v1nssl',       'tracers_RRFS_v1nssl_nohail_noccn.txt', 'input_RRFS_v1nssl_nohailnoccn.nml', 600.0, 600.0 , False))
 suite_list.append(suite('SCM_csawmg',            'tracers_csawmg.txt',                   'input_csawmg.nml',                  600.0, 1800.0, False))
 suite_list.append(suite('SCM_GFS_v16_debug',     'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, False))
+suite_list.append(suite('SCM_GFS_v17_p8_ugwpv1_no_nsst', 'tracers_GFS_v17_p8_ugwpv1.txt','input_GFS_v17_p8_ugwpv1.nml',       600.0, 600.0,  False))
+suite_list.append(suite('SCM_RRFS_v1beta_no_nsst',       'tracers_RRFS_v1beta.txt',      'input_RRFS_v1beta.nml',             600.0, 600.0 , False))
 
 def main():
     

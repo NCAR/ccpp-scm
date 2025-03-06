@@ -1,0 +1,7 @@
+&case_config
+    case_name = 'atomic_Feb09T12Feb10T20'
+    column_area = 169000000.0
+    input_type = 1
+    reference_profile_choice = 1
+    sfc_roughness_length_cm = 0.02
+/
