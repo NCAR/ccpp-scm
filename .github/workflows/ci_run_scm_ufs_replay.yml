@@ -1,4 +1,4 @@
-name: CI test to create SCM UFS-replay cases from UWM regression tests
+name: create SCM UFS-replay cases from UWM regression tests
 
 on: [pull_request,workflow_dispatch]
 
@@ -6,7 +6,7 @@ jobs:
   run_scm_ufs_replay:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}
@@ -45,6 +45,7 @@ jobs:
         use-only-tar-bz2: true
         auto-activate-base: true
         auto-update-conda: true
+        conda-remove-defaults: "true"
 
     #######################################################################################
     # Create UFS-replay case for SCM using UWM Regression Tests
