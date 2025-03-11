@@ -2836,6 +2836,13 @@
   units = count
   dimensions = ()
   type = integer
+[tkeh]
+   standard_name = vertical_turbulent_kinetic_energy_at_interface
+   long_name = vertical turbulent kinetic energy at model layer interfaces
+   units = m2 s-2
+   dimensions = (horizontal_loop_extent,vertical_interface_dimension)
+   type = real
+   kind = kind_phys
 [active_phys_tend]
   standard_name = tendencies_for_active_process_in_ccpp_suite_simulator
   long_name = tendencies for active physics process in ccpp suite simulator
