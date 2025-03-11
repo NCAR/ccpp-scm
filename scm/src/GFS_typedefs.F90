@@ -5145,7 +5145,7 @@ module GFS_typedefs
     if ( Model%do_ugwp_v1_w_gsldrag) then
        if(Model%gwd_opt == 1 )then
           Model%gwd_opt =2
-	  Model%nmtvr = 24
+          Model%nmtvr = 24
        endif
        Model%do_gsl_drag_ls_bl    = .true.
        Model%do_gsl_drag_tofd     = .true.
