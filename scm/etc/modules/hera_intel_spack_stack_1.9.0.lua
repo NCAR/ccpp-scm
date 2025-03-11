@@ -25,3 +25,5 @@ setenv("CMAKE_C_COMPILER","mpiicc")
 setenv("CMAKE_CXX_COMPILER","mpiicpc")
 setenv("CMAKE_Fortran_COMPILER","mpiifort")
 setenv("CMAKE_Platform","hera.intel")
+
+execute{cmd="source /scratch1/BMC/gmtb/ccpp-scm-software/spack-stack-1.9.0/bin/activate", modeA={"load"}}
