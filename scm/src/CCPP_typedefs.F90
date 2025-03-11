@@ -1280,7 +1280,7 @@ contains
     Interstitial%stress_land     = Model%huge
     Interstitial%stress_water    = Model%huge
     Interstitial%theta           = clear_val
-    Interstitial%tkeh            = 0
+    Interstitial%tkeh            = clear_val
     Interstitial%tprcp_ice       = Model%huge
     Interstitial%tprcp_land      = Model%huge
     Interstitial%tprcp_water     = Model%huge
