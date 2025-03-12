@@ -5,7 +5,7 @@ the NOAA RDHPC machine Hera using Intel-2021.5.0
 
 whatis([===[Loads libraries needed for building the CCPP SCM on Hera with Intel compilers ]===])
 
-prepend_path("MODULEPATH", "/contrib/spack-stack/spack-stack-1.9.0/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/")
+prepend_path("MODULEPATH", "/contrib/spack-stack/spack-stack-1.9.1/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/")
 
 load("stack-oneapi/2024.2.1")
 load("stack-intel-oneapi-mpi/2021.13")
@@ -26,4 +26,4 @@ setenv("CMAKE_CXX_COMPILER","mpiicpc")
 setenv("CMAKE_Fortran_COMPILER","mpiifort")
 setenv("CMAKE_Platform","hera.intel")
 
-execute{cmd="source /scratch1/BMC/gmtb/ccpp-scm-software/spack-stack-1.9.0/bin/activate", modeA={"load"}}
+execute{cmd="source /scratch1/BMC/gmtb/ccpp-scm-software/spack-stack-1.9.1/bin/activate", modeA={"load"}}
