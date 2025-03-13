@@ -29,18 +29,6 @@
   units = count
   dimensions = ()
   type = integer
-[blk_no]
-  standard_name = ccpp_block_number
-  long_name = number of block for explicit data blocking in CCPP
-  units = index
-  dimensions = ()
-  type = integer
-[chunk_no]
-  standard_name = ccpp_chunk_number
-  long_name = number of chunk for using array chunks in CCPP
-  units = index
-  dimensions = ()
-  type = integer
 [thrd_no]
   standard_name = ccpp_thread_number
   long_name = number of thread for threading in CCPP
@@ -59,16 +47,16 @@
   units = index
   dimensions = ()
   type = integer
-[chunk_begin]
-  standard_name = horizontal_loop_begin
-  long_name = first index for horizontal loop extent in run phase
+[chunk_no]
+  standard_name = ccpp_chunk_number
+  long_name = number of chunk for using array chunks in CCPP
   units = index
   dimensions = ()
   type = integer
-[chunk_end]
-  standard_name = horizontal_loop_end
-  long_name = last index for horizontal loop extent in run phase
-  units = index
+[chunk_cnt]
+  standard_name = ccpp_chunk_count
+  long_name = total number of chunks of array data used in run phase
+  units = count
   dimensions = ()
   type = integer
 [ccpp_errmsg]

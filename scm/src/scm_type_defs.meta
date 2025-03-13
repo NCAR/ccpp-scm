@@ -97,12 +97,6 @@
   units = DDT
   dimensions = ()
   type = GFS_tbd_type
-#[Interstitial]
-#  standard_name = GFS_interstitial_type_all_threads
-#  long_name = instance of derived type GFS_interstitial_type
-#  units = DDT
-#  dimensions = (ccpp_thread_count)
-#  type = GFS_interstitial_type
 [Interstitial(ccpp_thread_number)]
   standard_name = GFS_interstitial_type
   long_name = instance of derived type GFS_interstitial_type

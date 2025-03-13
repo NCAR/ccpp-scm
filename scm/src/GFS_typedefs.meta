@@ -3627,28 +3627,46 @@
   units = count
   dimensions = ()
   type = integer
-[nblks]
-  standard_name = ccpp_block_count
-  long_name = for explicit data blocking: number of blocks
+[ncols]
+  standard_name = horizontal_dimension
+  long_name = horizontal dimension
   units = count
   dimensions = ()
   type = integer
-[blksz]
-  standard_name = ccpp_block_sizes
+[chunks]
+  standard_name = ccpp_chunk_sizes
   long_name = for explicit data blocking: block sizes of all blocks
   units = count
-  dimensions = (ccpp_block_count)
+  dimensions = (ccpp_chunk_count)
   type = integer
-[blksz(ccpp_block_number)]
+[chunks(ccpp_chunk_number)]
   standard_name = horizontal_loop_extent
   long_name = horizontal loop extent
   units = count
   dimensions = ()
   type = integer
-[ncols]
-  standard_name = horizontal_dimension
-  long_name = horizontal dimension
-  units = count
+[chunk_begin]
+  standard_name = horizontal_loop_begin_all_chunks
+  long_name = first index for horizontal loop extent in run phase
+  units = index
+  dimensions = (ccpp_chunk_count)
+  type = integer
+[chunk_begin(ccpp_chunk_number)]
+  standard_name = horizontal_loop_begin
+  long_name = first index for horizontal loop extent in run phase
+  units = index
+  dimensions = ()
+  type = integer
+[chunk_end]
+  standard_name = horizontal_loop_end_all_chunks
+  long_name = last index for horizontal loop extent in run phase
+  units = index
+  dimensions = (ccpp_chunk_count)
+  type = integer
+[chunk_end(ccpp_chunk_number)]
+  standard_name = horizontal_loop_end
+  long_name = last index for horizontal loop extent in run phase
+  units = index
   dimensions = ()
   type = integer
 [tile_num]
@@ -6947,6 +6965,7 @@
   dimensions = (number_of_chemical_tracers)
   type = real
   kind = kind_phys
+  active = (number_of_chemical_tracers > 0)
 [ntot2d]
   standard_name = number_of_variables_in_xy_dimensioned_restart_array
   long_name = total number of variables for phyf2d
@@ -7387,6 +7406,205 @@
   units = flag
   dimensions = ()
   type = logical
+[icld_cfrac]
+  standard_name = index_for_cloud_fraction_in_cloud_data_array
+  long_name = index for cloud fraction in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_lwp]
+  standard_name = index_for_cloud_liquid_water_path_in_cloud_data_array
+  long_name = index for cloud LWP in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_reliq]
+  standard_name = index_for_cloud_liquid_effective_radius_in_cloud_data_array
+  long_name = index for cloud liquid effective radius in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_iwp]
+  standard_name = index_for_cloud_ice_water_path_in_cloud_data_array
+  long_name = index for cloud IWP in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_reice]
+  standard_name = index_for_cloud_ice_effective_radius_in_cloud_data_array
+  long_name = index for cloud ice effective radius in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_rwp]
+  standard_name = index_for_cloud_rain_water_path_in_cloud_data_array
+  long_name = index for cloud rain water path in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_rerain]
+  standard_name = index_for_cloud_rain_effective_radius_in_cloud_data_array
+  long_name = index for cloud rain effective radius in  cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_swp]
+  standard_name = index_for_cloud_snow_water_path_in_cloud_data_array
+  long_name = index for cloud snow water path in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[icld_resnow]
+  standard_name = index_for_cloud_snow_effective_radius_in_cloud_data_array
+  long_name = index for cloud snow effective radius in cloud data array
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_nirdir]
+  standard_name = index_for_surface_albedo_due_to_near_ir_direct
+  long_name = index for surface albedo due to near IR direct beam
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_nirdif]
+  standard_name = index_for_surface_albedo_due_to_near_ir_diffuse
+  long_name = index for surface albedo due to near IR diffuse beam
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_uvvisdir]
+  standard_name = index_for_surface_albedo_due_to_uv_and_vis_direct
+  long_name = index for surface albedo due to UV+VIS direct beam
+  units = count
+  dimensions = ()
+  type = integer
+[ialb_uvvisdif]
+  standard_name = index_for_surface_albedo_due_to_uv_and_vis_diffuse
+  long_name = index for surface albedo due to UV+VIS diffuse beam
+  units = count
+  dimensions = ()
+  type = integer
+[iaer_tau]
+  standard_name = index_for_aerosol_optical_depth_in_aer_array
+  long_name = index into aerosol array for aerosol optical depth
+  units = count
+  dimensions = ()
+  type = integer
+[iaer_ssa]
+  standard_name = index_for_aerosol_single_scattering_albedo_in_aer_array
+  long_name = index into aerosol array for aerosol single scattering albedo
+  units     = count
+  dimensions = ()
+  type = integer
+[iaer_g]
+  standard_name = index_for_aerosol_asymmetry_parameter_in_aer_array
+  long_name = index into aerosol array for aerosol asymmetry_parameter
+  units     = count
+  dimensions = ()
+  type = integer
+[igas_co2]
+  standard_name = index_for_volume_mixing_ratio_of_co2_in_gasvmr_array
+  long_name = index for volume mixing ratio co2
+  units = count
+  dimensions = ()
+  type = integer
+[igas_n2o]
+  standard_name = index_for_volume_mixing_ratio_of_n2o_in_gasvmr_array
+  long_name = index for volume mixing ratio no2
+  units = count
+  dimensions = ()
+  type = integer
+[igas_ch4]
+  standard_name = index_for_volume_mixing_ratio_of_ch4_in_gasvmr_array
+  long_name = index for volume mixing ratio ch4
+  units = count
+  dimensions = ()
+  type = integer
+[igas_o2]
+  standard_name = index_for_volume_mixing_ratio_of_o2_in_gasvmr_array
+  long_name = index for volume mixing ratio o2
+  units = count
+  dimensions = ()
+  type = integer
+[igas_co]
+  standard_name = index_for_volume_mixing_ratio_of_co_in_gasvmr_array
+  long_name = index for volume mixing ratio co
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc11]
+  standard_name = index_for_volume_mixing_ratio_of_cfc11_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc11
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc12]
+  standard_name = index_for_volume_mixing_ratio_of_cfc12_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc12
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc22]
+  standard_name = index_for_volume_mixing_ratio_of_cfc22_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc22
+  units = count
+  dimensions = ()
+  type = integer
+[igas_ccl4]
+  standard_name = index_for_volume_mixing_ratio_of_ccl4_in_gasvmr_array
+  long_name = index for volume mixing ratio ccl4
+  units = count
+  dimensions = ()
+  type = integer
+[igas_cfc113]
+  standard_name = index_for_volume_mixing_ratio_of_cfc113_in_gasvmr_array
+  long_name = index for volume mixing ratio cfc113
+  units = count
+  dimensions = ()
+  type = integer
+[nspc1]
+  standard_name = number_of_species_for_aerosol_optical_depth
+  long_name = number of species for output aerosol optical depth plus total
+  units = count
+  dimensions = ()
+  type = integer
+[nf_albd]
+  standard_name = number_of_components_for_surface_albedo
+  long_name = number of IR/VIS/UV compinents for surface albedo
+  units = count
+  dimensions = ()
+  type = integer
+[LTP]
+  standard_name = extra_top_layer
+  long_name = extra top layer for radiation
+  units = count
+  dimensions = ()
+  type = integer
+[clear_val]
+  standard_name = constant_zero
+  long_name = constant for zero
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[isfc_gfs]
+  standard_name = surface_index_used_in_gfs
+  long_name = surface index for GFS applications
+  units = count
+  dimensions = ()
+  type = integer
+[nf_aelw]
+  standard_name = number_of_aerosol_output_fields_for_longwave_radiation
+  long_name = number of aerosol output fields for longwave radiation
+  units = count
+  dimensions = ()
+  type = integer
+[nf_aesw]
+  standard_name = number_of_aerosol_output_fields_for_shortwave_radiation
+  long_name = number of aerosol output fields for shortwave radiation
+  units = count
+  dimensions = ()
+  type = integer
 [ipt]
   standard_name = index_of_horizontal_gridpoint_for_debug_output
   long_name = horizontal index for point used for diagnostic printout
@@ -10348,7 +10566,7 @@
 ########################################################################
 [ccpp-table-properties]
   name = GFS_typedefs
-  type = module
+  type = host
   relative_path = ../../ccpp/physics/physics
   dependencies = hooks/machine.F,hooks/physcons.F90
   dependencies = Radiation/RRTMG/radlw_param.f,Radiation/RRTMG/radsw_param.f
@@ -10356,26 +10574,8 @@
   dependencies = SFC_Models/Land/Noahmp/lnd_iau_mod.F90,MP/GFDL/GFDL_parse_tracers.F90
   dependencies = Interstitials/UFS_SCM_NEPTUNE/GFS_ccpp_suite_sim_pre.F90
   dependencies = Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90
+  dependencies = SFC_Models/Land/Noahmp/lnd_iau_mod.F90
 
 [ccpp-arg-table]
   name = GFS_typedefs
-  type = module
-[LTP]
-  standard_name = extra_top_layer
-  long_name = extra top layer for radiation
-  units = count
-  dimensions = ()
-  type = integer
-[clear_val]
-  standard_name = constant_zero
-  long_name = constant for zero
-  units = none
-  dimensions = ()
-  type = real
-  kind = kind_phys
-[isfc_gfs]
-  standard_name = surface_index_used_in_gfs
-  long_name = surface index for GFS applications
-  units = count
-  dimensions = ()
-  type = integer
+  type = host

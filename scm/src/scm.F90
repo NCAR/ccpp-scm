@@ -179,12 +179,10 @@ subroutine scm_main_sub()
       lcm(scm_state%n_itt_out,physics%Model%nslwr)*scm_state%dt," seconds."
   end if
 
-  ccpp_cfg%blk_no      = 1
+  ! Initialize CCPP physics control.
   ccpp_cfg%thrd_no     = 1
-  ccpp_cfg%thrd_cnt    = 1
+  ccpp_cfg%thrd_cnt    = n_threads
   ccpp_cfg%chunk_no    = 1
-  ccpp_cfg%chunk_begin = 1
-  ccpp_cfg%chunk_end   = 1
 
   call physics%associate(scm_state)
   call physics%set(scm_input_instance, scm_state)
