@@ -164,6 +164,13 @@ following observational field campaigns:
 -  Cold-Air Outbreaks in the Marine Boundary Layer Experiment (COMBLE) for
    March 12, 2020 mixed phased clouds in the polar marine boundary layer
 
+-  Atlantic Tradewind Ocean-Atmosphere Mesoscale Interaction Campaign (ATOMIC)
+   for January/February 2020 marine shallow convection. The ATOMIC test case
+   consists of seven 33-hour periods, each extending 16 hours before and
+   after the central times: (1) 14 UTC on Jan. 17 2020, (2) 13 UTC on Jan. 19,
+   (3) 13 UTC on Jan. 23, (4) 15 UTC on Jan. 31, (5) 13 UTC on Feb. 2,
+   (6) 04 UTC on Feb. 9, and (7) 04 UTC on Feb. 10.
+
 For the ARM SGP case, several case configuration files representing
 different time periods of the observational dataset are included,
 denoted by a trailing letter. The LASSO case may be run with different
@@ -297,6 +304,20 @@ Activate environment:
 .. code:: bash
 
   > conda activate env_ufscasegen
+  
+Note that it may be possible for conda to fail to solve for the environment when attempting to use the yml file. It 
+should still be possible to create the same environment manually:
+
+.. code:: bash
+
+  > conda create --name env_ufscasegen
+  > conda install -n env_ufscasegen --channel=conda-forge python=3.8.5
+  > conda install -n env_ufscasegen --channel=conda-forge netcdf4
+  > conda install -n env_ufscasegen --channel=conda-forge f90nml
+  > conda install -n env_ufscasegen --channel=conda-forge xarray
+  > conda install -n env_ufscasegen --channel=conda-forge numpy
+  > conda install -n env_ufscasegen --channel=conda-forge shapely
+  > conda install -n env_ufscasegen --channel=conda-forge xesmf
 
 .. _`ufscasegen`:
 
@@ -422,20 +443,32 @@ appreciably different than the calculated geostrophic winds), this often leads t
 with time. An option exists within the script to assume that the mean three-dimensional winds are, in fact, identical to the 
 geostrophic winds as well. Using this option eliminates any spurious turning.
 
+Writing UFS Comparison Data
+
+The `--save_comp` (or `-sc`) options allow one to write out the UFS data for the chosen column in NetCDF format. The profiles of the state variables 
+`u`, `v`, `T`, and `q_v` are written out for the given point for each history file time. In addition, a collection of other 
+diagnostics like profiles of physics tendencies and scalar surface variables are saved and written. One can include any variable that is
+provided in the UFS history files, although the specific variables are hard-coded in the `UFS_case_gen.py` file which will require editing
+to change. The file with comparison data is automatically written out to the `scm/data/comparison_data` directory, although this is controlled
+by the `COMPARISON_DATA_DIR` global variable in the `UFS_case_gen.py` script. The filename is a concatenation of the case name (specified by the 
+`--case_name (-n)` argument) and `_comp_data.nc`.
+
 .. _`ufsforcingensemblegenerator`:
 
 UFS_forcing_ensemble_generator.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There is an additional script in ``scm/etc/scripts/UFS_forcing_ensemble_generator.py`` to create UFS-caseGen case(s) starting
-with output from UFS Weather Model (UWM) Regression Tests (RTs).
+with output from UFS Weather Model (UWM) Regression Tests (RTs). This script provides a wrapper for ``UFS_case_gen.py`` for
+generating multiple cases at once.
 
 .. code:: bash
 
    UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
    (-lonl LON_1 LON_2 -latl LAT_1 LAT_2 -nens NENSMEMBERS |
    -lons [LON_LIST] -lats [LAT_LIST] |
-   -fxy [LON_LAT_FILE])
+   -fxy [LON_LAT_FILE] |
+   -tile [TILE_NUMBER] -is [I_INDEX_LIST] -js [J_INDEX_LIST])
    [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
 
 Mandatory arguments:
@@ -452,6 +485,8 @@ Mandatory arguments:
    -  ``--lon_list (-lons)`` AND ``--lat_list (-lats)``: longitude and latitude of cases
 
    -  ``--lonlat_file (fxy)``: file containing longitudes and latitudes
+   
+   -  ``--tile (-tile) `` AND ``--i_list (-is)`` AND ``--j_list (-js)``: tile, i- and j-indices of cases
 
 Optional arguments:
 
@@ -489,11 +524,12 @@ staged UWM RTs located at:
 Example 1: UFS-caseGen for single point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-UFS regression test, ``control_c192``, for single point.
+UFS regression test, ``control_c192``, for a single point using calculated horizontal advective tendencies,
+supplying the vertical velocity for the vertical advective terms and nudging the horizontal winds:
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34
+   ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34 -fm 2 -vm 2 -wn
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
@@ -509,11 +545,11 @@ The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, whe
 Example 2: UFS-caseGen for list of points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-UFS regression test, ``control_c384``, for multiple points.
+UFS regression test, ``control_c384``, for multiple points assuming the same forcing method as above:
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37
+   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37 -fm 2 -vm 2 -wn
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
