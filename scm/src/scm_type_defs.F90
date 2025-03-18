@@ -18,7 +18,8 @@ module scm_type_defs
                             GFS_cldprop_type,      &
                             GFS_radtend_type,      &
                             GFS_diag_type,         &
-                            GFS_init_type
+                            GFS_init_type,         &
+                            get_tracer_index
   use CCPP_typedefs,  only: GFS_interstitial_type
   use machine,        only: kind_phys
   use ccpp_types,     only: ccpp_t
@@ -1471,33 +1472,5 @@ module scm_type_defs
     end do
     
   end subroutine physics_set
-  
-  function get_tracer_index (tracer_names, name)
-
-    character(len=32), intent(in) :: tracer_names(:)
-    character(len=*),  intent(in) :: name
-    
-    !--- local variables
-    integer :: get_tracer_index
-    integer :: i
-    integer, parameter :: no_tracer = -99
-
-    get_tracer_index = no_tracer
-
-    do i=1, size(tracer_names)
-       if (trim(name) == trim(tracer_names(i))) then
-           get_tracer_index = i
-           exit
-       endif
-    enddo
-
-    if (get_tracer_index == no_tracer) then
-      print *,'tracer with name '//trim(name)//' not found'
-    else
-      print *,'tracer FOUND:',trim(name)
-    endif
-
-    return
-  end function get_tracer_index
 
 end module scm_type_defs
