@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.18)
 
 project(scm
         VERSION 5.0.0
@@ -64,6 +64,7 @@ endif(return_code EQUAL 0)
 ENABLE_LANGUAGE(Fortran)
 
 include(CMakeForceCompiler)
+include(GNUInstallDirs)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../../CMakeModules/Modules)
 
