@@ -60,6 +60,7 @@
       <scheme>unified_ugwp_post</scheme>
       <scheme>GFS_GWD_generic_post</scheme>
       <scheme>GFS_photochemistry</scheme>
+      <scheme>GFS_photochemistry_post</scheme>
       <scheme>get_phi_fv3</scheme>
       <scheme>GFS_suite_interstitial_3</scheme>
       <scheme>GFS_DCNV_generic_pre</scheme>
