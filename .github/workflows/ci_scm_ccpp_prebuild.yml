@@ -7,7 +7,7 @@ jobs:
   build-linux:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -17,10 +17,10 @@ jobs:
     - name: Initialize submodules
       run: git submodule update --init --recursive
 
-    - name: Set up Python 3.8.5
+    - name: Set up Python 3.11.7
       uses: actions/setup-python@v5
       with:
-        python-version: 3.8.5
+        python-version: 3.11.7
 
     - name: Add conda to system path
       run: |
