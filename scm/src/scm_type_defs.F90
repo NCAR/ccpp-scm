@@ -7,6 +7,7 @@ module scm_type_defs
 !! \htmlinclude scm_type_defs.html
 !!
 
+  use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
   use GFS_typedefs,   only: GFS_control_type,      &
                             GFS_statein_type,      &
@@ -1087,7 +1088,7 @@ module scm_type_defs
       ! Orographical data (2D)
       !
       if (scm_state%model_ics) then
-        write(0,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
+        write(*,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_stddev,    physics%Sfcprop%hprime(i,1),  "stddev",    .true., missing_var(1))
         call conditionally_set_var(scm_input%input_convexity, physics%Sfcprop%hprime(i,2),  "convexity", .true., missing_var(2))
         call conditionally_set_var(scm_input%input_oa1,       physics%Sfcprop%hprime(i,3),  "oa1",       .true., missing_var(3))
@@ -1112,10 +1113,10 @@ module scm_type_defs
         
         n = 21
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(error_unit,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
+          write(error_unit,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+            if (missing_var(j)) write(error_unit,'(a,i0)') "variable index ",j
           end do
         end if
         missing_var = .false.
@@ -1125,7 +1126,7 @@ module scm_type_defs
       ! Surface data (2D)
       !
       if (scm_state%model_ics .or. scm_state%lsm_ics) then
-        write(0,'(a)') "Setting internal physics variables from the surface section of the case input file (scalars)..."
+        write(*,'(a)') "Setting internal physics variables from the surface section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_slmsk,     physics%Sfcprop%slmsk(i),  "slmsk",    (.not. physics%Model%frac_grid), missing_var(1))
         call conditionally_set_var(scm_input%input_tsfco,     physics%Sfcprop%tsfco(i),  "tsfco",    .true.,  missing_var(2))
         call conditionally_set_var(scm_input%input_weasd,     physics%Sfcprop%weasd(i),  "weasd",    .true.,  missing_var(3))
@@ -1203,10 +1204,10 @@ module scm_type_defs
         !write out warning if missing data for non-required variables
         n = 50
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(error_unit,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables. This may lead to crashes or other strange behavior."
+          write(error_unit,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+            if (missing_var(j)) write(error_unit,'(a,i0)') "variable index ",j
           end do
         end if
         missing_var = .false.
@@ -1351,7 +1352,7 @@ module scm_type_defs
           physics%Sfcprop%dt_cool(i) = real_zero
           physics%Sfcprop%qrain(i)   = real_zero
         elseif (physics%Model%nstf_name(2) == 0) then         ! nsst restart
-          write(0,'(a)') "Setting internal physics variables from the NSST section of the case input file (scalars)..."
+          write(*,'(a)') "Setting internal physics variables from the NSST section of the case input file (scalars)..."
           call conditionally_set_var(scm_input%input_tref,    physics%Sfcprop%tref(i),    "tref",    .true., missing_var(1))
           call conditionally_set_var(scm_input%input_z_c,     physics%Sfcprop%z_c(i),     "z_c",     .true., missing_var(2))
           call conditionally_set_var(scm_input%input_c_0,     physics%Sfcprop%c_0(i),     "c_0",     .true., missing_var(3))
@@ -1385,10 +1386,10 @@ module scm_type_defs
 
         n = 3
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then 
-           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables needed by the LSM. Due to this, a cold-start algorithm to initialize variables will be used."
-           write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+           write(error_unit,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables needed by the LSM. Due to this, a cold-start algorithm to initialize variables will be used."
+           write(error_unit,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
            do j=1, n
-              if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+              if (missing_var(j)) write(error_unit,'(a,i0)') "variable index ",j
            end do
         end if
      end if
