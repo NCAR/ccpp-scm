@@ -3,6 +3,7 @@ case_name = 'DYNAMO_NSA3a',
 input_type = 1
 lsm_ics = .false.,
 do_spinup = .false.,
+do_sst_initialize_only = .false.
 spinup_timesteps = 0,
 reference_profile_choice = 2,
 column_area = 1.45E8,

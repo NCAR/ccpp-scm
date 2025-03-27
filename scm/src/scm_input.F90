@@ -63,6 +63,7 @@ subroutine get_config_nml(scm_state)
   logical              :: model_ics !<  true means have land info too
   logical              :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
   logical              :: do_spinup
+  logical              :: do_sst_initialize_only
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour, min
   real(kind=dp)        :: column_area
@@ -80,7 +81,7 @@ subroutine get_config_nml(scm_state)
 
   NAMELIST /case_config/ npz_type, vert_coord_file, case_name, dt, runtime, runtime_mult, n_itt_out, n_itt_diag, &
     n_levels, output_dir, thermo_forcing_type, model_ics, &
-    lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
+    lsm_ics, do_spinup, do_sst_initialize_only, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
     sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, &
     column_area, input_type
 
@@ -116,6 +117,7 @@ subroutine get_config_nml(scm_state)
   model_ics = .false.
   lsm_ics = .false.
   do_spinup = .false.
+  do_sst_initialize_only = .false.
   reference_profile_choice = 1
   year = 2006
   month = 1
@@ -200,6 +202,7 @@ subroutine get_config_nml(scm_state)
   scm_state%model_ics = model_ics
   scm_state%lsm_ics = lsm_ics
   scm_state%do_spinup = do_spinup
+  scm_state%do_sst_initialize_only = do_sst_initialize_only
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
   scm_state%input_type = input_type
