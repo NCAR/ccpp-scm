@@ -1333,12 +1333,16 @@ module scm_type_defs
           physics%Sfcprop%xs(i)      = real_zero
           physics%Sfcprop%xu(i)      = real_zero
           physics%Sfcprop%xv(i)      = real_zero
-          physics%Sfcprop%xz(i)      = 30.0_dp
+          physics%Sfcprop%xz(i)      = 20.0_dp
           physics%Sfcprop%zm(i)      = real_zero
           physics%Sfcprop%xtts(i)    = real_zero
           physics%Sfcprop%xzts(i)    = real_zero
           physics%Sfcprop%d_conv(i)  = real_zero
-          physics%Sfcprop%ifd(i)     = real_zero
+          if (scm_state%sfc_type(i) == 0) then
+            physics%Sfcprop%ifd(i)     = real_one
+          else
+            physics%Sfcprop%ifd(i)     = real_zero
+          endif
           physics%Sfcprop%dt_cool(i) = real_zero
           physics%Sfcprop%qrain(i)   = real_zero
         elseif (physics%Model%nstf_name(2) == 0) then         ! nsst restart
