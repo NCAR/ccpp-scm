@@ -63,4 +63,6 @@ public
   real(kind=dp),parameter:: con_solr_2008 = 1.3608e+3_dp     !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
   real(kind=dp),parameter:: con_thgni     = -38.15_dp        !< temperature the H.G.Nuc. ice starts
 
+  ! --- constants from physcons.F90 ---
+  real(kind=dp),parameter:: decorr_con = 2.50_dp      !< ! Decorrelation length constant (km) for iovr = 4 or 5 and idcor = 0
 end module scm_physical_constants
