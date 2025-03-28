@@ -53,7 +53,7 @@
   units = kg kg-1
   dimensions = ()
   type = real
-  kind = kind_phys 
+  kind = kind_phys
 [con_epsm1]
   standard_name = ratio_of_dry_air_to_water_vapor_gas_constants_minus_one
   long_name = (rd/rv) - 1
@@ -338,6 +338,13 @@
   standard_name = seconds_in_a_day
   long_name = number of seconds in a day
   units = s
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[decorr_con]
+  standard_name = decorrelation_length_constant
+  long_name = Decorrelation length constant (km) for iovr = 4 or 5 and idcor = 0
+  units = km
   dimensions = ()
   type = real
   kind = kind_phys

@@ -25,10 +25,10 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/SFC_Models/Land/Noahmp/lnd_iau_mod.F90',
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90',
     'scm/src/CCPP_typedefs.F90',
+    'scm/src/scm_physical_constants.F90',
     'scm/src/GFS_typedefs.F90',
     'scm/src/scm_kinds.F90',
     'scm/src/scm_type_defs.F90',
-    'scm/src/scm_physical_constants.F90',
     'scm/src/scm_utils.F90', #no definitions, but scm_type_defs.F90 uses a module from this file
     ]
 
