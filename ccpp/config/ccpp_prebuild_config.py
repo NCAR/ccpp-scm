@@ -21,6 +21,7 @@ VARIABLE_DEFINITION_FILES = [
     'ccpp/physics/physics/Radiation/RRTMG/radlw_param.f',
     'ccpp/physics/physics/photochem/module_ozphys.F90',
     'ccpp/physics/physics/photochem/module_h2ophys.F90',
+    'ccpp/physics/physics/MP/TEMPO/TEMPO/module_mp_tempo_params.F90',
     'ccpp/physics/physics/SFC_Models/Land/Noahmp/lnd_iau_mod.F90',
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90',
     'scm/src/CCPP_typedefs.F90',
@@ -53,6 +54,10 @@ TYPEDEFS_NEW_METADATA = {
     'module_h2ophys' : {
         'module_h2ophys' : '',
         'ty_h2ophys'     : '',
+        },
+    'module_mp_tempo_params' : {
+        'module_mp_tempo_params' : '',
+        'ty_tempo_cfg'     : '',
         },
     'land_iau_mod' : {
         'land_iau_mod' : '',
@@ -188,6 +193,9 @@ SCHEME_FILES = [
     'ccpp/physics/physics/MP/Thompson/mp_thompson_pre.F90',
     'ccpp/physics/physics/MP/Thompson/mp_thompson.F90',
     'ccpp/physics/physics/MP/Thompson/mp_thompson_post.F90',
+    'ccpp/physics/physics/MP/TEMPO/mp_tempo_pre.F90',
+    'ccpp/physics/physics/MP/TEMPO/mp_tempo.F90',
+    'ccpp/physics/physics/MP/TEMPO/mp_tempo_post.F90',
     'ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_gscond.f',
     'ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_precpd.f',
     'ccpp/physics/physics/PBL/HEDMF/hedmf.f',
