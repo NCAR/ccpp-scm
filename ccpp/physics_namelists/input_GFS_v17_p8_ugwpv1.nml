@@ -93,7 +93,7 @@
   iopt_tbot    = 2
   iopt_stc     = 3
   debug        = .false.
-  nstf_name    = 2,0,0,0,0
+  nstf_name    = 2,1,0,0,0
   nst_anl      = .true.
   psautco      = 0.0008,0.0005
   prautco      = 0.00015,0.00015
