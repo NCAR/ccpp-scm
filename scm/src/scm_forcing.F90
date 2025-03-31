@@ -326,7 +326,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           end do
         end if
 
-        if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2 .and. .not. scm_state%do_sst_initialize_only) then
+        if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2 .and. (.not. scm_state%do_sst_initialize_only)) then
           !skin temperature is needed if surface fluxes are specified (for calculating bulk Richardson number in the specified surface flux scheme) and for simple ocean scheme
           do i=1, scm_state%n_cols
             scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
