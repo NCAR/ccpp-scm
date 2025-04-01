@@ -44,6 +44,7 @@
   fhswr        = 1200.
   fhlwr        = 1200.
   progsigma    = .true.
+  progomega    = .false.
   betascu      = 8.0
   betamcu      = 1.0
   betadcu      = 2.0
