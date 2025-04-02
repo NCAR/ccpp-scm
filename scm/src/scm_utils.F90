@@ -714,13 +714,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (any(var_data == missing_value_sp)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -733,13 +730,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (any(var_data == missing_value_sp)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -752,13 +746,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:,:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (any(var_data == missing_value_sp)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -771,13 +762,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:,:,:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (any(var_data == missing_value_sp)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
