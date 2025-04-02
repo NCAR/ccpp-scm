@@ -850,7 +850,7 @@ contains
       endif
       if (Model%satmedmf) Interstitial%nvdiff = Interstitial%nvdiff + 1
     elseif ( Model%imp_physics == Model%imp_physics_nssl ) then
-      if (Model%me == Model%master)  write(0,*) 'nssl_settings1: nvdiff,ntrac = ', Interstitial%nvdiff, Model%ntrac
+      if (Model%me == Model%master)  write(*,*) 'nssl_settings1: nvdiff,ntrac = ', Interstitial%nvdiff, Model%ntrac
 
       IF ( Model%nssl_hail_on ) THEN
         Interstitial%nvdiff = 16 !  Model%ntrac ! 17
@@ -862,7 +862,7 @@ contains
       IF ( Model%nssl_ccn_on ) THEN
         Interstitial%nvdiff = Interstitial%nvdiff + 1
       ENDIF
-      if (Model%me == Model%master)  write(0,*) 'nssl_settings2: nvdiff,ntrac = ', Interstitial%nvdiff, Model%ntrac
+      if (Model%me == Model%master)  write(*,*) 'nssl_settings2: nvdiff,ntrac = ', Interstitial%nvdiff, Model%ntrac
 
     elseif (Model%imp_physics == Model%imp_physics_wsm6) then
       Interstitial%nvdiff = Model%ntrac -3
