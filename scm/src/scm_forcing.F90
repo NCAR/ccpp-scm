@@ -144,7 +144,9 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
 
           !>  - Set the surface parameters to the last available data.
           scm_state%pres_surf(i) = scm_input%input_pres_surf(scm_input%input_ntimes)
-          scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
+          if (.not. scm_state%do_sst_initialize_only) then
+            scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
+          end if
           scm_state%sh_flux(i) = scm_input%input_sh_flux_sfc_kin(scm_input%input_ntimes)
           scm_state%lh_flux(i) = scm_input%input_lh_flux_sfc_kin(scm_input%input_ntimes)
         end do
@@ -324,7 +326,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           end do
         end if
 
-        if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2) then
+        if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2 .and. (.not. scm_state%do_sst_initialize_only)) then
           !skin temperature is needed if surface fluxes are specified (for calculating bulk Richardson number in the specified surface flux scheme) and for simple ocean scheme
           do i=1, scm_state%n_cols
             scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
@@ -479,7 +481,9 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
         !>  - Interpolate the surface parameters in time.
         scm_state%pres_surf(i) = (1.0 - lifrac)*scm_input%input_pres_surf(low_t_index) + &
           lifrac*scm_input%input_pres_surf(low_t_index+1)
-        scm_state%T_surf(i) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
+        if (.not. scm_state%do_sst_initialize_only .or. scm_state%model_time == 0.0) then
+          scm_state%T_surf(i) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
+        end if
         scm_state%sh_flux(i) = (1.0 - lifrac)*scm_input%input_sh_flux_sfc_kin(low_t_index) + &
           lifrac*scm_input%input_sh_flux_sfc_kin(low_t_index+1)
         scm_state%lh_flux(i) = (1.0 - lifrac)*scm_input%input_lh_flux_sfc_kin(low_t_index) + &
@@ -701,8 +705,8 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%dT_dt_rad(i,:) = (1.0 - lifrac)*dT_dt_rad_bracket(1,:) + lifrac*dT_dt_rad_bracket(2,:)
         end do
       end if
-
-      if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2) then
+        
+      if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2 .and. (.not. scm_state%do_sst_initialize_only .or. scm_state%model_time == 0.0)) then
         !skin temperature is needed if surface fluxes are specified (for calculating bulk Richardson number in the specified surface flux scheme) and for simple ocean scheme
         do i=1, scm_state%n_cols
           scm_state%T_surf(i) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)

@@ -105,6 +105,7 @@ module scm_type_defs
     logical                           :: model_ics !<  true means have land info too
     logical                           :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
     logical                           :: do_spinup !< true when allowing the model to spin up before the "official" model integration starts
+    logical                           :: do_sst_initialize_only !< true when initializing SST only (and letting physics change SST during integration)
     integer                           :: input_type !< 0=> original DTC format, 1=> DEPHY-SCM format
     integer                           :: force_adv_T !< 0=> off, 1=> temperature, 2=> theta, 3=> thetal
     logical                           :: force_adv_qv !< true = on
@@ -1335,12 +1336,16 @@ module scm_type_defs
           physics%Sfcprop%xs(i)      = real_zero
           physics%Sfcprop%xu(i)      = real_zero
           physics%Sfcprop%xv(i)      = real_zero
-          physics%Sfcprop%xz(i)      = 30.0_dp
+          physics%Sfcprop%xz(i)      = 20.0_dp
           physics%Sfcprop%zm(i)      = real_zero
           physics%Sfcprop%xtts(i)    = real_zero
           physics%Sfcprop%xzts(i)    = real_zero
           physics%Sfcprop%d_conv(i)  = real_zero
-          physics%Sfcprop%ifd(i)     = real_zero
+          if (scm_state%sfc_type(i) == 0) then
+            physics%Sfcprop%ifd(i)     = real_one
+          else
+            physics%Sfcprop%ifd(i)     = real_zero
+          endif
           physics%Sfcprop%dt_cool(i) = real_zero
           physics%Sfcprop%qrain(i)   = real_zero
         elseif (physics%Model%nstf_name(2) == 0) then         ! nsst restart
