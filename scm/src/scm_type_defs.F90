@@ -84,6 +84,7 @@ module scm_type_defs
     integer                           :: hail_volume_index !< index for hail volume in the tracer array
     integer                           :: tke_index !< index for TKE in the tracer array
     integer                           :: sigmab_index !< index for prognostic updraft area fraction in convection
+    integer                           :: omegab_index !< index for prognostic convective updraft velocity
     integer                           :: ccn_index !< index for CCN in the tracer array
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
@@ -105,6 +106,7 @@ module scm_type_defs
     logical                           :: model_ics !<  true means have land info too
     logical                           :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
     logical                           :: do_spinup !< true when allowing the model to spin up before the "official" model integration starts
+    logical                           :: do_sst_initialize_only !< true when initializing SST only (and letting physics change SST during integration)
     integer                           :: input_type !< 0=> original DTC format, 1=> DEPHY-SCM format
     integer                           :: force_adv_T !< 0=> off, 1=> temperature, 2=> theta, 3=> thetal
     logical                           :: force_adv_qv !< true = on
@@ -497,6 +499,7 @@ module scm_type_defs
     scm_state%hail_volume_index               = get_tracer_index(scm_state%tracer_names,"hail_vol")
     scm_state%tke_index                       = get_tracer_index(scm_state%tracer_names,"sgs_tke")
     scm_state%sigmab_index                    = get_tracer_index(scm_state%tracer_names,"sigmab")
+    scm_state%omegab_index                    = get_tracer_index(scm_state%tracer_names,"omegab")
     scm_state%ccn_index                       = get_tracer_index(scm_state%tracer_names,"ccn_nc")
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
@@ -1334,12 +1337,16 @@ module scm_type_defs
           physics%Sfcprop%xs(i)      = real_zero
           physics%Sfcprop%xu(i)      = real_zero
           physics%Sfcprop%xv(i)      = real_zero
-          physics%Sfcprop%xz(i)      = 30.0_dp
+          physics%Sfcprop%xz(i)      = 20.0_dp
           physics%Sfcprop%zm(i)      = real_zero
           physics%Sfcprop%xtts(i)    = real_zero
           physics%Sfcprop%xzts(i)    = real_zero
           physics%Sfcprop%d_conv(i)  = real_zero
-          physics%Sfcprop%ifd(i)     = real_zero
+          if (scm_state%sfc_type(i) == 0) then
+            physics%Sfcprop%ifd(i)     = real_one
+          else
+            physics%Sfcprop%ifd(i)     = real_zero
+          endif
           physics%Sfcprop%dt_cool(i) = real_zero
           physics%Sfcprop%qrain(i)   = real_zero
         elseif (physics%Model%nstf_name(2) == 0) then         ! nsst restart
