@@ -331,6 +331,13 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
+[dclw]
+  standard_name = tendency_of_convective_transportable_tracers
+  long_name = array to contain tendencies of cloud water and other convective trans. tracers
+  units = kg kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_tracers_for_convective_transport)
+  type = real
+  kind = kind_phys
 [clx]
   standard_name = fraction_of_grid_box_with_subgrid_orography_higher_than_critical_height
   long_name = frac. of grid box with by subgrid height_above_mean_sea_level higher than critical height

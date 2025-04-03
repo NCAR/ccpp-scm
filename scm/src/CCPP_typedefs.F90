@@ -76,6 +76,7 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: cld1d(:)           => null()  !<
     real (kind=kind_phys), pointer      :: clouds(:,:,:)      => null()  !<
     real (kind=kind_phys), pointer      :: clw(:,:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: dclw(:,:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: clx(:,:)           => null()  !<
     real (kind=kind_phys), pointer      :: cmm_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: cmm_land(:)        => null()  !<
@@ -478,6 +479,7 @@ contains
     allocate (Interstitial%cld1d           (IM))
     allocate (Interstitial%clouds          (IM,Model%levr+LTP,NF_CLDS))
     allocate (Interstitial%clw             (IM,Model%levs,Interstitial%nn))
+    allocate (Interstitial%dclw            (IM,Model%levs,Interstitial%nn))
     allocate (Interstitial%clx             (IM,4))
     allocate (Interstitial%cmm_ice         (IM))
     allocate (Interstitial%cmm_land        (IM))
@@ -1157,6 +1159,7 @@ contains
     Interstitial%cldf            = clear_val
     Interstitial%clw             = clear_val
     Interstitial%clw(:,:,2)      = -999.9
+    Interstitial%dclw            = clear_val
     Interstitial%clx             = clear_val
     Interstitial%cmm_ice         = Model%huge
     Interstitial%cmm_land        = Model%huge
