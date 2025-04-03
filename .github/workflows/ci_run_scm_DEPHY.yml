@@ -1,4 +1,4 @@
-name: CI test to run the SCM with DEPHY v1 data
+name: run the SCM with DEPHY v1 data
 
 on: [pull_request,workflow_dispatch]
 
@@ -6,12 +6,12 @@ jobs:
   run-scm-DEPHY:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         fortran-compiler: [gfortran-12]
         build-type:       [Release, Debug]
-        py-version:       [3.7.13]
+        py-version:       [3.11.7]
 
     # Environmental variables
     env:
@@ -72,7 +72,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/bacio
-        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
 
     - name: Install bacio library v2.4.1
       if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
@@ -89,7 +89,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/NCEPLIBS-sp
-        key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
 
     - name: Install SP-library v2.3.3
       if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
@@ -106,7 +106,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/myw3emc
-        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
 
     - name: Install w3emc library v2.9.2
       if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
@@ -126,7 +126,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
 
     - name: Install NetCDF Fortran library
       if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
@@ -151,7 +151,7 @@ jobs:
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
-    
+
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
       run: |

@@ -287,6 +287,7 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: ten_v(:,:)         => null()
     real (kind=kind_phys), pointer      :: theta(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tlvl(:,:)          => null()  !<
+    real (kind=kind_phys), pointer      :: tkeh(:,:)          => null()  !< vertical turbulent kinetic energy (m2/s2) at the model layer interfaces
     real (kind=kind_phys), pointer      :: tlyr(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tprcp_ice(:)       => null()  !<
     real (kind=kind_phys), pointer      :: tprcp_land(:)      => null()  !<
@@ -631,6 +632,7 @@ contains
     allocate (Interstitial%ten_u           (IM,Model%levs))
     allocate (Interstitial%ten_v           (IM,Model%levs))
     allocate (Interstitial%theta           (IM))
+    allocate (Interstitial%tkeh            (IM,Model%levs+1)) !Vertical turbulent kinetic energy at model layer interfaces
     allocate (Interstitial%tlvl            (IM,Model%levr+1+LTP))
     allocate (Interstitial%tlyr            (IM,Model%levr+LTP))
     allocate (Interstitial%tprcp_ice       (IM))
@@ -957,15 +959,23 @@ contains
     if (Model%ntke > 0) Interstitial%ntkev = Interstitial%nvdiff
 
     if (Model%ntiw > 0) then
-      if (Model%ntclamt > 0 .and. Model%ntsigma <= 0) then
-        Interstitial%nn = Model%ntrac - 2
-      elseif (Model%ntclamt <= 0 .and. Model%ntsigma > 0) then
-        Interstitial%nn = Model%ntrac - 2
-      elseif  (Model%ntclamt > 0 .and. Model%ntsigma > 0) then
-        Interstitial%nn = Model%ntrac - 3
-      else
-        Interstitial%nn = Model%ntrac - 1
-      endif
+        if (Model%ntclamt > 0 .and. Model%ntsigma > 0 .and. Model%ntomega > 0) then
+           Interstitial%nn = Model%ntrac - 4
+        elseif (Model%ntclamt > 0 .and. Model%ntsigma > 0 .and. Model%ntomega <= 0) then
+           Interstitial%nn = Model%ntrac - 3
+        elseif (Model%ntclamt > 0 .and. Model%ntsigma <= 0 .and. Model%ntomega > 0) then
+           Interstitial%nn = Model%ntrac - 3
+        elseif (Model%ntclamt > 0 .and. Model%ntsigma <= 0 .and. Model%ntomega <= 0) then
+           Interstitial%nn = Model%ntrac - 2
+        elseif (Model%ntclamt <= 0 .and. Model%ntsigma > 0 .and. Model%ntomega > 0) then
+           Interstitial%nn = Model%ntrac - 3
+        elseif (Model%ntclamt <= 0 .and. Model%ntsigma > 0 .and. Model%ntomega <= 0) then
+           Interstitial%nn = Model%ntrac - 2
+        elseif (Model%ntclamt <= 0 .and. Model%ntsigma <= 0 .and. Model%ntomega > 0) then
+           Interstitial%nn = Model%ntrac - 2
+        else
+           Interstitial%nn = Model%ntrac - 1
+        endif
     elseif (Model%ntcw > 0) then
       Interstitial%nn = Model%ntrac
     else
@@ -980,11 +990,12 @@ contains
       do n=2,Model%ntrac
         ltest = ( n /= Model%ntcw  .and. n /= Model%ntiw  .and. n /= Model%ntclamt .and. &
                   n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
+                  n /= Model%ntlnc .and. n /= Model%ntinc                          .and. &
                   n /= Model%ntsnc .and. n /= Model%ntgl  .and. n /= Model%ntgnc   .and. &
                   n /= Model%nthl  .and. n /= Model%nthnc .and. n /= Model%ntgv    .and. &
                   n /= Model%nthv  .and. n /= Model%ntccn .and. n /= Model%ntccna  .and. &
                   n /= Model%ntrz  .and. n /= Model%ntgz  .and. n /= Model%nthz    .and. &
-                  n /= Model%ntsigma)
+                  n /= Model%ntsigma .and.  n /= Model%ntomega)
         Interstitial%otsptflag(n) = ltest
         if ( ltest ) then
           tracers = tracers + 1
@@ -1292,6 +1303,7 @@ contains
     Interstitial%ten_u           = clear_val
     Interstitial%ten_v           = clear_val
     Interstitial%theta           = clear_val
+    Interstitial%tkeh            = clear_val
     Interstitial%tprcp_ice       = Model%huge
     Interstitial%tprcp_land      = Model%huge
     Interstitial%tprcp_water     = Model%huge

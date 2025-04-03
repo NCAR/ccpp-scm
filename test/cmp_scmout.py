@@ -41,10 +41,8 @@ def main():
     # Housekeeping
     if file_rt is not None:
         result = os.system('tar -cvf scm_out_abs.tar scm_plots/*.png')
-        result = os.system('tar -cvf /scratch1/data_untrusted/Dustin.Swales/scm_out_abs.tar scm_plots/*.png')
     else:
         result = os.system('tar -cvf scm_out_diff.tar scm_plots/*.png')
-        result = os.system('tar -cvf /scratch1/data_untrusted/Dustin.Swales/scm_out_diff.tar scm_plots/*.png')
     # end if
     result = os.system('rm -rf scm_plots/')
 #
