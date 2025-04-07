@@ -1,6 +1,235 @@
 !> \file scm_utils.f90
 !!  Contains miscellaneous helper subroutines.
 
+module missing_values
+  use netcdf, only: NF90_FILL_INT, NF90_FILL_FLOAT, NF90_FILL_DOUBLE
+  use scm_kinds, only : dp, kind_scm_sp, kind_scm_dp
+  real(kind=dp) :: missing_value = NF90_FILL_DOUBLE
+  real(kind=kind_scm_sp) :: missing_value_sp = NF90_FILL_FLOAT
+  real(kind=kind_scm_dp) :: missing_value_dp = NF90_FILL_DOUBLE
+  integer :: missing_value_int = NF90_FILL_INT
+  character (3) :: missing_value_char = "mis"
+end module missing_values
+
+module data_qc
+  use scm_kinds, only : sp, dp, qp, kind_scm_sp, kind_scm_dp
+  use missing_values, only: missing_value_sp, missing_value_dp, missing_value_int
+
+  implicit none
+
+  interface is_missing_value
+    module procedure is_missing_value_sp
+    module procedure is_missing_value_dp
+  end interface is_missing_value
+
+  interface check_missing
+    module procedure check_missing_int_0d
+    module procedure check_missing_int_1d
+    module procedure check_missing_real_sp_0d
+    module procedure check_missing_real_sp_1d
+    module procedure check_missing_real_dp_0d
+    module procedure check_missing_real_dp_1d
+  end interface
+
+  interface conditionally_set_var
+    module procedure conditionally_set_int_var_0d
+    module procedure conditionally_set_int_var_1d
+    module procedure conditionally_set_real_sp_var_0d
+    module procedure conditionally_set_real_sp_var_1d
+    module procedure conditionally_set_real_dp_var_0d
+    module procedure conditionally_set_real_dp_var_1d
+  end interface
+
+  contains
+
+  function is_missing_value_sp(var) result(missing)
+    real(kind=kind_scm_sp), intent(in) :: var
+    logical :: missing
+    missing = .false.
+    if (var == missing_value_sp) then
+       missing = .true.
+    end if
+  end function is_missing_value_sp
+
+  function is_missing_value_dp(var) result(missing)
+    real(kind=kind_scm_dp), intent(in) :: var
+    logical :: missing
+    missing = .false.
+    if (var == missing_value_dp) then
+       missing = .true.
+    end if
+  end function is_missing_value_dp
+
+  subroutine check_missing_int_0d(var, missing)
+    integer, intent(in) :: var
+    logical, intent(out) :: missing
+
+    missing = .false.
+    if (var == missing_value_int) missing = .true.
+  end subroutine check_missing_int_0d
+
+  subroutine check_missing_int_1d(var, missing)
+    integer, dimension(:), intent(in) :: var
+    logical, intent(out) :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_int)) missing = .true.
+  end subroutine check_missing_int_1d
+
+  subroutine check_missing_real_sp_0d(var, missing)
+    real(kind=sp), intent(in) :: var
+    logical, intent(out) :: missing
+
+    missing = .false.
+    if (var == missing_value_sp) missing = .true.
+  end subroutine check_missing_real_sp_0d
+
+  subroutine check_missing_real_sp_1d(var, missing)
+    real(kind=sp), dimension(:), intent(in) :: var
+    logical, intent(out) :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_sp)) missing = .true.
+  end subroutine check_missing_real_sp_1d
+
+  subroutine check_missing_real_dp_0d(var, missing)
+    real(kind=kind_scm_dp), intent(in) :: var
+    logical, intent(out) :: missing
+
+    missing = .false.
+    if (var == missing_value_dp) missing = .true.
+  end subroutine check_missing_real_dp_0d
+
+  subroutine check_missing_real_dp_1d(var, missing)
+    real(kind=kind_scm_dp), dimension(:), intent(in) :: var
+    logical, intent(out) :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_dp)) missing = .true.
+  end subroutine check_missing_real_dp_1d
+
+  subroutine conditionally_set_int_var_0d(input, set_var, input_name, req, missing)
+    integer, intent(in) :: input
+    integer, intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+
+    call check_missing(input, missing)
+
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        error stop "Variable in the case data file had missing data, but it is required for the given physics configuration."
+      end if
+    end if
+
+  end subroutine conditionally_set_int_var_0d
+
+  subroutine conditionally_set_int_var_1d(input, set_var, input_name, req, missing)
+    integer, dimension(:), intent(in) :: input
+    integer, dimension(:), intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+
+    call check_missing(input, missing)
+
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
+      end if
+    end if
+
+  end subroutine conditionally_set_int_var_1d
+
+  subroutine conditionally_set_real_sp_var_0d(input, set_var, input_name, req, missing)
+    real(kind=sp), intent(in) :: input
+    real(kind=sp), intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+
+    call check_missing(input, missing)
+
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
+      end if
+    end if
+
+  end subroutine conditionally_set_real_sp_var_0d
+
+  subroutine conditionally_set_real_sp_var_1d(input, set_var, input_name, req, missing)
+    real(kind=sp), dimension(:), intent(in) :: input
+    real(kind=sp), dimension(:), intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+
+    call check_missing(input, missing)
+
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
+      end if
+    end if
+
+  end subroutine conditionally_set_real_sp_var_1d
+
+  subroutine conditionally_set_real_dp_var_0d(input, set_var, input_name, req, missing)
+    real(kind=kind_scm_dp), intent(in) :: input
+    real(kind=kind_scm_dp), intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+
+    call check_missing(input, missing)
+
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
+      end if
+    end if
+
+  end subroutine conditionally_set_real_dp_var_0d
+
+  subroutine conditionally_set_real_dp_var_1d(input, set_var, input_name, req, missing)
+    real(kind=kind_scm_dp), dimension(:), intent(in) :: input
+    real(kind=kind_scm_dp), dimension(:), intent(inout) :: set_var
+    character (*), intent(in) :: input_name
+    logical, intent(in) :: req
+    logical, intent(out) :: missing
+
+    call check_missing(input, missing)
+
+    if (.not. missing) then
+      set_var = input
+    else
+      if (req) then
+        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
+      end if
+    end if
+
+  end subroutine conditionally_set_real_dp_var_1d
+end module data_qc
+
+
 module scm_utils
 
 use scm_kinds, only: sp, dp, qp, kind_scm_dp
@@ -14,6 +243,8 @@ interface find_vertical_index_pressure
 end interface
 
 contains
+
+
 
 !> \ingroup SCM
 !! @{
@@ -173,15 +404,11 @@ end module scm_utils
 
 module NetCDF_read
   use scm_kinds, only : sp, dp, qp, kind_scm_sp, kind_scm_dp
+  use missing_values
+  use data_qc, only: is_missing_value
   use netcdf
 
   implicit none
-
-  real(kind=dp) :: missing_value = NF90_FILL_DOUBLE
-  real(kind=kind_scm_sp) :: missing_value_sp = NF90_FILL_FLOAT
-  real(kind=kind_scm_dp) :: missing_value_dp = NF90_FILL_DOUBLE
-  integer :: missing_value_int = NF90_FILL_INT
-  character (3) :: missing_value_char = "mis"
 
   interface NetCDF_read_var
     module procedure NetCDF_read_var_0d_int
@@ -714,13 +941,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (is_missing_value(maxval(var_data))) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -733,13 +957,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (is_missing_value(maxval(var_data))) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -752,13 +973,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:,:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (is_missing_value(maxval(var_data))) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -771,13 +989,10 @@ module NetCDF_read
     integer, intent(in) :: var_ctl, ncid
     character (*), intent(in) :: var_att, var_name, filename
     real(kind=sp), dimension(:,:,:,:), intent(out) :: var_data
-    real(kind=sp) :: missing_value_eps
-
-    missing_value_eps = missing_value_sp + 0.01
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (maxval(var_data) < missing_value_eps) then
+      if (is_missing_value(maxval(var_data))) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -933,198 +1148,3 @@ module NetCDF_put
 
   end subroutine NetCDF_put_var_2d_dp
 end module NetCDF_put
-
-module data_qc
-  use scm_kinds, only : sp, dp, qp, kind_scm_dp
-  use NetCDF_read, only: missing_value_sp, missing_value_dp, missing_value_int
-
-  implicit none
-
-  interface check_missing
-    module procedure check_missing_int_0d
-    module procedure check_missing_int_1d
-    module procedure check_missing_real_sp_0d
-    module procedure check_missing_real_sp_1d
-    module procedure check_missing_real_dp_0d
-    module procedure check_missing_real_dp_1d
-  end interface
-
-  interface conditionally_set_var
-    module procedure conditionally_set_int_var_0d
-    module procedure conditionally_set_int_var_1d
-    module procedure conditionally_set_real_sp_var_0d
-    module procedure conditionally_set_real_sp_var_1d
-    module procedure conditionally_set_real_dp_var_0d
-    module procedure conditionally_set_real_dp_var_1d
-  end interface
-
-  contains
-
-  subroutine check_missing_int_0d(var, missing)
-    integer, intent(in) :: var
-    logical, intent(out) :: missing
-
-    missing = .false.
-    if (var == missing_value_int) missing = .true.
-  end subroutine check_missing_int_0d
-
-  subroutine check_missing_int_1d(var, missing)
-    integer, dimension(:), intent(in) :: var
-    logical, intent(out) :: missing
-
-    missing = .false.
-    if ( ANY(var == missing_value_int)) missing = .true.
-  end subroutine check_missing_int_1d
-
-  subroutine check_missing_real_sp_0d(var, missing)
-    real(kind=sp), intent(in) :: var
-    logical, intent(out) :: missing
-
-    missing = .false.
-    if (var == missing_value_sp) missing = .true.
-  end subroutine check_missing_real_sp_0d
-
-  subroutine check_missing_real_sp_1d(var, missing)
-    real(kind=sp), dimension(:), intent(in) :: var
-    logical, intent(out) :: missing
-
-    missing = .false.
-    if ( ANY(var == missing_value_sp)) missing = .true.
-  end subroutine check_missing_real_sp_1d
-
-  subroutine check_missing_real_dp_0d(var, missing)
-    real(kind=kind_scm_dp), intent(in) :: var
-    logical, intent(out) :: missing
-
-    missing = .false.
-    if (var == missing_value_dp) missing = .true.
-  end subroutine check_missing_real_dp_0d
-
-  subroutine check_missing_real_dp_1d(var, missing)
-    real(kind=kind_scm_dp), dimension(:), intent(in) :: var
-    logical, intent(out) :: missing
-
-    missing = .false.
-    if ( ANY(var == missing_value_dp)) missing = .true.
-  end subroutine check_missing_real_dp_1d
-
-  subroutine conditionally_set_int_var_0d(input, set_var, input_name, req, missing)
-    integer, intent(in) :: input
-    integer, intent(inout) :: set_var
-    character (*), intent(in) :: input_name
-    logical, intent(in) :: req
-    logical, intent(out) :: missing
-
-    call check_missing(input, missing)
-
-    if (.not. missing) then
-      set_var = input
-    else
-      if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
-        error stop "Variable in the case data file had missing data, but it is required for the given physics configuration."
-      end if
-    end if
-
-  end subroutine conditionally_set_int_var_0d
-
-  subroutine conditionally_set_int_var_1d(input, set_var, input_name, req, missing)
-    integer, dimension(:), intent(in) :: input
-    integer, dimension(:), intent(inout) :: set_var
-    character (*), intent(in) :: input_name
-    logical, intent(in) :: req
-    logical, intent(out) :: missing
-
-    call check_missing(input, missing)
-
-    if (.not. missing) then
-      set_var = input
-    else
-      if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
-        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
-      end if
-    end if
-
-  end subroutine conditionally_set_int_var_1d
-
-  subroutine conditionally_set_real_sp_var_0d(input, set_var, input_name, req, missing)
-    real(kind=sp), intent(in) :: input
-    real(kind=sp), intent(inout) :: set_var
-    character (*), intent(in) :: input_name
-    logical, intent(in) :: req
-    logical, intent(out) :: missing
-
-    call check_missing(input, missing)
-
-    if (.not. missing) then
-      set_var = input
-    else
-      if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
-        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
-      end if
-    end if
-
-  end subroutine conditionally_set_real_sp_var_0d
-
-  subroutine conditionally_set_real_sp_var_1d(input, set_var, input_name, req, missing)
-    real(kind=sp), dimension(:), intent(in) :: input
-    real(kind=sp), dimension(:), intent(inout) :: set_var
-    character (*), intent(in) :: input_name
-    logical, intent(in) :: req
-    logical, intent(out) :: missing
-
-    call check_missing(input, missing)
-
-    if (.not. missing) then
-      set_var = input
-    else
-      if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
-        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
-      end if
-    end if
-
-  end subroutine conditionally_set_real_sp_var_1d
-
-  subroutine conditionally_set_real_dp_var_0d(input, set_var, input_name, req, missing)
-    real(kind=kind_scm_dp), intent(in) :: input
-    real(kind=kind_scm_dp), intent(inout) :: set_var
-    character (*), intent(in) :: input_name
-    logical, intent(in) :: req
-    logical, intent(out) :: missing
-
-    call check_missing(input, missing)
-
-    if (.not. missing) then
-      set_var = input
-    else
-      if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
-        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
-      end if
-    end if
-
-  end subroutine conditionally_set_real_dp_var_0d
-
-  subroutine conditionally_set_real_dp_var_1d(input, set_var, input_name, req, missing)
-    real(kind=kind_scm_dp), dimension(:), intent(in) :: input
-    real(kind=kind_scm_dp), dimension(:), intent(inout) :: set_var
-    character (*), intent(in) :: input_name
-    logical, intent(in) :: req
-    logical, intent(out) :: missing
-
-    call check_missing(input, missing)
-
-    if (.not. missing) then
-      set_var = input
-    else
-      if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
-        error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
-      end if
-    end if
-
-  end subroutine conditionally_set_real_dp_var_1d
-end module data_qc
