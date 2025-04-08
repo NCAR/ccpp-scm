@@ -2025,6 +2025,86 @@
   dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_tracers)
   type = real
   kind = kind_phys
+[ten_q(:,:,index_of_specific_humidity_in_tracer_concentration_array)]
+  standard_name = tendency_of_specific_humidity
+  long_name = water vapor specific humidity tendency
+  units = kg kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_cloud_liquid_water_mixing_ratio_in_tracer_concentration_array)]
+  standard_name = tendency_of_cloud_liquid_water_mixing_ratio
+  long_name = cloud condensed water mixing ratio tendency
+  units = kg kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_cloud_ice_mixing_ratio_in_tracer_concentration_array)]
+  standard_name = tendency_of_cloud_ice_mixing_ratio
+  long_name = cloud condensed water mixing ratio tendency
+  units = kg kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_rain_mixing_ratio_in_tracer_concentration_array)]
+  standard_name = tendency_of_rain_mixing_ratio
+  long_name = ratio of mass of rain water tendency to mass of dry air plus vapor (without condensates)
+  units = kg kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_snow_mixing_ratio_in_tracer_concentration_array)]
+  standard_name = tendency_of_snow_mixing_ratio
+  long_name = ratio of mass of snow water tendency to mass of dry air plus vapor (without condensates)
+  units = kg kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_graupel_mixing_ratio_in_tracer_concentration_array)]
+  standard_name = tendency_of_graupel_mixing_ratio
+  long_name = ratio of mass of graupel tendency to mass of dry air plus vapor (without condensates)
+  units = kg kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_mass_number_concentration_of_cloud_ice_in_tracer_concentration_array)]
+  standard_name = tendency_of_mass_number_concentration_of_cloud_ice_water_crystals_in_air
+  long_name = number concentration of ice tendency
+  units = kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_mass_number_concentration_of_rain_in_tracer_concentration_array)]
+  standard_name = tendency_of_mass_number_concentration_of_rain_water_in_air
+  long_name = number concentration of rain tendency
+  units = kg-1 s-1
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[ten_q(:,:,index_of_mass_number_concentration_of_cloud_droplets_in_tracer_concentration_array)]
+  standard_name = tendency_of_mass_number_concentration_of_cloud_liquid_water_particles_in_air
+  long_name = number concentration of cloud droplets (liquid) tendency
+  units = kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (index_of_mass_number_concentration_of_cloud_droplets_in_tracer_concentration_array > 0)
+[ten_q(:,:,index_of_mass_number_concentration_of_hygroscopic_aerosols_in_tracer_concentration_array)]
+  standard_name = tendency_of_mass_number_concentration_of_hygroscopic_aerosols
+  long_name = number concentration of water-friendly aerosols tendency
+  units = kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (index_of_mass_number_concentration_of_hygroscopic_aerosols_in_tracer_concentration_array > 0)
+[ten_q(:,:,index_of_mass_number_concentration_of_nonhygroscopic_ice_nucleating_aerosols_in_tracer_concentration_array)]
+  standard_name = tendency_of_mass_number_concentration_of_nonhygroscopic_ice_nucleating_aerosols
+  long_name = number concentration of ice-friendly aerosols tendency
+  units = kg-1 s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (index_of_mass_number_concentration_of_nonhygroscopic_ice_nucleating_aerosols_in_tracer_concentration_array > 0)
 [ten_t]
   standard_name = tendency_of_air_temperature
   long_name = tendency of air temperature calculated by one physics scheme
