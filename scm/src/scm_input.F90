@@ -4,7 +4,8 @@
 
 module scm_input
 
-use data_qc, only: is_missing_value
+use missing_values, only: missing_value
+use data_qc, only: is_missing_value, check_missing
 use scm_kinds, only: sp, dp, qp
 use scm_type_defs, only: character_length
 use netcdf
@@ -214,7 +215,7 @@ end subroutine get_config_nml
 !! "processed_case_input" directory.
 subroutine get_case_init(scm_state, scm_input)
   use scm_type_defs, only : scm_state_type, scm_input_type
-  use NetCDF_read, only: NetCDF_read_var, check, missing_value
+  use NetCDF_read, only: NetCDF_read_var, check
   type(scm_state_type), intent(inout) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
 
@@ -797,7 +798,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_snwdph   = input_snwdph
   scm_input%input_snoalb   = input_snoalb
   scm_input%input_sncovr   = input_sncovr
-  if (input_area > missing_value) then
+  if (.not. is_missing_value(input_area)) then
     scm_input%input_area   = input_area
   end if
   scm_input%input_tsfco    = input_tsfco
@@ -946,7 +947,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   !corresponds to the DEPHY-SCM specs, version 1
 
   use scm_type_defs, only : scm_state_type, scm_input_type
-  use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check, missing_value, missing_value_int
+  use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check
   use scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_rd
   use scm_utils, only: find_vertical_index_pressure, find_vertical_index_height
 
@@ -1512,7 +1513,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     call NetCDF_read_var(ncid, "pa", .True., input_pres)
     !zh could be defined in addition to lev, use if so
     call NetCDF_read_var(ncid, "zh", .False., input_height)
-    if (input_height(1,1) == missing_value) then
+    if (is_missing_value(input_height(1,1))) then
       do i=1, input_n_init_times
         do k=1, input_n_lev
           input_height(k,i) = input_lev(k)
@@ -1523,7 +1524,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     call NetCDF_read_var(ncid, "zh", .True., input_height)
     !pa could be defined in addition to lev, use if so
     call NetCDF_read_var(ncid, "pa", .False., input_pres)
-    if (input_pres(1,1) == missing_value) then
+    if (is_missing_value(input_pres(1,1))) then
       do i=1, input_n_init_times
         do k=1, input_n_lev
           input_pres(k,i) = input_lev(k)
@@ -1650,7 +1651,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
   !zh_forc and pa_forc should be present according to the DEPHY standard; if not, assume that zh_forc = input_height and pa_forc = input_pres
   call NetCDF_read_var(ncid, "zh_forc", .False., input_force_height)
-  if (input_force_height(1,1) == missing_value) then
+  if (is_missing_value(input_force_height(1,1))) then
     do i=1, input_n_forcing_times
       do k=1, input_n_lev
         input_force_height(k,i) = input_height(k,1)
@@ -1658,7 +1659,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
   end if
   call NetCDF_read_var(ncid, "pa_forc", .False., input_force_pres)
-  if (input_force_pres(1,1) == missing_value) then
+  if (is_missing_value(input_force_pres(1,1))) then
     do i=1, input_n_forcing_times
       do k=1, input_n_lev
         input_force_pres(k,i) = input_pres(k,1)
@@ -2161,7 +2162,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
 
     !kinematic surface fluxes are specified (but may need to be converted)
-    if (is_missing_value(maxval(input_force_wpthetap(:)))) then
+    if (check_missing(input_force_wpthetap(:))) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable wpthetap should be present, but it is missing."
     else
@@ -2173,18 +2174,18 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
 
     !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
-    if ((is_missing_value(maxval(input_force_wpqvp(:))) .and. &
-         is_missing_value(maxval(input_force_wpqtp(:)))) &
+    if ((check_missing(input_force_wpqvp(:)) .and. &
+         check_missing(input_force_wpqtp(:))) &
          .and. &
-        (.not. is_missing_value(maxval(input_force_wprvp(:))) .or. &
-         .not. is_missing_value(maxval(input_force_wprtp(:))))) then
-       if (.not. is_missing_value(maxval(input_force_wprvp(:)))) then
+        (.not. check_missing(input_force_wprvp(:)) .or. &
+         .not. check_missing(input_force_wprtp(:)))) then
+       if (.not. check_missing(input_force_wprvp(:))) then
          do i=1, input_n_forcing_times
            input_force_wpqvp(i) = input_force_wprvp(i)/&
               (1.0 + input_force_wprvp(i))
          end do
        end if
-       if (.not. is_missing_value(maxval(input_force_wprtp(:)))) then
+       if (.not. check_missing(input_force_wprtp(:))) then
          do i=1, input_n_forcing_times
            input_force_wpqtp(i) = input_force_wprtp(i)/&
               (1.0 + input_force_wprtp(i))
@@ -2192,11 +2193,11 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
        end if
     end if
 
-    if (is_missing_value(maxval(input_force_wpqvp(:))) .and. is_missing_value(maxval(input_force_wpqtp(:)))) then
+    if (check_missing(input_force_wpqvp(:)) .and. check_missing(input_force_wpqtp(:))) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing."
     else
-      if (.not. is_missing_value(maxval(input_force_wpqvp(:)))) then !use wpqvp if available
+      if (.not. check_missing(input_force_wpqvp(:))) then !use wpqvp if available
         scm_input%input_lh_flux_sfc_kin = input_force_wpqvp(:)
       else
         !surface total flux of water should just be vapor
@@ -2226,14 +2227,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
 
 
-    if (is_missing_value(maxval(input_force_sfc_sens_flx(:)))) then
+    if (check_missing(input_force_sfc_sens_flx(:))) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing in indicates that the variable sfc_sens_flx should be present, but it is missing."
     else
       scm_input%input_sh_flux_sfc = input_force_sfc_sens_flx(:)
     end if
 
-    if (is_missing_value(maxval(input_force_sfc_lat_flx(:)))) then
+    if (check_missing(input_force_sfc_lat_flx(:))) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable sfc_lat_flx should be present, but it is missing."
     else

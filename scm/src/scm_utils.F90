@@ -60,53 +60,53 @@ module data_qc
     end if
   end function is_missing_value_dp
 
-  subroutine check_missing_int_0d(var, missing)
+  function check_missing_int_0d(var) result(missing)
     integer, intent(in) :: var
-    logical, intent(out) :: missing
+    logical :: missing
 
     missing = .false.
     if (var == missing_value_int) missing = .true.
-  end subroutine check_missing_int_0d
+  end function check_missing_int_0d
 
-  subroutine check_missing_int_1d(var, missing)
+  function check_missing_int_1d(var) result(missing)
     integer, dimension(:), intent(in) :: var
-    logical, intent(out) :: missing
+    logical :: missing
 
     missing = .false.
     if ( ANY(var == missing_value_int)) missing = .true.
-  end subroutine check_missing_int_1d
+  end function check_missing_int_1d
 
-  subroutine check_missing_real_sp_0d(var, missing)
+  function check_missing_real_sp_0d(var) result(missing)
     real(kind=sp), intent(in) :: var
-    logical, intent(out) :: missing
+    logical :: missing
 
     missing = .false.
     if (var == missing_value_sp) missing = .true.
-  end subroutine check_missing_real_sp_0d
+  end function check_missing_real_sp_0d
 
-  subroutine check_missing_real_sp_1d(var, missing)
+  function check_missing_real_sp_1d(var) result(missing)
     real(kind=sp), dimension(:), intent(in) :: var
-    logical, intent(out) :: missing
+    logical :: missing
 
     missing = .false.
     if ( ANY(var == missing_value_sp)) missing = .true.
-  end subroutine check_missing_real_sp_1d
+  end function check_missing_real_sp_1d
 
-  subroutine check_missing_real_dp_0d(var, missing)
+  function check_missing_real_dp_0d(var) result(missing)
     real(kind=kind_scm_dp), intent(in) :: var
-    logical, intent(out) :: missing
+    logical :: missing
 
     missing = .false.
     if (var == missing_value_dp) missing = .true.
-  end subroutine check_missing_real_dp_0d
+  end function check_missing_real_dp_0d
 
-  subroutine check_missing_real_dp_1d(var, missing)
+  function check_missing_real_dp_1d(var) result(missing)
     real(kind=kind_scm_dp), dimension(:), intent(in) :: var
-    logical, intent(out) :: missing
+    logical :: missing
 
     missing = .false.
     if ( ANY(var == missing_value_dp)) missing = .true.
-  end subroutine check_missing_real_dp_1d
+  end function check_missing_real_dp_1d
 
   subroutine conditionally_set_int_var_0d(input, set_var, input_name, req, missing)
     integer, intent(in) :: input
@@ -115,7 +115,7 @@ module data_qc
     logical, intent(in) :: req
     logical, intent(out) :: missing
 
-    call check_missing(input, missing)
+    missing = check_missing(input)
 
     if (.not. missing) then
       set_var = input
@@ -135,7 +135,7 @@ module data_qc
     logical, intent(in) :: req
     logical, intent(out) :: missing
 
-    call check_missing(input, missing)
+    missing = check_missing(input)
 
     if (.not. missing) then
       set_var = input
@@ -155,7 +155,7 @@ module data_qc
     logical, intent(in) :: req
     logical, intent(out) :: missing
 
-    call check_missing(input, missing)
+    missing = check_missing(input)
 
     if (.not. missing) then
       set_var = input
@@ -175,7 +175,7 @@ module data_qc
     logical, intent(in) :: req
     logical, intent(out) :: missing
 
-    call check_missing(input, missing)
+    missing = check_missing(input)
 
     if (.not. missing) then
       set_var = input
@@ -195,7 +195,7 @@ module data_qc
     logical, intent(in) :: req
     logical, intent(out) :: missing
 
-    call check_missing(input, missing)
+    missing = check_missing(input)
 
     if (.not. missing) then
       set_var = input
@@ -215,7 +215,7 @@ module data_qc
     logical, intent(in) :: req
     logical, intent(out) :: missing
 
-    call check_missing(input, missing)
+    missing = check_missing(input)
 
     if (.not. missing) then
       set_var = input
