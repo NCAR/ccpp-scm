@@ -24,7 +24,6 @@
   </group>
   <group name="phys_ps">
     <subcycle loop="1">
-      <scheme>GFS_suite_interstitial_phys_reset</scheme>
       <scheme>GFS_suite_stateout_reset</scheme>
       <scheme>get_prs_fv3</scheme>
       <scheme>GFS_suite_interstitial_1</scheme>
