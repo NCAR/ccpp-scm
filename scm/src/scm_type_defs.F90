@@ -1058,7 +1058,7 @@ module scm_type_defs
     !this should be utilized for variables that cannot be modified or "forced" by the SCM;
     !most of this routine follows what is in FV3/io/FV3GFS_io.F90/sfc_prop_restart_read
     use scm_physical_constants, only: con_tice
-    use data_qc, only: conditionally_set_var, check_missing
+    use data_qc, only: conditionally_set_var
     use NetCDF_read, only: missing_value
     
     class(physics_type) :: physics
