@@ -154,11 +154,28 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
     call physics%Diag%phys_zero (physics%Model)
   endif
-
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
+  
+  !CCPP run phase
+  ! time_vary group doesn't have any run phase (omitted)
+  ! radiation group
+  call physics%Interstitial(1)%rad_reset(physics%Model)
+  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="radiation", ierr=ierr)
   if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop trim(cdata%errmsg)
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group radiation: ' // trim(cdata%errmsg) // '. Exiting...'
+      error stop
+  end if
+  ! process-split physics
+  call physics%Interstitial(1)%phys_reset(physics%Model)
+  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ps", ierr=ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ps: ' // trim(cdata%errmsg) // '. Exiting...'
+      error stop
+  end if
+  ! time-split physics
+  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ts", ierr=ierr)
+  if (ierr/=0) then
+      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(cdata%errmsg) // '. Exiting...'
+      error stop
   end if
 
   call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
