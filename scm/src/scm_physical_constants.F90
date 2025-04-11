@@ -70,5 +70,6 @@ public
   real(kind=dp), parameter :: con_secinday = 86400._dp
 
   ! --- constants from physcons.F90 ---
-  real(kind=dp),parameter:: decorr_con = 2.50_dp      !< ! Decorrelation length constant (km) for iovr = 4 or 5 and idcor = 0
+  real(kind=dp),parameter:: decorr_con = 2.50_dp      !< Decorrelation length constant (km) for iovr = 4 or 5 and idcor = 0
+  real(kind=dp),parameter:: qamin = 1.e-16_dp !< Minimum aerosol concentration
 end module scm_physical_constants

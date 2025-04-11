@@ -348,3 +348,10 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[qamin]
+  standard_name = minimum_aerosol_concentration
+  long_name = Minimum aerosol mass mixing ratio
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
