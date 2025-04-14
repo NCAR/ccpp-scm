@@ -18,6 +18,7 @@ module data_qc
   implicit none
 
   interface is_missing_value
+    module procedure is_missing_value_int
     module procedure is_missing_value_sp
     module procedure is_missing_value_dp
   end interface is_missing_value
@@ -25,10 +26,19 @@ module data_qc
   interface check_missing
     module procedure check_missing_int_0d
     module procedure check_missing_int_1d
+    module procedure check_missing_int_2d
+    module procedure check_missing_int_3d
+    module procedure check_missing_int_4d
     module procedure check_missing_real_sp_0d
     module procedure check_missing_real_sp_1d
+    module procedure check_missing_real_sp_2d
+    module procedure check_missing_real_sp_3d
+    module procedure check_missing_real_sp_4d
     module procedure check_missing_real_dp_0d
     module procedure check_missing_real_dp_1d
+    module procedure check_missing_real_dp_2d
+    module procedure check_missing_real_dp_3d
+    module procedure check_missing_real_dp_4d
   end interface
 
   interface conditionally_set_var
@@ -41,7 +51,16 @@ module data_qc
   end interface
 
   contains
-
+  
+  function is_missing_value_int(var) result(missing)
+    integer, intent(in) :: var
+    logical :: missing
+    missing = .false.
+    if (var == missing_value_int) then
+       missing = .true.
+    end if
+  end function is_missing_value_int
+  
   function is_missing_value_sp(var) result(missing)
     real(kind=kind_scm_sp), intent(in) :: var
     logical :: missing
@@ -75,6 +94,30 @@ module data_qc
     missing = .false.
     if ( ANY(var == missing_value_int)) missing = .true.
   end function check_missing_int_1d
+  
+  function check_missing_int_2d(var) result(missing)
+    integer, dimension(:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_int)) missing = .true.
+  end function check_missing_int_2d
+  
+  function check_missing_int_3d(var) result(missing)
+    integer, dimension(:,:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_int)) missing = .true.
+  end function check_missing_int_3d
+  
+  function check_missing_int_4d(var) result(missing)
+    integer, dimension(:,:,:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_int)) missing = .true.
+  end function check_missing_int_4d
 
   function check_missing_real_sp_0d(var) result(missing)
     real(kind=sp), intent(in) :: var
@@ -91,6 +134,30 @@ module data_qc
     missing = .false.
     if ( ANY(var == missing_value_sp)) missing = .true.
   end function check_missing_real_sp_1d
+  
+  function check_missing_real_sp_2d(var) result(missing)
+    real(kind=sp), dimension(:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_sp)) missing = .true.
+  end function check_missing_real_sp_2d
+  
+  function check_missing_real_sp_3d(var) result(missing)
+    real(kind=sp), dimension(:,:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_sp)) missing = .true.
+  end function check_missing_real_sp_3d
+  
+  function check_missing_real_sp_4d(var) result(missing)
+    real(kind=sp), dimension(:,:,:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_sp)) missing = .true.
+  end function check_missing_real_sp_4d
 
   function check_missing_real_dp_0d(var) result(missing)
     real(kind=kind_scm_dp), intent(in) :: var
@@ -107,6 +174,30 @@ module data_qc
     missing = .false.
     if ( ANY(var == missing_value_dp)) missing = .true.
   end function check_missing_real_dp_1d
+  
+  function check_missing_real_dp_2d(var) result(missing)
+    real(kind=kind_scm_dp), dimension(:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_dp)) missing = .true.
+  end function check_missing_real_dp_2d
+  
+  function check_missing_real_dp_3d(var) result(missing)
+    real(kind=kind_scm_dp), dimension(:,:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_dp)) missing = .true.
+  end function check_missing_real_dp_3d
+  
+  function check_missing_real_dp_4d(var) result(missing)
+    real(kind=kind_scm_dp), dimension(:,:,:,:), intent(in) :: var
+    logical :: missing
+
+    missing = .false.
+    if ( ANY(var == missing_value_dp)) missing = .true.
+  end function check_missing_real_dp_4d
 
   subroutine conditionally_set_int_var_0d(input, set_var, input_name, req, missing)
     integer, intent(in) :: input
@@ -405,7 +496,7 @@ end module scm_utils
 module NetCDF_read
   use scm_kinds, only : sp, dp, qp, kind_scm_sp, kind_scm_dp
   use missing_values
-  use data_qc, only: is_missing_value
+  use data_qc, only: is_missing_value, check_missing
   use netcdf
 
   implicit none
@@ -944,7 +1035,7 @@ module NetCDF_read
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (is_missing_value(maxval(var_data))) then
+      if (check_missing(var_data)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -960,7 +1051,7 @@ module NetCDF_read
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (is_missing_value(maxval(var_data))) then
+      if (check_missing(var_data)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -976,7 +1067,7 @@ module NetCDF_read
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (is_missing_value(maxval(var_data))) then
+      if (check_missing(var_data)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
@@ -992,7 +1083,7 @@ module NetCDF_read
 
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
-      if (is_missing_value(maxval(var_data))) then
+      if (check_missing(var_data)) then
         write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if

@@ -500,7 +500,7 @@ subroutine get_case_init(scm_state, scm_input)
   !Either thetail or T must be present
   call NetCDF_read_var(grp_ncid, "thetail", .False., input_thetail)
   call NetCDF_read_var(grp_ncid, "temp", .False., input_temp)
-  if (maxval(input_thetail) < 0 .and. maxval(input_temp) < 0) then
+  if (check_missing(input_thetail) .and. check_missing(input_temp)) then
     write(*,*) "One of thetail or temp variables must be present in ",trim(adjustl(scm_state%case_name))//'.nc',". Stopping..."
     error stop "One of thetail or temp variables"
   end if
@@ -919,8 +919,6 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_ifd     = input_ifd
   scm_input%input_dt_cool = input_dt_cool
   scm_input%input_qrain   = input_qrain
-
-  scm_input%input_area     = input_area
 
   scm_input%input_wetness         = input_wetness
   scm_input%input_clw_surf_land   = input_clw_surf_land
@@ -1532,7 +1530,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       end do
     end if
   end if
-
+  
   call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
   call NetCDF_read_var(ncid, "ua", .True., input_u)
   call NetCDF_read_var(ncid, "va", .True., input_v)
@@ -1891,29 +1889,29 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   scm_input%input_tke = input_tke(:,active_init_time)
 
   !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
-  if ((maxval(input_qv(:,active_init_time)) < 0 .and. &
-       maxval(input_qt(:,active_init_time)) < 0) .and. &
-      (maxval(input_rv(:,active_init_time)) > 0 .or. &
-       maxval(input_rt(:,active_init_time)) > 0)) then
-     if (maxval(input_rv(:,active_init_time)) > 0) then
+  if ((check_missing(input_qv(:,active_init_time)) .and. &
+       check_missing(input_qt(:,active_init_time))) .and. &
+      (.not. check_missing(input_rv(:,active_init_time)) .or. &
+       .not. check_missing(input_rt(:,active_init_time)))) then
+     if (.not. check_missing(input_rv(:,active_init_time))) then
        do k=1, input_n_lev
          input_qv(k,active_init_time) = input_rv(k,active_init_time)/&
             (1.0 + input_rv(k,active_init_time))
        end do
      end if
-     if (maxval(input_rt(:,active_init_time)) > 0) then
+     if (.not. check_missing(input_rt(:,active_init_time))) then
        do k=1, input_n_lev
          input_qt(k,active_init_time) = input_rt(k,active_init_time)/&
             (1.0 + input_rt(k,active_init_time))
        end do
      end if
-     if (maxval(input_rl(:,active_init_time)) > 0) then
+     if (.not. check_missing(input_rl(:,active_init_time))) then
        do k=1, input_n_lev
          input_ql(k,active_init_time) = input_rl(k,active_init_time)/&
             (1.0 + input_rl(k,active_init_time))
        end do
      end if
-     if (maxval(input_ri(:,active_init_time)) > 0) then
+     if (.not. check_missing(input_ri(:,active_init_time))) then
        do k=1, input_n_lev
          input_qi(k,active_init_time) = input_ri(k,active_init_time)/&
             (1.0 + input_ri(k,active_init_time))
@@ -1922,10 +1920,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   end if
 
   !make sure that one of qv or qt (and rv or rt due to above conversion) is present (add support for rh later)
-  if (maxval(input_qv(:,active_init_time)) >= 0) then
-    if (maxval(input_qt(:,active_init_time)) >= 0) then
-      if (maxval(input_ql(:,active_init_time)) >= 0) then
-        if (maxval(input_qi(:,active_init_time)) >= 0) then
+  if (.not. check_missing(input_qv(:,active_init_time))) then
+    if (.not. check_missing(input_qt(:,active_init_time))) then
+      if (.not. check_missing(input_ql(:,active_init_time))) then
+        if (.not. check_missing(input_qi(:,active_init_time))) then
           !all of qv, qt, ql, qi (need to check for consistency that they add up correctly?)
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_qt = input_qt(:,active_init_time)
@@ -1941,7 +1939,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           end do
         end if !qi test
       else
-        if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, qt, qi, but no ql
+        if (.not. check_missing(input_qi(:,active_init_time))) then !qv, qt, qi, but no ql
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_qt = input_qt(:,active_init_time)
           scm_input%input_qi = input_qi(:,active_init_time)
@@ -1960,8 +1958,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if !qi test
       end if !ql test
     else !qv, but not qt
-      if (maxval(input_ql(:,active_init_time)) >= 0) then
-        if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, no qt, ql, qi
+      if (.not. check_missing(input_ql(:,active_init_time))) then
+        if (.not. check_missing(input_qi(:,active_init_time))) then !qv, no qt, ql, qi
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_ql = input_ql(:,active_init_time)
           scm_input%input_qi = input_qi(:,active_init_time)
@@ -1979,7 +1977,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_qi = 0.0
         end if ! qi test
       else
-        if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, no qt, no ql, qi
+        if (.not. check_missing(input_qi(:,active_init_time))) then !qv, no qt, no ql, qi
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_qi = input_qi(:,active_init_time)
           !derive qt
@@ -1995,9 +1993,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if ! qi test
       end if ! ql test
     end if !qt test
-  else if (maxval(input_qt(:,active_init_time)) >= 0) then !qt, but not qv
-    if (maxval(input_ql(:,active_init_time)) >= 0) then
-      if (maxval(input_qi(:,active_init_time)) >= 0) then !no qv, qt, ql, qi
+  else if (.not. check_missing(input_qt(:,active_init_time))) then !qt, but not qv
+    if (.not. check_missing(input_ql(:,active_init_time))) then
+      if (.not. check_missing(input_qi(:,active_init_time))) then !no qv, qt, ql, qi
         scm_input%input_qt = input_qt(:,active_init_time)
         scm_input%input_ql = input_ql(:,active_init_time)
         scm_input%input_qi = input_qi(:,active_init_time)
@@ -2015,7 +2013,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         scm_input%input_qi = 0.0
       end if
     else
-      if (maxval(input_qi(:,active_init_time)) >= 0) then !no qv, qt, no ql, qi
+      if (.not. check_missing(input_qi(:,active_init_time))) then !no qv, qt, no ql, qi
         scm_input%input_qt = input_qt(:,active_init_time)
         scm_input%input_qi = input_qi(:,active_init_time)
         !derive qv
@@ -2038,11 +2036,11 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
   !make sure that at least one of temp, theta, thetal is present;
   !the priority for use is temp, thetal, theta
-  if (maxval(input_temp(:,active_init_time)) > 0) then
+  if (.not. check_missing(input_temp(:,active_init_time))) then
     scm_input%input_temp = input_temp(:,active_init_time)
     !since temperature was present (and is ultimately needed in the physics), choose to use it, and set the alternative to missing, even if it is also present in the file
     scm_input%input_thetail = missing_value
-  else if (maxval(input_thetal(:,active_init_time)) > 0) then
+  else if (.not. check_missing(input_thetal(:,active_init_time))) then
     !convert thetal to thetail
     do k=1, input_n_lev
       exner_inv = (p0/scm_input%input_pres(k))**con_rocp
@@ -2051,7 +2049,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     !since thetail is present, choose to use it, and set the alternative temperature to missing, even if it is also present in the file
     scm_input%input_temp = missing_value
-  else if (maxval(input_theta(:,active_init_time)) > 0) then
+  else if (.not. check_missing(input_theta(:,active_init_time))) then
     !convert theta to thetail
     do k=1, input_n_lev
       exner_inv = (p0/scm_input%input_pres(k))**con_rocp
@@ -2065,7 +2063,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
     error stop "All of the supported temperature variables (temp, theta, thetal) were missing"
   end if
-
+  
   if (trim(input_surfaceForcingLSM) == "lsm") then
     scm_input%input_ozone = input_ozone(:,active_init_time)
 
@@ -2130,7 +2128,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   !no sea ice type?
 
   if (input_surfaceForcingTemp == 'ts') then
-    if (maxval(input_force_ts) < 0) then
+    if (check_missing(input_force_ts)) then
       write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable ts should be present, but it is missing"
     else
@@ -2144,9 +2142,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 0
 
-    if (maxval(input_force_ts) < 0) then
+    if (check_missing(input_force_ts)) then
       !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
-      if (maxval(scm_input%input_temp) > 0) then
+      if (.not. check_missing(scm_input%input_temp)) then
         !temperature profile is available
         scm_input%input_T_surf = scm_input%input_temp(1)
       else
@@ -2209,9 +2207,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 1
 
-    if (maxval(input_force_ts) < 0) then
+    if (check_missing(input_force_ts)) then
       !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
-      if (maxval(scm_input%input_temp) > 0) then
+      if (.not. check_missing(scm_input%input_temp)) then
         !temperature profile is available
         scm_input%input_T_surf = scm_input%input_temp(1)
       else
