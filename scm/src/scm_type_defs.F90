@@ -1058,8 +1058,8 @@ module scm_type_defs
     !this should be utilized for variables that cannot be modified or "forced" by the SCM;
     !most of this routine follows what is in FV3/io/FV3GFS_io.F90/sfc_prop_restart_read
     use scm_physical_constants, only: con_tice
-    use data_qc, only: conditionally_set_var
-    use NetCDF_read, only: missing_value
+    use data_qc, only: conditionally_set_var, is_missing_value, check_missing
+    use missing_values, only: missing_value
     
     class(physics_type) :: physics
     type(scm_input_type), intent(in) :: scm_input
@@ -1069,15 +1069,15 @@ module scm_type_defs
     real(kind=dp) :: tem1, tem
     logical :: missing_var(100)
     real, parameter:: min_lake_orog = 200.0_dp
-    
+
     !double check under what circumstances these should actually be set from input!!! (these overwrite the initialzation in GFS_typedefs)
     missing_var = .false.
     do i = 1, physics%Model%ncols
       !since landfrac and lakefrac are read in with the orographic data (here and in FV3GFS_io), we need to set their values
-      !to missing when only LSM ICs are available in order for some of the logic below to work as intended.
+      !to -999.9 when only LSM ICs are available in order for some of the logic below to work as intended.
       if (scm_state%lsm_ics) then
-        physics%Sfcprop%landfrac(i) = missing_value
-        physics%Sfcprop%lakefrac(i) = missing_value
+        physics%Sfcprop%landfrac(i) = -999.9
+        physics%Sfcprop%lakefrac(i) = -999.9
       end if
       !
       ! Orographical data (2D)
@@ -1218,7 +1218,6 @@ module scm_type_defs
         if (physics%Sfcprop%slmsk(i) > 1.9_dp) physics%Sfcprop%fice(i) = 1.0 !needed to calculate tsfc and zorl below when model_ics == .false.
         if (physics%Sfcprop%slmsk(i) < 0.1_dp) physics%Sfcprop%oceanfrac(i) = 1.0
       end if
-
       !
       ! Derive physics quantities using surface model ICs.
       !
@@ -1471,7 +1470,7 @@ module scm_type_defs
          endif
       endif ! if (Model%frac_grid)
 
-      if (scm_state%model_ics .and. MAXVAL(scm_input%input_tiice) < real_zero) then
+      if (scm_state%model_ics .and. check_missing(scm_input%input_tiice)) then
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if
