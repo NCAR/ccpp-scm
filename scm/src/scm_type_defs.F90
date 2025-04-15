@@ -341,6 +341,8 @@ module scm_type_defs
     real(kind=dp)                     :: input_sfalb_ice !<
     real(kind=dp)                     :: input_emis_ice !<
     real(kind=dp)                     :: input_lai !< leaf area index for RUC LSM
+    real(kind=dp)                     :: input_snodi
+    real(kind=dp)                     :: input_weasdi
     
     real(kind=dp), allocatable        :: input_tslb(:) !< soil temperature for RUC LSM (K)    
     real(kind=dp), allocatable        :: input_smois(:) !< volume fraction of soil moisture for RUC LSM (frac)
@@ -850,6 +852,8 @@ module scm_type_defs
     scm_input%input_sfalb_lnd_bck   = real_zero
     scm_input%input_emis_ice        = real_zero
     scm_input%input_lai             = real_zero  !< leaf area index for RUC LSM
+    scm_input%input_snodi           = real_zero
+    scm_input%input_weasdi          = real_zero
     
     allocate(scm_input%input_tslb(nsoil), scm_input%input_smois(nsoil), scm_input%input_sh2o(nsoil), &
         scm_input%input_smfr(nsoil), scm_input%input_flfr(nsoil))
@@ -1076,8 +1080,8 @@ module scm_type_defs
       !since landfrac and lakefrac are read in with the orographic data (here and in FV3GFS_io), we need to set their values
       !to -999.9 when only LSM ICs are available in order for some of the logic below to work as intended.
       if (scm_state%lsm_ics) then
-        physics%Sfcprop%landfrac(i) = -999.9
-        physics%Sfcprop%lakefrac(i) = -999.9
+        physics%Sfcprop%landfrac(i) = missing_value
+        physics%Sfcprop%lakefrac(i) = missing_value
       end if
       !
       ! Orographical data (2D)
@@ -1222,7 +1226,7 @@ module scm_type_defs
       ! Derive physics quantities using surface model ICs.
       !
       if(scm_state%model_ics .or. scm_state%lsm_ics) then
-        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i)+0.5 <= 0) then
+        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i) <= 0) then
           physics%Sfcprop%landfrac(i) = real_zero
           physics%Sfcprop%stype(i) = 0
           if (physics%Sfcprop%lakefrac(i) > real_zero) then
@@ -1231,7 +1235,7 @@ module scm_type_defs
         endif
         
         if (physics%Model%frac_grid) then
-          if (physics%Sfcprop%landfrac(i) > -999.0_dp) then
+          if (.not. is_missing_value(physics%Sfcprop%landfrac(i))) then
             physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i)-1.0e-6)
             if (physics%Sfcprop%slmsk(i) == 1 .and. physics%Sfcprop%stype(i) == 14) &
               physics%Sfcprop%slmsk(i) = 0
@@ -1275,7 +1279,7 @@ module scm_type_defs
             endif
           endif
         else                                             ! not a fractional grid
-          if (physics%Sfcprop%landfrac(i) > -999.0_dp) then
+          if (.not. is_missing_value(physics%Sfcprop%landfrac(i))) then
             if (physics%Sfcprop%lakefrac(i) > real_zero) then
               physics%Sfcprop%oceanfrac(i) = real_zero
               physics%Sfcprop%landfrac(i)  = real_zero
@@ -1319,7 +1323,6 @@ module scm_type_defs
           endif
         endif
       end if
-      
       !
       ! NSSTM variables
       !
@@ -1394,7 +1397,7 @@ module scm_type_defs
       ! Compute surface fields that may/maynot present in model IC files.
       !
       if (scm_state%model_ics .or. scm_state%lsm_ics) then
-        if (scm_input%input_snodl <= real_zero) then
+        if (is_missing_value(scm_input%input_snodl) .or. scm_input%input_snodl == real_zero) then
           if (physics%Sfcprop%landfrac(i) > real_zero) then
             tem = real_one / physics%Sfcprop%landfrac(i)
             physics%Sfcprop%snodl(i)  = physics%Sfcprop%snowd(i) * tem
@@ -1403,9 +1406,9 @@ module scm_type_defs
           endif
         end if
         
-        if (scm_input%input_weasdl <= real_zero) then
+        if (is_missing_value(scm_input%input_weasdl) .or. scm_input%input_weasdl == real_zero) then
           if (physics%Sfcprop%landfrac(i) > real_zero) then
-            tem = real_one / physics%Sfcprop%landfrac(i)
+            tem = real_one / (physics%Sfcprop%fice(i)*(real_one - physics%Sfcprop%landfrac(i)) + physics%Sfcprop%landfrac(i))
             physics%Sfcprop%weasdl(i) = physics%Sfcprop%weasd(i) * tem
           else
             physics%Sfcprop%weasdl(i) = real_zero
@@ -1413,24 +1416,50 @@ module scm_type_defs
         end if
       end if
       
-      if (scm_input%input_tsfcl <= real_zero) then
+      if (is_missing_value(scm_input%input_tsfcl) .or. scm_input%input_tsfcl == real_zero) then
         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i) !--- compute tsfcl from existing variables
       end if
       
-      if (scm_input%input_zorlw <= real_zero) then
+      if (is_missing_value(scm_input%input_zorlw) .or. scm_input%input_zorlw == real_zero) then
         physics%Sfcprop%zorlw(i) = physics%Sfcprop%zorl(i) !--- compute zorlw from existing variables
       end if
       
-      if (scm_input%input_zorll <= real_zero) then
+      if (is_missing_value(scm_input%input_zorll) .or. scm_input%input_zorll == real_zero) then
         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorl(i) !--- compute zorll from existing variables
       end if
       
-      if (scm_input%input_zorli <= real_zero) then
+      if (is_missing_value(scm_input%input_zorli) .or. scm_input%input_zorli == real_zero) then
         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorl(i) !--- compute zorli from existing variables
       end if
       
+      if (is_missing_value(scm_input%input_emis_ice) .or. scm_input%input_emis_ice == real_zero) then
+        physics%Sfcprop%emis_ice(i) = 0.96 
+      end if
+      
+      if (((is_missing_value(scm_input%input_sncovr_ice) .or. scm_input%input_sncovr_ice == real_zero)) .and. physics%Model%lsm /= physics%Model%lsm_ruc) then
+        physics%Sfcprop%sncovr_ice(i) = real_zero 
+      end if
+      
+      if (is_missing_value(scm_input%input_snodi) .or. scm_input%input_snodi == real_zero) then
+        if (physics%Sfcprop%fice(i) > real_zero) then
+          tem = real_one / (physics%Sfcprop%fice(i)*(real_one-physics%Sfcprop%landfrac(i))+physics%Sfcprop%landfrac(i))
+          physics%Sfcprop%snodi(i)  = min(physics%Sfcprop%snowd(i) * tem, 3.0)
+        else
+          physics%Sfcprop%snodi(i)  = real_zero
+        endif
+      end if
+      
+      if (is_missing_value(scm_input%input_weasdi) .or. scm_input%input_weasdi == real_zero) then
+        if (physics%Sfcprop%fice(i) > real_zero) then
+          tem = real_one / (physics%Sfcprop%fice(i)*(real_one-physics%Sfcprop%landfrac(i))+physics%Sfcprop%landfrac(i))
+          physics%Sfcprop%weasdi(i)  = physics%Sfcprop%weasd(i)*tem
+        else
+          physics%Sfcprop%weasdi(i)  = real_zero
+        endif
+      end if  
+      
       if (physics%Model%use_cice_alb) then
-        if (scm_input%input_albdirvis_ice <= real_zero) then
+        if (is_missing_value(scm_input%input_albdirvis_ice) .or.  scm_input%input_albdirvis_ice == real_zero) then
           if (physics%Sfcprop%oceanfrac(i) > real_zero .and. &
                 physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
               physics%Sfcprop%albdirvis_ice(i) = 0.6_dp
@@ -1441,34 +1470,28 @@ module scm_type_defs
         endif
       endif
       
-      if (scm_input%input_zorlwav <= real_zero) then
+      if (is_missing_value(scm_input%input_zorlwav) .or. scm_input%input_zorlwav == real_zero) then
         physics%Sfcprop%zorlwav(i) = physics%Sfcprop%zorlw(i) !--- compute zorlwav from existing variables
       end if
-
-      if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics) ) then ! 3-way composite
-         if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
-         tem1 = real_one - physics%Sfcprop%landfrac(i)
-         tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
-         physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
-                                 + physics%Sfcprop%zorli(i) * tem                      &
-                                 + physics%Sfcprop%zorlw(i) * (tem1-tem)
-
-         physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
-                                 + physics%Sfcprop%tisfc(i) * tem                      &
-                                 + physics%Sfcprop%tsfco(i) * (tem1-tem)
-      else
-         if (physics%Sfcprop%slmsk(i) == 1) then
-            physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) 
+      
+      if (is_missing_value(scm_input%input_tsfc) .or. scm_input%input_tsfc == real_zero) then
+        if(physics%Model%frac_grid) then
+          physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
+          tem1 = real_one - physics%Sfcprop%landfrac(i)
+          tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
+          physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
+               + physics%Sfcprop%tisfc(i) * tem                      &
+               + physics%Sfcprop%tsfco(i) * (tem1-tem)
+        else
+          if (physics%Sfcprop%slmsk(i) == 1) then
             physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i)
-         else
+          else
             tem = real_one - physics%Sfcprop%fice(i)
-            physics%Sfcprop%zorl(i) = physics%Sfcprop%zorli(i) * physics%Sfcprop%fice(i) &
-                                   + physics%Sfcprop%zorlw(i) * tem
-
             physics%Sfcprop%tsfc(i) = physics%Sfcprop%tisfc(i) * physics%Sfcprop%fice(i) &
-                                   + physics%Sfcprop%tsfco(i) * tem
-         endif
-      endif ! if (Model%frac_grid)
+                 + physics%Sfcprop%tsfco(i) * tem
+          endif
+        end if
+      end if
 
       if (scm_state%model_ics .and. check_missing(scm_input%input_tiice)) then
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1

@@ -381,6 +381,8 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_sfalb_ice
   real(kind=dp)               :: input_emis_ice
   real(kind=dp)               :: input_lai !< leaf area index for RUC LSM
+  real(kind=dp)               :: input_snodi
+  real(kind=dp)               :: input_weasdi
 
   real(kind=dp), allocatable  :: input_tslb(:)    !< soil temperature for RUC LSM (K)
   real(kind=dp), allocatable  :: input_smois(:)   !< volume fraction of soil moisture for RUC LSM (frac)
@@ -695,6 +697,8 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
   call NetCDF_read_var(grp_ncid, "emis_ice",         .False., input_emis_ice)
   call NetCDF_read_var(grp_ncid, "lai",              .False., input_lai)
+  call NetCDF_read_var(grp_ncid, "snodi",            .False., input_snodi)
+  call NetCDF_read_var(grp_ncid, "weasdi",           .False., input_weasdi)
 
   !> - Read in the forcing data.
 
@@ -937,6 +941,8 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck
   scm_input%input_emis_ice        = input_emis_ice
   scm_input%input_lai             = input_lai
+  scm_input%input_snodi           = input_snodi
+  scm_input%input_weasdi          = input_weasdi
 
   if (scm_state%runtime_mult /= 1.0) then
     scm_state%runtime = scm_state%runtime*scm_state%runtime_mult
@@ -1140,6 +1146,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_sfalb_lnd_bck(:)   !<
   real(kind=dp), allocatable  :: input_sfalb_ice(:)       !<
   real(kind=dp), allocatable  :: input_emis_ice(:)        !<
+  real(kind=dp), allocatable  :: input_snodi(:)
+  real(kind=dp), allocatable  :: input_weasdi(:)
 
   ! forcing variables
   real(kind=sp), allocatable :: input_force_pres_surf(:) !< forcing surface pressure (Pa)
@@ -1501,6 +1509,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_sfalb_lnd_bck   (          input_n_init_times), &
              input_sfalb_ice       (          input_n_init_times), &
              input_emis_ice        (          input_n_init_times), &
+             input_snodi           (          input_n_init_times), &
+             input_weasdi          (          input_n_init_times), &
              stat=allocate_status)
 
   needed_for_lsm_ics = .False.
@@ -1837,6 +1847,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
   call NetCDF_read_var(ncid, "emis_ice",         .False., input_emis_ice)
   call NetCDF_read_var(ncid, "lai",              .False., input_lai)
+  call NetCDF_read_var(ncid, "snodi",            .False., input_snodi)
+  call NetCDF_read_var(ncid, "weasdi",           .False., input_weasdi)
 
 
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
@@ -2127,6 +2139,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%sfc_type = 0.0
   else if (input_SurfaceType == 'land') then
     scm_state%sfc_type = 1.0
+  else if (input_SurfaceType == 'ice') then
+    scm_state%sfc_type = 2.0
   end if
   !no sea ice type?
 
@@ -2343,6 +2357,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_sfalb_lnd       = input_sfalb_lnd(active_init_time)
     scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck(active_init_time)
     scm_input%input_emis_ice        = input_emis_ice(active_init_time)
+    scm_input%input_snodi           = input_snodi(active_init_time)
+    scm_input%input_weasdi          = input_weasdi(active_init_time)
   end if
 
   if (input_surfaceForcingWind == 'z0') then
