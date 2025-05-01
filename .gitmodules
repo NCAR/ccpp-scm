@@ -5,7 +5,7 @@
 [submodule "ccpp-physics"]
 	path = ccpp/physics
 	url = https://github.com/scrasmussen/ccpp-physics
-	branch = ufs-dev-PR260-memcheck-fixes
+	branch = ufs-dev-PR259-CMake-changes
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
