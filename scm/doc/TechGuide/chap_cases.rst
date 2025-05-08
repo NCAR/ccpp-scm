@@ -129,6 +129,35 @@ format requirements can be found at `DEPHY <https://github.com/GdR-DEPHY/DEPHY-S
     :name: lst_case_input_netcdf_header_dephy
     :caption: example NetCDF file (DEPHY format) header for case initialization and forcing data
 
+As of the CCPP v7.0.0 release, all SCM case files are expected to use the DEPHY format.
+To assist with this transition, a conversion script is provided in the repository to reformat
+legacy SCM case files into the new DEPHY-compliant format.
+
+The conversion script is located at:
+
+.. code:: bash
+
+   ccpp-scm/scm/etc/scripts/dephy_converter.py
+
+To convert a case, run the script with the -n option followed by the name of the case
+(excluding the .nc extension):
+
+.. code:: bash
+
+   python dephy_converter.py -n name_of_case
+
+This script performs the following actions:
+- Reads the legacy case file from ccpp-scm/scm/data/processed_case_data/name_of_case.nc
+- Reads the corresponding configuration namelist from ccpp-scm/scm/etc/case_config/name_of_case.nml
+- Outputs a new DEPHY-formatted file named name_of_case_SCM_driver.nc to the same data directory
+- Updates the configuration namelist accordingly
+
+.. Note::
+    Before running the script, back up both the original ``.nc`` file and its corresponding ``.nml``
+    configuration file. After conversion, you can test the new DEPHY-formatted case by running it
+    and comparing its output with the original. Although results may not be bit-for-bit identical,
+    they should be visually very similar when plotted.
+
 Included Cases
 --------------
 
@@ -174,6 +203,58 @@ In addition, cases can be generated from UFS initial conditions See
 :numref:`Section %s <UFScasegen>` for information on how to generate these
 files for other locations and dates, given appropriate UFS Atmosphere
 initial conditions and output.
+
+Maritime Cases with Active Surface Fluxes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When modeling cases over ocean surfaces without prescribed surface fluxes, instead
+of relying on physics to calculate them, GFS-based physics suites rely on the
+Near-Surface Sea Temperature (NSST) scheme.
+
+**Cold-Starting the NSST Scheme**
+
+To initialize NSST in a cold start configuration:
+
+1. Provide a sea surface temperature (SST) time series via the ``ts_forc`` time
+   series in the case data file.
+2. Set the following in the case data file:
+
+   - ``surface_forcing_temp = "ts"``
+   - ``surface_type = "ocean"``
+
+3. In the physics namelist, ensure the second digit of the nstf_name variable
+   is set to 1 (i.e., nstf_name = [*,1,*,*,*]).
+
+   - This value indicates NSST spin-up and is the default in physics namelists
+     distributed with the CCPP-SCM.
+
+Resulting behavior in CCPP-SCM:
+
+- The NSST scheme is initialized using the SST from ``ts_forc``.
+- The default ocean mixed layer depth ``xz`` is 20 meters.
+- The NSST reference temperature remains fixed at the initial SST value throughout
+  the simulation (in contrast to a 3D ocean model where it would ideally vary slowly).
+
+**Using UFS Output to Initialize NSST**
+
+When working with case data generated from UFS model output, NSST can be initialized
+directly from the history files. In this case:
+
+- Set the second digit of the ``nstf_name`` variable to 0 to bypass spin-up and use
+  supplied NSST state variables directly.
+
+**Default SST behavior in CCPP SCM**
+
+The SST is forced using the ``ts_forc`` time series in the case data file. This means:
+
+- The SST seen by the physics is linearly interpolated in time from the time series.
+  The SST is set during every timestep from that data.
+
+To instead allow the SST to evolve according to model physics:
+
+- Set the case configuration namelist variable ``do_sst_initialize_only = .true.``
+  This causes the SST to be initialized from the first value in ``ts_forc``, after
+  which the physics controls its evolution.
 
 How to set up new cases
 -----------------------
