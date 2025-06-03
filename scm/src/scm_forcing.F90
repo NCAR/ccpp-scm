@@ -3,6 +3,7 @@
 
 module scm_forcing
 
+use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
 use scm_utils, only: interpolate_to_grid_centers, find_vertical_index_pressure
 
@@ -795,7 +796,7 @@ subroutine apply_forcing_leapfrog(scm_state)
 
   select case(scm_state%mom_forcing_type)
     case (1)
-      write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
+      write(error_unit,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
       error stop
     case (2)
       !> - Calculate change in state momentum variables due to vertical advection (subsidence).
@@ -994,7 +995,7 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
   else
     select case(scm_state%mom_forcing_type)
       case (1)
-        write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
+        write(error_unit,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
         error stop
       case (2)
         !> - Calculate change in state momentum variables due to vertical advection (subsidence).

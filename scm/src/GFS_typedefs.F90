@@ -29,7 +29,7 @@ module GFS_typedefs
    integer, parameter :: dfi_radar_max_intervals = 4 !< Number of radar-derived temperature tendency and/or convection suppression intervals. Do not change.
 
    real(kind=kind_phys), parameter :: limit_unspecified = 1e12 !< special constant for "namelist value was not provided" in radar-derived temperature tendency limit range
-   
+
    integer, parameter :: no_tracer = -99
 
 !> \section arg_table_GFS_typedefs
@@ -2497,7 +2497,6 @@ module GFS_typedefs
     allocate (Sfcprop%slope_save (IM))
     allocate (Sfcprop%shdmin     (IM))
     allocate (Sfcprop%shdmax     (IM))
-    allocate (Sfcprop%snoalb     (IM))
     allocate (Sfcprop%tg3        (IM))
     allocate (Sfcprop%vfrac      (IM))
     allocate (Sfcprop%vtype      (IM))
@@ -2517,7 +2516,6 @@ module GFS_typedefs
     Sfcprop%slope_save = zero
     Sfcprop%shdmin     = clear_val
     Sfcprop%shdmax     = clear_val
-    Sfcprop%snoalb     = clear_val
     Sfcprop%tg3        = clear_val
     Sfcprop%vfrac      = clear_val
     Sfcprop%vtype      = zero
@@ -2989,14 +2987,16 @@ module GFS_typedefs
     if (Model%do_RRTMGP) then
        allocate (Coupling%fluxlwUP_radtime   (IM, Model%levs+1))
        allocate (Coupling%fluxlwDOWN_radtime (IM, Model%levs+1))
-       allocate (Coupling%fluxlwUP_jac       (IM, Model%levs+1))
        allocate (Coupling%htrlw              (IM, Model%levs))
        allocate (Coupling%tsfc_radtime       (IM))
        Coupling%fluxlwUP_radtime   = clear_val
        Coupling%fluxlwDOWN_radtime = clear_val
-       Coupling%fluxlwUP_jac       = clear_val
        Coupling%htrlw              = clear_val
        Coupling%tsfc_radtime       = clear_val
+       if (Model%use_LW_jacobian) then
+          allocate (Coupling%fluxlwUP_jac    (IM, Model%levs+1))
+          Coupling%fluxlwUP_jac    = clear_val
+       endif
     endif
 
     if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global .or. Model%cpllnd .or. Model%cpl_fire) then
@@ -4318,9 +4318,8 @@ module GFS_typedefs
 
 !--- read in the namelist
 #ifdef INTERNAL_FILE_NML
-    ! allocate required to work around GNU compiler bug 100886 https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100886
     allocate (Model%input_nml_file, mold=input_nml_file)
-    Model%input_nml_file => input_nml_file
+    Model%input_nml_file = input_nml_file
     read(Model%input_nml_file, nml=gfs_physics_nml)
     ! Set length (number of lines) in namelist for internal reads
     Model%input_nml_file_length = size(Model%input_nml_file)
@@ -8464,12 +8463,12 @@ module GFS_typedefs
     endif
 
   end subroutine diag_phys_zero
-  
+
   function get_tracer_index (tracer_names, name)
 
     character(len=32), intent(in) :: tracer_names(:)
     character(len=*),  intent(in) :: name
-    
+
     !--- local variables
     integer :: get_tracer_index
     integer :: i

@@ -4,6 +4,7 @@
 
 module scm_setup
 
+use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
 use scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_pi
 use scm_utils, only: interpolate_to_grid_centers
@@ -22,6 +23,7 @@ contains
 !> Subroutine to interpolate the initial conditions to the model grid and set the state variables.
 subroutine set_state(scm_input, scm_reference, scm_state)
   use scm_type_defs, only : scm_input_type, scm_reference_type, scm_state_type
+  use data_qc, only: check_missing
 
   type(scm_input_type), intent(in) :: scm_input
   type(scm_reference_type), intent(in) :: scm_reference
@@ -80,7 +82,7 @@ subroutine set_state(scm_input, scm_reference, scm_state)
        input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
          (con_hfus/con_cp)*scm_input%input_qi)
      else
-       if (maxval(scm_input%input_temp) > 0) then
+       if (.not. check_missing(scm_input%input_temp)) then
          input_T = scm_input%input_temp
        else
          input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
@@ -354,7 +356,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
     if (nthreads == 1) then
       call Interstitial(1)%create(n_cols, Model)
     else
-      print *,' CCPP SCM is only set up to use one thread - shutting down'
+      write(error_unit,*) ' CCPP SCM is only set up to use one thread - shutting down'
       error stop
     end if
 
@@ -384,15 +386,15 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
 
   !--- lsidea initialization
   if (Model%lsidea) then
-    print *,' LSIDEA is active but needs to be reworked for FV3 - shutting down'
+    write(error_unit,*) ' LSIDEA is active but needs to be reworked for FV3 - shutting down'
     error stop
     !--- NEED TO get the logic from the old phys/gloopb.f initialization area
   endif
 
   if(Model%do_ca)then
-    print *,'Cellular automata cannot be used when CCPP is turned on until'
-    print *,'the stochastic physics pattern generation code has been pulled'
-    print *,'out of the FV3 repository and updated with the CCPP version.'
+    write(error_unit,*) 'Cellular automata cannot be used when CCPP is turned on until'
+    write(error_unit,*) 'the stochastic physics pattern generation code has been pulled'
+    write(error_unit,*) 'out of the FV3 repository and updated with the CCPP version.'
     error stop
   endif
 
