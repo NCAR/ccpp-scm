@@ -1,4 +1,4 @@
-name: build test and push docker
+name: build and test docker
 
 on:
   # not listing pull_request closed, since it would run when merged
