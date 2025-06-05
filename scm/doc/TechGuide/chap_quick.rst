@@ -472,7 +472,7 @@ Running a case requires four pieces of information: the case to run
 (consisting of initial conditions, geolocation, forcing data, etc.), the
 physics suite to use (through a CCPP suite definition file), a physics
 namelist (that specifies configurable physics options to use), and a
-tracer configuration file. As discussed in :numref:`Chapter %c <cases>`, cases are set up via their own
+tracer configuration file. As discussed in :numref:`Chapter %s <cases>`, cases are set up via their own
 namelists in ``../etc/case_config``. A default physics suite is provided as a user-editable
 variable in the script and default namelists and tracer configurations
 are associated with each physics suite (through ``../src/suite_info.py``), so, technically, one
