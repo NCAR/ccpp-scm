@@ -102,8 +102,8 @@ state evolution.
 
 .. _`pydepend_css`:
 
-Python Dependencies
-~~~~~~~~~~~~~~~~~~~
+Python Dependencies (CSS)
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The scripts here require a few python packages that may not be found by
 default in all python installations. There is a YAML file with the
@@ -113,7 +113,7 @@ this environment using conda:
 Create environment (only once):
 
 .. code:: bash
-   
+
   > conda env create -f environment-suite-sim.yml
 
 This will create the conda environment ``scm_suite_sim``

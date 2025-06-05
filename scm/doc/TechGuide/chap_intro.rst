@@ -121,7 +121,7 @@ This release bundle has some known limitations:
       technical reason why they cannot be used with LSMs, however.
 
 -  Using the SCM over a land point with an LSM is
-   possible through the use of UFS initial conditions (see 
+   possible through the use of UFS initial conditions (see
    :numref:`Section %s <UFScasegen>`).
 
 -  There are several capabilities of the developmental code that have
