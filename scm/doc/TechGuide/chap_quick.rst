@@ -25,7 +25,7 @@ Clone the source using
 
 .. code:: bash
 
-   git clone --recursive -b v7.0.0 https://github.com/NCAR/ccpp-scm
+   git clone --recursive -b v7.0.1 https://github.com/NCAR/ccpp-scm
 
 The ``--recursive`` option is required to retrieve the ccpp-physics and ccpp-framework code,
 which are stored in separate repositories and linked to the SCM repository as submodules.
@@ -452,7 +452,7 @@ execute the following scripts:
 If the download step fails, make sure that your system’s firewall does
 not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
 ``physics_input_data.tar.gz``, ``processed_case_input.tar.gz``, and ``raw_case_input.tar.gz``
-from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v7.0.0>`__ using your browser and manually extract its
+from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v7.0.1>`__ using your browser and manually extract its
 contents in the directory ``scm/data``. Similarly, do the same for
 ``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
 to ``scm/data/physics_input_data/``.
@@ -769,7 +769,7 @@ internet search.
 Building the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Dockerfile builds CCPP SCM v7.0.0 from source using the GNU
+The Dockerfile builds CCPP SCM v7.0.1 from source using the GNU
 compiler.
 
 The CCPP SCM has a number of system requirements and necessary libraries
@@ -833,7 +833,7 @@ following from the terminal where Docker is run:
 
 .. code:: bash
 
-   docker pull dtcenter/ccpp-scm:v7.0.0
+   docker pull dtcenter/ccpp-scm:v7.0.1
 
 To verify that it exists afterward, run
 
@@ -921,7 +921,7 @@ Running the Docker image
    .. note::
      If you are using a prebuilt image from Dockerhub, substitute
      the name of the image that was pulled from Dockerhub in the commands
-     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v7.0.0``.
+     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v7.0.1``.
 
 #. To use the SCM interactively, run non-default configurations, create
    plots, or even develop code, issue the following command:
