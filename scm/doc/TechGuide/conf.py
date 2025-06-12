@@ -27,7 +27,7 @@ Tracy Hertneky, and Michael Kavulich, Jr."""
 # The short X.Y version
 version = '7.0'
 # The full version, including alpha/beta/rc tags
-release = '7.0.0'
+release = '7.0.1'
 
 numfig = True
 
