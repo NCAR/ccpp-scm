@@ -341,6 +341,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_amo3]
+  standard_name = molecular_weight_of_ozone
+  long_name = molecular weight of ozone
+  units = g mol-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [decorr_con]
   standard_name = decorrelation_length_constant
   long_name = Decorrelation length constant (km) for iovr = 4 or 5 and idcor = 0

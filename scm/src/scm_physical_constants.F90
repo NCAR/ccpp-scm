@@ -11,7 +11,7 @@ public
 !!
   integer      ,parameter:: con_zero   =0
   real(kind=dp),parameter:: con_pi     =3.1415926535897931
-  
+
   real(kind=dp),parameter:: con_rerth  =6.3712e+6
   real(kind=dp),parameter:: con_g      =9.80665e+0
   real(kind=dp),parameter:: con_omega  =7.2921e-5
@@ -42,8 +42,9 @@ public
   real(kind=dp),parameter:: con_avgd   =6.0221415e23_dp
   real(kind=dp),parameter:: con_amd    =28.9644_dp                   !< molecular wght of dry air (\f$g/mol\f$)
   real(kind=dp),parameter:: con_amw    =18.0154_dp
+  real(kind=dp),parameter:: con_amo3   =47.9982_dp
   real(kind=dp),parameter:: karman     =0.4_dp
-  
+
   real(kind=dp),parameter:: cimin      =0.15
   !> minimum rain amount
   real(kind=dp),parameter:: rainmin    =1.e-13_dp
@@ -52,7 +53,7 @@ public
   real(kind=dp),parameter:: con_rhw0   =1022.0
   real(kind=dp),parameter:: con_sbc    =5.670400e-8
   real(kind=dp),parameter:: con_tice   =2.7120e+2
-  
+
   real(kind=dp),parameter:: rhowater   =1000._dp
   real(kind=dp),parameter:: rholakeice = 0.917e3_dp          !< density of ice on lake (kg/m^3)
 
