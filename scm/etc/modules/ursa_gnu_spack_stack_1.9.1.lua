@@ -3,7 +3,7 @@ This module loads libraries for building the CCPP Single-Column Model on
 the NOAA RDHPC machine Ursa using GNU 12.4
 ]])
 
-whatis([===[Loads libraries needed for building the CCPP SCM on Hera with GNU compilers ]===])
+whatis([===[Loads libraries needed for building the CCPP SCM on Ursa with GNU compilers ]===])
 
 prepend_path("MODULEPATH", "/contrib/spack-stack/spack-stack-1.9.1/envs/ue-gcc-12.4.0/install/modulefiles/Core")
 
