@@ -155,7 +155,7 @@ contains the following set of libraries needed for building the SCM:
  - W3EMC (2.10.0) - GRIB decoder and encoder library
 
 Instructions for installing spack-stack can be found in the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
-Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera and
+Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera, Ursa, and
 Jet, and MSU's Orion.
 
 Compilers
@@ -192,7 +192,7 @@ the corresponding absolute path):
 View the contents of the directory to see if your machine/compiler
 combination is supported. As of this writing, modulefiles are provided
 for Intel and GNU compilers on the NCAR machine Derecho, the NOAA
-machines Hera and Jet, and the NOAA/MSU machine Orion. Loading these
+machines Hera, Ursa and Jet, and the NOAA/MSU machine Orion. Loading these
 modules will set up all the needed compilers, libraries, and other
 programs needed for building, as well as the python libraries needed for
 both building and running the SCM.
