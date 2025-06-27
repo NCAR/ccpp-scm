@@ -193,6 +193,13 @@ following observational field campaigns:
 -  Cold-Air Outbreaks in the Marine Boundary Layer Experiment (COMBLE) for
    March 12, 2020 mixed phased clouds in the polar marine boundary layer
 
+-  Atlantic Tradewind Ocean-Atmosphere Mesoscale Interaction Campaign (ATOMIC)
+   for January/February 2020 marine shallow convection. The ATOMIC test case
+   consists of seven 33-hour periods, each extending 16 hours before and
+   after the central times: (1) 14 UTC on Jan. 17 2020, (2) 13 UTC on Jan. 19,
+   (3) 13 UTC on Jan. 23, (4) 15 UTC on Jan. 31, (5) 13 UTC on Feb. 2,
+   (6) 04 UTC on Feb. 9, and (7) 04 UTC on Feb. 10.
+
 For the ARM SGP case, several case configuration files representing
 different time periods of the observational dataset are included,
 denoted by a trailing letter. The LASSO case may be run with different
@@ -541,7 +548,8 @@ generating multiple cases at once.
    UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
    (-lonl LON_1 LON_2 -latl LAT_1 LAT_2 -nens NENSMEMBERS |
    -lons [LON_LIST] -lats [LAT_LIST] |
-   -fxy [LON_LAT_FILE])
+   -fxy [LON_LAT_FILE] |
+   -tile [TILE_NUMBER] -is [I_INDEX_LIST] -js [J_INDEX_LIST])
    [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
 
 Mandatory arguments:
@@ -558,6 +566,8 @@ Mandatory arguments:
    -  ``--lon_list (-lons)`` AND ``--lat_list (-lats)``: longitude and latitude of cases
 
    -  ``--lonlat_file (fxy)``: file containing longitudes and latitudes
+   
+   -  ``--tile (-tile) `` AND ``--i_list (-is)`` AND ``--j_list (-js)``: tile, i- and j-indices of cases
 
 Optional arguments:
 

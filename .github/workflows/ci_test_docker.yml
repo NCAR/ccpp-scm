@@ -1,6 +1,10 @@
-name: build_test_and_push_docker
+name: build test and push docker
 
-on: [pull_request,workflow_dispatch]
+on:
+  # not listing pull_request closed, since it would run when merged
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 env:
   TEST_TAG: dtcenter/ccpp-scm:test

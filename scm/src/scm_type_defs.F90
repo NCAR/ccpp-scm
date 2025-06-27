@@ -7,6 +7,7 @@ module scm_type_defs
 !! \htmlinclude scm_type_defs.html
 !!
 
+  use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
   use GFS_typedefs,   only: GFS_control_type,      &
                             GFS_statein_type,      &
@@ -18,7 +19,8 @@ module scm_type_defs
                             GFS_cldprop_type,      &
                             GFS_radtend_type,      &
                             GFS_diag_type,         &
-                            GFS_init_type
+                            GFS_init_type,         &
+                            get_tracer_index
   use CCPP_typedefs,  only: GFS_interstitial_type
   use machine,        only: kind_phys
   use ccpp_types,     only: ccpp_t
@@ -82,6 +84,7 @@ module scm_type_defs
     integer                           :: hail_volume_index !< index for hail volume in the tracer array
     integer                           :: tke_index !< index for TKE in the tracer array
     integer                           :: sigmab_index !< index for prognostic updraft area fraction in convection
+    integer                           :: omegab_index !< index for prognostic convective updraft velocity
     integer                           :: ccn_index !< index for CCN in the tracer array
     integer                           :: water_friendly_aerosol_index !< index for water-friendly aerosols in the tracer array
     integer                           :: ice_friendly_aerosol_index !< index for ice-friendly aerosols in the tracer array
@@ -103,6 +106,7 @@ module scm_type_defs
     logical                           :: model_ics !<  true means have land info too
     logical                           :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
     logical                           :: do_spinup !< true when allowing the model to spin up before the "official" model integration starts
+    logical                           :: do_sst_initialize_only !< true when initializing SST only (and letting physics change SST during integration)
     integer                           :: input_type !< 0=> original DTC format, 1=> DEPHY-SCM format
     integer                           :: force_adv_T !< 0=> off, 1=> temperature, 2=> theta, 3=> thetal
     logical                           :: force_adv_qv !< true = on
@@ -338,6 +342,8 @@ module scm_type_defs
     real(kind=dp)                     :: input_sfalb_ice !<
     real(kind=dp)                     :: input_emis_ice !<
     real(kind=dp)                     :: input_lai !< leaf area index for RUC LSM
+    real(kind=dp)                     :: input_snodi
+    real(kind=dp)                     :: input_weasdi
     
     real(kind=dp), allocatable        :: input_tslb(:) !< soil temperature for RUC LSM (K)    
     real(kind=dp), allocatable        :: input_smois(:) !< volume fraction of soil moisture for RUC LSM (frac)
@@ -427,7 +433,7 @@ module scm_type_defs
     type(GFS_cldprop_type)                   :: Cldprop
     type(GFS_radtend_type)                   :: Radtend
     type(GFS_diag_type)                      :: Diag
-    type(GFS_interstitial_type)              :: Interstitial
+    type(GFS_interstitial_type), allocatable :: Interstitial(:)
     type(GFS_init_type)                      :: Init_parm
 
     contains
@@ -495,6 +501,7 @@ module scm_type_defs
     scm_state%hail_volume_index               = get_tracer_index(scm_state%tracer_names,"hail_vol")
     scm_state%tke_index                       = get_tracer_index(scm_state%tracer_names,"sgs_tke")
     scm_state%sigmab_index                    = get_tracer_index(scm_state%tracer_names,"sigmab")
+    scm_state%omegab_index                    = get_tracer_index(scm_state%tracer_names,"omegab")
     scm_state%ccn_index                       = get_tracer_index(scm_state%tracer_names,"ccn_nc")
     scm_state%water_friendly_aerosol_index    = get_tracer_index(scm_state%tracer_names,"liq_aero")
     scm_state%ice_friendly_aerosol_index      = get_tracer_index(scm_state%tracer_names,"ice_aero")
@@ -846,6 +853,8 @@ module scm_type_defs
     scm_input%input_sfalb_lnd_bck   = real_zero
     scm_input%input_emis_ice        = real_zero
     scm_input%input_lai             = real_zero  !< leaf area index for RUC LSM
+    scm_input%input_snodi           = real_zero
+    scm_input%input_weasdi          = real_zero
     
     allocate(scm_input%input_tslb(nsoil), scm_input%input_smois(nsoil), scm_input%input_sh2o(nsoil), &
         scm_input%input_smfr(nsoil), scm_input%input_flfr(nsoil))
@@ -947,15 +956,17 @@ module scm_type_defs
 
   end subroutine scm_reference_create
 
-  subroutine physics_create(physics, n_columns)
+  subroutine physics_create(physics, n_columns, n_threads)
     class(physics_type) :: physics
-    integer, intent(in) :: n_columns
+    integer, intent(in) :: n_columns, n_threads
     
     real(kind=kind_phys) :: kind_phys_zero
 
     integer :: i
     integer, dimension(8) :: zeroes_8
-
+    
+    allocate(physics%Interstitial(n_threads))
+    
     zeroes_8(:) = int_zero
     kind_phys_zero = real_zero
 
@@ -1052,8 +1063,8 @@ module scm_type_defs
     !this should be utilized for variables that cannot be modified or "forced" by the SCM;
     !most of this routine follows what is in FV3/io/FV3GFS_io.F90/sfc_prop_restart_read
     use scm_physical_constants, only: con_tice
-    use data_qc, only: conditionally_set_var, check_missing
-    use NetCDF_read, only: missing_value
+    use data_qc, only: conditionally_set_var, is_missing_value, check_missing
+    use missing_values, only: missing_value
     
     class(physics_type) :: physics
     type(scm_input_type), intent(in) :: scm_input
@@ -1063,12 +1074,12 @@ module scm_type_defs
     real(kind=dp) :: tem1, tem
     logical :: missing_var(100)
     real, parameter:: min_lake_orog = 200.0_dp
-    
+
     !double check under what circumstances these should actually be set from input!!! (these overwrite the initialzation in GFS_typedefs)
     missing_var = .false.
     do i = 1, physics%Model%ncols
       !since landfrac and lakefrac are read in with the orographic data (here and in FV3GFS_io), we need to set their values
-      !to missing when only LSM ICs are available in order for some of the logic below to work as intended.
+      !to -999.9 when only LSM ICs are available in order for some of the logic below to work as intended.
       if (scm_state%lsm_ics) then
         physics%Sfcprop%landfrac(i) = missing_value
         physics%Sfcprop%lakefrac(i) = missing_value
@@ -1077,7 +1088,7 @@ module scm_type_defs
       ! Orographical data (2D)
       !
       if (scm_state%model_ics) then
-        write(0,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
+        write(*,'(a)') "Setting internal physics variables from the orographic section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_stddev,    physics%Sfcprop%hprime(i,1),  "stddev",    .true., missing_var(1))
         call conditionally_set_var(scm_input%input_convexity, physics%Sfcprop%hprime(i,2),  "convexity", .true., missing_var(2))
         call conditionally_set_var(scm_input%input_oa1,       physics%Sfcprop%hprime(i,3),  "oa1",       .true., missing_var(3))
@@ -1102,10 +1113,10 @@ module scm_type_defs
         
         n = 21
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(error_unit,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) orography and gravity wave drag parameters. This may lead to crashes or other strange behavior."
+          write(error_unit,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+            if (missing_var(j)) write(error_unit,'(a,i0)') "variable index ",j
           end do
         end if
         missing_var = .false.
@@ -1115,7 +1126,7 @@ module scm_type_defs
       ! Surface data (2D)
       !
       if (scm_state%model_ics .or. scm_state%lsm_ics) then
-        write(0,'(a)') "Setting internal physics variables from the surface section of the case input file (scalars)..."
+        write(*,'(a)') "Setting internal physics variables from the surface section of the case input file (scalars)..."
         call conditionally_set_var(scm_input%input_slmsk,     physics%Sfcprop%slmsk(i),  "slmsk",    (.not. physics%Model%frac_grid), missing_var(1))
         call conditionally_set_var(scm_input%input_tsfco,     physics%Sfcprop%tsfco(i),  "tsfco",    .true.,  missing_var(2))
         call conditionally_set_var(scm_input%input_weasd,     physics%Sfcprop%weasd(i),  "weasd",    .true.,  missing_var(3))
@@ -1129,7 +1140,7 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_facwf,     physics%Sfcprop%facwf(i),  "facwf",    .true.,  missing_var(11))
         call conditionally_set_var(scm_input%input_vegfrac,   physics%Sfcprop%vfrac(i),  "vegfrac",  .true.,  missing_var(12))
         !GJF: is this needed anymore (not in FV3GFS_io)?
-        physics%Interstitial%sigmaf(i) = min(physics%Sfcprop%vfrac(i),0.01)
+        physics%Interstitial(1)%sigmaf(i) = min(physics%Sfcprop%vfrac(i),0.01)
         call conditionally_set_var(scm_input%input_canopy,    physics%Sfcprop%canopy(i), "canopy",   .true.,  missing_var(13))
         call conditionally_set_var(scm_input%input_f10m,      physics%Sfcprop%f10m(i),   "f10m",     .false., missing_var(14))
         call conditionally_set_var(scm_input%input_t2m,       physics%Sfcprop%t2m(i),    "t2m",      physics%Model%cplflx, missing_var(15))
@@ -1193,10 +1204,10 @@ module scm_type_defs
         !write out warning if missing data for non-required variables
         n = 50
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then
-          write(0,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables. This may lead to crashes or other strange behavior."
-          write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+          write(error_unit,'(a)') "INPUT CHECK: Some missing input data was found related to (potentially non-required) surface variables. This may lead to crashes or other strange behavior."
+          write(error_unit,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
           do j=1, n
-            if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+            if (missing_var(j)) write(error_unit,'(a,i0)') "variable index ",j
           end do
         end if
         missing_var = .false.
@@ -1212,12 +1223,11 @@ module scm_type_defs
         if (physics%Sfcprop%slmsk(i) > 1.9_dp) physics%Sfcprop%fice(i) = 1.0 !needed to calculate tsfc and zorl below when model_ics == .false.
         if (physics%Sfcprop%slmsk(i) < 0.1_dp) physics%Sfcprop%oceanfrac(i) = 1.0
       end if
-
       !
       ! Derive physics quantities using surface model ICs.
       !
       if(scm_state%model_ics .or. scm_state%lsm_ics) then
-        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i)+0.5 <= 0) then
+        if (physics%Sfcprop%stype(i) == 14 .or.  physics%Sfcprop%stype(i) <= 0) then
           physics%Sfcprop%landfrac(i) = real_zero
           physics%Sfcprop%stype(i) = 0
           if (physics%Sfcprop%lakefrac(i) > real_zero) then
@@ -1226,7 +1236,7 @@ module scm_type_defs
         endif
         
         if (physics%Model%frac_grid) then
-          if (physics%Sfcprop%landfrac(i) > -999.0_dp) then
+          if (.not. is_missing_value(physics%Sfcprop%landfrac(i))) then
             physics%Sfcprop%slmsk(i) = ceiling(physics%Sfcprop%landfrac(i)-1.0e-6)
             if (physics%Sfcprop%slmsk(i) == 1 .and. physics%Sfcprop%stype(i) == 14) &
               physics%Sfcprop%slmsk(i) = 0
@@ -1270,7 +1280,7 @@ module scm_type_defs
             endif
           endif
         else                                             ! not a fractional grid
-          if (physics%Sfcprop%landfrac(i) > -999.0_dp) then
+          if (.not. is_missing_value(physics%Sfcprop%landfrac(i))) then
             if (physics%Sfcprop%lakefrac(i) > real_zero) then
               physics%Sfcprop%oceanfrac(i) = real_zero
               physics%Sfcprop%landfrac(i)  = real_zero
@@ -1314,7 +1324,6 @@ module scm_type_defs
           endif
         endif
       end if
-      
       !
       ! NSSTM variables
       !
@@ -1330,16 +1339,20 @@ module scm_type_defs
           physics%Sfcprop%xs(i)      = real_zero
           physics%Sfcprop%xu(i)      = real_zero
           physics%Sfcprop%xv(i)      = real_zero
-          physics%Sfcprop%xz(i)      = 30.0_dp
+          physics%Sfcprop%xz(i)      = 20.0_dp
           physics%Sfcprop%zm(i)      = real_zero
           physics%Sfcprop%xtts(i)    = real_zero
           physics%Sfcprop%xzts(i)    = real_zero
           physics%Sfcprop%d_conv(i)  = real_zero
-          physics%Sfcprop%ifd(i)     = real_zero
+          if (scm_state%sfc_type(i) == 0) then
+            physics%Sfcprop%ifd(i)     = real_one
+          else
+            physics%Sfcprop%ifd(i)     = real_zero
+          endif
           physics%Sfcprop%dt_cool(i) = real_zero
           physics%Sfcprop%qrain(i)   = real_zero
         elseif (physics%Model%nstf_name(2) == 0) then         ! nsst restart
-          write(0,'(a)') "Setting internal physics variables from the NSST section of the case input file (scalars)..."
+          write(*,'(a)') "Setting internal physics variables from the NSST section of the case input file (scalars)..."
           call conditionally_set_var(scm_input%input_tref,    physics%Sfcprop%tref(i),    "tref",    .true., missing_var(1))
           call conditionally_set_var(scm_input%input_z_c,     physics%Sfcprop%z_c(i),     "z_c",     .true., missing_var(2))
           call conditionally_set_var(scm_input%input_c_0,     physics%Sfcprop%c_0(i),     "c_0",     .true., missing_var(3))
@@ -1373,10 +1386,10 @@ module scm_type_defs
 
         n = 3
         if ( i==1 .and. ANY( missing_var(1:n) ) ) then 
-           write(0,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables needed by the LSM. Due to this, a cold-start algorithm to initialize variables will be used."
-           write(0,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
+           write(error_unit,'(a)') "INPUT CHECK: Some missing input data was found related to surface variables needed by the LSM. Due to this, a cold-start algorithm to initialize variables will be used."
+           write(error_unit,'(a)') "Check scm_type_defs.F90/physics_set to see the names of variables that are missing, corresponding to the following indices:"
            do j=1, n
-              if (missing_var(j)) write(0,'(a,i0)') "variable index ",j
+              if (missing_var(j)) write(error_unit,'(a,i0)') "variable index ",j
            end do
         end if
      end if
@@ -1385,7 +1398,7 @@ module scm_type_defs
       ! Compute surface fields that may/maynot present in model IC files.
       !
       if (scm_state%model_ics .or. scm_state%lsm_ics) then
-        if (scm_input%input_snodl <= real_zero) then
+        if (is_missing_value(scm_input%input_snodl) .or. scm_input%input_snodl == real_zero) then
           if (physics%Sfcprop%landfrac(i) > real_zero) then
             tem = real_one / physics%Sfcprop%landfrac(i)
             physics%Sfcprop%snodl(i)  = physics%Sfcprop%snowd(i) * tem
@@ -1394,9 +1407,9 @@ module scm_type_defs
           endif
         end if
         
-        if (scm_input%input_weasdl <= real_zero) then
+        if (is_missing_value(scm_input%input_weasdl) .or. scm_input%input_weasdl == real_zero) then
           if (physics%Sfcprop%landfrac(i) > real_zero) then
-            tem = real_one / physics%Sfcprop%landfrac(i)
+            tem = real_one / (physics%Sfcprop%fice(i)*(real_one - physics%Sfcprop%landfrac(i)) + physics%Sfcprop%landfrac(i))
             physics%Sfcprop%weasdl(i) = physics%Sfcprop%weasd(i) * tem
           else
             physics%Sfcprop%weasdl(i) = real_zero
@@ -1404,24 +1417,50 @@ module scm_type_defs
         end if
       end if
       
-      if (scm_input%input_tsfcl <= real_zero) then
+      if (is_missing_value(scm_input%input_tsfcl) .or. scm_input%input_tsfcl == real_zero) then
         physics%Sfcprop%tsfcl(i) = physics%Sfcprop%tsfco(i) !--- compute tsfcl from existing variables
       end if
       
-      if (scm_input%input_zorlw <= real_zero) then
+      if (is_missing_value(scm_input%input_zorlw) .or. scm_input%input_zorlw == real_zero) then
         physics%Sfcprop%zorlw(i) = physics%Sfcprop%zorl(i) !--- compute zorlw from existing variables
       end if
       
-      if (scm_input%input_zorll <= real_zero) then
+      if (is_missing_value(scm_input%input_zorll) .or. scm_input%input_zorll == real_zero) then
         physics%Sfcprop%zorll(i) = physics%Sfcprop%zorl(i) !--- compute zorll from existing variables
       end if
       
-      if (scm_input%input_zorli <= real_zero) then
+      if (is_missing_value(scm_input%input_zorli) .or. scm_input%input_zorli == real_zero) then
         physics%Sfcprop%zorli(i) = physics%Sfcprop%zorl(i) !--- compute zorli from existing variables
       end if
       
+      if (is_missing_value(scm_input%input_emis_ice) .or. scm_input%input_emis_ice == real_zero) then
+        physics%Sfcprop%emis_ice(i) = 0.96 
+      end if
+      
+      if (((is_missing_value(scm_input%input_sncovr_ice) .or. scm_input%input_sncovr_ice == real_zero)) .and. physics%Model%lsm /= physics%Model%lsm_ruc) then
+        physics%Sfcprop%sncovr_ice(i) = real_zero 
+      end if
+      
+      if (is_missing_value(scm_input%input_snodi) .or. scm_input%input_snodi == real_zero) then
+        if (physics%Sfcprop%fice(i) > real_zero) then
+          tem = real_one / (physics%Sfcprop%fice(i)*(real_one-physics%Sfcprop%landfrac(i))+physics%Sfcprop%landfrac(i))
+          physics%Sfcprop%snodi(i)  = min(physics%Sfcprop%snowd(i) * tem, 3.0)
+        else
+          physics%Sfcprop%snodi(i)  = real_zero
+        endif
+      end if
+      
+      if (is_missing_value(scm_input%input_weasdi) .or. scm_input%input_weasdi == real_zero) then
+        if (physics%Sfcprop%fice(i) > real_zero) then
+          tem = real_one / (physics%Sfcprop%fice(i)*(real_one-physics%Sfcprop%landfrac(i))+physics%Sfcprop%landfrac(i))
+          physics%Sfcprop%weasdi(i)  = physics%Sfcprop%weasd(i)*tem
+        else
+          physics%Sfcprop%weasdi(i)  = real_zero
+        endif
+      end if  
+      
       if (physics%Model%use_cice_alb) then
-        if (scm_input%input_albdirvis_ice <= real_zero) then
+        if (is_missing_value(scm_input%input_albdirvis_ice) .or.  scm_input%input_albdirvis_ice == real_zero) then
           if (physics%Sfcprop%oceanfrac(i) > real_zero .and. &
                 physics%Sfcprop%fice(i) >= physics%Model%min_seaice) then
               physics%Sfcprop%albdirvis_ice(i) = 0.6_dp
@@ -1432,36 +1471,30 @@ module scm_type_defs
         endif
       endif
       
-      if (scm_input%input_zorlwav <= real_zero) then
+      if (is_missing_value(scm_input%input_zorlwav) .or. scm_input%input_zorlwav == real_zero) then
         physics%Sfcprop%zorlwav(i) = physics%Sfcprop%zorlw(i) !--- compute zorlwav from existing variables
       end if
-
-      if(physics%Model%frac_grid .and. (scm_state%model_ics .or. scm_state%lsm_ics) ) then ! 3-way composite
-         if( physics%Model%phour < 1.e-7) physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
-         tem1 = real_one - physics%Sfcprop%landfrac(i)
-         tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
-         physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) * physics%Sfcprop%landfrac(i) &
-                                 + physics%Sfcprop%zorli(i) * tem                      &
-                                 + physics%Sfcprop%zorlw(i) * (tem1-tem)
-
-         physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
-                                 + physics%Sfcprop%tisfc(i) * tem                      &
-                                 + physics%Sfcprop%tsfco(i) * (tem1-tem)
-      else
-         if (physics%Sfcprop%slmsk(i) == 1) then
-            physics%Sfcprop%zorl(i) = physics%Sfcprop%zorll(i) 
+      
+      if (is_missing_value(scm_input%input_tsfc) .or. scm_input%input_tsfc == real_zero) then
+        if(physics%Model%frac_grid) then
+          physics%Sfcprop%tsfco(i) = max(con_tice, physics%Sfcprop%tsfco(i))
+          tem1 = real_one - physics%Sfcprop%landfrac(i)
+          tem  = tem1 * physics%Sfcprop%fice(i) ! tem = ice fraction wrt whole cell
+          physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i) * physics%Sfcprop%landfrac(i) &
+               + physics%Sfcprop%tisfc(i) * tem                      &
+               + physics%Sfcprop%tsfco(i) * (tem1-tem)
+        else
+          if (physics%Sfcprop%slmsk(i) == 1) then
             physics%Sfcprop%tsfc(i) = physics%Sfcprop%tsfcl(i)
-         else
+          else
             tem = real_one - physics%Sfcprop%fice(i)
-            physics%Sfcprop%zorl(i) = physics%Sfcprop%zorli(i) * physics%Sfcprop%fice(i) &
-                                   + physics%Sfcprop%zorlw(i) * tem
-
             physics%Sfcprop%tsfc(i) = physics%Sfcprop%tisfc(i) * physics%Sfcprop%fice(i) &
-                                   + physics%Sfcprop%tsfco(i) * tem
-         endif
-      endif ! if (Model%frac_grid)
+                 + physics%Sfcprop%tsfco(i) * tem
+          endif
+        end if
+      end if
 
-      if (scm_state%model_ics .and. MAXVAL(scm_input%input_tiice) < real_zero) then
+      if (scm_state%model_ics .and. check_missing(scm_input%input_tiice)) then
         physics%Sfcprop%tiice(i,1) = physics%Sfcprop%stc(i,1) !--- initialize internal ice temp from soil temp at layer 1
         physics%Sfcprop%tiice(i,2) = physics%Sfcprop%stc(i,2) !--- initialize internal ice temp from soil temp at layer 2
       end if
@@ -1469,33 +1502,5 @@ module scm_type_defs
     end do
     
   end subroutine physics_set
-  
-  function get_tracer_index (tracer_names, name)
-
-    character(len=32), intent(in) :: tracer_names(:)
-    character(len=*),  intent(in) :: name
-    
-    !--- local variables
-    integer :: get_tracer_index
-    integer :: i
-    integer, parameter :: no_tracer = -99
-
-    get_tracer_index = no_tracer
-
-    do i=1, size(tracer_names)
-       if (trim(name) == trim(tracer_names(i))) then
-           get_tracer_index = i
-           exit
-       endif
-    enddo
-
-    if (get_tracer_index == no_tracer) then
-      print *,'tracer with name '//trim(name)//' not found'
-    else
-      print *,'tracer FOUND:',trim(name)
-    endif
-
-    return
-  end function get_tracer_index
 
 end module scm_type_defs

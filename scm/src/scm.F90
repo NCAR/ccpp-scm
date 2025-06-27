@@ -6,6 +6,7 @@ contains
 
 subroutine scm_main_sub()
 
+  use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
   use scm_input
   use scm_utils
@@ -33,7 +34,7 @@ subroutine scm_main_sub()
 
   type(MPI_Comm)           :: fcst_mpi_comm
 
-  integer      :: i, j, kdt_rad, idtend, itrac
+  integer      :: i, j, kdt_rad, idtend, itrac, n_tasks, n_threads
   real(kind=8) :: rinc(5) !(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
   integer      :: jdat(1:8)
 
@@ -44,10 +45,12 @@ subroutine scm_main_sub()
 
   call MPI_INIT(ierr)
   if (ierr/=0) then
-      write(*,*) 'An error occurred in MPI_INIT: ', ierr
+      write(error_unit,*) 'An error occurred in MPI_INIT: ', ierr
       error stop
   end if
   fcst_mpi_comm = MPI_COMM_WORLD
+  n_tasks   = 1
+  n_threads = 1
 
   call get_config_nml(scm_state)
 
@@ -57,7 +60,7 @@ subroutine scm_main_sub()
     case(1)
       call get_case_init_DEPHY(scm_state, scm_input_instance)
     case default
-      write(*,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
+      write(error_unit,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
       error stop
   end select
 
@@ -82,7 +85,7 @@ subroutine scm_main_sub()
 
   call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
-  call physics%create(scm_state%n_cols)
+  call physics%create(scm_state%n_cols, n_threads)
 
   !physics initialization section
 
@@ -131,7 +134,7 @@ subroutine scm_main_sub()
   call GFS_suite_setup(physics%Model, physics%Statein, physics%Stateout,           &
                        physics%Sfcprop, physics%Coupling, physics%Grid,            &
                        physics%Tbd, physics%Cldprop, physics%Radtend,              &
-                       physics%Diag, physics%Interstitial, 1, 1,                   &
+                       physics%Diag, physics%Interstitial, n_tasks, n_threads,     &
                        physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
                        scm_state%lat, scm_state%area)
 
@@ -151,10 +154,10 @@ subroutine scm_main_sub()
 
   !check for problematic diagnostic and radiation periods
   if (mod(physics%Model%nszero,scm_state%n_itt_out) /= 0) then
-    write(*,*) "***ERROR***: The diagnostic output period must be a multiple of the output period."
-    write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhzero = ",physics%Model%fhzero
-    write(*,*) "implying a diagnostic output period of ", physics%Model%nszero*scm_state%dt, "seconds."
-    write(*,*) "The given output period in the case configuration namelist is ", scm_state%output_period,"seconds."
+    write(error_unit,*) "***ERROR***: The diagnostic output period must be a multiple of the output period."
+    write(error_unit,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhzero = ",physics%Model%fhzero
+    write(error_unit,*) "implying a diagnostic output period of ", physics%Model%nszero*scm_state%dt, "seconds."
+    write(error_unit,*) "The given output period in the case configuration namelist is ", scm_state%output_period,"seconds."
     error stop
   end if
 
@@ -175,6 +178,7 @@ subroutine scm_main_sub()
   end if
 
   cdata%blk_no = 1
+  cdata%chunk_no = 1
   cdata%thrd_no = 1
   cdata%thrd_cnt = 1
 
@@ -192,11 +196,11 @@ subroutine scm_main_sub()
 
   !initialize the column's physics
 
-  write(0,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
+  write(*,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
   call ccpp_physics_init(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
-  write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
+  write(*,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ierr=", ierr
   if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(cdata%errmsg) // '. Exiting...'
       error stop
   end if
 
@@ -286,7 +290,7 @@ subroutine scm_main_sub()
 
     call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
         error stop
     end if
 
@@ -307,15 +311,32 @@ subroutine scm_main_sub()
       call physics%Diag%phys_zero (physics%Model)
     endif
 
-    call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
+    !CCPP run phase
+    ! time_vary group doesn't have any run phase (omitted)
+    ! radiation group
+    call physics%Interstitial(1)%rad_reset(physics%Model)
+    call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="radiation", ierr=ierr)
     if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(cdata%errmsg) // '. Exiting...'
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group radiation: ' // trim(cdata%errmsg) // '. Exiting...'
+        error stop
+    end if
+    ! process-split physics
+    call physics%Interstitial(1)%phys_reset(physics%Model)
+    call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ps", ierr=ierr)
+    if (ierr/=0) then
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ps: ' // trim(cdata%errmsg) // '. Exiting...'
+        error stop
+    end if
+    ! time-split physics
+    call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ts", ierr=ierr)
+    if (ierr/=0) then
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(cdata%errmsg) // '. Exiting...'
         error stop
     end if
 
     call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
         error stop
     end if
 
@@ -414,9 +435,9 @@ subroutine scm_main_sub()
     write(*,*) "itt = ",scm_state%itt
     write(*,*) "model time (s) = ",scm_state%model_time
     if (scm_state%lsm_ics .or. scm_state%model_ics) then
-      write(*,*) "Bowen ratio: ",physics%Interstitial%dtsfc1(1)/physics%Interstitial%dqsfc1(1)
-      write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial%dtsfc1(1)
-      write(*,*) "latent heat flux (W m-2): ",physics%Interstitial%dqsfc1(1)
+      write(*,*) "Bowen ratio: ",physics%Interstitial(1)%dtsfc1(1)/physics%Interstitial(1)%dqsfc1(1)
+      write(*,*) "sensible heat flux (W m-2): ",physics%Interstitial(1)%dtsfc1(1)
+      write(*,*) "latent heat flux (W m-2): ",physics%Interstitial(1)%dqsfc1(1)
     end if
 
     if (.not. in_spinup) then
@@ -427,13 +448,13 @@ subroutine scm_main_sub()
   call ccpp_physics_finalize(cdata, suite_name=trim(trim(adjustl(scm_state%physics_suite_name))), ierr=ierr)
 
   if (ierr/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
       error stop
   end if
 
   call MPI_FINALIZE(ierr)
   if (ierr/=0) then
-      write(*,*) 'An error occurred in MPI_FINALIZE: ', ierr
+      write(error_unit,*) 'An error occurred in MPI_FINALIZE: ', ierr
       error stop
   end if
 

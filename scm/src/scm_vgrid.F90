@@ -3,6 +3,7 @@
 
 module scm_vgrid
 
+use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp, kind_scm_dp, kind_scm_sp
 use scm_physical_constants, only : con_cp, con_rocp, con_fvirt, con_g, con_rd
 
@@ -103,8 +104,8 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
         !> - Open the appropriate file.
         open(unit=1, file=scm_state%vert_coord_file, status='old', action='read', iostat=ierr)
         if(ierr /= 0) then
-          write(*,*) 'There was an error opening the file ', scm_state%vert_coord_file, ' in the run directory. &
-            Error code = ',ierr
+          write(error_unit,*) 'There was an error opening the file ', scm_state%vert_coord_file, ' in the run directory. &
+            &Error code = ',ierr
           error stop
         endif
 
@@ -117,7 +118,7 @@ subroutine get_FV3_vgrid(scm_input, scm_state)
         !> - The first line contains the number of coefficients and number of levels
         read(1,*) dummy, n_levels_file
         if (n_levels_file /= scm_state%n_levels) then
-          write(*,*) 'There is a mismatch in the number of levels expected and the number of coefficients supplied in the file ',scm_state%vert_coord_file
+          write(error_unit,*) 'There is a mismatch in the number of levels expected and the number of coefficients supplied in the file ',scm_state%vert_coord_file
           error stop
         end if
         !> - Read in the coefficient data.
@@ -1585,7 +1586,7 @@ subroutine check_eta_levels(ak, bk)
          write(*,'(I4, F13.5, F13.5, F11.2)') k, ak(k), bk(k), ak(k) + bk(k)*1000.E2
       enddo
    endif
-   write(*,*) 'FV3 check_eta_levels: ak/bk pairs do not provide a monotonic vertical coordinate'
+   write(error_unit,*) 'FV3 check_eta_levels: ak/bk pairs do not provide a monotonic vertical coordinate'
    error stop
  endif
 

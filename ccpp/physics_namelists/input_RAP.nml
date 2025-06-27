@@ -78,7 +78,7 @@
   debug        = .false.
   oz_phys      = .false.
   oz_phys_2015 = .true.
-  nstf_name    = 2,0,0,0,0
+  nstf_name    = 2,1,0,0,0
   nst_anl      = .true.
   lkm          = 0
   psautco      = 0.0008,0.0005

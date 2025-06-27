@@ -9,3 +9,4 @@
 "o3mr","ozone_mixing_ratio","kg kg-1"
 "sgs_tke","turbulent_kinetic_energy","m2 s-2"
 "sigmab"," prognostic_updraft_area_fraction_in_convection","frac"
+"omegab","prognostic_updraft_velocity_in_convection","m s-1"
