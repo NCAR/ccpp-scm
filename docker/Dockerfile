@@ -142,4 +142,5 @@ if [ -n \"$PR_NUMBER\" ]; then \
   ./contrib/get_all_static_data.sh && \
   ./contrib/get_thompson_tables.sh; \
 fi && \
-cd /comsoftware/ccpp-scm/scm/bin"]
+cd /comsoftware/ccpp-scm/scm/bin && \
+exec sh"]
