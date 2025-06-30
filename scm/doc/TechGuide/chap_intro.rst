@@ -37,10 +37,6 @@ Version Notes
 
 The CCPP SCM v7.0.1 contains the following minor changes since v7.0.0.
 
--  Fix area logic in the SCM: Corrected assignment of the column area from the DEPHY
-   forcing file by removing the dependency on surface forcing LSM. Also allow the
-   column_area in the configuration namelist to override the DEPHY assignment.
-
 -  Enhanced UFS case generation tools: Reinstated functionality to support specifying
    i, j grid indices (from the FV3 native grid) along with a tile number in
    UFS_case_gen.py to generate single-column cases. Also added the ability to accept
@@ -49,6 +45,10 @@ The CCPP SCM v7.0.1 contains the following minor changes since v7.0.0.
 -  Use of standardized missing values: Replaced hard coded missing values, -9999.0
    and -9999, with the _FillValue or missing value attributes defined in the NetCDF
    variables.
+
+-  Fix area logic in the SCM: Corrected assignment of the column area from the DEPHY
+   forcing file by removing the dependency on surface forcing LSM. Also allow the
+   column_area in the configuration namelist to override the DEPHY assignment.
 
 -  Enhanced documentation for 1) using the DEPHY converter script, which converts
    forcing files from the legacy format to the DEPHY v1.0 format, and 2) including
