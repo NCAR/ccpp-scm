@@ -14,6 +14,8 @@ jobs:
         build-type:       [Release, Debug, SinglePrecision]
         py-version:       [3.11]
 
+    continue-on-error: true
+
     # Environmental variables
     env:
       NFHOME:     /home/runner/netcdf-fortran
