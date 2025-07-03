@@ -295,7 +295,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                                  GFS_tbd_type,      GFS_cldprop_type,    &
                                  GFS_radtend_type,  GFS_diag_type
   use CCPP_typedefs,       only: GFS_interstitial_type
-  use physcons,            only: pi => con_pi
+  use scm_physical_constants, only: pi => con_pi
 
 
   !use cldwat2m_micro,      only: ini_micro
@@ -410,7 +410,7 @@ end subroutine GFS_suite_setup
 !------------------
 subroutine GFS_grid_populate (Grid, xlon, xlat, area)
   use machine,             only: kind_phys
-  use physcons,            only: pi => con_pi
+  use scm_physical_constants, only: pi => con_pi
   use GFS_typedefs,        only: GFS_grid_type
 
   implicit none
