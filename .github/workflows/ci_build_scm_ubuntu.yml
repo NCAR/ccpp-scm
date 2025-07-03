@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        fortran-compiler: [gfortran-12, gfortran-14]
+        fortran-compiler: [12, 14]
         build-type:       [Release, Debug]
         py-version:       [3.11.7, '3.x']
 
@@ -46,9 +46,9 @@ jobs:
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
 
-    - name: Install NetCDF Python libraries
+    - name: Install Fortran Compiler
       run: |
-        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
+        conda install --yes -c conda-forge gfortran=${{matrix.fortran-compiler}}.*
 
     - name: Update system packages
       run: sudo apt-get update
@@ -145,6 +145,11 @@ jobs:
       run: |
         echo "FC=mpif90" >> $GITHUB_ENV
         echo "CC=mpicc"  >> $GITHUB_ENV
+
+
+    - name: Install NetCDF Python libraries
+      run: |
+        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
 
     #######################################################################################
     # Build SCM.
