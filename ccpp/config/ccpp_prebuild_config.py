@@ -179,7 +179,6 @@ SCHEME_FILES = [
     'ccpp/physics/physics/MP/Morrison_Gettelman/m_micro_pre.F90',
     'ccpp/physics/physics/MP/Morrison_Gettelman/m_micro_post.F90',
     'ccpp/physics/physics/MP/NSSL/mp_nssl.F90',
-    'ccpp/physics/physics/MP/Thompson/mp_thompson_pre.F90',
     'ccpp/physics/physics/MP/Thompson/mp_thompson.F90',
     'ccpp/physics/physics/MP/Thompson/mp_thompson_post.F90',
     'ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_gscond.f',
