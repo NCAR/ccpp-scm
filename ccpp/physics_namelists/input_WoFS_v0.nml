@@ -99,3 +99,6 @@
     knob_ugwp_wvspec = 1, 25, 25, 25
     launch_level = 25
 /
+
+&nssl_mp_params
+/

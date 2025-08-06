@@ -119,6 +119,48 @@
   type = real
   kind = kind_phys
   active = (do_lightning_threat_index_calculations)
+[def_1]
+  standard_name = square_of_vertical_shear_due_to_dynamics
+  long_name = square of vertical shear calculated from dynamics
+  units = m2 s-2
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[def_1(:,1)]
+  standard_name = square_of_vertical_shear_due_to_dynamics_at_surface_adjacent_layer
+  long_name = square of vertical shear calculated from dynamics at lowest model layer
+  units = m2 s-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[def_2]
+  standard_name = square_of_horizontal_shear_due_to_dynamics
+  long_name = square of horizontal shear calculated from dynamics
+  units = m2 s-2
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[def_2(:,1)]
+  standard_name = square_of_horizontal_shear_due_to_dynamics_at_surface_adjacent_layer
+  long_name = square of horizontal shear calculated from dynamics at lowest model layer
+  units = m2 s-2
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[def_3]
+  standard_name = horizontal_transfer_rate_of_tke_due_to_dynamics
+  long_name = rate of horizontal TKE transfer and pressure correlation calculated from dynamics
+  units = m2 s-3
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[def_3(:,1)]
+  standard_name = horizontal_transfer_rate_tke_due_to_dynamics_at_surface_adjacent_layer
+  long_name = rate of horizontal TKE transfer and pressure correlation calculated from dynamics at lowest model layer
+  units = m2 s-3
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
 [vvl]
   standard_name = lagrangian_tendency_of_air_pressure
   long_name = layer mean vertical velocity
@@ -349,6 +391,14 @@
   type = real
   kind = kind_phys
   active = (index_of_updraft_area_fraction_in_tracer_concentration_array > 0 )
+[qgrs(:,:,index_of_updraft_velocity_in_tracer_concentration_array)]
+  standard_name = prognostic_updraft_velocity_in_convection
+  long_name = convective updraft velocity
+  units = frac
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = (index_of_updraft_velocity_in_tracer_concentration_array > 0 )
 [qgrs(:,:,index_for_smoke_in_tracer_concentration_array)]
   standard_name = smoke_tracer_concentration
   long_name = concentration of smoke
@@ -631,7 +681,14 @@
   type = real
   kind = kind_phys
   active = ( index_of_updraft_area_fraction_in_tracer_concentration_array > 0 )
-
+[gq0(:,:,index_of_updraft_velocity_in_tracer_concentration_array)]
+  standard_name = updraft_velocity_updated_by_physics
+  long_name = convective updraft area fraction updated by physics
+  units = frac
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = ( index_of_updraft_velocity_in_tracer_concentration_array > 0 )
 ########################################################################
 [ccpp-table-properties]
   name = GFS_sfcprop_type
@@ -3360,7 +3417,7 @@
   dimensions = (horizontal_dimension,vertical_interface_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_rrtmgp_radiation_scheme)
+  active = (flag_for_rrtmgp_radiation_scheme .and. flag_to_calc_RRTMGP_LW_jacobian)
 [fluxlwUP_radtime]
   standard_name = RRTMGP_lw_flux_profile_upward_allsky_on_radiation_timestep
   long_name = RRTMGP upward longwave all-sky flux profile
@@ -5542,6 +5599,12 @@
   units = flag
   dimensions = ()
   type = logical
+[sa3dtke]
+  standard_name = do_scale_aware_3d_tke
+  long_name = flag for scale-aware 3d tke scheme
+  units = flag
+  dimensions = ()
+  type = logical
 [hurr_pbl]
   standard_name = flag_hurricane_PBL
   long_name = flag for hurricane-specific options in PBL scheme
@@ -5689,6 +5752,12 @@
 [progsigma]
   standard_name = do_prognostic_updraft_area_fraction
   long_name = do_prognostic_updraft_area_fraction
+  units = flag
+  dimensions = ()
+  type = logical
+[progomega]
+  standard_name = do_prognostic_updraft_velocity
+  long_name = do_prognostic_updraft_velocity
   units = flag
   dimensions = ()
   type = logical
@@ -6120,6 +6189,12 @@
 [tc_pbl]
   standard_name = control_for_TC_applications_in_the_PBL_scheme
   long_name = control for TC applications in the PBL scheme
+  units = none
+  dimensions = ()
+  type = integer
+[use_lpt]
+  standard_name = control_for_using_LPT_for_TC_applications_in_the_PBL_scheme
+  long_name = control for using LPT in TC applications in the PBL scheme
   units = none
   dimensions = ()
   type = integer
@@ -6657,6 +6732,12 @@
 [ntsigma]
   standard_name = index_of_updraft_area_fraction_in_tracer_concentration_array
   long_name = tracer index of updraft_area_fraction
+  units = index
+  dimensions = ()
+  type = integer
+[ntomega]
+  standard_name = index_of_updraft_velocity_in_tracer_concentration_array
+  long_name = tracer index of updraft_velocity
   units = index
   dimensions = ()
   type = integer
@@ -7747,6 +7828,12 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[do_ngw_ec]
+  standard_name = flag_for_ngw_ec
+  long_name = flag to activate ecmwf ngwd
+  units = flag
+  dimensions = ()
+  type = logical
 [do_ugwp_v1]
   standard_name = flag_for_ugwp_version_1
   long_name = flag to activate ver 1 CIRES UGWP
@@ -8087,6 +8174,20 @@
   long_name = pbl height
   units = m
   dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[dku3d_h]
+  standard_name = horizontal_atmosphere_momentum_diffusivity_for_dynamics
+  long_name = horizontal atmospheric momentum diffusivity for dynamics
+  units = m2 s-1
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+[dku3d_e]
+  standard_name = horizontal_atmosphere_tke_diffusivity_for_dynamics
+  long_name = horizontal atmospheric tke diffusivity for dynamics
+  units = m2 s-1
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
   type = real
   kind = kind_phys
 [ud_mf]

@@ -30,7 +30,7 @@ module GFS_typedefs
    integer, parameter :: dfi_radar_max_intervals = 4 !< Number of radar-derived temperature tendency and/or convection suppression intervals. Do not change.
 
    real(kind=kind_phys), parameter :: limit_unspecified = 1e12 !< special constant for "namelist value was not provided" in radar-derived temperature tendency limit range
-   
+
    integer, parameter :: no_tracer = -99
 
 !> \section arg_table_GFS_typedefs
@@ -162,6 +162,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: vvl  (:,:)   => null()  !< layer mean vertical velocity in pa/sec
     real (kind=kind_phys), pointer :: tgrs (:,:)   => null()  !< model layer mean temperature in k
     real (kind=kind_phys), pointer :: qgrs (:,:,:) => null()  !< layer mean tracer concentration
+!3D-SA-TKE
+    real (kind=kind_phys), pointer :: def_1 (:,:)   => null()  !< deformation
+    real (kind=kind_phys), pointer :: def_2 (:,:)   => null()  !< deformation
+    real (kind=kind_phys), pointer :: def_3 (:,:)   => null()  !< deformation
+!3D-SA-TKE-end
 ! dissipation estimate
     real (kind=kind_phys), pointer :: diss_est(:,:)   => null()  !< model layer mean temperature in k
     ! soil state variables - for soil SPPT - sfc-perts, mgehne
@@ -1154,6 +1159,7 @@ module GFS_typedefs
     logical              :: do_ugwp_v1           !< flag for version 1 ugwp GWD
     logical              :: do_ugwp_v1_orog_only !< flag for version 1 ugwp GWD (orographic drag only)
     logical              :: do_ugwp_v1_w_gsldrag !< flag for version 1 ugwp with OGWD of GSL
+    logical              :: do_ngw_ec            !< flag for ecmwf ngw
     logical              :: mstrat          !< flag for moorthi approach for stratus
     logical              :: moist_adj       !< flag for moist convective adjustment
     logical              :: cscnv           !< flag for Chikira-Sugiyama convection
@@ -1180,6 +1186,7 @@ module GFS_typedefs
     logical              :: do_ysu          !< flag for YSU turbulent mixing scheme
     logical              :: acm             !< flag for ACM turbulent mixing scheme
     logical              :: dspheat         !< flag for tke dissipative heating
+    logical              :: sa3dtke         !< flag for scale-aware 3D tke scheme
     logical              :: hurr_pbl        !< flag for hurricane-specific options in PBL scheme
     logical              :: lheatstrg       !< flag for canopy heat storage parameterization
     logical              :: lseaspray       !< flag for sea spray parameterization
@@ -1203,6 +1210,7 @@ module GFS_typedefs
     integer              :: imfshalcnv_c3       = 5 !< flag for the Community Convective Cloud (C3) scheme
     logical              :: hwrf_samfdeep           !< flag for HWRF SAMF deepcnv scheme (HWRF)
     logical              :: progsigma               !< flag for prognostic area fraction in samf ddepcnv scheme (GFS)
+    logical              :: progomega               !< flag for prognostic vertical velocity in samf ddepcnv scheme (GFS)
     integer              :: imfdeepcnv      !< flag for mass-flux deep convection scheme
                                             !<     1: July 2010 version of SAS conv scheme
                                             !<           current operational version as of 2016
@@ -1375,6 +1383,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: elmx            !< maximum allowed dissipation mixing length in boundary layer mass flux scheme
     integer              :: sfc_rlm         !< choice of near surface mixing length in boundary layer mass flux scheme
     integer              :: tc_pbl          !< control for TC applications in the PBL scheme
+    integer              :: use_lpt         !< control for using Liquid Potential Temp for TC applications in the GFSPBL scheme
 
 !--- parameters for canopy heat storage (CHS) parameterization
     real(kind=kind_phys) :: h0facu          !< CHS factor for sensible heat flux in unstable surface layer
@@ -1503,6 +1512,7 @@ module GFS_typedefs
     integer              :: nthz            !< tracer index for hail reflectivity
     integer              :: ntke            !< tracer index for kinetic energy
     integer              :: ntsigma         !< tracer index for updraft area fraction
+    integer              :: ntomega         !< tracer index for updraft velocity
     integer              :: nto             !< tracer index for oxygen ion
     integer              :: nto2            !< tracer index for oxygen
     integer              :: ntwa            !< tracer index for water friendly aerosol
@@ -1808,6 +1818,10 @@ module GFS_typedefs
 !--- Diagnostic that needs to be carried over to the next time step (removed from diag_type)
     real (kind=kind_phys), pointer :: hpbl     (:)     => null()  !< Planetary boundary layer height
     real (kind=kind_phys), pointer :: ud_mf  (:,:)     => null()  !< updraft mass flux
+
+!-- Diagnostic variable that passes to dyn_core (SA-3D-TKE)
+    real (kind=kind_phys), pointer :: dku3d_h  (:,:)     => null()  !< Horizontal eddy diffusitivity for momentum
+    real (kind=kind_phys), pointer :: dku3d_e  (:,:)     => null()  !< Eddy diffusitivity for momentum for tke
 
     !--- dynamical forcing variables for Grell-Freitas convection
     real (kind=kind_phys), pointer :: forcet (:,:)     => null()  !<
@@ -2284,11 +2298,21 @@ module GFS_typedefs
       allocate (Statein%wgrs   (IM,Model%levs))
     endif
     allocate (Statein%qgrs   (IM,Model%levs,Model%ntrac))
+!3D-SA-TKE
+    allocate (Statein%def_1   (IM,Model%levs))
+    allocate (Statein%def_2   (IM,Model%levs))
+    allocate (Statein%def_3   (IM,Model%levs))
+!3D-SA-TKE-end
 
     Statein%qgrs   = clear_val
     Statein%pgr    = clear_val
     Statein%ugrs   = clear_val
     Statein%vgrs   = clear_val
+!3D-SA-TKE
+    Statein%def_1   = clear_val
+    Statein%def_2   = clear_val
+    Statein%def_3   = clear_val
+!3D-SA-TKE-end
 
     if(Model%lightning_threat) then
       Statein%wgrs = clear_val
@@ -2487,7 +2511,6 @@ module GFS_typedefs
     allocate (Sfcprop%slope_save (IM))
     allocate (Sfcprop%shdmin     (IM))
     allocate (Sfcprop%shdmax     (IM))
-    allocate (Sfcprop%snoalb     (IM))
     allocate (Sfcprop%tg3        (IM))
     allocate (Sfcprop%vfrac      (IM))
     allocate (Sfcprop%vtype      (IM))
@@ -2507,7 +2530,6 @@ module GFS_typedefs
     Sfcprop%slope_save = zero
     Sfcprop%shdmin     = clear_val
     Sfcprop%shdmax     = clear_val
-    Sfcprop%snoalb     = clear_val
     Sfcprop%tg3        = clear_val
     Sfcprop%vfrac      = clear_val
     Sfcprop%vtype      = zero
@@ -2979,14 +3001,16 @@ module GFS_typedefs
     if (Model%do_RRTMGP) then
        allocate (Coupling%fluxlwUP_radtime   (IM, Model%levs+1))
        allocate (Coupling%fluxlwDOWN_radtime (IM, Model%levs+1))
-       allocate (Coupling%fluxlwUP_jac       (IM, Model%levs+1))
        allocate (Coupling%htrlw              (IM, Model%levs))
        allocate (Coupling%tsfc_radtime       (IM))
        Coupling%fluxlwUP_radtime   = clear_val
        Coupling%fluxlwDOWN_radtime = clear_val
-       Coupling%fluxlwUP_jac       = clear_val
        Coupling%htrlw              = clear_val
        Coupling%tsfc_radtime       = clear_val
+       if (Model%use_LW_jacobian) then
+          allocate (Coupling%fluxlwUP_jac    (IM, Model%levs+1))
+          Coupling%fluxlwUP_jac    = clear_val
+       endif
     endif
 
     if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global .or. Model%cpllnd .or. Model%cpl_fire) then
@@ -3721,6 +3745,7 @@ module GFS_typedefs
     logical              :: do_ugwp_v1           = .false.      !< flag for version 1 ugwp GWD
     logical              :: do_ugwp_v1_orog_only = .false.      !< flag for version 1 ugwp GWD (orographic drag only)
     logical              :: do_ugwp_v1_w_gsldrag = .false.      !< flag for version 1 ugwp GWD (orographic drag only)
+    logical              :: do_ngw_ec            = .false.      !< flag for ecmwf ngwd algorithm
 !--- vay-2018
     logical              :: ldiag_ugwp      = .false.                 !< flag for UGWP diag fields
     logical              :: ugwp_seq_update = .false.                 !< flag for updating winds between UGWP steps
@@ -3751,6 +3776,7 @@ module GFS_typedefs
     logical              :: do_ysu         = .false.                  !< flag for YSU vertical turbulent mixing scheme
     logical              :: acm            = .false.                  !< flag for ACM vertical turbulent mixing scheme
     logical              :: dspheat        = .false.                  !< flag for tke dissipative heating
+    logical              :: sa3dtke        = .false.                  !< flag for scale-aware 3D tke scheme
     logical              :: hurr_pbl       = .false.                  !< flag for hurricane-specific options in PBL scheme
     logical              :: lheatstrg      = .false.                  !< flag for canopy heat storage parameterization
     logical              :: lseaspray      = .false.                  !< flag for sea spray parameterization
@@ -3779,7 +3805,8 @@ module GFS_typedefs
 
     logical              :: hwrf_samfdeep     = .false.               !< flag for HWRF SAMF deepcnv scheme
     logical              :: hwrf_samfshal     = .false.               !< flag for HWRF SAMF shalcnv scheme
-    logical              :: progsigma         = .false.               !< flag for prognostic updraft area fraction closure in saSAS or Unified conv.
+    logical              :: progsigma         = .false.               !< flag for prognostic updraft area fraction closure in saSAS or C3
+    logical              :: progomega         = .false.               !< flag for prognostic updraft velocity in saSAS or C3
     integer              :: conv_cf_opt       =  0                    !< option for convection scheme cloud fraction computation
     logical              :: do_mynnedmf       = .false.               !< flag for MYNN-EDMF
     logical              :: do_mynnsfclay     = .false.               !< flag for MYNN Surface Layer Scheme
@@ -3932,6 +3959,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: elmx           = 300.            !< maximum allowed dissipation mixing length in boundary layer mass flux scheme
     integer              :: sfc_rlm        = 0               !< choice of near surface mixing length in boundary layer mass flux scheme
     integer              :: tc_pbl         = 0               !< control for TC applications in the PBL scheme
+    integer              :: use_lpt        = 0               !< control for using Liquid Potential Temp for TC applications in the GFSPBL scheme
 
 !--- parameters for canopy heat storage (CHS) parameterization
     real(kind=kind_phys) :: h0facu         = 0.25
@@ -4171,13 +4199,13 @@ module GFS_typedefs
                                gwd_opt, do_ugwp_v0, do_ugwp_v0_orog_only,                   &
                                do_ugwp_v0_nst_only,                                         &
                                do_gsl_drag_ls_bl, do_gsl_drag_ss, do_gsl_drag_tofd,         &
-                               do_gwd_opt_psl,                                              &
+                               do_gwd_opt_psl, do_ngw_ec,                                   &
                                do_ugwp_v1, do_ugwp_v1_orog_only,  do_ugwp_v1_w_gsldrag,     &
                                ugwp_seq_update, var_ric, coef_ric_l, coef_ric_s, hurr_pbl,  &
                                do_myjsfc, do_myjpbl,                                        &
-                               hwrf_samfdeep, hwrf_samfshal,progsigma,betascu,betamcu,      &
-                               betadcu,h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,&
-                               sigmab_coldstart,                                            &
+                               hwrf_samfdeep, hwrf_samfshal,progsigma,progomega,betascu,    &
+                               betamcu, betadcu,h2o_phys, pdfcld, shcnvcw, redrag,          &
+                               hybedmf, satmedmf, sigmab_coldstart,                         &
                                shinhong, do_ysu, dspheat, lheatstrg, lseaspray, cnvcld,     &
                                xr_cnvcld, random_clds, shal_cnv, imfshalcnv, imfdeepcnv,    &
                                isatmedmf, conv_cf_opt, do_deep, jcap,                       &
@@ -4189,6 +4217,8 @@ module GFS_typedefs
                                do_spp, n_var_spp,                                           &
                                lndp_type,  n_var_lndp, lndp_each_step,                      &
                                pert_mp,pert_clds,pert_radtend,                              &
+                          !--- Scale-aware 3D TKE scheme
+                               sa3dtke,                                                     &
                           !--- Rayleigh friction
                                prslrd0, ral_ts,  ldiag_ugwp, do_ugwp, do_tofd,              &
                           ! --- Ferrier-Aligo
@@ -4211,7 +4241,7 @@ module GFS_typedefs
                                diag_flux, diag_log,                                         &
                           !    vertical diffusion
                                xkzm_m, xkzm_h, xkzm_s, xkzminv, moninq_fac, dspfac,         &
-                               bl_upfr, bl_dnfr, rlmx, elmx, sfc_rlm, tc_pbl,               &
+                               bl_upfr, bl_dnfr, rlmx, elmx, sfc_rlm, tc_pbl, use_lpt,       &
                           !--- canopy heat storage parameterization
                                h0facu, h0facs,                                              &
                           !--- cellular automata
@@ -4288,9 +4318,8 @@ module GFS_typedefs
 
 !--- read in the namelist
 #ifdef INTERNAL_FILE_NML
-    ! allocate required to work around GNU compiler bug 100886 https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100886
     allocate (Model%input_nml_file, mold=input_nml_file)
-    Model%input_nml_file => input_nml_file
+    Model%input_nml_file = input_nml_file
     read(Model%input_nml_file, nml=gfs_physics_nml)
     ! Set length (number of lines) in namelist for internal reads
     Model%input_nml_file_length = size(Model%input_nml_file)
@@ -5058,7 +5087,7 @@ module GFS_typedefs
     Model%hwrf_samfdeep = hwrf_samfdeep
     Model%hwrf_samfshal = hwrf_samfshal
 
-    !--prognostic closure - moisture coupling
+    !--prognostic closure - check
     if ((progsigma .and. imfdeepcnv/=2) .and. (progsigma .and. imfdeepcnv/=5)) then
        write(*,*) 'Logic error: progsigma requires imfdeepcnv=2 or 5'
        error stop
@@ -5068,6 +5097,13 @@ module GFS_typedefs
     Model%betamcu = betamcu
     Model%betadcu = betadcu
     Model%sigmab_coldstart = sigmab_coldstart
+
+    !--prognostic closure - check
+    if (progomega .and. imfdeepcnv/=2) then
+       write(*,*) 'Logic error: progomega requires imfdeepcnv=2'
+       stop
+    end if
+    Model%progomega = progomega
 
     if (oz_phys .and. oz_phys_2015) then
        write(*,*) 'Logic error: can only use one ozone physics option (oz_phys or oz_phys_2015), not both. Exiting.'
@@ -5154,6 +5190,7 @@ module GFS_typedefs
     Model%do_gsl_drag_ss       = do_gsl_drag_ss
     Model%do_gsl_drag_tofd     = do_gsl_drag_tofd
     Model%do_gwd_opt_psl       = do_gwd_opt_psl
+    Model%do_ngw_ec            = do_ngw_ec
     Model%do_ugwp_v1           = do_ugwp_v1
     Model%do_ugwp_v1_orog_only = do_ugwp_v1_orog_only
     Model%do_ugwp_v1_w_gsldrag = do_ugwp_v1_w_gsldrag
@@ -5223,6 +5260,8 @@ module GFS_typedefs
     Model%diag_flux        = diag_flux
 !--- flux method in 2-m diagnostics (for stable conditions)
     Model%diag_log         = diag_log
+!--- SA-3D-TKE option
+    Model%sa3dtke          = sa3dtke
 
 !--- vertical diffusion
     Model%xkzm_m           = xkzm_m
@@ -5237,6 +5276,7 @@ module GFS_typedefs
     Model%elmx             = elmx
     Model%sfc_rlm          = sfc_rlm
     Model%tc_pbl           = tc_pbl
+    Model%use_lpt          = use_lpt
 
 !--- canopy heat storage parametrization
     Model%h0facu           = h0facu
@@ -5357,6 +5397,7 @@ module GFS_typedefs
     Model%nthz             = get_tracer_index(Model%tracer_names, 'hail_ref')
     Model%ntke             = get_tracer_index(Model%tracer_names, 'sgs_tke')
     Model%ntsigma          = get_tracer_index(Model%tracer_names, 'sigmab')
+    Model%ntomega          = get_tracer_index(Model%tracer_names, 'omegab')
     Model%nqrimef          = get_tracer_index(Model%tracer_names, 'q_rimef')
     Model%ntwa             = get_tracer_index(Model%tracer_names, 'liq_aero')
     Model%ntia             = get_tracer_index(Model%tracer_names, 'ice_aero')
@@ -5421,7 +5462,7 @@ module GFS_typedefs
     ! Last index of outermost dimension of dtend
     Model%ndtend = 0
     allocate (Model%dtidx(Model%ntracp100,Model%nprocess))
-    Model%dtidx = -99
+    Model%dtidx = no_tracer
 
     if(Model%ntchm>0) then
       Model%ntdu1 = get_tracer_index(Model%tracer_names, 'dust1')
@@ -5680,8 +5721,8 @@ module GFS_typedefs
               ENDIF
               error stop
             ENDIF
-          Model%ntccn = -99
-          Model%ntccna = -99
+          Model%ntccn = no_tracer
+          Model%ntccna = no_tracer
         ELSEIF ( Model%ntccn < 1 ) THEN
           if (Model%me == Model%master) then
             write(*,*) 'NSSL micro: error! CCN is ON but ntccn < 1. Must have ccn_nc in field_table if nssl_ccn_on=T'
@@ -6988,6 +7029,7 @@ module GFS_typedefs
       print *, ' do_ysu            : ', Model%do_ysu
       print *, ' acm               : ', Model%acm
       print *, ' dspheat           : ', Model%dspheat
+      print *, ' sa3dtke           : ', Model%sa3dtke
       print *, ' lheatstrg         : ', Model%lheatstrg
       print *, ' lseaspray         : ', Model%lseaspray
       print *, ' cnvcld            : ', Model%cnvcld
@@ -7028,6 +7070,7 @@ module GFS_typedefs
       print *, ' do_gsl_drag_tofd     : ', Model%do_gsl_drag_tofd
       print *, ' do_gwd_opt_psl       : ', Model%do_gwd_opt_psl
       print *, ' do_ugwp_v1           : ', Model%do_ugwp_v1
+      print *, ' do_ngw_ec            : ', Model%do_ngw_ec
       print *, ' do_ugwp_v1_orog_only : ', Model%do_ugwp_v1_orog_only
       print *, ' do_ugwp_v1_w_gsldrag : ', Model%do_ugwp_v1_w_gsldrag
       print *, ' hurr_pbl          : ', Model%hurr_pbl
@@ -7084,6 +7127,7 @@ module GFS_typedefs
       print *, ' elmx              : ', Model%elmx
       print *, ' sfc_rlm           : ', Model%sfc_rlm
       print *, ' tc_pbl            : ', Model%tc_pbl
+      print *, ' use_lpt           : ', Model%use_lpt
       print *, ' '
       print *, 'parameters for canopy heat storage parametrization'
       print *, ' h0facu            : ', Model%h0facu
@@ -7160,6 +7204,7 @@ module GFS_typedefs
       print *, ' nthz              : ', Model%nthz
       print *, ' ntke              : ', Model%ntke
       print *, ' ntsigma           : ', Model%ntsigma
+      print *, ' ntomega           : ', Model%ntomega
       print *, ' nto               : ', Model%nto
       print *, ' nto2              : ', Model%nto2
       print *, ' ntwa              : ', Model%ntwa
@@ -7434,6 +7479,12 @@ module GFS_typedefs
 
     allocate (Tbd%hpbl (IM))
     Tbd%hpbl     = clear_val
+
+    ! Allocate horizontal component of dku for dyn_core (SA-3D-TKE)
+    allocate (Tbd%dku3d_h (IM,Model%levs))
+    Tbd%dku3d_h    = clear_val
+    allocate (Tbd%dku3d_e (IM,Model%levs))
+    Tbd%dku3d_e    = clear_val
 
     if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .or. Model%imfdeepcnv == Model%imfdeepcnv_samf .or. Model%imfshalcnv == Model%imfshalcnv_samf .or. Model%imfdeepcnv == Model%imfdeepcnv_c3 .or. Model%imfshalcnv == Model%imfshalcnv_c3) then
        allocate (Tbd%prevsq(IM, Model%levs))
@@ -8430,12 +8481,12 @@ module GFS_typedefs
     endif
 
   end subroutine diag_phys_zero
-  
+
   function get_tracer_index (tracer_names, name)
 
     character(len=32), intent(in) :: tracer_names(:)
     character(len=*),  intent(in) :: name
-    
+
     !--- local variables
     integer :: get_tracer_index
     integer :: i

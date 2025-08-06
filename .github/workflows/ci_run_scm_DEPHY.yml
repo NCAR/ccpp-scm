@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        fortran-compiler: [gfortran-12]
+        fortran-compiler: [12]
         build-type:       [Release, Debug]
-        py-version:       [3.11.7]
+        py-version:       [3.11]
 
     # Environmental variables
     env:
@@ -25,14 +25,19 @@ jobs:
 
     # Workflow steps
     steps:
-    #######################################################################################
-    # Initial
-    #######################################################################################
-    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v4
-
-    - name: Initialize submodules
-      run: git submodule update --init --recursive
+    # Install System Dependencies
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update -qq && sudo apt-get install -qq -y --no-install-recommends \
+        gfortran-${{matrix.fortran-compiler}} \
+        libhdf5-dev \
+        libnetcdf-pnetcdf-19 \
+        libnetcdff7 \
+        libnetcdf-dev \
+        libnetcdff-dev \
+        libxml2 \
+        openmpi-bin \
+        libopenmpi-dev
 
     #######################################################################################
     # Python setup
@@ -42,31 +47,23 @@ jobs:
       with:
         python-version: ${{matrix.py-version}}
 
-    - name: Add conda to system path
-      run: |
-        echo $CONDA/bin >> $GITHUB_PATH
     - name: Install NetCDF Python libraries
       run: |
-        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
+        pip install f90nml h5py netCDF4
 
-    - name: Update system packages
-      run: sudo apt-get update
-
-    #######################################################################################
-    # Install FORTRAN dependencies
-    #######################################################################################
-    - name: Install openmpi
+    - name: Environment for openmpi compiler
       run: |
-        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
-        tar -xvf v4.1.6.tar.gz
-        cd ompi-4.1.6
-        ./autogen.pl
-        ./configure --prefix=/home/runner/ompi-4.1.6
-        make -j4
-        make install
-        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
 
+    - name: Check MPI version
+      run: |
+        which mpif90
+        mpif90 --version
+
+    #######################################################################################
+    # Install NCEP Libs
+    #######################################################################################
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v4
@@ -118,34 +115,18 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    - name: Install NetCDF C library
-      run: sudo apt-get install libnetcdf-dev
+    #######################################################################################
+    # Initialize SCM
+    #######################################################################################
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v4
 
-    - name: Cache NetCDF Fortran library v4.4.4
-      id: cache-netcdf-fortran
-      uses: actions/cache@v4
-      with:
-        path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
-
-    - name: Install NetCDF Fortran library
-      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
-      run: |
-        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
-        cd netcdf-fortran
-        ./configure
-        make -j
-        sudo make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
 
     #######################################################################################
     # Build SCM. Run DEPHYv1 case.
     #######################################################################################
-    - name: Environment for openmpi compiler
-      run: |
-        echo "FC=mpif90" >> $GITHUB_ENV
-        echo "CC=mpicc"  >> $GITHUB_ENV
-
     - name: Download data for SCM
       run: |
         cd ${SCM_ROOT}

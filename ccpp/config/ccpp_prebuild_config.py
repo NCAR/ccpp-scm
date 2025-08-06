@@ -124,8 +124,6 @@ SCHEME_FILES = [
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_mp.F90'          ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_overlap.F90'     ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_post.F90'              ,
-    'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_rad_reset.F90',
-    'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_phys_reset.F90',
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_1.F90'     ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_2.F90'     ,
     'ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_stateout_reset.F90'     ,
