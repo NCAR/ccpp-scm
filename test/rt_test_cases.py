@@ -49,6 +49,8 @@ run_list = [\
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RRFS_v1beta"},                                                                                \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RAP"},                                                                                        \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v15p2"},                                                                                  \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8_ugwpv1_tempo"},                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16_gfdlmpv3"},                                                                           \
             {"case": "twpice",                "suite": "SCM_GFS_v17_p8"},                                                                                 \
             {"case": "twpice",                "suite": "SCM_HRRR"},                                                                                       \
             {"case": "twpice",                "suite": "SCM_RRFS_v1beta"},                                                                                \

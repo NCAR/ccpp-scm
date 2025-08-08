@@ -224,6 +224,8 @@ rad_cloud_swp      = []
 rad_eff_rad_qs     = []
 
 sw_rad_heating_rate = []
+sw_up_sfc_tot = []
+sw_dn_sfc_tot = []
 lw_rad_heating_rate = []
 
 pwat       = []
@@ -344,11 +346,31 @@ for i in range(len(scm_datasets)):
     hour.append(nc_fid.variables['init_hour'][:])
     minute.append(nc_fid.variables['init_minute'][:])
 
-    time_inst.append(nc_fid.variables['time_inst'][:])
-    time_diag.append(nc_fid.variables['time_diag'][:])
-    time_swrad.append(nc_fid.variables['time_swrad'][:])
-    time_lwrad.append(nc_fid.variables['time_lwrad'][:])
-    time_rad.append(nc_fid.variables['time_rad'][:])
+    
+    raw_data = nc_fid.variables['time_inst'][:]
+    raw_data[raw_data == nc_fid.variables['time_inst']._FillValue] = np.nan
+    time_inst.append(raw_data[:])
+    #time_inst.append(nc_fid.variables['time_inst'][:])
+    
+    raw_data = nc_fid.variables['time_diag'][:]
+    raw_data[raw_data == nc_fid.variables['time_diag']._FillValue] = np.nan
+    time_diag.append(raw_data[:])
+    #time_diag.append(nc_fid.variables['time_diag'][:])
+    
+    raw_data = nc_fid.variables['time_swrad'][:]
+    raw_data[raw_data == nc_fid.variables['time_swrad']._FillValue] = np.nan
+    time_swrad.append(raw_data[:])
+    #time_swrad.append(nc_fid.variables['time_swrad'][:])
+    
+    raw_data = nc_fid.variables['time_lwrad'][:]
+    raw_data[raw_data == nc_fid.variables['time_lwrad']._FillValue] = np.nan
+    time_lwrad.append(raw_data[:])
+    #time_lwrad.append(nc_fid.variables['time_lwrad'][:])
+    
+    raw_data = nc_fid.variables['time_rad'][:]
+    raw_data[raw_data == nc_fid.variables['time_rad']._FillValue] = np.nan
+    time_rad.append(raw_data[:])
+    #time_rad.append(nc_fid.variables['time_rad'][:])
     
     pres_l.append(nc_fid.variables['pres'][:])
     inst_time_group.append('pres_l')
@@ -559,6 +581,23 @@ for i in range(len(scm_datasets)):
     sw_rad_heating_rate.append(nc_fid.variables['sw_rad_heating_rate'][:])
     swrad_time_group.append('sw_rad_heating_rate')
     
+    try:
+        sw_up_sfc_tot.append(nc_fid.variables['sw_up_sfc_tot'][:])
+    except KeyError:
+        print('sw_up_sfc_tot is not in the output file {0}'.format(scm_datasets[i]))
+        print('Missing variables are replaced with {0}'.format(missing_value))
+        sw_up_sfc_tot.append(missing_value*np.ones((len(time_inst[-1]),pres_l[-1].shape[1],pres_l[-1].shape[2])))
+    swrad_time_group.append('sw_up_sfc_tot')
+    
+    try:
+        sw_dn_sfc_tot.append(nc_fid.variables['sw_dn_sfc_tot'][:])
+    except KeyError:
+        print('sw_dn_sfc_tot is not in the output file {0}'.format(scm_datasets[i]))
+        print('Missing variables are replaced with {0}'.format(missing_value))
+        sw_dn_sfc_tot.append(missing_value*np.ones((len(time_inst[-1]),pres_l[-1].shape[1],pres_l[-1].shape[2])))
+    swrad_time_group.append('sw_dn_sfc_tot')    
+    
+    
     lw_rad_heating_rate.append(nc_fid.variables['lw_rad_heating_rate'][:])
     lwrad_time_group.append('lw_rad_heating_rate')
     
@@ -755,11 +794,16 @@ for i in range(len(scm_datasets)):
     initial_date = datetime.datetime(year[i], month[i], day[i], hour[i], minute[i], 0, 0)
     
     #convert times to datetime objects starting from initial date
-    date_inst.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_inst[-1]]))
-    date_diag.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_diag[-1]]))
-    date_swrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_swrad[-1]]))
-    date_lwrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_lwrad[-1]]))
-    date_rad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_rad[-1]]))
+    date_inst.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_inst[-1][~np.isnan(time_inst[-1])]]))
+    date_diag.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_diag[-1][~np.isnan(time_diag[-1])]]))
+    #print(time_swrad[-1])
+    #print(time_swrad[-1][~np.isnan(time_swrad[-1])])
+    #exit()
+    #print(time_swrad[-1][not np.isnan(time_swrad[-1])])
+    
+    date_swrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_swrad[-1][~np.isnan(time_swrad[-1])]]))
+    date_lwrad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_lwrad[-1][~np.isnan(time_lwrad[-1])]]))
+    date_rad.append(np.array([initial_date + datetime.timedelta(seconds=int(s)) for s in time_rad[-1][~np.isnan(time_rad[-1])]]))
     nc_fid.close()
 
     #calculate diagnostic values from model output
