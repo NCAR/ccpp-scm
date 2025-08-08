@@ -5025,6 +5025,12 @@
   units = flag
   dimensions = ()
   type = logical
+[fast_mp_consv]
+  standard_name = flag_for_fast_microphysics_energy_conservation
+  long_name = flag for fast microphysics energy conservation
+  units = flag
+  dimensions = ()
+  type = logical
 [lsm]
   standard_name = control_for_land_surface_scheme
   long_name = flag for land surface model
