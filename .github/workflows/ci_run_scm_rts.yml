@@ -130,6 +130,7 @@ jobs:
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
+        ./contrib/get_tempo_data.sh
         ./contrib/get_aerosol_climo.sh
 
     - name: Configure build with CMake (Release)
