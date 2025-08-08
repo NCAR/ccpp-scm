@@ -6,8 +6,8 @@
 	path = ccpp/physics
 	#url = https://github.com/NCAR/ccpp-physics
 	#branch = main
-        url = https://github.com/AndersJensen-NOAA/ccpp-physics
-        branch = tempo_dev
+	url = https://github.com/grantfirl/ccpp-physics
+	branch = ufs-dev-PR195
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
