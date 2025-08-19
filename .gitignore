@@ -1,3 +1,4 @@
+*~
 *.DS_Store
 *.[oa]
 *.mod
@@ -10,3 +11,8 @@ scm/data/physics_input_data/freezeH2O.dat
 scm/data/physics_input_data/CCN_ACTIVATE.BIN
 scm/data/physics_input_data/cam5_4_143_NAAI_monclimo2.nc
 scm/data/physics_input_data/cam5_4_143_NPCCN_monclimo2.nc
+
+# ignore directories from building documentation locally
+scm/doc/_build/
+scm/doc/html/
+scm/doc/latex/

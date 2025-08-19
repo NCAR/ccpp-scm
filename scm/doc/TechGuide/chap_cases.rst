@@ -84,7 +84,7 @@ arguments) are:
 -  ``do_spinup``
 
    - Set to ``.true.`` when allowing the model to spin up before the "official"
-     model integration starts. 
+     model integration starts.
 
 -  ``spinup_timesteps``
 
@@ -128,6 +128,35 @@ format requirements can be found at `DEPHY <https://github.com/GdR-DEPHY/DEPHY-S
 .. literalinclude:: dephy_case_header.txt
     :name: lst_case_input_netcdf_header_dephy
     :caption: example NetCDF file (DEPHY format) header for case initialization and forcing data
+
+As of the CCPP v7.0.0 release, all SCM case files are expected to use the DEPHY format.
+To assist with this transition, a conversion script is provided in the repository to reformat
+legacy SCM case files into the new DEPHY-compliant format.
+
+The conversion script is located at:
+
+.. code:: bash
+
+   ccpp-scm/scm/etc/scripts/dephy_converter.py
+
+To convert a case, run the script with the -n option followed by the name of the case
+(excluding the .nc extension):
+
+.. code:: bash
+
+   python dephy_converter.py -n name_of_case
+
+This script performs the following actions:
+- Reads the legacy case file from ccpp-scm/scm/data/processed_case_data/name_of_case.nc
+- Reads the corresponding configuration namelist from ccpp-scm/scm/etc/case_config/name_of_case.nml
+- Outputs a new DEPHY-formatted file named name_of_case_SCM_driver.nc to the same data directory
+- Updates the configuration namelist accordingly
+
+.. Note::
+    Before running the script, back up both the original ``.nc`` file and its corresponding ``.nml``
+    configuration file. After conversion, you can test the new DEPHY-formatted case by running it
+    and comparing its output with the original. Although results may not be bit-for-bit identical,
+    they should be visually very similar when plotted.
 
 Included Cases
 --------------
@@ -181,6 +210,58 @@ In addition, cases can be generated from UFS initial conditions See
 :numref:`Section %s <UFScasegen>` for information on how to generate these
 files for other locations and dates, given appropriate UFS Atmosphere
 initial conditions and output.
+
+Maritime Cases with Active Surface Fluxes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When modeling cases over ocean surfaces without prescribed surface fluxes, instead
+of relying on physics to calculate them, GFS-based physics suites rely on the
+Near-Surface Sea Temperature (NSST) scheme.
+
+**Cold-Starting the NSST Scheme**
+
+To initialize NSST in a cold start configuration:
+
+1. Provide a sea surface temperature (SST) time series via the ``ts_forc`` time
+   series in the case data file.
+2. Set the following in the case data file:
+
+   - ``surface_forcing_temp = "ts"``
+   - ``surface_type = "ocean"``
+
+3. In the physics namelist, ensure the second digit of the nstf_name variable
+   is set to 1 (i.e., nstf_name = [*,1,*,*,*]).
+
+   - This value indicates NSST spin-up and is the default in physics namelists
+     distributed with the CCPP-SCM.
+
+Resulting behavior in CCPP-SCM:
+
+- The NSST scheme is initialized using the SST from ``ts_forc``.
+- The default ocean mixed layer depth ``xz`` is 20 meters.
+- The NSST reference temperature remains fixed at the initial SST value throughout
+  the simulation (in contrast to a 3D ocean model where it would ideally vary slowly).
+
+**Using UFS Output to Initialize NSST**
+
+When working with case data generated from UFS model output, NSST can be initialized
+directly from the history files. In this case:
+
+- Set the second digit of the ``nstf_name`` variable to 0 to bypass spin-up and use
+  supplied NSST state variables directly.
+
+**Default SST behavior in CCPP SCM**
+
+The SST is forced using the ``ts_forc`` time series in the case data file. This means:
+
+- The SST seen by the physics is linearly interpolated in time from the time series.
+  The SST is set during every timestep from that data.
+
+To instead allow the SST to evolve according to model physics:
+
+- Set the case configuration namelist variable ``do_sst_initialize_only = .true.``
+  This causes the SST to be initialized from the first value in ``ts_forc``, after
+  which the physics controls its evolution.
 
 How to set up new cases
 -----------------------
@@ -283,8 +364,8 @@ Using UFS Output to Create SCM Cases: UFS Case Generation
 
 .. _`pydepend_casegen`:
 
-Python Dependencies
-~~~~~~~~~~~~~~~~~~~
+Python Dependencies (Casegen)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The scripts here require a few python packages that may not be found by
 default in all python installations. There is a YAML file with the
@@ -304,8 +385,8 @@ Activate environment:
 .. code:: bash
 
   > conda activate env_ufscasegen
-  
-Note that it may be possible for conda to fail to solve for the environment when attempting to use the yml file. It 
+
+Note that it may be possible for conda to fail to solve for the environment when attempting to use the yml file. It
 should still be possible to create the same environment manually:
 
 .. code:: bash
@@ -319,7 +400,7 @@ should still be possible to create the same environment manually:
   > conda install -n env_ufscasegen --channel=conda-forge shapely
   > conda install -n env_ufscasegen --channel=conda-forge xesmf
 
-.. _`ufscasegen`:
+.. _`ufscasegenpy`:
 
 UFS_case_gen.py
 ~~~~~~~~~~~~~~~
@@ -372,7 +453,7 @@ Optional arguments:
 
 #. ``--save_comp (-sc)``: flag to create UFS reference file for comparison
 
-#. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint for calculation 
+#. ``--use_nearest (-near)``: flag to indicate using the nearest UFS history file gridpoint for calculation
    of forcing; only valid for use with -fm=1 or -fm=3
 
 #. ``--forcing_method (-fm)``: method used to calculate forcing (1=total tendencies from UFS dycore,
@@ -387,70 +468,70 @@ Optional arguments:
 
 Notes Regarding Implemented Forcing Methods
 
-The ``--forcing_method`` option hides some complexity that should be understood when running this script since 
-each method has a particular use case and produces potentially very different forcing terms. Forcing method 1 is 
-designed to be used in concert with the three-dimensional UFS. I.e., the UFS must be run with diagnostic tendencies 
-activated so that the `nophysics` term is calculated and output for all grid points 
-(see https://ccpp-techdoc.readthedocs.io/en/latest/ParamSpecificOutput.html#tendencies). This diagnostic term 
-represents the tendency produced for each state variable by the UFS between calls to the "slow" physics. This 
+The ``--forcing_method`` option hides some complexity that should be understood when running this script since
+each method has a particular use case and produces potentially very different forcing terms. Forcing method 1 is
+designed to be used in concert with the three-dimensional UFS. I.e., the UFS must be run with diagnostic tendencies
+activated so that the `nophysics` term is calculated and output for all grid points
+(see https://ccpp-techdoc.readthedocs.io/en/latest/ParamSpecificOutput.html#tendencies). This diagnostic term
+represents the tendency produced for each state variable by the UFS between calls to the "slow" physics. This
 includes the tendency due to advection, but also any tendencies due to other non-physics processes, e.g. "fast"
-physics, coupling to external components, data assimilation, etc. Within the SCM, this diagnostic is used as the 
-forcing term for each state variable. Although one can achieve results as close as possible between a UFS column 
+physics, coupling to external components, data assimilation, etc. Within the SCM, this diagnostic is used as the
+forcing term for each state variable. Although one can achieve results as close as possible between a UFS column
 and the single column model using this method, it will NOT be bit-for-bit for many reasons. Some of these reasons
-include: diagnostic output is not typically instantaneous for every timestep, the UFS' vertical coordinate is 
+include: diagnostic output is not typically instantaneous for every timestep, the UFS' vertical coordinate is
 semi-Lagrangian and includes a remapping step as the surface pressure changes for each column, whereas the SCM
 uses a Eulerian vertical coordinate without the vertical remapping step, and some interpolation happens in the
 UFS_case_gen.py script due to the UFS initial conditions and history files using different grids. This method
 can only be used when the UFS has been configured and run with the anticipation of running the SCM using this
 forcing method afterward because it requires considerable extra disk space for the additional output.
 
-The `--forcing_method` 2 option is the most general in the sense that the same method could apply to any three-dimensional 
-model output. For a given column, it uses a configurable number of neighboring grid points to calculate the horizontal 
-advective tendencies using the horizontal components of the three-dimensional wind and horizontal derivatives of the 
-state variables. Note that the script performs some smoothing in the vertical profiles used to calculate the advective 
+The `--forcing_method` 2 option is the most general in the sense that the same method could apply to any three-dimensional
+model output. For a given column, it uses a configurable number of neighboring grid points to calculate the horizontal
+advective tendencies using the horizontal components of the three-dimensional wind and horizontal derivatives of the
+state variables. Note that the script performs some smoothing in the vertical profiles used to calculate the advective
 terms in order to eliminate small-scale noise in the forcing terms and the derivatives are calculated using a second- or
-fourth-order centered difference scheme, depending on the number of neighboring points used. Vertical advective terms 
-are calculated based on the specification of `--vertical_method` (-vm). For vertical_method 1, the vertical advective 
-terms are calculated from the history files using UFS vertical velocities and the same modeled smoothed vertical profiles 
-of the state variables using the upstream scheme. Note that while the horizontal terms use neighboring points, the vertical 
+fourth-order centered difference scheme, depending on the number of neighboring points used. Vertical advective terms
+are calculated based on the specification of `--vertical_method` (-vm). For vertical_method 1, the vertical advective
+terms are calculated from the history files using UFS vertical velocities and the same modeled smoothed vertical profiles
+of the state variables using the upstream scheme. Note that while the horizontal terms use neighboring points, the vertical
 advective terms only use the central, chosen column. This method is sometimes referred to as "total advective forcing" and
-tends to be less "responsive" to the SCM-modeled state. I.e., a SCM run using vertical method 2 has a greater chance of 
-deviating from the UFS column state and not being able to "recover". For this reason, vertical method 2 is often used 
+tends to be less "responsive" to the SCM-modeled state. I.e., a SCM run using vertical method 2 has a greater chance of
+deviating from the UFS column state and not being able to "recover". For this reason, vertical method 2 is often used
 in the literature, whereby the vertical velocity profile from the three-dimensional model is provided as forcing to the SCM
 and the vertical advective terms are calculated during the SCM integration using the SCM-modeled state variable profiles.
 
 The final forcing method, 3, uses the three-dimensional history files to calculate profiles of the total time-rate of change
-of the state variables to use as forcing for the SCM. Note that this is tantamount to strongly nudging the SCM state to the 
-UFS state and already intrinsically includes both the physics and dynamics tendencies. While a simulation using this forcing 
+of the state variables to use as forcing for the SCM. Note that this is tantamount to strongly nudging the SCM state to the
+UFS state and already intrinsically includes both the physics and dynamics tendencies. While a simulation using this forcing
 is more-or-less guaranteed to produce a SCM simulation that closely matches the three-dimensional output of the state variables,
-it strongly minimizes the contribution of physics in the SCM simulation. Indeed, an SCM simulation without running a physics suite 
-at all would still be expected to closely track the mean state of the three-dimensional column, so this method will likely be of 
+it strongly minimizes the contribution of physics in the SCM simulation. Indeed, an SCM simulation without running a physics suite
+at all would still be expected to closely track the mean state of the three-dimensional column, so this method will likely be of
 limited use for physics studies.
 
-Forcing the horizontal components of the wind can be notoriously difficult in SCMs, and the most straightforward method is to 
-simply nudge them to the three-dimensional modeled state. This method is achieved by using the `--wind_nudge` (-wn) option and uses a nudging 
-timescale of one hour. It should be possible to calculate a nudging timescale based on the magnitude of the wind in the neighboring 
+Forcing the horizontal components of the wind can be notoriously difficult in SCMs, and the most straightforward method is to
+simply nudge them to the three-dimensional modeled state. This method is achieved by using the `--wind_nudge` (-wn) option and uses a nudging
+timescale of one hour. It should be possible to calculate a nudging timescale based on the magnitude of the wind in the neighboring
 grid cells, although this is not implemented yet.
 
-The second method to force the horizontal wind components is to calculate the geostrophic wind using the "large scale" pressure 
-gradient from the three-dimensional model. This is achieved by using the `--geostrophic` (-geos) option. What qualifies as large 
-enough of a horizontal gridscale to achieve geostrophic balance is when the Rossby number is much less than one. The script uses a 
-configurable Rossby number (around 0.1) to expand the number of neighboring grid points such that geostrophic balance can be assumed 
-given the particular UFS history file grid. The geostrophic winds are calculated using the horizontal geopotential gradient and the 
-local latitude-dependent Coriolis parameter. From the PBL top downward, the geostrophic winds are assumed to go to zero. In testing 
-with this method, if the initial horizontal winds have a significant ageostrophic component (the initial condition winds are 
-appreciably different than the calculated geostrophic winds), this often leads to spurious clockwise turning of the mean modeled winds 
-with time. An option exists within the script to assume that the mean three-dimensional winds are, in fact, identical to the 
+The second method to force the horizontal wind components is to calculate the geostrophic wind using the "large scale" pressure
+gradient from the three-dimensional model. This is achieved by using the `--geostrophic` (-geos) option. What qualifies as large
+enough of a horizontal gridscale to achieve geostrophic balance is when the Rossby number is much less than one. The script uses a
+configurable Rossby number (around 0.1) to expand the number of neighboring grid points such that geostrophic balance can be assumed
+given the particular UFS history file grid. The geostrophic winds are calculated using the horizontal geopotential gradient and the
+local latitude-dependent Coriolis parameter. From the PBL top downward, the geostrophic winds are assumed to go to zero. In testing
+with this method, if the initial horizontal winds have a significant ageostrophic component (the initial condition winds are
+appreciably different than the calculated geostrophic winds), this often leads to spurious clockwise turning of the mean modeled winds
+with time. An option exists within the script to assume that the mean three-dimensional winds are, in fact, identical to the
 geostrophic winds as well. Using this option eliminates any spurious turning.
 
 Writing UFS Comparison Data
 
-The `--save_comp` (or `-sc`) options allow one to write out the UFS data for the chosen column in NetCDF format. The profiles of the state variables 
-`u`, `v`, `T`, and `q_v` are written out for the given point for each history file time. In addition, a collection of other 
+The `--save_comp` (or `-sc`) options allow one to write out the UFS data for the chosen column in NetCDF format. The profiles of the state variables
+`u`, `v`, `T`, and `q_v` are written out for the given point for each history file time. In addition, a collection of other
 diagnostics like profiles of physics tendencies and scalar surface variables are saved and written. One can include any variable that is
 provided in the UFS history files, although the specific variables are hard-coded in the `UFS_case_gen.py` file which will require editing
 to change. The file with comparison data is automatically written out to the `scm/data/comparison_data` directory, although this is controlled
-by the `COMPARISON_DATA_DIR` global variable in the `UFS_case_gen.py` script. The filename is a concatenation of the case name (specified by the 
+by the `COMPARISON_DATA_DIR` global variable in the `UFS_case_gen.py` script. The filename is a concatenation of the case name (specified by the
 `--case_name (-n)` argument) and `_comp_data.nc`.
 
 .. _`ufsforcingensemblegenerator`:
@@ -485,7 +566,7 @@ Mandatory arguments:
    -  ``--lon_list (-lons)`` AND ``--lat_list (-lats)``: longitude and latitude of cases
 
    -  ``--lonlat_file (fxy)``: file containing longitudes and latitudes
-   
+
    -  ``--tile (-tile) `` AND ``--i_list (-is)`` AND ``--j_list (-js)``: tile, i- and j-indices of cases
 
 Optional arguments:
@@ -522,7 +603,7 @@ staged UWM RTs located at:
 .. _`example1`:
 
 Example 1: UFS-caseGen for single point
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_c192``, for a single point using calculated horizontal advective tendencies,
 supplying the vertical velocity for the vertical advective terms and nudging the horizontal winds:
@@ -543,7 +624,7 @@ The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, whe
 .. _`example2`:
 
 Example 2: UFS-caseGen for list of points
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_c384``, for multiple points assuming the same forcing method as above:
 
@@ -572,7 +653,7 @@ number of points provided. The contents of the file should look like:
 .. _`example3`:
 
 Example 3: UFS-caseGen for an ensemble of points
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UFS regression test, ``control_p8``, for an ensemble (10) of randomly selected points
 over a specified longitude (:math:`300-320^oW`) and latitude

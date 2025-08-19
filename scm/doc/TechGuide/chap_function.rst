@@ -93,9 +93,9 @@ process:
    initialization stages of all schemes, groups, and suites that are
    defined in the suite definition file.
 
-.. _`time integration`:
+.. _`time-integration`:
 
-Time integration
+Time Integration
 ----------------
 
 The CCPP SCM uses the simple forward Euler scheme for time-stepping.

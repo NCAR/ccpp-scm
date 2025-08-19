@@ -3,6 +3,7 @@
 
 module scm_forcing
 
+use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
 use scm_utils, only: interpolate_to_grid_centers, find_vertical_index_pressure
 
@@ -144,7 +145,9 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
 
           !>  - Set the surface parameters to the last available data.
           scm_state%pres_surf(i) = scm_input%input_pres_surf(scm_input%input_ntimes)
-          scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
+          if (.not. scm_state%do_sst_initialize_only) then
+            scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
+          end if
           scm_state%sh_flux(i) = scm_input%input_sh_flux_sfc_kin(scm_input%input_ntimes)
           scm_state%lh_flux(i) = scm_input%input_lh_flux_sfc_kin(scm_input%input_ntimes)
         end do
@@ -324,7 +327,7 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           end do
         end if
 
-        if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2) then
+        if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2 .and. (.not. scm_state%do_sst_initialize_only)) then
           !skin temperature is needed if surface fluxes are specified (for calculating bulk Richardson number in the specified surface flux scheme) and for simple ocean scheme
           do i=1, scm_state%n_cols
             scm_state%T_surf(i) = scm_input%input_T_surf(scm_input%input_ntimes)
@@ -479,7 +482,9 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
         !>  - Interpolate the surface parameters in time.
         scm_state%pres_surf(i) = (1.0 - lifrac)*scm_input%input_pres_surf(low_t_index) + &
           lifrac*scm_input%input_pres_surf(low_t_index+1)
-        scm_state%T_surf(i) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
+        if (.not. scm_state%do_sst_initialize_only .or. scm_state%model_time == 0.0) then
+          scm_state%T_surf(i) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
+        end if
         scm_state%sh_flux(i) = (1.0 - lifrac)*scm_input%input_sh_flux_sfc_kin(low_t_index) + &
           lifrac*scm_input%input_sh_flux_sfc_kin(low_t_index+1)
         scm_state%lh_flux(i) = (1.0 - lifrac)*scm_input%input_lh_flux_sfc_kin(low_t_index) + &
@@ -701,8 +706,8 @@ subroutine interpolate_forcing(scm_input, scm_state, in_spinup)
           scm_state%dT_dt_rad(i,:) = (1.0 - lifrac)*dT_dt_rad_bracket(1,:) + lifrac*dT_dt_rad_bracket(2,:)
         end do
       end if
-
-      if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2) then
+        
+      if (scm_state%surface_thermo_control == 0 .or. scm_state%surface_thermo_control == 1 .or. scm_state%surface_thermo_control == 2 .and. (.not. scm_state%do_sst_initialize_only .or. scm_state%model_time == 0.0)) then
         !skin temperature is needed if surface fluxes are specified (for calculating bulk Richardson number in the specified surface flux scheme) and for simple ocean scheme
         do i=1, scm_state%n_cols
           scm_state%T_surf(i) = (1.0 - lifrac)*scm_input%input_T_surf(low_t_index) + lifrac*scm_input%input_T_surf(low_t_index+1)
@@ -791,7 +796,7 @@ subroutine apply_forcing_leapfrog(scm_state)
 
   select case(scm_state%mom_forcing_type)
     case (1)
-      write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
+      write(error_unit,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
       error stop
     case (2)
       !> - Calculate change in state momentum variables due to vertical advection (subsidence).
@@ -990,7 +995,7 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
   else
     select case(scm_state%mom_forcing_type)
       case (1)
-        write(*,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
+        write(error_unit,*) 'momentum forcing type = 1 is not implemented. Pick 2 or 3. Stopping...'
         error stop
       case (2)
         !> - Calculate change in state momentum variables due to vertical advection (subsidence).

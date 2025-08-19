@@ -1,4 +1,4 @@
-name: CI test to build the CCPP-SCM on ubuntu v22.04
+name: build the CCPP-SCM with Nvidia
 
 #on: [pull_request,workflow_dispatch]
 on: [workflow_dispatch]
@@ -6,15 +6,14 @@ on: [workflow_dispatch]
 jobs:
 
   build_scm:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         fortran-compiler: [nvfortran]
-        build-type:       [Release]#, Debug]
-        enable-gpu-acc:   [False, True]
-        py-version:       [3.7.13, 3.9.12]
+        build-type:       [Release] #, Debug]
+        enable-gpu-acc:   [False] #, True] # GPUs aren't available for testing
+        py-version:       [3.11.7]
 
     # Environmental variables
     env:
@@ -58,8 +57,55 @@ jobs:
       run: |
         df -h
 
+    # - name: Add conda to system path
+    #   run: |
+    #     echo $CONDA/bin >> $GITHUB_PATH
+
+    # - name: Install NetCDF Python libraries
+    #   run: |
+    #     conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
+
     #######################################################################################
-    # Initial
+    # Install Nvidia.
+    #######################################################################################
+
+    - name: Nvidia setup compilers.
+      env:
+        NVCOMPILERS: /home/runner/hpc_sdk
+        NVARCH: Linux_x86_64
+        NVYEAR: 2025
+        NVVERSION: 25.1
+        CUDA_VERSION: 12.6
+        NVVERSION_PACKED: 251 # Manually take NVVERSION and remove . because funcationality not in actions
+        NVHPC_SILENT: true
+        NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
+        NVHPC_INSTALL_TYPE: network
+        NVHPC_INSTALL_LOCAL_DIR: /home/runner/hpc_sdk
+      run: |
+        mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
+        wget -q https://developer.download.nvidia.com/hpc-sdk/${NVVERSION}/nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
+        tar xpzf nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
+        ls
+        nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}/install
+        export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/${NVVERSION}/compilers/bin
+        export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/${NVVERSION}/compilers/man
+        echo "The nvfortran installed is:"
+        nvfortran --version
+        echo "The path to nvfortran is:"
+        command -v nvfortran
+        echo "Removing tarball"
+        rm nvhpc_${NVYEAR}_${NVVERSION_PACKED}_Linux_x86_64_cuda_${CUDA_VERSION}.tar.gz
+        echo "CC=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "FC=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvfortran" >> $GITHUB_ENV
+        echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvc" >> $GITHUB_ENV
+        echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvfortran" >> $GITHUB_ENV
+
+    - name: Check space (pre dependency install)
+      run: |
+        df -h
+
+    #######################################################################################
+    # Initialize SCM
     #######################################################################################
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
       uses: actions/checkout@v4
@@ -74,47 +120,6 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{matrix.py-version}}
-
-    - name: Add conda to system path
-      run: |
-        echo $CONDA/bin >> $GITHUB_PATH
-
-    - name: Install NetCDF Python libraries
-      run: |
-        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml
-
-    #######################################################################################
-    # Install Nvidia.
-    #######################################################################################
-
-    - name: Nvidia setup compilers.
-      env:
-        NVCOMPILERS: /home/runner/hpc_sdk
-        NVARCH: Linux_x86_64
-        NVHPC_SILENT: true
-        NVHPC_INSTALL_DIR: /home/runner/hpc_sdk
-        NVHPC_INSTALL_TYPE: network
-        NVHPC_INSTALL_LOCAL_DIR: /home/runner/hpc_sdk
-      run: |
-        mkdir /home/runner/hpc_sdk && cd /home/runner/hpc_sdk
-        wget -q https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-        tar xpzf nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-        nvhpc_2024_241_Linux_x86_64_cuda_12.3/install
-        export PATH=${PATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/bin
-        export MANPATH=${MANPATH}:${NVCOMPILERS}/${NVARCH}/24.1/compilers/man
-        echo "The nvfortran installed is:"
-        nvfortran --version
-        echo "The path to nvfortran is:"
-        command -v nvfortran
-        echo "Removing tarball"
-        rm nvhpc_2024_241_Linux_x86_64_cuda_12.3.tar.gz
-
-    - name: Set environment for Nvidia compiler.
-      run: |
-        echo "CC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
-        echo "FC=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
-        echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvc" >> $GITHUB_ENV
-        echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/24.1/compilers/bin/nvfortran" >> $GITHUB_ENV
 
     #######################################################################################
     # Install FORTRAN dependencies
@@ -143,6 +148,8 @@ jobs:
         ./configure --prefix=${HDF5_ROOT}
         make -j
         make install
+        cd ..
+        rm -rf hdf5-hdf5-1_14_1-2 hdf5-1_14_1-2.tar.gz
 
     - name: Setup HDF5 Paths
       run: |
@@ -176,6 +183,8 @@ jobs:
       run: |
         cd ${HOME}/openmpi-4.1.6
         sudo make install -j
+        cd ..
+        rm -rf openmpi-4.1.6 openmpi-4.1.6.tar.gz
 
     - name: Setup OpenMPI Paths
       run: |
@@ -214,6 +223,8 @@ jobs:
         CPPFLAGS="-I/home/runner/hdf5/include" LDFLAGS="-L/home/runner/hdf5/lib" ./configure --prefix=${NETCDF}
         make
         make install
+        cd ..
+        rm -rf netcdf-c-4.7.4 v4.7.4.tar.gz
 
     - name: Install NetCDF Fortran library
       if: steps.cache-netcdf.outputs.cache-hit != 'true'
@@ -224,6 +235,8 @@ jobs:
         FCFLAGS="-fPIC" FFLAGS="-fPIC" CPPFLAGS="-I/home/runner/hdf5/include -I/home/runner/netcdf/include" LDFLAGS="-L/home/runner/hdf5/lib -L/home/runner/netcdf/lib" ./configure --prefix=${NETCDF}
         make
         make install
+        cd ..
+        rm -rf netcdf-fortran-4.6.1 v4.6.1.tar.gz
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
@@ -241,6 +254,8 @@ jobs:
         make -j
         make install
         echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
+        cd ../../
+        rm -rf bacio
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
@@ -258,6 +273,8 @@ jobs:
         make -j
         make install
         echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
+        cd ../../
+        rm -rf NCEPLIBS-sp
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
@@ -275,6 +292,12 @@ jobs:
         make -j
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
+        cd ../../
+        rm -rf NCEPLIBS-w3emc
+
+    - name: Check space (pre SCM build)
+      run: |
+        df -h
 
     #######################################################################################
     # Build and run SCM regression tests (ccpp-scm/test/rt_test_cases.py)
@@ -291,16 +314,20 @@ jobs:
         cd ${SCM_ROOT}/scm/bin
         make -j
 
-    - name: Download data for SCM
-      if: contains(matrix.enable-gpu-acc, 'False')
+    - name: Check space (post SCM build)
       run: |
-        cd ${SCM_ROOT}
-        ./contrib/get_all_static_data.sh
-        ./contrib/get_thompson_tables.sh
-        ./contrib/get_aerosol_climo.sh
+        df -h
 
-    - name: Run SCM RTs (w/o GPU)
-      if: contains(matrix.enable-gpu-acc, 'False')
-      run: |
-        cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 -v
+    # - name: Download data for SCM
+    #   if: contains(matrix.enable-gpu-acc, 'False')
+    #   run: |
+    #     cd ${SCM_ROOT}
+    #     ./contrib/get_all_static_data.sh
+    #     ./contrib/get_thompson_tables.sh
+    #     ./contrib/get_aerosol_climo.sh
+
+    # - name: Run SCM RTs (w/o GPU)
+    #   if: contains(matrix.enable-gpu-acc, 'False')
+    #   run: |
+    #     cd ${SCM_ROOT}/scm/bin
+    #     ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 -v

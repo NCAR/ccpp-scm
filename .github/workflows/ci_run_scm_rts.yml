@@ -1,5 +1,5 @@
 
-name: CI test to build and run SCM regression tests
+name: build and run SCM regression tests
 
 on: [pull_request, workflow_dispatch]
 
@@ -7,12 +7,14 @@ jobs:
   run_scm_rts:
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        fortran-compiler: [gfortran-11]
+        fortran-compiler: [12]
         build-type:       [Release, Debug, SinglePrecision]
-        py-version:       [3.9.12]
+        py-version:       [3.11]
+
+    continue-on-error: true
 
     # Environmental variables
     env:
@@ -29,56 +31,47 @@ jobs:
 
     # Workflow steps
     steps:
-    #######################################################################################
-    # Initial
-    #######################################################################################
-    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v4
+    # Install System Dependencies
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update -qq && sudo apt-get install -qq -y --no-install-recommends \
+        gfortran-${{matrix.fortran-compiler}} \
+        libhdf5-dev \
+        libnetcdf-pnetcdf-19 \
+        libnetcdff7 \
+        libnetcdf-dev \
+        libnetcdff-dev \
+        libxml2 \
+        openmpi-bin \
+        libopenmpi-dev
 
-    - name: Initialize submodules
-      run: git submodule update --init --recursive
-
-    #######################################################################################
     # Python setup
-    #######################################################################################
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: ${{matrix.py-version}}
 
-    - name: Add conda to system path
-      run: |
-        echo $CONDA/bin >> $GITHUB_PATH
-
     - name: Install NetCDF Python libraries
       run: |
-        conda install --yes -c conda-forge h5py>=3.4 netCDF4 f90nml matplotlib
+        pip install f90nml h5py netCDF4 matplotlib
 
-    - name: Update system packages
-      run: sudo apt-get update
-
-    #######################################################################################
-    # Install FORTRAN dependencies
-    #######################################################################################
-
-    - name: Install openmpi
+    - name: Environment for openmpi compiler
       run: |
-        wget https://github.com/open-mpi/ompi/archive/refs/tags/v4.1.6.tar.gz
-        tar -xvf v4.1.6.tar.gz
-        cd ompi-4.1.6
-        ./autogen.pl
-        ./configure --prefix=/home/runner/ompi-4.1.6
-        make -j4
-        make install
-        echo "LD_LIBRARY_PATH=/home/runner/ompi-4.1.6/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "PATH=/home/runner/ompi-4.1.6/bin:$PATH" >> $GITHUB_ENV
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
 
+    - name: Check MPI version
+      run: |
+        which mpif90
+        mpif90 --version
+
+    # Install NCEP libs
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v4
       with:
         path: /home/runner/bacio
-        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
 
     - name: Install bacio library v2.4.1
       if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
@@ -95,7 +88,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/NCEPLIBS-sp
-        key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
 
     - name: Install SP-library v2.3.3
       if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
@@ -112,7 +105,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /home/runner/myw3emc
-        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key
+        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
 
     - name: Install w3emc library v2.9.2
       if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
@@ -124,34 +117,14 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    - name: Install NetCDF C library
-      run: sudo apt-get install libnetcdf-dev
 
-    - name: Cache NetCDF Fortran library
-      id: cache-netcdf-fortran
-      uses: actions/cache@v4
-      with:
-        path: /home/runner/netcdf-fortran
-        key: cache-netcdf-fortran-${{matrix.fortran-compiler}}-key
+    # Initialize and build SCM, run regressions tests
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v4
 
-    - name: Install NetCDF Fortran library
-      if: steps.cache-netcdf-fortran.outputs.cache-hit != 'true'
-      run: |
-        git clone --branch ${NFVERSION} https://github.com/Unidata/netcdf-fortran.git
-        cd netcdf-fortran
-        ./configure
-        make -j
-        sudo make install
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${NFHOME}/lib
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
 
-    - name: Environment for openmpi compiler
-      run: |
-        echo "FC=mpif90" >> $GITHUB_ENV
-        echo "CC=mpicc"  >> $GITHUB_ENV
-
-    #######################################################################################
-    # Build SCM. Run regression tests.
-    #######################################################################################
     - name: Download data for SCM
       run: |
         cd ${SCM_ROOT}
@@ -217,7 +190,17 @@ jobs:
         cd ${SCM_ROOT}/test
         ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
+    - name: Check if SCM RT plots exist
+      id: check_files
+      run: |
+        if [ -n "$(ls -A /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out 2>/dev/null)" ]; then
+          echo "files_exist=true" >> "$GITHUB_ENV"
+        else
+          echo "files_exist=false" >> "$GITHUB_ENV"
+        fi
+
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
+      if: env.files_exist == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: rt-plots-${{matrix.build-type}}

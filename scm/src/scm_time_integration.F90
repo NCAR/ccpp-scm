@@ -3,6 +3,7 @@
 
 module scm_time_integration
 
+use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
 use scm_forcing
 use ccpp_config, only: ty_ccpp_config
@@ -136,7 +137,7 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_suite_part
                                   physics    = physics, &
                                   ccpp_cfg   = ccpp_cfg)
   if (ccpp_cfg%ccpp_errflg/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
       error stop trim(ccpp_cfg%ccpp_errmsg)
   end if
 
@@ -158,6 +159,8 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_suite_part
   endif
 
   do isuite_part=1,size(ccpp_suite_parts)
+     call physics%Interstitial(1)%rad_reset(physics%Model)
+     call physics%Interstitial(1)%phys_reset(physics%Model)
      call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                            suite_part = trim(trim(adjustl(ccpp_suite_parts(isuite_part)))), &
                            physics    = physics, &

@@ -4,9 +4,12 @@
 
 module scm_input
 
-use scm_kinds, only : sp, dp, qp
-use netcdf
+use missing_values, only: missing_value
+use data_qc, only: is_missing_value, check_missing
+use scm_kinds, only: sp, dp, qp
 use scm_type_defs, only: character_length
+use iso_fortran_env, only: error_unit
+use netcdf
 
 implicit none
 
@@ -63,6 +66,7 @@ subroutine get_config_nml(scm_state)
   logical              :: model_ics !<  true means have land info too
   logical              :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
   logical              :: do_spinup
+  logical              :: do_sst_initialize_only
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour, min
   real(kind=dp)        :: column_area
@@ -80,7 +84,7 @@ subroutine get_config_nml(scm_state)
 
   NAMELIST /case_config/ npz_type, vert_coord_file, case_name, dt, runtime, runtime_mult, n_itt_out, n_itt_diag, &
     n_levels, output_dir, thermo_forcing_type, model_ics, &
-    lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
+    lsm_ics, do_spinup, do_sst_initialize_only, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
     sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, &
     column_area, input_type
 
@@ -116,6 +120,7 @@ subroutine get_config_nml(scm_state)
   model_ics = .false.
   lsm_ics = .false.
   do_spinup = .false.
+  do_sst_initialize_only = .false.
   reference_profile_choice = 1
   year = 2006
   month = 1
@@ -126,7 +131,7 @@ subroutine get_config_nml(scm_state)
 
   open(unit=10, file=experiment_namelist, status='old', action='read', iostat=ioerror)
   if(ioerror /= 0) then
-    write(*,'(a,i0)') 'There was an error opening the file ' // experiment_namelist // &
+    write(error_unit,'(a,i0)') 'There was an error opening the file ' // experiment_namelist // &
                       '; error code = ', ioerror
     error stop "error opening namelist"
   else
@@ -134,7 +139,7 @@ subroutine get_config_nml(scm_state)
   end if
 
   if(ioerror /= 0) then
-    write(*,'(a,i0)') 'There was an error reading the namelist case_config in the file '&
+    write(error_unit,'(a,i0)') 'There was an error reading the namelist case_config in the file '&
                       // experiment_namelist // '; error code = ',ioerror
     error stop "error opening namelist"
   end if
@@ -200,6 +205,7 @@ subroutine get_config_nml(scm_state)
   scm_state%model_ics = model_ics
   scm_state%lsm_ics = lsm_ics
   scm_state%do_spinup = do_spinup
+  scm_state%do_sst_initialize_only = do_sst_initialize_only
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
   scm_state%input_type = input_type
@@ -213,7 +219,7 @@ end subroutine get_config_nml
 !! "processed_case_input" directory.
 subroutine get_case_init(scm_state, scm_input)
   use scm_type_defs, only : scm_state_type, scm_input_type
-  use NetCDF_read, only: NetCDF_read_var, check, missing_value
+  use NetCDF_read, only: NetCDF_read_var, check
   type(scm_state_type), intent(inout) :: scm_state
   type(scm_input_type), target, intent(inout) :: scm_input
 
@@ -376,6 +382,8 @@ subroutine get_case_init(scm_state, scm_input)
   real(kind=dp)               :: input_sfalb_ice
   real(kind=dp)               :: input_emis_ice
   real(kind=dp)               :: input_lai !< leaf area index for RUC LSM
+  real(kind=dp)               :: input_snodi
+  real(kind=dp)               :: input_weasdi
 
   real(kind=dp), allocatable  :: input_tslb(:)    !< soil temperature for RUC LSM (K)
   real(kind=dp), allocatable  :: input_smois(:)   !< volume fraction of soil moisture for RUC LSM (frac)
@@ -498,8 +506,8 @@ subroutine get_case_init(scm_state, scm_input)
   !Either thetail or T must be present
   call NetCDF_read_var(grp_ncid, "thetail", .False., input_thetail)
   call NetCDF_read_var(grp_ncid, "temp", .False., input_temp)
-  if (maxval(input_thetail) < 0 .and. maxval(input_temp) < 0) then
-    write(*,*) "One of thetail or temp variables must be present in ",trim(adjustl(scm_state%case_name))//'.nc',". Stopping..."
+  if (check_missing(input_thetail) .and. check_missing(input_temp)) then
+    write(error_unit,*) "One of thetail or temp variables must be present in ",trim(adjustl(scm_state%case_name))//'.nc',". Stopping..."
     error stop "One of thetail or temp variables"
   end if
   call NetCDF_read_var(grp_ncid, "qt",    .True., input_qt   )
@@ -690,6 +698,8 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
   call NetCDF_read_var(grp_ncid, "emis_ice",         .False., input_emis_ice)
   call NetCDF_read_var(grp_ncid, "lai",              .False., input_lai)
+  call NetCDF_read_var(grp_ncid, "snodi",            .False., input_snodi)
+  call NetCDF_read_var(grp_ncid, "weasdi",           .False., input_weasdi)
 
   !> - Read in the forcing data.
 
@@ -796,7 +806,7 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_snwdph   = input_snwdph
   scm_input%input_snoalb   = input_snoalb
   scm_input%input_sncovr   = input_sncovr
-  if (input_area > missing_value) then
+  if (.not. is_missing_value(input_area)) then
     scm_input%input_area   = input_area
   end if
   scm_input%input_tsfco    = input_tsfco
@@ -918,8 +928,6 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_dt_cool = input_dt_cool
   scm_input%input_qrain   = input_qrain
 
-  scm_input%input_area     = input_area
-
   scm_input%input_wetness         = input_wetness
   scm_input%input_clw_surf_land   = input_clw_surf_land
   scm_input%input_clw_surf_ice    = input_clw_surf_ice
@@ -934,6 +942,8 @@ subroutine get_case_init(scm_state, scm_input)
   scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck
   scm_input%input_emis_ice        = input_emis_ice
   scm_input%input_lai             = input_lai
+  scm_input%input_snodi           = input_snodi
+  scm_input%input_weasdi          = input_weasdi
 
   if (scm_state%runtime_mult /= 1.0) then
     scm_state%runtime = scm_state%runtime*scm_state%runtime_mult
@@ -945,7 +955,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   !corresponds to the DEPHY-SCM specs, version 1
 
   use scm_type_defs, only : scm_state_type, scm_input_type
-  use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check, missing_value, missing_value_int
+  use NetCDF_read, only: NetCDF_read_var, NetCDF_read_att, NetCDF_conditionally_read_var, check
   use scm_physical_constants, only: con_hvap, con_hfus, con_cp, con_rocp, con_rd
   use scm_utils, only: find_vertical_index_pressure, find_vertical_index_height
 
@@ -1137,6 +1147,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   real(kind=dp), allocatable  :: input_sfalb_lnd_bck(:)   !<
   real(kind=dp), allocatable  :: input_sfalb_ice(:)       !<
   real(kind=dp), allocatable  :: input_emis_ice(:)        !<
+  real(kind=dp), allocatable  :: input_snodi(:)
+  real(kind=dp), allocatable  :: input_weasdi(:)
 
   ! forcing variables
   real(kind=sp), allocatable :: input_force_pres_surf(:) !< forcing surface pressure (Pa)
@@ -1182,14 +1194,12 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   CHARACTER(LEN=nf90_max_name) :: tmpName
   CHARACTER(LEN=nf90_max_name) :: tmpUnits
   real(kind=sp), parameter :: p0 = 100000.0
-  real(kind=sp) :: exner, exner_inv, rho, elapsed_sec, missing_value_eps
+  real(kind=sp) :: exner, exner_inv, rho, elapsed_sec
   real(kind=dp) :: rinc(5)
   integer :: jdat(1:8), idat(1:8) !(yr, mon, day, t-zone, hr, min, sec, mil-sec)
   logical :: needed_for_lsm_ics, needed_for_model_ics, lev_in_altitude
 
   integer :: input_n_init_times, input_n_forcing_times, input_n_lev, input_n_snow, input_n_ice, input_n_soil, input_nvegcat, input_nsoilcat
-
-  missing_value_eps = missing_value + 0.01
 
   !> - Open the case input file found in the processed_case_input dir corresponding to the experiment name.
   call check(NF90_OPEN(trim(adjustl(scm_state%case_name))//'_SCM_driver.nc',nf90_nowrite,ncid),"nf90_open()")
@@ -1212,8 +1222,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else if (adjustl(trim(tmpUnits)) == 'm') then
     lev_in_altitude = .true.
   else
-    write(0,'(a,i0,a)') "The variable 'lev' in the case data file had units different than 'm', 'pa', or 'Pa', but it is expected to be altitude in m or pressure in Pa. Stopping..."
-    STOP
+    write(error_unit,'(a,i0,a)') "The variable 'lev' in the case data file had units different than 'm', 'pa', or 'Pa', but it is expected to be altitude in m or pressure in Pa. Stopping..."
+    error stop
   end if
 
   !### TO BE USED IF DEPHY-SCM can be extended to include model ICs ###
@@ -1500,6 +1510,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
              input_sfalb_lnd_bck   (          input_n_init_times), &
              input_sfalb_ice       (          input_n_init_times), &
              input_emis_ice        (          input_n_init_times), &
+             input_snodi           (          input_n_init_times), &
+             input_weasdi          (          input_n_init_times), &
              stat=allocate_status)
 
   needed_for_lsm_ics = .False.
@@ -1513,7 +1525,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     call NetCDF_read_var(ncid, "pa", .True., input_pres)
     !zh could be defined in addition to lev, use if so
     call NetCDF_read_var(ncid, "zh", .False., input_height)
-    if (input_height(1,1) == missing_value) then
+    if (is_missing_value(input_height(1,1))) then
       do i=1, input_n_init_times
         do k=1, input_n_lev
           input_height(k,i) = input_lev(k)
@@ -1524,7 +1536,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     call NetCDF_read_var(ncid, "zh", .True., input_height)
     !pa could be defined in addition to lev, use if so
     call NetCDF_read_var(ncid, "pa", .False., input_pres)
-    if (input_pres(1,1) == missing_value) then
+    if (is_missing_value(input_pres(1,1))) then
       do i=1, input_n_init_times
         do k=1, input_n_lev
           input_pres(k,i) = input_lev(k)
@@ -1651,7 +1663,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "ps_forc", .True., input_force_pres_surf)
   !zh_forc and pa_forc should be present according to the DEPHY standard; if not, assume that zh_forc = input_height and pa_forc = input_pres
   call NetCDF_read_var(ncid, "zh_forc", .False., input_force_height)
-  if (input_force_height(1,1) == missing_value) then
+  if (is_missing_value(input_force_height(1,1))) then
     do i=1, input_n_forcing_times
       do k=1, input_n_lev
         input_force_height(k,i) = input_height(k,1)
@@ -1659,7 +1671,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
   end if
   call NetCDF_read_var(ncid, "pa_forc", .False., input_force_pres)
-  if (input_force_pres(1,1) == missing_value) then
+  if (is_missing_value(input_force_pres(1,1))) then
     do i=1, input_n_forcing_times
       do k=1, input_n_lev
         input_force_pres(k,i) = input_pres(k,1)
@@ -1836,6 +1848,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   call NetCDF_read_var(ncid, "sfalb_lnd_bck",    .False., input_sfalb_lnd_bck)
   call NetCDF_read_var(ncid, "emis_ice",         .False., input_emis_ice)
   call NetCDF_read_var(ncid, "lai",              .False., input_lai)
+  call NetCDF_read_var(ncid, "snodi",            .False., input_snodi)
+  call NetCDF_read_var(ncid, "weasdi",           .False., input_weasdi)
 
 
   call check(NF90_CLOSE(NCID=ncid),"nf90_close()")
@@ -1891,29 +1905,29 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   scm_input%input_tke = input_tke(:,active_init_time)
 
   !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
-  if ((maxval(input_qv(:,active_init_time)) < 0 .and. &
-       maxval(input_qt(:,active_init_time)) < 0) .and. &
-      (maxval(input_rv(:,active_init_time)) > 0 .or. &
-       maxval(input_rt(:,active_init_time)) > 0)) then
-     if (maxval(input_rv(:,active_init_time)) > 0) then
+  if ((check_missing(input_qv(:,active_init_time)) .and. &
+       check_missing(input_qt(:,active_init_time))) .and. &
+      (.not. check_missing(input_rv(:,active_init_time)) .or. &
+       .not. check_missing(input_rt(:,active_init_time)))) then
+     if (.not. check_missing(input_rv(:,active_init_time))) then
        do k=1, input_n_lev
          input_qv(k,active_init_time) = input_rv(k,active_init_time)/&
             (1.0 + input_rv(k,active_init_time))
        end do
      end if
-     if (maxval(input_rt(:,active_init_time)) > 0) then
+     if (.not. check_missing(input_rt(:,active_init_time))) then
        do k=1, input_n_lev
          input_qt(k,active_init_time) = input_rt(k,active_init_time)/&
             (1.0 + input_rt(k,active_init_time))
        end do
      end if
-     if (maxval(input_rl(:,active_init_time)) > 0) then
+     if (.not. check_missing(input_rl(:,active_init_time))) then
        do k=1, input_n_lev
          input_ql(k,active_init_time) = input_rl(k,active_init_time)/&
             (1.0 + input_rl(k,active_init_time))
        end do
      end if
-     if (maxval(input_ri(:,active_init_time)) > 0) then
+     if (.not. check_missing(input_ri(:,active_init_time))) then
        do k=1, input_n_lev
          input_qi(k,active_init_time) = input_ri(k,active_init_time)/&
             (1.0 + input_ri(k,active_init_time))
@@ -1922,10 +1936,10 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   end if
 
   !make sure that one of qv or qt (and rv or rt due to above conversion) is present (add support for rh later)
-  if (maxval(input_qv(:,active_init_time)) >= 0) then
-    if (maxval(input_qt(:,active_init_time)) >= 0) then
-      if (maxval(input_ql(:,active_init_time)) >= 0) then
-        if (maxval(input_qi(:,active_init_time)) >= 0) then
+  if (.not. check_missing(input_qv(:,active_init_time))) then
+    if (.not. check_missing(input_qt(:,active_init_time))) then
+      if (.not. check_missing(input_ql(:,active_init_time))) then
+        if (.not. check_missing(input_qi(:,active_init_time))) then
           !all of qv, qt, ql, qi (need to check for consistency that they add up correctly?)
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_qt = input_qt(:,active_init_time)
@@ -1941,7 +1955,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           end do
         end if !qi test
       else
-        if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, qt, qi, but no ql
+        if (.not. check_missing(input_qi(:,active_init_time))) then !qv, qt, qi, but no ql
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_qt = input_qt(:,active_init_time)
           scm_input%input_qi = input_qi(:,active_init_time)
@@ -1960,8 +1974,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if !qi test
       end if !ql test
     else !qv, but not qt
-      if (maxval(input_ql(:,active_init_time)) >= 0) then
-        if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, no qt, ql, qi
+      if (.not. check_missing(input_ql(:,active_init_time))) then
+        if (.not. check_missing(input_qi(:,active_init_time))) then !qv, no qt, ql, qi
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_ql = input_ql(:,active_init_time)
           scm_input%input_qi = input_qi(:,active_init_time)
@@ -1979,7 +1993,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
           scm_input%input_qi = 0.0
         end if ! qi test
       else
-        if (maxval(input_qi(:,active_init_time)) >= 0) then !qv, no qt, no ql, qi
+        if (.not. check_missing(input_qi(:,active_init_time))) then !qv, no qt, no ql, qi
           scm_input%input_qv = input_qv(:,active_init_time)
           scm_input%input_qi = input_qi(:,active_init_time)
           !derive qt
@@ -1995,9 +2009,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         end if ! qi test
       end if ! ql test
     end if !qt test
-  else if (maxval(input_qt(:,active_init_time)) >= 0) then !qt, but not qv
-    if (maxval(input_ql(:,active_init_time)) >= 0) then
-      if (maxval(input_qi(:,active_init_time)) >= 0) then !no qv, qt, ql, qi
+  else if (.not. check_missing(input_qt(:,active_init_time))) then !qt, but not qv
+    if (.not. check_missing(input_ql(:,active_init_time))) then
+      if (.not. check_missing(input_qi(:,active_init_time))) then !no qv, qt, ql, qi
         scm_input%input_qt = input_qt(:,active_init_time)
         scm_input%input_ql = input_ql(:,active_init_time)
         scm_input%input_qi = input_qi(:,active_init_time)
@@ -2015,7 +2029,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
         scm_input%input_qi = 0.0
       end if
     else
-      if (maxval(input_qi(:,active_init_time)) >= 0) then !no qv, qt, no ql, qi
+      if (.not. check_missing(input_qi(:,active_init_time))) then !no qv, qt, no ql, qi
         scm_input%input_qt = input_qt(:,active_init_time)
         scm_input%input_qi = input_qi(:,active_init_time)
         !derive qv
@@ -2032,17 +2046,17 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if !ql test
   else
     !no qv or qt
-    write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported moisture variables (qv, qt, rv, rt) were missing. Stopping...'
+    write(error_unit,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported moisture variables (qv, qt, rv, rt) were missing. Stopping...'
     error stop "Aall of the supported moisture variables (qv, qt, rv, rt) were missing"
   end if
 
   !make sure that at least one of temp, theta, thetal is present;
   !the priority for use is temp, thetal, theta
-  if (maxval(input_temp(:,active_init_time)) > 0) then
+  if (.not. check_missing(input_temp(:,active_init_time))) then
     scm_input%input_temp = input_temp(:,active_init_time)
     !since temperature was present (and is ultimately needed in the physics), choose to use it, and set the alternative to missing, even if it is also present in the file
     scm_input%input_thetail = missing_value
-  else if (maxval(input_thetal(:,active_init_time)) > 0) then
+  else if (.not. check_missing(input_thetal(:,active_init_time))) then
     !convert thetal to thetail
     do k=1, input_n_lev
       exner_inv = (p0/scm_input%input_pres(k))**con_rocp
@@ -2051,7 +2065,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end do
     !since thetail is present, choose to use it, and set the alternative temperature to missing, even if it is also present in the file
     scm_input%input_temp = missing_value
-  else if (maxval(input_theta(:,active_init_time)) > 0) then
+  else if (.not. check_missing(input_theta(:,active_init_time))) then
     !convert theta to thetail
     do k=1, input_n_lev
       exner_inv = (p0/scm_input%input_pres(k))**con_rocp
@@ -2062,7 +2076,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     !since thetail is present, choose to use it, and set the alternative temperature to missing, even if it is also present in the file
     scm_input%input_temp = missing_value
   else
-    write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
+    write(error_unit,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
     error stop "All of the supported temperature variables (temp, theta, thetal) were missing"
   end if
 
@@ -2126,12 +2140,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%sfc_type = 0.0
   else if (input_SurfaceType == 'land') then
     scm_state%sfc_type = 1.0
+  else if (input_SurfaceType == 'ice') then
+    scm_state%sfc_type = 2.0
   end if
   !no sea ice type?
 
   if (input_surfaceForcingTemp == 'ts') then
-    if (maxval(input_force_ts) < 0) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
+    if (check_missing(input_force_ts)) then
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable ts should be present, but it is missing"
     else
       !overwrite sfc_flux_spec
@@ -2144,9 +2160,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 0
 
-    if (maxval(input_force_ts) < 0) then
+    if (check_missing(input_force_ts)) then
       !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
-      if (maxval(scm_input%input_temp) > 0) then
+      if (.not. check_missing(scm_input%input_temp)) then
         !temperature profile is available
         scm_input%input_T_surf = scm_input%input_temp(1)
       else
@@ -2162,8 +2178,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
 
     !kinematic surface fluxes are specified (but may need to be converted)
-    if (maxval(input_force_wpthetap(:)) < missing_value_eps) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
+    if (check_missing(input_force_wpthetap(:))) then
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable wpthetap should be present, but it is missing."
     else
       !convert from theta to T
@@ -2174,17 +2190,18 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
 
     !if mixing ratios are present, and not specific humidities, convert from mixing ratio to specific humidities
-    if ((maxval(input_force_wpqvp(:)) < missing_value_eps .and. &
-         maxval(input_force_wpqtp(:)) < missing_value_eps) .and. &
-        (maxval(input_force_wprvp(:)) > missing_value_eps .or. &
-         maxval(input_force_wprtp(:)) > missing_value_eps)) then
-       if (maxval(input_force_wprvp(:)) > missing_value_eps) then
+    if ((check_missing(input_force_wpqvp(:)) .and. &
+         check_missing(input_force_wpqtp(:))) &
+         .and. &
+        (.not. check_missing(input_force_wprvp(:)) .or. &
+         .not. check_missing(input_force_wprtp(:)))) then
+       if (.not. check_missing(input_force_wprvp(:))) then
          do i=1, input_n_forcing_times
            input_force_wpqvp(i) = input_force_wprvp(i)/&
               (1.0 + input_force_wprvp(i))
          end do
        end if
-       if (maxval(input_force_wprtp(:)) > missing_value_eps) then
+       if (.not. check_missing(input_force_wprtp(:))) then
          do i=1, input_n_forcing_times
            input_force_wpqtp(i) = input_force_wprtp(i)/&
               (1.0 + input_force_wprtp(i))
@@ -2192,11 +2209,11 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
        end if
     end if
 
-    if (maxval(input_force_wpqvp(:)) < missing_value_eps .and. maxval(input_force_wpqtp(:)) < missing_value_eps) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
+    if (check_missing(input_force_wpqvp(:)) .and. check_missing(input_force_wpqtp(:))) then
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing."
     else
-      if (maxval(input_force_wpqvp(:)) > missing_value_eps) then !use wpqvp if available
+      if (.not. check_missing(input_force_wpqvp(:))) then !use wpqvp if available
         scm_input%input_lh_flux_sfc_kin = input_force_wpqvp(:)
       else
         !surface total flux of water should just be vapor
@@ -2208,9 +2225,9 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_state%sfc_flux_spec = .true.
     scm_state%surface_thermo_control = 1
 
-    if (maxval(input_force_ts) < 0) then
+    if (check_missing(input_force_ts)) then
       !since no surface temperature is given, assume that the surface temperature is equivalent to the static, surface-adjacent temperature in the initial profile
-      if (maxval(scm_input%input_temp) > 0) then
+      if (.not. check_missing(scm_input%input_temp)) then
         !temperature profile is available
         scm_input%input_T_surf = scm_input%input_temp(1)
       else
@@ -2226,15 +2243,15 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
 
 
-    if (maxval(input_force_sfc_sens_flx(:)) < missing_value_eps) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
+    if (check_missing(input_force_sfc_sens_flx(:))) then
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing in indicates that the variable sfc_sens_flx should be present, but it is missing."
     else
       scm_input%input_sh_flux_sfc = input_force_sfc_sens_flx(:)
     end if
 
-    if (maxval(input_force_sfc_lat_flx(:)) < missing_value_eps) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
+    if (check_missing(input_force_sfc_lat_flx(:))) then
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable sfc_lat_flx should be present, but it is missing."
     else
       scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(:)
@@ -2341,6 +2358,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     scm_input%input_sfalb_lnd       = input_sfalb_lnd(active_init_time)
     scm_input%input_sfalb_lnd_bck   = input_sfalb_lnd_bck(active_init_time)
     scm_input%input_emis_ice        = input_emis_ice(active_init_time)
+    scm_input%input_snodi           = input_snodi(active_init_time)
+    scm_input%input_weasdi          = input_weasdi(active_init_time)
   end if
 
   if (input_surfaceForcingWind == 'z0') then
@@ -2349,7 +2368,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else if (input_surfaceForcingWind == 'ustar') then
     !not supported
     scm_state%surface_momentum_control = 1
-    write(*,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported. Stopping ...'
+    write(error_unit,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported. Stopping ...'
     error stop "The global attribute surfaceForcingWind indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported."
   end if
 
@@ -2451,7 +2470,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   if (char_rad_temp == 'adv' .or. char_rad_theta == 'adv' .or. char_rad_thetal == 'adv') then
     scm_state%force_rad_T = 4
     if (scm_state%force_adv_T == 0) then
-      write(*,*) 'The global attribute rad_temp, rad_theta, or rad_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that radiative forcing is included in the advection term, but there is no advection term. Stopping ...'
+      write(error_unit,*) 'The global attribute rad_temp, rad_theta, or rad_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that radiative forcing is included in the advection term, but there is no advection term. Stopping ...'
       error stop "The global attribute rad_temp, rad_theta, or rad_thetal indicates that radiative forcing is included in the advection term, but there is no advection term."
     end if
   else if (rad_temp > 0) then
@@ -2747,7 +2766,7 @@ subroutine get_reference_profile(scm_state, scm_reference)
     case (1)
       open(unit=1, file='McCProfiles.dat', status='old', action='read', iostat=ioerror)
       if(ioerror /= 0) then
-        write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
+        write(error_unit,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
           &Error code = ',ioerror
         error stop "There was an error opening the file McCprofiles.dat in the processed_case_input directory."
       endif
@@ -2857,7 +2876,7 @@ subroutine get_tracers(tracer_names, tracer_types)
             tracer_types(i) = 0 ! temporary until SCM is configured to work with GOCART
         end do
     else
-        write(*,'(a,i0)') 'There was an error opening the file ' // FILE_NAME // &
+        write(error_unit,'(a,i0)') 'There was an error opening the file ' // FILE_NAME // &
                           '; error code = ', rc
         error stop "Error opening tracers file"
     end if

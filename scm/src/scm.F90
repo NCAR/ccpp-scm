@@ -6,6 +6,7 @@ contains
 
 subroutine scm_main_sub()
 
+  use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
   use scm_input
   use scm_utils
@@ -49,7 +50,7 @@ subroutine scm_main_sub()
 
   call MPI_INIT(ierr)
   if (ierr/=0) then
-      write(*,*) 'An error occurred in MPI_INIT: ', ierr
+      write(error_unit,*) 'An error occurred in MPI_INIT: ', ierr
       error stop
   end if
   fcst_mpi_comm = MPI_COMM_WORLD
@@ -64,7 +65,7 @@ subroutine scm_main_sub()
     case(1)
       call get_case_init_DEPHY(scm_state, scm_input_instance)
     case default
-      write(*,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
+      write(error_unit,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
       error stop
   end select
 
@@ -156,10 +157,10 @@ subroutine scm_main_sub()
 
   !check for problematic diagnostic and radiation periods
   if (mod(physics%Model%nszero,scm_state%n_itt_out) /= 0) then
-    write(*,*) "***ERROR***: The diagnostic output period must be a multiple of the output period."
-    write(*,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhzero = ",physics%Model%fhzero
-    write(*,*) "implying a diagnostic output period of ", physics%Model%nszero*scm_state%dt, "seconds."
-    write(*,*) "The given output period in the case configuration namelist is ", scm_state%output_period,"seconds."
+    write(error_unit,*) "***ERROR***: The diagnostic output period must be a multiple of the output period."
+    write(error_unit,*) "From ", adjustl(trim(scm_state%physics_nml)), ", fhzero = ",physics%Model%fhzero
+    write(error_unit,*) "implying a diagnostic output period of ", physics%Model%nszero*scm_state%dt, "seconds."
+    write(error_unit,*) "The given output period in the case configuration namelist is ", scm_state%output_period,"seconds."
     error stop
   end if
 
@@ -197,18 +198,18 @@ subroutine scm_main_sub()
   endif
 
   !initialize the column's physics
-  write(0,'(a,i0,a)') "Calling ccpp_physics_suite_part_list with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
+  write(*,'(a,i0,a)') "Calling ccpp_physics_suite_part_list with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
   call ccpp_physics_suite_part_list(suite_name  = trim(trim(adjustl(scm_state%physics_suite_name))), &
                                     part_list   = ccpp_suite_parts, &
                                     ccpp_errmsg = ccpp_cfg%ccpp_errmsg,      &
                                     ccpp_errflg = ccpp_cfg%ccpp_errflg)
-  write(0,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
+  write(*,'(a,i0,a)') "Calling ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "'"
   call ccpp_physics_init(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                          physics    = physics,     &
                          ccpp_cfg   = ccpp_cfg)
-  write(0,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ccpp_errflg=", ccpp_cfg%ccpp_errflg
+  write(*,'(a,i0,a,i0)') "Called ccpp_physics_init with suite '" // trim(trim(adjustl(scm_state%physics_suite_name))) // "', ccpp_errflg=", ccpp_cfg%ccpp_errflg
   if (ccpp_cfg%ccpp_errflg/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
       error stop
   end if
 
@@ -299,7 +300,7 @@ subroutine scm_main_sub()
                                     physics    = physics,     &
                                     ccpp_cfg   = ccpp_cfg)
     if (ccpp_cfg%ccpp_errflg/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
         error stop
     end if
 
@@ -321,12 +322,14 @@ subroutine scm_main_sub()
     endif
 
     do isuite_part=1,size(ccpp_suite_parts)
+       call physics%Interstitial(1)%rad_reset(physics%Model)
+       call physics%Interstitial(1)%phys_reset(physics%Model)
        call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                              suite_part = ccpp_suite_parts(isuite_part), &
                              physics    = physics,     &
                              ccpp_cfg   = ccpp_cfg)
        if (ccpp_cfg%ccpp_errflg/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+          write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
           error stop
        end if
     end do
@@ -335,7 +338,7 @@ subroutine scm_main_sub()
                                         physics    = physics,     &
                                         ccpp_cfg   = ccpp_cfg)
     if (ccpp_cfg%ccpp_errflg/=0) then
-        write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
         stop 1
     end if
 
@@ -449,13 +452,13 @@ subroutine scm_main_sub()
                              ccpp_cfg   = ccpp_cfg)
   
   if (ccpp_cfg%ccpp_errflg/=0) then
-      write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
       error stop
   end if
 
   call MPI_FINALIZE(ierr)
   if (ierr/=0) then
-      write(*,*) 'An error occurred in MPI_FINALIZE: ', ierr
+      write(error_unit,*) 'An error occurred in MPI_FINALIZE: ', ierr
       error stop
   end if
 
