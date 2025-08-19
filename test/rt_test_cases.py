@@ -60,7 +60,6 @@ run_list = [\
             {"case": "bomex",                 "suite": "SCM_RRFS_v1beta"},                                                                                \
             {"case": "bomex",                 "suite": "SCM_RAP"},                                                                                        \
             {"case": "bomex",                 "suite": "SCM_GFS_v15p2"},                                                                                  \
-            {"case": "bomex",                 "suite": "SCM_GFS_v16_debug"},                                                                              \
             {"case": "astex",                 "suite": "SCM_GFS_v17_p8"},                                                                                 \
             {"case": "astex",                 "suite": "SCM_HRRR"},                                                                                       \
             {"case": "astex",                 "suite": "SCM_RRFS_v1beta"},                                                                                \
@@ -71,3 +70,4 @@ run_list = [\
             {"case": "LASSO_2016051812",      "suite": "SCM_RRFS_v1beta"},                                                                                \
             {"case": "LASSO_2016051812",      "suite": "SCM_RAP"},                                                                                        \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v15p2"}]
+
