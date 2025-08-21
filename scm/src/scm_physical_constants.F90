@@ -62,5 +62,10 @@ public
   real(kind=dp),parameter:: con_solr_2002 = 1.3660e+3_dp     !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
   real(kind=dp),parameter:: con_solr_2008 = 1.3608e+3_dp     !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
   real(kind=dp),parameter:: con_thgni     = -38.15_dp        !< temperature the H.G.Nuc. ice starts
+  
+  ! for gfdlmp v3
+  real(kind=dp), parameter :: con_one      = 1_dp
+  real(kind=dp), parameter :: con_p001     = 0.001_dp
+  real(kind=dp), parameter :: con_secinday = 86400._dp
 
 end module scm_physical_constants

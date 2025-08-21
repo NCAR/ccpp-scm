@@ -36,6 +36,7 @@ Cubed-Sphere (FV3) dynamical core.
 | ``│   ├── get_all_static_data.sh`` - Script for downloading/extracting the processed SCM case data
 | ``│   ├── get_mg_inccn_data.sh`` - Script for downloading/extracting the Morrison-Gettelman data
 | ``│   └── get_thompson_tables.sh`` - Script for downloading/extracting the Thompson lookup tables
+| ``│   └── get_tempo_data.sh`` - Script for downloading/extracting the TEMPO lookup tables
 | ``│   └── get_aerosol_climo.sh`` - Script for downloading/extracting the GOCART climatological aerosol data
 | ``├── docker``
 | ``│   └── Dockerfile`` - Contains Docker instructions for building the CCPP SCM image
