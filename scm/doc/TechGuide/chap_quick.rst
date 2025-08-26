@@ -448,6 +448,7 @@ execute the following scripts:
 
    ./contrib/get_all_static_data.sh
    ./contrib/get_thompson_tables.sh
+   ./contrib/get_tempo_data.sh
 
 If the download step fails, make sure that your system’s firewall does
 not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
