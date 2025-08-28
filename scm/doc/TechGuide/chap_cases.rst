@@ -109,11 +109,13 @@ format, not maintained by the DTC, can be cloned from the `DEPHY-SCM
 DEPHY-SCM file location to the SCM.
 
    .. note::
+
       Not all forcing methods available in external DEPHY-SCM cases are currently 
       supported in the CCPP SCM. For example:
-      - surface_forcing_moisture: "beta", "mrsos" 
-      - surface_forcing_wind: "ustar"
-      - surface_type: "seaice"
+   
+      - ``surface_forcing_moisture``: "beta", "mrsos" 
+      - ``surface_forcing_wind``: "ustar"
+      - ``surface_type``: "seaice"
 
       Be sure to verify that the case you wish to run is compatible with the CCPP SCM.
 
