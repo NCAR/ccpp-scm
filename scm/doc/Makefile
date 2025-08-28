@@ -13,6 +13,9 @@ latex:
 html:
 	python -m sphinx -T -b html -d _build/doctrees -D language=en TechGuide html
 
+open:
+	open html/index.html
+
 clean:
 	rm -fr _build html latex
 

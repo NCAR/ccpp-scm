@@ -101,11 +101,25 @@ Case input data file (DEPHY format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Development and Evaluation of Physics in atmospheric models (DEPHY)
-format is an internationally-adopted data format intended for use by SCM
+format is an internationally-adopted data format intended for use by SCMs
 and LESs. The initialization and forcing data for each case in the CCPP SCM
 repository is stored in a NetCDF (version 4) file. Additional cases in DEPHY
-format, not maintained by the DTC, can be cloned from the DEPHY-SCM repository,
-and run by providing the DEPHY-SCM file location to the SCM. For example:
+format, not maintained by the DTC, can be cloned from the `DEPHY-SCM
+<https://github.com/GdR-DEPHY/DEPHY-SCM>`__ repository, and run by providing the
+DEPHY-SCM file location to the SCM.
+
+   .. note::
+
+      Not all forcing methods available in external DEPHY-SCM cases are currently 
+      supported in the CCPP SCM. For example:
+   
+      - ``surface_forcing_moisture``: "beta", "mrsos" 
+      - ``surface_forcing_wind``: "ustar"
+      - ``surface_type``: "seaice"
+
+      Be sure to verify that the case you wish to run is compatible with the CCPP SCM.
+
+Example to run a DEPHY-SCM case:
 
 .. code:: bash
 
