@@ -448,6 +448,7 @@ execute the following scripts:
 
    ./contrib/get_all_static_data.sh
    ./contrib/get_thompson_tables.sh
+   ./contrib/get_tempo_data.sh
 
 If the download step fails, make sure that your system’s firewall does
 not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
@@ -710,7 +711,9 @@ If using the model on HPC resources and significant amounts of processor
 time is anticipated for the experiments, it will likely be necessary to
 submit a job through the HPC’s batch system. An example script has been
 included in the repository for running the model on Hera’s batch system
-(SLURM). It is located in ``ccpp-scm/scm/etc/scm_slurm_example.py``. Edit the ``job_name``, ``account``, etc. to suit your needs and
+(SLURM). Note, this is machine specific and might not be the optimal approach
+on other systems with different charging configurations.
+It is located in ``ccpp-scm/scm/etc/scm_slurm_example.py``. Edit the ``job_name``, ``account``, etc. to suit your needs and
 copy to the ``bin`` directory. The case name to be run is included in the ``command``
 variable. To use, invoke
 
@@ -722,8 +725,7 @@ from the ``bin`` directory.
 
 Additional details regarding the SCM may be found in the remainder of
 this guide. More information on the CCPP can be found in the CCPP
-Technical Documentation available at
-https://ccpp-techdoc.readthedocs.io/en/v7.0.0/.
+Technical Documentation available at https://ccpp-techdoc.readthedocs.io.
 
 .. _docker:
 
