@@ -4,9 +4,8 @@
 	branch = main
 [submodule "ccpp-physics"]
 	path = ccpp/physics
-	#branch = main
-	url = https://github.com/grantfirl/ccpp-physics
-	branch = ufs-dev-PR302
+	url = https://github.com/NCAR/ccpp-physics
+	branch = main
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
