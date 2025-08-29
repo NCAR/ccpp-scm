@@ -49,7 +49,7 @@ Cubed-Sphere (FV3) dynamical core.
 | ``│   │   └── vert_coord_data`` - Contains data to calculate vertical coordinates (from GSM-based GFS only)
 | ``│   ├── doc``
 | ``│   │   └── TechGuide`` - Contains source code and other files for this User’s/Technical Guide
-| ``│   ├── etc`` - Contains case configuration, machine setup scripts, and plotting scripts
+| ``│   ├── etc`` - Contains case configuration, machine setup scripts, and plotting scripts. These might be machine dependent and not all scripts are supported
 | ``│   │   ├── CENTOS_docker_setup.sh`` - Contains machine setup for Docker container
 | ``│   │   ├── case_config`` - Contains case configuration files
 | ``│   │   ├── modules`` - Contains module files for loading build environments on both pre-configured and custom platforms
