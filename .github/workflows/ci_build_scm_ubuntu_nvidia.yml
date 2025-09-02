@@ -1,18 +1,10 @@
 name: build the CCPP-SCM with Nvidia
 
-on:
-  workflow_run:
-    workflows: ["build and run SCM regression tests"]
-    types:
-      - completed
+on: [pull_request,workflow_dispatch]
 
 jobs:
 
   build_scm:
-    # trigger only after the SCM regression tests have completed from a PR or workflow event
-    if: |
-      github.event.workflow_run.event == 'pull_request' ||
-      github.event.workflow_run.event == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -64,23 +56,6 @@ jobs:
       run: |
         df -h
 
-    #######################################################################################
-    # Initial
-    #######################################################################################
-    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v4
-
-    - name: Initialize submodules
-      run: git submodule update --init --recursive
-
-    #######################################################################################
-    # Python setup
-    #######################################################################################
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{matrix.py-version}}
-
     # - name: Add conda to system path
     #   run: |
     #     echo $CONDA/bin >> $GITHUB_PATH
@@ -124,13 +99,30 @@ jobs:
         echo "CMAKE_C_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvc" >> $GITHUB_ENV
         echo "CMAKE_Fortran_COMPILER=/home/runner/hpc_sdk/Linux_x86_64/${NVVERSION}/compilers/bin/nvfortran" >> $GITHUB_ENV
 
-    #######################################################################################
-    # Install FORTRAN dependencies
-    #######################################################################################
-
     - name: Check space (pre dependency install)
       run: |
         df -h
+
+    #######################################################################################
+    # Initialize SCM
+    #######################################################################################
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v5
+
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+
+    #######################################################################################
+    # Python setup
+    #######################################################################################
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{matrix.py-version}}
+
+    #######################################################################################
+    # Install FORTRAN dependencies
+    #######################################################################################
 
     - name: Install Curl and zlib
       run: |

@@ -36,6 +36,7 @@ Cubed-Sphere (FV3) dynamical core.
 | ``│   ├── get_all_static_data.sh`` - Script for downloading/extracting the processed SCM case data
 | ``│   ├── get_mg_inccn_data.sh`` - Script for downloading/extracting the Morrison-Gettelman data
 | ``│   └── get_thompson_tables.sh`` - Script for downloading/extracting the Thompson lookup tables
+| ``│   └── get_tempo_data.sh`` - Script for downloading/extracting the TEMPO lookup tables
 | ``│   └── get_aerosol_climo.sh`` - Script for downloading/extracting the GOCART climatological aerosol data
 | ``├── docker``
 | ``│   └── Dockerfile`` - Contains Docker instructions for building the CCPP SCM image
@@ -48,7 +49,7 @@ Cubed-Sphere (FV3) dynamical core.
 | ``│   │   └── vert_coord_data`` - Contains data to calculate vertical coordinates (from GSM-based GFS only)
 | ``│   ├── doc``
 | ``│   │   └── TechGuide`` - Contains source code and other files for this User’s/Technical Guide
-| ``│   ├── etc`` - Contains case configuration, machine setup scripts, and plotting scripts
+| ``│   ├── etc`` - Contains case configuration, machine setup scripts, and plotting scripts. These might be machine dependent and not all scripts are supported
 | ``│   │   ├── CENTOS_docker_setup.sh`` - Contains machine setup for Docker container
 | ``│   │   ├── case_config`` - Contains case configuration files
 | ``│   │   ├── modules`` - Contains module files for loading build environments on both pre-configured and custom platforms
