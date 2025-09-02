@@ -7,7 +7,7 @@
 	#url = https://github.com/NCAR/ccpp-physics
 	#branch = main
         url = https://github.com/grantfirl/ccpp-physics
-        branch = return-on-error
+        branch = NRL_combo_2025_09_02r
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
