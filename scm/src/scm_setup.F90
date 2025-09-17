@@ -337,13 +337,13 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                    Init_parm%restart, Init_parm%fcst_mpi_comm,     &
                    ntasks, nthreads,                               &
                    ! Below only needed for FV3 dynamical core.
-                   tile_num = Init_parm%tile_num,                  &
+                   Init_parm%tile_num,                             &
                    Init_parm%isc, Init_parm%jsc,                   &
                    Init_parm%nx, Init_parm%ny,                     &
                    Init_parm%cnx, Init_parm%cny,                   &
                    Init_parm%gnx, Init_parm%gny,                   &
                    Init_parm%ak, Init_parm%bk,                     &
-                   hydrostatic = Init_parm%hydrostatic)
+                   Init_parm%hydrostatic)
 
   !--- initialize DDTs
 
