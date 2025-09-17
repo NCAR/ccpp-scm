@@ -3075,11 +3075,9 @@ module GFS_typedefs
     if (Model%do_RRTMGP) then
        allocate (Coupling%fluxlwUP_radtime   (IM, Model%levs+1))
        allocate (Coupling%fluxlwDOWN_radtime (IM, Model%levs+1))
-       allocate (Coupling%htrlw              (IM, Model%levs))
        allocate (Coupling%tsfc_radtime       (IM))
        Coupling%fluxlwUP_radtime   = Model%clear_val
        Coupling%fluxlwDOWN_radtime = Model%clear_val
-       Coupling%htrlw              = Model%clear_val
        Coupling%tsfc_radtime       = Model%clear_val
        if (Model%use_LW_jacobian) then
           allocate (Coupling%fluxlwUP_jac    (IM, Model%levs+1))
@@ -7653,9 +7651,9 @@ module GFS_typedefs
 
     ! Allocate horizontal component of dku for dyn_core (SA-3D-TKE)
     allocate (Tbd%dku3d_h (IM,Model%levs))
-    Tbd%dku3d_h    = clear_val
+    Tbd%dku3d_h    = Model%clear_val
     allocate (Tbd%dku3d_e (IM,Model%levs))
-    Tbd%dku3d_e    = clear_val
+    Tbd%dku3d_e    = Model%clear_val
 
     if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .or. Model%imfdeepcnv == Model%imfdeepcnv_samf .or. Model%imfshalcnv == Model%imfshalcnv_samf .or. Model%imfdeepcnv == Model%imfdeepcnv_c3 .or. Model%imfshalcnv == Model%imfshalcnv_c3) then
        allocate (Tbd%prevsq(IM, Model%levs))
@@ -8368,30 +8366,30 @@ module GFS_typedefs
 
 !IVAI: photdiag arrays
       allocate (Diag%coszens(IM))
-      Diag%coszens= zero
+      Diag%coszens= Model%zero
 
       allocate (Diag%jo3o1d(IM))
-      Diag%jo3o1d = zero
+      Diag%jo3o1d = Model%zero
 
       allocate (Diag%jno2(IM))
-      Diag%jno2 = zero
+      Diag%jno2 = Model%zero
 
 !IVAI: canopy arrays read via aqm_emis_read
       if (Model%do_canopy) then
         allocate (Diag%claie(IM))
-        Diag%claie = zero
+        Diag%claie = Model%zero
 
         allocate (Diag%cfch  (IM))
-        Diag%cfch   = zero
+        Diag%cfch   = Model%zero
 
         allocate (Diag%cfrt  (IM))
-        Diag%cfrt   = zero
+        Diag%cfrt   = Model%zero
 
         allocate (Diag%cclu  (IM))
-        Diag%cclu   = zero
+        Diag%cclu   = Model%zero
 
         allocate (Diag%cpopu (IM))
-        Diag%cpopu  = zero
+        Diag%cpopu  = Model%zero
       end if! (Model%do_canopy)
 
     end if ! (Model%cplaqm)
@@ -8591,8 +8589,8 @@ module GFS_typedefs
          Diag%do3_dt_ohoz = Model%zero
       endif
       if (Model%h2o_phys) then
-         Diag%dqv_dt_prd  = zero
-         Diag%dqv_dt_qvmx = zero
+         Diag%dqv_dt_prd  = Model%zero
+         Diag%dqv_dt_qvmx = Model%zero
       end if
     endif
 

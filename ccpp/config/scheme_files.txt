@@ -5,10 +5,9 @@ ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F
 ccpp/physics/physics/SFC_Models/Land/Noahmp/lnd_iau_mod.F90
 ccpp/physics/physics/photochem/module_h2ophys.F90
 ccpp/physics/physics/photochem/module_ozphys.F90
+ccpp/physics/physics/MP/TEMPO/TEMPO/module_mp_tempo_params.F90
 ccpp/physics/physics/Radiation/RRTMG/radlw_param.f
 ccpp/physics/physics/Radiation/RRTMG/radsw_param.f
-ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_phys_reset.F90
-ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_rad_reset.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_DCNV_generic_pre.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_DCNV_generic_post.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_GWD_generic_pre.F90
@@ -102,7 +101,7 @@ ccpp/physics/physics/PBL/saYSU/shinhongvdif.F90
 ccpp/physics/physics/PBL/YSU/ysuvdif.F90
 ccpp/physics/physics/PBL/MYNN_EDMF/mynnedmf_wrapper.F90
 ccpp/physics/physics/PBL/MYJ/myjpbl_wrapper.F90
-ccpp/physics/physics/MP/GFDL/gfdl_cloud_microphys.F90
+ccpp/physics/physics/MP/GFDL/v1_2019/gfdl_cloud_microphys.F90
 ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_gscond.f
 ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_precpd.f
 ccpp/physics/physics/MP/Morrison_Gettelman/m_micro.F90
@@ -111,6 +110,9 @@ ccpp/physics/physics/MP/Morrison_Gettelman/m_micro_post.F90
 ccpp/physics/physics/MP/Thompson/mp_thompson_pre.F90
 ccpp/physics/physics/MP/Thompson/mp_thompson.F90
 ccpp/physics/physics/MP/Thompson/mp_thompson_post.F90
+ccpp/physics/physics/MP/TEMPO/mp_tempo_pre.F90
+ccpp/physics/physics/MP/TEMPO/mp_tempo.F90
+ccpp/physics/physics/MP/TEMPO/mp_tempo_post.F90
 ccpp/physics/physics/MP/NSSL/mp_nssl.F90
 ccpp/physics/physics/MP/Ferrier_Aligo/mp_fer_hires.F90
 ccpp/physics/physics/SFC_Layer/GFDL/gfdl_sfc_layer.F90

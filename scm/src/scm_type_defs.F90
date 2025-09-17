@@ -1442,7 +1442,7 @@ module scm_type_defs
         physics%Sfcprop%emis_ice(i) = 0.96 
       end if
       
-      if (((is_missing_value(scm_input%input_sncovr_ice) .or. scm_input%input_sncovr_ice == real_zero)) .and. physics%Model%lsm /= physics%Model%lsm_ruc) then
+      if (((is_missing_value(scm_input%input_sncovr_ice) .or. scm_input%input_sncovr_ice == real_zero)) .and. physics%Model%lsm /= physics%Model%ilsm_ruc) then
         physics%Sfcprop%sncovr_ice(i) = real_zero 
       end if
       
