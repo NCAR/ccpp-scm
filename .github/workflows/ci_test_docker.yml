@@ -1,7 +1,9 @@
-name: build_test_and_push_docker
-
-#on: [pull_request,workflow_dispatch]
-on: [workflow_dispatch]
+name: build and test docker
+on:
+  # not listing pull_request closed, since it would run when merged
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 env:
   TEST_TAG: dtcenter/ccpp-scm:test
@@ -12,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx

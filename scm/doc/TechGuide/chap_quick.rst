@@ -25,7 +25,7 @@ Clone the source using
 
 .. code:: bash
 
-   git clone --recursive -b v7.0.0 https://github.com/NCAR/ccpp-scm
+   git clone --recursive -b v7.0.1 https://github.com/NCAR/ccpp-scm
 
 The ``--recursive`` option is required to retrieve the ccpp-physics and ccpp-framework code,
 which are stored in separate repositories and linked to the SCM repository as submodules.
@@ -155,7 +155,7 @@ contains the following set of libraries needed for building the SCM:
  - W3EMC (2.10.0) - GRIB decoder and encoder library
 
 Instructions for installing spack-stack can be found in the `spack-stack documentation <https://spack-stack.readthedocs.io/en/latest/>`__.
-Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera and
+Spack-stack is already installed and maintained on many HPC platforms, including NSF NCAR's Derecho, NOAA's Hera, Ursa, and
 Jet, and MSU's Orion.
 
 Compilers
@@ -192,7 +192,7 @@ the corresponding absolute path):
 View the contents of the directory to see if your machine/compiler
 combination is supported. As of this writing, modulefiles are provided
 for Intel and GNU compilers on the NCAR machine Derecho, the NOAA
-machines Hera and Jet, and the NOAA/MSU machine Orion. Loading these
+machines Hera, Ursa and Jet, and the NOAA/MSU machine Orion. Loading these
 modules will set up all the needed compilers, libraries, and other
 programs needed for building, as well as the python libraries needed for
 both building and running the SCM.
@@ -448,11 +448,12 @@ execute the following scripts:
 
    ./contrib/get_all_static_data.sh
    ./contrib/get_thompson_tables.sh
+   ./contrib/get_tempo_data.sh
 
 If the download step fails, make sure that your system’s firewall does
 not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
 ``physics_input_data.tar.gz``, ``processed_case_input.tar.gz``, and ``raw_case_input.tar.gz``
-from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v7.0.0>`__ using your browser and manually extract its
+from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v7.0.1>`__ using your browser and manually extract its
 contents in the directory ``scm/data``. Similarly, do the same for
 ``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
 to ``scm/data/physics_input_data/``.
@@ -472,7 +473,7 @@ Running a case requires four pieces of information: the case to run
 (consisting of initial conditions, geolocation, forcing data, etc.), the
 physics suite to use (through a CCPP suite definition file), a physics
 namelist (that specifies configurable physics options to use), and a
-tracer configuration file. As discussed in :numref:`Chapter %c <cases>`, cases are set up via their own
+tracer configuration file. As discussed in :numref:`Chapter %s <cases>`, cases are set up via their own
 namelists in ``../etc/case_config``. A default physics suite is provided as a user-editable
 variable in the script and default namelists and tracer configurations
 are associated with each physics suite (through ``../src/suite_info.py``), so, technically, one
@@ -710,7 +711,9 @@ If using the model on HPC resources and significant amounts of processor
 time is anticipated for the experiments, it will likely be necessary to
 submit a job through the HPC’s batch system. An example script has been
 included in the repository for running the model on Hera’s batch system
-(SLURM). It is located in ``ccpp-scm/scm/etc/scm_slurm_example.py``. Edit the ``job_name``, ``account``, etc. to suit your needs and
+(SLURM). Note, this is machine specific and might not be the optimal approach
+on other systems with different charging configurations.
+It is located in ``ccpp-scm/scm/etc/scm_slurm_example.py``. Edit the ``job_name``, ``account``, etc. to suit your needs and
 copy to the ``bin`` directory. The case name to be run is included in the ``command``
 variable. To use, invoke
 
@@ -722,8 +725,7 @@ from the ``bin`` directory.
 
 Additional details regarding the SCM may be found in the remainder of
 this guide. More information on the CCPP can be found in the CCPP
-Technical Documentation available at
-https://ccpp-techdoc.readthedocs.io/en/v7.0.0/.
+Technical Documentation available at https://ccpp-techdoc.readthedocs.io.
 
 .. _docker:
 
@@ -769,7 +771,7 @@ internet search.
 Building the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Dockerfile builds CCPP SCM v7.0.0 from source using the GNU
+The Dockerfile builds CCPP SCM v7.0.1 from source using the GNU
 compiler.
 
 The CCPP SCM has a number of system requirements and necessary libraries
@@ -833,7 +835,7 @@ following from the terminal where Docker is run:
 
 .. code:: bash
 
-   docker pull dtcenter/ccpp-scm:v7.0.0
+   docker pull dtcenter/ccpp-scm:v7.0.1
 
 To verify that it exists afterward, run
 
@@ -921,7 +923,7 @@ Running the Docker image
    .. note::
      If you are using a prebuilt image from Dockerhub, substitute
      the name of the image that was pulled from Dockerhub in the commands
-     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v7.0.0``.
+     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v7.0.1``.
 
 #. To use the SCM interactively, run non-default configurations, create
    plots, or even develop code, issue the following command:

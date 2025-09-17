@@ -1130,7 +1130,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme)
+  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_tempo_microphysics_scheme)
 [gwdcu]
   standard_name = tendency_of_x_wind_due_to_convective_gravity_wave_drag
   long_name = zonal wind tendency due to convective gravity wave drag
@@ -1222,7 +1222,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme)
+  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_tempo_microphysics_scheme)
 [dry]
   standard_name = flag_nonzero_land_surface_fraction
   long_name = flag indicating presence of some land surface area fraction
@@ -1581,7 +1581,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme)
+  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_tempo_microphysics_scheme)
 [rainp]
   standard_name = tendency_of_rain_water_mixing_ratio_due_to_microphysics
   long_name = tendency of rain water mixing ratio due to microphysics
@@ -1830,7 +1830,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme)
+  active = (control_for_microphysics_scheme == identifier_for_gfdl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_thompson_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_nssl_microphysics_scheme .or. control_for_microphysics_scheme == identifier_for_tempo_microphysics_scheme)
 [snowmt]
   standard_name = surface_snow_melt
   long_name = snow melt during timestep
@@ -2687,6 +2687,13 @@
   units = count
   dimensions = ()
   type = integer
+[tkeh]
+   standard_name = vertical_turbulent_kinetic_energy_at_interface
+   long_name = vertical turbulent kinetic energy at model layer interfaces
+   units = m2 s-2
+   dimensions = (horizontal_loop_extent,vertical_interface_dimension)
+   type = real
+   kind = kind_phys
 [active_phys_tend]
   standard_name = tendencies_for_active_process_in_ccpp_suite_simulator
   long_name = tendencies for active physics process in ccpp suite simulator

@@ -55,12 +55,16 @@ public
   real(kind=kind_phys),parameter:: rhowater   =1000._kind_phys
   real(kind=kind_phys),parameter:: rholakeice = 0.917e3_kind_phys          !< density of ice on lake (kg/m^3)
 
-
   real(kind=kind_phys),parameter:: con_c         = 2.99792458e+8_kind_phys !< speed of light (\f$m/s\f$)
   real(kind=kind_phys),parameter:: con_plnk      = 6.6260693e-34_kind_phys !< planck constant (\f$J/s\f$)
   real(kind=kind_phys),parameter:: con_boltz     = 1.3806505e-23_kind_phys !< boltzmann constant (\f$J/K\f$)
   real(kind=kind_phys),parameter:: con_solr_2002 = 1.3660e+3_kind_phys     !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
   real(kind=kind_phys),parameter:: con_solr_2008 = 1.3608e+3_kind_phys     !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
   real(kind=kind_phys),parameter:: con_thgni     = -38.15_kind_phys        !< temperature the H.G.Nuc. ice starts
+
+  ! for gfdlmp v3
+  real(kind=kind_phys), parameter :: con_one      = 1_kind_phys
+  real(kind=kind_phys), parameter :: con_p001     = 0.001_kind_phys
+  real(kind=kind_phys), parameter :: con_secinday = 86400._kind_phys
 
 end module scm_physical_constants

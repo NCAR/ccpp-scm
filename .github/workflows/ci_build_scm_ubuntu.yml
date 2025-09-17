@@ -1,0 +1,132 @@
+name: build the CCPP-SCM on latest Ubuntu runner
+
+#on: [pull_request,workflow_dispatch]
+on: [workflow_dispatch]
+
+jobs:
+  build_scm:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fortran-compiler: [13] # currently the only version usable with this configuration
+        build-type:       [Release, Debug]
+        py-version:       [3.11, '3.x']
+
+    # Environmental variables
+    env:
+      NFHOME:     /home/runner/netcdf-fortran
+      NFVERSION:  v4.5.3
+      bacio_ROOT: /home/runner/bacio
+      sp_ROOT:    /home/runner/NCEPLIBS-sp
+      w3emc_ROOT: /home/runner/myw3emc
+      SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
+      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf,SCM_HRRR_gf_ps
+
+    # Workflow steps
+    steps:
+    # Install System Dependencies
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update -qq && sudo apt-get install -qq -y --no-install-recommends \
+        gfortran-${{matrix.fortran-compiler}} \
+        libhdf5-dev \
+        libnetcdf-pnetcdf-19 \
+        libnetcdff7 \
+        libnetcdf-dev \
+        libnetcdff-dev \
+        libxml2 \
+        openmpi-bin \
+        libopenmpi-dev
+
+
+    # Python setup
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{matrix.py-version}}
+
+    - name: Install NetCDF Python libraries
+      run: |
+        pip install f90nml h5py netCDF4
+
+    - name: Environment for openmpi compiler
+      run: |
+        echo "FC=mpif90" >> $GITHUB_ENV
+        echo "CC=mpicc"  >> $GITHUB_ENV
+
+    - name: Check MPI version
+      run: |
+        which mpif90
+        mpif90 --version
+
+
+    # Install NCEP Lib Dependencies
+    - name: Cache bacio library v2.4.1
+      id: cache-bacio-fortran
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/bacio
+        key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-${{matrix.py-version}}-key
+
+    - name: Install bacio library v2.4.1
+      if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.4.1 https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio
+        cd bacio && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${bacio_ROOT} ../
+        make -j2
+        make install
+        echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
+
+    - name: Cache SP-library v2.3.3
+      id: cache-sp-fortran
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/NCEPLIBS-sp
+        key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-${{matrix.py-version}}-key
+
+    - name: Install SP-library v2.3.3
+      if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.3.3 https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp
+        cd NCEPLIBS-sp && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${sp_ROOT} ../
+        make -j2
+        make install
+        echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
+
+    - name: Cache w3emc library v2.9.2
+      id: cache-w3emc-fortran
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/myw3emc
+        key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-${{matrix.py-version}}-key
+
+    - name: Install w3emc library v2.9.2
+      if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
+      run: |
+        git clone --branch v2.9.2 https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc
+        cd NCEPLIBS-w3emc && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=${w3emc_ROOT} ../
+        make -j2
+        make install
+        echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
+
+
+    # Initialize and Build SCM
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v5
+
+    - name: Initialize Submodules
+      run: git submodule update --init --recursive
+
+    - name: Configure Build with CMake
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
+
+    - name: Build SCM
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        make -j4
