@@ -1831,7 +1831,6 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dku3d_h  (:,:)     => null()  !< Horizontal eddy diffusitivity for momentum
     real (kind=kind_phys), pointer :: dku3d_e  (:,:)     => null()  !< Eddy diffusitivity for momentum for tke
 
-
     !--- dynamical forcing variables for Grell-Freitas convection
     real (kind=kind_phys), pointer :: forcet (:,:)     => null()  !<
     real (kind=kind_phys), pointer :: forceq (:,:)     => null()  !<
@@ -4338,6 +4337,10 @@ module GFS_typedefs
 !--- NRL ozone physics
     character(len=128) :: err_message
 
+!--- CCPP suite simulator
+    integer :: ncid, dimID, varID, status, ntime_sim_data, nlev_sim_data, errflg
+    character(len=256) :: errmsg
+
     !--- If initializing model with FV3 dynamical core.
     if (Model%dycore_active == Model%dycore_fv3) then
        if (.not. present(tile_num)) then
@@ -4390,10 +4393,6 @@ module GFS_typedefs
        endif
     endif
     
-!--- CCPP suite simulator
-    integer :: ncid, dimID, varID, status, ntime_sim_data, nlev_sim_data, errflg
-    character(len=256) :: errmsg
-
     ! dtend selection: default is to match all variables:
     dtend_select(1)='*'
     do ipat=2,pat_count
