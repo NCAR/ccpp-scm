@@ -165,7 +165,6 @@ module CCPP_typedefs
     integer                             :: ipr                           !<
     integer,               pointer      :: islmsk(:)          => null()  !<
     integer,               pointer      :: islmsk_cice(:)     => null()  !<
-    integer                             :: itc                           !<
     logical,               pointer      :: wet(:)             => null()  !<
     integer                             :: kb                            !<
     integer,               pointer      :: kbot(:)            => null()  !<
@@ -185,14 +184,10 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: ncps(:,:)          => null()  !<
     integer                             :: ncstrac                       !<
     integer                             :: nday                          !<
-    integer                             :: nn                            !<
     integer                             :: nsamftrac                     !<
     integer                             :: ntcwx                         !<
     integer                             :: ntiwx                         !<
     integer                             :: ntrwx                         !<
-    integer                             :: ntk                           !<
-    integer                             :: ntkev                         !<
-    integer                             :: nvdiff                        !<
     real (kind=kind_phys), pointer      :: oa4(:,:)           => null()  !<
     real (kind=kind_phys), pointer      :: oc(:)              => null()  !<
     real (kind=kind_phys), pointer      :: olyr(:,:)          => null()  !<
@@ -260,7 +255,6 @@ module CCPP_typedefs
     integer                             :: tracers_start_index           !<
     integer                             :: tracers_total                 !<
     integer                             :: tracers_water                 !<
-    logical                             :: trans_aero                    !<
     real (kind=kind_phys), pointer      :: trans(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tseal(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tsfa(:)            => null()  !<
@@ -399,11 +393,6 @@ contains
     type(GFS_control_type), intent(in) :: Model
     integer                            :: iGas
     !
-    allocate (Interstitial%otspt      (Model%ntracp1,2))
-    allocate (Interstitial%otsptflag  (Model%ntrac))
-    ! Set up numbers of tracers for PBL, convection, etc: sets
-    ! Interstitial%{nvdiff,mg3_as_mg2,nn,tracers_total,ntcwx,ntiwx,ntk,ntkev,otspt,nsamftrac,ncstrac,nscav}
-    call gfs_interstitial_setup_tracers(Interstitial, Model)
     ! Allocate arrays
     allocate (Interstitial%adjsfculw_land  (IM))
     allocate (Interstitial%adjsfculw_ice   (IM))
@@ -436,7 +425,7 @@ contains
     allocate (Interstitial%cldtausw        (IM,Model%levr+Model%LTP))
     allocate (Interstitial%cld1d           (IM))
     allocate (Interstitial%clouds          (IM,Model%levr+Model%LTP,Model%NF_CLDS))
-    allocate (Interstitial%clw             (IM,Model%levs,Interstitial%nn))
+    allocate (Interstitial%clw             (IM,Model%levs,Model%nn))
     allocate (Interstitial%clx             (IM,4))
     allocate (Interstitial%cmm_ice         (IM))
     allocate (Interstitial%cmm_land        (IM))
@@ -465,7 +454,7 @@ contains
     allocate (Interstitial%dvdt            (IM,Model%levs))
     allocate (Interstitial%dvsfcg          (IM))
     allocate (Interstitial%dvsfc1          (IM))
-    allocate (Interstitial%dvdftra         (IM,Model%levs,Interstitial%nvdiff))
+    allocate (Interstitial%dvdftra         (IM,Model%levs,Model%nvdiff))
     allocate (Interstitial%dzlyr           (IM,Model%levr+Model%LTP))
     allocate (Interstitial%elvmax          (IM))
     allocate (Interstitial%ep1d            (IM))
@@ -601,7 +590,7 @@ contains
     allocate (Interstitial%uustar_ice      (IM))
     allocate (Interstitial%uustar_land     (IM))
     allocate (Interstitial%uustar_water    (IM))
-    allocate (Interstitial%vdftra          (IM,Model%levs,Interstitial%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
+    allocate (Interstitial%vdftra          (IM,Model%levs,Model%nvdiff))  !GJF first dimension was set as 'IX' in GFS_physics_driver
     allocate (Interstitial%vegf1d          (IM))
     allocate (Interstitial%wcbmax          (IM))
     allocate (Interstitial%wind            (IM))
@@ -1102,194 +1091,5 @@ contains
     endif
 
   end subroutine gfs_interstitial_create
-
-  subroutine gfs_interstitial_setup_tracers(Interstitial, Model)
-    !
-    implicit none
-    !
-    class(GFS_interstitial_type)       :: Interstitial
-    type(GFS_control_type), intent(in) :: Model
-    integer :: n, tracers
-    logical :: ltest
-
-    !first, initialize the values (in case the values don't get initialized within if statements below)
-    Interstitial%nvdiff           = Model%ntrac
-    Interstitial%mg3_as_mg2       = .false.
-    Interstitial%nn               = Model%ntrac + 1
-    Interstitial%itc              = 0
-    Interstitial%ntk              = 0
-    Interstitial%ntkev            = 0
-    Interstitial%tracers_total    = 0
-    Interstitial%otspt(:,:)       = .true.
-    Interstitial%otsptflag(:)     = .true.
-    Interstitial%nsamftrac        = 0
-    Interstitial%ncstrac          = 0
-    Interstitial%ntcwx            = 0
-    Interstitial%ntiwx            = 0
-    Interstitial%ntrwx            = 0
-
-    ! perform aerosol convective transport and PBL diffusion
-    Interstitial%trans_aero = Model%cplchm .and. Model%trans_trac
-
-    if (Model%imp_physics == Model%imp_physics_thompson) then
-      if (Model%ltaerosol) then
-        Interstitial%nvdiff = 12
-     else if (Model%mraerosol) then
-        Interstitial%nvdiff = 10
-      else
-        Interstitial%nvdiff = 9
-      endif
-      if (Model%satmedmf) Interstitial%nvdiff = Interstitial%nvdiff + 1
-    elseif ( Model%imp_physics == Model%imp_physics_nssl ) then
-      if (Model%me == Model%master)  write(0,*) 'nssl_settings1: nvdiff,ntrac = ', Interstitial%nvdiff, Model%ntrac
-
-      IF ( Model%nssl_hail_on ) THEN
-        Interstitial%nvdiff = 16 !  Model%ntrac ! 17
-      ELSE
-        Interstitial%nvdiff = 13 ! turn off hail q,N, and volume
-      ENDIF
-      ! write(*,*) 'NSSL: nvdiff, ntrac = ',Interstitial%nvdiff, Model%ntrac
-      if (Model%satmedmf) Interstitial%nvdiff = Interstitial%nvdiff + 1
-      IF ( Model%nssl_ccn_on ) THEN
-        Interstitial%nvdiff = Interstitial%nvdiff + 1
-      ENDIF
-      if (Model%me == Model%master)  write(0,*) 'nssl_settings2: nvdiff,ntrac = ', Interstitial%nvdiff, Model%ntrac
-
-    elseif (Model%imp_physics == Model%imp_physics_wsm6) then
-      Interstitial%nvdiff = Model%ntrac -3
-      if (Model%satmedmf) Interstitial%nvdiff = Interstitial%nvdiff + 1
-    elseif (Model%ntclamt > 0) then             ! for GFDL MP don't diffuse cloud amount
-      Interstitial%nvdiff = Model%ntrac - 1
-    endif
-
-    if (Model%imp_physics == Model%imp_physics_mg) then
-      if (abs(Model%fprcp) == 1) then
-        Interstitial%mg3_as_mg2 = .false.
-      elseif (Model%fprcp >= 2) then
-        if(Model%ntgl > 0 .and. (Model%mg_do_graupel .or. Model%mg_do_hail)) then
-          Interstitial%mg3_as_mg2 = .false.
-        else                              ! MG3 code run without graupel/hail i.e. as MG2
-          Interstitial%mg3_as_mg2 = .true.
-        endif
-      endif
-    endif
-
-    if (Interstitial%nvdiff == Model%ntrac) then
-      Interstitial%ntcwx = Model%ntcw
-      Interstitial%ntiwx = Model%ntiw
-      Interstitial%ntrwx = Model%ntrw
-    else
-      if (Model%imp_physics == Model%imp_physics_wsm6) then
-        Interstitial%ntcwx = 2
-        Interstitial%ntiwx = 3
-      elseif (Model%imp_physics == Model%imp_physics_thompson) then
-        Interstitial%ntcwx = 2
-        Interstitial%ntiwx = 3
-        Interstitial%ntrwx = 4
-      elseif (Model%imp_physics == Model%imp_physics_nssl) then
-        Interstitial%ntcwx = 2
-        Interstitial%ntiwx = 3
-        Interstitial%ntrwx = 4
-      elseif (Model%imp_physics == Model%imp_physics_gfdl) then
-        Interstitial%ntcwx = 2
-        Interstitial%ntiwx = 3
-        Interstitial%ntrwx = 4
-      ! F-A MP scheme
-      elseif (Model%imp_physics == Model%imp_physics_fer_hires) then
-        Interstitial%ntcwx = 2
-        Interstitial%ntiwx = 3
-        Interstitial%ntrwx = 4
-      elseif (Model%imp_physics == Model%imp_physics_mg) then
-        Interstitial%ntcwx = 2
-        Interstitial%ntiwx = 3
-        Interstitial%ntrwx = 4
-      elseif (Model%imp_physics == Model%imp_physics_zhao_carr) then
-        Interstitial%ntcwx = 2
-      endif
-    endif
-
-    if (Model%cplchm) then
-      ! Only the following microphysics schemes are supported with coupled chemistry
-      if (Model%imp_physics == Model%imp_physics_zhao_carr) then
-        Interstitial%nvdiff = 3
-      elseif (Model%imp_physics == Model%imp_physics_mg) then
-        if (Model%ntgl > 0) then
-          Interstitial%nvdiff = 12
-        else
-          Interstitial%nvdiff = 10
-        endif
-      elseif (Model%imp_physics == Model%imp_physics_gfdl) then
-        Interstitial%nvdiff = 7
-      elseif (Model%imp_physics == Model%imp_physics_thompson) then
-        if (Model%ltaerosol) then
-          Interstitial%nvdiff = 12
-        else if (Model%mraerosol) then
-          Interstitial%nvdiff = 10
-        else
-          Interstitial%nvdiff = 9
-        endif
-      else
-        error stop "Selected microphysics scheme is not supported when coupling with chemistry"
-      endif
-      if (Interstitial%trans_aero) Interstitial%nvdiff = Interstitial%nvdiff + Model%ntchm
-      if (Model%ntke > 0) Interstitial%nvdiff = Interstitial%nvdiff + 1    !  adding tke to the list
-    endif
-
-    if (Model%ntke > 0) Interstitial%ntkev = Interstitial%nvdiff
-
-    if (Model%ntiw > 0) then
-      if (Model%ntclamt > 0 .and. Model%ntsigma <= 0) then
-        Interstitial%nn = Model%ntrac - 2
-      elseif (Model%ntclamt <= 0 .and. Model%ntsigma > 0) then
-        Interstitial%nn = Model%ntrac - 2
-      elseif  (Model%ntclamt > 0 .and. Model%ntsigma > 0) then
-        Interstitial%nn = Model%ntrac - 3
-      else
-        Interstitial%nn = Model%ntrac - 1
-      endif
-    elseif (Model%ntcw > 0) then
-      Interstitial%nn = Model%ntrac
-    else
-      Interstitial%nn = Model%ntrac + 1
-    endif
-
-    if (Model%cscnv .or. Model%satmedmf .or. Model%trans_trac ) then
-      Interstitial%otspt(:,:)   = .true.     ! otspt is used only for cscnv
-      Interstitial%otspt(1:3,:) = .false.    ! this is for sp.hum, ice and liquid water
-      Interstitial%otsptflag(:) = .true.
-      tracers = 2
-      do n=2,Model%ntrac
-        ltest = ( n /= Model%ntcw  .and. n /= Model%ntiw  .and. n /= Model%ntclamt .and. &
-                  n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
-                  n /= Model%ntsnc .and. n /= Model%ntgl  .and. n /= Model%ntgnc   .and. &
-                  n /= Model%nthl  .and. n /= Model%nthnc .and. n /= Model%ntgv    .and. &
-                  n /= Model%nthv  .and. n /= Model%ntccn .and. n /= Model%ntccna  .and. &
-                  n /= Model%ntrz  .and. n /= Model%ntgz  .and. n /= Model%nthz    .and. &
-                  n /= Model%ntsigma)
-        Interstitial%otsptflag(n) = ltest
-        if ( ltest ) then
-          tracers = tracers + 1
-          if (Model%ntke  == n ) then
-            Interstitial%otspt(tracers+1,1) = .false.
-            Interstitial%ntk = tracers
-          endif
-          if (Model%ntlnc == n .or. Model%ntinc == n .or. Model%ntrnc == n .or. Model%ntsnc == n .or. Model%ntgnc == n)    &
-!           if (ntlnc == n .or. ntinc == n .or. ntrnc == n .or. ntsnc == n .or.&
-!               ntrw  == n .or. ntsw  == n .or. ntgl  == n)                    &
-                  Interstitial%otspt(tracers+1,1) = .false.
-          if (Interstitial%trans_aero .and. Model%ntchs == n) Interstitial%itc = tracers
-        endif
-      enddo
-      Interstitial%tracers_total = tracers - 2
-    endif   ! end if_ras or cfscnv or samf
-    if (.not. Model%satmedmf .and. .not. Model%trans_trac .and. &
-        .not. Model%ras      .and. .not. Model%do_shoc) then
-       Interstitial%nsamftrac = 0
-    else
-       Interstitial%nsamftrac = Interstitial%tracers_total
-    endif
-    Interstitial%ncstrac = Interstitial%tracers_total + 3
-
-  end subroutine gfs_interstitial_setup_tracers
-
+  
 end module CCPP_typedefs

@@ -826,7 +826,7 @@ module GFS_typedefs
     real(kind=kind_phys) :: dtf             !< dynamics timestep in seconds
     integer              :: nscyc           !< trigger for surface data cycling
     integer              :: nszero          !< trigger for Model%zeroing diagnostic buckets
-    integer              :: idat(1:8)       !< initialization date and time
+    integer              :: idat(8)         !< initialization date and time
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     integer              :: idate(4)        !< initial date with different size and ordering
                                             !< (hr, mon, day, yr)
@@ -1470,6 +1470,24 @@ module GFS_typedefs
     real(kind=kind_phys), pointer :: spp_prt_list(:)
     real(kind=kind_phys), pointer :: spp_stddev_cutoff(:)
 
+!--- physics tracer configuration parameters 
+    integer              :: nvdiff
+    integer              :: nn
+    logical              :: mg3_as_mg2
+    integer              :: itc
+    integer              :: ntk
+    integer              :: ntkev
+    integer              :: tracers_total 
+    logical , pointer    :: otspt(:,:)   => null()
+    logical , pointer    :: otsptflag(:) => null()
+    integer              :: ncstrac
+    integer              :: nsamftrac
+    integer              :: ntcwx
+    integer              :: ntiwx
+    integer              :: ntrwx
+    logical              :: trans_aero
+
+    
 !--- tracer handling
     character(len=32), pointer :: tracer_names(:) !< array of initialized tracers from dynamic core
     integer              :: ntrac                 !< number of tracers
@@ -1655,7 +1673,7 @@ module GFS_typedefs
     logical              :: restart         !< flag whether this is a coldstart (.false.) or a warmstart/restart (.true.)
     logical              :: lsm_cold_start
     logical              :: hydrostatic     !< flag whether this is a hydrostatic or non-hydrostatic run
-    integer              :: jdat(1:8)       !< current forecast date and time
+    integer              :: jdat(8)         !< current forecast date and time
                                             !< (yr, mon, day, t-zone, hr, min, sec, mil-sec)
     integer              :: imn             !< initial forecast month
     real(kind=kind_phys) :: julian          !< julian day using midnight of January 1 of forecast year as initial epoch
@@ -4046,6 +4064,21 @@ module GFS_typedefs
     integer :: spp_cu_deep  =  0
     logical :: do_spp       = .false.
 
+!--- physics tracer configuration parameters
+    integer :: nvdiff        = 0
+    integer :: nn            = 0
+    logical :: mg3_as_mg2    = .false.
+    integer :: itc           = 0
+    integer :: ntk           = 0
+    integer :: ntkev         = 0
+    integer :: tracers_total = 0
+    integer :: ncstrac       = 0
+    integer :: nsamftrac     = 0
+    integer :: ntcwx         = 0
+    integer :: ntiwx         = 0
+    integer :: ntrwx         = 0
+    logical :: trans_aero    = .false.
+    
     integer              :: ichoice         = 0 !< flag for closure of C3/GF deep convection
     integer              :: ichoicem        = 13!< flag for closure of C3/GF mid convection
     integer              :: ichoice_s       = 3 !< flag for closure of C3/GF shallow convection
@@ -5439,6 +5472,12 @@ module GFS_typedefs
     Model%ntdust           = get_tracer_index(Model%tracer_names, 'dust',       Model%me, Model%master, Model%debug)
     Model%ntcoarsepm       = get_tracer_index(Model%tracer_names, 'coarsepm',   Model%me, Model%master, Model%debug)
     endif
+
+!--- Call gfs_setup_tracers() 
+    allocate (Model%otspt      (Model%ntracp1,2))
+    allocate (Model%otsptflag  (Model%ntrac))
+    call gfs_setup_tracers(Model)
+    
 !--- initialize parameters for atmospheric chemistry tracers
     call Model%init_chemistry(tracer_types)
 
@@ -8510,5 +8549,180 @@ module GFS_typedefs
     endif
 
   end subroutine diag_phys_zero
+
+  subroutine gfs_setup_tracers(Model)
+    implicit none
+
+    type(GFS_control_type), intent(inout) :: Model
+    integer :: n, tracers
+    logical :: ltest
+
+    ! Initialize
+    Model%nvdiff           = Model%ntrac
+    Model%mg3_as_mg2       = .false.
+    Model%nn               = Model%ntrac + 1
+    Model%otspt(:,:)       = .true.
+    Model%otsptflag(:)     = .true.
+
+    ! Perform aerosol convective transport and PBL diffusion?
+    Model%trans_aero = Model%cplchm .and. Model%trans_trac
+
+    if (Model%imp_physics == Model%imp_physics_thompson) then
+       if (Model%ltaerosol) then
+          Model%nvdiff = 12
+       else if (Model%mraerosol) then
+          Model%nvdiff = 10
+       else
+          Model%nvdiff = 9
+       endif
+       if (Model%satmedmf) Model%nvdiff = Model%nvdiff + 1
+    elseif ( Model%imp_physics == Model%imp_physics_nssl ) then
+       if (Model%me == Model%master)  write(0,*) 'nssl_settings1: nvdiff,ntrac = ', Model%nvdiff, Model%ntrac
+       IF ( Model%nssl_hail_on ) THEN
+          Model%nvdiff = 16 !  Model%ntrac ! 17
+       ELSE
+          Model%nvdiff = 13 ! turn off hail q,N, and volume
+       ENDIF
+       if (Model%satmedmf) Model%nvdiff = Model%nvdiff + 1
+       IF ( Model%nssl_ccn_on ) THEN
+          Model%nvdiff = Model%nvdiff + 1
+       ENDIF
+       if (Model%me == Model%master)  write(0,*) 'nssl_settings2: nvdiff,ntrac = ', Model%nvdiff, Model%ntrac
+    elseif (Model%imp_physics == Model%imp_physics_wsm6) then
+       Model%nvdiff = Model%ntrac -3
+       if (Model%satmedmf) Model%nvdiff = Model%nvdiff + 1
+    elseif (Model%ntclamt > 0) then             ! for GFDL MP don't diffuse cloud amount
+       Model%nvdiff = Model%ntrac - 1
+    endif
+
+    if (Model%imp_physics == Model%imp_physics_mg) then
+       if (abs(Model%fprcp) == 1) then
+          Model%mg3_as_mg2 = .false.
+       elseif (Model%fprcp >= 2) then
+          if(Model%ntgl > 0 .and. (Model%mg_do_graupel .or. Model%mg_do_hail)) then
+             Model%mg3_as_mg2 = .false.
+          else                              ! MG3 code run without graupel/hail i.e. as MG2
+             Model%mg3_as_mg2 = .true.
+          endif
+       endif
+    endif
+
+    Model%nscav = Model%ntrac - Model%ncnd + 2
+    
+    if (Model%nvdiff == Model%ntrac) then
+       Model%ntcwx = Model%ntcw
+       Model%ntiwx = Model%ntiw
+       Model%ntrwx = Model%ntrw
+    else
+       if (Model%imp_physics == Model%imp_physics_wsm6) then
+          Model%ntcwx = 2
+          Model%ntiwx = 3
+       elseif (Model%imp_physics == Model%imp_physics_thompson) then
+          Model%ntcwx = 2
+          Model%ntiwx = 3
+          Model%ntrwx = 4
+       elseif (Model%imp_physics == Model%imp_physics_nssl) then
+          Model%ntcwx = 2
+          Model%ntiwx = 3
+          Model%ntrwx = 4
+       elseif (Model%imp_physics == Model%imp_physics_gfdl) then
+          Model%ntcwx = 2
+          Model%ntiwx = 3
+          Model%ntrwx = 4
+       elseif (Model%imp_physics == Model%imp_physics_fer_hires) then
+          Model%ntcwx = 2
+          Model%ntiwx = 3
+          Model%ntrwx = 4
+       elseif (Model%imp_physics == Model%imp_physics_mg) then
+          Model%ntcwx = 2
+          Model%ntiwx = 3
+          Model%ntrwx = 4
+       elseif (Model%imp_physics == Model%imp_physics_zhao_carr) then
+          Model%ntcwx = 2
+       endif
+    endif
+     
+    if (Model%cplchm) then
+       ! Only the following microphysics schemes are supported with coupled chemistry
+       if (Model%imp_physics == Model%imp_physics_zhao_carr) then
+          Model%nvdiff = 3
+       elseif (Model%imp_physics == Model%imp_physics_mg) then
+          if (Model%ntgl > 0) then
+             Model%nvdiff = 12
+          else
+             Model%nvdiff = 10
+          endif
+       elseif (Model%imp_physics == Model%imp_physics_gfdl) then
+          Model%nvdiff = 7
+       elseif (Model%imp_physics == Model%imp_physics_thompson) then
+          if (Model%ltaerosol) then
+             Model%nvdiff = 12
+          else if (Model%mraerosol) then
+             Model%nvdiff = 10
+          else
+             Model%nvdiff = 9
+          endif
+       else
+          error stop "Selected microphysics scheme is not supported when coupling with chemistry"
+       endif
+       if (Model%trans_aero) Model%nvdiff = Model%nvdiff + Model%ntchm
+       if (Model%ntke > 0) Model%nvdiff = Model%nvdiff + 1    !  adding tke to the list
+    endif
+
+    if (Model%ntke > 0) Model%ntkev = Model%nvdiff
+
+    if (Model%ntiw > 0) then
+       if (Model%ntclamt > 0 .and. Model%ntsigma <= 0) then
+          Model%nn = Model%ntrac - 2
+       elseif (Model%ntclamt <= 0 .and. Model%ntsigma > 0) then
+          Model%nn = Model%ntrac - 2
+       elseif  (Model%ntclamt > 0 .and. Model%ntsigma > 0) then
+          Model%nn = Model%ntrac - 3
+       else
+          Model%nn = Model%ntrac - 1
+       endif
+    elseif (Model%ntcw > 0) then
+       Model%nn = Model%ntrac
+    else
+       Model%nn = Model%ntrac + 1
+    endif
+    
+    if (Model%cscnv .or. Model%satmedmf .or. Model%trans_trac ) then
+       Model%otspt(:,:)   = .true.     ! otspt is used only for cscnv
+       Model%otspt(1:3,:) = .false.    ! this is for sp.hum, ice and liquid water
+       Model%otsptflag(:) = .true.
+       tracers = 2
+       do n=2,Model%ntrac
+          ltest = ( n /= Model%ntcw  .and. n /= Model%ntiw  .and. n /= Model%ntclamt .and. &
+                    n /= Model%ntrw  .and. n /= Model%ntsw  .and. n /= Model%ntrnc   .and. &
+                    n /= Model%ntsnc .and. n /= Model%ntgl  .and. n /= Model%ntgnc   .and. &
+                    n /= Model%nthl  .and. n /= Model%nthnc .and. n /= Model%ntgv    .and. &
+                    n /= Model%nthv  .and. n /= Model%ntccn .and. n /= Model%ntccna  .and. &
+                    n /= Model%ntrz  .and. n /= Model%ntgz  .and. n /= Model%nthz    .and. &
+                    n /= Model%ntsigma)
+          Model%otsptflag(n) = ltest
+          if ( ltest ) then
+             tracers = tracers + 1
+             if (Model%ntke  == n ) then
+                Model%otspt(tracers+1,1) = .false.
+                Model%ntk = tracers
+             endif
+             if (Model%ntlnc == n .or. Model%ntinc == n .or. Model%ntrnc == n .or. Model%ntsnc == n .or. Model%ntgnc == n)    &
+                  Model%otspt(tracers+1,1) = .false.
+             if (Model%trans_aero .and. Model%ntchs == n) Model%itc = tracers
+          endif
+       enddo
+       Model%tracers_total = tracers - 2
+    endif   ! end if_ras or cfscnv or samf
+
+    if (.not. Model%satmedmf .and. .not. Model%trans_trac .and. &
+        .not. Model%ras      .and. .not. Model%do_shoc) then
+       Model%nsamftrac = 0
+    else
+       Model%nsamftrac = Model%tracers_total
+    endif
+    Model%ncstrac = Model%tracers_total + 3
+    
+  end subroutine gfs_setup_tracers
 
 end module GFS_typedefs

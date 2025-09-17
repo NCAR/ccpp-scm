@@ -2537,7 +2537,7 @@
   standard_name = surface_downwelling_shortwave_flux_on_radiation_timestep_assuming_clear_sky
   long_name = total sky sfc downward sw flux assuming clear sky conditions
   units = W m-2
-  dimensions = (horizontal_loop_extent)
+  dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
 [sfcnsw]
@@ -6454,6 +6454,96 @@
   units = count
   dimensions = ()
   type = integer
+[nn]
+  standard_name = number_of_tracers_for_convective_transport
+  long_name = number of tracers for convective transport
+  units = count
+  dimensions = ()
+  type = integer
+[nvdiff]
+  standard_name = number_of_vertical_diffusion_tracers
+  long_name = number of tracers to diffuse vertically
+  units = count
+  dimensions = ()
+  type = integer
+[mg3_as_mg2]
+  standard_name = flag_mg3_as_mg2
+  long_name = flag for controlling prep for Morrison-Gettelman microphysics
+  units = flag
+  dimensions = ()
+  type = logical
+[itc]
+  standard_name = index_of_first_chemical_tracer_for_convection
+  long_name = index of first chemical tracer transported/scavenged by convection
+  units = index
+  dimensions = ()
+  type = integer
+[ntk]
+  standard_name = index_for_turbulent_kinetic_energy_convective_transport_tracer
+  long_name = index for turbulent kinetic energy in the convectively transported tracer array
+  units = index
+  dimensions = ()
+  type = integer
+[ntkev]
+  standard_name = index_for_turbulent_kinetic_energy_vertical_diffusion_tracer
+  long_name = index for turbulent kinetic energy in the vertically diffused tracer array
+  units = index
+  dimensions = ()
+  type = integer
+[tracers_total]
+  standard_name = number_of_total_tracers
+  long_name = total number of tracers
+  units = count
+  dimensions = ()
+  type = integer
+[otspt]
+  standard_name = flag_convective_tracer_transport
+  long_name = flag to enable tracer transport by updrafts/downdrafts[(:,1)] or subsidence [(:,2)]
+  units = flag
+  dimensions = (number_of_tracers_plus_one,2)
+  type = logical
+[otsptflag]
+  standard_name = flag_convective_tracer_transport_interstitial
+  long_name = flag for interstitial tracer transport
+  units = flag
+  dimensions = (number_of_tracers)
+  type = logical
+[nsamftrac]
+  standard_name = number_of_tracers_for_samf
+  long_name = number of tracers for scale-aware mass flux schemes
+  units = count
+  dimensions = ()
+  type = integer
+[ntcwx]
+  standard_name = index_for_liquid_cloud_condensate_vertical_diffusion_tracer
+  long_name = index for liquid cloud condensate in the vertically diffused tracer array
+  units = index
+  dimensions = ()
+  type = integer
+[ntiwx]
+  standard_name = index_for_ice_cloud_condensate_vertical_diffusion_tracer
+  long_name = index for ice cloud condensate in the vertically diffused tracer array
+  units = index
+  dimensions = ()
+  type = integer
+[ntrwx]
+  standard_name = index_for_rain_water_vertical_diffusion_tracer
+  long_name = tracer index for rain water in the vertically diffused tracer array
+  units = index
+  dimensions = ()
+  type = integer
+[ncstrac]
+  standard_name = number_of_tracers_for_CS
+  long_name = number of convectively transported tracers in Chikira-Sugiyama deep convection scheme
+  units = count
+  dimensions = ()
+  type = integer
+[trans_aero]
+  standard_name = flag_for_aerosol_convective_transport_and_PBL_diffusion
+  long_name = flag for aerosol convective transport and PBL diffusion
+  units = flag
+  dimensions = ()
+  type = logical
 [ntrac]
   standard_name = number_of_tracers
   long_name = number of tracers
@@ -9619,7 +9709,7 @@
   standard_name = surface_downwelling_shortwave_flux_assuming_clear_sky
   long_name = surface downwelling shortwave flux at current time assuming clear sky
   units = W m-2
-  dimensions = (horizontal_loop_extent)
+  dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
 [nswsfci]
