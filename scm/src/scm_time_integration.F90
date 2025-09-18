@@ -158,9 +158,9 @@ subroutine do_time_step(scm_state, physics, ccpp_cfg, in_spinup, ccpp_suite_part
     call physics%Diag%phys_zero (physics%Model)
   endif
 
+  call physics%Interstitial(1)%rad_reset(physics%Model)
+  call physics%Interstitial(1)%phys_reset(physics%Model)
   do isuite_part=1,size(ccpp_suite_parts)
-     call physics%Interstitial(1)%rad_reset(physics%Model)
-     call physics%Interstitial(1)%phys_reset(physics%Model)
      call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                            suite_part = trim(trim(adjustl(ccpp_suite_parts(isuite_part)))), &
                            physics    = physics, &
