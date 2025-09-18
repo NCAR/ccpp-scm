@@ -3075,9 +3075,11 @@ module GFS_typedefs
     if (Model%do_RRTMGP) then
        allocate (Coupling%fluxlwUP_radtime   (IM, Model%levs+1))
        allocate (Coupling%fluxlwDOWN_radtime (IM, Model%levs+1))
+       allocate (Coupling%hrlw               (IM, Model%levs))
        allocate (Coupling%tsfc_radtime       (IM))
        Coupling%fluxlwUP_radtime   = Model%clear_val
        Coupling%fluxlwDOWN_radtime = Model%clear_val
+       Coupling%hrlw               = Model%clear_val
        Coupling%tsfc_radtime       = Model%clear_val
        if (Model%use_LW_jacobian) then
           allocate (Coupling%fluxlwUP_jac    (IM, Model%levs+1))
