@@ -46,6 +46,7 @@ ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_mp.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_overlap.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_post.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_photochemistry.F90
+ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_debug.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/dcyc2t3.f
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/cnvc90.f
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/maximum_hourly_diagnostics.F90
@@ -102,6 +103,7 @@ ccpp/physics/physics/PBL/YSU/ysuvdif.F90
 ccpp/physics/physics/PBL/MYNN_EDMF/mynnedmf_wrapper.F90
 ccpp/physics/physics/PBL/MYJ/myjpbl_wrapper.F90
 ccpp/physics/physics/MP/GFDL/v1_2019/gfdl_cloud_microphys.F90
+ccpp/physics/physics/MP/GFDL/v3_2022/gfdl_cloud_microphys_v3.F90
 ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_gscond.f
 ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_precpd.f
 ccpp/physics/physics/MP/Morrison_Gettelman/m_micro.F90
