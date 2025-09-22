@@ -5171,8 +5171,8 @@ module GFS_typedefs
     Model%nlevlake_clm_lake = nlevlake_clm_lake
     Model%nlevsoil_clm_lake = nlevsoil_clm_lake
     Model%nlevsnow_clm_lake = nlevsnow_clm_lake
-    Model%nlevsnowsoil_clm_lake = nlevsnowsoil_clm_lake
-    Model%nlevsnowsoil1_clm_lake = nlevsnowsoil1_clm_lake
+    Model%nlevsnowsoil_clm_lake = -1*nlevsnow_clm_lake
+    Model%nlevsnowsoil1_clm_lake = -1*(nlevsnow_clm_lake + 1)
     Model%clm_lake_depth_default = clm_lake_depth_default
     Model%clm_lake_use_lakedepth = clm_lake_use_lakedepth
     Model%clm_lake_debug = clm_lake_debug
