@@ -82,10 +82,3 @@
 [ccpp-arg-table]
   name = ccpp_config
   type = module
-
-[MPI_Comm]
-  standard_name = MPI_Comm
-  long_name = definition of type MPI_Comm
-  units = DDT
-  dimensions = ()
-  type = MPI_Comm
