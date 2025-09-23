@@ -143,11 +143,11 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: vvl  (:,:)   => null()  !< layer mean vertical velocity in pa/sec
     real (kind=kind_phys), pointer :: tgrs (:,:)   => null()  !< model layer mean temperature in k
     real (kind=kind_phys), pointer :: qgrs (:,:,:) => null()  !< layer mean tracer concentration
-!3D-SA-TKE
+!SA-3D-TKE
     real (kind=kind_phys), pointer :: def_1 (:,:)   => null()  !< deformation
     real (kind=kind_phys), pointer :: def_2 (:,:)   => null()  !< deformation
     real (kind=kind_phys), pointer :: def_3 (:,:)   => null()  !< deformation
-!3D-SA-TKE-end
+!SA-3D-TKE-end
 ! dissipation estimate
     real (kind=kind_phys), pointer :: diss_est(:,:)   => null()  !< model layer mean temperature in k
     ! soil state variables - for soil SPPT - sfc-perts, mgehne
@@ -799,6 +799,11 @@ module GFS_typedefs
     !
     integer              :: fire_aux_data_levels !< vertical levels of fire auxiliary data
 
+!--- dycore control parameters
+    integer              :: dycore_active   !< Choice of dynamical core
+    integer              :: dycore_fv3  = 1 !< Choice of FV3 dynamical core
+    integer              :: dycore_mpas = 2 !< Choice of MPAS dynamical core
+    
 !--- coupling parameters
     logical              :: cplflx          !< default no cplflx collection
     logical              :: cplice          !< default no cplice collection (used together with cplflx)
@@ -1216,6 +1221,8 @@ module GFS_typedefs
     logical              :: hybedmf         !< flag for hybrid edmf pbl scheme
     logical              :: satmedmf        !< flag for scale-aware TKE-based moist edmf
                                             !< vertical turbulent mixing scheme
+    logical              :: tte_edmf        !< flag for scale-aware TTE-based moist edmf
+                                            !< vertical turbulent mixing scheme
     logical              :: shinhong        !< flag for scale-aware Shinhong vertical turbulent mixing scheme
     logical              :: do_ysu          !< flag for YSU turbulent mixing scheme
     logical              :: acm             !< flag for ACM turbulent mixing scheme
@@ -1275,6 +1282,7 @@ module GFS_typedefs
                                             !< used in the GWD parameterization - 10 more added if
                                             !< GSL orographic drag scheme is used
     integer              :: jcap            !< number of spectral wave trancation used only by sascnv shalcnv
+    real(kind=kind_phys) :: cscale          !< tunable parameter for saSAS convective cloud liquid
     real(kind=kind_phys) :: cs_parm(10)     !< tunable parameters for Chikira-Sugiyama convection
     real(kind=kind_phys) :: flgmin(2)       !< [in] ice fraction bounds
     real(kind=kind_phys) :: cgwf(2)         !< multiplication factor for convective GWD
@@ -2372,21 +2380,21 @@ module GFS_typedefs
       allocate (Statein%wgrs   (IM,Model%levs))
     endif
     allocate (Statein%qgrs   (IM,Model%levs,Model%ntrac))
-!3D-SA-TKE
+!SA-3D-TKE
     allocate (Statein%def_1   (IM,Model%levs))
     allocate (Statein%def_2   (IM,Model%levs))
     allocate (Statein%def_3   (IM,Model%levs))
-!3D-SA-TKE-end
+!SA-3D-TKE-end
 
     Statein%qgrs   = Model%clear_val
     Statein%pgr    = Model%clear_val
     Statein%ugrs   = Model%clear_val
     Statein%vgrs   = Model%clear_val
-!3D-SA-TKE
+!SA-3D-TKE
     Statein%def_1   = Model%clear_val
     Statein%def_2   = Model%clear_val
     Statein%def_3   = Model%clear_val
-!3D-SA-TKE-end
+!SA-3D-TKE-end
 
     if(Model%lightning_threat) then
       Statein%wgrs = Model%clear_val
@@ -3427,14 +3435,14 @@ module GFS_typedefs
 !----------------------
 ! GFS_control_type%init
 !----------------------
-  subroutine control_initialize (Model, nlunit, fn_nml, me, master, &
-                                 logunit, isc, jsc, nx, ny, levs,   &
-                                 cnx, cny, gnx, gny, dt_dycore,     &
+  subroutine control_initialize (Model, nlunit, fn_nml, me,         &
+                                 master, logunit, levs, dt_dycore,  &
                                  dt_phys, iau_offset, idat, jdat,   &
                                  nwat, tracer_names, tracer_types,  &
-                                 input_nml_file, tile_num, chunks,  &
-                                 ak, bk, restart, hydrostatic,      &
-                                 communicator, ntasks, nthreads)
+                                 input_nml_file, chunks, restart,   &
+                                 communicator, ntasks, nthreads,    &
+                                 tile_num, isc, jsc, nx, ny,  cnx,  &
+                                 cny, gnx, gny, ak, bk, hydrostatic)
 
 !--- modules
     use physcons,         only: con_rerth, con_pi, con_p0, rhowater
@@ -3450,16 +3458,7 @@ module GFS_typedefs
     integer,                intent(in) :: me
     integer,                intent(in) :: master
     integer,                intent(in) :: logunit
-    integer,                intent(in) :: tile_num
-    integer,                intent(in) :: isc
-    integer,                intent(in) :: jsc
-    integer,                intent(in) :: nx
-    integer,                intent(in) :: ny
     integer,                intent(in) :: levs
-    integer,                intent(in) :: cnx
-    integer,                intent(in) :: cny
-    integer,                intent(in) :: gnx
-    integer,                intent(in) :: gny
     real(kind=kind_phys),   intent(in) :: dt_dycore
     real(kind=kind_phys),   intent(in) :: dt_phys
     integer,                intent(in) :: iau_offset
@@ -3470,13 +3469,23 @@ module GFS_typedefs
     integer,                intent(in) :: tracer_types(:)
     character(len=:),       intent(in), dimension(:), pointer :: input_nml_file
     integer,                intent(in) :: chunks(:)
-    real(kind=kind_phys), dimension(:), intent(in) :: ak
-    real(kind=kind_phys), dimension(:), intent(in) :: bk
     logical,                intent(in) :: restart
-    logical,                intent(in) :: hydrostatic
     type(MPI_Comm),         intent(in) :: communicator
     integer,                intent(in) :: ntasks
     integer,                intent(in) :: nthreads
+    !--- optional variables (Dycore specific)
+    integer, optional,      intent(in) :: tile_num
+    integer, optional,      intent(in) :: isc
+    integer, optional,      intent(in) :: jsc
+    integer, optional,      intent(in) :: nx
+    integer, optional,      intent(in) :: ny
+    integer, optional,      intent(in) :: cnx
+    integer, optional,      intent(in) :: cny
+    integer, optional,      intent(in) :: gnx
+    integer, optional,      intent(in) :: gny
+    logical, optional,      intent(in) :: hydrostatic
+    real(kind_phys), optional, dimension(:), intent(in) :: ak
+    real(kind_phys), optional, dimension(:), intent(in) :: bk
 
     !--- local variables
     integer :: i, j, n
@@ -3850,6 +3859,8 @@ module GFS_typedefs
     logical              :: hybedmf        = .false.                  !< flag for hybrid edmf pbl scheme
     logical              :: satmedmf       = .false.                  !< flag for scale-aware TKE-based moist edmf
                                                                       !< vertical turbulent mixing scheme
+    logical              :: tte_edmf       = .false.                  !< flag for scale-aware TTE-based moist edmf
+                                                                      !< vertical turbulent mixing scheme
     logical              :: shinhong       = .false.                  !< flag for scale-aware Shinhong vertical turbulent mixing scheme
     logical              :: do_ysu         = .false.                  !< flag for YSU vertical turbulent mixing scheme
     logical              :: acm            = .false.                  !< flag for ACM vertical turbulent mixing scheme
@@ -3922,7 +3933,8 @@ module GFS_typedefs
     integer              :: nmtvr          = 14                       !< number of topographic variables such as variance etc
                                                                       !< used in the GWD parameterization
     integer              :: jcap           =  1              !< number of spectral wave trancation used only by sascnv shalcnv
-!   real(kind=kind_phys) :: cs_parm(10) = (/5.0,2.5,1.0e3,3.0e3,20.0,-999.,-999.,0.,0.,0./)
+    real                 :: cscale         =  1                       !< tunable parameter for convective cloud liquid (0-1)
+    !   real(kind=kind_phys) :: cs_parm(10) = (/5.0,2.5,1.0e3,3.0e3,20.0,-999.,-999.,0.,0.,0./)
     real(kind=kind_phys) :: cs_parm(10) = (/8.0,4.0,1.0e3,3.5e3,20.0,1.0,-999.,1.,0.6,0./)
     real(kind=kind_phys) :: flgmin(2)      = (/0.180,0.220/)          !< [in] ice fraction bounds
     real(kind=kind_phys) :: cgwf(2)        = (/0.5d0,0.05d0/)         !< multiplication factor for convective GWD
@@ -4307,10 +4319,10 @@ module GFS_typedefs
                                do_myjsfc, do_myjpbl,                                        &
                                hwrf_samfdeep, hwrf_samfshal,progsigma,progomega,betascu,    &
                                betamcu, betadcu,h2o_phys, pdfcld, shcnvcw, redrag,          &
-                               hybedmf, satmedmf, sigmab_coldstart,                         &
+                               hybedmf, satmedmf, tte_edmf, sigmab_coldstart,               &
                                shinhong, do_ysu, dspheat, lheatstrg, lseaspray, cnvcld,     &
                                xr_cnvcld, random_clds, shal_cnv, imfshalcnv, imfdeepcnv,    &
-                               isatmedmf, conv_cf_opt, do_deep, jcap,                       &
+                               isatmedmf, conv_cf_opt, do_deep, jcap, cscale,               &
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, alpha_fd,              &
                                psl_gwd_dx_factor,                                           &
                                sup, ctei_rm, crtrh,                                         &
@@ -4452,6 +4464,58 @@ module GFS_typedefs
     Model%ialb_uvvisdif = 4
     Model%NSPC  = 5
     Model%NSPC1 = 6
+    
+    !--- If initializing model with FV3 dynamical core.
+    if (Model%dycore_active == Model%dycore_fv3) then
+       if (.not. present(tile_num)) then
+          write(6,*) 'ERROR: <tile_num> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(isc)) then
+          write(6,*) 'ERROR: <isc> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(jsc)) then
+          write(6,*) 'ERROR: <jsc> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(nx)) then
+          write(6,*) 'ERROR: <nx> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(ny)) then
+          write(6,*) 'ERROR: <ny> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(cnx)) then
+          write(6,*) 'ERROR: <cnx> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(cny)) then
+          write(6,*) 'ERROR: <cny> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(gnx)) then
+          write(6,*) 'ERROR: <gnx> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(gny)) then
+          write(6,*) 'ERROR: <gny> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(hydrostatic)) then
+          write(6,*) 'ERROR: <hydrostatic> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(ak)) then
+          write(6,*) 'ERROR: <ak> is required when using FV3 dynamical core'
+          stop
+       endif
+       if (.not. present(bk)) then
+          write(6,*) 'ERROR: <bk> is required when using FV3 dynamical core'
+          stop
+       endif
+    endif
     
     ! dtend selection: default is to match all variables:
     dtend_select(1)='*'
@@ -4644,17 +4708,26 @@ module GFS_typedefs
     Model%sfcpress_id      = sfcpress_id
     Model%gen_coord_hybrid = gen_coord_hybrid
 
-    !--- set some grid extent parameters
-    Model%tile_num         = tile_num
-    Model%isc              = isc
-    Model%jsc              = jsc
-    Model%nx               = nx
-    Model%ny               = ny
+    !--- set some grid extent parameters (dycore specific)
+    if (Model%dycore_active == Model%dycore_fv3) then
+       Model%tile_num         = tile_num
+       Model%isc              = isc
+       Model%jsc              = jsc
+       Model%nx               = nx
+       Model%ny               = ny
+       allocate (Model%ak(1:size(ak)))
+       allocate (Model%bk(1:size(bk)))
+       Model%ak               = ak
+       Model%bk               = bk
+       Model%cnx              = cnx
+       Model%cny              = cny
+       Model%lonr             = gnx         ! number longitudinal points
+       Model%latr             = gny         ! number of latitudinal points from pole to pole
+    endif
+    if (Model%dycore_active == Model%dycore_mpas) then
+
+    end if
     Model%levs             = levs
-    allocate (Model%ak(1:size(ak)))
-    allocate (Model%bk(1:size(bk)))
-    Model%ak               = ak
-    Model%bk               = bk
     Model%levsp1           = Model%levs + 1
     Model%levsm1           = Model%levs - 1
     Model%cnx              = cnx
@@ -5266,6 +5339,7 @@ module GFS_typedefs
     Model%redrag            = redrag
     Model%hybedmf           = hybedmf
     Model%satmedmf          = satmedmf
+    Model%tte_edmf          = tte_edmf
     Model%shinhong          = shinhong
     Model%do_ysu            = do_ysu
     Model%acm               = acm
@@ -5284,6 +5358,7 @@ module GFS_typedefs
     Model%conv_cf_opt       = conv_cf_opt
     Model%nmtvr             = nmtvr
     Model%jcap              = jcap
+    Model%cscale            = cscale
     Model%flgmin            = flgmin
     Model%cgwf              = cgwf
     Model%ccwf              = ccwf
@@ -6032,28 +6107,38 @@ module GFS_typedefs
     Model%first_time_step  = .true.
     Model%restart          = restart
     Model%lsm_cold_start   = .not. restart
-    Model%hydrostatic      = hydrostatic
     if (Model%me == Model%master) then
       print *,'in atm phys init, phour=',Model%phour,'fhour=',Model%fhour,'zhour=',Model%zhour,'kdt=',Model%kdt
     endif
 
-
-    if(Model%hydrostatic .and. Model%lightning_threat) then
-      write(0,*) 'Turning off lightning threat index for hydrostatic run.'
-      Model%lightning_threat = .false.
-      lightning_threat = .false.
+    if (Model%dycore_active == Model%dycore_fv3) then
+       Model%hydrostatic      = hydrostatic
+       if(Model%hydrostatic .and. Model%lightning_threat) then
+          write(0,*) 'Turning off lightning threat index for hydrostatic run.'
+          Model%lightning_threat = .false.
+          lightning_threat = .false.
+       endif
     endif
 
-    Model%jdat(1:8)        = jdat(1:8)
-    allocate (Model%si(Model%levs+1))
-    !--- Define sigma level for radiation initialization
+    !--- Define sigma level for radiation initialization (FV3)
     !--- The formula converting hybrid sigma pressure coefficients to sigma coefficients follows Eckermann (2009, MWR)
     !--- ps is replaced with p0. The value of p0 uses that in http://www.emc.ncep.noaa.gov/officenotes/newernotes/on461.pdf
     !--- ak/bk have been flipped from their original FV3 orientation and are defined sfc -> toa
-    Model%si(1:Model%levs+1) = (ak(1:Model%levs+1) + bk(1:Model%levs+1) * con_p0 - ak(Model%levs+1)) / (con_p0 - ak(Model%levs+1))
+    allocate (Model%si(Model%levs+1))
+    if (Model%dycore_active == Model%dycore_fv3) then
+       Model%si(1:Model%levs+1) = (ak(1:Model%levs+1) + bk(1:Model%levs+1) * con_p0 - ak(Model%levs+1)) / (con_p0 - ak(Model%levs+1))
+    end if
+    ! DJS2025: NOT YET IMPLEMENTED
+    if (Model%dycore_active == Model%dycore_mpas) then
+       Model%si(1:Model%levs+1) = 1._kind_phys
+    endif
+
+    ! --- Set default time
+    Model%jdat(1:8)        = jdat(1:8)
     Model%sec              = 0
     Model%yearlen          = 365
     Model%julian           = -9999.
+
     !--- Set vertical flag used by radiation schemes
     Model%top_at_1         = .false.
     if (Model%do_RRTMGP) then
@@ -6864,18 +6949,22 @@ module GFS_typedefs
       print *, ' thermodyn_id      : ', Model%thermodyn_id
       print *, ' sfcpress_id       : ', Model%sfcpress_id
       print *, ' gen_coord_hybrid  : ', Model%gen_coord_hybrid
-      print *, ' hydrostatic       : ', Model%hydrostatic
+      if (Model%dycore_active == Model%dycore_fv3) then
+         print *, ' hydrostatic       : ', Model%hydrostatic
+      endif
       print *, ' '
       print *, 'grid extent parameters'
-      print *, ' isc               : ', Model%isc
-      print *, ' jsc               : ', Model%jsc
-      print *, ' nx                : ', Model%nx
-      print *, ' ny                : ', Model%ny
-      print *, ' levs              : ', Model%levs
-      print *, ' cnx               : ', Model%cnx
-      print *, ' cny               : ', Model%cny
-      print *, ' lonr              : ', Model%lonr
-      print *, ' latr              : ', Model%latr
+      if (Model%dycore_active == Model%dycore_fv3) then
+         print *, ' isc               : ', Model%isc
+         print *, ' jsc               : ', Model%jsc
+         print *, ' nx                : ', Model%nx
+         print *, ' ny                : ', Model%ny
+         print *, ' levs              : ', Model%levs
+         print *, ' cnx               : ', Model%cnx
+         print *, ' cny               : ', Model%cny
+         print *, ' lonr              : ', Model%lonr
+         print *, ' latr              : ', Model%latr
+      end if
       print *, ' chunks(1)         : ', Model%chunks(1)
       print *, ' chunks(nchunks)   : ', Model%chunks(Model%nchunks)
       print *, ' Model%ncols       : ', Model%ncols
@@ -7191,6 +7280,7 @@ module GFS_typedefs
       print *, ' redrag            : ', Model%redrag
       print *, ' hybedmf           : ', Model%hybedmf
       print *, ' satmedmf          : ', Model%satmedmf
+      print *, ' tte_edmf          : ', Model%tte_edmf
       print *, ' isatmedmf         : ', Model%isatmedmf
       print *, ' shinhong          : ', Model%shinhong
       print *, ' do_ysu            : ', Model%do_ysu
@@ -7208,6 +7298,7 @@ module GFS_typedefs
       print *, ' conv_cf_opt        : ', Model%conv_cf_opt
       print *, ' nmtvr             : ', Model%nmtvr
       print *, ' jcap              : ', Model%jcap
+      print *, ' cscale            : ', Model%cscale
       print *, ' cs_parm           : ', Model%cs_parm
       print *, ' flgmin            : ', Model%flgmin
       print *, ' cgwf              : ', Model%cgwf
