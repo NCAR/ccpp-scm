@@ -5176,35 +5176,30 @@
   units = count
   dimensions = ()
   type = integer
-  active = (control_for_lake_surface_scheme == 2)
 [nlevsoil_clm_lake]
   standard_name = soil_vertical_dimension_for_clm_lake_model
   long_name = soil vertical dimension for clm lake model
   units = count
   dimensions = ()
   type = integer
-  active = (control_for_lake_surface_scheme == 2)
 [nlevsnow_clm_lake]
   standard_name = snow_vertical_dimension_for_clm_lake_model
   long_name = snow vertical dimension for clm lake model
   units = count
   dimensions = ()
   type = integer
-  active = (control_for_lake_surface_scheme == 2)
 [nlevsnowsoil_clm_lake]
   standard_name = snow_plus_soil_vertical_dimension_for_clm_lake_model
   long_name = snow plus soil vertical dimension for clm lake model
   units = count
   dimensions = ()
   type = integer
-  active = (control_for_lake_surface_scheme == 2)
 [nlevsnowsoil1_clm_lake]
   standard_name = snow_plus_soil_minus_one_vertical_dimension_for_clm_lake_model
   long_name = snow plus soil minus one vertical dimension for clm lake model
   units = count
   dimensions = ()
   type = integer
-  active = (control_for_lake_surface_scheme == 2)
 [lsoil]
   standard_name = vertical_dimension_of_soil
   long_name = number of soil layers
