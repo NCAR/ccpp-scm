@@ -24,8 +24,6 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     SCM_GFS_v15p2,SCM_GFS_v15p2_ntiedtke,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf,SCM_GFS_v17_p8_ugwpv1,SCM_GFS_v16_RRTMGP,SCM_GFS_v16_debug,SCM_GFS_v16_no_nsst,SCM_GFS_v17_p8_ugwpv1_no_nsst,SCM_RRFS_v1beta_no_nsst,SCM_GFS_v16_gfdlmpv3,SCM_GFS_v17_p8_ugwpv1_tempo
-      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v15p2_ntiedtke_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v16_debug_ps,SCM_GFS_v16_no_nsst_ps,SCM_GFS_v17_p8_ugwpv1_no_nsst_ps,SCM_RRFS_v1beta_no_nsst_ps,SCM_GFS_v16_gfdlmpv3_ps,SCM_GFS_v17_p8_ugwpv1_tempo_ps
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
 
@@ -138,21 +136,21 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites},${suites_ps} ../src
+        cmake ../src
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
+        cmake -DCMAKE_BUILD_TYPE=Debug ../src
 
     - name: Configure build with CMake (Single Precision)
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites},${suites_ps} -D32BIT=1 ../src
+        cmake -D32BIT=1 ../src
 
     - name: Build SCM
       run: |
