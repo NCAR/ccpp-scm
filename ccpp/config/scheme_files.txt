@@ -46,7 +46,6 @@ ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_mp.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_overlap.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_post.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_photochemistry.F90
-ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_debug.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/dcyc2t3.f
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/cnvc90.f
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/maximum_hourly_diagnostics.F90
