@@ -359,7 +359,7 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
     call Diag%create(Model)
     !--- internal representation of interstitials for CCPP physics
     if (nthreads == 1) then
-      call Interstitial(1)%create(n_cols, Model)
+       call Interstitial(1)%create(ixs=Model%chunk_begin(1), ixe=Model%chunk_end(1), model=Model)
     else
       write(error_unit,*) ' CCPP SCM is only set up to use one thread - shutting down'
       error stop

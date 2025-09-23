@@ -27,6 +27,7 @@ jobs:
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      suites:     SCM_GFS_v16,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf,SCM_GFS_v17_p8_ugwpv1,SCM_GFS_v16_RRTMGP,SCM_GFS_v16_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_GFS_v16_RRTMGP_ps
 
     # Workflow steps
     steps:
@@ -137,21 +138,21 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake ../src
+        cmake ../src -DCCPP_SUITES=${suites}
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCMAKE_BUILD_TYPE=Debug ../src
+        cmake -DCMAKE_BUILD_TYPE=Debug ../src -DCCPP_SUITES=${suites}
 
     - name: Configure build with CMake (Single Precision)
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -D32BIT=1 ../src
+        cmake -D32BIT=1 ../src -DCCPP_SUITES=${suites}
 
     - name: Build SCM
       run: |
