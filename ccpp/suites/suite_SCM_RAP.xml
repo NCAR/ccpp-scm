@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_RAP" version="1">
+<suite name="SCM_RAP" version="1.0">
   <!-- <init></init> -->
   <group name="time_vary">
     <subcycle loop="1">
@@ -55,6 +55,10 @@
       <scheme>GFS_GWD_generic_pre</scheme>
       <scheme>drag_suite</scheme>
       <scheme>GFS_GWD_generic_post</scheme>
+    </subcycle>
+  </group>
+  <group name="physics_ts">
+    <subcycle loop="1">
       <scheme>GFS_suite_stateout_update</scheme>
     </subcycle>
   </group>
