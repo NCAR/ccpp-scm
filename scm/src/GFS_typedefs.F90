@@ -34,11 +34,7 @@ module GFS_typedefs
 
    integer, parameter :: no_tracer = -99
 
-!> \section arg_table_GFS_typedefs
-!! \htmlinclude GFS_typedefs.html
-!!
-
-  !--- version of physics
+   !--- version of physics
   character(len=64) :: phys_version = 'v2021 UFS PHYSICS'
 
 !----------------

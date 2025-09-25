@@ -1,21 +1,17 @@
 module CCPP_typedefs
 
-!> \section arg_table_CCPP_typedefs Argument Table
-!! \htmlinclude CCPP_typedefs.html
-!!
+  ! Physics kind defininitions needed for interstitial DDTs
+  use machine,  only: kind_grid, kind_dyn, kind_phys
 
-    ! Physics kind defininitions needed for interstitial DDTs
-    use machine,  only: kind_grid, kind_dyn, kind_phys
+  ! Physics type defininitions needed for interstitial DDTs
+  use module_radsw_parameters,  only: profsw_type, cmpfsw_type
+  use module_radlw_parameters,  only: proflw_type
+  use GFS_typedefs,             only: GFS_control_type
 
-    ! Physics type defininitions needed for interstitial DDTs
-    use module_radsw_parameters,  only: profsw_type, cmpfsw_type
-    use module_radlw_parameters,  only: proflw_type
-    use GFS_typedefs,             only: GFS_control_type
+  implicit none
 
-    implicit none
-
-    ! GFS_interstitial_type
-    public GFS_interstitial_type
+  ! GFS_interstitial_type
+  public GFS_interstitial_type
 
 !! \section arg_table_GFS_interstitial_type
 !! \htmlinclude GFS_interstitial_type.html

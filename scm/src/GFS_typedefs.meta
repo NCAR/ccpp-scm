@@ -10856,21 +10856,3 @@
   kind = kind_phys
   intent = inout
   active = (do_lightning_threat_index_calculations)
-
-########################################################################
-[ccpp-table-properties]
-  name = GFS_typedefs
-  type = host
-  relative_path = ../../ccpp/physics/physics
-  dependencies = hooks/machine.F,hooks/physcons.F90
-  dependencies = Radiation/RRTMG/radlw_param.f,Radiation/RRTMG/radsw_param.f
-  dependencies = MP/TEMPO/TEMPO/module_mp_tempo_params.F90
-  dependencies = photochem/module_ozphys.F90,photochem/module_h2ophys.F90
-  dependencies = SFC_Models/Land/Noahmp/lnd_iau_mod.F90
-  dependencies = Interstitials/UFS_SCM_NEPTUNE/GFS_ccpp_suite_sim_pre.F90
-  dependencies = Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90
-  dependencies = SFC_Models/Land/Noahmp/lnd_iau_mod.F90
-
-[ccpp-arg-table]
-  name = GFS_typedefs
-  type = host

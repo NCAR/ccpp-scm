@@ -2,11 +2,6 @@
 !!  Contains type definitions for SCM-related variables and physics-related variables
 
 module scm_type_defs
-
-!> \section arg_table_scm_type_defs
-!! \htmlinclude scm_type_defs.html
-!!
-
   use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
   use GFS_typedefs,   only: GFS_control_type,      &
@@ -23,19 +18,8 @@ module scm_type_defs
                             get_tracer_index
   use CCPP_typedefs,  only: GFS_interstitial_type
   use machine,        only: kind_phys
-  use ccpp_config,    only: ty_ccpp_config
   
   implicit none
-
-  integer, parameter :: character_length = 80
-  integer, parameter :: int_zero = 0
-  integer, parameter :: int_one = 1
-  integer, parameter :: int_neg_one = -1
-  real(kind=dp), parameter :: real_zero = 0.0
-  real(kind=dp), parameter :: real_one = 1.0
-
-  character(len = 80) :: clear_char = ''
-
 !> \section arg_table_physics_type
 !! \htmlinclude physics_type.html
 !!
@@ -57,9 +41,6 @@ module scm_type_defs
       procedure :: associate => physics_associate
       procedure :: set => physics_set
   end type physics_type
-
-  type(physics_type),   target :: physics
-  type(ty_ccpp_config), target :: ccpp_cfg
 
 !> \section arg_table_scm_state_type
 !! \htmlinclude scm_state_type.html

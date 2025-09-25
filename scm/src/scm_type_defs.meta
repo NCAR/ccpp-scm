@@ -115,26 +115,3 @@
   units = DDT
   dimensions = ()
   type = GFS_init_type
-
-########################################################################
-[ccpp-table-properties]
-  name = scm_type_defs
-  type = host
-  dependencies = GFS_typedefs.F90,CCPP_typedefs.F90,ccpp_config.F90
-  dependencies = scm_kinds.F90,scm_utils.F90
-
-[ccpp-arg-table]
-  name = scm_type_defs
-  type = host
-[physics]
-  standard_name = physics_type
-  long_name = definition of derived data type physics_type
-  units = DDT
-  dimensions = ()
-  type = physics_type
-[ccpp_cfg]
-  standard_name = ccpp_configuration
-  long_name = definition of derived data type ccpp_config
-  units = DDT
-  dimensions = ()
-  type = ty_ccpp_config
