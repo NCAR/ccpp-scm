@@ -58,7 +58,7 @@ jobs:
       with:
         name: rt-baselines-${{matrix.build-type}}
         github-token: ${{ secrets.GH_PAT }}
-	repository: NCAR/ccpp-scm
+        repository: NCAR/ccpp-scm
         run_id: 4119235968
 
     - name: Display downlaoded artifact.
