@@ -56,7 +56,7 @@ jobs:
     - name: Download a single artifact
       uses: actions/download-artifact@v4
       with:
-        name: rt-baselines-${{matrix.build-type}}
+        artifact-ids: 4119235968
         path: ${dir_bl}
 
     - name: Display downlaoded artifact.
