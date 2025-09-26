@@ -45,6 +45,14 @@ jobs:
         openmpi-bin \
         libopenmpi-dev
 
+    - name: Download a single artifact
+      uses: actions/download-artifact@v5
+      with:
+        cd ${dir_bl}
+        name: rt-baselines-${{matrix.build-type}}
+        pwd
+        ls -l
+    
     # Python setup
     - name: Setup Python
       uses: actions/setup-python@v6
