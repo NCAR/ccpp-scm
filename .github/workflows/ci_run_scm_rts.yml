@@ -47,7 +47,7 @@ jobs:
 
     # Initialize and build SCM, run regressions tests
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v5
+      uses: actions/checkout@v4
 
     - name: Create directory for SCM RT baselines
       run: mkdir ${dir_bl}
