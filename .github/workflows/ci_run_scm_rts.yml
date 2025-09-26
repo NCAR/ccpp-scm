@@ -46,7 +46,7 @@ jobs:
         libopenmpi-dev
 
     - name: Download a single artifact
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v4
       with:
         name: rt-baselines-${{matrix.build-type}}
         path: ${dir_bl}
