@@ -45,16 +45,20 @@ jobs:
         openmpi-bin \
         libopenmpi-dev
 
-#    - name: Download a single artifact
-#      uses: actions/download-artifact@v4
-#      with:
-#        name: rt-baselines-${{matrix.build-type}}.zip
-#        path: ${dir_bl}
+    - name: Create directory for SCM RT baselines
+      run: mkdir ${dir_bl}
 
-#    - name: Display downlaoded artifact.
-#      run: |
-#        cd ${dir_bl}
-#        ls -ltr
+    - name: Download a single artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: rt-baselines-${{matrix.build-type}}.zip
+        path: ${dir_bl}
+
+    - name: Display downlaoded artifact.
+      run: |
+        cd ${dir_bl}
+        unzip rt-baselines-${{matrix.build-type}}.zip
+        ls -ltr
 
     # Python setup
     - name: Setup Python
@@ -188,14 +192,14 @@ jobs:
         mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
         ./ci_util.py -b ${{matrix.build-type}}
 
-    - name: Create directory for SCM RT baselines
-      run: mkdir ${dir_bl}
-
-    - name: Download SCM RT baselines
-      run: |
-        cd ${dir_bl}
-        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
-        unzip rt-baselines-${{matrix.build-type}}.zip
+#    - name: Create directory for SCM RT baselines
+#      run: mkdir ${dir_bl}
+#
+#    - name: Download SCM RT baselines
+#      run: |
+#        cd ${dir_bl}
+#        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
+#        unzip rt-baselines-${{matrix.build-type}}.zip
 
     - name: Compare SCM RT output to baselines
       run: |
