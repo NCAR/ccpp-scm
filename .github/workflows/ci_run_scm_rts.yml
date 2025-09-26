@@ -2,7 +2,8 @@
 name: build and run SCM regression tests
 
 on: [pull_request, workflow_dispatch]
-
+permissions:
+  actions: read # Allows downloading artifacts
 jobs:
   run_scm_rts:
 
@@ -45,14 +46,6 @@ jobs:
         openmpi-bin \
         libopenmpi-dev
 
-    - name: Get GitHub App token
-      id: get-token
-      uses: actions/create-github-app-token@v1
-      with:
-        owner: 'me'
-        app-id: ${{ secrets.APPLICATION_ID }}
-        private-key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-
     # Initialize and build SCM, run regressions tests
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
       uses: actions/checkout@v4
@@ -63,8 +56,6 @@ jobs:
     - name: Download a single artifact
       uses: actions/download-artifact@v4
       with:
-        run-id: ${{ github.event.workflow_run.id }}
-        github-token: ${{ github.token }}
         name: rt-baselines-${{matrix.build-type}}
         path: ${dir_bl}
 
