@@ -45,6 +45,10 @@ jobs:
         openmpi-bin \
         libopenmpi-dev
 
+    # Initialize and build SCM, run regressions tests
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v5
+
     - name: Create directory for SCM RT baselines
       run: mkdir ${dir_bl}
 
@@ -133,9 +137,9 @@ jobs:
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
 
-    # Initialize and build SCM, run regressions tests
-    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v5
+#    # Initialize and build SCM, run regressions tests
+#    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+#      uses: actions/checkout@v5
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
