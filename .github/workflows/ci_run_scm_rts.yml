@@ -45,16 +45,16 @@ jobs:
         openmpi-bin \
         libopenmpi-dev
 
-    - name: Download a single artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: rt-baselines-${{matrix.build-type}}.zip
-        path: ${dir_bl}
+#    - name: Download a single artifact
+#      uses: actions/download-artifact@v4
+#      with:
+#        name: rt-baselines-${{matrix.build-type}}.zip
+#        path: ${dir_bl}
 
-    - name: Display downlaoded artifact.
-      run: |
-        cd ${dir_bl}
-        ls -ltr
+#    - name: Display downlaoded artifact.
+#      run: |
+#        cd ${dir_bl}
+#        ls -ltr
 
     # Python setup
     - name: Setup Python
