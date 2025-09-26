@@ -48,10 +48,13 @@ jobs:
     - name: Download a single artifact
       uses: actions/download-artifact@v5
       with:
-        cd ${dir_bl}
         name: rt-baselines-${{matrix.build-type}}
-        pwd
-        ls -l
+        path: ${dir_bl}
+
+    - name: Display downlaoded artifact.
+      run: |
+        cd ${dir_bl}
+        ls -ltr
 
     # Python setup
     - name: Setup Python
