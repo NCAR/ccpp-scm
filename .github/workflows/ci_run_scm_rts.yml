@@ -56,7 +56,7 @@ jobs:
     - name: Download a single artifact
       uses: actions/download-artifact@v4
       with:
-        artifact-ids: 4119235968
+        artifact-ids: 18049252452
         path: ${dir_bl}
 
     - name: Display downlaoded artifact.
