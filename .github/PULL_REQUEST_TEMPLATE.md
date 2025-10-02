@@ -26,8 +26,8 @@ This PR catches the NCAR:main branch up with changes from the ufs-community:ufs/
 Associated ufs/dev PR:
 - ufs-community/ccpp-physics#
 
-Associated fv3atm PR:
-- NOAA-EMC/fv3atm#
+Associated ufsatm PR:
+- NOAA-EMC/ufsatm#
 
 Associated NCAR PR:
  - NCAR/ccpp-physics#
