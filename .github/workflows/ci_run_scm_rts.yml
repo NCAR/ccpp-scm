@@ -2,7 +2,8 @@
 name: build and run SCM regression tests
 
 on: [pull_request, workflow_dispatch]
-
+permissions:
+  actions: read # Allows downloading artifacts
 jobs:
   run_scm_rts:
 
@@ -44,6 +45,27 @@ jobs:
         libxml2 \
         openmpi-bin \
         libopenmpi-dev
+
+    # Initialize and build SCM, run regressions tests
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v4
+
+    - name: Create directory for SCM RT baselines
+      run: mkdir ${dir_bl}
+
+    - name: Download a single artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: rt-baselines-${{matrix.build-type}}
+        github-token: ${{ secrets.GH_PAT }}
+        repository: NCAR/ccpp-scm
+        run-id: 4119235968
+
+    - name: Display downlaoded artifact.
+      run: |
+        cd ${dir_bl}
+        unzip rt-baselines-${{matrix.build-type}}.zip
+        ls -ltr
 
     # Python setup
     - name: Setup Python
@@ -118,9 +140,9 @@ jobs:
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
 
-    # Initialize and build SCM, run regressions tests
-    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v5
+#    # Initialize and build SCM, run regressions tests
+#    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+#      uses: actions/checkout@v5
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
@@ -177,14 +199,14 @@ jobs:
         mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
         ./ci_util.py -b ${{matrix.build-type}}
 
-    - name: Create directory for SCM RT baselines
-      run: mkdir ${dir_bl}
-
-    - name: Download SCM RT baselines
-      run: |
-        cd ${dir_bl}
-        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
-        unzip rt-baselines-${{matrix.build-type}}.zip
+#    - name: Create directory for SCM RT baselines
+#      run: mkdir ${dir_bl}
+#
+#    - name: Download SCM RT baselines
+#      run: |
+#        cd ${dir_bl}
+#        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
+#        unzip rt-baselines-${{matrix.build-type}}.zip
 
     - name: Compare SCM RT output to baselines
       run: |
