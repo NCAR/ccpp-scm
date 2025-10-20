@@ -141,6 +141,7 @@ set(32BIT           OFF CACHE BOOL "Enable 32BIT (single precision arithmetic in
 set(AVX2            ON  CACHE BOOL "Enable AVX2 instruction set")
 set(AVX             OFF CACHE BOOL "Enable AVX-I instruction set")
 set(SIMDMULTIARCH   OFF CACHE BOOL "Enable multi-target SIMD instruction sets")
+set(RRTMGP_32BIT    OFF CACHE BOOL "Enable 32BIT (single precision arithmetic in rte-rrtmgp radiation)")
 
 #------------------------------------------------------------------------------
 # Set compile options
