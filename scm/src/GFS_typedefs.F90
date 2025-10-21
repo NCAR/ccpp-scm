@@ -1053,6 +1053,7 @@ module GFS_typedefs
     
     !--- GFDL microphysical paramters
     logical              :: lgfdlmprad      !< flag for GFDL mp scheme and radiation consistency
+    logical              :: fast_mp_consv
 
     !--- Thompson,GFDL mp parameter
     logical              :: lrefres          !< flag for radar reflectivity in restart file
@@ -3677,7 +3678,8 @@ module GFS_typedefs
     
     !--- GFDL microphysical parameters
     logical              :: lgfdlmprad     = .false.            !< flag for GFDLMP radiation interaction
-
+    logical              :: fast_mp_consv  = .false.
+    
     !--- Thompson,GFDL microphysical parameter
     logical              :: lrefres        = .false.            !< flag for radar reflectivity in restart file
 
@@ -4992,6 +4994,7 @@ module GFS_typedefs
 
 !--- GFDL MP parameters
     Model%lgfdlmprad       = lgfdlmprad
+    Model%fast_mp_consv    = fast_mp_consv
 !--- Thompson,GFDL,NSSL MP parameter
     Model%lrefres          = lrefres
 
