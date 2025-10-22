@@ -186,10 +186,14 @@ jobs:
       run: mkdir ${dir_bl}
 
     - name: Download SCM RT baselines
-      run: |
-        cd ${dir_bl}
-        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
-        unzip rt-baselines-${{matrix.build-type}}.zip
+      uses: actions/download-artifact@v5
+      with:
+        name: rt-baselines-${{matrix.build-type}}-main
+        repository: NCAR/ccpp-scm
+        path: ${dir_bl}
+
+    - name: List SCM RT baseline
+      run: ls ${dir_bl}
 
     - name: Compare SCM RT output to baselines
       run: |
