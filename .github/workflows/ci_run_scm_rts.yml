@@ -207,13 +207,13 @@ jobs:
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
       if: env.files_exist == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: rt-plots-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: rt-baselines-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
