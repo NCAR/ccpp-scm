@@ -56,7 +56,7 @@ jobs:
         --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .id '
 
     - name: Save Artifact Id Numbers
-      run: save-id
+      id: save-id
       run: |
         DEBUG_ID=$(gh api \
         repos/NCAR/ccpp-scm/actions/artifacts \
