@@ -42,7 +42,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Create directory for SCM RT baselines
-      run: mkdir ${dir_bl}
+      run: mkdir -p ${dir_bl}
 
     - name: Test gh api Get Artifact-Info
       run: |
@@ -71,7 +71,7 @@ jobs:
       uses: actions/download-artifact@v5
       with:
         name: rt-baselines-${{matrix.build-type}}-main
-        path: ${dir_bl}
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         run-id: ${{ env.debug_id }}
 
