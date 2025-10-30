@@ -44,6 +44,7 @@ jobs:
       run: mkdir ${dir_bl}
 
     - name: Get Artifact Id Numbers
+      run: |
         DEBUG_ID=$(gh api \
         repos/NCAR/ccpp-scm/actions/artifacts \
         --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.create_at) | first | .id ')
