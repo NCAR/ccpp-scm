@@ -141,6 +141,7 @@ set(32BIT           OFF CACHE BOOL "Enable 32BIT (single precision arithmetic in
 set(AVX2            ON  CACHE BOOL "Enable AVX2 instruction set")
 set(AVX             OFF CACHE BOOL "Enable AVX-I instruction set")
 set(SIMDMULTIARCH   OFF CACHE BOOL "Enable multi-target SIMD instruction sets")
+set(RRTMGP_32BIT    OFF CACHE BOOL "Enable 32BIT (single precision arithmetic in rte-rrtmgp radiation)")
 
 #------------------------------------------------------------------------------
 # Set compile options
@@ -262,6 +263,22 @@ else()
   remove_definitions(-DOVERLOAD_R4)
   set(CMAKE_Fortran_FLAGS_PHYSICS  "")
   set(CMAKE_Fortran_FLAGS_DYNAMICS "")
+endif()
+
+#------------------------------------------------------------------------------
+# Set flags for rte-rrtmgp radiation
+if(RRTMGP_32BIT)
+  message(STATUS "Compile CCPP RTE-RRTMGP with 32-bit precision")
+  add_definitions(-DRTE_USE_SP)
+  if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
+    set(CMAKE_Fortran_FLAGS_RTERRTMGP  "-real-size 32")
+  elseif(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+    set(CMAKE_Fortran_FLAGS_RTERRTMGP  "-fno-default-real-8 -fdefault-double-8")
+  endif()
+else()
+  message(STATUS "Compile CCPP RTE-RRTMGP with 64-bit precision")
+  remove_definitions(-DRTE_USE_SP)
+  set(CMAKE_Fortran_FLAGS_RTERRTMGP  ${CMAKE_Fortran_FLAGS_PHYSICS})
 endif()
 
 #------------------------------------------------------------------------------

@@ -111,7 +111,6 @@
   bl_mynn_edmf      = 1
   bl_mynn_edmf_mom  = 1
   do_RRTMGP          = .false.
-  doGP_cldoptics_LUT = .false.
   doGP_lwscat        = .false.
 /
 
