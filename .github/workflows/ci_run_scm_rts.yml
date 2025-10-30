@@ -44,6 +44,7 @@ jobs:
       run: mkdir ${dir_bl}
 
     - name: Get Artifact Id Numbers
+      GH_TOKEN: ${{ github.token }}
       run: |
         DEBUG_ID=$(gh api \
         repos/NCAR/ccpp-scm/actions/artifacts \
