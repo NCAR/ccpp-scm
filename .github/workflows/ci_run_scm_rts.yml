@@ -55,14 +55,14 @@ jobs:
         repos/NCAR/ccpp-scm/actions/artifacts \
         --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .id '
 
-    - name: Save Artifact Id Numbers I
-      id: save-id
-      run: |
-        DEBUG_ID=$(gh api \
-        repos/NCAR/ccpp-scm/actions/artifacts \
-        --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .id ')
-        echo "debug_id=${DEBUG_ID}"
-        echo "debug_id=${DEBUG_ID}" >> "$GITHUB_OUTPUT"
+    # - name: Save Artifact Id Numbers I
+    #   id: save-id
+    #   run: |
+    #     DEBUG_ID=$(gh api \
+    #     repos/NCAR/ccpp-scm/actions/artifacts \
+    #     --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .id ')
+    #     echo "debug_id=${DEBUG_ID}"
+    #     echo "debug_id=${DEBUG_ID}" >> "$GITHUB_OUTPUT"
     - name: Save Artifact Id Numbers II
       run: |
         DEBUG_ID=$(gh api \
@@ -73,8 +73,7 @@ jobs:
 
     - name: Check Artifact Id Numbers
       run: |
-        echo "1: debug_id = ${{ save-id.outputs.debug_id }}"
-        echo "2: debug_id = ${debug_id}"
+        echo "2: debug_id = ${{ env.debug_id }}"
 
     - name: Download SCM RT baselines
       uses: actions/download-artifact@v5
@@ -82,7 +81,7 @@ jobs:
         name: rt-baselines-${{matrix.build-type}}-main
         path: ${dir_bl}
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        run-id: ${save-id.outputs.debug_id}
+        run-id: ${{ env.debug_id }}
 
     - name: List SCM RT baseline
       run: |
