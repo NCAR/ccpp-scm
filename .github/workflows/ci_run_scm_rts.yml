@@ -44,7 +44,7 @@ jobs:
       run: mkdir ${dir_bl}
 
     - name: Get Artifact Id Numbers
-      GH_TOKEN: ${{ github.token }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
       run: |
         DEBUG_ID=$(gh api \
         repos/NCAR/ccpp-scm/actions/artifacts \
@@ -63,7 +63,7 @@ jobs:
       with:
         name: rt-baselines-${{matrix.build-type}}-main
         path: ${dir_bl}
-        # github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         run-id: ${debug_id}
 
     - name: List SCM RT baseline
