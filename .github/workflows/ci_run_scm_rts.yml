@@ -44,6 +44,12 @@ jobs:
     - name: Create directory for SCM RT baselines
       run: mkdir ${dir_bl}
 
+    - name: Test gh api Get Artifact-Info
+      run: |
+        gh api \
+        repos/NCAR/ccpp-scm/actions/artifacts
+
+
     - name: Get Artifact Id Numbers
       run: |
         DEBUG_ID=$(gh api \
