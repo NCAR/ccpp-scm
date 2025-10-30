@@ -33,6 +33,7 @@ jobs:
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
       artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('main' == 'main' && 'main' || 'PR') }}
+      GH_TOKEN:   ${{ github.token }}
 
     # Workflow steps
     steps:
@@ -44,7 +45,6 @@ jobs:
       run: mkdir ${dir_bl}
 
     - name: Get Artifact Id Numbers
-      github-token: ${{ secrets.GITHUB_TOKEN }}
       run: |
         DEBUG_ID=$(gh api \
         repos/NCAR/ccpp-scm/actions/artifacts \
