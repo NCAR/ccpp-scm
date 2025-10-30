@@ -53,7 +53,7 @@ jobs:
       run: |
         gh api \
         repos/NCAR/ccpp-scm/actions/artifacts \
-        --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .id '
+        --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id '
 
     # - name: Save Artifact Id Numbers I
     #   id: save-id
@@ -67,7 +67,7 @@ jobs:
       run: |
         DEBUG_ID=$(gh api \
         repos/NCAR/ccpp-scm/actions/artifacts \
-        --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .id ')
+        --jq '[.artifacts[] | select(.name == "rt-baselines-Debug-main" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
         echo "debug_id=${DEBUG_ID}"
         echo "debug_id=${DEBUG_ID}">> "$GITHUB_ENV"
 
