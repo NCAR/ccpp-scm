@@ -193,7 +193,7 @@ jobs:
         echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
 
     - name: Download SCM RT baselines
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         name: rt-baselines-${{matrix.build-type}}-main
         path: ${dir_bl}
