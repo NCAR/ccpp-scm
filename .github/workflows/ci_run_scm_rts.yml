@@ -33,6 +33,7 @@ jobs:
       dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
       artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('main' == 'main' && 'main' || 'PR') }}
+      GH_TOKEN:   ${{ github.token }}
 
     # Workflow steps
     steps:
@@ -183,14 +184,22 @@ jobs:
         mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
         ./ci_util.py -b ${{matrix.build-type}}
 
-    - name: Create directory for SCM RT baselines
-      run: mkdir ${dir_bl}
+    - name: Save Artifact Id Numbers and Create Directory for SCM RT baselines
+      run: |
+        mkdir -p ${dir_bl}
+        ARTIFACT_ID=$(gh api \
+        repos/NCAR/ccpp-scm/actions/artifacts \
+        --jq '[.artifacts[] | select(.name == "rt-baselines-${{matrix.build-type}}-main" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
+        echo "artifact_id=${ARTIFACT_ID}"
+        echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
 
     - name: Download SCM RT baselines
-      run: |
-        cd ${dir_bl}
-        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}.zip
-        unzip rt-baselines-${{matrix.build-type}}.zip
+      uses: actions/download-artifact@v6
+      with:
+        name: rt-baselines-${{matrix.build-type}}-main
+        path: ${dir_bl}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        run-id: ${{ env.artifact_id }}
 
     - name: Compare SCM RT output to baselines
       run: |
@@ -208,13 +217,13 @@ jobs:
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
       if: env.files_exist == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: rt-plots-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: rt-baselines-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
