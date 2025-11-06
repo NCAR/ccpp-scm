@@ -203,6 +203,8 @@ jobs:
 
     - name: Compare SCM RT output to baselines
       run: |
+        cd ${dir_bl}
+        unzip rt-baselines-${{matrix.build-type}}.zip
         cd ${SCM_ROOT}/test
         ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
