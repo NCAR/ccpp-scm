@@ -202,8 +202,7 @@ jobs:
         run-id: ${{ env.artifact_id }}
 
     - name: Compare SCM RT output to baselines
-      run: |
-        ls -R ${dir_bl}
+      run: ls -R ${dir_bl}
 #        cd ${SCM_ROOT}/test
 #        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
