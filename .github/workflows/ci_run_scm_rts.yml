@@ -50,27 +50,27 @@ jobs:
         libxml2 \
         openmpi-bin \
         libopenmpi-dev
-    
+
     # Python setup
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
         python-version: ${{matrix.py-version}}
-    
+
     - name: Install NetCDF Python libraries
       run: |
         pip install f90nml h5py netCDF4 matplotlib
-    
+
     - name: Environment for openmpi compiler
       run: |
         echo "FC=mpif90" >> $GITHUB_ENV
         echo "CC=mpicc"  >> $GITHUB_ENV
-    
+
     - name: Check MPI version
       run: |
         which mpif90
         mpif90 --version
-    
+
     # Install NCEP libs
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
@@ -78,7 +78,7 @@ jobs:
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
-    
+
     - name: Install bacio library v2.4.1
       if: steps.cache-bacio-fortran.outputs.cache-hit != 'true'
       run: |
@@ -88,14 +88,14 @@ jobs:
         make -j2
         make install
         echo "bacio_DIR=/home/runner/bacio/lib/cmake/bacio" >> $GITHUB_ENV
-    
+
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
       uses: actions/cache@v4
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
-    
+
     - name: Install SP-library v2.3.3
       if: steps.cache-sp-fortran.outputs.cache-hit != 'true'
       run: |
@@ -105,14 +105,14 @@ jobs:
         make -j2
         make install
         echo "sp_DIR=/home/runner/NCEPLIBS-sp/lib/cmake/sp" >> $GITHUB_ENV
-    
+
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
       uses: actions/cache@v4
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
-    
+
     - name: Install w3emc library v2.9.2
       if: steps.cache-w3emc-fortran.outputs.cache-hit != 'true'
       run: |
@@ -122,15 +122,15 @@ jobs:
         make -j2
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
-    
-    
+
+
     # Initialize and build SCM, run regressions tests
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
       uses: actions/checkout@v5
-    
+
     - name: Initialize submodules
       run: git submodule update --init --recursive
-    
+
     - name: Download data for SCM
       run: |
         cd ${SCM_ROOT}
@@ -139,45 +139,45 @@ jobs:
         ./contrib/get_tempo_data.sh
         ./contrib/get_aerosol_climo.sh
         ./contrib/get_rrtmgp_data.sh
-    
+
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} ../src
-    
+
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
-    
+
     - name: Configure build with CMake (Single Precision)
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -D32BIT=1 ../src
-    
+
     - name: Build SCM
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
-    
+
     - name: Run SCM RTs
       if: matrix.build-type != 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
-    
+
     - name: Run SCM Single Precision RTs
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
         ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1
-    
+
     - name: Gather SCM RT output
       run: |
         cd ${SCM_ROOT}/test
@@ -214,14 +214,14 @@ jobs:
         else
           echo "files_exist=false" >> "$GITHUB_ENV"
         fi
-    
+
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
       if: env.files_exist == 'true'
       uses: actions/upload-artifact@v5
       with:
         name: rt-plots-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
-    
+
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v5
       with:
