@@ -138,6 +138,7 @@ jobs:
         ./contrib/get_thompson_tables.sh
         ./contrib/get_tempo_data.sh
         ./contrib/get_aerosol_climo.sh
+        ./contrib/get_rrtmgp_data.sh
 
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
@@ -196,7 +197,7 @@ jobs:
       uses: actions/download-artifact@v6
       with:
         name: rt-baselines-${{matrix.build-type}}-main
-        path: ${dir_bl}
+        path: ${{ env.dir_bl }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         run-id: ${{ env.artifact_id }}
 
