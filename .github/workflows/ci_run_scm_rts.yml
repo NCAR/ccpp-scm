@@ -186,9 +186,9 @@ jobs:
     - name: Save Artifact Id Numbers and Create Directory for SCM RT baselines
       run: |
         mkdir -p ${dir_bl}
-        ARTIFACT_ID=$(gh api \
-        repos/NCAR/ccpp-scm/actions/artifacts \
-        --jq '[.artifacts[] | select(.name == "rt-baselines-${{matrix.build-type}}-main" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
+        ARTIFACT_ID=$(gh api --paginate \
+        repos/NCAR/ccpp-scm/actions/artifacts | \
+        jq -s '[ .[] | .artifacts[] | select(.name == "rt-baselines-${{matrix.build-type}}-main" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
         echo "artifact_id=${ARTIFACT_ID}"
         echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
 
