@@ -1,10 +1,7 @@
 
-name: build and run SCM regression tests
+name: create scm rt artifacts
 
 on:
-  push:
-    branches: [main] # add artifact to main branch
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -182,44 +179,6 @@ jobs:
         cd ${SCM_ROOT}/test
         mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
         ./ci_util.py -b ${{matrix.build-type}}
-
-    - name: Save Artifact Id Numbers and Create Directory for SCM RT baselines
-      run: |
-        mkdir -p ${dir_bl}
-        ARTIFACT_ID=$(gh api --paginate \
-        repos/NCAR/ccpp-scm/actions/artifacts | \
-        jq -s '[ .[] | .artifacts[] | select(.name == "rt-baselines-${{matrix.build-type}}-main" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
-        echo "artifact_id=${ARTIFACT_ID}"
-        echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
-
-    - name: Download SCM RT baselines
-      uses: actions/download-artifact@v6
-      with:
-        name: rt-baselines-${{matrix.build-type}}-main
-        path: ${dir_bl}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        run-id: ${{ env.artifact_id }}
-
-    - name: Compare SCM RT output to baselines
-      run: |
-        cd ${SCM_ROOT}/test
-        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
-
-    - name: Check if SCM RT plots exist
-      id: check_files
-      run: |
-        if [ -n "$(ls -A /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out 2>/dev/null)" ]; then
-          echo "files_exist=true" >> "$GITHUB_ENV"
-        else
-          echo "files_exist=false" >> "$GITHUB_ENV"
-        fi
-
-    - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
-      if: env.files_exist == 'true'
-      uses: actions/upload-artifact@v5
-      with:
-        name: rt-plots-${{matrix.build-type}}-${{ env.artifact_origin }}
-        path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v5
