@@ -298,6 +298,7 @@ endif()
 #------------------------------------------------------------------------------
 # Configure sources
 
+set(BUILD_SHARED_LIBS OFF)
 ADD_SUBDIRECTORY(${CCPP_FRAMEWORK_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
 ADD_SUBDIRECTORY(${CCPP_PHYSICS_SRC} ${CMAKE_BINARY_DIR}/ccpp/physics)
 ADD_DEPENDENCIES(ccpp_physics ccpp_framework)
