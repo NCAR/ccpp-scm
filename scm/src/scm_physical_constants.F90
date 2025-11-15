@@ -9,6 +9,7 @@ public
 !> \section arg_table_scm_physical_constants
 !! \htmlinclude scm_physical_constants.html
 !!
+  integer      ,parameter:: con_zero   =0
   real(kind=dp),parameter:: con_pi     =3.1415926535897931
   
   real(kind=dp),parameter:: con_rerth  =6.3712e+6

@@ -284,7 +284,7 @@ end subroutine patch_in_ref
 !--------------
 subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                   &
                             Coupling, Grid, Tbd, Cldprop, Radtend, Diag,         &
-                            Interstitial, ntasks, nthreads,                      &
+                            ntasks, nthreads,                                    &
                             Init_parm, n_cols, lon, lat, area)
 
   use machine,             only: kind_phys
@@ -294,7 +294,6 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
                                  GFS_control_type,  GFS_grid_type,       &
                                  GFS_tbd_type,      GFS_cldprop_type,    &
                                  GFS_radtend_type,  GFS_diag_type
-  use CCPP_typedefs,       only: GFS_interstitial_type
   use physcons,            only: pi => con_pi
 
 
@@ -313,7 +312,6 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
   type(GFS_cldprop_type),                    intent(inout) :: Cldprop
   type(GFS_radtend_type),                    intent(inout) :: Radtend
   type(GFS_diag_type),                       intent(inout) :: Diag
-  type(GFS_interstitial_type),               intent(inout) :: Interstitial(:)
   type(GFS_init_type),                       intent(in)    :: Init_parm
 
   integer,                  intent(in)    :: ntasks, nthreads, n_cols
@@ -357,13 +355,6 @@ subroutine GFS_suite_setup (Model, Statein, Stateout, Sfcprop,                  
     call Radtend%create(Model)
     !--- internal representation of diagnostics
     call Diag%create(Model)
-    !--- internal representation of interstitials for CCPP physics
-    if (nthreads == 1) then
-      call Interstitial(1)%create(n_cols, Model)
-    else
-      write(error_unit,*) ' CCPP SCM is only set up to use one thread - shutting down'
-      error stop
-    end if
 
     !--- populate the grid components
     !call GFS_grid_populate (Grid(i), Init_parm%xlon, Init_parm%xlat, Init_parm%area)

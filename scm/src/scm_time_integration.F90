@@ -159,7 +159,8 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   !CCPP run phase
   ! time_vary group doesn't have any run phase (omitted)
   ! radiation group
-  call physics%Interstitial(1)%reset(physics%Model)
+  
+  call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)  
   call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="radiation", ierr=ierr)
   if (ierr/=0) then
       write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group radiation: ' // trim(cdata%errmsg) // '. Exiting...'
@@ -178,7 +179,6 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
       write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(cdata%errmsg) // '. Exiting...'
       error stop
   end if
-
   call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
   if (ierr/=0) then
       write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'

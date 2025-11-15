@@ -6,6 +6,12 @@
 [ccpp-arg-table]
   name = scm_physical_constants
   type = module
+[con_zero]
+  standard_name = constant_zero
+  long_name = definition of constant zero
+  units = 1
+  dimensions = ()
+  type = integer
 [con_cliq]
   standard_name = specific_heat_of_liquid_water_at_constant_pressure
   long_name = specific heat of liquid water at constant pressure
