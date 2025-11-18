@@ -205,7 +205,7 @@ subroutine scm_main_sub()
   end if
 
   physics%Model%first_time_step = .true.
-  
+
   call output_init(scm_state, physics)
   if (n_threads == 1) then
     call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)
@@ -339,7 +339,7 @@ subroutine scm_main_sub()
         write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(cdata%errmsg) // '. Exiting...'
         error stop
     end if
-    
+
     call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
     if (ierr/=0) then
         write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
