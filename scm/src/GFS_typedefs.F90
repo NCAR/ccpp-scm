@@ -3,8 +3,8 @@ module GFS_typedefs
    use mpi_f08
    use machine,                  only: kind_phys, kind_dbl_prec, kind_sngl_prec
 
-   use module_radsw_parameters,  only: topfsw_type, sfcfsw_type
-   use module_radlw_parameters,  only: topflw_type, sfcflw_type
+   use module_radsw_parameters,  only: topfsw_type, sfcfsw_type, NBDSW
+   use module_radlw_parameters,  only: topflw_type, sfcflw_type, NBDLW
    use module_mp_tempo_params,   only: ty_tempo_cfg
    use module_ozphys,            only: ty_ozphys
    use module_h2ophys,           only: ty_h2ophys
@@ -724,6 +724,8 @@ module GFS_typedefs
                                                                         !< for use with internal file reads
     integer              :: input_nml_file_length    !< length (number of lines) in namelist for internal reads
     integer              :: logunit
+    integer              :: latidxprnt
+    integer              :: ipr
     real(kind=kind_phys) :: fhzero          !< hours between clearing of diagnostic buckets (current bucket)
     real(kind=kind_phys) :: fhzero_array(2) !< array to hold the the hours between clearing of diagnostic buckets
     real(kind=kind_phys) :: fhzero_fhour(2) !< the maximum forecast length for the hours between clearing of diagnostic buckets
@@ -807,6 +809,7 @@ module GFS_typedefs
 !--- calendars and time parameters and activation triggers
     real(kind=kind_phys) :: dtp             !< physics timestep in seconds
     real(kind=kind_phys) :: dtf             !< dynamics timestep in seconds
+    real(kind=kind_phys) :: frain           !< ratio of dynamics timestep to physics timestep
     integer              :: nscyc           !< trigger for surface data cycling
     integer              :: nszero          !< trigger for zeroing diagnostic buckets
     integer              :: idat(1:8)       !< initialization date and time
@@ -823,6 +826,15 @@ module GFS_typedefs
     integer              :: nhfrad          !< number of timesteps for which to call radiation on physics timestep (coldstarts)
     integer              :: levr            !< number of vertical levels for radiation calculations
     integer              :: levrp1          !< number of vertical levels for radiation calculations plus one
+    integer              :: lmk
+    integer              :: lmp
+    integer              :: nbdlw
+    integer              :: nbdsw
+    integer              :: NF_AESW
+    integer              :: NF_AELW
+    integer              :: NF_ALBD
+    integer              :: NSPC
+    integer              :: NSPC1
     integer              :: nfxr            !< second dimension for fluxr diagnostic variable (radiation)
     logical              :: iaerclm         !< flag for initializing aerosol data
     integer              :: ntrcaer         !< number of aerosol tracers for Morrison-Gettelman microphysics
@@ -974,6 +986,7 @@ module GFS_typedefs
     !--- M-G microphysical parameters
     integer              :: fprcp              !< no prognostic rain and snow (MG)
     integer              :: pdfflag            !< pdf flag for MG macrophysics
+    logical              :: skip_macro
     real(kind=kind_phys) :: mg_dcs             !< Morrison-Gettelman microphysics parameters
     real(kind=kind_phys) :: mg_qcvar
     real(kind=kind_phys) :: mg_ts_auto_ice(2)  !< ice auto conversion time scale
@@ -1055,6 +1068,7 @@ module GFS_typedefs
     
     !--- GFDL microphysical paramters
     logical              :: lgfdlmprad      !< flag for GFDL mp scheme and radiation consistency
+    logical              :: phys_hydrostatic
     logical              :: fast_mp_consv
 
     !--- Thompson,GFDL mp parameter
@@ -1685,6 +1699,7 @@ module GFS_typedefs
     type(ty_ozphys) :: ozphys          !< DDT with data needed by ozone physics
     integer         :: levozp          !< Number of vertical layers in ozone forcing data
     integer         :: oz_coeff        !< Number of coefficients in ozone forcing data
+    integer         :: oz_coeffp5
 !--- NRL h2o photchemistry physics
     type(ty_h2ophys) :: h2ophys        !< DDT with data needed by h2o photchemistry physics.
     integer          :: levh2o         !< Number of vertical layers in stratospheric h2o data.
@@ -1897,7 +1912,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: cv  (:)     => null()  !< fraction of convective cloud ; phys
     real (kind=kind_phys), pointer :: cvt (:)     => null()  !< convective cloud top pressure in pa ; phys
     real (kind=kind_phys), pointer :: cvb (:)     => null()  !< convective cloud bottom pressure in pa ; phys, cnvc90
-
+    real (kind=kind_phys), pointer :: cnvw (:,:)  => null()  !< convective cloud fractions
     contains
       procedure :: create  => cldprop_create  !<   allocate array data
   end type GFS_cldprop_type
@@ -4451,6 +4466,7 @@ module GFS_typedefs
     Model%nlunit           = nlunit
     Model%fn_nml           = fn_nml
     Model%logunit          = logunit
+    Model%latidxprnt       = 1
     Model%fhzero           = fhzero
     Model%fhzero_array     = fhzero_array
     Model%fhzero_fhour     = fhzero_fhour
@@ -4621,6 +4637,7 @@ module GFS_typedefs
     Model%levs             = levs
     Model%levsp1           = Model%levs + 1
     Model%levsm1           = Model%levs - 1
+    
     Model%nblks            = size(blksz)
     allocate (Model%blksz(1:Model%nblks))
     Model%blksz            = blksz
@@ -4635,6 +4652,7 @@ module GFS_typedefs
         Model%chunk_begin(i) = Model%chunk_end(i-1) + 1
         Model%chunk_end(i) = Model%chunk_begin(i) + blksz(i) - 1
     end do
+    Model%ipr = min(minval(Model%blksz), 10)
 
 !--- coupling parameters
     Model%cplflx           = cplflx
@@ -4714,6 +4732,7 @@ module GFS_typedefs
 !--- calendars and time parameters and activation triggers
     Model%dtp              = dt_phys
     Model%dtf              = dt_dycore
+    Model%frain            = Model%dtf/Model%dtp
     Model%nscyc            = nint(Model%fhcyc*con_hr/Model%dtp)
     Model%nszero           = nint(Model%fhzero*con_hr/Model%dtp)
     Model%idat(1:8)        = idat(1:8)
@@ -4748,6 +4767,15 @@ module GFS_typedefs
       Model%levr           = levr
     endif
     Model%levrp1           = Model%levr + 1
+    Model%lmk              = Model%levr + LTP
+    Model%lmp              = Model%levr + 1 + LTP
+    Model%nbdlw            = NBDLW
+    Model%nbdsw            = NBDSW
+    Model%NF_AESW          = 3
+    Model%NF_AELW          = 3
+    Model%NF_ALBD          = 4
+    Model%NSPC             = 5
+    Model%NSPC1            = Model%NSPC + 1
 
     if (isubc_sw < 0 .or. isubc_sw > 2) then
        write(0,'(a,i0)') 'ERROR: shortwave cloud-sampling (isubc_sw) scheme selected not valid: ',isubc_sw
@@ -4915,6 +4943,7 @@ module GFS_typedefs
 !--- Morrison-Gettelman MP parameters
     Model%fprcp            = fprcp
     Model%pdfflag          = pdfflag
+    Model%skip_macro       = .false.  ! this gets reset in m_micro_pre
     Model%mg_dcs           = mg_dcs
     Model%mg_qcvar         = mg_qcvar
     Model%mg_ts_auto_ice   = mg_ts_auto_ice
@@ -4997,6 +5026,10 @@ module GFS_typedefs
 
 !--- GFDL MP parameters
     Model%lgfdlmprad       = lgfdlmprad
+    ! The value phys_hydrostatic from dynamics does not match the
+    ! hardcoded value for calling GFDL MP in GFS_physics_driver.F90,
+    ! which is set to .true.
+    Model%phys_hydrostatic = .true.
     Model%fast_mp_consv    = fast_mp_consv
 !--- Thompson,GFDL,NSSL MP parameter
     Model%lrefres          = lrefres
@@ -5921,6 +5954,11 @@ module GFS_typedefs
        err_message    = Model%ozphys%load_o3prog('global_o3prdlos.f77',kozpl)
        Model%levozp   = Model%ozphys%nlev
        Model%oz_coeff = Model%ozphys%ncf
+       if (Model%oz_phys .or. Model%oz_phys_2015) then
+         Model%oz_coeffp5     = Model%oz_coeff+5
+       else
+         Model%oz_coeffp5     = 5
+       endif
 
        if (Model%me == Model%master) then
           write(*,*) 'Reading in o3data from global_o3prdlos.f77 '
@@ -6921,6 +6959,7 @@ module GFS_typedefs
       print *, 'calendars and time parameters and activation triggers'
       print *, ' dtp               : ', Model%dtp
       print *, ' dtf               : ', Model%dtf
+      print *, ' frain             : ', Model%frain
       print *, ' nscyc             : ', Model%nscyc
       print *, ' nszero            : ', Model%nszero
       print *, ' idat              : ', Model%idat
@@ -7745,11 +7784,13 @@ module GFS_typedefs
     allocate (Cldprop%cv  (IM))
     allocate (Cldprop%cvt (IM))
     allocate (Cldprop%cvb (IM))
+    allocate (Cldprop%cnvw(IM, Model%levs))
 
     Cldprop%cv  = clear_val
     Cldprop%cvt = clear_val
     Cldprop%cvb = clear_val
-
+    Cldprop%cnvw = clear_val
+    
   end subroutine cldprop_create
 
 

@@ -81,7 +81,7 @@ subroutine output_init(scm_state, physics)
       n_rad = 1
     end if
   end if
-  
+
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id),"nf90_def_dim(time_inst_dim)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id),"nf90_def_dim(time_diag_dim)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_swrad_dim",LEN=n_swrad,DIMID=time_swrad_id),"nf90_def_dim(time_swrad_dim)")
@@ -90,7 +90,7 @@ subroutine output_init(scm_state, physics)
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="hor_dim_layer",LEN=scm_state%n_cols,DIMID=hor_dim_id),"nf90_def_dim(hor_dim_layer)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_layer",LEN=scm_state%n_levels,DIMID=vert_dim_id),"nf90_def_dim(vert_dim_layer)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_interface",LEN=scm_state%n_levels+1,DIMID=vert_dim_i_id),"nf90_def_dim(vert_dim_interface)")
-  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_rad",LEN=physics%Interstitial(1)%lmk,DIMID=vert_dim_rad_id),"nf90_def_dim(vert_dim_rad)")
+  CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_rad",LEN=physics%Model%lmk,DIMID=vert_dim_rad_id),"nf90_def_dim(vert_dim_rad)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="vert_dim_soil",LEN=physics%Model%lsoil_lsm,DIMID=vert_dim_soil_id),"nf90_def_dim(vert_dim_soil)")
 
   !> - Define the dimension variables.
@@ -159,7 +159,7 @@ subroutine output_init(scm_state, physics)
     call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    missing_value_1D, 1)
     call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_1D, 1)
   end if
-  
+
   CALL CHECK(NF90_CLOSE(NCID=ncid),"nf90_close()")
 
   !> @}

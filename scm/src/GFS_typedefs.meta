@@ -1657,7 +1657,7 @@
   standard_name = temperature_in_surface_snow
   long_name = temperature_in_surface_snow
   units = K
-  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:0)
+  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:constant_zero)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -1673,7 +1673,7 @@
   standard_name = lwe_thickness_of_ice_in_surface_snow
   long_name = snow layer ice
   units = mm
-  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:0)
+  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:constant_zero)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -1681,7 +1681,7 @@
   standard_name = lwe_thickness_of_liquid_water_in_surface_snow
   long_name = snow layer liquid water
   units = mm
-  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:0)
+  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:constant_zero)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -3513,6 +3513,18 @@
   units = none
   dimensions = ()
   type = integer
+[latidxprnt]
+  standard_name = latitude_index_in_debug_printouts
+  long_name = latitude index in debug printouts
+  units = index
+  dimensions = ()
+  type = integer
+[ipr]
+  standard_name = horizontal_index_of_printed_column
+  long_name = horizontal index of printed column
+  units = index
+  dimensions = ()
+  type = integer
 [ldiag3d]
   standard_name = flag_for_diagnostics_3D
   long_name = flag for 3d diagnostic fields
@@ -3852,6 +3864,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[frain]
+  standard_name = dynamics_to_physics_timestep_ratio
+  long_name = ratio of dynamics timestep to physics timestep
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [idat]
   standard_name = date_and_time_at_model_initialization_in_iso_order
   long_name = initialization date and time
@@ -3905,6 +3924,54 @@
 [levrp1]
   standard_name = vertical_interface_dimension_for_radiation
   long_name = number of vertical levels for radiation calculations + 1
+  units = count
+  dimensions = ()
+  type = integer
+[lmk]
+  standard_name = adjusted_vertical_layer_dimension_for_radiation
+  long_name = adjusted number of vertical layers for radiation
+  units = count
+  dimensions = ()
+  type = integer
+[lmp]
+  standard_name = adjusted_vertical_level_dimension_for_radiation
+  long_name = adjusted number of vertical levels for radiation
+  units = count
+  dimensions = ()
+  type = integer
+[nbdlw]
+  standard_name = number_of_aerosol_bands_for_longwave_radiation
+  long_name = number of aerosol bands for longwave radiation
+  units = count
+  dimensions = ()
+  type = integer
+[nbdsw]
+  standard_name = number_of_aerosol_bands_for_shortwave_radiation
+  long_name = number of aerosol bands for shortwave radiation
+  units = count
+  dimensions = ()
+  type = integer
+[nf_aelw]
+  standard_name = number_of_aerosol_output_fields_for_longwave_radiation
+  long_name = number of aerosol output fields for longwave radiation
+  units = count
+  dimensions = ()
+  type = integer
+[nf_aesw]
+  standard_name = number_of_aerosol_output_fields_for_shortwave_radiation
+  long_name = number of aerosol output fields for shortwave radiation
+  units = count
+  dimensions = ()
+  type = integer
+[nf_albd]
+  standard_name = number_of_components_for_surface_albedo
+  long_name = number of IR/VIS/UV compinents for surface albedo
+  units = count
+  dimensions = ()
+  type = integer
+[nspc1]
+  standard_name = number_of_species_for_aerosol_optical_depth
+  long_name = number of species for output aerosol optical depth plus total
   units = count
   dimensions = ()
   type = integer
@@ -4612,6 +4679,12 @@
   units = flag
   dimensions = ()
   type = integer
+[skip_macro]
+  standard_name = flag_skip_macro
+  long_name = flag to skip cloud macrophysics in Morrison scheme
+  units = flag
+  dimensions = ()
+  type = logical
 [mg_dcs]
   standard_name = autoconverion_to_snow_size_threshold
   long_name = autoconversion size threshold for cloud ice to snow for MG microphysics
@@ -5085,6 +5158,12 @@
 [lgfdlmprad]
   standard_name = flag_for_GFDL_microphysics_radiation_interaction
   long_name = flag for GFDL microphysics-radiation interaction
+  units = flag
+  dimensions = ()
+  type = logical
+[phys_hydrostatic]
+  standard_name = flag_for_hydrostatic_heating_from_physics
+  long_name = flag for use of hydrostatic heating in physics
   units = flag
   dimensions = ()
   type = logical
@@ -7372,6 +7451,12 @@
   units = count
   dimensions = ()
   type = integer
+[oz_coeffp5]
+  standard_name = number_of_coefficients_in_ozone_forcing_data_plus_five
+  long_name = number of coefficients in ozone forcing data plus five
+  units = index
+  dimensions = ()
+  type = integer
 [levh2o]
   standard_name = vertical_dimension_of_h2o_forcing_data
   long_name = number of vertical layers in h2o forcing data
@@ -8387,6 +8472,13 @@
   type = real
   kind = kind_phys
   active = (number_of_cloud_types_CS > 0 .and. flag_for_Chikira_Sugiyama_deep_convection)
+[phy_f2d]
+  standard_name = xy_dimensioned_restart_array
+  long_name = xy dimensioned restart array
+  units = mixed
+  dimensions = (horizontal_dimension,number_of_variables_in_xy_dimensioned_restart_array)
+  type = real
+  kind = kind_phys
 [phy_f2d(:,index_of_surface_air_pressure_two_timesteps_back_in_xyz_dimensioned_tracer_array)]
   standard_name = surface_air_pressure_two_timesteps_back
   long_name = surface air pressure two timesteps back
@@ -8411,6 +8503,13 @@
   type = real
   kind = kind_phys
   active = (index_of_enhancement_to_wind_speed_at_surface_adjacent_layer_due_to_convection_in_xy_dimensioned_restart_array > 0)
+[phy_f3d]
+  standard_name = xyz_dimensioned_restart_array
+  long_name = xyz dimensioned restart array
+  units = mixed
+  dimensions = (horizontal_dimension,vertical_layer_dimension,number_of_variables_in_xyz_dimensioned_restart_array)
+  type = real
+  kind = kind_phys
 [phy_f3d(:,:,index_of_air_temperature_two_timesteps_back_in_xyz_dimensioned_restart_array)]
   standard_name = air_temperature_two_timesteps_back
   long_name = air temperature two timesteps back
@@ -8798,6 +8897,13 @@
   long_name = convective cloud bottom pressure
   units = Pa
   dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+[cnvw]
+  standard_name = convective_cloud_water_mixing_ratio
+  long_name = moist convective cloud water mixing ratio
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_layer_dimension)
   type = real
   kind = kind_phys
 
