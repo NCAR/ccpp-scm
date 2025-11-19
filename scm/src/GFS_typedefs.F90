@@ -726,6 +726,7 @@ module GFS_typedefs
     integer              :: logunit
     integer              :: latidxprnt
     integer              :: ipr
+    integer              :: n_diag_buckets
     real(kind=kind_phys) :: fhzero          !< hours between clearing of diagnostic buckets (current bucket)
     real(kind=kind_phys) :: fhzero_array(2) !< array to hold the the hours between clearing of diagnostic buckets
     real(kind=kind_phys) :: fhzero_fhour(2) !< the maximum forecast length for the hours between clearing of diagnostic buckets
@@ -2009,7 +2010,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dtsfc  (:)     => null()   !< sensible heat flux (w/m2)
     real (kind=kind_phys), pointer :: dqsfc  (:)     => null()   !< latent heat flux (w/m2)
     real (kind=kind_phys), pointer :: totprcp(:)     => null()   !< accumulated total precipitation (kg/m2)
-    real (kind=kind_phys), pointer :: totprcpb(:)    => null()   !< accumulated total precipitation in bucket(kg/m2)
+    real (kind=kind_phys), pointer :: totprcpb(:,:)  => null()   !< accumulated total precipitation in bucket(kg/m2)
     real (kind=kind_phys), pointer :: gflux  (:)     => null()   !< groud conductive heat flux
     real (kind=kind_phys), pointer :: dlwsfc (:)     => null()   !< time accumulated sfc dn lw flux ( w/m**2 )
     real (kind=kind_phys), pointer :: ulwsfc (:)     => null()   !< time accumulated sfc up lw flux ( w/m**2 )
@@ -2025,7 +2026,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: dvgwd  (:)     => null()   !< vertically integrated v change by OGWD
     real (kind=kind_phys), pointer :: psmean (:)     => null()   !< surface pressure (kPa)
     real (kind=kind_phys), pointer :: cnvprcp(:)     => null()   !< accumulated convective precipitation (kg/m2)
-    real (kind=kind_phys), pointer :: cnvprcpb(:)    => null()   !< accumulated convective precipitation in bucket (kg/m2)
+    real (kind=kind_phys), pointer :: cnvprcpb(:,:)  => null()   !< accumulated convective precipitation in bucket (kg/m2)
     real (kind=kind_phys), pointer :: spfhmin(:)     => null()   !< minimum specific humidity
     real (kind=kind_phys), pointer :: spfhmax(:)     => null()   !< maximum specific humidity
     real (kind=kind_phys), pointer :: u10mmax(:)     => null()   !< maximum u-wind
@@ -4467,6 +4468,7 @@ module GFS_typedefs
     Model%fn_nml           = fn_nml
     Model%logunit          = logunit
     Model%latidxprnt       = 1
+    Model%n_diag_buckets   = 1
     Model%fhzero           = fhzero
     Model%fhzero_array     = fhzero_array
     Model%fhzero_fhour     = fhzero_fhour
@@ -6862,6 +6864,7 @@ module GFS_typedefs
       print *, ' fhzero            : ', Model%fhzero
       print *, ' fhzero_array      : ', Model%fhzero_array
       print *, ' fhzero_fhour      : ', Model%fhzero_fhour
+      print *, ' n_diag_buckets    : ', Model%n_diag_buckets
       print *, ' ldiag3d           : ', Model%ldiag3d
       print *, ' qdiag3d           : ', Model%qdiag3d
       print *, ' lssav             : ', Model%lssav
@@ -8080,11 +8083,12 @@ module GFS_typedefs
   subroutine diag_create (Diag, Model)
     class(GFS_diag_type)               :: Diag
     type(GFS_control_type), intent(in) :: Model
-    integer :: IM
+    integer :: IM, ndb
     logical, save :: linit
     logical :: have_pbl, have_dcnv, have_scnv, have_mp, have_oz_phys
 
     IM = Model%ncols
+    ndb = Model%n_diag_buckets
 
     if(Model%print_diff_pgr) then
       allocate (Diag%old_pgr(IM))
@@ -8127,7 +8131,7 @@ module GFS_typedefs
     allocate (Diag%dtsfc   (IM))
     allocate (Diag%dqsfc   (IM))
     allocate (Diag%totprcp (IM))
-    allocate (Diag%totprcpb(IM))
+    allocate (Diag%totprcpb(ndb,IM))
     allocate (Diag%gflux   (IM))
     allocate (Diag%dlwsfc  (IM))
     allocate (Diag%ulwsfc  (IM))
@@ -8142,7 +8146,7 @@ module GFS_typedefs
     allocate (Diag%dvgwd   (IM))
     allocate (Diag%psmean  (IM))
     allocate (Diag%cnvprcp (IM))
-    allocate (Diag%cnvprcpb(IM))
+    allocate (Diag%cnvprcpb(ndb,IM))
     allocate (Diag%spfhmin (IM))
     allocate (Diag%spfhmax (IM))
     allocate (Diag%u10mmax (IM))

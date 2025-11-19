@@ -3525,6 +3525,12 @@
   units = index
   dimensions = ()
   type = integer
+[n_diag_buckets]
+  standard_name = number_of_diagnostic_buckets
+  long_name = number of diagnostic bucket reset periods
+  units = count
+  dimensions = ()
+  type = integer
 [ldiag3d]
   standard_name = flag_for_diagnostics_3D
   long_name = flag for 3d diagnostic fields
@@ -9254,7 +9260,7 @@
   standard_name = accumulated_lwe_thickness_of_precipitation_amount_in_bucket
   long_name = accumulated total precipitation in bucket
   units = m
-  dimensions = (horizontal_dimension)
+  dimensions = (number_of_diagnostic_buckets,horizontal_dimension)
   type = real
   kind = kind_phys
 [toticeb]
@@ -9445,7 +9451,7 @@
   standard_name = cumulative_lwe_thickness_of_convective_precipitation_amount_in_bucket
   long_name = cumulative convective precipitation in bucket
   units = m
-  dimensions = (horizontal_dimension)
+  dimensions = (number_of_diagnostic_buckets,horizontal_dimension)
   type = real
   kind = kind_phys
 [spfhmin]
