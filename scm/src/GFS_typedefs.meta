@@ -9260,7 +9260,7 @@
   standard_name = accumulated_lwe_thickness_of_precipitation_amount_in_bucket
   long_name = accumulated total precipitation in bucket
   units = m
-  dimensions = (number_of_diagnostic_buckets,horizontal_dimension)
+  dimensions = (horizontal_dimension,number_of_diagnostic_buckets)
   type = real
   kind = kind_phys
 [toticeb]
@@ -9451,7 +9451,7 @@
   standard_name = cumulative_lwe_thickness_of_convective_precipitation_amount_in_bucket
   long_name = cumulative convective precipitation in bucket
   units = m
-  dimensions = (number_of_diagnostic_buckets,horizontal_dimension)
+  dimensions = (horizontal_dimension,number_of_diagnostic_buckets)
   type = real
   kind = kind_phys
 [spfhmin]
