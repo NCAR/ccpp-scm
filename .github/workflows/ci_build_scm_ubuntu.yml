@@ -114,7 +114,7 @@ jobs:
 
     # Initialize and Build SCM
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Initialize Submodules
       run: git submodule update --init --recursive
