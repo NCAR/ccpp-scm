@@ -2355,7 +2355,7 @@
   dimensions = (horizontal_dimension,vertical_interface_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_tendency_of_air_temperature_due_to_longwave_heating_on_radiation_timestep_assuming_clear_sky)
+  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_output_of_tendency_of_air_temperature_due_to_longwave_heating_on_radiation_timestep_assuming_clear_sky)
 [fluxlwDOWN_clrsky]
   standard_name = RRTMGP_lw_flux_profile_downward_clrsky
   long_name = RRTMGP downward longwave clr-sky flux profile
@@ -2363,7 +2363,7 @@
   dimensions = (horizontal_dimension,vertical_interface_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_tendency_of_air_temperature_due_to_longwave_heating_on_radiation_timestep_assuming_clear_sky)
+  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_output_of_tendency_of_air_temperature_due_to_longwave_heating_on_radiation_timestep_assuming_clear_sky)
 [fluxswUP_allsky]
   standard_name = RRTMGP_sw_flux_profile_upward_allsky
   long_name = RRTMGP upward shortwave all-sky flux profile
@@ -2387,7 +2387,7 @@
   dimensions = (horizontal_dimension,vertical_interface_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_tendency_of_air_temperature_due_to_shortwave_heating_on_radiation_timestep_assuming_clear_sky)
+  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_output_of_tendency_of_air_temperature_due_to_shortwave_heating_on_radiation_timestep_assuming_clear_sky)
 [fluxswDOWN_clrsky]
   standard_name = RRTMGP_sw_flux_profile_downward_clrsky
   long_name = RRTMGP downward shortwave clr-sky flux profile
@@ -2395,7 +2395,7 @@
   dimensions = (horizontal_dimension,vertical_interface_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_tendency_of_air_temperature_due_to_shortwave_heating_on_radiation_timestep_assuming_clear_sky)
+  active = (flag_for_rrtmgp_radiation_scheme .and. flag_for_output_of_tendency_of_air_temperature_due_to_shortwave_heating_on_radiation_timestep_assuming_clear_sky)
 [flxprf_lw]
   standard_name = RRTMGP_lw_fluxes
   long_name = lw fluxes total sky / csk and up / down at levels

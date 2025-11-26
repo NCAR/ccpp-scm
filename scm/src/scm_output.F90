@@ -81,7 +81,7 @@ subroutine output_init(scm_state, physics)
       n_rad = 1
     end if
   end if
-  
+
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_inst_dim",LEN=n_inst,DIMID=time_inst_id),"nf90_def_dim(time_inst_dim)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_diag_dim",LEN=n_diag,DIMID=time_diag_id),"nf90_def_dim(time_diag_dim)")
   CALL CHECK(NF90_DEF_DIM(NCID=ncid,NAME="time_swrad_dim",LEN=n_swrad,DIMID=time_swrad_id),"nf90_def_dim(time_swrad_dim)")
@@ -159,7 +159,7 @@ subroutine output_init(scm_state, physics)
     call NetCDF_put_var(ncid, 'vert_int_lwp_cf',    missing_value_1D, 1)
     call NetCDF_put_var(ncid, 'vert_int_iwp_cf',    missing_value_1D, 1)
   end if
-  
+
   CALL CHECK(NF90_CLOSE(NCID=ncid),"nf90_close()")
 
   !> @}
@@ -788,16 +788,16 @@ subroutine output_append_diag_avg(ncid, scm_state, physics)
     call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_physics),           "dv_dt_phys",     scm_state%itt_diag, inverse_n_diag*inverse_dt)
     call output_append_tendency(ncid, physics, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics),       "dv_dt_nonphys",  scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
-    call NetCDF_put_var(ncid, "tprcp_accum",          physics%Diag%totprcpb(:), scm_state%itt_diag, inverse_n_diag)
+    call NetCDF_put_var(ncid, "tprcp_accum",          physics%Diag%totprcpb(:,1), scm_state%itt_diag, inverse_n_diag)
     call NetCDF_put_var(ncid, "ice_accum",            physics%Diag%toticeb(:),  scm_state%itt_diag, inverse_n_diag)
     call NetCDF_put_var(ncid, "snow_accum",           physics%Diag%totsnwb(:),  scm_state%itt_diag, inverse_n_diag)
     call NetCDF_put_var(ncid, "graupel_accum",        physics%Diag%totgrpb(:),  scm_state%itt_diag, inverse_n_diag)
-    call NetCDF_put_var(ncid, "conv_prcp_accum",      physics%Diag%cnvprcpb(:), scm_state%itt_diag, inverse_n_diag)
-    call NetCDF_put_var(ncid, "tprcp_rate_accum",     physics%Diag%totprcpb(:), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "conv_prcp_accum",      physics%Diag%cnvprcpb(:,1), scm_state%itt_diag, inverse_n_diag)
+    call NetCDF_put_var(ncid, "tprcp_rate_accum",     physics%Diag%totprcpb(:,1), scm_state%itt_diag, inverse_n_diag*inverse_dt)
     call NetCDF_put_var(ncid, "ice_rate_accum",       physics%Diag%toticeb(:),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
     call NetCDF_put_var(ncid, "snow_rate_accum",      physics%Diag%totsnwb(:),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
     call NetCDF_put_var(ncid, "graupel_rate_accum",   physics%Diag%totgrpb(:),  scm_state%itt_diag, inverse_n_diag*inverse_dt)
-    call NetCDF_put_var(ncid, "conv_prcp_rate_accum", physics%Diag%cnvprcpb(:), scm_state%itt_diag, inverse_n_diag*inverse_dt)
+    call NetCDF_put_var(ncid, "conv_prcp_rate_accum", physics%Diag%cnvprcpb(:,1), scm_state%itt_diag, inverse_n_diag*inverse_dt)
     
 end subroutine output_append_diag_avg
 

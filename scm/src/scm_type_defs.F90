@@ -1134,8 +1134,6 @@ module scm_type_defs
         call conditionally_set_var(scm_input%input_facsf,     physics%Sfcprop%facsf(i),  "facsf",    .true.,  missing_var(10))
         call conditionally_set_var(scm_input%input_facwf,     physics%Sfcprop%facwf(i),  "facwf",    .true.,  missing_var(11))
         call conditionally_set_var(scm_input%input_vegfrac,   physics%Sfcprop%vfrac(i),  "vegfrac",  .true.,  missing_var(12))
-        !GJF: is this needed anymore (not in FV3GFS_io)?
-        physics%Interstitial(1)%sigmaf(i) = min(physics%Sfcprop%vfrac(i),0.01)
         call conditionally_set_var(scm_input%input_canopy,    physics%Sfcprop%canopy(i), "canopy",   .true.,  missing_var(13))
         call conditionally_set_var(scm_input%input_f10m,      physics%Sfcprop%f10m(i),   "f10m",     .false., missing_var(14))
         call conditionally_set_var(scm_input%input_t2m,       physics%Sfcprop%t2m(i),    "t2m",      physics%Model%cplflx, missing_var(15))
