@@ -32,7 +32,7 @@
 [ccpp-table-properties]
   name = physics_type
   type = ddt
-  dependencies = GFS_typedefs.F90,CCPP_typedefs.F90
+  dependencies = GFS_typedefs.F90,CCPP_typedefs.F90,scm_utils.F90
 
 [ccpp-arg-table]
   name = physics_type

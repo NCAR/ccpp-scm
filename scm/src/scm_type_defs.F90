@@ -42,6 +42,15 @@ module scm_type_defs
       procedure :: set => physics_set
   end type physics_type
 
+  integer, parameter :: character_length = 80
+  integer, parameter :: int_zero = 0
+  integer, parameter :: int_one = 1
+  integer, parameter :: int_neg_one = -1
+  real(kind=dp), parameter :: real_zero = 0.0
+  real(kind=dp), parameter :: real_one = 1.0
+
+  character(len = character_length) :: clear_char = ''
+
 !> \section arg_table_scm_state_type
 !! \htmlinclude scm_state_type.html
 !!
