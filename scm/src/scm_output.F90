@@ -563,14 +563,14 @@ subroutine output_append_sfcprop(ncid, scm_state, physics)
   if (scm_state%model_ics .or. scm_state%lsm_ics) then
     if (physics%Model%lsoil_lsm > 0) then
       missing_value_2D = missing_value
-      if (physics%Model%lsm == physics%Model%lsm_noah .or. physics%Model%lsm == physics%Model%lsm_noahmp) then
+      if (physics%Model%lsm == physics%Model%ilsm_noah .or. physics%Model%lsm == physics%Model%ilsm_noahmp) then
         call NetCDF_put_var(ncid, 'soil_T',                          physics%Sfcprop%stc(:,:), scm_state%itt_out)
         call NetCDF_put_var(ncid, 'soil_moisture',                   physics%Sfcprop%smc(:,:), scm_state%itt_out)
         call NetCDF_put_var(ncid, 'soil_moisture_unfrozen',          physics%Sfcprop%slc(:,:), scm_state%itt_out)
         call NetCDF_put_var(ncid, 'soil_moisture_total_vol_frac',    missing_value_2D, scm_state%itt_out)
         call NetCDF_put_var(ncid, 'soil_moisture_unfrozen_vol_frac', missing_value_2D, scm_state%itt_out)
         call NetCDF_put_var(ncid, 'soil_moisture_frozen_vol_frac',   missing_value_2D, scm_state%itt_out)
-      else if (physics%Model%lsm == physics%Model%lsm_ruc) then
+      else if (physics%Model%lsm == physics%Model%ilsm_ruc) then
         call NetCDF_put_var(ncid, 'soil_T',                          physics%Sfcprop%tslb(:,:), scm_state%itt_out)
         call NetCDF_put_var(ncid, 'soil_moisture',                   missing_value_2D, scm_state%itt_out)
         call NetCDF_put_var(ncid, 'soil_moisture_unfrozen',          missing_value_2D, scm_state%itt_out)

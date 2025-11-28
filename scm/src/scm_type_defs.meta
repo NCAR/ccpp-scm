@@ -1,7 +1,38 @@
+########################################################################
+[ccpp-table-properties]
+  name = scm_state_type
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = scm_state_type
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
+  name = scm_input_type
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = scm_input_type
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
+  name = scm_reference_type
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = scm_reference_type
+  type = ddt
+
+########################################################################
 [ccpp-table-properties]
   name = physics_type
   type = ddt
-  dependencies = GFS_typedefs.F90,CCPP_typedefs.F90
+  dependencies = GFS_typedefs.F90,CCPP_typedefs.F90,scm_utils.F90
 
 [ccpp-arg-table]
   name = physics_type
@@ -78,31 +109,9 @@
   units = DDT
   dimensions = (number_of_openmp_threads)
   type = GFS_interstitial_type
-
-########################################################################
-[ccpp-table-properties]
-  name = scm_type_defs
-  type = module
-  dependencies = scm_kinds.F90,GFS_typedefs.F90,CCPP_typedefs.F90,../../ccpp/physics/physics/hooks/machine.F
-
-[ccpp-arg-table]
-  name = scm_type_defs
-  type = module
-[physics_type]
-  standard_name = physics_type
-  long_name = definition of type physics_type
+[Init_parm]
+  standard_name = GFS_init_type_instance
+  long_name = instance of derived type GFS_init_type
   units = DDT
   dimensions = ()
-  type = physics_type
-[physics]
-  standard_name = physics_type_instance
-  long_name = instance of derived data type physics_type
-  units = DDT
-  dimensions = ()
-  type = physics_type
-[cdata]
-  standard_name = ccpp_t_instance
-  long_name = instance of derived data type ccpp_t
-  units = DDT
-  dimensions = ()
-  type = ccpp_t
+  type = GFS_init_type

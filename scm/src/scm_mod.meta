@@ -1,0 +1,21 @@
+########################################################################
+[ccpp-table-properties]
+  name = scm_mod
+  type = module
+  dependencies = scm_type_defs.F90,ccpp_config.F90
+
+[ccpp-arg-table]
+  name = scm_mod
+  type = module
+[physics]
+  standard_name = physics_type
+  long_name = definition of derived data type physics_type
+  units = DDT
+  dimensions = ()
+  type = physics_type
+[ccpp_cfg]
+  standard_name = ccpp_configuration
+  long_name = definition of derived data type ccpp_config
+  units = DDT
+  dimensions = ()
+  type = ty_ccpp_config
