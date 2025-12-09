@@ -39,7 +39,9 @@ jobs:
         git config --global --add safe.directory ${SCM_ROOT}
         cd ${SCM_ROOT}
         git submodule update --init --recursive
-        ls /opt/nceplibs
+        pwd
+        ls
+	ls ../
 
     - name: Configure Build with CMake
       run: |
