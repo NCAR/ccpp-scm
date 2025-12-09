@@ -5,30 +5,34 @@
 ARG TOOLCHAIN
 FROM minimal-toolchain:$TOOLCHAIN
 
+ENV NCEPLIBS_DIR=/opt/nceplibs
+
 # Install bacio library
 ENV BACIO_VERSION=2.4.1
-ENV BACIO_ROOT=/opt/bacio
-ENV BACIO_DIR=${BACIO_ROOT}/lib/cmake/bacio
-RUN git clone --branch v${BACIO_VERSION} https://github.com/NOAA-EMC/NCEPLIBS-bacio.git bacio \
-  && cd bacio && mkdir build && cd build \
-  && cmake -DCMAKE_INSTALL_PREFIX=${BACIO_ROOT} .. \
-  && make -j2 \
+ENV bacio_ROOT=/opt/nceplibs
+RUN mkdir -p $NCEPLIBS_DIR/src && cd $NCEPLIBS_DIR/src \
+  && git clone -b v${BACIO_VERSION} --recursive https://github.com/NOAA-EMC/NCEPLIBS-bacio \
+  && mkdir NCEPLIBS-bacio/build && cd NCEPLIBS-bacio/build \
+  && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
+  && make VERBOSE=1 -j \
   && make install
 
 # Install SP-library
 ENV SP_VERSION=2.3.3
-ENV SP_ROOT=/opt/NCEPLIBS-sp
-RUN git clone --branch v${SP_VERSION} https://github.com/NOAA-EMC/NCEPLIBS-sp.git NCEPLIBS-sp \
-  && cd NCEPLIBS-sp && mkdir build && cd build \
-  && cmake -DCMAKE_INSTALL_PREFIX=${SP_ROOT} .. \
-  && make -j2 \
+ENV sp_ROOT=/opt/nceplibs
+RUN cd $NCEPLIBS_DIR/src \
+  && git clone -b v${SP_VERSION} --recursive https://github.com/NOAA-EMC/NCEPLIBS-sp \
+  && mkdir NCEPLIBS-sp/build && cd NCEPLIBS-sp/build \
+  && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
+  && make VERBOSE=1 -j \
   && make install
 
 # Install w3emc library
 ENV W3EMC_VERSION=2.9.2
-ENV W3EMC_ROOT=/opt/myw3emc
-#RUN git clone --branch v${W3EMC_VERSION} https://github.com/NOAA-EMC/NCEPLIBS-w3emc.git NCEPLIBS-w3emc \
-#  && cd NCEPLIBS-w3emc && mkdir build && cd build \
-#  && cmake -DCMAKE_INSTALL_PREFIX=${W3EMC_ROOT} .. \
-#  && make -j2 \
-#  && make install
+ENV w3emc_ROOT=/opt/nceplibs
+RUN cd $NCEPLIBS_DIR/src \
+  && git clone -b v${W3EMC_VERSION} --recursive https://github.com/NOAA-EMC/NCEPLIBS-w3emc \
+  && mkdir NCEPLIBS-w3emc/build && cd NCEPLIBS-w3emc/build \
+  && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
+  && make VERBOSE=1 -j \
+  && make install

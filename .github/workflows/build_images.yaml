@@ -15,27 +15,27 @@ jobs:
       - name: Build minimal-toolchain:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
         with:
-          file: Dockerfile-${{ matrix.toolchain }}-minimal
+          file: docker/Dockerfile-${{ matrix.toolchain }}-minimal
           tags: minimal-toolchain:${{ matrix.toolchain }}
 
       - name: Build add-netcdf:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
         with:
-          file: Dockerfile-add-netcdf
+          file: docker/Dockerfile-add-netcdf
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
           tags: add-netcdf:${{ matrix.toolchain }}
 
       - name: Build add-nceplibs:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
         with:
-          file: Dockerfile-add-nceplibs
+          file: docker/Dockerfile-add-nceplibs
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
           tags: add-nceplibs:${{ matrix.toolchain }}
 
       - name: Build add-python:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
         with:
-          file: Dockerfile-add-python
+          file: docker/Dockerfile-add-python
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
           tags: add-python:${{ matrix.toolchain }}
 
@@ -49,7 +49,7 @@ jobs:
       - name: Build and push ccpp-scm-ci:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
         with:
-          file: Dockerfile-finalize
+          file: docker/Dockerfile-finalize
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
           push: ${{ github.ref == 'refs/heads/ci_images' }}
           tags: |
