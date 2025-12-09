@@ -38,10 +38,10 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
-        echo "-----/"
-        ls /
+        echo "-----/lib"
+        ls /lib/
         echo "-----bacho_ROOT"
-        echo ${bacio_ROOT}
+        echo ${FC}
 
     - name: Configure Build with CMake
       run: |
