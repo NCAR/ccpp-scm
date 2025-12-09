@@ -35,9 +35,8 @@ jobs:
 
     - name: Initialize Submodules
       run: |
-        pwd
+        git config --global --add safe.directory ${SCM_ROOT}
         cd ${SCM_ROOT}
-        pwd
         git submodule update --init --recursive
 
     - name: Configure Build with CMake
