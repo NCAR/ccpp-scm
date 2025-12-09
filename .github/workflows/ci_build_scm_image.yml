@@ -41,7 +41,7 @@ jobs:
         git submodule update --init --recursive
         pwd
         ls
-	ls ../
+        ls ../
 
     - name: Configure Build with CMake
       run: |
