@@ -39,8 +39,8 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
-        echo "-----/opt/"
-        ls /opt/
+        echo "-----/opt/intel/oneapi/"
+        ls /opt/intel/oneapi/
         echo "-----/home/"
         ls /home/
 
