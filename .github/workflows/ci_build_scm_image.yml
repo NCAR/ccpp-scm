@@ -35,7 +35,9 @@ jobs:
 
     - name: Initialize Submodules
       run: |
+        pwd
         cd ${SCM_ROOT}
+        pwd
         git submodule update --init --recursive
 
     - name: Configure Build with CMake
