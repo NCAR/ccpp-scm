@@ -14,7 +14,6 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Install essential packages
-#   we install netCDF4 instead of xarray[io] to omit unnecessary packages
 RUN pip3 install  --break-system-packages \
       f90nml \
       h5py \
@@ -23,7 +22,6 @@ RUN pip3 install  --break-system-packages \
       xarray
 
 # Install packages for the validation plot generation
-#   we install scipy instead of xarray[accel] to omit unnecessary packages
 RUN pip3 install  --break-system-packages \
       matplotlib
 
