@@ -38,8 +38,6 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
-        echo "-----/home/runner"
-        ls /home/runner/
         echo "-----bacio_ROOT"
         echo ${bacio_ROOT}
 

@@ -37,3 +37,7 @@ ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRA
 ENV FC=ifx CC=icx CXX=icpx
 ENV MPICC="mpicc -cc=icx"
 ENV MPIF90="mpifort -fc=ifx"
+
+ENV bacio_DIR=/opt/nceplibs
+ENV sp_DIR=/opt/nceplibs
+ENV w3emc_DIR=/opt/nceplibs
