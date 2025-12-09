@@ -24,7 +24,7 @@ jobs:
     # Environmental variables
     env:
       SCM_ROOT:   /__w/ccpp-scm/ccpp-scm
-      bacio_ROOT: /usr/bin/docker/opt/nceplibs
+      bacio_ROOT: /opt/nceplibs
       suites:   SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf,SCM_HRRR_gf_ps
 
     # Workflow steps
@@ -39,8 +39,7 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
-        ls
-        ls ../../../
+        ls /opt/
 
     - name: Configure Build with CMake
       run: |
