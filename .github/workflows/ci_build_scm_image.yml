@@ -30,8 +30,7 @@ jobs:
     # Workflow steps
     steps:
 
-    # Initialize and Build SCM
-    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+    - name: Checkout SCM code
       uses: actions/checkout@v6
 
     - name: Initialize Submodules
@@ -41,7 +40,7 @@ jobs:
         git submodule update --init --recursive
         pwd
         ls
-        ls ../
+        ls ../../
 
     - name: Configure Build with CMake
       run: |
