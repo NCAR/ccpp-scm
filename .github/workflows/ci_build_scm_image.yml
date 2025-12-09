@@ -39,7 +39,7 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
-        ls /opt/
+        ls /github/home
 
     - name: Configure Build with CMake
       run: |
