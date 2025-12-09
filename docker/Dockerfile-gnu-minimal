@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-ARG GNU_VERSION='13'
+ARG GNU_VERSION=12
 
 # Extend and update the package registry
 RUN apt-get update \
@@ -10,6 +10,7 @@ RUN apt-get update \
       wget \
       gpg \
       binutils \
+      gfortran-$GNU_VERSION \
       g++ \
       gcc \
       libc-dev \

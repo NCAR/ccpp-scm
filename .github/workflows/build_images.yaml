@@ -6,6 +6,7 @@ on: [push]
 jobs:
   docker:
     strategy:
+      fail-fast: false  # Disable fail-fast
       matrix:
         toolchain:  [oneapi,gnu]
     runs-on: ubuntu-latest
