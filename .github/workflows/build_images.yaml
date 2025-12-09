@@ -7,7 +7,7 @@ jobs:
   docker:
     strategy:
       matrix:
-        toolchain:  [oneapi]
+        toolchain:  [oneapi,nvhpc]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
