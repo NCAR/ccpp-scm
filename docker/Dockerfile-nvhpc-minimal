@@ -1,0 +1,30 @@
+FROM ubuntu:24.04
+
+ARG NVHPC_VERSION_MAJOR='25'
+ARG NVHPC_VERSION_MINOR='9'
+
+# Extend and update the package registry
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
+      ca-certificates \
+      curl \
+      gpg \
+      make \
+      cmake \
+      git 
+ RUN curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
+      | gpg --dearmor > /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg \
+ && echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" > /etc/apt/sources.list.d/nvhpc.list \
+ && apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
+      nvhpc-${NVHPC_VERSION_MAJOR}-${NVHPC_VERSION_MINOR} \
+ && rm -rf /var/lib/apt/lists/* \
+ && for dir in comm_libs examples math_libs profilers; do \
+      rm -rf "/opt/nvidia/hpc_sdk/Linux_x86_64/${NVHPC_VERSION_MAJOR}.${NVHPC_VERSION_MINOR}/${dir}"; \
+    done
+
+ENV PATH="/opt/nvidia/hpc_sdk/Linux_x86_64/${NVHPC_VERSION_MAJOR}.${NVHPC_VERSION_MINOR}/compilers/bin:${PATH}"
+
+# Set default compiler executables
+ENV FC=nvfortran CC=nvc CXX=nvc++
+ENV MPICC=mpicc
