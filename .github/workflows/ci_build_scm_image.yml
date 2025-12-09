@@ -1,0 +1,54 @@
+name: Build the CCPP-SCM in a container
+
+on:
+  push:
+    branches:
+      - feature/containerized_ci
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build_scm_container:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        fortran-compiler: [ifx]
+        build-type:       [Release, Debug]
+        include:
+        # Set container images
+        - fortran-compiler: ifx
+          image: dustinswales/ccpp-scm-ci:oneapi
+    container:
+      image: ${{ matrix.image }} 
+    # Environmental variables
+    env:
+      FC:         ${{ matrix.fortran-compiler }}
+      NFHOME:     /home/runner/netcdf-fortran
+      NFVERSION:  v4.5.3
+      bacio_ROOT: /home/runner/bacio
+      sp_ROOT:    /home/runner/NCEPLIBS-sp
+      w3emc_ROOT: /home/runner/myw3emc
+      SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
+      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf,SCM_HRRR_gf_ps
+
+    # Workflow steps
+    steps:
+
+    # Initialize and Build SCM
+    - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
+      uses: actions/checkout@v6
+
+    - name: Initialize Submodules
+      run: git submodule update --init --recursive
+
+    - name: Configure Build with CMake
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
+
+    - name: Build SCM
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        make -j4
