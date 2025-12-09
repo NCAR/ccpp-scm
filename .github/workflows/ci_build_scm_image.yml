@@ -23,14 +23,8 @@ jobs:
       image: ${{ matrix.image }} 
     # Environmental variables
     env:
-      FC:         ${{ matrix.fortran-compiler }}
-      NFHOME:     /home/runner/netcdf-fortran
-      NFVERSION:  v4.5.3
-      bacio_ROOT: /home/runner/bacio
-      sp_ROOT:    /home/runner/NCEPLIBS-sp
-      w3emc_ROOT: /home/runner/myw3emc
-      SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf,SCM_HRRR_gf_ps
+      SCM_ROOT: /home/runner/work/ccpp-scm/ccpp-scm
+      suites:   SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf,SCM_HRRR_gf_ps
 
     # Workflow steps
     steps:
@@ -40,7 +34,9 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Initialize Submodules
-      run: git submodule update --init --recursive
+      run: |
+        cd ${SCM_ROOT}
+        git submodule update --init --recursive
 
     - name: Configure Build with CMake
       run: |
