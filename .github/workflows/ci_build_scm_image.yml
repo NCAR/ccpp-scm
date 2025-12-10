@@ -38,8 +38,8 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
-        echo "-----bacio_ROOT"
-        echo ${bacio_ROOT}
+        echo "-----bacio_DIR"
+        echo ${{ env.bacio_DIR }}
 
     - name: Configure Build with CMake
       run: |

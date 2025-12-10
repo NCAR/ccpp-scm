@@ -38,6 +38,6 @@ ENV FC=ifx CC=icx CXX=icpx
 ENV MPICC="mpicc -cc=icx"
 ENV MPIF90="mpifort -fc=ifx"
 
-ENV bacio_DIR=/opt/nceplibs
-ENV sp_DIR=/opt/nceplibs
-ENV w3emc_DIR=/opt/nceplibs
+ENV bacio_DIR=/opt/nceplibs/NCEPLIBS-bacio/lib/cmake/bacio
+ENV sp_DIR=/opt/nceplibs/NCEPLIBS-sp/lib/cmake/sp
+ENV w3emc_DIR=/opt/nceplibs/NCEPLIBS-w3emc/lib/cmake/w3emc
