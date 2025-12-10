@@ -38,64 +38,6 @@ ENV FC=ifx CC=icx CXX=icpx
 ENV MPICC="mpicc -cc=icx"
 ENV MPIF90="mpifort -fc=ifx"
 
-############################################################################################
-# Netcdf
-############################################################################################
-# Install the dependencies
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
-      curl \
-      libnetcdf-dev \
- && rm -rf /var/lib/apt/lists/*
-
-# Install NetCDF Fortran
-#   The version must be compitible with NetCDF C installed above
-ARG NFVERSION=4.5.4
-RUN curl https://downloads.unidata.ucar.edu/netcdf-fortran/$NFVERSION/netcdf-fortran-$NFVERSION.tar.gz | tar xz \
-  && cd netcdf-fortran-$NFVERSION \
-  && { ./configure \
-         CFLAGS='-O2' \
-         FCFLAGS='-O2 -fPIC' \
-         --disable-static || \
-       { cat ./config.log; exit 1; } } \
-  && make -j \
-  && make install \
-  && cd .. \
-  && rm -rf netcdf-fortran-$NFVERSION \
-  && ldconfig
-
-############################################################################################
-# NCEPlibs
-############################################################################################
-ENV NCEPLIBS_DIR=/opt/nceplibs
-
-# Install bacio library
-ENV BACIO_VERSION=2.4.1
-RUN mkdir -p $NCEPLIBS_DIR/src && cd $NCEPLIBS_DIR/src \
-  && git clone -b v${BACIO_VERSION} --recursive https://github.com/NOAA-EMC/NCEPLIBS-bacio \
-  && mkdir NCEPLIBS-bacio/build && cd NCEPLIBS-bacio/build \
-  && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
-  && make VERBOSE=1 -j \
-  && make install
-
-# Install SP-library
-ENV SP_VERSION=2.3.3
-RUN cd $NCEPLIBS_DIR/src \
-  && git clone -b v${SP_VERSION} --recursive https://github.com/NOAA-EMC/NCEPLIBS-sp \
-  && mkdir NCEPLIBS-sp/build && cd NCEPLIBS-sp/build \
-  && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
-  && make VERBOSE=1 -j \
-  && make install
-
-# Install w3emc library
-ENV W3EMC_VERSION=2.11.0
-RUN cd $NCEPLIBS_DIR/src \
-  && git clone -b v${W3EMC_VERSION} --recursive https://github.com/NOAA-EMC/NCEPLIBS-w3emc \
-  && mkdir NCEPLIBS-w3emc/build && cd NCEPLIBS-w3emc/build \
-  && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
-  && make VERBOSE=1 -j \
-  && make install
-
 ENV bacio_DIR=/opt/nceplibs/lib/cmake/bacio
 ENV sp_DIR=/opt/nceplibs/lib/cmake/sp
 ENV w3emc_DIR=/opt/nceplibs/lib/cmake/w3emc

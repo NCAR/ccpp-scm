@@ -3,7 +3,7 @@
 #
 
 ARG TOOLCHAIN
-FROM minimal-toolchain:$TOOLCHAIN
+FROM add-netcdf:$TOOLCHAIN
 
 ENV NCEPLIBS_DIR=/opt/nceplibs
 

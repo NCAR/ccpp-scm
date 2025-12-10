@@ -3,7 +3,7 @@
 #
 
 ARG TOOLCHAIN
-FROM add-netcdf:$TOOLCHAIN
+FROM add-nceplibs:$TOOLCHAIN
 
 # Install Python
 RUN apt-get update \
