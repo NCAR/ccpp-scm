@@ -30,8 +30,13 @@ jobs:
 
     # Workflow steps
     steps:
-
-    - name: Checkout SCM code
+    #############################################################
+    # $ echo ${{ github.workspace }}
+    # /home/runner/work/<REPO_NAME>/<REPO_NAME>
+    # $ echo $GITHUB_WORKSPACE
+    # /__w/<REPO_NAME>/<REPO_NAME>
+    #############################################################
+    - name: Checkout SCM code (/__w/ccpp-scm/ccpp-scm)
       uses: actions/checkout@v4
 
     - name: Initialize Submodules
@@ -45,7 +50,7 @@ jobs:
         echo "-----1"
         ls /__w/
         echo "-----2"
-        ls /opt/nceplibs/NCEPLIBS-bacio/
+        ls /__w/_actions
 
     - name: Configure Build with CMake
       run: |
