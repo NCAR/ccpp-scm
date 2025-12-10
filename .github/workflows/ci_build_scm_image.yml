@@ -39,7 +39,7 @@ jobs:
         git submodule update --init --recursive
         pwd
         echo "-----bacio_DIR"
-        echo ${{ env.bacio_DIR }}
+        echo ls /opt/nceplibs/NCEPLIBS-bacio/lib/cmake/bacio
 
     - name: Configure Build with CMake
       run: |
