@@ -3,7 +3,7 @@
 #
 
 ARG TOOLCHAIN
-FROM minimal-toolchain:$TOOLCHAIN
+FROM add-netcdf:$TOOLCHAIN
 
 # Set environment variables for PnetCDF installation
 ENV PNETCDF_VERSION=1.14.1
