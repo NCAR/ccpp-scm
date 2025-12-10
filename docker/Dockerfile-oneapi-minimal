@@ -35,8 +35,9 @@ ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRA
 
 # Set default compiler executables
 ENV FC=ifx CC=icx CXX=icpx
-ENV MPICC="mpicc -cc=icx"
-ENV MPIF90="mpifort -fc=ifx"
+#ENV MPICC="mpicc -cc=icx"
+#ENV MPIF90="mpifort -fc=ifx"
+ENV MPI_C=mpicc MPI_FORTRAN=mpifort
 
 ENV bacio_DIR=/opt/nceplibs/lib/cmake/bacio
 ENV sp_DIR=/opt/nceplibs/lib/cmake/sp
