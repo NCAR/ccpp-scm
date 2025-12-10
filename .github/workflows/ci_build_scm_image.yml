@@ -38,8 +38,12 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
+        echo "-----0"
+        ls /opt
+        echo "-----1"
+        ls /opt/nceplibs/
         echo "-----2"
-        ls /opt/nceplibs/NCEPLIBS-bacio/lib/cmake/bacio
+        ls /opt/nceplibs/NCEPLIBS-bacio/
 
     - name: Configure Build with CMake
       run: |
