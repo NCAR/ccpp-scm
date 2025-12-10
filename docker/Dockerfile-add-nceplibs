@@ -5,7 +5,7 @@
 ARG TOOLCHAIN
 FROM minimal-toolchain:$TOOLCHAIN
 
-ENV NCEPLIBS_DIR=/opt/intel/nceplibs
+ENV NCEPLIBS_DIR=/opt/nceplibs
 
 # Install bacio library
 ENV BACIO_VERSION=2.4.1
@@ -34,6 +34,6 @@ RUN cd $NCEPLIBS_DIR/src \
   && make VERBOSE=1 -j \
   && make install
 
-ENV bacio_DIR=/opt/intel/nceplibs/lib/cmake/bacio
-ENV sp_DIR=/opt/intel/nceplibs/lib/cmake/sp
-ENV w3emc_DIR=/opt/intel/nceplibs/lib/cmake/w3emc
+ENV bacio_DIR=/opt/nceplibs/lib/cmake/bacio
+ENV sp_DIR=/opt/nceplibs/lib/cmake/sp
+ENV w3emc_DIR=/opt/nceplibs/lib/cmake/w3emc
