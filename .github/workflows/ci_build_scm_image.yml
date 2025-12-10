@@ -50,7 +50,7 @@ jobs:
         echo "-----1"
         ls /__w/
         echo "-----2"
-        ls /__w/_actions
+        ls /__w/_actions/actions/
 
     - name: Configure Build with CMake
       run: |
