@@ -17,7 +17,7 @@ RUN apt-get update \
       cmake \
       git 
 
-# See https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2025-2/hpc-apt.html#HPC-APT 
+# See https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2025-2/hpc-apt.html
 
 RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
      | gpg --dearmor \
@@ -34,10 +34,8 @@ ENV PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRARY_PATH}"
 
 # Set default compiler executables
-ENV FC=ifx CC=icx CXX=icpx
-#ENV MPICC="mpicc -cc=icx"
-#ENV MPIF90="mpifort -fc=ifx"
-ENV MPI_C=mpicc MPI_FORTRAN=mpifort
+ENV FC=mpifort CC=mpicc CXX=mpic++
+#ENV FC=ifx CC=icx CXX=icpx
 
 ENV bacio_DIR=/opt/nceplibs/lib/cmake/bacio
 ENV sp_DIR=/opt/nceplibs/lib/cmake/sp
