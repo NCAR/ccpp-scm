@@ -48,9 +48,9 @@ jobs:
         echo "-----0"
         ls /opt
         echo "-----1"
-        ls /__w/
-        echo "-----2"
-        ls /__w/_actions/actions/
+        ls -ltr /__w/*
+        #echo "-----2"
+        #ls /__w/_actions/actions/
 
     - name: Configure Build with CMake
       run: |
