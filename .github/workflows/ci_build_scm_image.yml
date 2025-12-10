@@ -38,8 +38,6 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
         pwd
-        echo "-----1"
-        ls /opt/nceplibs/lib/cmake/bacio
         echo "-----2"
         ls /opt/nceplibs/NCEPLIBS-bacio/lib/cmake/bacio
 
