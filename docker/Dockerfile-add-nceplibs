@@ -15,6 +15,8 @@ RUN mkdir -p $NCEPLIBS_DIR/src && cd $NCEPLIBS_DIR/src \
   && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
   && make VERBOSE=1 -j \
   && make install
+ENV PATH="/opt/nceplibs/NCEPLIBS-bacio/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/opt/nceplibs/NCEPLIBS-bacio/lib:${LD_LIBRARY_PATH}
 
 # Install SP-library
 ENV SP_VERSION=2.3.3
@@ -24,6 +26,8 @@ RUN cd $NCEPLIBS_DIR/src \
   && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
   && make VERBOSE=1 -j \
   && make install
+ENV PATH="/opt/nceplibs/NCEPLIBS-sp/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/opt/nceplibs/NCEPLIBS-sp/lib:${LD_LIBRARY_PATH}
 
 # Install w3emc library
 ENV W3EMC_VERSION=2.11.0
@@ -33,3 +37,5 @@ RUN cd $NCEPLIBS_DIR/src \
   && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
   && make VERBOSE=1 -j \
   && make install
+ENV PATH="/opt/nceplibs/NCEPLIBS-w3emc/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/opt/nceplibs/NCEPLIBS-w3emc/lib:${LD_LIBRARY_PATH}
