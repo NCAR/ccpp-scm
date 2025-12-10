@@ -20,8 +20,6 @@ RUN apt-get update \
 
 # Set default compiler executables
 ENV FC=gfortran CC=gcc CXX=g++
-ENV MPICC="mpicc -cc=gcc"
-ENV MPIF90="mpif90 -fc=gfortran"
 
 # GNU fortran
 ENV NETCDF_FORTRAN_DIR=/usr
