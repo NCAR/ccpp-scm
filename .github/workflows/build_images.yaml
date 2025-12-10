@@ -19,20 +19,6 @@ jobs:
           file: docker/Dockerfile-${{ matrix.toolchain }}-minimal
           tags: minimal-toolchain:${{ matrix.toolchain }}
 
-      - name: Build add-netcdf:${{ matrix.toolchain }}
-        uses: docker/build-push-action@v6
-        with:
-          file: docker/Dockerfile-add-netcdf
-          build-args: TOOLCHAIN=${{ matrix.toolchain }}
-          tags: add-netcdf:${{ matrix.toolchain }}
-
-      - name: Build add-nceplibs:${{ matrix.toolchain }}
-        uses: docker/build-push-action@v6
-        with:
-          file: docker/Dockerfile-add-nceplibs
-          build-args: TOOLCHAIN=${{ matrix.toolchain }}
-          tags: add-nceplibs:${{ matrix.toolchain }}
-
       - name: Build add-python:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
         with:

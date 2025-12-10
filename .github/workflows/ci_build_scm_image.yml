@@ -46,9 +46,7 @@ jobs:
         git submodule update --init --recursive
         pwd
         echo "-----0"
-        ls /opt
         echo "-----1"
-        ls -ltr /__w/*
         #echo "-----2"
         #ls /__w/_actions/actions/
 
