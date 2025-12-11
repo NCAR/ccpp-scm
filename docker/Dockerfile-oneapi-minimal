@@ -33,7 +33,12 @@ RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PR
 ENV PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRARY_PATH}"
 
+RUN . /opt/intel/oneapi/setvars.sh
+
+
+
+
 # Set default compiler executables (Serial)
-ENV FC=ifx CC=icx CXX=icpx
+#ENV FC=ifx CC=icx CXX=icpx
 
 # Set default compiler executables (MPI)
