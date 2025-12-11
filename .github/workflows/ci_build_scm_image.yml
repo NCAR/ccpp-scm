@@ -56,7 +56,7 @@ jobs:
         source /opt/intel/oneapi/setvars.sh
         # Make environment variables available to subsequent steps in the workflow
         #echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
-        #echo "/opt/intel/oneapi/mpi/latest/bin" >> $GITHUB_PATH
+        echo "/opt/intel/oneapi/mpi/latest/bin" >> $GITHUB_PATH
       shell: bash
 
     - name: Configure Build with CMake
