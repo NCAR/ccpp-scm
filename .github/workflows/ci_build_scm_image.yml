@@ -50,15 +50,14 @@ jobs:
         #echo "-----2"
         #ls /__w/_actions/actions/
 
-    - name: Environment for openmpi compiler
+    - name: Set up the oneAPI environment variables
+      # Source setvars.sh to make compilers and MPI wrappers (mpiicc, mpiifort) available
       run: |
-        echo -e "CC=mpiicx"      >> $GITHUB_ENV
-        echo -e "CXX=mpiicpx"    >> $GITHUB_ENV
-        echo -e "FC=mpiifx"      >> $GITHUB_ENV
-        echo -e "I_MPI_CC=icx"   >> $GITHUB_ENV
-        echo -e "I_MPI_CXX=icpx" >> $GITHUB_ENV
-        echo -e "I_MPI_FC=ifx"   >> $GITHUB_ENV
-        echo -e "I_MPI_F77=ifx"  >> $GITHUB_ENV
+        source /opt/intel/oneapi/setvars.sh
+        # Make environment variables available to subsequent steps in the workflow
+        echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
+        echo "/opt/intel/oneapi/mpi/latest/bin" >> $GITHUB_PATH
+      shell: bash
 
     - name: Configure Build with CMake
       run: |
