@@ -50,6 +50,16 @@ jobs:
         #echo "-----2"
         #ls /__w/_actions/actions/
 
+    - name: Environment for openmpi compiler
+      run: |
+        echo -e "CC=mpiicx"      >> $GITHUB_ENV
+        echo -e "CXX=mpiicpx"    >> $GITHUB_ENV
+        echo -e "FC=mpiifx"      >> $GITHUB_ENV
+        echo -e "I_MPI_CC=icx"   >> $GITHUB_ENV
+        echo -e "I_MPI_CXX=icpx" >> $GITHUB_ENV
+        echo -e "I_MPI_FC=ifx"   >> $GITHUB_ENV
+        echo -e "I_MPI_F77=ifx"  >> $GITHUB_ENV
+
     - name: Configure Build with CMake
       run: |
         cd ${SCM_ROOT}/scm
