@@ -1,7 +1,6 @@
 name: build the CCPP-SCM with Nvidia
 
-#on: [pull_request,workflow_dispatch]
-on: [workflow_dispatch]
+on: workflow_dispatch
 
 jobs:
 
@@ -108,7 +107,7 @@ jobs:
     # Initialize SCM
     #######################################################################################
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
@@ -117,7 +116,7 @@ jobs:
     # Python setup
     #######################################################################################
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{matrix.py-version}}
 

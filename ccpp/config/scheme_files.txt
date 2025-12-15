@@ -21,7 +21,7 @@ ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_SCNV_generic_post.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_phys_time_vary.scm.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rad_time_vary.scm.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_radiation_surface.F90
-ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmg_post.F90
+ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_radiation_post.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmg_pre.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmg_setup.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_1.F90
@@ -44,7 +44,6 @@ ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_pre.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_cloud_diagnostics.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_mp.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_overlap.F90
-ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_post.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_photochemistry.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_ccpp_suite_sim_pre.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/dcyc2t3.f

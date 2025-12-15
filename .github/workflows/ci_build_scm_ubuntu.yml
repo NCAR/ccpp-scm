@@ -41,7 +41,7 @@ jobs:
 
     # Python setup
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{matrix.py-version}}
 
@@ -115,7 +115,7 @@ jobs:
 
     # Initialize and Build SCM
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Initialize Submodules
       run: git submodule update --init --recursive

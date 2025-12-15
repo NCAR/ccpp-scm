@@ -136,7 +136,7 @@ subroutine scm_main_sub()
   call GFS_suite_setup(physics%Model, physics%Statein, physics%Stateout,           &
                        physics%Sfcprop, physics%Coupling, physics%Grid,            &
                        physics%Tbd, physics%Cldprop, physics%Radtend,              &
-                       physics%Diag, physics%Interstitial, n_tasks, n_threads,     &
+                       physics%Diag, n_tasks, n_threads,                           &
                        physics%Init_parm, scm_state%n_cols, scm_state%lon,         &
                        scm_state%lat, scm_state%area)
 
@@ -213,6 +213,12 @@ subroutine scm_main_sub()
   physics%Model%first_time_step = .true.
 
   call output_init(scm_state, physics)
+  if (n_threads == 1) then
+    call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)
+  else
+    write(error_unit,*) ' CCPP SCM is only set up to use one thread - shutting down'
+    error stop
+  end if
   call output_append(scm_state, physics, force=.true.)
 
   !first time step (call once)
@@ -316,9 +322,9 @@ subroutine scm_main_sub()
       call physics%Diag%phys_zero (physics%Model)
     endif
 
-    call physics%Interstitial(1)%rad_reset(physics%Model)
-    call physics%Interstitial(1)%phys_reset(physics%Model)
+    call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)
     do isuite_part=1,size(ccpp_suite_parts)
+       call physics%Interstitial(1)%reset(physics%Model)
        call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                              suite_part = ccpp_suite_parts(isuite_part))
        if (ccpp_cfg%ccpp_errflg/=0) then
@@ -367,7 +373,10 @@ subroutine scm_main_sub()
   if (.not. in_spinup) then
     call output_append(scm_state, physics)
   end if
-
+  
+  !wait until after output append to destroy interstitial DDT
+  call physics%Interstitial(1)%destroy(physics%Model)
+  
   !prepare for time loop
   scm_state%n_timesteps = ceiling(scm_state%runtime/scm_state%dt) + scm_state%spinup_timesteps
 
@@ -436,6 +445,8 @@ subroutine scm_main_sub()
     if (.not. in_spinup) then
       call output_append(scm_state, physics)
     end if
+    !wait until after output append to destroy interstitial DDT
+    call physics%Interstitial(1)%destroy(physics%Model)
   end do
 
   call ccpp_physics_finalize(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))))

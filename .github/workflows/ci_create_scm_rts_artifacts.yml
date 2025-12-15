@@ -1,18 +1,21 @@
-name: run the SCM with DEPHY v1 data
 
-#on: [pull_request,workflow_dispatch]
-on: [workflow_dispatch]
+name: create scm rt artifacts
+
+on:
+  workflow_dispatch:
 
 jobs:
-  run-scm-DEPHY:
+  run_scm_rts:
 
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     strategy:
       matrix:
         fortran-compiler: [12]
-        build-type:       [Release, Debug]
+        build-type:       [Release, Debug, SinglePrecision]
         py-version:       [3.11]
+
+    continue-on-error: true
 
     # Environmental variables
     env:
@@ -22,7 +25,12 @@ jobs:
       sp_ROOT:    /home/runner/NCEPLIBS-sp
       w3emc_ROOT: /home/runner/myw3emc
       SCM_ROOT:   /home/runner/work/ccpp-scm/ccpp-scm
-      suites:     SCM_GFS_v16,SCM_GFS_v16_ps
+      suites:     SCM_GFS_v15p2,SCM_GFS_v15p2_ntiedtke,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf,SCM_GFS_v17_p8_ugwpv1,SCM_GFS_v16_RRTMGP,SCM_GFS_v16_debug,SCM_GFS_v16_no_nsst,SCM_GFS_v17_p8_ugwpv1_no_nsst,SCM_RRFS_v1beta_no_nsst,SCM_GFS_v16_gfdlmpv3,SCM_GFS_v17_p8_ugwpv1_tempo
+      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v15p2_ntiedtke_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v16_debug_ps,SCM_GFS_v16_no_nsst_ps,SCM_GFS_v17_p8_ugwpv1_no_nsst_ps,SCM_RRFS_v1beta_no_nsst_ps,SCM_GFS_v16_gfdlmpv3_ps,SCM_GFS_v17_p8_ugwpv1_tempo_ps
+      dir_rt:     /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
+      dir_bl:     /home/runner/work/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('main' == 'main' && 'main' || 'PR') }}
+      GH_TOKEN:   ${{ github.token }}
 
     # Workflow steps
     steps:
@@ -40,17 +48,15 @@ jobs:
         openmpi-bin \
         libopenmpi-dev
 
-    #######################################################################################
     # Python setup
-    #######################################################################################
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v6
       with:
         python-version: ${{matrix.py-version}}
 
     - name: Install NetCDF Python libraries
       run: |
-        pip install f90nml h5py netCDF4
+        pip install f90nml h5py netCDF4 matplotlib
 
     - name: Environment for openmpi compiler
       run: |
@@ -62,9 +68,7 @@ jobs:
         which mpif90
         mpif90 --version
 
-    #######################################################################################
-    # Install NCEP Libs
-    #######################################################################################
+    # Install NCEP libs
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
       uses: actions/cache@v4
@@ -116,49 +120,68 @@ jobs:
         make install
         echo "w3emc_DIR=/home/runner/myw3emc/lib/cmake/w3emc" >> $GITHUB_ENV
 
-    #######################################################################################
-    # Initialize SCM
-    #######################################################################################
+
+    # Initialize and build SCM, run regressions tests
     - name: Checkout SCM code (into /home/runner/work/ccpp-scm/)
       uses: actions/checkout@v6
 
     - name: Initialize submodules
       run: git submodule update --init --recursive
 
-    #######################################################################################
-    # Build SCM. Run DEPHYv1 case.
-    #######################################################################################
     - name: Download data for SCM
       run: |
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
         ./contrib/get_thompson_tables.sh
+        ./contrib/get_tempo_data.sh
+        ./contrib/get_aerosol_climo.sh
 
     - name: Configure build with CMake (Release)
       if: contains(matrix.build-type, 'Release')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} ../src
+        cmake -DCCPP_SUITES=${suites},${suites_ps} ../src
 
     - name: Configure build with CMake (Debug)
       if: contains(matrix.build-type, 'Debug')
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites} -DCMAKE_BUILD_TYPE=Debug ../src
+        cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=Debug ../src
+
+    - name: Configure build with CMake (Single Precision)
+      if: matrix.build-type == 'SinglePrecision'
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${suites},${suites_ps} -D32BIT=1 ../src
 
     - name: Build SCM
       run: |
         cd ${SCM_ROOT}/scm/bin
         make -j4
 
-    - name: Clone GdR-DEPHY/DEPHY-SCM repository
-      run: |
-        cd /home/runner
-        git clone https://github.com/GdR-DEPHY/DEPHY-SCM.git DEPHY-SCM
-
-    - name: Run SCM with MAGIC_LEG04A DEPHY reference case
+    - name: Run SCM RTs
+      if: matrix.build-type != 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py -c MAGIC_LEG04A --case_data_dir /home/runner/DEPHY-SCM/MAGIC/LEG04A --runtime_mult 0.1 -v
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
+
+    - name: Run SCM Single Precision RTs
+      if: matrix.build-type == 'SinglePrecision'
+      run: |
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file /home/runner/work/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1
+
+    - name: Gather SCM RT output
+      run: |
+        cd ${SCM_ROOT}/test
+        mkdir /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
+        ./ci_util.py -b ${{matrix.build-type}}
+
+    - name: Upload SCM RTs as GitHub Artifact
+      uses: actions/upload-artifact@v5
+      with:
+        name: rt-baselines-${{matrix.build-type}}-${{ env.artifact_origin }}
+        path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
