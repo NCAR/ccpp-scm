@@ -40,6 +40,10 @@ jobs:
     - name: Checkout SCM code (/__w/ccpp-scm/ccpp-scm)
       uses: actions/checkout@v4
 
+    - name: Install Required Tools
+      run: |
+        apt-get update#openmpi-bin libopenmpi-dev
+	
     - name: Initialize Submodules
       run: |
         git config --global --add safe.directory ${SCM_ROOT}
