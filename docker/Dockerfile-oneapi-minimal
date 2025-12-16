@@ -15,7 +15,9 @@ RUN apt-get update \
       libc-dev \
       make \
       cmake \
-      git 
+      git \
+      openmpi-bin \
+      libopenmpi-dev
 
 # See https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2025-2/hpc-apt.html
 
@@ -31,6 +33,8 @@ RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PR
      intel-oneapi-common-vars \
      intel-oneapi-mpi \
      intel-oneapi-mpi-devel \
+     intel-oneapi-mkl-${ONEAPI_VERSION} \
+     intel-oneapi-mkl-devel-${ONEAPI_VERSION}
  && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/bin:${PATH}"
@@ -39,4 +43,4 @@ ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRA
 RUN . /opt/intel/oneapi/setvars.sh
 
 # Set default compiler executables (Serial)
-ENV FC=ifx CC=icx CXX=icpx
+#ENV FC=ifx CC=icx CXX=icpx
