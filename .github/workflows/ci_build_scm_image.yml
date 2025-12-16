@@ -46,16 +46,21 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
 
-    - name: Set up the oneAPI environment variables
-      # Source setvars.sh to make compilers and MPI wrappers (mpiicc, mpiifort) available
+#    - name: Set up the oneAPI environment variables
+#      # Source setvars.sh to make compilers and MPI wrappers (mpiicc, mpiifort) available
+#      run: |
+#        source /opt/intel/oneapi/setvars.sh
+#        # Make environment variables available to subsequent steps in the workflow
+#        echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
+#        #echo "/opt/intel/oneapi/mpi/2025.3/bin" >> $GITHUB_PATH
+#        ##echo -e "CC=mpiicx\nCXX=mpiicpx\nFC=mpiifx" >> $GITHUB_ENV
+#        ##echo -e "I_MPI_CC=icx\nI_MPI_CXX=icpx\nI_MPI_FC=ifx\nI_MPI_F77=ifx" >> $GITHUB_ENV
+#      shell: bash
+
+    - name: Setup Intel oneAPI environment
       run: |
-        source /opt/intel/oneapi/setvars.sh
-        # Make environment variables available to subsequent steps in the workflow
-        echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
-        #echo "/opt/intel/oneapi/mpi/2025.3/bin" >> $GITHUB_PATH
-        ##echo -e "CC=mpiicx\nCXX=mpiicpx\nFC=mpiifx" >> $GITHUB_ENV
-        ##echo -e "I_MPI_CC=icx\nI_MPI_CXX=icpx\nI_MPI_FC=ifx\nI_MPI_F77=ifx" >> $GITHUB_ENV
-      shell: bash
+        source /opt/intel/oneapi/2025.3/oneapi-vars.sh
+        printenv >> $GITHUB_ENV
 
     - name: Setup Intel oneAPI.
       run: |
