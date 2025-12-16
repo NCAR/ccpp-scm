@@ -59,8 +59,8 @@ jobs:
 
     - name: Setup Intel oneAPI.
       run: |
-        echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+        #echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
+        #echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
         echo "-----LD_LIBRARY_PATH-----"
         echo ${LD_LIBRARY_PATH}
         echo "----------PATH-----------"
@@ -68,8 +68,8 @@ jobs:
 
     - name: Setup MPI Paths
       run: |
-        echo "PATH=/opt/intel/oneapi/compiler/2025.3/bin:${PATH}" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+        #echo "PATH=/opt/intel/oneapi/compiler/2025.3/bin:${PATH}" >> $GITHUB_ENV
+        #echo "LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
         echo "-----LD_LIBRARY_PATH-----"
         echo ${LD_LIBRARY_PATH}
         echo "----------PATH-----------"
