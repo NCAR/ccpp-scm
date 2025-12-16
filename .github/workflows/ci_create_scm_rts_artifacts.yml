@@ -181,7 +181,7 @@ jobs:
         ./ci_util.py -b ${{matrix.build-type}}
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: rt-baselines-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
