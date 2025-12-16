@@ -33,8 +33,6 @@ RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PR
      intel-oneapi-common-vars \
      intel-oneapi-mpi \
      intel-oneapi-mpi-devel \
-     intel-oneapi-mkl-${ONEAPI_VERSION} \
-     intel-oneapi-mkl-devel-${ONEAPI_VERSION} \
  && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/bin:${PATH}"
