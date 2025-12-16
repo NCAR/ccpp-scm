@@ -39,4 +39,4 @@ ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRA
 RUN . /opt/intel/oneapi/setvars.sh
 
 # Set default compiler executables (Serial)
-#ENV FC=ifx CC=icx CXX=icpx
+ENV FC=ifx CC=icx CXX=icpx
