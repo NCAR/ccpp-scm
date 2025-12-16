@@ -75,14 +75,14 @@ jobs:
 
     - name: Dispaly stuff
       run: |
-      echo "----- /opt/intel/oneapi/mpi/latest/lib ----------"
-      ls /opt/intel/oneapi/mpi/latest/lib
-      echo "----- /opt/intel/oneapi/mpi/latest/lib ----------"
-      ls /opt/intel/oneapi/mpi/latest/lib
-      echo "----- /opt/intel/oneapi/compiler/2025.3/bin -----"
-      ls /opt/intel/oneapi/compiler/2025.3/bin
-      echo "----- /opt/intel/oneapi/compiler/2025.3/lib -----"
-      ls /opt/intel/oneapi/compiler/2025.3/lib
+        echo "----- /opt/intel/oneapi/mpi/latest/lib ----------"
+        ls /opt/intel/oneapi/mpi/latest/lib
+        echo "----- /opt/intel/oneapi/mpi/latest/lib ----------"
+        ls /opt/intel/oneapi/mpi/latest/lib
+        echo "----- /opt/intel/oneapi/compiler/2025.3/bin -----"
+        ls /opt/intel/oneapi/compiler/2025.3/bin
+        echo "----- /opt/intel/oneapi/compiler/2025.3/lib -----"
+        ls /opt/intel/oneapi/compiler/2025.3/lib
 
     - name: Configure Build with CMake
       run: |
