@@ -71,7 +71,7 @@ jobs:
     # Install NCEP libs
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -88,7 +88,7 @@ jobs:
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -105,7 +105,7 @@ jobs:
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
