@@ -15,9 +15,7 @@ RUN apt-get update \
       libc-dev \
       make \
       cmake \
-      git \
-      openmpi-bin \
-      libopenmpi-dev
+      git
 
 # See https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2025-2/hpc-apt.html
 
