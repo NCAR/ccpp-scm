@@ -42,7 +42,8 @@ jobs:
 
     - name: Install Required Tools
       run: |
-        apt-get update openmpi-bin libopenmpi-dev
+        apt-get update
+        apt-get install -y openmpi-bin libopenmpi-dev
 
     - name: Initialize Submodules
       run: |
