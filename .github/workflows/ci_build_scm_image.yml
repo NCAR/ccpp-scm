@@ -55,7 +55,7 @@ jobs:
 #        #echo "/opt/intel/oneapi/mpi/2025.3/bin" >> $GITHUB_PATH
 #        ##echo -e "CC=mpiicx\nCXX=mpiicpx\nFC=mpiifx" >> $GITHUB_ENV
 #        ##echo -e "I_MPI_CC=icx\nI_MPI_CXX=icpx\nI_MPI_FC=ifx\nI_MPI_F77=ifx" >> $GITHUB_ENV
-#      shell: bash
+      shell: bash
 
     - name: Setup Intel oneAPI environment
       run: |
