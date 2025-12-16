@@ -66,8 +66,8 @@ jobs:
         echo "---------------------------------------"
         echo "----- /opt/intel/oneapi/mpi ----------"
         ls /opt/intel/oneapi/mpi/
-        #source /opt/intel/oneapi/2025.3/oneapi-vars.sh
-        #printenv >> $GITHUB_ENV
+        echo "----- /opt/intel/oneapi/mpi/latest ----------"
+        ls /opt/intel/oneapi/mpi/latest
 
     - name: Setup Intel oneAPI.
       run: |
