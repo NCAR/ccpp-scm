@@ -59,6 +59,9 @@ jobs:
 
     - name: Setup Intel oneAPI environment
       run: |
+        echo "------ /opt/intel/oneapi/2025.3/ ------"
+        ls /opt/intel/oneapi/2025.3/
+        echo "---------------------------------------"
         source /opt/intel/oneapi/2025.3/oneapi-vars.sh
         printenv >> $GITHUB_ENV
 
