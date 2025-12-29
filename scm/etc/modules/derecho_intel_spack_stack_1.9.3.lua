@@ -26,7 +26,16 @@ load("w3emc/2.10.0")
 load("py-f90nml")
 load("py-netcdf4/1.7.1.post2")
 
+load("intel-oneapi")
+
 setenv("CMAKE_C_COMPILER","cc")
 setenv("CMAKE_CXX_COMPILER","CC")
 setenv("CMAKE_Fortran_COMPILER","ftn")
 setenv("CMAKE_Platform","derecho.intel")
+
+if mode() == "load" then
+   local red   = "\27[31m"
+   local reset = "\27[0m"
+   LmodMessage(red .. "WARNING: " .. reset .. "Login node on Derecho does not have enough memory to build SCM, use interactive node")
+   LmodMessage(red .. "WARNING: " .. reset .. "Debug mode currently broken on Derecho, don't use '-g'")
+end
