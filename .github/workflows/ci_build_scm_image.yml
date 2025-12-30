@@ -31,6 +31,7 @@ jobs:
     # Workflow steps
     steps:
     #############################################################
+    # NOTE
     # $ echo ${{ github.workspace }}
     # /home/runner/work/<REPO_NAME>/<REPO_NAME>
     # $ echo $GITHUB_WORKSPACE
@@ -39,25 +40,59 @@ jobs:
     - name: Checkout SCM code (/__w/ccpp-scm/ccpp-scm)
       uses: actions/checkout@v4
 
+    - name: Install Required Tools
+      run: |
+        apt-get update
+        #apt-get install -y openmpi-bin libopenmpi-dev
+
     - name: Initialize Submodules
       run: |
         git config --global --add safe.directory ${SCM_ROOT}
         cd ${SCM_ROOT}
         git submodule update --init --recursive
-        pwd
-        echo "-----0"
-        echo "-----1"
-        #echo "-----2"
-        #ls /__w/_actions/actions/
 
-    - name: Set up the oneAPI environment variables
-      # Source setvars.sh to make compilers and MPI wrappers (mpiicc, mpiifort) available
+#    - name: Set up the oneAPI environment variables
+#      # Source setvars.sh to make compilers and MPI wrappers (mpiicc, mpiifort) available
+#      run: |
+#        source /opt/intel/oneapi/setvars.sh
+#        # Make environment variables available to subsequent steps in the workflow
+#        echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
+#        #echo "/opt/intel/oneapi/mpi/latest/bin" >> $GITHUB_PATH
+#      shell: bash
+#    - name: Setup Intel oneAPI.
+#      run: |
+#        echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
+#        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+#        source /opt/intel/oneapi/setvars.sh
+#      shell: bash
+#
+#    - name: Setup MPI Paths
+#      run: |
+#        #echo "PATH=/opt/intel/oneapi/compiler/2025.3/bin:${PATH}" >> $GITHUB_ENV
+#        #echo "LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+    - name: Dispaly stuff
       run: |
-        source /opt/intel/oneapi/setvars.sh
-        # Make environment variables available to subsequent steps in the workflow
-        echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
-        #echo "/opt/intel/oneapi/mpi/latest/bin" >> $GITHUB_PATH
-      shell: bash
+        echo "-----LD_LIBRARY_PATH-----"
+        echo ${LD_LIBRARY_PATH}
+        echo "----------PATH-----------"
+        echo ${PATH}
+        echo "---------- /opt/intel/oneapi/ ---------"
+        ls /opt/intel/oneapi/
+        echo "------ /opt/intel/oneapi/2025.3/compiler"
+        ls /opt/intel/oneapi/compiler/2025.3/
+        echo "----- /opt/intel/oneapi/mpi ----------"
+        ls /opt/intel/oneapi/mpi/
+        echo "----- /opt/intel/oneapi/mpi/latest ----------"
+        ls /opt/intel/oneapi/mpi/latest	
+        echo "----- /opt/intel/oneapi/mpi/latest/bin ----------"
+        ls /opt/intel/oneapi/mpi/latest/bin
+        echo "----- /opt/intel/oneapi/mpi/latest/lib ----------"
+        ls /opt/intel/oneapi/mpi/latest/lib
+        echo "----- /opt/intel/oneapi/compiler/2025.3/bin -----"
+        ls /opt/intel/oneapi/compiler/2025.3/bin
+        echo "----- /opt/intel/oneapi/compiler/2025.3/lib -----"
+        ls /opt/intel/oneapi/compiler/2025.3/lib
 
     - name: Configure Build with CMake
       run: |

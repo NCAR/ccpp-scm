@@ -15,7 +15,7 @@ RUN apt-get update \
       libc-dev \
       make \
       cmake \
-      git 
+      git
 
 # See https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2025-2/hpc-apt.html
 
@@ -26,11 +26,11 @@ RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PR
      |  tee /etc/apt/sources.list.d/oneAPI.list \
  && apt-get update \
  && apt-get install --yes --no-install-recommends \
-     intel-oneapi-compiler-dpcpp-cpp-${ONEAPI_VERSION} \
-     intel-oneapi-compiler-fortran-${ONEAPI_VERSION} \
      intel-oneapi-common-vars \
+     intel-oneapi-compiler-fortran-${ONEAPI_VERSION} \
      intel-oneapi-mpi \
-     intel-oneapi-mpi-devel \
+     intel-oneapi-mpi-devel\
+     intel-oneapi-compiler-dpcpp-cpp-${ONEAPI_VERSION} \
  && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/intel/oneapi/${ONEAPI_VERSION}/compiler/bin:${PATH}"
