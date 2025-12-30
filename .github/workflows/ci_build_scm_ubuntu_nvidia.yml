@@ -133,7 +133,7 @@ jobs:
 
     - name: Cache HDF5
       id: cache-hdf5
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/hdf5
         KEY: cache-hdf5-${{matrix.fortran-compiler}}-key
@@ -157,7 +157,7 @@ jobs:
 
     - name: Cache OpenMPI
       id: cache-openmpi
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/openmpi
         KEY: cache-openmpi-${{matrix.fortran-compiler}}-key
@@ -203,7 +203,7 @@ jobs:
 
     - name: Cache NetCDF library
       id: cache-netcdf
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/netcdf
         key: cache-netcdf-${{matrix.fortran-compiler}}-key
@@ -239,7 +239,7 @@ jobs:
 
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-key
@@ -258,7 +258,7 @@ jobs:
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-key
@@ -277,7 +277,7 @@ jobs:
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-key

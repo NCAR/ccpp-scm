@@ -9,6 +9,8 @@ on:
 
 jobs:
   run_scm_rts:
+    # Don't run in forks
+    if: github.repository == 'NCAR/ccpp-scm'
 
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -74,7 +76,7 @@ jobs:
     # Install NCEP libs
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -91,7 +93,7 @@ jobs:
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -108,7 +110,7 @@ jobs:
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -194,7 +196,7 @@ jobs:
         echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
 
     - name: Download SCM RT baselines
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: rt-baselines-${{matrix.build-type}}-main
         path: ${{ env.dir_bl }}
@@ -217,13 +219,13 @@ jobs:
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
       if: env.files_exist == 'true'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: rt-plots-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: rt-baselines-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
