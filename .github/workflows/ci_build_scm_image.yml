@@ -66,8 +66,8 @@ jobs:
 
     - name: Setup MPI Paths
       run: |
-        echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+        echo "PATH=/opt/intel/oneapi/mpi/latest/bin" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib" >> $GITHUB_ENV
 
     - name: Dispaly stuff
       run: |
