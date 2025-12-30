@@ -35,8 +35,6 @@ RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PR
 
 ENV PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRARY_PATH}"
-ENV PATH="/opt/intel/oneapi/${ONEAPI_VERSION}/compiler/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/opt/intel/oneapi/${ONEAPI_VERSION}/compiler/lib:${LD_LIBRARY_PATH}"
 ENV PATH="/opt/intel/oneapi/mpi/latest/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}"
 
