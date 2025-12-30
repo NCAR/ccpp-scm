@@ -59,12 +59,10 @@ jobs:
 #        echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
 #        #echo "/opt/intel/oneapi/mpi/latest/bin" >> $GITHUB_PATH
 #      shell: bash
-#    - name: Setup Intel oneAPI.
-#      run: |
-#        echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
-#        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-#        source /opt/intel/oneapi/setvars.sh
-#      shell: bash
+    - name: Setup Intel oneAPI.
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+      shell: bash
 #
 #    - name: Setup MPI Paths
 #      run: |

@@ -26,14 +26,12 @@ RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PR
      |  tee /etc/apt/sources.list.d/oneAPI.list \
  && apt-get update \
  && apt-get install --yes --no-install-recommends \
-     intel-oneapi-compiler-dpcpp-cpp-${ONEAPI_VERSION} \
-     intel-oneapi-compiler-fortran-${ONEAPI_VERSION} \
-     intel-oneapi-mki-devel \
-     intel-oneapi-mpi-devel \
      intel-oneapi-common-vars \
+     intel-oneapi-compiler-fortran-${ONEAPI_VERSION} \
+     intel-oneapi-mpi \
+     intel-oneapi-mpi-devel\
+     intel-oneapi-compiler-dpcpp-cpp-${ONEAPI_VERSION} \
  && rm -rf /var/lib/apt/lists/*
-
-ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/latest
 
 ENV PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:${LD_LIBRARY_PATH}"
