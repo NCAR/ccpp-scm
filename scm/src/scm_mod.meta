@@ -8,13 +8,13 @@
   name = scm_mod
   type = module
 [physics]
-  standard_name = physics_type
+  standard_name = physics
   long_name = definition of derived data type physics_type
   units = DDT
   dimensions = ()
   type = physics_type
 [ccpp_cfg]
-  standard_name = ccpp_configuration
+  standard_name = ccpp_cfg
   long_name = definition of derived data type ccpp_config
   units = DDT
   dimensions = ()
