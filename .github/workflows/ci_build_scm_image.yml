@@ -63,11 +63,11 @@ jobs:
       run: |
         source /opt/intel/oneapi/setvars.sh
       shell: bash
-#
-#    - name: Setup MPI Paths
-#      run: |
-#        #echo "PATH=/opt/intel/oneapi/compiler/2025.3/bin:${PATH}" >> $GITHUB_ENV
-#        #echo "LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+    - name: Setup MPI Paths
+      run: |
+        echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
     - name: Dispaly stuff
       run: |
