@@ -79,6 +79,8 @@ jobs:
         echo ${PATH}
         echo "---------- /opt/intel/oneapi/ ---------"
         ls /opt/intel/oneapi/
+        echo "---------- /opt/intel/oneapi/compiler ---------"
+        ls /opt/intel/oneapi/compiler
         echo "------ /opt/intel/oneapi/2025.3/compiler"
         ls /opt/intel/oneapi/compiler/2025.3/
         echo "----- /opt/intel/oneapi/mpi ----------"
