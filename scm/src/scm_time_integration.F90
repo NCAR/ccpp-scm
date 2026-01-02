@@ -157,8 +157,8 @@ subroutine do_time_step(scm_state, in_spinup, ccpp_suite_parts)
 
   !--- Call physics Groups w/ run phase.
   call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)
+  call physics%Interstitial(1)%reset(physics%Model)
   do isuite_part=1,size(ccpp_suite_parts)
-     call physics%Interstitial(1)%reset(physics%Model)
      call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
                            suite_part = trim(trim(adjustl(ccpp_suite_parts(isuite_part)))))
      if (ccpp_cfg%ccpp_errflg/=0) then
