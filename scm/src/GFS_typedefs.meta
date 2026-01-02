@@ -2482,21 +2482,18 @@
   units = mixed
   dimensions = ()
   type = land_iau_external_data_type
-  active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
 [land_iau_control]
   standard_name = land_data_assimilation_control
   long_name = land data assimilation control
   units = mixed
   dimensions = ()
   type = land_iau_control_type
-  active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
 [land_iau_state]
   standard_name = land_data_assimilation_interpolated_data
   long_name = land data assimilation space- and time-interpolated
   units = mixed
   dimensions = ()
   type = land_iau_state_type
-  active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
 
 ########################################################################
 [ccpp-table-properties]
