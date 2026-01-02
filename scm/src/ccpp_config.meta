@@ -1,0 +1,84 @@
+########################################################################
+[ccpp-table-properties]
+  name = MPI_Comm
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = MPI_Comm
+  type = ddt
+
+########################################################################
+[ccpp-table-properties]
+  name = ty_ccpp_config
+  type = ddt
+  dependencies =
+
+[ccpp-arg-table]
+  name = ty_ccpp_config
+  type = ddt
+[loop_cnt]
+  standard_name = ccpp_loop_counter
+  long_name = loop counter for subcycling loops in CCPP
+  units = index
+  dimensions = ()
+  type = integer
+[loop_max]
+  standard_name = ccpp_loop_extent
+  long_name = loop extent for subcycling loops in CCPP
+  units = count
+  dimensions = ()
+  type = integer
+[thrd_no]
+  standard_name = ccpp_thread_number
+  long_name = number of thread for threading in CCPP
+  units = index
+  dimensions = ()
+  type = integer
+[thrd_cnt]
+  standard_name = ccpp_thread_count
+  long_name = total number of threads for threading in CCPP
+  units = index
+  dimensions = ()
+  type = integer
+[ccpp_instance]
+  standard_name = ccpp_instance
+  long_name = ccpp_instance
+  units = index
+  dimensions = ()
+  type = integer
+[chunk_no]
+  standard_name = ccpp_chunk_number
+  long_name = number of chunk for using array chunks in CCPP
+  units = index
+  dimensions = ()
+  type = integer
+[chunk_cnt]
+  standard_name = ccpp_chunk_count
+  long_name = total number of chunks of array data used in run phase
+  units = count
+  dimensions = ()
+  type = integer
+[ccpp_errmsg]
+  standard_name = ccpp_error_message
+  long_name = Error message for error handling in CCPP
+  units = none
+  dimensions = ()
+  type = character
+  kind = len=512
+[ccpp_errflg]
+  standard_name = ccpp_error_code
+  long_name = Error flag for error handling in CCPP
+  units = 1
+  dimensions = ()
+  type = integer
+
+########################################################################
+[ccpp-table-properties]
+  name = ccpp_config
+  type = module
+  dependencies =
+  
+[ccpp-arg-table]
+  name = ccpp_config
+  type = module

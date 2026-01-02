@@ -6,13 +6,12 @@ module scm_time_integration
 use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
 use scm_forcing
+use ccpp_config, only: ty_ccpp_config
 
-use ccpp_types,        only: ccpp_t
-use :: ccpp_static_api,                      &
-       only: ccpp_physics_timestep_init,     &
-             ccpp_physics_run,               &
-             ccpp_physics_timestep_finalize
-
+use :: SCM_ccpp_cap,  only: &
+        ccpp_physics_timestep_init     => SCM_ccpp_physics_timestep_initial, &
+        ccpp_physics_run               => SCM_ccpp_physics_run,              &
+        ccpp_physics_timestep_finalize => SCM_ccpp_physics_timestep_final
 
 implicit none
 
@@ -54,15 +53,15 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, physics, cdata, in_spinup)
+subroutine do_time_step(scm_state, in_spinup, ccpp_suite_parts)
   use scm_type_defs, only: scm_state_type, physics_type
+  use scm_mod,       only: physics, ccpp_cfg
 
-  type(scm_state_type), intent(inout)          :: scm_state
-  type(physics_type), intent(inout)            :: physics
-  type(ccpp_t), intent(inout)                  :: cdata
-  logical, intent(in)                          :: in_spinup
+  type(scm_state_type), intent(inout) :: scm_state
+  logical,              intent(in)    :: in_spinup
+  character(len=128),   intent(in)    :: ccpp_suite_parts(:)
 
-  integer :: i, ierr, kdt_rad, idtend, itrac
+  integer :: i, ierr, kdt_rad, idtend, itrac, isuite_part
 
   !> \section do_time_step_alg Algorithm
   !! @{
@@ -133,10 +132,10 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
     endif
   enddo
 
-  call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop trim(cdata%errmsg)
+  call ccpp_physics_timestep_init(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))))
+  if (ccpp_cfg%ccpp_errflg/=0) then
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+      error stop trim(ccpp_cfg%ccpp_errmsg)
   end if
 
   !--- determine if radiation diagnostics buckets need to be cleared
@@ -156,33 +155,22 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
     call physics%Diag%phys_zero (physics%Model)
   endif
 
-  !CCPP run phase
-  ! time_vary group doesn't have any run phase (omitted)
-  ! radiation group
-  
-  call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)  
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="radiation", ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group radiation: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop
-  end if
-  ! process-split physics
+  !--- Call physics Groups w/ run phase.
+  call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)
   call physics%Interstitial(1)%reset(physics%Model)
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ps", ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ps: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop
-  end if
-  ! time-split physics
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ts", ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop
-  end if
-  call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop trim(cdata%errmsg)
+  do isuite_part=1,size(ccpp_suite_parts)
+     call ccpp_physics_run(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))), &
+                           suite_part = trim(trim(adjustl(ccpp_suite_parts(isuite_part)))))
+     if (ccpp_cfg%ccpp_errflg/=0) then
+        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+        error stop trim(ccpp_cfg%ccpp_errmsg)
+     end if
+  enddo
+
+  call ccpp_physics_timestep_finalize(suite_name = trim(trim(adjustl(scm_state%physics_suite_name))))
+  if (ccpp_cfg%ccpp_errflg/=0) then
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(ccpp_cfg%ccpp_errmsg) // '. Exiting...'
+      error stop trim(ccpp_cfg%ccpp_errmsg)
   end if
 
   !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)
