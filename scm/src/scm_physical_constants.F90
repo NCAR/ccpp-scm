@@ -64,8 +64,23 @@ public
   real(kind=dp),parameter:: con_solr_2002 = 1.3660e+3_dp     !< solar constant (\f$W/m^{2}\f$)-Liu(2002)
   real(kind=dp),parameter:: con_solr_2008 = 1.3608e+3_dp     !< solar constant (\f$W/m^{2}\f$)-nasa-sorce Tim(2008)
   real(kind=dp),parameter:: con_thgni     = -38.15_dp        !< temperature the H.G.Nuc. ice starts
-  
+
   ! for gfdlmp v3
+  real(kind=dp), parameter:: con_rhoair_IFS = 1.0  ! reference air density (kg/m^3), ref: IFS
+  real(kind=dp), parameter:: con_rhosnow = 100.0   ! density of snow (kg/m^3)
+  real(kind=dp), parameter :: con_visd  = 1.717e-5 ! dynamics viscosity of air at 0 deg C and 1000 hPa (Mason, 1971) (kg/m/s)
+  real(kind=dp), parameter :: con_visk  = 1.35e-5  ! kinematic viscosity of air at 0 deg C  and 1000 hPa (Mason, 1971) (m^2/s)
+  real(kind=dp), parameter :: con_vdifu = 2.25e-5  ! diffusivity of water vapor in air at 0 deg C  and 1000 hPa (Mason, 1971) (m^2/s)
+  real(kind=dp), parameter :: con_tcond = 2.40e-2  ! thermal conductivity of air at 0 deg C  and 1000 hPa (Mason, 1971) (J/m/s/K)
+  real(kind=dp), parameter :: con_cdg   = 3.15121  ! drag coefficient of graupel (Locatelli and Hobbs, 1974)
+  real(kind=dp), parameter :: con_cdh   = 0.5      ! drag coefficient of hail (Heymsfield and Wright, 2014)
+  real(kind=dp), parameter :: con_rhocw = 1.0e3    ! density of cloud water (kg/m^3)
+  real(kind=dp), parameter :: con_rhoci = 9.17e2   ! density of cloud ice (kg/m^3)
+  real(kind=dp), parameter :: con_rhocr = 1.0e3    ! density of rain (Lin et al. 1983) (kg/m^3)
+  real(kind=dp), parameter :: con_rhocg = 4.0e2    ! density of graupel (Rutledge and Hobbs 1984) (kg/m^3)
+  real(kind=dp), parameter :: con_rhoch = 9.17e2   ! density of hail (Lin et al. 1983) (kg/m^3)
+  real(kind=dp), parameter :: con_qcmin = 1.0e-15  ! min value for cloud condensates (kg/kg)
+  real(kind=dp), parameter :: con_qfmin = 1.0e-8   ! min value for sedimentation (kg/kg)
   real(kind=dp), parameter :: con_one      = 1_dp
   real(kind=dp), parameter :: con_p001     = 0.001_dp
   real(kind=dp), parameter :: con_secinday = 86400._dp

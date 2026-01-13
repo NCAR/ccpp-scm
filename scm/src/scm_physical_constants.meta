@@ -362,3 +362,123 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[con_rhoair_IFS]
+  standard_name = density_of_air_IFS
+  long_name = density of air IFS
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_rhosnow]
+  standard_name = density_of_snow
+  long_name = density of snow
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_visd]
+  standard_name = dynamic_viscosity_of_air
+  long_name = dynamic viscosity of air at 0 deg C and 1000 hPa (Mason, 1971)
+  units = kg m-1 s-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_visk]
+  standard_name = kinematic_viscosity_of_air
+  long_name = kinematic viscosity of air at 0 deg C and 1000 hPa (Mason, 1971)
+  units = m2 s-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_vdifu]
+  standard_name = diffusivity_of_water_vapor_in_air
+  long_name = diffusivity of water vapor in air at 0 deg C and 1000 hPa (Mason, 1971)
+  units = m2 s-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_tcond]
+  standard_name = thermal_conductivity_of_air
+  long_name = thermal conductivity of air at 0 deg C and 1000 hPa (Mason, 1971)
+  units = W m-1 K-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_cdg]
+  standard_name = drag_coefficient_of_graupel
+  long_name = drag coefficient of graupel (Locatelli and Hobbs, 1974)
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_cdh]
+  standard_name = drag_coefficient_of_hail
+  long_name = drag coefficient of hail (Heymsfield and Wright, 2014)
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_rhocw]
+  standard_name = density_of_cloud_water
+  long_name = density of cloud water
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_rhoci]
+  standard_name = density_of_cloud_ice
+  long_name = density of cloud ice
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_rhocr]
+  standard_name = density_of_rain
+  long_name = density of rain (Lin et al., 1983)
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_rhocg]
+  standard_name = density_of_graupel
+  long_name = density of graupel (Rutledge and Hobbs, 1984)
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_rhoch]
+  standard_name = density_of_hail
+  long_name = density of hail (Lin et al., 1983)
+  units = kg m-3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_qcmin]
+  standard_name = minimum_mass_mixing_ratio_of_cloud_condensate
+  long_name = minimum value for cloud condensates
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[con_qfmin]
+  standard_name = minimum_mass_mixing_ratio_for_sedimentation
+  long_name = minimum value for sedimentation
+  units = kg kg-1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
