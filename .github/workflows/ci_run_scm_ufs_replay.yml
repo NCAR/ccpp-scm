@@ -61,15 +61,15 @@ jobs:
       run: |
         if test ! -d "${dir_rt_cache}"; then
           mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
-          wget https://dtcenter.ucar.edu/ccpp/rt/ufs_rts_scmreplay_ci.tar
-          tar -xvf ufs_rts_scmreplay_ci.tar
-          ls ${dir_rt_cache}
+          wget -q https://github.com/NCAR/ccpp-scm/releases/download/v7.0.1/ufs_rts_scmreplay_ci.tar.gz
+          tar -xvf ufs_rts_scmreplay_ci.tar.gz
+          ls ${dir_rt_cache}/data_new
         fi
 
     - name: Create UFS-replay case.
       run: |
         cd ${SCM_ROOT}/scm/etc/scripts/
-        ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/ --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34 -sc
+        ./UFS_forcing_ensemble_generator.py -d ${dir_rt_cache}/data_new --C_RES 192 -dt 360  -n control_c192 -lons 99.844 -lats 36.749 -sc
 
     #######################################################################################
     # Done
