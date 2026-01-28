@@ -3411,7 +3411,7 @@ module GFS_typedefs
                                  cny, gnx, gny, ak, bk, hydrostatic)
     
 !--- modules
-    use physcons,         only: con_rerth, con_pi, con_p0, rhowater
+    use scm_physical_constants, only: con_rerth, con_pi, con_p0, rhowater
     use mersenne_twister, only: random_setseed, random_number
     use GFS_ccpp_suite_sim_pre, only: load_ccpp_suite_sim
 !
