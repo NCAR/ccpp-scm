@@ -71,7 +71,7 @@ jobs:
     # Install NCEP libs
     - name: Cache bacio library v2.4.1
       id: cache-bacio-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/bacio
         key: cache-bacio-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -88,7 +88,7 @@ jobs:
 
     - name: Cache SP-library v2.3.3
       id: cache-sp-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/NCEPLIBS-sp
         key: cache-sp-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -105,7 +105,7 @@ jobs:
 
     - name: Cache w3emc library v2.9.2
       id: cache-w3emc-fortran
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: /home/runner/myw3emc
         key: cache-w3emc-fortran-${{matrix.fortran-compiler}}-${{matrix.build-type}}-key
@@ -181,7 +181,7 @@ jobs:
         ./ci_util.py -b ${{matrix.build-type}}
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: rt-baselines-${{matrix.build-type}}-${{ env.artifact_origin }}
         path: /home/runner/work/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
