@@ -13,6 +13,7 @@ RUN apt-get update \
       libc-dev \
       make \
       git \
-      gfortran>=14 
+      gfortran>=14 \
+      cmake
 
 ENV FC=gfortran CC=gcc F77=gfortran
