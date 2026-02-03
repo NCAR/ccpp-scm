@@ -23,6 +23,7 @@ jobs:
       image: ${{ matrix.image }} 
     # Environmental variables
     env:
+      oneapi_version: 2025.3
       FC:       ${{ matrix.fortran-compiler }}
       NetCDF_Fortran_ROOT: /opt/netcdf-fortran
       SCM_ROOT: /__w/ccpp-scm/ccpp-scm
@@ -54,6 +55,8 @@ jobs:
     - name: Setup Intel oneAPI.
       run: |
         source /opt/intel/oneapi/setvars.sh
+        ${{ github.action_path }}/configure-intel-gcc.sh \
+        "${{ env.oneapi_version }}"
       shell: bash
 
     - name: Setup MPI Paths
