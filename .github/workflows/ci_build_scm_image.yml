@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fortran-compiler: [ifx, gfortran]
+        fortran-compiler: [ifx, gfortran, nvfortran]
         build-type:       [Release, Debug]
         include:
         # Set container images for each compiler
@@ -21,11 +21,13 @@ jobs:
           image: dustinswales/ccpp-scm-ci:oneapi
         - fortran-compiler: gfortran
           image: dustinswales/ccpp-scm-ci:gnu
+        - fortran-compiler: nvfortran
+          image: dustinswales/ccpp-scm-ci:nvhpc
     container:
       image: ${{ matrix.image }}
     # Environmental variables
     env:
-      NetCDF_Fortran_ROOT: /opt/netcdf-fortran
+      #NetCDF_Fortran_ROOT: /opt/netcdf-fortran
       NFHOME: /usr
 
     # Workflow steps
@@ -50,15 +52,10 @@ jobs:
         cd $GITHUB_WORKSPACE
         git submodule update --init --recursive
 
-    #- name: Setup Intel oneAPI.
+    #- name: Setup MPI Paths
     #  run: |
-    #    source /opt/intel/oneapi/setvars.sh
-    #  shell: bash
-
-    - name: Setup MPI Paths
-      run: |
-        echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+    #    echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
+    #    echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
     - name: Configure Build with CMake
       run: |
