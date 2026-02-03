@@ -55,7 +55,6 @@ jobs:
         git submodule update --init --recursive
 
     - name: Setup MPI Paths
-      if: contains(matrix.compiler, 'ifx')
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
