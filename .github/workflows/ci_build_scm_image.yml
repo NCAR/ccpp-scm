@@ -13,12 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fortran-compiler: [ifx]
+        fortran-compiler: [ifx, gfortran]
         build-type:       [Release, Debug]
         include:
-        # Set container images
+        # Set container images for each compiler
         - fortran-compiler: ifx
           image: dustinswales/ccpp-scm-ci:oneapi
+        - fortran-compiler: gfortran
+          image: dustinswales/ccpp-scm-ci:gnu
     container:
       image: ${{ matrix.image }}
     # Environmental variables
@@ -48,10 +50,10 @@ jobs:
         cd $GITHUB_WORKSPACE
         git submodule update --init --recursive
 
-    - name: Setup Intel oneAPI.
-      run: |
-        source /opt/intel/oneapi/setvars.sh
-      shell: bash
+    #- name: Setup Intel oneAPI.
+    #  run: |
+    #    source /opt/intel/oneapi/setvars.sh
+    #  shell: bash
 
     - name: Setup MPI Paths
       run: |
