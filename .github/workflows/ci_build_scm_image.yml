@@ -57,8 +57,8 @@ jobs:
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-        echo "PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/latest/comm_libs/mpi/bin:${PATH}"
-        echo "LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/latest/comm_libs/mpi/lib:${LD_LIBRARY_PATH}"
+        echo "PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/latest/comm_libs/mpi/bin:${PATH}" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/latest/comm_libs/mpi/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
         
     - name: Configure Build with CMake
       run: |
