@@ -55,7 +55,7 @@ jobs:
     - name: Setup Intel oneAPI.
       run: |
         source /opt/intel/oneapi/setvars.sh
-        ${SCM_ROOT}/configure-intel-gcc.sh \
+        ${SCM_ROOT}/docker/configure-intel-gcc.sh \
         "${{ env.oneapi_version }}"
       shell: bash
 
