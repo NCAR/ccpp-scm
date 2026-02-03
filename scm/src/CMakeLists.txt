@@ -150,6 +150,9 @@ if (32BIT)
   add_definitions(-DRTE_USE_SP)
 endif()
 
+#------------------------------------------------------------------------------
+# GNU
+#------------------------------------------------------------------------------ 
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
 
@@ -173,7 +176,49 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
-elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
+#------------------------------------------------------------------------------
+# Intel oneAPI
+#------------------------------------------------------------------------------
+ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "IntelLLVM")
+  message(STATUS "Compile using Intel OneAPI")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback -fpp -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -nowarn -align array64byte -qno-opt-dynamic-align")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -qno-opt-dynamic-align -sox -fp-model source")
+
+  if(NOT 32BIT)
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -real-size 64")
+  endif()
+
+  if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fstack-protector-all -fpe0 -debug -ftrapuv -init=snan,arrays")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -ftrapuv")
+  else()
+    if(32BIT)
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2 -debug minimal -fp-model source -qoverride-limits -qopt-prefetch=3")
+    else()
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2 -debug minimal -fp-model source -qoverride-limits -qopt-prefetch=3 -no-prec-div")
+    endif()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -debug minimal")
+    set(FAST "-fast-transcendentals")
+    if(AVX2)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -march=core-avx2")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=core-avx2")
+    elseif(SIMDMULTIARCH)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -axSSE4.2,CORE-AVX2")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -axSSE4.2,CORE-AVX2")
+    elseif(AVX)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -march=core-avx-i")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=core-avx-i")
+    endif()
+  endif()
+  set(CMAKE_C_FLAGS_RELEASE       "-O2 -fPIC" CACHE STRING "" FORCE)
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -fPIC" CACHE STRING "" FORCE)
+  set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
+  set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
+#------------------------------------------------------------------------------
+# Intel Classic
+#------------------------------------------------------------------------------ 
+ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
+  message(STATUS "Compile using Intel Classic")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback -fpp -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -nowarn -sox -align array64byte -qno-opt-dynamic-align")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -qno-opt-dynamic-align -sox -fp-model source")
 
@@ -209,6 +254,9 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set(CMAKE_C_FLAGS_BITFORBIT       "-O2 -fPIC" CACHE STRING "" FORCE)
   set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
 
+#------------------------------------------------------------------------------
+# Nvidia HPC stack
+#------------------------------------------------------------------------------ 
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
   if(ENABLE_NVIDIA_OPENACC MATCHES "true")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc -Minfo=accel")
