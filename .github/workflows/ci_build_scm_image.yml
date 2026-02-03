@@ -49,8 +49,8 @@ jobs:
 
     - name: Initialize Submodules
       run: |
-        git config --global --add safe.directory ${SCM_ROOT}
-        cd ${SCM_ROOT}
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        cd $GITHUB_WORKSPACE
         git submodule update --init --recursive
 
     - name: Setup Intel oneAPI.
@@ -90,11 +90,11 @@ jobs:
 
     - name: Configure Build with CMake
       run: |
-        cd ${SCM_ROOT}/scm
+        cd $GITHUB_WORKSPACE/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
 
     - name: Build SCM
       run: |
-        cd ${SCM_ROOT}/scm/bin
+        cd $GITHUB_WORKSPACE/scm/bin
         make -j4

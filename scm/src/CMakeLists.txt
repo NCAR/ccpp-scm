@@ -154,6 +154,7 @@ endif()
 # GNU
 #------------------------------------------------------------------------------ 
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
+  message(STATUS "Compile using GNU")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
 
   if(${CMAKE_Fortran_COMPILER_VERSION} VERSION_GREATER_EQUAL 10)
@@ -258,6 +259,7 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 # Nvidia HPC stack
 #------------------------------------------------------------------------------ 
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
+  message(STATUS "Compile using Nvidia HPC Stack")
   if(ENABLE_NVIDIA_OPENACC MATCHES "true")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc -Minfo=accel")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -acc -Minfo=accel")
