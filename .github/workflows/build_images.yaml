@@ -9,12 +9,12 @@ jobs:
       fail-fast: false  # Disable fail-fast
       matrix:
         toolchain:  [oneapi,gnu]
-	include:
-        # Set toolchain configuration(s)
-        - toolchain: oneapi
-          nfversion: 4.5.4
-        - toolchain: gnu
-          nfversion: 4.5.4
+        include:
+          # Set toolchain configuration(s)
+          - toolchain: oneapi
+            nfversion: 4.5.4
+          - toolchain: gnu
+            nfversion: 4.5.4
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
