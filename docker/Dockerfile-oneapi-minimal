@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 
 ARG ONEAPI_VERSION='2025.3'
+ARG NFVERSION=4.5.4
 
 # Extend and update the package registry
 RUN apt-get update \
