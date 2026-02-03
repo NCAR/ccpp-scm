@@ -2,11 +2,6 @@
 !!  Contains type definitions for SCM-related variables and physics-related variables
 
 module scm_type_defs
-
-!> \section arg_table_scm_type_defs
-!! \htmlinclude scm_type_defs.html
-!!
-
   use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
   use GFS_typedefs,   only: GFS_control_type,      &
@@ -23,9 +18,29 @@ module scm_type_defs
                             get_tracer_index
   use CCPP_typedefs,  only: GFS_interstitial_type
   use machine,        only: kind_phys
-  use ccpp_types,     only: ccpp_t
-
+  
   implicit none
+!> \section arg_table_physics_type
+!! \htmlinclude physics_type.html
+!!
+  type physics_type
+    type(GFS_control_type)       :: Model
+    type(GFS_statein_type)       :: Statein
+    type(GFS_stateout_type)      :: Stateout
+    type(GFS_sfcprop_type)       :: Sfcprop
+    type(GFS_coupling_type)      :: Coupling
+    type(GFS_grid_type)          :: Grid
+    type(GFS_tbd_type)           :: Tbd
+    type(GFS_cldprop_type)       :: Cldprop
+    type(GFS_radtend_type)       :: Radtend
+    type(GFS_diag_type)          :: Diag
+    type(GFS_interstitial_type), allocatable :: Interstitial(:)
+    type(GFS_init_type)          :: Init_parm
+    contains
+      procedure :: create => physics_create
+      procedure :: associate => physics_associate
+      procedure :: set => physics_set
+  end type physics_type
 
   integer, parameter :: character_length = 80
   integer, parameter :: int_zero = 0
@@ -36,17 +51,19 @@ module scm_type_defs
 
   character(len = character_length) :: clear_char = ''
 
-
+!> \section arg_table_scm_state_type
+!! \htmlinclude scm_state_type.html
+!!
   type scm_state_type
 
-    character(len=character_length)                 :: experiment_name !> name of model configuration file
-    character(len=character_length)                 :: npz_type !< used to define different FV3 vertical grids
-    character(len=character_length)                 :: vert_coord_file !< name of vertical coordinate file
-    character(len=character_length)                 :: output_dir !< name of output directory to place netCDF file
-    character(len=character_length)                 :: output_file !< name of output file (without the file extension)
-    character(len=character_length)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
-    character(len=character_length)                 :: physics_suite_name !< name of physics suite (must be "GFS_operational" for prototype)
-    character(len=character_length)                 :: physics_nml
+    character(len=80)                 :: experiment_name !> name of model configuration file
+    character(len=80)                 :: npz_type !< used to define different FV3 vertical grids
+    character(len=80)                 :: vert_coord_file !< name of vertical coordinate file
+    character(len=80)                 :: output_dir !< name of output directory to place netCDF file
+    character(len=80)                 :: output_file !< name of output file (without the file extension)
+    character(len=80)                 :: case_name !< name of case initialization and forcing to use (different than experiment name, which names the model run (as a control, experiment_1, etc.))
+    character(len=80)                 :: physics_suite_name !< name of physics suite (must be "GFS_operational" for prototype)
+    character(len=80)                 :: physics_nml
 
     integer                           :: n_levels !< number of model levels
     integer                           :: n_soil  !< number of model levels
@@ -179,6 +196,9 @@ module scm_type_defs
 
   end type scm_state_type
 
+!> \section arg_table_scm_input_type
+!! \htmlinclude scm_input_type.html
+!!   
   type scm_input_type
     !> - Define the case-specific initialization and forcing variables.
     integer                           :: input_nlev !< number of levels in the input file
@@ -405,6 +425,9 @@ module scm_type_defs
 
   end type scm_input_type
 
+!> \section arg_table_scm_reference_type
+!! \htmlinclude scm_reference_type.html
+!!
   type scm_reference_type
     !> - Define the reference profile variables.
     integer                                 :: ref_nlev !< number of levels in the reference profile
@@ -418,40 +441,12 @@ module scm_type_defs
 
   end type scm_reference_type
 
-!> \section arg_table_physics_type
-!! \htmlinclude physics_type.html
-!!
-  type physics_type
-
-    type(GFS_control_type)                   :: Model
-    type(GFS_statein_type)                   :: Statein
-    type(GFS_stateout_type)                  :: Stateout
-    type(GFS_sfcprop_type)                   :: Sfcprop
-    type(GFS_coupling_type)                  :: Coupling
-    type(GFS_grid_type)                      :: Grid
-    type(GFS_tbd_type)                       :: Tbd
-    type(GFS_cldprop_type)                   :: Cldprop
-    type(GFS_radtend_type)                   :: Radtend
-    type(GFS_diag_type)                      :: Diag
-    type(GFS_interstitial_type), allocatable :: Interstitial(:)
-    type(GFS_init_type)                      :: Init_parm
-
-    contains
-      procedure :: create => physics_create
-      procedure :: associate => physics_associate
-      procedure :: set => physics_set
-  end type physics_type
-
-  type(physics_type), target :: physics
-
-  type(ccpp_t),       target :: cdata
-
   contains
 
   subroutine scm_state_create(scm_state, n_columns, n_levels, n_soil, n_snow, n_time_levels, tracers, tracer_types)
     class(scm_state_type)             :: scm_state
     integer, intent(in)               :: n_columns, n_levels, n_soil, n_snow, n_time_levels
-    character(len=character_length), intent(in), dimension(:) :: tracers
+    character(len=80), intent(in), dimension(:) :: tracers
     integer,                         intent(in), dimension(:) :: tracer_types
     
     integer :: i
@@ -1435,7 +1430,7 @@ module scm_type_defs
         physics%Sfcprop%emis_ice(i) = 0.96 
       end if
       
-      if (((is_missing_value(scm_input%input_sncovr_ice) .or. scm_input%input_sncovr_ice == real_zero)) .and. physics%Model%lsm /= physics%Model%lsm_ruc) then
+      if (((is_missing_value(scm_input%input_sncovr_ice) .or. scm_input%input_sncovr_ice == real_zero)) .and. physics%Model%lsm /= physics%Model%ilsm_ruc) then
         physics%Sfcprop%sncovr_ice(i) = real_zero 
       end if
       
