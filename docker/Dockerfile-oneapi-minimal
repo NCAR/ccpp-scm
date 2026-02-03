@@ -12,6 +12,7 @@ RUN apt-get update \
       binutils \
       g++ \
       gcc \
+      gfortran \
       libc-dev \
       make \
       cmake \
@@ -39,7 +40,6 @@ ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib:${LD_LIBRARY_PATH}"
 ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/latest
 
 RUN . /opt/intel/oneapi/setvars.sh
-
 
 # Set default compiler executables (Serial)
 ENV FC=ifx CC=icx CXX=icpx
