@@ -8,6 +8,7 @@ ccpp/physics/physics/photochem/module_ozphys.F90
 ccpp/physics/physics/MP/TEMPO/TEMPO/module_mp_tempo_params.F90
 ccpp/physics/physics/Radiation/RRTMG/radlw_param.f
 ccpp/physics/physics/Radiation/RRTMG/radsw_param.f
+ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_debug.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_DCNV_generic_pre.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_DCNV_generic_post.F90
 ccpp/physics/physics/Interstitials/UFS_SCM_NEPTUNE/GFS_GWD_generic_pre.F90
