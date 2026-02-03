@@ -26,8 +26,10 @@ jobs:
     # Environmental variables
     env:
       NFHOME:    /usr
-      suites:    SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf
-      suites_ps: SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps
+      #suites:    SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf
+      #suites_ps: SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps
+      suites:     SCM_GFS_v15p2,SCM_GFS_v16,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_WoFS_v0,SCM_HRRR_gf,SCM_GFS_v17_p8_ugwpv1,SCM_GFS_v16_RRTMGP
+      suites_ps:  SCM_GFS_v15p2_ps,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_GFS_v16_RRTMGP_ps
 
     # Workflow steps
     steps:
@@ -48,7 +50,17 @@ jobs:
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-        
+
+    #######################################################################################
+    # Build SCM.
+    #######################################################################################
+    - name: Download data for SCM
+      run: |
+        cd $GITHUB_WORKSPACE
+        ./contrib/get_all_static_data.sh
+        ./contrib/get_thompson_tables.sh
+        ./contrib/get_aerosol_climo.sh
+
     - name: Configure Build with CMake
       run: |
         cd $GITHUB_WORKSPACE/scm
@@ -59,3 +71,50 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/scm/bin
         make -j4
+
+    #######################################################################################
+    # Run regression tests.
+    #######################################################################################
+    - name: Run SCM RTs
+      if: matrix.build-type != 'SinglePrecision'
+      run: |
+        cd $GITHUB_WORKSPACE/scm/bin
+        ./run_scm.py --file $GITHUB_WORKSPACE/test/rt_test_cases.py --runtime_mult 0.1
+
+    - name: Run SCM Single Precision RTs
+      if: matrix.build-type == 'SinglePrecision'
+      run: |
+        cd $GITHUB_WORKSPACE/scm/bin
+        ./run_scm.py --file $GITHUB_WORKSPACE/test/rt_test_cases_sp.py --runtime_mult 0.1
+
+    - name: Gather SCM RT output
+      run: |
+        cd $GITHUB_WORKSPACE/test
+        mkdir $GITHUB_WORKSPACE/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}
+        ./ci_util.py -b ${{matrix.build-type}}-${{matrix.fortran-compiler}}
+
+    - name: Create directory for SCM RT baselines
+      run: mkdir ${dir_bl}
+
+    - name: Download SCM RT baselines
+      run: |
+        cd ${dir_bl}
+        wget https://dtcenter.ucar.edu/ccpp/rt/rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}.zip
+        unzip rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}.zip
+
+    - name: Compare SCM RT output to baselines
+      run: |
+        cd $GITHUB_WORKSPACE/test
+        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
+
+    - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
+      uses: actions/upload-artifact@v4
+      with:
+        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}
+        path: $GITHUB_WORKSPACE/test/scm_rt_out
+
+    - name: Upload SCM RTs as GitHub Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}
+        path: $GITHUB_WORKSPACE/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}
