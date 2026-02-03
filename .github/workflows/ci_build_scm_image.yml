@@ -24,6 +24,7 @@ jobs:
     # Environmental variables
     env:
       NetCDF_Fortran_ROOT: /opt/netcdf-fortran
+      NFHOME: /usr
 
     # Workflow steps
     steps:
