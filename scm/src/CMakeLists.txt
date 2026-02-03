@@ -4,6 +4,7 @@ project(scm
         VERSION 5.0.0
         LANGUAGES C Fortran)
 set(PROJECT "CCPP-SCM")
+set(CCPP_SCM ON BOOL)
 
 #------------------------------------------------------------------------------
 #
@@ -367,6 +368,9 @@ endif()
 # How about using proper compile targets etc?
 #------------------------------------------------------------------------------
 # Configure sources
+
+include(${CMAKE_BINARY_DIR}/ccpp/physics/CCPP_KINDS.cmake)
+message(STATUS "Got CCPP KINDS from cmakefile include file: ${KINDS}")
 
 set(BUILD_SHARED_LIBS OFF)
 ADD_SUBDIRECTORY(${CCPP_FRAMEWORK_SRC} ${CMAKE_BINARY_DIR}/ccpp/framework)
