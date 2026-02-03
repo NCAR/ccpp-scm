@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-ARG GNU_VERSION=12
+ARG GNU_VERSION=14
 
 # Extend and update the package registry
 RUN apt-get update \
@@ -20,7 +20,3 @@ RUN apt-get update \
 
 # Set default compiler executables
 ENV FC=gfortran CC=gcc CXX=g++
-
-# GNU fortran
-ENV NETCDF_FORTRAN_DIR=/usr
-ENV LD_LIBRARY_PATH=${NETCDF_FORTRAN_DIR}/lib:$LD_LIBRARY_PATH
