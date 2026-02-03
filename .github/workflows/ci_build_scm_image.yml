@@ -55,7 +55,9 @@ jobs:
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-
+        echo -e "CC=mpiicx\nCXX=mpiicpx\nFC=mpi${{ matrixfortran-compiler }}" >> $GITHUB_ENV
+        echo -e "I_MPI_CC=icx\nI_MPI_CXX=icpx\nI_MPI_FC=${{ matrix.fortran-compiler }}\nI_MPI_F77=${{ matrix.fortran-compiler }}" >> $GITHUB_ENV
+        . /opt/intel/oneapi/mpi/latest/env/vars.sh
     #######################################################################################
     # Build SCM.
     #######################################################################################
