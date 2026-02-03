@@ -8,14 +8,14 @@ jobs:
     strategy:
       fail-fast: false  # Disable fail-fast
       matrix:
-        toolchain:  [oneapi,gnu,nvidia]
+        toolchain:  [oneapi,gnu,nvhpc]
         include:
           # Set toolchain configuration(s)
           - toolchain: oneapi
             nfversion: 4.5.4
           - toolchain: gnu
             nfversion: 4.6.2
-          - toolchain: nvidia
+          - toolchain: nvhpc
             nfversion: 4.5.4
     runs-on: ubuntu-latest
     steps:
