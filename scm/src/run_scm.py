@@ -736,7 +736,7 @@ def launch_executable(use_gdb, gdb, mpi_command, ignore_error = False):
             mpi_command = DEFAULT_MPI_COMMAND
         cmd = '(cd {scm_run} && time {mpi_command} {executable})'.format(scm_run=SCM_RUN, mpi_command=mpi_command, executable=EXECUTABLE)
     logging.info('Passing control to "{0}"'.format(cmd))
-    time.sleep(1)
+    #time.sleep(1)
     # This will abort in 'execute' in the event of an error if ignore_error = False
     (status, stdout, stderr) = execute(cmd, ignore_error = ignore_error)
     logging.info('Process "{0}" returned with status {1}'.format(cmd, status))
