@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false  # Disable fail-fast
       matrix:
-        toolchain:  [oneapi]
+        toolchain:  [oneapi,gnu]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
