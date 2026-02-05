@@ -48,3 +48,5 @@ RUN . /opt/intel/oneapi/setvars.sh
 
 # Set default compiler executables (Serial)
 ENV FC=ifx CC=icx CXX=icpx
+
+ENV I_MPI_HYDRA_ALLOW_ROOT=1
