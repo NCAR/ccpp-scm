@@ -1,4 +1,4 @@
-name: Build the CCPP-SCM in a container
+name: Build and run the CCPP-SCM in a container
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_in_container:
+  scm_in_container:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -52,12 +52,12 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
 
-    - name: Setup MPI Paths (Intel OneAPI)
+    - name: Setup MPI (GNU)
       if: matrix.fortran-compiler == 'gfortran'
       run: |
         echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
 
-    - name: Setup MPI Paths (Intel OneAPI)
+    - name: Setup MPI (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
