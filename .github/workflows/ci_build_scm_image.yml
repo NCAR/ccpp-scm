@@ -100,7 +100,7 @@ jobs:
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1 -v
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1 -v --mpi_command "mpirun --allow-run-as-root -np 1"
 
     - name: Gather SCM RT output
       run: |

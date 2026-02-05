@@ -19,7 +19,7 @@ jobs:
             pnfversion: 1.14.1
           - toolchain: nvhpc
             nfversion: 4.5.4
-            pnfversion: 1.14.1
+            pnfversion: 1.12.3
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

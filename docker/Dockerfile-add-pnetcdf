@@ -9,7 +9,6 @@ ARG PNFVERSION
 ENV PNFVERSION=$PNFVERSION
 
 # Set environment variables for PnetCDF installation
-ENV PNETCDF_VERSION=1.14.1
 ENV PNETCDF_PREFIX=/opt/pnetcdf
 ENV PATH="${PNETCDF_PREFIX}/bin:${PATH}"
 ENV LD_LIBRARY_PATH="${PNETCDF_PREFIX}/lib:{$LD_LIBRARY_PATH}"
@@ -17,7 +16,6 @@ ENV PKG_CONFIG_PATH="${PNETCDF_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}"
 
 # Update and install necessary build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gfortran \
     automake \
     libtool \
     m4 \
