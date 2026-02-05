@@ -46,8 +46,8 @@ jobs:
 
     - name: Initialize Submodules
       run: |
-        git config --global --add safe.directory $GITHUB_WORKSPACE
-        cd $GITHUB_WORKSPACE
+        git config --global --add safe.directory ${SCM_ROOT}
+        cd ${SCM_ROOT}
         git submodule update --init --recursive
 
     - name: Setup MPI Paths (Intel OneAPI)
@@ -71,20 +71,20 @@ jobs:
     #######################################################################################
     - name: Download data for SCM
       run: |
-        cd $GITHUB_WORKSPACE
+        cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
 #        ./contrib/get_thompson_tables.sh
 #        ./contrib/get_aerosol_climo.sh
 
     - name: Configure Build with CMake
       run: |
-        cd $GITHUB_WORKSPACE/scm
+        cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
 
     - name: Build SCM
       run: |
-        cd $GITHUB_WORKSPACE/scm/bin
+        cd ${SCM_ROOT}/scm/bin
         make -j4
 
     #######################################################################################
@@ -93,19 +93,19 @@ jobs:
     - name: Run SCM RTs
       if: matrix.build-type != 'SinglePrecision'
       run: |
-        cd $GITHUB_WORKSPACE/scm/bin
-        ./run_scm.py --file $GITHUB_WORKSPACE/test/rt_test_cases.py --runtime_mult 0.1
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1
 
     - name: Run SCM Single Precision RTs
       if: matrix.build-type == 'SinglePrecision'
       run: |
-        cd $GITHUB_WORKSPACE/scm/bin
-        ./run_scm.py --file $GITHUB_WORKSPACE/test/rt_test_cases_sp.py --runtime_mult 0.1 -v
+        cd ${SCM_ROOT}/scm/bin
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1 -v
 
     - name: Gather SCM RT output
       run: |
-        cd $GITHUB_WORKSPACE/test
-        mkdir $GITHUB_WORKSPACE/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}
+        cd ${SCM_ROOT}/test
+        mkdir /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}
         ./ci_util.py -b ${{matrix.build-type}}-${{matrix.fortran-compiler}}
 
     - name: Create directory for SCM RT baselines
@@ -119,17 +119,17 @@ jobs:
 
     - name: Compare SCM RT output to baselines
       run: |
-        cd $GITHUB_WORKSPACE/test
+        cd ${SCM_ROOT}/test
         ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact.
       uses: actions/upload-artifact@v4
       with:
         name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}
-        path: $GITHUB_WORKSPACE/test/scm_rt_out
+        path: /__w/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v4
       with:
         name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}
-        path: $GITHUB_WORKSPACE/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}
+        path: /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}
