@@ -44,9 +44,11 @@ ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib:${LD_LIBRARY_PATH}"
 
 ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/latest
 
-RUN . /opt/intel/oneapi/setvars.sh
+#RUN . /opt/intel/oneapi/setvars.sh
+RUN . /opt/intel/oneapi/mpi/latest/env/vars.sh
 
-# Set default compiler executables (Serial)
-ENV FC=ifx CC=icx CXX=icpx
+# Set default compiler executables (Parallel)
+ENV FC=mpiifx CC=mpiicx CXX=mpiicpx
+ENV I_MPI_CC=icx I_MPI_CXX=icpx I_MPI_FC=ifx
 
 ENV I_MPI_HYDRA_ALLOW_ROOT=1
