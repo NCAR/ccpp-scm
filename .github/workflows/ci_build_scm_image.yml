@@ -43,6 +43,7 @@ jobs:
     - name: Install Required Tools
       run: |
         apt-get update
+
     - name: Install System Dependencies
       run: |
         apt-get update -qq && apt-get install -qq -y --no-install-recommends \
@@ -50,10 +51,10 @@ jobs:
         libnetcdf-pnetcdf-19 \
         libnetcdff7 \
         libnetcdf-dev \
-	libnetcdff-dev \
+        libnetcdff-dev \
         libxml2 \
         openmpi-bin \
-	libopenmpi-dev
+        libopenmpi-dev
 
     - name: Initialize Submodules
       run: |
