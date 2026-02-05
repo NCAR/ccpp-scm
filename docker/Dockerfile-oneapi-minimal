@@ -53,5 +53,5 @@ RUN . /opt/intel/oneapi/mpi/latest/env/vars.sh
 
 ENV FC=ifx CC=icx CXX=icpx
 
-ENV MPICC=mpiicx
+ENV MPICC=mpicc
 ENV I_MPI_HYDRA_ALLOW_ROOT=1
