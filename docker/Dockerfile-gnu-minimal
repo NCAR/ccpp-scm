@@ -16,6 +16,11 @@ RUN apt-get update \
       gfortran>=14 \
       cmake \
       libopenmpi-dev \
-      openmpi-bin
+      openmpi-bin \
+      ksh \
+      m4 \
+      tcsh \
+      time \
+      vim
 
 ENV FC=gfortran CC=gcc F77=gfortran
