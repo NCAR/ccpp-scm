@@ -44,18 +44,6 @@ jobs:
       run: |
         apt-get update
 
-    - name: Install System Dependencies
-      run: |
-        apt-get update -qq && apt-get install -qq -y --no-install-recommends \
-        libhdf5-dev \
-        libnetcdf-pnetcdf-19 \
-        libnetcdff7 \
-        libnetcdf-dev \
-        libnetcdff-dev \
-        libxml2 \
-        openmpi-bin \
-        libopenmpi-dev
-
     - name: Initialize Submodules
       run: |
         git config --global --add safe.directory $GITHUB_WORKSPACE
@@ -67,6 +55,11 @@ jobs:
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+    - name: Display mpi
+      run : |
+        mpirun -V
+        which mpirun
 
     #######################################################################################
     # Build SCM.
