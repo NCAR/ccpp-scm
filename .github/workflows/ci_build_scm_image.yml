@@ -58,6 +58,7 @@ jobs:
         echo -e "CC=mpiicx\nCXX=mpiicpx\nFC=mpi${{ matrix.fortran-compiler }}" >> $GITHUB_ENV
         echo -e "I_MPI_CC=icx\nI_MPI_CXX=icpx\nI_MPI_FC=${{ matrix.fortran-compiler }}\nI_MPI_F77=${{ matrix.fortran-compiler }}" >> $GITHUB_ENV
         . /opt/intel/oneapi/mpi/latest/env/vars.sh
+
     #######################################################################################
     # Build SCM.
     #######################################################################################
@@ -92,7 +93,7 @@ jobs:
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd $GITHUB_WORKSPACE/scm/bin
-        ./run_scm.py --file $GITHUB_WORKSPACE/test/rt_test_cases_sp.py --runtime_mult 0.1
+        ./run_scm.py --file $GITHUB_WORKSPACE/test/rt_test_cases_sp.py --runtime_mult 0.1 -v
 
     - name: Gather SCM RT output
       run: |
