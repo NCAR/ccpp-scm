@@ -44,6 +44,15 @@ jobs:
       run: |
         apt-get update
 
+    - name: Setup Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: 3.11
+
+    - name: Install NetCDF Python libraries
+      run: |
+        pip install f90nml h5py netCDF4 matplotlib
+
     - name: Initialize Submodules
       run: |
         git config --global --add safe.directory $GITHUB_WORKSPACE
