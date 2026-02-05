@@ -5,6 +5,9 @@
 ARG TOOLCHAIN
 FROM add-netcdf:$TOOLCHAIN
 
+ARG PNFVERSION
+ENV PNFVERSION=$PNFVERSION
+
 # Set environment variables for PnetCDF installation
 ENV PNETCDF_VERSION=1.14.1
 ENV PNETCDF_PREFIX=/opt/pnetcdf
@@ -22,14 +25,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Download, compile, and install PnetCDF
 WORKDIR /tmp
-RUN wget https://parallel-netcdf.github.io/Release/pnetcdf-${PNETCDF_VERSION}.tar.gz \
-    && tar xzf pnetcdf-${PNETCDF_VERSION}.tar.gz \
-    && cd pnetcdf-${PNETCDF_VERSION} \
+RUN wget https://parallel-netcdf.github.io/Release/pnetcdf-${PNFVERSION}.tar.gz \
+    && tar xzf pnetcdf-${PNFVERSION}.tar.gz \
+    && cd pnetcdf-${PNFVERSION} \
     && autoreconf -i \
     && ./configure --prefix=${PNETCDF_PREFIX} --enable-shared --disable-static MPICC=mpicc\
     && make -j 8 install \
     && cd /tmp \
-    && rm -rf pnetcdf-${PNETCDF_VERSION} pnetcdf-${PNETCDF_VERSION}.tar.gz
+    && rm -rf pnetcdf-${PNFVERSION} pnetcdf-${PNFVERSION}.tar.gz
 
 # Add PnetCDF library path to the environment
 ENV PATH="${PNETCDF_PREFIX}/bin:${PATH}"

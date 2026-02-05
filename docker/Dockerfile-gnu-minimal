@@ -21,6 +21,8 @@ RUN apt-get update \
       m4 \
       tcsh \
       time \
-      vim
+      vim \
+      file \
+      libxml2
 
 ENV FC=gfortran CC=gcc F77=gfortran

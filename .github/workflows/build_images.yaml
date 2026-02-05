@@ -13,10 +13,13 @@ jobs:
           # Set toolchain configuration(s)
           - toolchain: oneapi
             nfversion: 4.5.4
+            pnfversion: 1.12.3
           - toolchain: gnu
             nfversion: 4.6.2
+            pnfversion: 1.14.1
           - toolchain: nvhpc
             nfversion: 4.5.4
+            pnfversion: 1.14.1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -40,8 +43,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           file: docker/Dockerfile-add-pnetcdf
-          build-args: TOOLCHAIN=${{ matrix.toolchain }}
           tags: add-pnetcdf:${{ matrix.toolchain }}
+          build-args: |
+            TOOLCHAIN=${{ matrix.toolchain }}
+            PNFVERSION=${{ matrix.pnfversion }}
 
       - name: Build add-nceplibs:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
