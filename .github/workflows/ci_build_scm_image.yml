@@ -54,8 +54,8 @@ jobs:
 
     - name: Setup MPI Paths (Intel OneAPI)
       if: matrix.fortran-compiler == 'gfortran'
-        run: |
-          echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
+      run: |
+        echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
 
     - name: Setup MPI Paths (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
