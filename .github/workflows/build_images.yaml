@@ -39,14 +39,14 @@ jobs:
             TOOLCHAIN=${{ matrix.toolchain }}
             NFVERSION=${{ matrix.nfversion }}
 
-#      - name: Build add-pnetcdf:${{ matrix.toolchain }}
-#        uses: docker/build-push-action@v6
-#        with:
-#          file: docker/Dockerfile-add-pnetcdf
-#          tags: add-pnetcdf:${{ matrix.toolchain }}
-#          build-args: |
-#            TOOLCHAIN=${{ matrix.toolchain }}
-#            PNFVERSION=${{ matrix.pnfversion }}
+      - name: Build add-pnetcdf:${{ matrix.toolchain }}
+        uses: docker/build-push-action@v6
+        with:
+          file: docker/Dockerfile-add-pnetcdf
+          tags: add-pnetcdf:${{ matrix.toolchain }}
+          build-args: |
+            TOOLCHAIN=${{ matrix.toolchain }}
+            PNFVERSION=${{ matrix.pnfversion }}
 
       - name: Build add-nceplibs:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
