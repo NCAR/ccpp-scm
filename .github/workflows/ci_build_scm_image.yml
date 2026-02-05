@@ -53,10 +53,17 @@ jobs:
         git submodule update --init --recursive
 
     - name: Setup MPI Paths (Intel OneAPI)
+      if: matrix.fortran-compiler == 'gfortran'
+        run: |
+          echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
+
+    - name: Setup MPI Paths (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+        echo "I_MPI_HYDRA_ALLOW_ROOT=1" >> $GITHUB_ENV
+        echo "MPI_COMM=mpirun -np 1" >> $GITHUB_ENV
 
     #######################################################################################
     # Build SCM.
@@ -86,13 +93,13 @@ jobs:
       if: matrix.build-type != 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "mpirun --allow-run-as-root -np 1"
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "${MPI_COMM}"
 
     - name: Run SCM Single Precision RTs
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1 -v --mpi_command "mpirun --allow-run-as-root -np 1"
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1 -v --mpi_command "$(MPI_COMM}"
 
     - name: Gather SCM RT output
       run: |
