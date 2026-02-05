@@ -35,6 +35,7 @@ jobs:
       suites_ps: SCM_GFS_v16_ps
       dir_rt:    /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:    /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      I_MPI_HYDRA_ALLOW_ROOT: 1
 
     # Workflow steps
     steps:
@@ -64,7 +65,7 @@ jobs:
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-        echo "MPI_COMM=mpirun -np 1" >> $GITHUB_ENV
+        echo "MPI_COMM=mpirun " >> $GITHUB_ENV
 
     #######################################################################################
     # Build SCM.
