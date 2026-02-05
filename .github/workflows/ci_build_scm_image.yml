@@ -23,6 +23,8 @@ jobs:
           image: dustinswales/ccpp-scm-ci:gnu
     container:
       image: ${{ matrix.image }}
+      env:
+        I_MPI_HYDRA_ALLOW_ROOT: 1
     # Environmental variables
     env:
       SCM_ROOT:  /__w/ccpp-scm/ccpp-scm
