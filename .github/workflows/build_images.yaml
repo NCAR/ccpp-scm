@@ -44,7 +44,6 @@ jobs:
 
       - name: Where are things
         run: !
-          mpiicc -v
           where mpiicc
 
       - name: Build minimal-toolchain:${{ matrix.toolchain }}
