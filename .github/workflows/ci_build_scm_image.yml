@@ -58,7 +58,6 @@ jobs:
     - name: Display some things
       run: !
         which mpicc
-        ls /__w/
 
     - name: Setup MPI (GNU)
       if: matrix.fortran-compiler == 'gfortran'
