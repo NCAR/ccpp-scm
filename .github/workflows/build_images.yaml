@@ -45,7 +45,6 @@ jobs:
       - name: Where are things
         run: !
          ls -l /home/
-         echo "--------------------"
          ls -l /home/runner/
 
       - name: Build minimal-toolchain:${{ matrix.toolchain }}
