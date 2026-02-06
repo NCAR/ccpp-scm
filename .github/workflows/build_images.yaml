@@ -43,7 +43,6 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Where are things
-        uses: docker/build-push-action@v6
         run: !
           mpiicc -v
           where mpiicc
