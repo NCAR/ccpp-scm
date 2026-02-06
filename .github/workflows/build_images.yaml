@@ -22,13 +22,13 @@ jobs:
             pnfversion: 1.14.1
             FC:  gfortran
             CC:  gcc
-      	    CXX: g++
+            CXX: g++
           - toolchain: nvhpc
             nfversion: 4.5.4
             pnfversion: 1.12.3
             FC:  nvfortran
-      	    CC:  nvc
-      	    CXX: nvc++
+            CC:  nvc
+            CXX: nvc++
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
