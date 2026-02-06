@@ -21,7 +21,7 @@ jobs:
             nfversion: 4.6.2
             pnfversion: 1.14.1
             FC:  gfortran
-      	    CC:  gcc
+            CC:  gcc
       	    CXX: g++
           - toolchain: nvhpc
             nfversion: 4.5.4
