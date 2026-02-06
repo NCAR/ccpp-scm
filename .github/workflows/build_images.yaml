@@ -14,6 +14,7 @@ jobs:
           - toolchain: oneapi
             nfversion: 4.5.4
             pnfversion: 1.12.3
+            OMPI:
             FC:  ifx
             CC:  icx
             CXX: icpx
@@ -22,6 +23,7 @@ jobs:
           - toolchain: gnu
             nfversion: 4.6.2
             pnfversion: 1.14.1
+            OMPI:
             FC:  gfortran
             CC:  gcc
             CXX: g++
@@ -30,6 +32,7 @@ jobs:
           - toolchain: nvhpc
             nfversion: 4.5.4
             pnfversion: 1.12.3
+            OMPI:
             FC:  nvfortran
             CC:  nvc
             CXX: nvc++
@@ -38,6 +41,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Where are things
+        uses: docker/build-push-action@v6
+        run: !
+          mpiicc -v
+          where mpiicc
 
       - name: Build minimal-toolchain:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
