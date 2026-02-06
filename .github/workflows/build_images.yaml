@@ -14,21 +14,27 @@ jobs:
           - toolchain: oneapi
             nfversion: 4.5.4
             pnfversion: 1.12.3
-            FC:  mpiifort
-            CC:  mpiicc
+            FC:  ifx
+            CC:  icx
             CXX: icpx
+            PFC: mpiifort
+            PCC: mpiicc
           - toolchain: gnu
             nfversion: 4.6.2
             pnfversion: 1.14.1
             FC:  gfortran
             CC:  gcc
             CXX: g++
+            PFC: gfortran
+            PCC: gcc
           - toolchain: nvhpc
             nfversion: 4.5.4
             pnfversion: 1.12.3
             FC:  nvfortran
             CC:  nvc
             CXX: nvc++
+            PFC: nvfortran
+            CC:  nvc
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -59,8 +65,8 @@ jobs:
           build-args: |
             TOOLCHAIN=${{ matrix.toolchain }}
             PNFVERSION=${{ matrix.pnfversion }}
-            FC=${{ matrix.FC }}
-            CC=${{ matrix.CC }}
+            FC=${{ matrix.PFC }}
+            CC=${{ matrix.PCC }}
 
       - name: Build add-nceplibs:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
