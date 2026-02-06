@@ -14,38 +14,24 @@ jobs:
           - toolchain: oneapi
             nfversion: 4.5.4
             pnfversion: 1.12.3
-            OMPI:
             FC:  ifx
             CC:  icx
             CXX: icpx
-            PFC: mpiifort
-            PCC: mpiicc
           - toolchain: gnu
             nfversion: 4.6.2
             pnfversion: 1.14.1
-            OMPI:
             FC:  gfortran
             CC:  gcc
             CXX: g++
-            PFC: gfortran
-            PCC: gcc
           - toolchain: nvhpc
             nfversion: 4.5.4
             pnfversion: 1.12.3
-            OMPI:
             FC:  nvfortran
             CC:  nvc
             CXX: nvc++
-            PFC: nvfortran
-            PCC: nvc
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - name: Where are things
-        run: !
-         ls -l /home/
-         ls -l /home/runner/
 
       - name: Build minimal-toolchain:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
@@ -73,8 +59,8 @@ jobs:
           build-args: |
             TOOLCHAIN=${{ matrix.toolchain }}
             PNFVERSION=${{ matrix.pnfversion }}
-            FC=${{ matrix.PFC }}
-            CC=${{ matrix.PCC }}
+            FC=${{ matrix.FC }}
+            CC=${{ matrix.CC }}
 
       - name: Build add-nceplibs:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
