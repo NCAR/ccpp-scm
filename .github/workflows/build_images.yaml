@@ -59,6 +59,8 @@ jobs:
           build-args: |
             TOOLCHAIN=${{ matrix.toolchain }}
             PNFVERSION=${{ matrix.pnfversion }}
+            FC=${{ matrix.FC }}
+            CC=${{ matrix.CC }}
 
       - name: Build add-nceplibs:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6

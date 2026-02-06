@@ -7,6 +7,10 @@ FROM add-netcdf:$TOOLCHAIN
 
 ARG PNFVERSION
 ENV PNFVERSION=$PNFVERSION
+ARG FC
+ENV FC=$FC
+ARG CC
+ENV CC=$CC
 
 # Set environment variables for PnetCDF installation
 ENV PNETCDF_PREFIX=/opt/pnetcdf
@@ -25,7 +29,7 @@ WORKDIR /tmp
 RUN wget https://parallel-netcdf.github.io/Release/pnetcdf-${PNFVERSION}.tar.gz \
     && tar xzf pnetcdf-${PNFVERSION}.tar.gz \
     && cd pnetcdf-${PNFVERSION} \
-    && ./configure --prefix=${PNETCDF_PREFIX} \
+    && CC=$CC FC=$FC ./configure --prefix=${PNETCDF_PREFIX} \
     && make -j 8 install \
     && cd /tmp \
     && rm -rf pnetcdf-${PNFVERSION} pnetcdf-${PNFVERSION}.tar.gz
