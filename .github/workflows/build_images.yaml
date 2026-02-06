@@ -44,7 +44,9 @@ jobs:
 
       - name: Where are things
         run: !
-          where mpiicc
+         ls -l /home/
+         echo "--------------------"
+         ls -l /home/runner/
 
       - name: Build minimal-toolchain:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
