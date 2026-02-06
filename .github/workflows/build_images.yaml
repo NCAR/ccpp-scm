@@ -34,7 +34,7 @@ jobs:
             CC:  nvc
             CXX: nvc++
             PFC: nvfortran
-            CC:  nvc
+            PCC: nvc
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
