@@ -55,6 +55,11 @@ jobs:
         cd ${SCM_ROOT}
         git submodule update --init --recursive
 
+    - name: Display some things
+      run: !
+        which mpicc
+        ls /__w/
+
     - name: Setup MPI (GNU)
       if: matrix.fortran-compiler == 'gfortran'
       run: |
