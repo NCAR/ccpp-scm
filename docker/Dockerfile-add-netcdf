@@ -42,5 +42,5 @@ ENV CXX=$CXX
 RUN wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v$NFVERSION.tar.gz \
     && tar -xzf v$NFVERSION.tar.gz \
     && cd netcdf-fortran-$NFVERSION \
-    && CC=$CC FC=$FC CXX=$CXX ./configure --disable-static --prefix=/usr \
+    && CC=$CC FC=$FC CXX=$CXX ./configure --prefix=/usr \
     && make -j && make install
