@@ -14,8 +14,8 @@ jobs:
           - toolchain: oneapi
             nfversion: 4.5.4
             pnfversion: 1.12.3
-            FC:  ifx
-            CC:  icx
+            FC:  mpiifort
+            CC:  mpiicc
             CXX: icpx
           - toolchain: gnu
             nfversion: 4.6.2
