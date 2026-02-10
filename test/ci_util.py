@@ -9,7 +9,8 @@
 import os
 import sys
 from rt_test_cases_supported import run_list as run_list_supported
-from rt_test_cases_legdev import run_list as run_list_legdev
+from rt_test_cases_legcy     import run_list as run_list_legacy
+from rt_test_cases_dev       import run_list as run_list_dev
 from os.path import exists
 import argparse
 
@@ -29,7 +30,8 @@ def main():
     (build_type, sdfs) = parse_args()
 
     if (sdfs == 'supported'): run_list = run_list_supported
-    if (sdfs == 'legdev'):    run_list = run_list_legdev
+    if (sdfs == 'legacy'):    run_list = run_list_legacy
+    if (sdfs == 'dev'):       run_list = run_list_dev
     #
     errmsgs=[]
     for run in run_list:
