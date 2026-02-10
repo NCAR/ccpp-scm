@@ -9,16 +9,26 @@ COMPILER_TYPE="${1:-oneapi}"
 echo "=== Checking MPI Installation (${COMPILER_TYPE}) ==="
 
 if [ "$COMPILER_TYPE" = "ifx" ]; then
-    for compiler in mpiicx mpiicpx mpiifx; do
+#    for compiler in mpiicx mpiicpx mpiifx; do
+#        which $compiler || { echo "ERROR: $compiler not found"; }
+#    done
+#    mpiicx --version
+#    echo "CC: $CC , should be mpiicx"
+#    echo "CXX: $CXX , should be mpiicpx"
+#    echo "FC: $FC , should be mpiifx"
+#    test "$CC" = "mpiicx"   || { echo "ERROR: CC should be mpiicx but is $CC"; exit 1; }
+#    test "$CXX" = "mpiicpx" || { echo "ERROR: CXX should be mpiicpx but is $CXX"; exit 1; }
+#    test "$FC" = "mpiifx"   || { echo "ERROR: FC should be mpiifx but is $FC"; exit 1; }
+    for compiler in mpiicc mpiicpc mpiifort; do
         which $compiler || { echo "ERROR: $compiler not found"; }
     done
-    mpiicx --version
-    echo "CC: $CC , should be mpiicx"
-    echo "CXX: $CXX , should be mpiicpx"
-    echo "FC: $FC , should be mpiifx"
-    test "$CC" = "mpiicx"   || { echo "ERROR: CC should be mpiicx but is $CC"; exit 1; }
-    test "$CXX" = "mpiicpx" || { echo "ERROR: CXX should be mpiicpx but is $CXX"; exit 1; }
-    test "$FC" = "mpiifx"   || { echo "ERROR: FC should be mpiifx but is $FC"; exit 1; }
+    mpiicc --version
+    echo "CC: $CC , should be mpiicc"
+    echo "CXX: $CXX , should be mpiicpc"
+    echo "FC: $FC , should be mpiifort"
+    test "$CC" = "mpiicc"   || { echo "ERROR: CC should be mpiicc but is $CC"; exit 1; }
+    test "$CXX" = "mpiicpc" || { echo "ERROR: CXX should be mpiicpc but is $CXX"; exit 1; }
+    test "$FC" = "mpiifort"   || { echo "ERROR: FC should be mpiifort but is $FC"; exit 1; }
 fi
 if [ "$COMPILER_TYPE" = "gfortran" ]; then
     for compiler in mpicc mpicxx mpif90; do

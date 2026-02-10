@@ -47,4 +47,5 @@ ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/latest
 # oneAPI environments
 RUN . /opt/intel/oneapi/setvars.sh
 #ENV FC=ifx CC=icx CXX=icpx
-ENV FC=mpiifx CC=mpiicx CXX=mpiicpx
+#ENV FC=mpiifx CC=mpiicx CXX=mpiicpx
+ENV FC=mpiifort CC=mpiicc CXX=mpiicpc
