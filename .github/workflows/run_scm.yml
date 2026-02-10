@@ -151,11 +151,20 @@ jobs:
         cd ${SCM_ROOT}/test
         ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl}
 
-#    - name: Upload plots of SCM Baselines/RTs as GitHub Artifact
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}
-#        path: /__w/ccpp-scm/ccpp-scm/test/scm_rt_out
+    - name: Check if SCM RT plots exist
+      id: check_files
+      run: |
+        if [ -n "$(ls -A /__w/ccpp-scm/ccpp-scm/test/scm_rt_out 2>/dev/null)" ]; then
+          echo "files_exist=true" >> "$GITHUB_ENV"
+        else
+          echo "files_exist=false" >> "$GITHUB_ENV"
+        fi
+
+    - name: Upload plots of SCM Baselines/RTs as GitHub Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}
+        path: /__w/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v5
