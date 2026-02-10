@@ -67,10 +67,6 @@ jobs:
       if: matrix.fortran-compiler == 'gfortran'
       run: bash test/verify-mpi.sh gfortran
 
-    - name: display1
-      run: |
-        ls /opt/intel/oneapi/mpi/latest/env/
-
     - name: setvars
       if: matrix.fortran-compiler == 'ifx'
       run: |
