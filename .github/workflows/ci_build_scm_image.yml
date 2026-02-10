@@ -85,6 +85,7 @@ jobs:
     - name: Setup MPI (Nvidia)
       if: matrix.fortran-compiler == 'nvfortran'
       run: |
+        echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
         echo "CC=mpicc"   >> $GITHUB_ENV
         echo "CXX=mpic++" >> $GITHUB_ENV
         echo "FC=mpifort" >> $GITHUB_ENV
