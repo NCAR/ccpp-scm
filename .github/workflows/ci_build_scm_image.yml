@@ -60,7 +60,7 @@ jobs:
       run: |
         echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
         echo "CC=mpiicx"   >> $GITHUB_ENV
-      	echo "CXX=mpiicpx" >> $GITHUB_ENV
+        echo "CXX=mpiicpx" >> $GITHUB_ENV
         echo "FC=mpiifx"   >> $GITHUB_ENV
 
     - name: Setup MPI (Intel OneAPI)
