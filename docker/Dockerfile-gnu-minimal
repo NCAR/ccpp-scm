@@ -25,4 +25,5 @@ RUN apt-get update \
       file \
       libxml2
 
-ENV FC=gfortran CC=gcc F77=gfortran
+#ENV FC=gfortran CC=gcc F77=gfortran
+ENV FC=mpif90 CC=mpicc CXX=mpicxx

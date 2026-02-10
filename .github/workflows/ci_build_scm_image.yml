@@ -59,9 +59,9 @@ jobs:
       if: matrix.fortran-compiler == 'gfortran'
       run: |
         echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
-        echo "CC=mpicc"   >> $GITHUB_ENV
-        echo "CXX=mpicxx" >> $GITHUB_ENV
-        echo "FC=mpif90"  >> $GITHUB_ENV
+#        echo "CC=mpicc"   >> $GITHUB_ENV
+#        echo "CXX=mpicxx" >> $GITHUB_ENV
+#        echo "FC=mpif90"  >> $GITHUB_ENV
 
     - name: Verify MPI installation (GNU)
       if: matrix.fortran-compiler == 'gfortran'
