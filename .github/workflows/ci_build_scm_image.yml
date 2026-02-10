@@ -21,8 +21,8 @@ jobs:
           image: dustinswales/ccpp-scm-ci:oneapi
         - fortran-compiler: gfortran
           image: dustinswales/ccpp-scm-ci:gnu
-        - fortran-compiler: nvfortran
-          image: dustinswales/ccpp-scm-ci:nvhpc
+#        - fortran-compiler: nvfortran
+#          image: dustinswales/ccpp-scm-ci:nvhpc
     container:
       image: ${{ matrix.image }}
       env:

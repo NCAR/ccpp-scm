@@ -11,7 +11,7 @@ RUN apt-get update \
       curl \
       libnetcdf-dev  \
       libopenmpi-dev \
-      openmpi-bin \
+#      openmpi-bin \
  && rm -rf /var/lib/apt/lists/*
 
 # Install NetCDF Fortran
