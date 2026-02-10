@@ -59,6 +59,9 @@ jobs:
       if: matrix.fortran-compiler == 'gfortran'
       run: |
         echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
+        echo "CC=mpiicx"   >> $GITHUB_ENV
+      	echo "CXX=mpiicpx" >> $GITHUB_ENV
+        echo "FC=mpiifx"   >> $GITHUB_ENV
 
     - name: Setup MPI (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
@@ -67,6 +70,9 @@ jobs:
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
         echo "I_MPI_HYDRA_ALLOW_ROOT=1" >> $GITHUB_ENV
         echo "MPI_COMM=mpirun -np 1" >> $GITHUB_ENV
+        echo "CC=mpiicc"    >> $GITHUB_ENV
+        echo "CXX=mpiicpc"  >> $GITHUB_ENV
+        echo "FC=mpiifort"  >> $GITHUB_ENV
 
     #######################################################################################
     # Build SCM.
