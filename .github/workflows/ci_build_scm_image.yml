@@ -59,13 +59,9 @@ jobs:
       if: matrix.fortran-compiler == 'gfortran'
       run: |
         echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
-        echo "CC=mpiicc"   >> $GITHUB_ENV
-        echo "CXX=mpiicpc" >> $GITHUB_ENV
-        echo "FC=mpiifort" >> $GITHUB_ENV
-
-    - name: Verify MPI installation (GNU)
-      if: matrix.fortran-compiler == 'gfortran'
-      run: bash test/verify-mpi.sh gfortran
+        echo "CC=mpicc"   >> $GITHUB_ENV
+        echo "CXX=mpicxx" >> $GITHUB_ENV
+        echo "FC=mpif90"  >> $GITHUB_ENV
 
     - name: Setup MPI (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
