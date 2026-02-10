@@ -90,7 +90,7 @@ jobs:
         make -j4
 
     - name: Verify MPI installation
-        run: bash ci/verify-mpi.sh ${{ matrix.fortran-compiler }}
+      run: bash ci/verify-mpi.sh ${{ matrix.fortran-compiler }}
 
     #######################################################################################
     # Run regression tests.
