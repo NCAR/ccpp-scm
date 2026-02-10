@@ -101,13 +101,13 @@ jobs:
         ./contrib/get_rrtmgp_data.sh
 
     - name: Configure SCM SDFs before building model (supported SCM cases/sdfs)
-      if: matrix.sdfs != 'supported'
+      if: matrix.sdfs == 'supported'
       run: |
         echo "suites=${sdfs_supported}"       >> "$GITHUB_ENV"
         echo "suites_ps=${sdfs_supported_ps}" >> "$GITHUB_ENV"
 
     - name: Configure SCM SDFs before building model (legacy/developmental SCM cases/sdfs)
-      if: matrix.sdfs != 'legdev'
+      if: matrix.sdfs == 'legdev'
       run: |
         echo "suites=${sdfs_legdev}"       >> "$GITHUB_ENV"
         echo "suites_ps=${sdfs_legdev_ps}" >> "$GITHUB_ENV"
