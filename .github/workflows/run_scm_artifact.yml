@@ -31,8 +31,8 @@ jobs:
       SCM_ROOT:          /__w/ccpp-scm/ccpp-scm
       sdfs_supported:    SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8_ugwpv1,SCM_WoFS_v0,SCM_HRRR_gf
       sdfs_supported_ps: SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps
-      sdfs_legdev:       SCM_GFS_v16_no_nsst,SCM_GFS_v17_p8_ugwpv1_no_nsst,SCM_RRFS_v1beta_no_nsst,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_GFS_v15p2,SCM_GFS_v16_gfdlmpv3,SCM_GFS_v15p2_ntiedtke,SCM_GFS_v16_debug#,SCM_GFS_v17_p8_ugwpv1_tempo
-      sdfs_legdev_ps:    SCM_GFS_v16_no_nsst_ps,SCM_GFS_v17_p8_ugwpv1_no_nsst_ps,SCM_RRFS_v1beta_no_nsst_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_GFS_v15p2_ps,SCM_GFS_v16_gfdlmpv3_ps,SCM_GFS_v15p2_ntiedtke_ps,SCM_GFS_v16_debug_ps#,SCM_GFS_v17_p8_ugwpv1_tempo_ps
+      sdfs_legdev:       SCM_GFS_v16_no_nsst,SCM_GFS_v17_p8_ugwpv1_no_nsst,SCM_RRFS_v1beta_no_nsst,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP,SCM_GFS_v15p2,SCM_GFS_v16_gfdlmpv3,SCM_GFS_v15p2_ntiedtke,SCM_GFS_v16_debug
+      sdfs_legdev_ps:    SCM_GFS_v16_no_nsst_ps,SCM_GFS_v17_p8_ugwpv1_no_nsst_ps,SCM_RRFS_v1beta_no_nsst_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps,SCM_GFS_v15p2_ps,SCM_GFS_v16_gfdlmpv3_ps,SCM_GFS_v15p2_ntiedtke_ps,SCM_GFS_v16_debug_ps
       dir_rt:            /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:            /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
       artifact_origin:   ${{ github.event_name == 'pull_request' && 'PR' || ('feature/containerized_ci' == 'feature/containerized_ci' && 'feature/containerized_ci' || 'PR') }}
@@ -69,6 +69,7 @@ jobs:
       run: |
         echo "PATH=/opt/intel/oneapi/mpi/latest/bin:${PATH}" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+        echo "I_MPI_HYDRA_ALLOW_ROOT=1" >> $GITHUB_ENV
         echo "MPI_COMM=mpirun -np 1" >> $GITHUB_ENV
         echo "CC=mpiicx"   >> $GITHUB_ENV
         echo "CXX=mpiicpx" >> $GITHUB_ENV
