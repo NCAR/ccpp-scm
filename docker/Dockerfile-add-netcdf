@@ -24,23 +24,23 @@ ENV NFVERSION=$NFVERSION
 #ENV CXX=$CXX
 
 
-#RUN curl https://downloads.unidata.ucar.edu/netcdf-fortran/$NFVERSION/netcdf-fortran-$NFVERSION.tar.gz | tar xz \
-#  && cd netcdf-fortran-$NFVERSION \
-#  && { ./configure \
-#         CFLAGS='-O2' \
-#         FCFLAGS='-O2 -fPIC' \
-#         --disable-static \ 
-#         --prefix=/usr || \
-#       { cat ./config.log; exit 1; } }
-#RUN cd netcdf-fortran-$NFVERSION \
-#  && make -j \
-#  && make install \
-#  && cd .. \
-#  && rm -rf netcdf-fortran-$NFVERSION \
-#  && ldconfig
+RUN curl https://downloads.unidata.ucar.edu/netcdf-fortran/$NFVERSION/netcdf-fortran-$NFVERSION.tar.gz | tar xz \
+  && cd netcdf-fortran-$NFVERSION \
+  && { ./configure \
+         CFLAGS='-O2' \
+         FCFLAGS='-O2 -fPIC' \
+         --disable-static \ 
+         --prefix=/usr || \
+       { cat ./config.log; exit 1; } }
+RUN cd netcdf-fortran-$NFVERSION \
+  && make -j \
+  && make install \
+  && cd .. \
+  && rm -rf netcdf-fortran-$NFVERSION \
+  && ldconfig
 
-RUN wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v$NFVERSION.tar.gz \
-    && tar -xzf v$NFVERSION.tar.gz \
-    && cd netcdf-fortran-$NFVERSION \
-    && ./configure --prefix=/usr \
-    && make -j && make install
+#RUN wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v$NFVERSION.tar.gz \
+#    && tar -xzf v$NFVERSION.tar.gz \
+#    && cd netcdf-fortran-$NFVERSION \
+#    && ./configure --prefix=/usr \
+#    && make -j && make install
