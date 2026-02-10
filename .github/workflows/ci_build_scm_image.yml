@@ -63,6 +63,10 @@ jobs:
         echo "CXX=mpiicpc" >> $GITHUB_ENV
         echo "FC=mpiifort" >> $GITHUB_ENV
 
+    - name: Verify MPI installation (GNU)
+      if: matrix.fortran-compiler == 'gfortran'
+      run: bash test/verify-mpi.sh gfortran
+
     - name: Setup MPI (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
       run: |
@@ -74,8 +78,9 @@ jobs:
         echo "CXX=mpiicpx" >> $GITHUB_ENV
         echo "FC=mpiifx"   >> $GITHUB_ENV
 
-    - name: Verify MPI installation
-      run: bash test/verify-mpi.sh ${{ matrix.fortran-compiler }}
+    - name: Verify MPI installation (Intel OneAPI)
+      if: matrix.fortran-compiler == 'ifx'
+      run: bash test/verify-mpi.sh oneapi
 
     #######################################################################################
     # Build SCM.
