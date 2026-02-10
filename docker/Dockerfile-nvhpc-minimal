@@ -8,6 +8,7 @@ RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
       ca-certificates \
       curl \
+      time \
       gpg \
       make \
       cmake \
