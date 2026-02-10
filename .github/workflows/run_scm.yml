@@ -142,7 +142,7 @@ jobs:
       run: |
         cd ${SCM_ROOT}/test
         mkdir /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}
-        ./ci_util.py -b ${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}
+        ./ci_util.py -b ${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}} -s ${{matrix.sdfs}}
 
     - name: Save Artifact Id Numbers and Create Directory for SCM RT baselines
       run: |

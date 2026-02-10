@@ -8,23 +8,28 @@
 ##############################################################################
 import os
 import sys
-from rt_test_cases import run_list
+from rt_test_cases_supported import run_list as run_list_supported
+from rt_test_cases_legdev import run_list as run_list_legdev
 from os.path import exists
 import argparse
 
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-b', '--build_type',  help='SCM build type')
+parser.add_argument('-b', '--build_type', help='SCM build type')
+parser.add_argument('-s', '--sdfs',       help='SCM SDFs and cases')
 
 def parse_args():
     args       = parser.parse_args()
     build_type = args.build_type
-    return (build_type)
+    sdfs       = args.sdfs
+    return (build_type, sdfs)
 
 def main():
     
-    (build_type) = parse_args()
+    (build_type, sdfs) = parse_args()
 
+    if (sdfs == 'supported') run_list = run_list_supported
+    if (sdfs == 'legdev')    run_list = run_list_legdev
     #
     errmsgs=[]
     for run in run_list:
