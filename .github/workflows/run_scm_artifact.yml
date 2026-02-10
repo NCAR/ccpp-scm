@@ -94,8 +94,10 @@ jobs:
       run: |
         cd ${SCM_ROOT}
         ./contrib/get_all_static_data.sh
-#        ./contrib/get_thompson_tables.sh
-#        ./contrib/get_aerosol_climo.sh
+        ./contrib/get_thompson_tables.sh
+        ./contrib/get_tempo_data.sh
+        ./contrib/get_aerosol_climo.sh
+        ./contrib/get_rrtmgp_data.sh
 
     - name: Configure Build with CMake
       run: |
