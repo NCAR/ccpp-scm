@@ -16,13 +16,6 @@ RUN apt-get update \
 #   The version must be compitible with NetCDF C installed above
 ARG NFVERSION
 ENV NFVERSION=$NFVERSION
-#ARG FC
-#ENV FC=$FC
-#ARG CC
-#ENV CC=$CC
-#ARG CXX
-#ENV CXX=$CXX
-
 
 RUN curl https://downloads.unidata.ucar.edu/netcdf-fortran/$NFVERSION/netcdf-fortran-$NFVERSION.tar.gz | tar xz \
   && cd netcdf-fortran-$NFVERSION \
@@ -38,9 +31,3 @@ RUN cd netcdf-fortran-$NFVERSION \
   && cd .. \
   && rm -rf netcdf-fortran-$NFVERSION \
   && ldconfig
-
-#RUN wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v$NFVERSION.tar.gz \
-#    && tar -xzf v$NFVERSION.tar.gz \
-#    && cd netcdf-fortran-$NFVERSION \
-#    && ./configure --prefix=/usr \
-#    && make -j && make install
