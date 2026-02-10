@@ -82,7 +82,7 @@ jobs:
 
     - name: Verify MPI installation
       run: |
-        source test/verify-mpi.sh matrix.fortran-compiler
+        source test/verify-mpi.sh ${{matrix.fortran-compiler}}
       shell: bash
 
     #######################################################################################

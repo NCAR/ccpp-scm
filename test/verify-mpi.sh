@@ -8,7 +8,7 @@ COMPILER_TYPE="${1:-oneapi}"
 
 echo "=== Checking MPI Installation (${COMPILER_TYPE}) ==="
 
-if [ "$COMPILER_TYPE" = "oneapi" ]; then
+if [ "$COMPILER_TYPE" = "ifx" ]; then
     for compiler in mpiicx mpiicpx mpiifx; do
         which $compiler || { echo "ERROR: $compiler not found"; }
     done
@@ -19,7 +19,8 @@ if [ "$COMPILER_TYPE" = "oneapi" ]; then
     test "$CC" = "mpiicx"   || { echo "ERROR: CC should be mpiicx but is $CC"; exit 1; }
     test "$CXX" = "mpiicpx" || { echo "ERROR: CXX should be mpiicpx but is $CXX"; exit 1; }
     test "$FC" = "mpiifx"   || { echo "ERROR: FC should be mpiifx but is $FC"; exit 1; }
-else
+fi
+if [ "$COMPILER_TYPE" = "gfortran" ]; then
     for compiler in mpicc mpicxx mpif90; do
         which $compiler || { echo "ERROR: $compiler not found"; }
     done
@@ -31,7 +32,7 @@ else
     test "$CXX" = "mpicxx" || { echo "ERROR: CXX should be mpicxx but is $CXX"; exit 1; }
     test "$FC" = "mpif90"  || { echo "ERROR: FC should be mpif90 but is $FC"; exit 1; }    
 fi
-if [ "$COMPILER_TYPE" = "nvhpc" ]; then
+if [ "$COMPILER_TYPE" = "nvfortran" ]; then
     for compiler in mpicc mpic++ mpifort; do
         which $compiler || { echo "ERROR: $compiler not found"; }
     done
