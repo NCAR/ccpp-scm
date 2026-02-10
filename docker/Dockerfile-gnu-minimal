@@ -23,6 +23,8 @@ RUN apt-get update \
       time \
       vim \
       file \
-      libxml2
+      libxml2 \
+      gh \
+      jq
 
 ENV FC=mpif90 CC=mpicc CXX=mpicxx
