@@ -28,6 +28,6 @@ RUN apt-get update \
 ENV PATH="/opt/nvidia/hpc_sdk/Linux_x86_64/${NVHPC_VERSION_MAJOR}.${NVHPC_VERSION_MINOR}/compilers/bin:${PATH}"
 
 # Set default compiler executables
-#ENV FC=nvfortran CC=nvc CXX=nvc++
+ENV FC=nvfortran CC=nvc CXX=nvc++
 ENV MPICC=mpicc
-ENV FC=mpifort CC=mpicc CXX=mpic++
+#ENV FC=mpifort CC=mpicc CXX=mpic++
