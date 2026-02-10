@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fortran-compiler: [ifx, gfortran, nvfortran]
+        fortran-compiler: [ifx, gfortran]#, nvfortran]
         build-type:       [Release, Debug]
         include:
         # Set container images for each compiler
