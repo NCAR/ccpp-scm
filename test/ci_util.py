@@ -28,8 +28,8 @@ def main():
     
     (build_type, sdfs) = parse_args()
 
-    if (sdfs == 'supported') run_list = run_list_supported
-    if (sdfs == 'legdev')    run_list = run_list_legdev
+    if (sdfs == 'supported'): run_list = run_list_supported
+    if (sdfs == 'legdev'):    run_list = run_list_legdev
     #
     errmsgs=[]
     for run in run_list:
