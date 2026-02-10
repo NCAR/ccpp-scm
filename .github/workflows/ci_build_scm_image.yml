@@ -71,8 +71,14 @@ jobs:
       if: matrix.fortran-compiler == 'ifx'
       run: |
         source /opt/intel/oneapi/setvars.sh
+      shell: bash
+
+    - name: setvars2
+      if: matrix.fortran-compiler == 'ifx'
+      run: |
         source /opt/intel/oneapi/mpi/latest/env/vars.sh
-        
+      shell: bash
+
     - name: Setup MPI (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
       run: |
