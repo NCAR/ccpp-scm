@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fortran-compiler: [ifx, gfortran]
+        fortran-compiler: [ifx, gfortran, nvfortran]
         build-type:       [Release, Debug]
         include:
         # Set container images for each compiler
@@ -21,6 +21,8 @@ jobs:
           image: dustinswales/ccpp-scm-ci:oneapi
         - fortran-compiler: gfortran
           image: dustinswales/ccpp-scm-ci:gnu
+        - fortran-compiler: nvfortran
+          image: dustinswales/ccpp-scm-ci:nvhpc
     container:
       image: ${{ matrix.image }}
       env:
@@ -59,24 +61,15 @@ jobs:
       if: matrix.fortran-compiler == 'gfortran'
       run: |
         echo "MPI_COMM=mpirun --allow-run-as-root -np 1" >> $GITHUB_ENV
-#        echo "CC=mpicc"   >> $GITHUB_ENV
-#        echo "CXX=mpicxx" >> $GITHUB_ENV
-#        echo "FC=mpif90"  >> $GITHUB_ENV
 
-    - name: Verify MPI installation (GNU)
-      if: matrix.fortran-compiler == 'gfortran'
-      run: bash test/verify-mpi.sh gfortran
+#    - name: Verify MPI installation (GNU)
+#      if: matrix.fortran-compiler == 'gfortran'
+#      run: bash test/verify-mpi.sh gfortran
 
     - name: setvars
       if: matrix.fortran-compiler == 'ifx'
       run: |
         source /opt/intel/oneapi/setvars.sh
-      shell: bash
-
-    - name: setvars2
-      if: matrix.fortran-compiler == 'ifx'
-      run: |
-        source /opt/intel/oneapi/mpi/latest/env/vars.sh
       shell: bash
 
     - name: Setup MPI (Intel OneAPI)
@@ -86,13 +79,11 @@ jobs:
         echo "LD_LIBRARY_PATH=/opt/intel/oneapi/mpi/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
         echo "I_MPI_HYDRA_ALLOW_ROOT=1" >> $GITHUB_ENV
         echo "MPI_COMM=mpirun -np 1" >> $GITHUB_ENV
-#        echo "CC=mpiicx"   >> $GITHUB_ENV
-#        echo "CXX=mpiicpx" >> $GITHUB_ENV
-#        echo "FC=mpiifx"   >> $GITHUB_ENV
 
-    - name: Verify MPI installation (Intel OneAPI)
-      if: matrix.fortran-compiler == 'ifx'
-      run: bash test/verify-mpi.sh oneapi
+    - name: Verify MPI installation
+      run: |
+        source test/verify-mpi.sh matrix.fortran-compiler
+      shell: bash
 
     #######################################################################################
     # Build SCM.

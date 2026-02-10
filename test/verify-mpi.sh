@@ -16,9 +16,9 @@ if [ "$COMPILER_TYPE" = "oneapi" ]; then
     echo "CC: $CC , should be mpiicx"
     echo "CXX: $CXX , should be mpiicpx"
     echo "FC: $FC , should be mpiifx"
-    test "$CC" = "mpiicx" || { echo "ERROR: CC should be mpiicx but is $CC"; exit 1; }
+    test "$CC" = "mpiicx"   || { echo "ERROR: CC should be mpiicx but is $CC"; exit 1; }
     test "$CXX" = "mpiicpx" || { echo "ERROR: CXX should be mpiicpx but is $CXX"; exit 1; }
-    test "$FC" = "mpiifx" || { echo "ERROR: FC should be mpiifx but is $FC"; exit 1; }
+    test "$FC" = "mpiifx"   || { echo "ERROR: FC should be mpiifx but is $FC"; exit 1; }
 else
     for compiler in mpicc mpicxx mpif90; do
         which $compiler || { echo "ERROR: $compiler not found"; }
@@ -30,6 +30,18 @@ else
     test "$CC" = "mpicc"   || { echo "ERROR: CC should be mpicc but is $CC"; exit 1; }
     test "$CXX" = "mpicxx" || { echo "ERROR: CXX should be mpicxx but is $CXX"; exit 1; }
     test "$FC" = "mpif90"  || { echo "ERROR: FC should be mpif90 but is $FC"; exit 1; }    
+fi
+if [ "$COMPILER_TYPE" = "nvhpc" ]; then
+    for compiler in mpicc mpic++ mpifort; do
+        which $compiler || { echo "ERROR: $compiler not found"; }
+    done
+    mpicc --version
+    echo "CC: $CC , should be mpicc"
+    echo "CXX: $CXX , should be mpic++"
+    echo "FC: $FC , should be mpifort"
+    test "$CC" = "mpicc"   || { echo "ERROR: CC should be mpicc but is $CC"; exit 1; }
+    test "$CXX" = "mpic++" || { echo "ERROR: CXX should be mpic++ but is $CXX"; exit 1; }
+    test "$FC" = "mpifort" || { echo "ERROR: FC should be mpifort but is $FC"; exit 1; }
 fi
 
 which mpirun
