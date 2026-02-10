@@ -21,9 +21,7 @@ RUN apt-get update \
       m4 \
       tcsh \
       time \
-      vim \
-      libopenmpi-dev \
-      openmpi-bin
+      vim
 
 # See https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2025-2/hpc-apt.html
 
@@ -48,5 +46,5 @@ ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/latest
 
 # oneAPI environments
 RUN . /opt/intel/oneapi/setvars.sh
-ENV FC=ifx CC=icx CXX=icpx
-#ENV FC=mpiifx CC=mpiicx CXX=mpiicpx
+#ENV FC=ifx CC=icx CXX=icpx
+ENV FC=mpiifx CC=mpiicx CXX=mpiicpx

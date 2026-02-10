@@ -9,7 +9,9 @@ FROM minimal-toolchain:$TOOLCHAIN
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
       curl \
-      libnetcdf-dev \
+      libnetcdf-dev  \
+      libopenmpi-dev \
+      openmpi-bin \
  && rm -rf /var/lib/apt/lists/*
 
 # Install NetCDF Fortran
