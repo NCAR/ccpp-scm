@@ -65,11 +65,11 @@ jobs:
         echo "CXX=mpicxx" >> $GITHUB_ENV
         echo "FC=mpif90"  >> $GITHUB_ENV
 
-    - name: setvars
-      if: matrix.fortran-compiler == 'ifx'
-      run: |
-        source /opt/intel/oneapi/setvars.sh
-      shell: bash
+#    - name: setvars
+#      if: matrix.fortran-compiler == 'ifx'
+#      run: |
+#        source /opt/intel/oneapi/setvars.sh
+#      shell: bash
 
     - name: Setup MPI (Intel OneAPI)
       if: matrix.fortran-compiler == 'ifx'
