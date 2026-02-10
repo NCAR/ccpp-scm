@@ -8,7 +8,7 @@
 import os
 import sys
 from rt_test_cases_supported import run_list as run_list_supported
-from rt_test_cases_legcy     import run_list as run_list_legacy
+from rt_test_cases_legacy    import run_list as run_list_legacy
 from rt_test_cases_dev       import run_list as run_list_dev
 from os.path import exists
 import argparse
