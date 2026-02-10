@@ -1,4 +1,4 @@
-name: Build and run the CCPP-SCM in a container
+name: Build/run the CCPP-SCM, create baselines (artifact)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  scm_in_container:
+  scm_in_container_artifact:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
