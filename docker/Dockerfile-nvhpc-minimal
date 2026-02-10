@@ -11,6 +11,7 @@ RUN apt-get update \
       gpg \
       make \
       cmake \
+      wget \
       git
  RUN curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
       | gpg --dearmor > /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg \
