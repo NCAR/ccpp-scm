@@ -29,13 +29,6 @@ jobs:
     # Environmental variables
     env:
       SCM_ROOT:  /__w/ccpp-scm/ccpp-scm
-      sdfs_supported:    SCM_GFS_v16,SCM_GFS_v16_RRTMGP,SCM_GFS_v17_p8_ugwpv1,SCM_WoFS_v0,SCM_HRRR_gf
-      sdfs_supported_ps: SCM_GFS_v16_ps,SCM_GFS_v16_RRTMGP_ps,SCM_GFS_v17_p8_ugwpv1_ps,SCM_WoFS_v0_ps,SCM_HRRR_gf_ps
-      sdfs_legacy:       SCM_GFS_v15p2,SCM_GFS_v17_p8,SCM_HRRR,SCM_RRFS_v1beta,SCM_RAP
-      sdfs_legacy_ps:    SCM_GFS_v15p2_ps,SCM_GFS_v17_p8_ps,SCM_HRRR_ps,SCM_RRFS_v1beta_ps,SCM_RAP_ps
-      sdfs_dev:          SCM_GFS_v16_no_nsst,SCM_GFS_v17_p8_ugwpv1_no_nsst,SCM_RRFS_v1beta_no_nsst,SCM_GFS_v16_gfdlmpv3,SCM_GFS_v15p2_ntiedtke,SCM_GFS_v16_debug,SCM_GFS_v17_p8_ugwpv1_tempo
-      sdfs_dev_ps:       SCM_GFS_v16_no_nsst_ps,SCM_GFS_v17_p8_ugwpv1_no_nsst_ps,SCM_RRFS_v1beta_no_nsst_ps,SCM_GFS_v16_gfdlmpv3_ps,SCM_GFS_v15p2_ntiedtke_ps,SCM_GFS_v16_debug_ps,SCM_GFS_v17_p8_ugwpv1_tempo_ps
-
       dir_rt:    /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:    /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
       artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('feature/containerized_ci' == 'feature/containerized_ci' && 'feature/containerized_ci' || 'PR') }}
@@ -93,6 +86,17 @@ jobs:
     #######################################################################################
     # Build SCM.
     #######################################################################################
+    - name: Get SDFs names
+      id: set_sdfs
+      run: |
+        cd ${SCM_ROOT}/test
+        suites=$(./get_sdfs_for_run_list.py --sdf_list suites_${{matrix.sdfs}}_${{matrix.fortran-compiler}})
+        echo "suites=${suites}" >> $GITHUB_OUTPUT
+
+    - name: Print SDF names
+      run: |
+        echo ${{steps.set_sdfs.outputs.suites}}
+
     - name: Download data for SCM
       run: |
         cd ${SCM_ROOT}
@@ -102,29 +106,11 @@ jobs:
         ./contrib/get_aerosol_climo.sh
         ./contrib/get_rrtmgp_data.sh
 
-    - name: Configure SCM SDFs before building model (supported SCM cases/sdfs)
-      if: matrix.sdfs == 'supported'
-      run: |
-        echo "suites=${sdfs_supported}"       >> "$GITHUB_ENV"
-        echo "suites_ps=${sdfs_supported_ps}" >> "$GITHUB_ENV"
-
-    - name: Configure SCM SDFs before building model (legacy SCM cases/sdfs)
-      if: matrix.sdfs == 'legacy'
-      run: |
-        echo "suites=${sdfs_legacy}"       >> "$GITHUB_ENV"
-        echo "suites_ps=${sdfs_legacy_ps}" >> "$GITHUB_ENV"
-
-    - name: Configure SCM SDFs before building model (developmental SCM cases/sdfs)
-      if: matrix.sdfs == 'dev'
-      run: |
-        echo "suites=${sdfs_dev}"       >> "$GITHUB_ENV"
-        echo "suites_ps=${sdfs_dev_ps}" >> "$GITHUB_ENV"
-
     - name: Configure Build with CMake
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${suites},${suites_ps} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
+        cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
 
     - name: Build SCM
       run: |
