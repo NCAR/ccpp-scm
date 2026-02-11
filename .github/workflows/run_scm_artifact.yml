@@ -101,7 +101,7 @@ jobs:
 
     - name: Print SDF names
       run: |
-        echo ${steps.set_sdfs.outputs.suites}}
+        echo ${{steps.set_sdfs.outputs.suites}}
 
     - name: Download data for SCM
       run: |
