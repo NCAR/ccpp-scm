@@ -14,21 +14,12 @@ jobs:
           - toolchain: oneapi
             nfversion: 4.5.4
             pnfversion: 1.12.3
-#            FC:  ifx
-#            CC:  icx
-#            CXX: icpx
           - toolchain: gnu
             nfversion: 4.6.2
             pnfversion: 1.14.1
-#            FC:  gfortran
-#            CC:  gcc
-#            CXX: g++
           - toolchain: nvhpc
             nfversion: 4.5.4
             pnfversion: 1.12.3
-#            FC:  nvfortran
-#            CC:  nvc
-#            CXX: nvc++
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -47,20 +38,6 @@ jobs:
           build-args: |
             TOOLCHAIN=${{ matrix.toolchain }}
             NFVERSION=${{ matrix.nfversion }}
-#            FC=${{ matrix.FC }}
-#            CC=${{ matrix.CC }}
-#            CXX=${{ matrix.CXX }}
-
-#      - name: Build add-pnetcdf:${{ matrix.toolchain }}
-#        uses: docker/build-push-action@v6
-#        with:
-#          file: docker/Dockerfile-add-pnetcdf
-#          tags: add-pnetcdf:${{ matrix.toolchain }}
-#          build-args: |
-#            TOOLCHAIN=${{ matrix.toolchain }}
-#            PNFVERSION=${{ matrix.pnfversion }}
-#            FC=${{ matrix.FC }}
-#            CC=${{ matrix.CC }}
 
       - name: Build add-nceplibs:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6

@@ -15,7 +15,7 @@ jobs:
       matrix:
         fortran-compiler: [ifx, gfortran]#, nvfortran]
         build-type:       [Release, Debug]
-        sdfs:             [supported, legacy, dev]#, sp, nvhpc]
+        run_lists:        [supported, legacy, dev, sp]#, nvhpc]
         include:
         # Set container images for each compiler
         - fortran-compiler: ifx
@@ -28,10 +28,11 @@ jobs:
       image: ${{ matrix.image }}
     # Environmental variables
     env:
-      SCM_ROOT:  /__w/ccpp-scm/ccpp-scm
-      dir_rt:    /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
-      dir_bl:    /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      SCM_ROOT:        /__w/ccpp-scm/ccpp-scm
+      dir_rt:          /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
+      dir_bl:          /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
       artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('feature/containerized_ci' == 'feature/containerized_ci' && 'feature/containerized_ci' || 'PR') }}
+      GH_TOKEN:        ${{ github.token }}
 
     # Workflow steps
     steps:
@@ -77,15 +78,10 @@ jobs:
         echo "CXX=mpic++" >> $GITHUB_ENV
         echo "FC=mpifort" >> $GITHUB_ENV
 
-    - name: Verify MPI installation
-      run: |
-        source test/verify-mpi.sh ${{matrix.fortran-compiler}}
-      shell: bash
-
     #######################################################################################
     # Build SCM.
     #######################################################################################
-    - name: Get SDFs names
+    - name: Get SDF names for this run_list
       id: set_sdfs
       run: |
         cd ${SCM_ROOT}/test
@@ -105,11 +101,19 @@ jobs:
         ./contrib/get_aerosol_climo.sh
         ./contrib/get_rrtmgp_data.sh
 
-    - name: Configure Build with CMake
+    - name: Configure Build with CMake (64-bit)
+      if matrix.run_lists != 'sp'
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
+
+    - name: Configure Build with CMake (32-bit)
+      if matrix.run_lists == 'sp'
+      run: |
+        cd ${SCM_ROOT}/scm
+        mkdir bin && cd bin
+        cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -D32BIT=1 ../src
 
     - name: Build SCM
       run: |
@@ -120,36 +124,29 @@ jobs:
     # Run regression tests.
     #######################################################################################
     - name: Run SCM RTs
-      if: matrix.build-type != 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --run_list ${{matrix.sdfs}}_${{matrix.fortran-compiler}} --runtime_mult 0.1 --mpi_command "${MPI_COMM}"
-
-    - name: Run SCM Single Precision RTs
-      if: matrix.build-type == 'SinglePrecision'
-      run: |
-        cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --run_list ${{matrix.sdfs}}_${{matrix.fortran-compiler}} --runtime_mult 0.1 -v --mpi_command "$(MPI_COMM}"
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --run_list ${{matrix.run_lists}}_${{matrix.fortran-compiler}} --runtime_mult 0.1 --mpi_command "${MPI_COMM}"
 
     - name: Gather SCM RT output
       run: |
         cd ${SCM_ROOT}/test
-        mkdir /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}
-        ./ci_util.py -b ${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}} --run_list run_list_${{matrix.sdfs}}_${{matrix.fortran-compiler}}
+        mkdir /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        ./ci_util.py -b ${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}} --run_list run_list_${{matrix.run_lists}}_${{matrix.fortran-compiler}}
 
     - name: Save Artifact Id Numbers and Create Directory for SCM RT baselines
       run: |
         mkdir -p ${dir_bl}
         ARTIFACT_ID=$(gh api --paginate \
         repos/dustinswales/ccpp-scm/actions/artifacts | \
-        jq -s '[ .[] | .artifacts[] | select(.name == "rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
+        jq -s '[ .[] | .artifacts[] | select(.name == "rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
         echo "artifact_id=${ARTIFACT_ID}"
         echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
 
     - name: Download SCM RT baselines
       uses: actions/download-artifact@v6
       with:
-        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
         path: ${{ env.dir_bl }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         run-id: ${{ env.artifact_id }}
@@ -157,7 +154,7 @@ jobs:
     - name: Compare SCM RT output to baselines
       run: |
         cd ${SCM_ROOT}/test
-        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl} --run_list run_list_${{matrix.sdfs}}_${{matrix.fortran-compiler}}
+        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl} --run_list run_list_${{matrix.run_lists}}_${{matrix.fortran-compiler}}
 
     - name: Check if SCM RT plots exist
       id: check_files
@@ -171,11 +168,11 @@ jobs:
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}
+        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
         path: /__w/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v5
       with:
-        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}
-        path: /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.sdfs}}
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        path: /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
