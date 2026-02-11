@@ -92,6 +92,16 @@ jobs:
     #######################################################################################
     # Build SCM.
     #######################################################################################
+    - id: set-sdfd
+      run: |
+        cd ${SCM_ROOT}/test
+        suites=$(./get_sdfs_for_run_list.py --sdf_list suites_${{matrix.sdfs}}_${{matrix.fortran-compiler}})
+        echo "suites=${suites}" >> $GITHUB_OUTPUT
+
+    - name: Print SDF names
+      run: |
+        echo ${steps.set-sdfs.outputs.suites}}
+
     - name: Download data for SCM
       run: |
         cd ${SCM_ROOT}
@@ -100,16 +110,6 @@ jobs:
         ./contrib/get_tempo_data.sh
         ./contrib/get_aerosol_climo.sh
         ./contrib/get_rrtmgp_data.sh
-
-    - name: Get SDFs
-      run: |
-        cd ${SCM_ROOT}/test
-        suites=$(./get_sdfs_for_run_list.py --sdf_list suites_${{matrix.sdfs}}_${{matrix.fortran-compiler}})
-        echo "suites=${suites}" >> $GITHUB_OUTPUT
-
-    - name: Print SDF names
-      run: |
-        echo ${steps.set-variable.outputs.suites}}
 
     - name: Configure SCM SDFs before building model (supported SCM cases/sdfs)
       if: matrix.sdfs == 'supported'
