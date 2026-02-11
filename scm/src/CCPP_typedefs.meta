@@ -2758,7 +2758,7 @@
 [ccpp-table-properties]
   name = CCPP_typedefs
   type = module
-  relative_path = ../../ccpp/physics/physics
+  dependencies_path = ../../ccpp/physics/physics
   dependencies = hooks/machine.F,photochem/module_ozphys.F90
   dependencies = Radiation/RRTMG/radlw_param.f,Radiation/RRTMG/radsw_param.f
 
