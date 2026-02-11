@@ -25,7 +25,8 @@ def parse_args():
 
 def main():
     
-    (build_type, run_list) = parse_args()
+    (build_type, run_list_name) = parse_args()
+    run_list = getattr(rt_test_cases, run_list_name)
     #
     errmsgs=[]
     for run in run_list:

@@ -31,7 +31,9 @@ def parse_args():
 #
 def main():
 
-    (dir_rt, dir_bl, no_plots, run_list) = parse_args()
+    (dir_rt, dir_bl, no_plots, run_list_name) = parse_args()
+    run_list = getattr(rt_test_cases, run_list_name)
+
     #
     error_count = 0
     for run in run_list:
