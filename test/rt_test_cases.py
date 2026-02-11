@@ -166,6 +166,6 @@ run_list_sp_gfortran = [\
             {"case": "bomex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "astex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_HRRR_gf"}]
-
-#NOT TESTED WITH ONEAPI
-#run_list_sp_ifx = run_list_sp_gfortran
+#
+suites_sp_ifx   = suites_sp_gfortran
+run_list_sp_ifx = run_list_sp_gfortran
