@@ -1,10 +1,15 @@
 name: CCPP SCM Base Images Build
 run-name: CI Image Build for CCPP SCM
 
-on: [push]
+on:
+  push:
+    branches:
+      # Only build containers when pushing to main
+      - "main"
 
 jobs:
   docker:
+    if: github.repository == 'NCAR/ccpp-scm'
     strategy:
       fail-fast: false  # Disable fail-fast
       matrix:
@@ -54,17 +59,16 @@ jobs:
           tags: add-python:${{ matrix.toolchain }}
 
       - name: Log in to DockerHub
-        if: ${{ github.ref == 'refs/heads/feature/containerized_ci' }}
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push ccpp-scm-ci:${{ matrix.toolchain }}
+      - name: Build and push dtcenter/ccpp-scm:${{ matrix.toolchain }}
         uses: docker/build-push-action@v6
         with:
           file: docker/Dockerfile-finalize
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
-          push: ${{ github.ref == 'refs/heads/feature/containerized_ci' }}
+          push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-            dustinswales/ccpp-scm-ci:${{ matrix.toolchain }}
+            dtcenter/ccpp-scm:${{ matrix.toolchain }}
