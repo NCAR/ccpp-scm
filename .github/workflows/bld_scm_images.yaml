@@ -2,7 +2,9 @@ name: CCPP SCM Base Images Build
 run-name: CI Image Build for CCPP SCM
 
 on:
-  push:
+  pull_request:
+  workflow_dispatch:
+#  push:
 #    branches:
 #      # Only build containers when pushing to main
 #      - "main"
