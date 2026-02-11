@@ -1,4 +1,4 @@
-name: Build/run the CCPP-SCM, create baselines (artifact)
+name: Build/run the CCPP-SCM, compare to existing baselines (GitHub artifact)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  scm_in_container_artifact:
+  run_scm_rts:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -32,6 +32,7 @@ jobs:
       dir_rt:          /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:          /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
       artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('feature/containerized_ci' == 'feature/containerized_ci' && 'feature/containerized_ci' || 'PR') }}
+      GH_TOKEN:        ${{ github.token }}
 
     # Workflow steps
     steps:
@@ -101,14 +102,14 @@ jobs:
         ./contrib/get_rrtmgp_data.sh
 
     - name: Configure Build with CMake (64-bit)
-      if matrix.run_lists != 'sp'
+      if: matrix.run_lists != 'sp'
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
         cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
 
     - name: Configure Build with CMake (32-bit)
-      if matrix.run_lists == 'sp'
+      if: matrix.run_lists == 'sp'
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
@@ -132,6 +133,43 @@ jobs:
         cd ${SCM_ROOT}/test
         mkdir /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
         ./ci_util.py -b ${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}} --run_list run_list_${{matrix.run_lists}}_${{matrix.fortran-compiler}}
+
+    - name: Save Artifact Id Numbers and Create Directory for SCM RT baselines
+      run: |
+        mkdir -p ${dir_bl}
+        ARTIFACT_ID=$(gh api --paginate \
+        repos/dustinswales/ccpp-scm/actions/artifacts | \
+        jq -s '[ .[] | .artifacts[] | select(.name == "rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}" and (.expired | not))] | sort_by(.created_at) | last | .workflow_run | .id ')
+        echo "artifact_id=${ARTIFACT_ID}"
+        echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
+
+    - name: Download SCM RT baselines
+      uses: actions/download-artifact@v6
+      with:
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        path: ${{ env.dir_bl }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        run-id: ${{ env.artifact_id }}
+
+    - name: Compare SCM RT output to baselines
+      run: |
+        cd ${SCM_ROOT}/test
+        ./cmp_rt2bl.py --dir_rt ${dir_rt} --dir_bl ${dir_bl} --run_list run_list_${{matrix.run_lists}}_${{matrix.fortran-compiler}}
+
+    - name: Check if SCM RT plots exist
+      id: check_files
+      run: |
+        if [ -n "$(ls -A /__w/ccpp-scm/ccpp-scm/test/scm_rt_out 2>/dev/null)" ]; then
+          echo "files_exist=true" >> "$GITHUB_ENV"
+        else
+          echo "files_exist=false" >> "$GITHUB_ENV"
+        fi
+
+    - name: Upload plots of SCM Baselines/RTs as GitHub Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        path: /__w/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v5
