@@ -7,7 +7,7 @@
 ##############################################################################
 import os
 import sys
-from rt_test_cases
+import rt_test_cases
 from os.path import exists
 import argparse
 from plot_scm_out import plot_results
@@ -17,27 +17,21 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-drt',  '--dir_rt',   help='Directory containing SCM RT output',              required=True)
 parser.add_argument('-dbl',  '--dir_bl',   help='Directory containing SCM RT baselines',           required=True)
 parser.add_argument('-np',   '--no_plots', help='flag to turn off generation of difference plots', required=False, action='store_true')
-parser.add_argument('-s',    '--sdfs',     help='SCM SDFs and cases')
+parser.add_argument('-r',    '--run_list', help='Run list of SCM SDFs and cases')
+
 #
 def parse_args():
     args      = parser.parse_args()
     dir_rt    = args.dir_rt 
     dir_bl    = args.dir_bl
     no_plots  = args.no_plots
-    sdfs      = args.sdfs
-    return (dir_rt, dir_bl, no_plots, sdfs)
+    un_list   = ards.run_list
+    return (dir_rt, dir_bl, no_plots, run_list)
 
 #
 def main():
-    #
-    (dir_rt, dir_bl, no_plots, sdfs) = parse_args()
 
-    if (sdfs == 'supported'): run_list = run_list_supported
-    if (sdfs == 'legacy'):    run_list = run_list_legacy
-    if (sdfs == 'dev'):       run_list = run_list_dev
-    if (sdfs == 'sp'):        run_list = run_list_sp
-    if (sdfs == 'nvhpc'):     run_list = run_list_nvhpc
-
+    (dir_rt, dir_bl, no_plots, run_list) = parse_args()
     #
     error_count = 0
     for run in run_list:

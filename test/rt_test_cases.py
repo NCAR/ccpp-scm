@@ -1,59 +1,112 @@
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
 # Supported suites for CCPP Version 7 release.
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
-run_list_supported = [\
+run_list_supported_gfortran = [\
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16"},                                                                                    \
-            #{"case": "arm_sgp_summer_1997_A", "suite": "SCM_WoFS_v0"},                                                                                    \
-            #{"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "twpice",                "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
             {"case": "twpice",                "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
             {"case": "twpice",                "suite": "SCM_GFS_v16"},                                                                                    \
-            #{"case": "twpice",                "suite": "SCM_WoFS_v0"},                                                                                    \
-            #{"case": "twpice",                "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "bomex",                 "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
             {"case": "bomex",                 "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
             {"case": "bomex",                 "suite": "SCM_GFS_v16"},                                                                                    \
-            #{"case": "bomex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
-            #{"case": "bomex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "astex",                 "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
             {"case": "astex",                 "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
             {"case": "astex",                 "suite": "SCM_GFS_v16"},                                                                                    \
-            #{"case": "astex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
-            #{"case": "astex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16"},                                                                                    \
-            #{"case": "LASSO_2016051812",      "suite": "SCM_WoFS_v0"},                                                                                    \
-            #{"case": "LASSO_2016051812",      "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "COMBLE",                "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
             {"case": "COMBLE",                "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
             {"case": "COMBLE",                "suite": "SCM_GFS_v16"},                                                                                    \
-            #{"case": "COMBLE",                "suite": "SCM_WoFS_v0"},                                                                                    \
-            #{"case": "COMBLE",                "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
             {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
             {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v16"},                                                                                    \
-            #{"case": "MOSAiC-AMPS",           "suite": "SCM_WoFS_v0"},                                                                                    \
-            #{"case": "MOSAiC-AMPS",           "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "gabls3",                "suite": "SCM_GFS_v16"}]
+run_list_supported_ifx = [\
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            #{"case": "twpice",                "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "twpice",                "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "twpice",                "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            {"case": "bomex",                 "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "bomex",                 "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "bomex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            #{"case": "astex",                 "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "astex",                 "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "astex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            #{"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "LASSO_2016051812",      "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            #{"case": "COMBLE",                "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "COMBLE",                "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "COMBLE",                "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v17_p8_ugwpv1"},                                                                          \
+            #{"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v16_RRTMGP"},                                                                             \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_GFS_v16"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_WoFS_v0"},                                                                                    \
+            {"case": "MOSAiC-AMPS",           "suite": "SCM_HRRR_gf"},                                                                                    \
+            {"case": "gabls3",                "suite": "SCM_GFS_v16"}]
+run_list_supported_nvhpc = [\
+            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RAP"},                                                                                        \
+            {"case": "twpice",                "suite": "SCM_RAP"},                                                                                        \
+            {"case": "bomex",                 "suite": "SCM_RAP"},                                                                                        \
+            {"case": "astex",                 "suite": "SCM_RAP"},                                                                                        \
+            {"case": "LASSO_2016051812",      "suite": "SCM_RAP"}]
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
 # Developmental suites, (w/ supported cases). 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
-run_list_dev = [\
+run_list_dev_gfortran = [\
             {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_GFS_v16_no_nsst"},                                                                          \
             {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_GFS_v17_p8_ugwpv1_no_nsst"},                                                                \
             {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_RRFS_v1beta_no_nsst"},                                                                      \
-            #{"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8_ugwpv1_tempo"},                                                                    \
-            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v16_gfdlmpv3"},                                                                           \
-            {"case": "twpice",                "suite": "SCM_GFS_v15p2_ntiedtke"},                                                                         \
-            {"case": "bomex",                 "suite": "SCM_GFS_v16_debug"},                                                                              \
+            {"case": "arm_sgp_summer_1997_A",   "suite": "SCM_GFS_v17_p8_ugwpv1_tempo"},                                                                  \
+            {"case": "arm_sgp_summer_1997_A",   "suite": "SCM_GFS_v16_gfdlmpv3"},                                                                         \
+            {"case": "twpice",                  "suite": "SCM_GFS_v15p2_ntiedtke"},                                                                       \
+            {"case": "bomex",                   "suite": "SCM_GFS_v16_debug"},                                                                            \
             ]
+run_list_dev_ifx = [\
+            {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_GFS_v16_no_nsst"},                                                                          \
+            {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_GFS_v17_p8_ugwpv1_no_nsst"},                                                                \
+            {"case": "atomic_Jan16T22Jan18T06", "suite": "SCM_RRFS_v1beta_no_nsst"},                                                                      \
+            #{"case": "arm_sgp_summer_1997_A",   "suite": "SCM_GFS_v17_p8_ugwpv1_tempo"},                                                                  \
+            {"case": "arm_sgp_summer_1997_A",   "suite": "SCM_GFS_v16_gfdlmpv3"},                                                                         \
+            {"case": "twpice",                  "suite": "SCM_GFS_v15p2_ntiedtke"},                                                                       \
+            {"case": "bomex",                   "suite": "SCM_GFS_v16_debug"},                                                                            \
+            ]
+
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
 # Legacy suites, (w/ supported cases).
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
-run_list_legacy = [\
+run_list_legacy_gfortran = [\
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_GFS_v17_p8"},                                                                                 \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR"},                                                                                       \
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RRFS_v1beta"},                                                                                \
@@ -79,23 +132,18 @@ run_list_legacy = [\
             {"case": "LASSO_2016051812",      "suite": "SCM_RRFS_v1beta"},                                                                                \
             {"case": "LASSO_2016051812",      "suite": "SCM_RAP"},                                                                                        \
             {"case": "LASSO_2016051812",      "suite": "SCM_GFS_v15p2"}]
+run_list_legacy_ifx = run_list_legacy_gfortran
+
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
 # Single precision supported suites, (w/ supported cases).
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
-run_list_sp = [\
+run_list_sp_gfortran = [\
             {"case": "arm_sgp_summer_1997_A", "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "twpice",                "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "bomex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "astex",                 "suite": "SCM_HRRR_gf"},                                                                                    \
             {"case": "LASSO_2016051812",      "suite": "SCM_HRRR_gf"},                                                                                    \
             ]
-#----------------------------------------------------------------------------------------------------------------------------------------------------------
-# Suites for use with Nvidia compilers, (w/ supported cases). 
-#----------------------------------------------------------------------------------------------------------------------------------------------------------
-run_list_nvhpc = [\
-            {"case": "arm_sgp_summer_1997_A", "suite": "SCM_RAP"},                                                                                        \
-            {"case": "twpice",                "suite": "SCM_RAP"},                                                                                        \
-            {"case": "bomex",                 "suite": "SCM_RAP"},                                                                                        \
-            {"case": "astex",                 "suite": "SCM_RAP"},                                                                                        \
-            {"case": "LASSO_2016051812",      "suite": "SCM_RAP"}]
 
+#NOT TESTED WITH ONEAPI
+#run_list_sp_ifx = run_list_sp_gfortran
