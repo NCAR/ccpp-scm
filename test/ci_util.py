@@ -20,7 +20,7 @@ parser.add_argument('-r', '--run_list',   help='Run list of SCM SDFs and cases')
 def parse_args():
     args       = parser.parse_args()
     build_type = args.build_type
-    run_list   = ards.run_list
+    run_list   = args.run_list
     return (build_type, run_list)
 
 def main():

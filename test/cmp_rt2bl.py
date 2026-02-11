@@ -25,7 +25,7 @@ def parse_args():
     dir_rt    = args.dir_rt 
     dir_bl    = args.dir_bl
     no_plots  = args.no_plots
-    un_list   = ards.run_list
+    un_list   = args.run_list
     return (dir_rt, dir_bl, no_plots, run_list)
 
 #
