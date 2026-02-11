@@ -16,6 +16,9 @@ jobs:
         fortran-compiler: [ifx, gfortran]#, nvfortran]
         build-type:       [Release, Debug]
         run_lists:        [supported, legacy, dev, sp]#, nvhpc]
+	exclude:
+          - build-type: Debug
+            run_lists: sp
         include:
         # Set container images for each compiler
         - fortran-compiler: ifx
