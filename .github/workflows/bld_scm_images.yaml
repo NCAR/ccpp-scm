@@ -80,5 +80,4 @@ jobs:
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-#            dtcenter/ccpp-scm:${{ matrix.toolchain }}
             ghcr.io/ncar/ccpp-scm:${{ matrix.toolchain }}
