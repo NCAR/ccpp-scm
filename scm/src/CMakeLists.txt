@@ -191,7 +191,7 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
   if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
 #    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fstack-protector-all -fpe0 -debug -ftrapuv -init=snan,arrays")
-    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fpe0 -debug)
+    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fpe0 -debug")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -ftrapuv")
   else()
     if(32BIT)
