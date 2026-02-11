@@ -92,7 +92,7 @@ jobs:
     #######################################################################################
     # Build SCM.
     #######################################################################################
-    - id: set-sdfd
+    - id: set-sdfs
       run: |
         cd ${SCM_ROOT}/test
         suites=$(./get_sdfs_for_run_list.py --sdf_list suites_${{matrix.sdfs}}_${{matrix.fortran-compiler}})
