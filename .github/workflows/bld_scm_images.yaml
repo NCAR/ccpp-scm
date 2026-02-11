@@ -3,9 +3,9 @@ run-name: CI Image Build for CCPP SCM
 
 on:
   push:
-    branches:
-      # Only build containers when pushing to main
-      - "main"
+#    branches:
+#      # Only build containers when pushing to main
+#      - "main"
 
 jobs:
   docker:

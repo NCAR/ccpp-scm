@@ -2,8 +2,6 @@ name: Build/run the CCPP-SCM, compare to existing baselines (GitHub artifact)
 
 on:
   push:
-    branches:
-      - feature/containerized_ci
   pull_request:
   workflow_dispatch:
 
@@ -34,7 +32,7 @@ jobs:
       SCM_ROOT:        /__w/ccpp-scm/ccpp-scm
       dir_rt:          /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:          /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
-      artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('feature/containerized_ci' == 'feature/containerized_ci' && 'feature/containerized_ci' || 'PR') }}
+      artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('main' == 'main' && 'main' || 'PR') }}
       GH_TOKEN:        ${{ github.token }}
 
     # Workflow steps
