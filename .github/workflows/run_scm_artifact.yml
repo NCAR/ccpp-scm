@@ -92,7 +92,8 @@ jobs:
     #######################################################################################
     # Build SCM.
     #######################################################################################
-    - id: set-sdfs
+    - name Set SDFs names
+      id: set_sdfs
       run: |
         cd ${SCM_ROOT}/test
         suites=$(./get_sdfs_for_run_list.py --sdf_list suites_${{matrix.sdfs}}_${{matrix.fortran-compiler}})
@@ -100,7 +101,7 @@ jobs:
 
     - name: Print SDF names
       run: |
-        echo ${steps.set-sdfs.outputs.suites}}
+        echo ${steps.set_sdfs.outputs.suites}}
 
     - name: Download data for SCM
       run: |
