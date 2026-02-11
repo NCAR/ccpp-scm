@@ -7,9 +7,7 @@
 ##############################################################################
 import os
 import sys
-from rt_test_cases_supported import run_list as run_list_supported
-from rt_test_cases_legacy    import run_list as run_list_legacy
-from rt_test_cases_dev       import run_list as run_list_dev
+from rt_test_cases
 from os.path import exists
 import argparse
 from plot_scm_out import plot_results
@@ -37,6 +35,9 @@ def main():
     if (sdfs == 'supported'): run_list = run_list_supported
     if (sdfs == 'legacy'):    run_list = run_list_legacy
     if (sdfs == 'dev'):       run_list = run_list_dev
+    if (sdfs == 'sp'):        run_list = run_list_sp
+    if (sdfs == 'nvhpc'):     run_list = run_list_nvhpc
+
     #
     error_count = 0
     for run in run_list:

@@ -15,7 +15,7 @@ jobs:
       matrix:
         fortran-compiler: [ifx, gfortran]#, nvfortran]
         build-type:       [Release, Debug]
-        sdfs:             [supported, legacy, dev]
+        sdfs:             [supported, legacy, dev]#, sp, nvhpc]
         include:
         # Set container images for each compiler
         - fortran-compiler: ifx
@@ -138,13 +138,13 @@ jobs:
       if: matrix.build-type != 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases_${{matrix.sdfs}}.py --runtime_mult 0.1 --mpi_command "${MPI_COMM}"
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --run_list ${{matrix.sdfs}} --runtime_mult 0.1 --mpi_command "${MPI_COMM}"
 
     - name: Run SCM Single Precision RTs
       if: matrix.build-type == 'SinglePrecision'
       run: |
         cd ${SCM_ROOT}/scm/bin
-        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases_sp.py --runtime_mult 0.1 -v --mpi_command "$(MPI_COMM}"
+        ./run_scm.py --file /__w/ccpp-scm/ccpp-scm/test/rt_test_cases.py --run_list ${{matrix.sdfs}} --runtime_mult 0.1 -v --mpi_command "$(MPI_COMM}"
 
     - name: Gather SCM RT output
       run: |

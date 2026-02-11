@@ -107,6 +107,7 @@ parser = argparse.ArgumentParser()
 sgroup = parser.add_argument_group('Single experiment')
 sgroup.add_argument('-c', '--case',       help='name of case to run')
 sgroup.add_argument('-s', '--suite',      help='name of suite to use')
+sgroup.add_argument('--run_list',         help='name of run_list in rt_test_cases file', required=False)
 sgroup.add_argument('-n', '--namelist',   help='physics namelist to use')
 sgroup.add_argument('-t', '--tracers',    help='tracer configuration to use')
 parser.add_argument('-g', '--gdb',        help='invoke scm through gdb', action='store_true', default=False)
@@ -174,6 +175,7 @@ def parse_arguments():
     """Parse command line arguments"""
     args = parser.parse_args()
     file = args.file
+    run_list = args.run_list
     case = args.case
     sdf = args.suite
     namelist = args.namelist
@@ -201,7 +203,7 @@ def parse_arguments():
     if not sdf:
         sdf = DEFAULT_SUITE
 
-    return (file, case, sdf, namelist, tracers, gdb, runtime, runtime_mult, docker, \
+    return (file, run_list, case, sdf, namelist, tracers, gdb, runtime, runtime_mult, docker, \
             verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,   \
             n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error)
 
@@ -835,7 +837,7 @@ def find_max_str_lengths(run_list):
 
 
 def main():
-    (file, case, sdf, namelist, tracers, use_gdb, runtime, runtime_mult, docker, \
+    (file, run_list_name, case, sdf, namelist, tracers, use_gdb, runtime, runtime_mult, docker, \
      verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,       \
      n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error \
      ) = parse_arguments()
@@ -867,6 +869,11 @@ def main():
     global EXECUTABLE
     EXECUTABLE = os.path.join(SCM_RUN, EXECUTABLE_NAME)
 
+    list_name = "run_list"
+    if (run_list_name):
+        list_name = "run_list_"+run_list_name
+    # end if
+
     # Debugger
     if use_gdb:
         gdb = find_gdb()
@@ -879,7 +886,7 @@ def main():
             sys.path.append(dirname)
             module_name = os.path.splitext(basename)[0]
             scm_runs = importlib.import_module(module_name)
-            run_list = scm_runs.run_list
+            run_list = getattr(scm_runs,list_name)
             sys.path.pop()
         except ImportError:
             message = 'There was a problem loading {0}. Please check that the path exists.'.format(file)
