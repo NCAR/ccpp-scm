@@ -78,6 +78,6 @@ jobs:
         with:
           file: docker/Dockerfile-finalize
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: True
           tags: |
             ghcr.io/ncar/ccpp-scm:${{ matrix.toolchain }}
