@@ -78,4 +78,4 @@ jobs:
           build-args: TOOLCHAIN=${{ matrix.toolchain }}
           push: True
           tags: |
-            dustinswales/ccpp-scm:${{ matrix.toolchain }}
+            dustinswales/ccpp-scm-ci:${{ matrix.toolchain }}
