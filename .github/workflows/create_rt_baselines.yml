@@ -2,6 +2,7 @@ name: Build/run the CCPP-SCM, create baselines, store as GitHub artifact
 
 on:
   workflow_dispatch:
+  pull_request:
 
 jobs:
   create_rt_baselines:
