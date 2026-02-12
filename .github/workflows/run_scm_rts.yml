@@ -147,7 +147,7 @@ jobs:
     - name: Download SCM RT baselines
       uses: actions/download-artifact@v6
       with:
-        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-main
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-${{ env.artifact_origin }}
         path: ${{ env.dir_bl }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         run-id: ${{ env.artifact_id }}
