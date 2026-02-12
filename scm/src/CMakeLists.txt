@@ -73,7 +73,7 @@ find_package(sp    REQUIRED)
 find_package(w3emc REQUIRED)
 find_package(MPI   REQUIRED)
 if(NOT MPI_Fortran_HAVE_F08_MODULE)
-  #message(FATAL_ERROR "MPI_F08 Required")
+  message(FATAL_ERROR "MPI_F08 Required")
 endif()
 
 find_package(MPI REQUIRED Fortran)
