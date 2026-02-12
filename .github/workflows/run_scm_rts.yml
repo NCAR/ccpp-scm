@@ -147,7 +147,7 @@ jobs:
     - name: Download SCM RT baselines
       uses: actions/download-artifact@v6
       with:
-        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-main
         path: ${{ env.dir_bl }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         run-id: ${{ env.artifact_id }}
@@ -169,11 +169,11 @@ jobs:
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-${{ env.artifact_origin }}
         path: /__w/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v5
       with:
-        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-${{ env.artifact_origin }}
         path: /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}

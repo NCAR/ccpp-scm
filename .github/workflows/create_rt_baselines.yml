@@ -1,10 +1,6 @@
 name: Build/run the CCPP-SCM, create baselines, store as GitHub artifact
 
 on:
-  push:
-    branches:
-      - feature/containerized_ci
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -34,6 +30,8 @@ jobs:
       SCM_ROOT: /__w/ccpp-scm/ccpp-scm
       dir_rt:   /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}
       dir_bl:   /__w/ccpp-scm/ccpp-scm/test/BL-${{matrix.build-type}}
+      artifact_origin: ${{ github.event_name == 'pull_request' && 'PR' || ('main' == 'main' && 'main' || 'PR') }}
+      GH_TOKEN:   ${{ github.token }}
 
     # Workflow steps
     steps:
@@ -138,5 +136,5 @@ jobs:
     - name: Upload SCM RTs as GitHub Artifact
       uses: actions/upload-artifact@v5
       with:
-        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
+        name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-${{ env.artifact_origin }}
         path: /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}
