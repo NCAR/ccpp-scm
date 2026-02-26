@@ -95,13 +95,19 @@ def main():
         import rt_test_cases_sp
         import rt_test_cases_nvidia
         
-        for item in rt_test_cases.run_list:
+        for item in rt_test_cases.run_list_supported:
+            rt_suite_list.append(item.get("suite"))
+
+        for item in rt_test_cases.run_list_legacy:
+            rt_suite_list.append(item.get("suite"))
+
+        for item in rt_test_cases.run_list_dev:
+            rt_suite_list.append(item.get("suite"))
+
+        for item in rt_test_cases.run_list_sp:
             rt_suite_list.append(item.get("suite"))
         
-        for item in rt_test_cases_sp.run_list:
-            rt_suite_list.append(item.get("suite"))
-        
-        for item in rt_test_cases_nvidia.run_list:
+        for item in rt_test_cases.run_list_nvhpc:
             rt_suite_list.append(item.get("suite"))
         
         unique_suite_list = list(set(rt_suite_list))

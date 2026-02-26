@@ -1,0 +1,50 @@
+FROM ubuntu:24.04
+
+ARG ONEAPI_VERSION='2025.3'
+
+# Extend and update the package registry
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
+      ca-certificates \
+      curl \
+      wget \
+      gpg \
+      binutils \
+      g++ \
+      gcc \
+      gfortran \
+      libc-dev \
+      make \
+      cmake \
+      git \
+      ksh \
+      m4 \
+      tcsh \
+      time \
+      vim \
+      gh \
+      jq
+# See https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2025-2/hpc-apt.html
+
+RUN wget -O - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+     | gpg --dearmor \
+     | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null \
+ && echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+     |  tee /etc/apt/sources.list.d/oneAPI.list \
+ && apt-get update \
+ && apt-get install --yes --no-install-recommends \
+     intel-oneapi-common-vars \
+     intel-oneapi-compiler-fortran-${ONEAPI_VERSION} \
+     intel-oneapi-mpi \
+     intel-oneapi-mpi-devel\
+     intel-oneapi-compiler-dpcpp-cpp-${ONEAPI_VERSION} \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/opt/intel/oneapi/compiler/latest/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib:${LD_LIBRARY_PATH}"
+
+ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/latest
+
+# oneAPI environments
+RUN . /opt/intel/oneapi/setvars.sh
+ENV FC=ifx CC=icx CXX=icpx

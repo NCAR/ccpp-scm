@@ -1,0 +1,39 @@
+#
+# Install Parallel NetCDF Fortran and its dependencies
+#
+
+ARG TOOLCHAIN
+FROM add-netcdf:$TOOLCHAIN
+
+ARG PNFVERSION
+ENV PNFVERSION=$PNFVERSION
+ARG FC
+ENV FC=$FC
+ARG CC
+ENV CC=$CC
+
+# Set environment variables for PnetCDF installation
+ENV PNETCDF_PREFIX=/opt/pnetcdf
+ENV PATH="${PNETCDF_PREFIX}/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${PNETCDF_PREFIX}/lib:{$LD_LIBRARY_PATH}"
+ENV PKG_CONFIG_PATH="${PNETCDF_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+
+# Update and install necessary build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    automake \
+    libtool \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download, compile, and install PnetCDF
+WORKDIR /tmp
+RUN wget https://parallel-netcdf.github.io/Release/pnetcdf-${PNFVERSION}.tar.gz \
+    && tar xzf pnetcdf-${PNFVERSION}.tar.gz \
+    && cd pnetcdf-${PNFVERSION} \
+    && CC=$CC FC=$FC ./configure --prefix=${PNETCDF_PREFIX} \
+    && make -j 8 install \
+    && cd /tmp \
+    && rm -rf pnetcdf-${PNFVERSION} pnetcdf-${PNFVERSION}.tar.gz
+
+# Add PnetCDF library path to the environment
+ENV PATH="${PNETCDF_PREFIX}/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${PNETCDF_PREFIX}/lib:${LD_LIBRARY_PATH}"

@@ -1,0 +1,12 @@
+#
+# Finalize CI containers
+#
+
+ARG TOOLCHAIN
+FROM add-python:$TOOLCHAIN
+
+# Install additional tools
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
+      zstd \
+ && rm -rf /var/lib/apt/lists/*

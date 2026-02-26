@@ -8,23 +8,25 @@
 ##############################################################################
 import os
 import sys
-from rt_test_cases import run_list
+import rt_test_cases
 from os.path import exists
 import argparse
 
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-b', '--build_type',  help='SCM build type')
+parser.add_argument('-b', '--build_type', help='SCM build type')
+parser.add_argument('-r', '--run_list',   help='Run list of SCM SDFs and cases')
 
 def parse_args():
     args       = parser.parse_args()
     build_type = args.build_type
-    return (build_type)
+    run_list   = args.run_list
+    return (build_type, run_list)
 
 def main():
     
-    (build_type) = parse_args()
-
+    (build_type, run_list_name) = parse_args()
+    run_list = getattr(rt_test_cases, run_list_name)
     #
     errmsgs=[]
     for run in run_list:

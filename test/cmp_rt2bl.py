@@ -7,7 +7,7 @@
 ##############################################################################
 import os
 import sys
-from rt_test_cases import run_list
+import rt_test_cases
 from os.path import exists
 import argparse
 from plot_scm_out import plot_results
@@ -17,19 +17,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-drt',  '--dir_rt',   help='Directory containing SCM RT output',              required=True)
 parser.add_argument('-dbl',  '--dir_bl',   help='Directory containing SCM RT baselines',           required=True)
 parser.add_argument('-np',   '--no_plots', help='flag to turn off generation of difference plots', required=False, action='store_true')
+parser.add_argument('-r',    '--run_list', help='Run list of SCM SDFs and cases')
 
 #
 def parse_args():
-    args    = parser.parse_args()
-    dir_rt  = args.dir_rt 
-    dir_bl  = args.dir_bl
-    no_plots   = args.no_plots
-    return (dir_rt, dir_bl, no_plots)
+    args      = parser.parse_args()
+    dir_rt    = args.dir_rt 
+    dir_bl    = args.dir_bl
+    no_plots  = args.no_plots
+    run_list   = args.run_list
+    return (dir_rt, dir_bl, no_plots, run_list)
 
 #
 def main():
-    #
-    (dir_rt, dir_bl, no_plots) = parse_args()
+
+    (dir_rt, dir_bl, no_plots, run_list_name) = parse_args()
+    run_list = getattr(rt_test_cases, run_list_name)
 
     #
     error_count = 0
