@@ -214,7 +214,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/Radiation/RRTMGP/rrtmgp_lw_main.F90',
     'ccpp/physics/physics/Radiation/RRTMGP/rrtmgp_sw_main.F90',
     'ccpp/physics/physics/SFC_Layer/GFDL/gfdl_sfc_layer.F90',
-    'ccpp/physics/physics/SFC_Layer/MYNN/mynnsfc_wrapper.F90',
+    'ccpp/physics/physics/SFC_Layer/MYNN/MYNN/CCPP/module_sf_mynnsfc_driver.F90',
     'ccpp/physics/physics/SFC_Layer/MYJ/myjsfc_wrapper.F90',
     'ccpp/physics/physics/SFC_Layer/UFS/sfc_diag.f',
     'ccpp/physics/physics/SFC_Layer/UFS/sfc_diag_post.F90',
