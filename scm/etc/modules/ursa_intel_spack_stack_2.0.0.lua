@@ -28,4 +28,4 @@ setenv("CMAKE_CXX_COMPILER","CC")
 setenv("CMAKE_Fortran_COMPILER","ftn")
 setenv("CMAKE_Platform","ursa.intel")
 
-execute{cmd="source /scratch3/BMC/gmtb/ccpp-scm-software/spack-stack-2.0.0/bin/activate", modeA={"load"}}
+execute{cmd="source /scratch3/BMC/gmtb/ccpp-scm-software/spack-stack-2.0.0-intel/bin/activate", modeA={"load"}}
