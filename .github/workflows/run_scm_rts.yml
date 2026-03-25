@@ -41,7 +41,7 @@ jobs:
     # Initial
     #######################################################################################
     - name: Checkout SCM code (/__w/ccpp-scm/ccpp-scm)
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Install Required Tools
       run: |
@@ -145,7 +145,7 @@ jobs:
         echo "artifact_id=${ARTIFACT_ID}" >> "$GITHUB_ENV"
 
     - name: Download SCM RT baselines
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-main
         path: ${{ env.dir_bl }}
@@ -167,13 +167,13 @@ jobs:
         fi
 
     - name: Upload plots of SCM Baselines/RTs as GitHub Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: rt-plots-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-${{ env.artifact_origin }}
         path: /__w/ccpp-scm/ccpp-scm/test/scm_rt_out
 
     - name: Upload SCM RTs as GitHub Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: rt-baselines-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}-${{ env.artifact_origin }}
         path: /__w/ccpp-scm/ccpp-scm/test/artifact-${{matrix.build-type}}-${{matrix.fortran-compiler}}-${{matrix.run_lists}}

@@ -18,7 +18,7 @@ if(DEFINED CCPP_SUITES)
   unset(CCPP_SUITES CACHE)
 else()
   execute_process(
-    COMMAND scm/src/suite_info.py
+    COMMAND scm/src/suite_info.py --fc "${CMAKE_Fortran_COMPILER_ID}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
     OUTPUT_VARIABLE suite_string
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -152,7 +152,7 @@ endif()
 
 #------------------------------------------------------------------------------
 # GNU
-#------------------------------------------------------------------------------ 
+#------------------------------------------------------------------------------
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message(STATUS "Compile using GNU")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ggdb -fbacktrace -cpp -fcray-pointer -ffree-line-length-none -fno-range-check")
@@ -218,7 +218,7 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS_BITFORBIT "-O2 -fPIC" CACHE STRING "" FORCE)
 #------------------------------------------------------------------------------
 # Intel Classic
-#------------------------------------------------------------------------------ 
+#------------------------------------------------------------------------------
  elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   message(STATUS "Compile using Intel Classic")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback -fpp -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -nowarn -sox -align array64byte -qno-opt-dynamic-align")
@@ -258,7 +258,7 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
 #------------------------------------------------------------------------------
 # Nvidia HPC stack
-#------------------------------------------------------------------------------ 
+#------------------------------------------------------------------------------
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "NVHPC")
   message(STATUS "Compile using Nvidia HPC Stack")
   if(ENABLE_NVIDIA_OPENACC MATCHES "true")

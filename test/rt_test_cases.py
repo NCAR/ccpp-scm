@@ -90,7 +90,7 @@ run_list_supported_nvhpc = [\
             {"case": "LASSO_2016051812",      "suite": "SCM_RAP"}]
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
-# Developmental suites, (w/ supported cases). 
+# Developmental suites, (w/ supported cases).
 #----------------------------------------------------------------------------------------------------------------------------------------------------------
 suites_dev_gfortran = [\
             " SCM_GFS_v16_no_nsst",    "SCM_GFS_v17_p8_ugwpv1_no_nsst",    "SCM_RRFS_v1beta_no_nsst",    "SCM_GFS_v17_p8_ugwpv1_tempo",                   \
@@ -169,3 +169,22 @@ run_list_sp_gfortran = [\
 #
 suites_sp_ifx   = suites_sp_gfortran
 run_list_sp_ifx = run_list_sp_gfortran
+
+# make this work with suite_info.py
+class gnu_test_cases:
+    run_list_supported = run_list_supported_gfortran
+    run_list_legacy = run_list_legacy_gfortran
+    run_list_dev = run_list_dev_gfortran
+    run_list_sp = run_list_sp_gfortran
+
+class intel_test_cases:
+    run_list_supported = run_list_supported_ifx
+    run_list_legacy = run_list_legacy_ifx
+    run_list_dev = run_list_dev_ifx
+    run_list_sp = run_list_sp_ifx
+
+class nvhpc_test_cases:
+    run_list_supported = run_list_supported_nvhpc
+    run_list_legacy = []
+    run_list_dev = []
+    run_list_sp = []

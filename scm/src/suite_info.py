@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-import sys, os
+import sys, os, argparse
 
 #DEFAULT_SUITE_BEHAVIOR = 'supported'
 DEFAULT_SUITE_BEHAVIOR = 'regression_test'
 
 class suite(object):
-  
+
     DEFAULT_MAX_TIMESTEP = 1800.0
-  
+
     def __init__(self, name, tracers, namelist, timestep, max_timestep, supported):
         DEFAULT_MAX_TIMESTEP = 1800.0
         self._name = name                     #should remain unchanged after init
@@ -17,12 +17,12 @@ class suite(object):
         self.tracers = self._default_tracers   #can be modified after init
         self.namelist = self._default_namelist #can be modified after init
         self._supported = supported
-      
+
         if max_timestep > 0:
             self._max_timestep = max_timestep     #should remain unchanged after init
         else:
             self._max_timestep = DEFAULT_MAX_TIMESTEP
-        
+
         if timestep <= self._max_timestep and timestep > 0:
             self._default_timestep = timestep #should remain unchanged after init
             self.timestep = self._default_timestep #can be modified after init
@@ -31,7 +31,7 @@ class suite(object):
         else:
             message = 'The timestep for suite {0} cannot be set greater than the max_timestep of {1}'.format(self._name, self._max_timestep)
             raise Exception(message)
-      
+
         @property
         def timestep(self):
             """Get the timestep for the given suite."""
@@ -45,7 +45,7 @@ class suite(object):
             else:
                 message = 'The timestep for suite {0} cannot be set greater than the max_timestep of {1}'.format(self._name, self._max_timestep)
                 raise Exception(message)
-      
+
 suite_list = []
 suite_list.append(suite('SCM_GFS_v16',           'tracers_GFS_v16.txt',                  'input_GFS_v16.nml',                 600.0, 1800.0, True ))
 suite_list.append(suite('SCM_GFS_v17_p8_ugwpv1', 'tracers_GFS_v17_p8_ugwpv1.txt',        'input_GFS_v17_p8_ugwpv1.nml',       600.0, 600.0,  True ))
@@ -81,45 +81,54 @@ suite_list.append(suite('SCM_GFS_v16_gfdlmpv3',  'tracers_GFS_v16.txt',         
 
 
 def main():
-    
+    # find which compiler is being used
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fc")
+    args = parser.parse_args()
+
     #print supported suites separated by commas
     suite_string = ''
-    
+
     if DEFAULT_SUITE_BEHAVIOR == 'regression_test':
         dir_path = os.path.dirname(os.path.realpath(__file__))
         sys.path.insert(1, dir_path + '/../../test/')
-        
+
         rt_suite_list = []
-        
+
         import rt_test_cases
-        import rt_test_cases_sp
-        import rt_test_cases_nvidia
-        
-        for item in rt_test_cases.run_list_supported:
+
+        # choose correct compiler
+        if 'gfortran' in args.fc.lower():
+            rttc = rt_test_cases.gnu_test_cases
+        elif 'intel' in args.fc.lower():
+            rttc = rt_test_cases.intel_test_cases
+        elif 'nvhpc' in args.fc.lower():
+            rttc = rt_test_cases.nvhpc_test_cases
+        else:
+            print("Warning: suite_info.py was unable to match CMAKE_Fortran_COMPILER string, using default gnu rt test cases")
+            rttc = rt_test_cases.gnu_test_cases
+
+        for item in rttc.run_list_supported:
             rt_suite_list.append(item.get("suite"))
 
-        for item in rt_test_cases.run_list_legacy:
+        for item in rttc.run_list_legacy:
             rt_suite_list.append(item.get("suite"))
 
-        for item in rt_test_cases.run_list_dev:
+        for item in rttc.run_list_dev:
             rt_suite_list.append(item.get("suite"))
 
-        for item in rt_test_cases.run_list_sp:
+        for item in rttc.run_list_sp:
             rt_suite_list.append(item.get("suite"))
-        
-        for item in rt_test_cases.run_list_nvhpc:
-            rt_suite_list.append(item.get("suite"))
-        
+
         unique_suite_list = list(set(rt_suite_list))
-        
-        for s in unique_suite_list:    
+
+        for s in unique_suite_list:
             suite_string += s + ',' + s + '_ps' + ','
     else:
         for s in suite_list:
             if s._supported:
-                suite_string += s._name + ',' + s._name + '_ps' + ','  
+                suite_string += s._name + ',' + s._name + '_ps' + ','
     print(suite_string[:-1])
 
 if __name__ == '__main__':
-    main()  
- 
+    main()

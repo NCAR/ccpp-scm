@@ -1,5 +1,6 @@
 name: env_ufscasegen
-
+channels:
+  - conda-forge
 dependencies:
   - conda-forge::python=3.8.5
   - conda-forge::netcdf4
