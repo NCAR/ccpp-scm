@@ -300,7 +300,7 @@
   type = real
   kind = kind_phys
 [con_avgd]
-  standard_name = avogadro_consant
+  standard_name = avogadro_constant
   long_name = Avogadro constant
   units = mol-1
   dimensions = ()
