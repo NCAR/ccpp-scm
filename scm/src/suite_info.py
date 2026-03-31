@@ -98,7 +98,7 @@ def main():
         import rt_test_cases
 
         # choose correct compiler
-        if 'gfortran' in args.fc.lower():
+        if 'gnu' in args.fc.lower():
             rttc = rt_test_cases.gnu_test_cases
         elif 'intel' in args.fc.lower():
             rttc = rt_test_cases.intel_test_cases
