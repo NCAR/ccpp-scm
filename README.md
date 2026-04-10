@@ -10,6 +10,6 @@ The SCM is a tool for developing physics suites and diagnosing their performance
 - [CCPP Framework:](https://github.com/NCAR/ccpp-framework) a framework for connecting atmospheric models to physics suites.
 
 ## Documentation
-- [SCM readthedocs](https://ccpp-scm.readthedocs.io/en/v7.0.0/)
-- [CCPP readthedocs](https://ccpp-techdoc.readthedocs.io/en/v7.0.0/)
+- [SCM readthedocs](https://ccpp-scm.readthedocs.io)
+- [CCPP readthedocs](https://ccpp-techdoc.readthedocs.io)
 - [Scientific documentation](https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/index.html)

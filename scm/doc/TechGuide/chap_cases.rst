@@ -110,10 +110,10 @@ DEPHY-SCM file location to the SCM.
 
    .. note::
 
-      Not all forcing methods available in external DEPHY-SCM cases are currently 
+      Not all forcing methods available in external DEPHY-SCM cases are currently
       supported in the CCPP SCM. For example:
-   
-      - ``surface_forcing_moisture``: "beta", "mrsos" 
+
+      - ``surface_forcing_moisture``: "beta", "mrsos"
       - ``surface_forcing_wind``: "ustar"
       - ``surface_type``: "seaice"
 
@@ -123,10 +123,10 @@ Example to run a DEPHY-SCM case:
 
 .. code:: bash
 
-   cd [...]/ccpp-scm/scm/data
-   git clone https://github.com/GdR-DEPHY/DEPHY-SCM DEPHY-SCM
-   cd [...]/ccpp-scm/scm/bin
-   ./run_scm.py -c MAGIC_LEG04A --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/MAGIC/LEG04A -v
+   $ cd [...]/ccpp-scm/scm/data
+   $ git clone https://github.com/GdR-DEPHY/DEPHY-SCM DEPHY-SCM
+   $ cd [...]/ccpp-scm/scm/bin
+   $ ./run_scm.py -c MAGIC_LEG04A --case_data_dir [...]/ccpp-scm/scm/data/DEPHY-SCM/MAGIC/LEG04A -v
 
 Each DEPHY file has three dimensions (``time``, ``t0``, ``levels``) and contains the initial
 conditions (``t0``, ``levels``) and forcing data (``time``, ``levels``). Not all fields
@@ -158,7 +158,7 @@ To convert a case, run the script with the -n option followed by the name of the
 
 .. code:: bash
 
-   python dephy_converter.py -n name_of_case
+   $ python dephy_converter.py -n name_of_case
 
 This script performs the following actions:
 - Reads the legacy case file from ccpp-scm/scm/data/processed_case_data/name_of_case.nc
@@ -365,7 +365,7 @@ following steps:
 
    .. code:: bash
 
-      ./lasso1_forcing_file_generator_gjf.py
+      $ ./lasso1_forcing_file_generator_gjf.py
 
 #. Create a new case configuration file (or copy and modify an existing
    one) in ``ccpp-scm/scm/etc/case_config``. Be sure that the ``case_name`` variable points to the newly
@@ -390,7 +390,7 @@ Create environment (only once):
 
 .. code:: bash
 
-  > conda env create -f environment-ufscasegen.yml
+  $ conda env create -f environment-ufscasegen.yml
 
 This will create the conda environment ``env_ufscasegen``
 
@@ -398,21 +398,21 @@ Activate environment:
 
 .. code:: bash
 
-  > conda activate env_ufscasegen
+  $ conda activate env_ufscasegen
 
 Note that it may be possible for conda to fail to solve for the environment when attempting to use the yml file. It
 should still be possible to create the same environment manually:
 
 .. code:: bash
 
-  > conda create --name env_ufscasegen
-  > conda install -n env_ufscasegen --channel=conda-forge python=3.8.5
-  > conda install -n env_ufscasegen --channel=conda-forge netcdf4
-  > conda install -n env_ufscasegen --channel=conda-forge f90nml
-  > conda install -n env_ufscasegen --channel=conda-forge xarray
-  > conda install -n env_ufscasegen --channel=conda-forge numpy
-  > conda install -n env_ufscasegen --channel=conda-forge shapely
-  > conda install -n env_ufscasegen --channel=conda-forge xesmf
+  $ conda create --name env_ufscasegen
+  $ conda install -n env_ufscasegen --channel=conda-forge python=3.8.5
+  $ conda install -n env_ufscasegen --channel=conda-forge netcdf4
+  $ conda install -n env_ufscasegen --channel=conda-forge f90nml
+  $ conda install -n env_ufscasegen --channel=conda-forge xarray
+  $ conda install -n env_ufscasegen --channel=conda-forge numpy
+  $ conda install -n env_ufscasegen --channel=conda-forge shapely
+  $ conda install -n env_ufscasegen --channel=conda-forge xesmf
 
 .. _`ufscasegenpy`:
 
@@ -425,10 +425,13 @@ format.
 
 .. code:: bash
 
-   ./UFS_case_gen.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX) -d
-   DATE -i IN_DIR -g GRID_DIR -f FORCING_DIR -n
-   CASE_NAME [-t {1,2,3,4,5,6,7}] [-a AREA] [-oc]
-   [-lam] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
+    $ ./UFS_case_gen.py --help
+    usage: ./UFS_case_gen.py [-h] (-l LOCATION LOCATION | -ij INDEX INDEX)
+                             [-d DATE] -i IN_DIR -g GRID_DIR -f FORCING_DIR
+                             -n CASE_NAME [-t {1,2,3,4,5,6,7}] [-a AREA]
+                             [-oc] [-lam] [-sc] [-near]
+                             [-fm {1,2,3}] [-vm {1,2}] [-wn] [-geos]
+
 
 Mandatory arguments:
 
@@ -559,12 +562,12 @@ generating multiple cases at once.
 
 .. code:: bash
 
-   UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME
-   (-lonl LON_1 LON_2 -latl LAT_1 LAT_2 -nens NENSMEMBERS |
-   -lons [LON_LIST] -lats [LAT_LIST] |
-   -fxy [LON_LAT_FILE] |
-   -tile [TILE_NUMBER] -is [I_INDEX_LIST] -js [J_INDEX_LIST])
-   [-dt TIMESTEP] [-cres C_RES] [-sdf SUITE] [-sc] [-near] [-fm] [-vm] [-wn] [-geos]
+   $ UFS_forcing_ensemble_generator.py --help
+   usage: UFS_forcing_ensemble_generator.py [-h] -d DIR -n CASE_NAME [-lonl LON_LIMITS LON_LIMITS] [-latl LAT_LIMITS LAT_LIMITS]
+                                            [-lons [LON_LIST ...]] [-lats [LAT_LIST ...]] [-fxy LONLAT_FILE]
+                                            [-nens NENSMEMBERS] [-tile TILE] [-is [I_LIST ...]] [-js [J_LIST ...]] [-dt TIMESTEP]
+                                            [-cres C_RES] [-sdf SUITE] [-sc] [-near] [-lam] [-fm {1,2,3}]
+                                            [-vm {1,2}] [-wn] [-geos]
 
 Mandatory arguments:
 
@@ -624,14 +627,15 @@ supplying the vertical velocity for the vertical advective terms and nudging the
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34 -fm 2 -vm 2 -wn
+   $ ./UFS_forcing_ensemble_generator.py -d [path_to_regression_tests_output]/control_c192_intel/ \
+                                         -sc --C_RES 192 -dt 360  -n control_c192 -lons 300 -lats 34 -fm 2 -vm 2 -wn
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
 
 .. code:: bash
 
-   ./run_scm.py --npz_type gfs --file scm_ufsens_control_c192.py --timestep 360
+   $ ./run_scm.py --npz_type gfs --file scm_ufsens_control_c192.py --timestep 360
 
 The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, where the SCM run script is to be exectued.
 
@@ -644,14 +648,15 @@ UFS regression test, ``control_c384``, for multiple points assuming the same for
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37 -fm 2 -vm 2 -wn
+   $ ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_c384_intel/ \
+                                         -sc --C_RES 384 -dt 225 -n control_c384 -lons 300 300 300 300 -lats 34 35 35 37 -fm 2 -vm 2 -wn
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
 
 .. code:: bash
 
-   ./run_scm.py --npz_type gfs --file scm_ufsens_control_c384.py --timestep 225
+   $ ./run_scm.py --npz_type gfs --file scm_ufsens_control_c384.py --timestep 225
 
 The file ``scm_ufsens_control_c384.py`` contains ALL of the cases created. Each case created will have the
 naming convention ``case_name_nXXX``, where the suffix ``XXX`` is the case number from 0 to the
@@ -689,14 +694,15 @@ Now the cases can be generated with the following command:
 
 .. code:: bash
 
-   ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_p8_intel -sc --C_RES 96 -dt 720 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10 -sdf SCM_GFS_v17_p8
+   $ ./UFS_forcing_ensemble_generator.py -d /glade/derecho/scratch/epicufsrt/ufs-weather-model/RT/NEMSfv3gfs/develop-20240607/control_p8_intel \
+                                         -sc --C_RES 96 -dt 720 -n control_p8 -lonl 300 320 -latl 40 50 -nens 10 -sdf SCM_GFS_v17_p8
 
 Upon successful completion of the script, the command to run the case(s)
 will print to the screen. For example,
 
 .. code:: bash
 
-   ./run_scm.py --npz_type gfs --file scm_ufsens_control_p8.py --timestep 720
+   $ ./run_scm.py --npz_type gfs --file scm_ufsens_control_p8.py --timestep 720
 
 The file ``scm_ufsens_control_p8.py`` contains ten cases (n000-n009) to be run. The contents of the
 file should look like:

@@ -25,7 +25,7 @@ Clone the source using
 
 .. code:: bash
 
-   git clone --recursive -b v7.0.1 https://github.com/NCAR/ccpp-scm
+   $ git clone --recursive -b v7.0.1 https://github.com/NCAR/ccpp-scm
 
 The ``--recursive`` option is required to retrieve the ccpp-physics and ccpp-framework code,
 which are stored in separate repositories and linked to the SCM repository as submodules.
@@ -34,7 +34,7 @@ by executing the following command from the SCM directory:
 
 .. code:: bash
 
-   git submodule update --init --recursive
+   $ git submodule update --init --recursive
 
 The CCPP framework can be found in the ``ccpp/framework`` subdirectory at
 this level. The CCPP physics parameterizations can be found in the
@@ -50,7 +50,7 @@ version of the code, which can be found on the ``main`` branch of the repository
 
 .. code:: bash
 
-   git clone --recursive -b main https://github.com/NCAR/ccpp-scm
+   $ git clone --recursive -b main https://github.com/NCAR/ccpp-scm
 
 Recall that the ``--recursive`` option in this command clones the main ccpp-scm
 repository and all subrepositories (ccpp-physics and ccpp-framework).
@@ -60,7 +60,7 @@ SCM by executing the following command from the SCM directory:
 
 .. code:: bash
 
-   git submodule update --init --recursive
+   $ git submodule update --init --recursive
 
 While the ``main`` branch is tested regularly for compilation and basic functionality (as described in :numref:`Section %s <testing>`),
 it may not be as stable or scientifically vetted as the latest release code, and may be lacking in up-to-date documentation.
@@ -85,27 +85,27 @@ development). To do so:
 
    .. code:: bash
 
-      cd ccpp-scm/ccpp/physics
+      $ cd ccpp-scm/ccpp/physics
 
 #. Check out main.
 
    .. code:: bash
 
-      git checkout main
+      $ git checkout main
 
 #. Pull down the latest changes just to be sure.
 
    .. code:: bash
 
-      git pull
+      $ git pull
 
 #. Do the same for ccpp-framework
 
    .. code:: bash
 
-      cd ../framework
-      git checkout main
-      git pull
+      $ cd ../framework
+      $ git checkout main
+      $ git pull
 
 #. Change back to the main directory for following the instructions in
    :numref:`Section %s <compiling>`, assuming system requirements in
@@ -113,7 +113,7 @@ development). To do so:
 
    .. code:: bash
 
-      cd ../..
+      $ cd ../..
 
 .. _`systemrequirements`:
 
@@ -185,9 +185,29 @@ the corresponding absolute path):
 
 .. code:: sh
 
-   module purge
-   module use scm/etc/modules
-   module load [machine]_[compiler]
+   $ module purge
+   $ module use scm/etc/modules
+   $ module load [machine]_[compiler]
+
+For specific versions of the spack-stack, use the module version.
+
+.. code:: sh
+
+   list available module versions
+   $ module spider derecho_gnu
+   ------------------------------------------
+     derecho_gnu:
+   ------------------------------------------
+        Versions:
+           derecho_gnu/1.6.0
+           derecho_gnu/1.9.3
+           derecho_gnu/2.1.0
+
+
+   load specific module version
+   $ module load derecho_gnu/2.1.0
+
+
 
 View the contents of the directory to see if your machine/compiler
 combination is supported. As of this writing, modulefiles are provided
@@ -305,13 +325,13 @@ components.
 
    .. code:: bash
 
-      cd scm
+      $ cd scm
 
 #. Make a build directory and change into it.
 
    .. code:: bash
 
-      mkdir bin && cd bin
+      $ mkdir bin && cd bin
 
 #. Invoke ``cmake`` on the source code to build using one of the options below.
    This step is used to identify for which suites the ccpp-framework
@@ -322,16 +342,31 @@ components.
 
       .. code:: bash
 
-         cmake ../src
+         $ cmake ../src
 
       By default, this option uses all supported suites. The list of
-      supported suites is controlled by ``scm/src/suite_info.py``.
+      supported suites is controlled by ``scm/src/suite_info.py`` and
+      can be viewed with the following command.
+
+      .. code:: bash
+
+         $ ./suite_info.py --fc gnu --rl supported
+         SCM_GFS_v16,SCM_GFS_v16_ps,SCM_GFS_v17_p8_ugwpv1,SCM_GFS_v17_p8_ugwpv1_ps,SCM_RAP,SCM_RAP_ps,SCM_HRRR_gf,SCM_HRRR_gf_ps,SCM_WoFS_v0,SCM_WoFS_v0_ps,SCM_GFS_v16_RRTMGP,SCM_GFS_v16_RRTMGP_ps
+
+         $ ./suite_info.py --help
+         usage: suite_info.py [-h] [--fc FC] [--rl RL]
+
+         options:
+           -h, --help  show this help message and exit
+           --fc FC     Fortran compiler being used (e.g. gnu, intel, intelllvm, nvhpc)
+           --rl RL     run list type in rt_test_cases.py (e.g. supported, dev, legacy, sp)
+
 
    -  All suites mode
 
       .. code:: bash
 
-         cmake -DCCPP_SUITES=ALL ../src
+         $ cmake -DCCPP_SUITES=ALL ../src
 
       All suites in ``scm/src/suite_info.py``, regardless of whether they’re supported, will be
       used. This list is typically longer for the development version of
@@ -341,7 +376,7 @@ components.
 
       .. code:: bash
 
-         cmake -DCCPP_SUITES=SCM_GFS_v16,SCM_RAP ../src
+         $ cmake -DCCPP_SUITES=SCM_GFS_v16,SCM_RAP ../src
 
       This only compiles the listed subset of suites (which should still
       have a corresponding entry in ``scm/src/suite_info.py``)
@@ -373,7 +408,7 @@ components.
 
       .. code:: bash
 
-         cmake [-DCMAKE_BUILD_TYPE ...] ../src 2>&1 | tee log.cmake
+         $ cmake [-DCMAKE_BUILD_TYPE ...] ../src 2>&1 | tee log.cmake
 
    CMake automatically runs the CCPP prebuild script to match required
    physics variables with those available from the dycore (SCM) and to
@@ -387,7 +422,7 @@ components.
 
    .. code:: bash
 
-      ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --suites=SCM_GFS_v16,SCM_RAP[...] --builddir=./scm/bin [--debug]
+      $ ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --suites=SCM_GFS_v16,SCM_RAP[...] --builddir=./scm/bin [--debug]
 
    where the argument supplied via the ``--suites`` variable is a comma-separated
    list of suite names that exist in the directory. Note that suite
@@ -397,14 +432,14 @@ components.
 
    .. code:: bash
 
-      make
+      $ make
 
    -  One may also use more threads for compilation and/or save the
       output of the compilation to a log file:
 
       .. code:: bash
 
-         make -j4 2>&1 | tee log.make
+         $ make -j4 2>&1 | tee log.make
 
 The resulting executable may be found at ./scm (Full path of ``ccpp-scm/scm/bin/scm``).
 
@@ -414,8 +449,9 @@ directory)
 
 .. code:: bash
 
-   pwd #confirm that you are in the ccpp-scm/scm/bin directory before deleting files
-   rm -rfd *
+   confirm that you are in the ccpp-scm/scm/bin directory before deleting files
+   $ pwd
+   $ rm -rfd *
 
 .. warning::
   This command can be dangerous (deletes files without confirming),
@@ -446,9 +482,9 @@ execute the following scripts:
 
 .. code:: bash
 
-   ./contrib/get_all_static_data.sh
-   ./contrib/get_thompson_tables.sh
-   ./contrib/get_tempo_data.sh
+   $ ./contrib/get_all_static_data.sh
+   $ ./contrib/get_thompson_tables.sh
+   $ ./contrib/get_tempo_data.sh
 
 If the download step fails, make sure that your system’s firewall does
 not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
@@ -462,7 +498,7 @@ New with the SCM v7 release, static data is available for running cases with GOC
 
 .. code:: bash
 
-   ./contrib/get_aerosol_climo.sh
+   $ ./contrib/get_aerosol_climo.sh
 
 .. _`singlerunscript`:
 
@@ -482,7 +518,7 @@ integration. For example, to run the "BOMEX" case:
 
 .. code:: bash
 
-  ./run_scm.py -c bomex
+  $ ./run_scm.py -c bomex
 
 For running multiple integrations at once, the run script can accept a file that contains a list of tests to run.
 The file ``ccpp-scm/test/rt_test_cases.py`` contains the full list of regression test cases, so you could run that list
@@ -490,13 +526,13 @@ of tests with the following command:
 
 .. code:: bash
 
- ./run_scm.py -f ../../test/rt_test_cases.py
+  $ ./run_scm.py -f ../../test/rt_test_cases.py
 
 To see the full list of available options, use the ``--help`` flag:
 
 .. code:: bash
 
-  ./run_scm.py --help
+  $ ./run_scm.py --help
 
 
 The run script’s full set of options are described below, where optional abbreviations are included in brackets.
@@ -719,7 +755,7 @@ variable. To use, invoke
 
 .. code:: bash
 
-   ./scm_slurm_example.py
+  $ ./scm_slurm_example.py
 
 from the ``bin`` directory.
 
@@ -766,7 +802,7 @@ internet search.
 
    .. code:: bash
 
-      docker-machine create default --virtualbox-no-vtx-check
+      $ docker-machine create default --virtualbox-no-vtx-check
 
 Building the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -811,7 +847,7 @@ and then executing the following steps:
 
    .. code:: bash
 
-      docker build -t ccpp-scm .
+      $ docker build -t ccpp-scm .
 
    Inspect the Dockerfile if you would like to see details for how the
    image is built. The image will contain SCM prerequisite software from
@@ -820,7 +856,7 @@ and then executing the following steps:
 
    .. code:: bash
 
-      > docker images
+      $ docker images
 
       REPOSITORY           TAG       IMAGE ID       CREATED       SIZE
       ccpp-scm             latest    1b2e0a0afdf9   2 days ago    3.21GB
@@ -835,13 +871,13 @@ following from the terminal where Docker is run:
 
 .. code:: bash
 
-   docker pull dtcenter/ccpp-scm:v7.0.1
+   $ docker pull dtcenter/ccpp-scm:v7.0.1
 
 To verify that it exists afterward, run
 
 .. code:: bash
 
-   docker images
+   $ docker images
 
 Running the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -857,7 +893,7 @@ Running the Docker image
 
    .. code:: bash
 
-      mkdir -p /path/to/output
+      $ mkdir -p /path/to/output
 
    For Windows, you can try to create a directory of your choice to
    mount to the container, but it may not work or require more
@@ -877,7 +913,7 @@ Running the Docker image
 
    .. code:: bash
 
-      export OUT_DIR=/path/to/output
+      $ export OUT_DIR=/path/to/output
 
    For Windows, the format that worked for us followed this example:
    ``/c/Users/myusername/path/to/directory/to/mount``
@@ -889,7 +925,7 @@ Running the Docker image
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice --mpi_command "mpirun -np 1 --allow-run-as-root" -d
+      $ docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -c twpice --mpi_command "mpirun -np 1 --allow-run-as-root" -d
 
    will run through the TWPICE case using the default suite and namelist
    and put the output in the shared directory.
@@ -902,7 +938,7 @@ Running the Docker image
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "mpirun -np 1 --allow-run-as-root" -d
+      $ docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm ./run_scm.py -f ../../test/rt_test_cases.py --runtime_mult 0.1 --mpi_command "mpirun -np 1 --allow-run-as-root" -d
 
    The options included in the above ``run`` commands are the following:
 
@@ -930,7 +966,7 @@ Running the Docker image
 
    .. code:: bash
 
-      docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm /bin/bash
+      $ docker run --rm -it -v ${OUT_DIR}:/home --name run-ccpp-scm ccpp-scm /bin/bash
 
    You will be placed within the container space and within the
    directory of the SCM with a pre-compiled executable. At this point,

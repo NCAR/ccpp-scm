@@ -114,7 +114,7 @@ Create environment (only once):
 
 .. code:: bash
 
-  > conda env create -f environment-suite-sim.yml
+  $ conda env create -f environment-suite-sim.yml
 
 This will create the conda environment ``scm_suite_sim``
 
@@ -122,7 +122,7 @@ Activate environment:
 
 .. code:: bash
 
-  > conda activate scm_suite_sim
+  $ conda activate scm_suite_sim
 
 Enabling the CCPP Suite Simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -211,25 +211,25 @@ interpolates these forcings in time.
 
    .. code:: bash
 
-      cd ccpp-scm/scm/bin
-      ./run_scm.py -c twpice -s SCM_GFS_v16
-      ./run_scm.py -c twpice -s SCM_GFS_v17_p8
+      $ cd ccpp-scm/scm/bin
+      $ ./run_scm.py -c twpice -s SCM_GFS_v16
+      $ ./run_scm.py -c twpice -s SCM_GFS_v17_p8
 
 #. Create 2D forcing data for the CSS, using SCM output from TWPICE case
    with ``GFS_v16`` suite.
 
    .. code:: bash
 
-      cd ccpp-scm/scm/etc/scripts/ccpp_suite_sim
-      ./create_2D_CSSdata.py --cases twpice --suites SCM_GFS_v16
+      $ cd ccpp-scm/scm/etc/scripts/ccpp_suite_sim
+      $ ./create_2D_CSSdata.py --cases twpice --suites SCM_GFS_v16
 
 #. Create constant forcing data for the CSS, using SCM output, at
    forecast time 3600s, from TWPICE case with ``GFS_v17_p8`` suite.
 
    .. code:: bash
 
-      cd ccpp-scm/scm/etc/scripts/ccpp_suite_sim
-      ./create_1D_CSSdata.py --cases twpice --suites SCM_GFS_v17_p8 --time 3600
+      $ cd ccpp-scm/scm/etc/scripts/ccpp_suite_sim
+      $ ./create_1D_CSSdata.py --cases twpice --suites SCM_GFS_v17_p8 --time 3600
 
 The data file will be written to ``ccpp-scm/scm/etc/scripts/ccpp_suite_sim/`` with the format ``data_CSS_DIM.CASES.SUITES.nc``
 
@@ -267,9 +267,9 @@ and run the SCM using TWPICE case with the modified suite.
 
 .. code:: bash
 
-   cd ccpp-scm/scm/bin
-   cmake ../src -DCCPP_SUITES=SCM_GFS_v16
-   ./run_scm.py -c twpice -s SCM_GFS_v16
+   $ cd ccpp-scm/scm/bin
+   $ cmake ../src -DCCPP_SUITES=SCM_GFS_v16
+   $ ./run_scm.py -c twpice -s SCM_GFS_v16
 
 .. _`Suite_with_Active_cldmp`:
 
@@ -309,9 +309,9 @@ and run the SCM using TWPICE case with the modified suite.
 
 .. code:: bash
 
-   cd ccpp-scm/scm/bin
-   cmake ../src -DCCPP_SUITES=SCM_GFS_v17_p8
-   ./run_scm.py -c twpice -s SCM_GFS_v17_p8
+   $ cd ccpp-scm/scm/bin
+   $ cmake ../src -DCCPP_SUITES=SCM_GFS_v17_p8
+   $ ./run_scm.py -c twpice -s SCM_GFS_v17_p8
 
 .. _`plotting_tools`:
 
@@ -322,7 +322,9 @@ Additionally, plotting scripts provided in :
 
 #. .. code:: bash
 
-      ./plt_scmout_2d.py [-h] -n CASE_NAME -sdf SDF -nmls NMLS -vars VAR1 VAR2 VAR3
+      $ ./plt_scmout_2d.py --help
+      usage: plt_scmout_2d.py [-h] -n CASE_NAME -sdf SUITE [-nmls [NML_LIST ...]] -vars [VAR_LIST ...]
+
 
    Mandatory arguments:
 
@@ -336,7 +338,8 @@ Additionally, plotting scripts provided in :
 
 #. .. code:: bash
 
-      ./plt_scmout_3d.py [-h] -n CASE_NAME -sdf SDF -nmls NMLS -vars VAR1 VAR2 VAR3 -time TIME
+      $ ./plt_scmout_3d.py --help
+      usage: plt_scmout_3d.py [-h] -n CASE_NAME -sdf SUITE [-nmls [NML_LIST ...]] -vars [VAR_LIST ...] [-time TIME_PLOT]
 
    Mandatory arguments:
 
