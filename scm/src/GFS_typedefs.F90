@@ -6431,7 +6431,7 @@ module GFS_typedefs
     Model%nps2delt = -999
     Model%npsdelt  = -999
     Model%ncnd     = nwat - 1                   ! ncnd is the number of cloud condensate types
-    
+
     if (Model%imp_physics == Model%imp_physics_fer_hires) then     ! Ferrier-Aligo scheme
       Model%npdf3d  = 0
       Model%num_p3d = 3
