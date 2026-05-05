@@ -203,6 +203,7 @@ SCHEME_FILES = [
     'ccpp/physics/physics/PBL/MYNN_EDMF/mynnedmf_wrapper.F90',
     'ccpp/physics/physics/PBL/SATMEDMF/satmedmfvdif.F',
     'ccpp/physics/physics/PBL/SATMEDMF/satmedmfvdifq.F',
+    'ccpp/physics/physics/PBL/SATMEDMF/canopy_driver.F',
     'ccpp/physics/physics/PBL/YSU/ysuvdif.F90',
     'ccpp/physics/physics/PBL/saYSU/shinhongvdif.F90',
     'ccpp/physics/physics/Radiation/RRTMG/radsw_main.F90',
