@@ -1,0 +1,32 @@
+name: Run Capgen fortran to metadata comparision script
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SCM_ROOT: ${{ github.workspace }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize Submodules
+        run: |
+          git config --global --add safe.directory ${SCM_ROOT}
+          cd ${SCM_ROOT}
+          git submodule update --init --recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Compare Fortran source files to CCPP metadata files
+        run: |
+          cp test/test_fortran_to_metadata.py .
+          ./test_fortran_to_metadata.py

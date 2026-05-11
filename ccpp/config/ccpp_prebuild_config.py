@@ -43,9 +43,16 @@ TYPEDEFS_NEW_METADATA = {
         },
     'module_radsw_parameters' : {
         'module_radsw_parameters' : '',
+        'cmpfsw_type' : '',
+        'sfcfsw_type' : '',
+        'profsw_type' : '',
+        'topfsw_type' : '',
         },
     'module_radlw_parameters' : {
         'module_radlw_parameters' : '',
+        'sfcflw_type' : '',
+        'proflw_type' : '',
+        'topflw_type' : '',
         },
     'module_ozphys' : {
         'module_ozphys' : '',
