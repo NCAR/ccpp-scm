@@ -28,6 +28,5 @@ jobs:
 
       - name: Compare Fortran source files to CCPP metadata files
         run: |
-          cd ${SCM_ROOT}
           cp test/test_fortran_to_metadata.py .
           ./test_fortran_to_metadata.py
