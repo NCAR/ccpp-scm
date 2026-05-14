@@ -213,6 +213,10 @@ function(ccpp_capgen)
   # of horizontal_loop_extent for scheme run phase metadata
   list(APPEND CCPP_CAPGEN_CMD_LIST "--legacy-mode")
   # *DH
+  # DH* 20260514 TEMPORARY: add --no-host-introspection to
+  # suppress writing lists of variables etc to ccpp_static_api
+  list(APPEND CCPP_CAPGEN_CMD_LIST "--no-host-introspection")
+  # *DH
 
   message(STATUS "Running ccpp_capgen.py from ${CMAKE_CURRENT_SOURCE_DIR}")
 

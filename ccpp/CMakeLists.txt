@@ -73,6 +73,16 @@ set(SCHEME_METADATA_FILES
   "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_MP_generic_post.meta"
   "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/maximum_hourly_diagnostics.meta"
   "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_physics_post.meta"
+  "${SCHEME_FILES_DIR}/CONV/C3/cu_c3_driver.meta"
+  "${SCHEME_FILES_DIR}/CONV/C3/cu_c3_driver_post.meta"
+  "${SCHEME_FILES_DIR}/CONV/C3/cu_c3_driver_pre.meta"
+  "${SCHEME_FILES_DIR}/GWD/ugwpv1_gsldrag.meta"
+  "${SCHEME_FILES_DIR}/GWD/ugwpv1_gsldrag_post.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Ocean/UFS/sfc_ocean.meta"
+  "${SCHEME_FILES_DIR}/MP/TEMPO/mp_tempo_post.meta"
+  "${SCHEME_FILES_DIR}/MP/TEMPO/mp_tempo.meta"
+  "${SCHEME_FILES_DIR}/MP/TEMPO/mp_tempo_pre.meta"
+  "${SCHEME_FILES_DIR}/MP/TEMPO/TEMPO/module_mp_tempo_params.meta"
 )
 
 ## DH* TEST
@@ -102,6 +112,14 @@ set(SUITE_FILES_DIR "${CMAKE_SOURCE_DIR}/ccpp/suites")
 set(SUITE_FILES
   "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8.xml"
   "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ps.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3_ps.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst_ps.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_ps.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo_ps.xml"
 )
 
 set(HOST "ccpp-scm")
