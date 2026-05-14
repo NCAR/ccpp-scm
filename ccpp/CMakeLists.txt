@@ -83,6 +83,23 @@ set(SCHEME_METADATA_FILES
   "${SCHEME_FILES_DIR}/MP/TEMPO/mp_tempo.meta"
   "${SCHEME_FILES_DIR}/MP/TEMPO/mp_tempo_pre.meta"
   "${SCHEME_FILES_DIR}/MP/TEMPO/TEMPO/module_mp_tempo_params.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Land/Noah/lsm_noah.meta"
+  "${SCHEME_FILES_DIR}/GWD/cires_ugwp.meta"
+  "${SCHEME_FILES_DIR}/GWD/cires_ugwp_post.meta"
+  "${SCHEME_FILES_DIR}/MP/GFDL/v1_2019/gfdl_cloud_microphys.meta"
+  "${SCHEME_FILES_DIR}/MP/GFDL/fv_sat_adj.meta"
+  "${SCHEME_FILES_DIR}/MP/GFDL/v3_2022/gfdl_cloud_microphys_v3.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_overlap.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_setup.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_pre.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_mp.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_cloud_diagnostics.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMGP/rrtmgp_aerosol_optics.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMGP/rrtmgp_sw_main.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMGP/rrtmgp_lw_main.meta"
+  "${SCHEME_FILES_DIR}/PBL/HEDMF/hedmf.meta"
+  "${SCHEME_FILES_DIR}/MP/Ferrier_Aligo/mp_fer_hires.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/GFDL/gfdl_sfc_layer.meta"
 )
 
 ## DH* TEST
@@ -110,6 +127,19 @@ message(INFO "${HOST_METADATA_FILES} --> ${HOST_FORTRAN_FILES}")
 
 set(SUITE_FILES_DIR "${CMAKE_SOURCE_DIR}/ccpp/suites")
 set(SUITE_FILES
+  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_ps.xml"
+  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson_ps.xml"
+  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson.xml"
+  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf.xml"
+  # skipping csawmg and GFS v15 suites
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_ps.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3_ps.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst_ps.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP.xml"
+  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP_ps.xml"
   "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8.xml"
   "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ps.xml"
   "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3.xml"
