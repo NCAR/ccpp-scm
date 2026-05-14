@@ -1,11 +1,11 @@
 [ccpp-table-properties]
   name = scm_kinds
-  type = module
+  type = host
   dependencies =
 
 [ccpp-arg-table]
   name = scm_kinds
-  type = module
+  type = host
 [kind_sp]
   standard_name = kind_sp
   long_name = definition of kind_sp

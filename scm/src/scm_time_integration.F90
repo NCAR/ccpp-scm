@@ -7,14 +7,20 @@ use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
 use scm_forcing
 
-use ccpp_types,        only: ccpp_t
-use :: ccpp_static_api,                      &
-       only: ccpp_physics_timestep_init,     &
-             ccpp_physics_run,               &
-             ccpp_physics_timestep_finalize
-
+use :: ccpp_static_api,                  &
+       only: ccpp_physics_timestep_init, &
+             ccpp_physics_run,           &
+             ccpp_physics_timestep_final
 
 implicit none
+
+  ! CCPP control variables declared as module variables so that
+  ! scm.F90 can import them. OK since SCM doesn't use multiple
+  ! instances and doesn't use OpenMP threading in the host.
+  ! Fixed CCPP control values are passed via a CPP directive.
+  character(len=512) :: errmsg
+  integer :: errflg
+#define CCPP_PHYSICS_STATIC_ARGS lb=1, ub=1, mythread=1, nthreads=1, nphys_threads=1
 
 contains
 
@@ -54,15 +60,14 @@ end subroutine
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
 !! this subroutine, the unfiltered state variables will have been stepped forward in time.
-subroutine do_time_step(scm_state, physics, cdata, in_spinup)
+subroutine do_time_step(scm_state, physics, in_spinup)
   use scm_type_defs, only: scm_state_type, physics_type
 
   type(scm_state_type), intent(inout)          :: scm_state
   type(physics_type), intent(inout)            :: physics
-  type(ccpp_t), intent(inout)                  :: cdata
   logical, intent(in)                          :: in_spinup
 
-  integer :: i, ierr, kdt_rad, idtend, itrac
+  integer :: i, kdt_rad, idtend, itrac
 
   !> \section do_time_step_alg Algorithm
   !! @{
@@ -91,7 +96,7 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   end select
 
   if (scm_state%time_scheme == 2) then
-    !IPD cdata points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
+    ! TODO UPDATE COMMENT IPD cdata points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
     scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
     scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
     scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
@@ -133,10 +138,11 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
     endif
   enddo
 
-  call ccpp_physics_timestep_init(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop trim(cdata%errmsg)
+  call ccpp_physics_timestep_init(suite_name=scm_state%physics_suite_name, group_name='all', &
+          errflg=errflg, errmsg=errmsg, CCPP_PHYSICS_STATIC_ARGS)
+  if (errflg/=0) then
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(errmsg) // '. Exiting...'
+      error stop trim(errmsg)
   end if
 
   !--- determine if radiation diagnostics buckets need to be cleared
@@ -161,28 +167,32 @@ subroutine do_time_step(scm_state, physics, cdata, in_spinup)
   ! radiation group
   
   call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)  
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="radiation", ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group radiation: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_run(suite_name=scm_state%physics_suite_name, group_name="radiation", &
+          errflg=errflg, errmsg=errmsg, CCPP_PHYSICS_STATIC_ARGS)
+  if (errflg/=0) then
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group radiation: ' // trim(errmsg) // '. Exiting...'
       error stop
   end if
   ! process-split physics
   call physics%Interstitial(1)%reset(physics%Model)
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ps", ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ps: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_run(suite_name=scm_state%physics_suite_name, group_name="phys_ps", &
+          errflg=errflg, errmsg=errmsg, CCPP_PHYSICS_STATIC_ARGS)
+  if (errflg/=0) then
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ps: ' // trim(errmsg) // '. Exiting...'
       error stop
   end if
   ! time-split physics
-  call ccpp_physics_run(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), group_name="phys_ts", ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(cdata%errmsg) // '. Exiting...'
+  call ccpp_physics_run(suite_name=scm_state%physics_suite_name, group_name="phys_ts", &
+          errflg=errflg, errmsg=errmsg, CCPP_PHYSICS_STATIC_ARGS)
+  if (errflg/=0) then
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(errmsg) // '. Exiting...'
       error stop
   end if
-  call ccpp_physics_timestep_finalize(cdata, suite_name=trim(adjustl(scm_state%physics_suite_name)), ierr=ierr)
-  if (ierr/=0) then
-      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(cdata%errmsg) // '. Exiting...'
-      error stop trim(cdata%errmsg)
+  call ccpp_physics_timestep_final(suite_name=scm_state%physics_suite_name, group_name='all', &
+          errflg=errflg, errmsg=errmsg, CCPP_PHYSICS_STATIC_ARGS)
+  if (errflg/=0) then
+      write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(errmsg) // '. Exiting...'
+      error stop trim(errmsg)
   end if
 
   !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)

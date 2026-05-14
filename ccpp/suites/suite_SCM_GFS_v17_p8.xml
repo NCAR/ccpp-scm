@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_GFS_v17_p8" version="1">
-  <!-- <init></init> -->
+<suite name="SCM_GFS_v17_p8" version="2.0">
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>GFS_time_vary_pre</scheme>
@@ -79,12 +78,11 @@
       <subcycle loop="1">
         <scheme>mp_thompson</scheme>
       </subcycle>
-        <subcycle loop="1">
+      <subcycle loop="1">
         <scheme>mp_thompson_post</scheme>
         <scheme>GFS_MP_generic_post</scheme>
         <scheme>maximum_hourly_diagnostics</scheme>
         <scheme>GFS_physics_post</scheme>
       </subcycle>
     </group>
-  <!-- <finalize></finalize> -->
 </suite>

@@ -710,11 +710,11 @@ class Experiment(object):
         # Move executable to run dir
         if COPY_EXECUTABLE:
             logging.debug('Copying executable to run directory')
-            cmd = 'cp {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
+            cmd = 'cp {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, "scm", "src", EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
             execute(cmd)
         else:
             logging.debug('Linking executable to run directory')
-            cmd = 'ln -sf {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
+            cmd = 'ln -sf {0} {1}'.format(os.path.join(SCM_ROOT, SCM_BIN, "scm", "src", EXECUTABLE_NAME), os.path.join(SCM_RUN, EXECUTABLE_NAME))
             execute(cmd)
 
         #Inform user of timestep and output intervals

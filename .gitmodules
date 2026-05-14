@@ -1,5 +1,5 @@
 [submodule "ccpp-framework"]
-	path = ccpp/framework-ORIGINAL
+	path = ccpp/framework
 	#url = https://github.com/NCAR/ccpp-framework
 	#branch = develop
 	url = https://github.com/climbfuji/ccpp-framework

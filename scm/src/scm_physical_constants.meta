@@ -1,11 +1,11 @@
 [ccpp-table-properties]
   name = scm_physical_constants
-  type = module
+  type = host
   dependencies = scm_kinds.F90
 
 [ccpp-arg-table]
   name = scm_physical_constants
-  type = module
+  type = host
 [con_zero]
   standard_name = constant_zero
   long_name = definition of constant zero
