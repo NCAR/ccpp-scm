@@ -1,11 +1,15 @@
 [submodule "ccpp-framework"]
-	path = ccpp/framework
-	url = https://github.com/NCAR/ccpp-framework
-	branch = develop
+	path = ccpp/framework-ORIGINAL
+	#url = https://github.com/NCAR/ccpp-framework
+	#branch = develop
+	url = https://github.com/climbfuji/ccpp-framework
+	branch = feature/capgen-ng
 [submodule "ccpp-physics"]
 	path = ccpp/physics
-	url = https://github.com/NCAR/ccpp-physics
-	branch = scm/dev
+	#url = https://github.com/NCAR/ccpp-physics
+	#branch = scm/dev
+	url = https://github.com/climbfuji/ccpp-physics
+	branch = feature/capgen-ng
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
