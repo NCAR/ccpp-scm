@@ -213,7 +213,7 @@ set(SUITE_FILES
   "${SUITE_FILES_DIR}/suite_SCM_WoFS_v0.xml"
 )
 
-set(HOST "ccpp-scm")
+set(HOST "scm")
 
 set(CCPP_VERBOSITY "2" CACHE STRING "Verbosity level of output (default: 0)")
 
@@ -252,13 +252,12 @@ message(STATUS "List of capgen dependencies: ${CAPGEN_DEPENDENCIES}")
 message(STATUS "List of filtered scheme files: ${SCHEME_FORTRAN_FILES}")
 message(STATUS "List of capgen-generated files: ${CAPGEN_FILES}")
 
-# Temporary: manually added dependencies because of working on a subset of schemes only
+# Extra files that do not make it through the capgen scheme filter
 set(EXTRA_FILES
-  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radlw_datatb.f"
-  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radsw_datatb.f"
+#  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radlw_datatb.f"
+#  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radsw_datatb.f"
   "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90"
 )
-# End temporary
 
 add_library(scm-ccpp STATIC
   ${EXTRA_FILES}

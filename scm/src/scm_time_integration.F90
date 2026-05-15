@@ -7,7 +7,7 @@ use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
 use scm_forcing
 
-use :: ccpp_static_api,                  &
+use :: scm_ccpp_cap,                  &
        only: ccpp_physics_timestep_init, &
              ccpp_physics_run,           &
              ccpp_physics_timestep_final

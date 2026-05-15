@@ -24,7 +24,7 @@ subroutine scm_main_sub()
 #define CCPP_PHYSICS_STATIC_ARGS lb=1, ub=1, mythread=1, nthreads=1, nphys_threads=1
 #define CCPP_PHYSICS_NPHYS_THREADS 1
 
-  use :: ccpp_static_api,                   &
+  use :: scm_ccpp_cap,                   &
          only: ccpp_register,               &
                ccpp_init,                   &
                ccpp_physics_init,           &
