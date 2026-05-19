@@ -194,8 +194,6 @@ SCHEME_FILES = [
     'ccpp/physics/physics/MP/TEMPO/mp_tempo_pre.F90',
     'ccpp/physics/physics/MP/TEMPO/mp_tempo.F90',
     'ccpp/physics/physics/MP/TEMPO/mp_tempo_post.F90',
-    'ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_gscond.f',
-    'ccpp/physics/physics/MP/Zhao_Carr/zhaocarr_precpd.f',
     'ccpp/physics/physics/PBL/HEDMF/hedmf.f',
     'ccpp/physics/physics/PBL/SHOC/moninshoc.f',
     'ccpp/physics/physics/PBL/SHOC/shoc.F90',
