@@ -228,6 +228,12 @@ function(ccpp_capgen)
   # of horizontal_loop_extent for scheme run phase metadata
   list(APPEND CCPP_CAPGEN_CMD_LIST "--legacy-mode")
   # *DH
+
+  # DH* 20260521 TEMPORARY: add --gfs-dim-aliases so that
+  # capgen considers specific dimension names as equal
+  list(APPEND CCPP_CAPGEN_CMD_LIST "--gfs-dim-aliases")
+  # *DH
+
   # DH* 20260514 TEMPORARY: add --no-host-introspection to
   # suppress writing lists of variables etc to ccpp_static_api
   list(APPEND CCPP_CAPGEN_CMD_LIST "--no-host-introspection")
