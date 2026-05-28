@@ -384,7 +384,7 @@
   type = real
   kind = kind_phys
 [qgrs(:,:,index_of_updraft_area_fraction_in_tracer_concentration_array)]
-  standard_name = physics_timestep_initial_prognostic_updraft_area_fraction_in_convection
+  standard_name = physics_timestep_initial_updraft_area_fraction
   long_name = convective updraft area fraction at the beginning of the physics timestep
   units = frac
   dimensions = (horizontal_dimension,vertical_layer_dimension)
@@ -392,7 +392,7 @@
   kind = kind_phys
   active = (index_of_updraft_area_fraction_in_tracer_concentration_array > 0 )
 [qgrs(:,:,index_of_updraft_velocity_in_tracer_concentration_array)]
-  standard_name = prognostic_updraft_velocity_in_convection
+  standard_name = physics_timestep_initial_updraft_velocity
   long_name = convective updraft velocity
   units = Pa s-1
   dimensions = (horizontal_dimension,vertical_layer_dimension)
@@ -682,7 +682,7 @@
   kind = kind_phys
   active = ( index_of_updraft_area_fraction_in_tracer_concentration_array > 0 )
 [gq0(:,:,index_of_updraft_velocity_in_tracer_concentration_array)]
-  standard_name = updraft_velocity_updated_by_physics
+  standard_name = updraft_velocity
   long_name = convective updraft area fraction updated by physics
   units = Pa s-1
   dimensions = (horizontal_dimension,vertical_layer_dimension)
