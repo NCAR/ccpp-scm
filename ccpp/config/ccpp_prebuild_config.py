@@ -186,7 +186,6 @@ SCHEME_FILES = [
     'ccpp/physics/physics/MP/NSSL/mp_nssl.F90',
     'ccpp/physics/physics/MP/Thompson/mp_thompson.F90',
     'ccpp/physics/physics/MP/Thompson/mp_thompson_post.F90',
-    'ccpp/physics/physics/MP/TEMPO/mp_tempo_pre.F90',
     'ccpp/physics/physics/MP/TEMPO/mp_tempo.F90',
     'ccpp/physics/physics/MP/TEMPO/mp_tempo_post.F90',
     'ccpp/physics/physics/PBL/HEDMF/hedmf.f',
