@@ -47,7 +47,6 @@
       <scheme>GFS_suite_interstitial_3</scheme>
       <scheme>samfdeepcnv</scheme>
       <scheme>GFS_DCNV_generic_post</scheme>
-      <scheme>GFS_SCNV_generic_pre</scheme>
       <scheme>samfshalcnv</scheme>
       <scheme>GFS_SCNV_generic_post</scheme>
       <scheme>GFS_suite_interstitial_4</scheme>
