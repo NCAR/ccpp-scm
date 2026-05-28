@@ -1102,7 +1102,7 @@ contains
        deallocate (Interstitial%t2mmp)
        deallocate (Interstitial%q2mp)
     end if
-    
+
   end subroutine gfs_interstitial_destroy
 
   subroutine gfs_interstitial_setup_tracers(Interstitial, Model)
@@ -1666,7 +1666,7 @@ contains
     ! Use same logic in UFS to reset Thompson extended diagnostics
     Interstitial%ext_diag_thompson_reset = Interstitial%max_hourly_reset
 
-    ! Frequency flag for computing the full radar reflectivity (water coated ice) 
+    ! Frequency flag for computing the full radar reflectivity (water coated ice)
     if (Model%nsfullradar_diag<0) then
       Interstitial%fullradar_diag = .true.
     else

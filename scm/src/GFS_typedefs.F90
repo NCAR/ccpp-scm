@@ -3090,7 +3090,7 @@ module GFS_typedefs
       Coupling%snow_cpl = clear_val
     endif
 
-    if (Model%cplflx .or. Model%cplchm .or. Model%cplwav) then
+    if (Model%cplflx .or. Model%cplchm .or. Model%cplwav .or. Model%cpl_fire) then
       !--- instantaneous quantities
       allocate (Coupling%u10mi_cpl (IM))
       allocate (Coupling%v10mi_cpl (IM))
@@ -6431,7 +6431,7 @@ module GFS_typedefs
     Model%nps2delt = -999
     Model%npsdelt  = -999
     Model%ncnd     = nwat - 1                   ! ncnd is the number of cloud condensate types
-    
+
     if (Model%imp_physics == Model%imp_physics_fer_hires) then     ! Ferrier-Aligo scheme
       Model%npdf3d  = 0
       Model%num_p3d = 3
