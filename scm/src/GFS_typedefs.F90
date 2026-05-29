@@ -4736,8 +4736,6 @@ module GFS_typedefs
         Model%chunk_begin(i) = Model%chunk_end(i-1) + 1
         Model%chunk_end(i) = Model%chunk_begin(i) + blksz(i) - 1
     end do
-    Model%ipr = min(minval(Model%blksz), 10)
-
 !--- tendency controls
     Model%tend_opt_swrad      = tend_opt_swrad
     Model%tend_opt_lwrad      = tend_opt_lwrad
@@ -4749,7 +4747,9 @@ module GFS_typedefs
     Model%tend_opt_deep_conv  = tend_opt_deep_conv
     Model%tend_opt_shal_conv  = tend_opt_shal_conv
     Model%tend_opt_mp         = tend_opt_mp
-    Model%tend_opt_stoch      = tend_opt_stoch  
+    Model%tend_opt_stoch      = tend_opt_stoch
+    
+    Model%ipr = min(minval(Model%blksz), 10)
 !--- coupling parameters
     Model%cplflx           = cplflx
     Model%cplice           = cplice
