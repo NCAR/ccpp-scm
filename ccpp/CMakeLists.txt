@@ -127,6 +127,7 @@ set(SCHEME_METADATA_FILES
   "${SCHEME_FILES_DIR}/CONV/nTiedtke/cu_ntiedtke_post.meta"
   "${SCHEME_FILES_DIR}/PBL/saYSU/shinhongvdif.meta"
   "${SCHEME_FILES_DIR}/PBL/YSU/ysuvdif.meta"
+  "${SCHEME_FILES_DIR}/PBL/SATMEDMF/canopy_driver.meta"
 )
 
 ## DH* TEST

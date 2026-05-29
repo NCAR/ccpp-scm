@@ -1102,7 +1102,7 @@ contains
        deallocate (Interstitial%t2mmp)
        deallocate (Interstitial%q2mp)
     end if
-    
+
   end subroutine gfs_interstitial_destroy
 
   subroutine gfs_interstitial_setup_tracers(Interstitial, Model)
@@ -1209,16 +1209,12 @@ contains
         Interstitial%ntcwx = 2
         Interstitial%ntiwx = 3
         Interstitial%ntrwx = 4
-      elseif (Model%imp_physics == Model%imp_physics_zhao_carr) then
-        Interstitial%ntcwx = 2
       endif
     endif
 
     if (Model%cplchm) then
       ! Only the following microphysics schemes are supported with coupled chemistry
-      if (Model%imp_physics == Model%imp_physics_zhao_carr) then
-        Interstitial%nvdiff = 3
-      elseif (Model%imp_physics == Model%imp_physics_mg) then
+      if (Model%imp_physics == Model%imp_physics_mg) then
         if (Model%ntgl > 0) then
           Interstitial%nvdiff = 12
         else
@@ -1670,7 +1666,7 @@ contains
     ! Use same logic in UFS to reset Thompson extended diagnostics
     Interstitial%ext_diag_thompson_reset = Interstitial%max_hourly_reset
 
-    ! Frequency flag for computing the full radar reflectivity (water coated ice) 
+    ! Frequency flag for computing the full radar reflectivity (water coated ice)
     if (Model%nsfullradar_diag<0) then
       Interstitial%fullradar_diag = .true.
     else
