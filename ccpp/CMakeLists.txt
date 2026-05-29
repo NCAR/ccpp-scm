@@ -130,13 +130,6 @@ set(SCHEME_METADATA_FILES
   "${SCHEME_FILES_DIR}/PBL/SATMEDMF/canopy_driver.meta"
 )
 
-## DH* TEST
-## Run ccpp_validator
-#ccpp_validator(VERBOSITY ${CCPP_VERBOSITY}
-#               SOURCE_FILES "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_diff.f"
-#               METADATA_FILES "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_diff.meta")
-## *DH
-
 # Create list of scheme source files from metadata files
 ccpp_source_files(SCHEME_FORTRAN_FILES ${SCHEME_METADATA_FILES})
 
@@ -255,8 +248,6 @@ message(STATUS "List of capgen-generated files: ${CAPGEN_FILES}")
 
 # Extra files that do not make it through the capgen scheme filter
 set(EXTRA_FILES
-#  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radlw_datatb.f"
-#  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radsw_datatb.f"
   "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90"
 )
 
@@ -267,8 +258,6 @@ add_library(scm-ccpp STATIC
   ${HOST_FORTRAN_FILES}
   ${CAPGEN_FILES}
 )
-
-#set_target_properties(scm-ccpp PROPERTIES LINKER_LANGUAGE Fortran)
 
 target_link_libraries(scm-ccpp MPI::MPI_Fortran)
 if(OPENMP)
@@ -293,22 +282,3 @@ target_link_libraries(scm-ccpp w3emc::w3emc_d)
 
 set_target_properties(scm-ccpp PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
 target_include_directories(scm-ccpp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}>)
-
-#message(FATAL_ERROR "xxx")
-#
-#add_executable(test_chunked_data.x
-#  ${CAPGEN_DEPENDENCIES}
-#  ${SCHEME_FORTRAN_FILES}
-#  ${HOST_FORTRAN_FILES}
-#  ${CAPGEN_FILES}
-#)
-#target_link_libraries(test_chunked_data.x PRIVATE MPI::MPI_Fortran)
-#if(OPENMP)
-#  target_link_libraries(test_chunked_data.x PRIVATE OpenMP::OpenMP_Fortran)
-#endif()
-#set_target_properties(test_chunked_data.x PROPERTIES LINKER_LANGUAGE Fortran)
-#
-## Add executable to be called with ctest
-#add_test(NAME test_chunked_data
-#         COMMAND test_chunked_data.x)
-#

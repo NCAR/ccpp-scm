@@ -3720,60 +3720,12 @@
   units = count
   dimensions = ()
   type = integer
-#[nblks]
-#  standard_name = ccpp_block_count
-#  long_name = for explicit data blocking: number of blocks
-#  units = count
-#  dimensions = ()
-#  type = integer
-#[blksz]
-#  standard_name = ccpp_block_sizes
-#  long_name = for explicit data blocking: block sizes of all blocks
-#  units = count
-#  dimensions = (ccpp_block_count)
-#  type = integer
-#[blksz(ccpp_block_number)]
-#  standard_name = horizontal_loop_extent
-#  long_name = horizontal loop extent
-#  units = count
-#  dimensions = ()
-#  type = integer
 [ncols]
   standard_name = horizontal_dimension
   long_name = horizontal dimension
   units = count
   dimensions = ()
   type = integer
-#[nchunks]
-#  standard_name = ccpp_chunk_extent
-#  long_name = number of chunks of array data used in run phase
-#  units = count
-#  dimensions = ()
-#  type = integer
-#[chunk_begin]
-#  standard_name = horizontal_loop_begin_all_chunks
-#  long_name = first index for horizontal loop extent in run phase
-#  units = index
-#  dimensions = (ccpp_chunk_extent)
-#  type = integer
-#[chunk_begin(ccpp_chunk_number)]
-#  standard_name = horizontal_loop_begin
-#  long_name = first index for horizontal loop extent in run phase
-#  units = index
-#  dimensions = ()
-#  type = integer
-#[chunk_end]
-#  standard_name = horizontal_loop_end_all_chunks
-#  long_name = last index for horizontal loop extent in run phase
-#  units = index
-#  dimensions = (ccpp_chunk_extent)
-#  type = integer
-#[chunk_end(ccpp_chunk_number)]
-#  standard_name = horizontal_loop_end
-#  long_name = last index for horizontal loop extent in run phase
-#  units = index
-#  dimensions = ()
-#  type = integer
 [dycore_active]
   standard_name = control_for_dynamical_core
   long_name = choice of dynamical core
