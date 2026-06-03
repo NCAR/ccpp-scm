@@ -37,7 +37,8 @@ jobs:
         libnetcdff-dev \
         libxml2 \
         openmpi-bin \
-        libopenmpi-dev
+        libopenmpi-dev \
+        libxml2-utils
 
     #######################################################################################
     # Python setup
@@ -49,7 +50,7 @@ jobs:
 
     - name: Install NetCDF Python libraries
       run: |
-        pip install f90nml h5py netCDF4
+        pip install f90nml h5py netCDF4 pytest
 
     - name: Environment for openmpi compiler
       run: |

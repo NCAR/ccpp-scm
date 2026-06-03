@@ -14,6 +14,7 @@ module scm_kinds
   integer, parameter :: dp = sp
   integer, parameter :: qp = sp
 #endif
+  integer, parameter :: kind_phys = dp
 
   ! these types exists to allow generic interface compilation in scm_utils.F90
   integer, parameter :: kind_scm_sp = selected_real_kind(P= 6,R=37)

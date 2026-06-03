@@ -1676,13 +1676,6 @@
   dimensions = (horizontal_dimension,vertical_layer_dimension)
   type = real
   kind = kind_phys
-[rho1]
-  standard_name = air_density_at_lowest_model_layer
-  long_name = air density at lowest model layer
-  units = kg m-3
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
 [runoff]
   standard_name = surface_runoff_flux
   long_name = surface runoff flux

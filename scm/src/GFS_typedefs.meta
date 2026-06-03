@@ -3273,22 +3273,6 @@
   type = real
   kind = kind_phys
   active = (do_smoke_coupling)
-[smoke_ext]
-  standard_name = extinction_coefficient_in_air_due_to_smoke
-  long_name = extinction coefficient in air due to smoke
-  units = various
-  dimensions = (horizontal_dimension,vertical_layer_dimension)
-  type = real
-  kind = kind_phys
-  active = (do_smoke_coupling)
-[dust_ext]
-  standard_name = extinction_coefficient_in_air_due_to_dust
-  long_name = extinction coefficient in air due to dust
-  units = various
-  dimensions = (horizontal_dimension,vertical_layer_dimension)
-  type = real
-  kind = kind_phys
-  active = (do_smoke_coupling)
 [chem3d]
   standard_name = chem3d_mynn_pbl_transport
   long_name = mynn pbl transport of smoke and dust
@@ -3563,7 +3547,7 @@
   units = none
   dimensions = (number_of_lines_in_internal_namelist)
   type = character
-  kind = len=256
+  kind = len=:
 [logunit]
   standard_name = iounit_of_log
   long_name = fortran unit number for logfile
@@ -3690,12 +3674,14 @@
   units = Pa
   dimensions = (vertical_interface_dimension)
   type = real
+  kind = kind_phys
 [bk]
   standard_name = sigma_pressure_hybrid_coordinate_b_coefficient
   long_name = b parameter for sigma pressure level calculations
   units = none
   dimensions = (vertical_interface_dimension)
   type = real
+  kind = kind_phys
 [levsp1]
   standard_name = vertical_interface_dimension
   long_name = number of vertical levels plus one
@@ -4607,6 +4593,7 @@
   units = km
   dimensions = ()
   type = real
+  kind = kind_phys
 [psautco]
   standard_name = autoconversion_to_snow_coefficient
   long_name = auto conversion coeff from ice to snow
@@ -7535,13 +7522,6 @@
   units = flag
   dimensions = ()
   type = logical
-[suite_sim_data]
-  standard_name = filename_for_CCPP_suite_simulator
-  long_name = filename for cccpp suite simulator data file
-  units = none
-  dimensions = ()
-  type = character
-  kind = len=256
 [nprg_active]
   standard_name = number_of_prognostics_varaibles_in_CCPP_suite_simulator
   long_name = number of prognostic variables used in CCPP suite simulator
@@ -7907,6 +7887,7 @@
   units = 1
   dimensions = ()
   type = real
+  kind = kind_phys
 [icloud_bl]
   standard_name = control_for_sgs_cloud_radiation_coupling_in_mellor_yamamda_nakanishi_niino_pbl_scheme
   long_name = flag for coupling sgs clouds to radiation
@@ -10663,7 +10644,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  intent = inout
   active = (do_lightning_threat_index_calculations)
 [ltg2_max]
   standard_name = lightning_threat_index_2
@@ -10672,7 +10652,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  intent = inout
   active = (do_lightning_threat_index_calculations)
 [ltg3_max]
   standard_name = lightning_threat_index_3
@@ -10681,5 +10660,4 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  intent = inout
   active = (do_lightning_threat_index_calculations)

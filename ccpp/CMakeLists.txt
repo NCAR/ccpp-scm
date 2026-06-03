@@ -135,7 +135,6 @@ ccpp_source_files(SCHEME_FORTRAN_FILES ${SCHEME_METADATA_FILES})
 
 set(HOST_FILES_DIR "${CMAKE_SOURCE_DIR}/scm/src")
 set(HOST_METADATA_FILES
-  "${HOST_FILES_DIR}/scm_kinds.meta"
   "${HOST_FILES_DIR}/scm_physical_constants.meta"
   "${HOST_FILES_DIR}/scm_type_defs.meta"
   "${HOST_FILES_DIR}/CCPP_typedefs.meta"
@@ -227,10 +226,12 @@ set(OUTPUT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/ccpp")
 # Run ccpp_validator
 ccpp_validator(VERBOSITY ${CCPP_VERBOSITY}
                SOURCE_FILES ${SCHEME_FORTRAN_FILES}
-               METADATA_FILES ${SCHEME_METADATA_FILES})
+               METADATA_FILES ${SCHEME_METADATA_FILES}
+               TYPE "SCHEME")
 ccpp_validator(VERBOSITY ${CCPP_VERBOSITY}
                SOURCE_FILES ${HOST_FORTRAN_FILES}
-               METADATA_FILES ${HOST_METADATA_FILES})
+               METADATA_FILES ${HOST_METADATA_FILES}
+               TYPE "HOST")
 
 if (32BIT)
   set(CCPP_KINDS "kind_phys=REAL32")
