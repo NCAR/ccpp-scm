@@ -49,7 +49,8 @@ jobs:
 
     - name: Install Required Tools
       run: |
-        apt-get update
+        apt-get update -qq && apt-get install -qq -y --no-install-recommends \
+        libxml2-utils
 
     - name: Initialize Submodules
       run: |
@@ -111,14 +112,14 @@ jobs:
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../src
+        cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} ../..
 
     - name: Configure Build with CMake (32-bit)
       if: matrix.run_lists == 'sp'
       run: |
         cd ${SCM_ROOT}/scm
         mkdir bin && cd bin
-        cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -D32BIT=1 ../src
+        cmake -DCCPP_SUITES=${{steps.set_sdfs.outputs.suites}} -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -D32BIT=1 ../..
 
     - name: Build SCM
       run: |

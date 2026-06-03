@@ -147,66 +147,76 @@ ccpp_source_files(HOST_FORTRAN_FILES ${HOST_METADATA_FILES})
 message(INFO "${HOST_METADATA_FILES} --> ${HOST_FORTRAN_FILES}")
 
 set(SUITE_FILES_DIR "${CMAKE_SOURCE_DIR}/ccpp/suites")
-set(SUITE_FILES
-  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_ps.xml"
-  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson_ps.xml"
-  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson.xml"
-  "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_csawmg_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_csawmg.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ACM_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_FA.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_MYJ.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_noahmp.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_no_nsst_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_no_nsst.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ntiedtke_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ntiedtke.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_RRTMGP_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_RRTMGP.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_saYSU_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_YSU_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GSD_v1nssl_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GSD_v1nssl.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GSD_v1_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_GSD_v1.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_HRRR_gf_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_HRRR_gf.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_HRRR_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_HRRR.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RAP_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RAP.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1alpha_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1alpha.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_no_nsst_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_no_nsst.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1nssl.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_WoFS_v0_ps.xml"
-  "${SUITE_FILES_DIR}/suite_SCM_WoFS_v0.xml"
+if(DEFINED CCPP_SUITES)
+  # Take comma seperated string containing SDF names <CCPP_SUITES>,
+  # append <SUITE_FILES_DIR> as file prefix, append ".xml" file suffix,
+  # and replace "," with ";"
+  set(SUITE_FILES ${SUITE_FILES_DIR}/suite_${CCPP_SUITES})
+  string(REPLACE "," ".xml;${SUITE_FILES_DIR}/suite_" SUITE_FILES "${SUITE_FILES}")
+  set(SUITE_FILES "${SUITE_FILES}.xml")
+else()
+  set(SUITE_FILES
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_ps.xml"
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson_ps.xml"
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson.xml"
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_csawmg_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_csawmg.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ACM_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_FA.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_MYJ.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_noahmp.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ntiedtke_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ntiedtke.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_RRTMGP_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_RRTMGP.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_saYSU_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_YSU_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1nssl_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1nssl.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR_gf_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR_gf.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RAP_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RAP.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1alpha_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1alpha.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1nssl.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_WoFS_v0_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_WoFS_v0.xml"
 )
-
+endif()
+message(STATUS "Compiling the following SDFs: ${SUITE_FILES}")
+ 
 set(HOST "scm")
 
 set(CCPP_VERBOSITY "2" CACHE STRING "Verbosity level of output (default: 0)")
@@ -222,13 +232,18 @@ ccpp_validator(VERBOSITY ${CCPP_VERBOSITY}
                SOURCE_FILES ${HOST_FORTRAN_FILES}
                METADATA_FILES ${HOST_METADATA_FILES})
 
+if (32BIT)
+  set(CCPP_KINDS "kind_phys=REAL32")
+  message(STATUS "Building physics with 32-bit")
+endif()
 # Run ccpp_capgen_ng
 ccpp_capgen(VERBOSITY ${CCPP_VERBOSITY}
             HOSTFILES ${HOST_METADATA_FILES}
             SCHEMEFILES ${SCHEME_METADATA_FILES}
             SUITES ${SUITE_FILES}
             HOST_NAME ${HOST}
-            OUTPUT_ROOT "${OUTPUT_ROOT}")
+            OUTPUT_ROOT "${OUTPUT_ROOT}"
+	    KIND_SPECS "${CCPP_KINDS}")
 
 # Retrieve the list of Fortran files required for test host from datatable.xml;
 # this includes capgen-generated files and dependencies inferred from metadata
