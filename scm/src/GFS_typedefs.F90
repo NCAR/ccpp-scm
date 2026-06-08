@@ -841,6 +841,7 @@ module GFS_typedefs
     integer              :: tend_opt_stoch
     
     logical              :: gfs_phys_time_vary_is_init=.false. !< GFS_phys_time_vary interstitial initialization flag
+
 !--- radiation control parameters
     real(kind=kind_phys) :: fhswr           !< frequency for shortwave radiation (secs)
     real(kind=kind_phys) :: fhlwr           !< frequency for longwave radiation (secs)
@@ -6929,9 +6930,11 @@ module GFS_typedefs
         if (j > 1) then
           read(fscav(i)(j+1:), *, iostat=ios) tem
           if (ios /= 0) cycle
-          n = get_tracer_index(Model%tracer_names, adjustl(fscav(i)(:j-1))) &
-              - Model%ntchs + 1
-          if (n > 0) Model%fscav(n) = tem
+          n = get_tracer_index(Model%tracer_names, adjustl(fscav(i)(:j-1)))
+          if (n /= no_tracer) then
+              n = n - Model%ntchs + 1
+              if (n > 0) Model%fscav(n) = tem
+          endif
         endif
       enddo
     endif
