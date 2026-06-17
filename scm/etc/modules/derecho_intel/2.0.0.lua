@@ -6,7 +6,10 @@ the CISL machine Derecho (Cray) using Intel oneAPI 2025.2.1
 whatis([===[Loads spack-stack libraries needed for building the CCPP SCM on Derecho with Intel compilers]===])
 
 
-prepend_path("MODULEPATH","/glade/work/epicufsrt/contrib/spack-stack/derecho/spack-stack-2.0.0/envs/ue-oneapi-2025.2.1/modules/Core/")
+local spack_root = "/glade/work/epicufsrt/contrib/spack-stack/derecho/spack-stack-2.0.0/envs/ue-oneapi-2025.2.1"
+prepend_path("MODULEPATH", pathJoin(spack_root, "modules/Core/"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(spack_root, "install/intel-oneapi-compilers/2025.2.1/openssl-3.4.1-oacbwdv/lib64/"))
+
 
 load("stack-intel-oneapi-compilers/2025.2.1")
 load("stack-cray-mpich/8.1.32")

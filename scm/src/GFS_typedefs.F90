@@ -6929,9 +6929,11 @@ module GFS_typedefs
         if (j > 1) then
           read(fscav(i)(j+1:), *, iostat=ios) tem
           if (ios /= 0) cycle
-          n = get_tracer_index(Model%tracer_names, adjustl(fscav(i)(:j-1))) &
-              - Model%ntchs + 1
-          if (n > 0) Model%fscav(n) = tem
+          n = get_tracer_index(Model%tracer_names, adjustl(fscav(i)(:j-1)))
+          if (n /= no_tracer) then
+              n = n - Model%ntchs + 1
+              if (n > 0) Model%fscav(n) = tem
+          endif
         endif
       enddo
     endif
