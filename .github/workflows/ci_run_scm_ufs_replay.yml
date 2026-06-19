@@ -23,7 +23,7 @@ jobs:
     #######################################################################################
 
     - name: Checkout SCM.
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Initialize SCM submodules.
       run: git submodule update --init --recursive
