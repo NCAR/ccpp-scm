@@ -101,6 +101,8 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: dusfcg(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dusfc1(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dvdftra(:,:,:)     => null()  !<
+    real (kind=kind_phys), pointer      :: ten_t_pbl(:,:)     => null()  !<
+    real (kind=kind_phys), pointer      :: ten_q_pbl(:,:)     => null()  !<
     real (kind=kind_phys), pointer      :: dvdt(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: dvsfcg(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dvsfc1(:)          => null()  !<
@@ -484,6 +486,8 @@ contains
     allocate (Interstitial%dusfcg          (ixs:ixe))
     allocate (Interstitial%dusfc1          (ixs:ixe))
     allocate (Interstitial%dvdt            (ixs:ixe,Model%levs))
+    allocate (Interstitial%ten_t_pbl       (ixs:ixe,Model%levs))
+    allocate (Interstitial%ten_q_pbl       (ixs:ixe,Model%levs))
     allocate (Interstitial%dvsfcg          (ixs:ixe))
     allocate (Interstitial%dvsfc1          (ixs:ixe))
     allocate (Interstitial%dvdftra         (ixs:ixe,Model%levs,Interstitial%nvdiff))
@@ -643,12 +647,13 @@ contains
     allocate (Interstitial%ztmax_land      (ixs:ixe))
     allocate (Interstitial%ztmax_water     (ixs:ixe))
 
+    allocate (Interstitial%tv_lay               (ixs:ixe, Model%levs))
+    allocate (Interstitial%relhum               (ixs:ixe, Model%levs))
+    allocate (Interstitial%qs_lay               (ixs:ixe, Model%levs))
+
     ! RRTMGP
     if (Model%do_RRTMGP) then
        allocate (Interstitial%tracer               (ixs:ixe, Model%levs,Model%ntrac))
-       allocate (Interstitial%tv_lay               (ixs:ixe, Model%levs))
-       allocate (Interstitial%relhum               (ixs:ixe, Model%levs))
-       allocate (Interstitial%qs_lay               (ixs:ixe, Model%levs))
        allocate (Interstitial%q_lay                (ixs:ixe, Model%levs))
        allocate (Interstitial%deltaZ               (ixs:ixe, Model%levs))
        allocate (Interstitial%deltaZc              (ixs:ixe, Model%levs))
@@ -845,6 +850,8 @@ contains
     deallocate (Interstitial%dvsfcg)
     deallocate (Interstitial%dvsfc1)
     deallocate (Interstitial%dvdftra)
+    deallocate (Interstitial%ten_t_pbl)
+    deallocate (Interstitial%ten_q_pbl)
     deallocate (Interstitial%dzlyr)
     deallocate (Interstitial%elvmax)
     deallocate (Interstitial%ep1d)
@@ -1001,12 +1008,13 @@ contains
     deallocate (Interstitial%ztmax_land)
     deallocate (Interstitial%ztmax_water)
 
+    deallocate (Interstitial%tv_lay)
+    deallocate (Interstitial%relhum)
+    deallocate (Interstitial%qs_lay)
+
     ! RRTMGP
     if (Model%do_RRTMGP) then
        deallocate (Interstitial%tracer)
-       deallocate (Interstitial%tv_lay)
-       deallocate (Interstitial%relhum)
-       deallocate (Interstitial%qs_lay)
        deallocate (Interstitial%q_lay)
        deallocate (Interstitial%deltaZ)
        deallocate (Interstitial%deltaZc)
@@ -1391,6 +1399,8 @@ contains
     Interstitial%dvsfcg          = clear_val
     Interstitial%dvsfc1          = clear_val
     Interstitial%dvdftra         = clear_val
+    Interstitial%ten_t_pbl       = clear_val
+    Interstitial%ten_q_pbl       = clear_val
     Interstitial%dzlyr           = clear_val
     Interstitial%elvmax          = clear_val
     Interstitial%ep1d            = clear_val
@@ -1558,12 +1568,13 @@ contains
     Interstitial%ztmax_land      = clear_val
     Interstitial%ztmax_water     = clear_val
 
+    Interstitial%tv_lay                      = clear_val
+    Interstitial%relhum                      = clear_val
+    Interstitial%qs_lay                      = clear_val
+
     ! RRTMGP
     if (Model%do_RRTMGP) then
        Interstitial%tracer                      = clear_val
-       Interstitial%tv_lay                      = clear_val
-       Interstitial%relhum                      = clear_val
-       Interstitial%qs_lay                      = clear_val
        Interstitial%q_lay                       = clear_val
        Interstitial%deltaZ                      = clear_val
        Interstitial%deltaZc                     = clear_val
