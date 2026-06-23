@@ -21,7 +21,7 @@ subroutine scm_main_sub()
   ! Import CCPP control variables from scm_time_integration
   ! and define CPP directive for fixed control values.
   use scm_time_integration, only: errmsg, errflg
-#define CCPP_PHYSICS_STATIC_ARGS lb=1, ub=1, mythread=1, nthreads=1, nphys_threads=1
+#define CCPP_PHYSICS_STATIC_ARGS lb=1, ub=1, nphys_threads=1
 #define CCPP_PHYSICS_NPHYS_THREADS 1
 
   use :: scm_ccpp_cap,                   &

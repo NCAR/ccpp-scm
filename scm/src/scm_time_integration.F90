@@ -20,7 +20,7 @@ implicit none
   ! Fixed CCPP control values are passed via a CPP directive.
   character(len=512) :: errmsg
   integer :: errflg
-#define CCPP_PHYSICS_STATIC_ARGS lb=1, ub=1, mythread=1, nthreads=1, nphys_threads=1
+#define CCPP_PHYSICS_STATIC_ARGS lb=1, ub=1, nphys_threads=1
 
 contains
 
