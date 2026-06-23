@@ -528,6 +528,12 @@ of tests with the following command:
 
   $ ./run_scm.py -f ../../test/rt_test_cases.py
 
+The ``run_scm.py`` script calls ``mpirun -np 1 ./scm``, but ``mpirun/mpiexec``
+is unavailable on some host machine's login nodes. For example Derecho
+defaults to call ``./scm``, but calling an MPI compiled executable without
+``mpirun/mpiexec`` is not supported by all MPI implementations, so this is not
+the default on all systems.
+
 To see the full list of available options, use the ``--help`` flag:
 
 .. code:: bash
