@@ -1,9 +1,9 @@
 [submodule "ccpp-framework"]
 	path = ccpp/framework
-	#url = https://github.com/NCAR/ccpp-framework
+	url = https://github.com/NCAR/ccpp-framework
+	# Long-lived feature branch until CAM-SIMA transitions
 	#branch = develop
-	url = https://github.com/climbfuji/ccpp-framework
-	branch = feature/capgen-ng
+	branch = feature/capgen-v1
 [submodule "ccpp-physics"]
 	path = ccpp/physics
 	#url = https://github.com/NCAR/ccpp-physics
