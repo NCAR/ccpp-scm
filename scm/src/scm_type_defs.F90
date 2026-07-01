@@ -23,7 +23,6 @@ module scm_type_defs
                             get_tracer_index
   use CCPP_typedefs,  only: GFS_interstitial_type
   use machine,        only: kind_phys
-  use ccpp_types,     only: ccpp_t
 
   implicit none
 
@@ -443,8 +442,6 @@ module scm_type_defs
   end type physics_type
 
   type(physics_type), target :: physics
-
-  type(ccpp_t),       target :: cdata
 
   contains
 

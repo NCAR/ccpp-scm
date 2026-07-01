@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_HRRR" version="1">
+<suite name="SCM_HRRR" version="1.0">
   <!-- <init></init> -->
   <group name="time_vary">
     <subcycle loop="1">
@@ -42,7 +42,6 @@
       <scheme>sfc_nst</scheme>
       <scheme>sfc_nst_post</scheme>
       <scheme>lsm_ruc</scheme>
-      <scheme>clm_lake</scheme>
       <scheme>GFS_surface_loop_control_part2</scheme>
     </subcycle>
     <!-- End of surface iteration loop -->

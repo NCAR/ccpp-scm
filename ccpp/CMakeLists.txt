@@ -1,0 +1,295 @@
+#------------------------------------------------------------------------------
+#
+# Create list of SCHEME_FILES, HOST_FILES, and SUITE_FILES
+# Paths should be relative to CMAKE_SOURCE_DIR (this file's directory)
+#
+#------------------------------------------------------------------------------
+
+set(SCHEME_FILES_DIR "${CMAKE_SOURCE_DIR}/ccpp/physics/physics")
+set(SCHEME_METADATA_FILES
+  # time-vary
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_ccpp_suite_sim_pre.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_time_vary_pre.scm.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmg_setup.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rad_time_vary.scm.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_phys_time_vary.scm.meta"
+  # radiation
+  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radsw_param.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmg_pre.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_radiation_surface.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMG/rad_sw_pre.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radsw_main.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMG/rrtmg_sw_post.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMG/radlw_main.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMG/rrtmg_lw_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_radiation_post.meta"
+  # physics
+  "${SCHEME_FILES_DIR}/tools/get_prs_fv3.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_1.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_surface_generic_pre.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_surface_composites_pre.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/dcyc2t3.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_surface_composites_inter.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_2.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_surface_loop_control_part1.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_diff.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/scm_sfc_flux_spec.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Land/Noahmp/lnd_iau_mod.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_nst_pre.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_nst.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_nst_post.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Land/Noahmp/noahmpdrv.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/SeaIce/CICE/sfc_sice.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_surface_loop_control_part2.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_surface_composites_post.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_diag.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/UFS/sfc_diag_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_surface_generic_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_PBL_generic_pre.meta"
+  "${SCHEME_FILES_DIR}/PBL/SATMEDMF/satmedmfvdifq.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_PBL_generic_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_GWD_generic_pre.meta"
+  "${SCHEME_FILES_DIR}/GWD/unified_ugwp.meta"
+  "${SCHEME_FILES_DIR}/GWD/unified_ugwp_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_GWD_generic_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_photochemistry.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_photochemistry_post.meta"
+  "${SCHEME_FILES_DIR}/tools/get_phi_fv3.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_3.meta"
+  "${SCHEME_FILES_DIR}/CONV/SAMF/samfdeepcnv.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_DCNV_generic_post.meta"
+  "${SCHEME_FILES_DIR}/CONV/SAMF/samfshalcnv.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_SCNV_generic_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_suite_interstitial_4.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/cnvc90.meta"
+  "${SCHEME_FILES_DIR}/MP/Thompson/mp_thompson.meta"
+  "${SCHEME_FILES_DIR}/MP/Thompson/mp_thompson_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_MP_generic_post.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/maximum_hourly_diagnostics.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_physics_post.meta"
+  "${SCHEME_FILES_DIR}/CONV/C3/CCPP/cu_c3_driver_ccpp.meta"
+  "${SCHEME_FILES_DIR}/CONV/C3/CCPP/cu_c3_driver_post.meta"
+  "${SCHEME_FILES_DIR}/CONV/C3/CCPP/cu_c3_driver_pre.meta"
+  "${SCHEME_FILES_DIR}/GWD/ugwpv1_gsldrag.meta"
+  "${SCHEME_FILES_DIR}/GWD/ugwpv1_gsldrag_post.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Ocean/UFS/sfc_ocean.meta"
+  "${SCHEME_FILES_DIR}/MP/TEMPO/mp_tempo_post.meta"
+  "${SCHEME_FILES_DIR}/MP/TEMPO/mp_tempo.meta"
+  "${SCHEME_FILES_DIR}/MP/TEMPO/TEMPO/module_mp_tempo_params.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Land/Noah/lsm_noah.meta"
+  "${SCHEME_FILES_DIR}/GWD/cires_ugwp.meta"
+  "${SCHEME_FILES_DIR}/GWD/cires_ugwp_post.meta"
+  "${SCHEME_FILES_DIR}/MP/GFDL/v1_2019/gfdl_cloud_microphys.meta"
+  "${SCHEME_FILES_DIR}/MP/GFDL/fv_sat_adj.meta"
+  "${SCHEME_FILES_DIR}/MP/GFDL/v3_2022/gfdl_cloud_microphys_v3.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_overlap.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_setup.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_pre.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_rrtmgp_cloud_mp.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/GFS_cloud_diagnostics.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMGP/rrtmgp_aerosol_optics.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMGP/rrtmgp_sw_main.meta"
+  "${SCHEME_FILES_DIR}/Radiation/RRTMGP/rrtmgp_lw_main.meta"
+  "${SCHEME_FILES_DIR}/PBL/HEDMF/hedmf.meta"
+  "${SCHEME_FILES_DIR}/MP/Ferrier_Aligo/mp_fer_hires.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/GFDL/gfdl_sfc_layer.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/sgscloud_radpre.meta"
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/sgscloud_radpost.meta"
+  "${SCHEME_FILES_DIR}/PBL/MYNN_EDMF/mynnedmf_wrapper.meta"
+  "${SCHEME_FILES_DIR}/PBL/MYNN_EDMF/mynnedmf_wrapper_post.meta"
+  "${SCHEME_FILES_DIR}/CONV/Grell_Freitas/cu_gf_driver_pre.meta"
+  "${SCHEME_FILES_DIR}/CONV/Grell_Freitas/cu_gf_driver.meta"
+  "${SCHEME_FILES_DIR}/CONV/Grell_Freitas/cu_gf_driver_post.meta"
+  "${SCHEME_FILES_DIR}/MP/NSSL/mp_nssl.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Land/RUC/lsm_ruc.meta"
+  "${SCHEME_FILES_DIR}/smoke_dust/rrfs_smoke_wrapper.meta"
+  "${SCHEME_FILES_DIR}/smoke_dust/rrfs_smoke_postpbl.meta"
+  "${SCHEME_FILES_DIR}/GWD/drag_suite.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/MYNN/MYNN/CCPP/module_sf_mynnsfc_driver.meta"
+  "${SCHEME_FILES_DIR}/SFC_Models/Lake/CLM/clm_lake.meta"
+  "${SCHEME_FILES_DIR}/CONV/Chikira_Sugiyama/cs_conv_pre.meta"
+  "${SCHEME_FILES_DIR}/CONV/Chikira_Sugiyama/cs_conv.meta"
+  "${SCHEME_FILES_DIR}/CONV/Chikira_Sugiyama/cs_conv_post.meta"
+  "${SCHEME_FILES_DIR}/MP/Morrison_Gettelman/m_micro_pre.meta"
+  "${SCHEME_FILES_DIR}/MP/Morrison_Gettelman/m_micro.meta"
+  "${SCHEME_FILES_DIR}/MP/Morrison_Gettelman/m_micro_post.meta"
+  "${SCHEME_FILES_DIR}/CONV/Chikira_Sugiyama/cs_conv_aw_adj.meta"
+  "${SCHEME_FILES_DIR}/SFC_Layer/MYJ/myjsfc_wrapper.meta"
+  "${SCHEME_FILES_DIR}/PBL/MYJ/myjpbl_wrapper.meta"
+  "${SCHEME_FILES_DIR}/CONV/nTiedtke/cu_ntiedtke.meta"
+  "${SCHEME_FILES_DIR}/CONV/nTiedtke/cu_ntiedtke_pre.meta"
+  "${SCHEME_FILES_DIR}/CONV/nTiedtke/cu_ntiedtke_post.meta"
+  "${SCHEME_FILES_DIR}/PBL/saYSU/shinhongvdif.meta"
+  "${SCHEME_FILES_DIR}/PBL/YSU/ysuvdif.meta"
+  "${SCHEME_FILES_DIR}/PBL/SATMEDMF/canopy_driver.meta"
+)
+
+# Create list of scheme source files from metadata files
+ccpp_source_files(SCHEME_FORTRAN_FILES ${SCHEME_METADATA_FILES})
+
+set(HOST_FILES_DIR "${CMAKE_SOURCE_DIR}/scm/src")
+set(HOST_METADATA_FILES
+  "${HOST_FILES_DIR}/scm_physical_constants.meta"
+  "${HOST_FILES_DIR}/scm_type_defs.meta"
+  "${HOST_FILES_DIR}/CCPP_typedefs.meta"
+  "${HOST_FILES_DIR}/GFS_typedefs.meta"
+  "${HOST_FILES_DIR}/scm_time_integration.meta"
+)
+
+ccpp_source_files(HOST_FORTRAN_FILES ${HOST_METADATA_FILES})
+message(INFO "${HOST_METADATA_FILES} --> ${HOST_FORTRAN_FILES}")
+
+set(SUITE_FILES_DIR "${CMAKE_SOURCE_DIR}/ccpp/suites")
+if(DEFINED CCPP_SUITES)
+  # Take comma seperated string containing SDF names <CCPP_SUITES>,
+  # append <SUITE_FILES_DIR> as file prefix, append ".xml" file suffix,
+  # and replace "," with ";"
+  set(SUITE_FILES ${SUITE_FILES_DIR}/suite_${CCPP_SUITES})
+  string(REPLACE "," ".xml;${SUITE_FILES_DIR}/suite_" SUITE_FILES "${SUITE_FILES}")
+  set(SUITE_FILES "${SUITE_FILES}.xml")
+else()
+  set(SUITE_FILES
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_ps.xml"
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson_ps.xml"
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf_thompson.xml"
+    "${SUITE_FILES_DIR}/suite_HAFS_v0_hwrf.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_csawmg_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_csawmg.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ACM_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_FA.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_MYJ.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_noahmp.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ntiedtke_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ntiedtke.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_RRTMGP_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_RRTMGP.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_saYSU_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v15p2_YSU_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_gfdlmpv3_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v16_RRTMGP_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_c3_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GFS_v17_p8_ugwpv1_tempo_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1nssl_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1nssl.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_GSD_v1.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR_gf_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR_gf.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_HRRR.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RAP_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RAP.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1alpha_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1alpha.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_no_nsst_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_no_nsst.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1beta.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_RRFS_v1nssl.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_WoFS_v0_ps.xml"
+    "${SUITE_FILES_DIR}/suite_SCM_WoFS_v0.xml"
+)
+endif()
+message(STATUS "Compiling the following SDFs: ${SUITE_FILES}")
+ 
+set(HOST "scm")
+
+set(CCPP_VERBOSITY "2" CACHE STRING "Verbosity level of output (default: 0)")
+
+# By default, generated caps go in ccpp subdir
+set(OUTPUT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/ccpp")
+
+# Run ccpp_validator
+ccpp_validator(VERBOSITY ${CCPP_VERBOSITY}
+               SOURCE_FILES ${SCHEME_FORTRAN_FILES}
+               METADATA_FILES ${SCHEME_METADATA_FILES}
+               TYPE "SCHEME")
+ccpp_validator(VERBOSITY ${CCPP_VERBOSITY}
+               SOURCE_FILES ${HOST_FORTRAN_FILES}
+               METADATA_FILES ${HOST_METADATA_FILES}
+               TYPE "HOST")
+
+if (32BIT)
+  set(CCPP_KINDS "kind_phys=REAL32")
+  message(STATUS "Building physics with 32-bit")
+endif()
+# Run ccpp_capgen_ng
+ccpp_capgen(VERBOSITY ${CCPP_VERBOSITY}
+            HOSTFILES ${HOST_METADATA_FILES}
+            SCHEMEFILES ${SCHEME_METADATA_FILES}
+            SUITES ${SUITE_FILES}
+            HOST_NAME ${HOST}
+            OUTPUT_ROOT "${OUTPUT_ROOT}"
+	    KIND_SPECS "${CCPP_KINDS}")
+
+# Retrieve the list of Fortran files required for test host from datatable.xml;
+# this includes capgen-generated files and dependencies inferred from metadata
+ccpp_datafile(DATATABLE "${OUTPUT_ROOT}/datatable.xml"
+              REPORT_NAME "--dependencies")
+set(CAPGEN_DEPENDENCIES ${CCPP_FILES})
+ccpp_datafile(DATATABLE "${OUTPUT_ROOT}/datatable.xml"
+              REPORT_NAME "--scheme-files")
+set(SCHEME_FORTRAN_FILES ${CCPP_FILES})
+ccpp_datafile(DATATABLE "${OUTPUT_ROOT}/datatable.xml"
+              REPORT_NAME "--capgen-files")
+set(CAPGEN_FILES ${CCPP_FILES})
+
+message(STATUS "List of capgen dependencies: ${CAPGEN_DEPENDENCIES}")
+message(STATUS "List of filtered scheme files: ${SCHEME_FORTRAN_FILES}")
+message(STATUS "List of capgen-generated files: ${CAPGEN_FILES}")
+
+# Extra files that do not make it through the capgen scheme filter
+set(EXTRA_FILES
+  "${SCHEME_FILES_DIR}/Interstitials/UFS_SCM_NEPTUNE/module_ccpp_suite_simulator.F90"
+)
+
+add_library(scm-ccpp STATIC
+  ${EXTRA_FILES}
+  ${CAPGEN_DEPENDENCIES}
+  ${SCHEME_FORTRAN_FILES}
+  ${HOST_FORTRAN_FILES}
+  ${CAPGEN_FILES}
+)
+
+target_link_libraries(scm-ccpp MPI::MPI_Fortran)
+if(OPENMP)
+  target_link_libraries(scm-ccpp OpenMP::OpenMP_Fortran)
+endif()
+target_link_libraries(scm-ccpp NetCDF::NetCDF_Fortran)
+if(TARGET bacio::bacio)
+  set(BACIO_TARGET bacio::bacio)
+elseif(TARGET bacio::bacio_4)
+  set(BACIO_TARGET bacio::bacio_4)
+else()
+  message(FATAL_ERROR
+    "bacio found but expected target not exported (bacio::bacio or bacio::bacio_4)")
+endif()
+target_link_libraries(scm-ccpp ${BACIO_TARGET})
+if(ip_FOUND)
+  target_link_libraries(scm-ccpp ip::ip_d)
+else()
+  target_link_libraries(scm-ccpp sp::sp_d)
+endif()
+target_link_libraries(scm-ccpp w3emc::w3emc_d)
+
+set_target_properties(scm-ccpp PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+target_include_directories(scm-ccpp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}>)

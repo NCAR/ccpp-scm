@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="SCM_GSD_v1" version="1">
+<suite name="SCM_GSD_v1" version="1.0">
   <!-- <init></init> -->
   <group name="time_vary">
     <subcycle loop="1">
@@ -24,7 +24,7 @@
       <scheme>GFS_radiation_post</scheme>
     </subcycle>
   </group>
-  <group name="physics_ps">
+  <group name="phys_ps">
     <subcycle loop="1">
       <scheme>get_prs_fv3</scheme>
       <scheme>GFS_suite_interstitial_1</scheme>

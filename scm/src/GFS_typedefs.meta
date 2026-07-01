@@ -1,3 +1,26 @@
+########################################################################
+[ccpp-table-properties]
+  name = GFS_typedefs
+  type = host
+  dependencies_path = ../../ccpp/physics/physics
+  dependencies = hooks/machine.F,hooks/physcons.F90
+  dependencies = Radiation/RRTMG/radlw_param.f,Radiation/RRTMG/radsw_param.f
+  dependencies = MP/TEMPO/TEMPO/module_mp_tempo_params.F90
+  dependencies = photochem/module_ozphys.F90,photochem/module_h2ophys.F90
+  dependencies = SFC_Models/Land/Noahmp/lnd_iau_mod.F90
+  dependencies = Interstitials/UFS_SCM_NEPTUNE/GFS_ccpp_suite_sim_pre.F90
+
+[ccpp-arg-table]
+  name = GFS_typedefs
+  type = host
+[LTP]
+  standard_name = extra_top_layer
+  long_name = extra top layer for radiation
+  units = count
+  dimensions = ()
+  type = integer
+
+
 [ccpp-table-properties]
   name = GFS_statein_type
   type = ddt
@@ -1665,7 +1688,7 @@
   standard_name = temperature_in_surface_snow
   long_name = temperature_in_surface_snow
   units = K
-  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:constant_zero)
+  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:upper_bound_of_vertical_dimension_of_surface_snow)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -1681,7 +1704,7 @@
   standard_name = lwe_thickness_of_ice_in_surface_snow
   long_name = snow layer ice
   units = mm
-  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:constant_zero)
+  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:upper_bound_of_vertical_dimension_of_surface_snow)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -1689,7 +1712,7 @@
   standard_name = lwe_thickness_of_liquid_water_in_surface_snow
   long_name = snow layer liquid water
   units = mm
-  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:constant_zero)
+  dimensions = (horizontal_dimension, lower_bound_of_vertical_dimension_of_surface_snow:upper_bound_of_vertical_dimension_of_surface_snow)
   type = real
   kind = kind_phys
   active = (control_for_land_surface_scheme == identifier_for_noahmp_land_surface_scheme)
@@ -3258,22 +3281,6 @@
   type = real
   kind = kind_phys
   active = (do_smoke_coupling)
-[smoke_ext]
-  standard_name = extinction_coefficient_in_air_due_to_smoke
-  long_name = extinction coefficient in air due to smoke
-  units = various
-  dimensions = (horizontal_dimension,vertical_layer_dimension)
-  type = real
-  kind = kind_phys
-  active = (do_smoke_coupling)
-[dust_ext]
-  standard_name = extinction_coefficient_in_air_due_to_dust
-  long_name = extinction coefficient in air due to dust
-  units = various
-  dimensions = (horizontal_dimension,vertical_layer_dimension)
-  type = real
-  kind = kind_phys
-  active = (do_smoke_coupling)
 [chem3d]
   standard_name = chem3d_mynn_pbl_transport
   long_name = mynn pbl transport of smoke and dust
@@ -3516,12 +3523,6 @@
   units = count
   dimensions = ()
   type = integer
-[nthreads]
-  standard_name = number_of_openmp_threads
-  long_name = number of OpenMP threads available for physics schemes
-  units = count
-  dimensions = ()
-  type = integer
 [nlunit]
   standard_name = iounit_of_namelist
   long_name = fortran unit number for file opens
@@ -3554,7 +3555,7 @@
   units = none
   dimensions = (number_of_lines_in_internal_namelist)
   type = character
-  kind = len=256
+  kind = len=:
 [logunit]
   standard_name = iounit_of_log
   long_name = fortran unit number for logfile
@@ -3681,12 +3682,14 @@
   units = Pa
   dimensions = (vertical_interface_dimension)
   type = real
+  kind = kind_phys
 [bk]
   standard_name = sigma_pressure_hybrid_coordinate_b_coefficient
   long_name = b parameter for sigma pressure level calculations
   units = none
   dimensions = (vertical_interface_dimension)
   type = real
+  kind = kind_phys
 [levsp1]
   standard_name = vertical_interface_dimension
   long_name = number of vertical levels plus one
@@ -3711,58 +3714,10 @@
   units = count
   dimensions = ()
   type = integer
-[nblks]
-  standard_name = ccpp_block_count
-  long_name = for explicit data blocking: number of blocks
-  units = count
-  dimensions = ()
-  type = integer
-[blksz]
-  standard_name = ccpp_block_sizes
-  long_name = for explicit data blocking: block sizes of all blocks
-  units = count
-  dimensions = (ccpp_block_count)
-  type = integer
-[blksz(ccpp_block_number)]
-  standard_name = horizontal_loop_extent
-  long_name = horizontal loop extent
-  units = count
-  dimensions = ()
-  type = integer
 [ncols]
   standard_name = horizontal_dimension
   long_name = horizontal dimension
   units = count
-  dimensions = ()
-  type = integer
-[nchunks]
-  standard_name = ccpp_chunk_extent
-  long_name = number of chunks of array data used in run phase
-  units = count
-  dimensions = ()
-  type = integer
-[chunk_begin]
-  standard_name = horizontal_loop_begin_all_chunks
-  long_name = first index for horizontal loop extent in run phase
-  units = index
-  dimensions = (ccpp_chunk_extent)
-  type = integer
-[chunk_begin(ccpp_chunk_number)]
-  standard_name = horizontal_loop_begin
-  long_name = first index for horizontal loop extent in run phase
-  units = index
-  dimensions = ()
-  type = integer
-[chunk_end]
-  standard_name = horizontal_loop_end_all_chunks
-  long_name = last index for horizontal loop extent in run phase
-  units = index
-  dimensions = (ccpp_chunk_extent)
-  type = integer
-[chunk_end(ccpp_chunk_number)]
-  standard_name = horizontal_loop_end
-  long_name = last index for horizontal loop extent in run phase
-  units = index
   dimensions = ()
   type = integer
 [dycore_active]
@@ -4012,13 +3967,13 @@
 [nsswr]
   standard_name = number_of_timesteps_between_shortwave_radiation_calls
   long_name = number of timesteps between shortwave radiation calls
-  units =
+  units = count
   dimensions = ()
   type = integer
 [nslwr]
   standard_name = number_of_timesteps_between_longwave_radiation_calls
   long_name = number of timesteps between longwave radiation calls
-  units =
+  units = count
   dimensions = ()
   type = integer
 [fhswr]
@@ -4712,6 +4667,7 @@
   units = km
   dimensions = ()
   type = real
+  kind = kind_phys
 [psautco]
   standard_name = autoconversion_to_snow_coefficient
   long_name = auto conversion coeff from ice to snow
@@ -5842,7 +5798,7 @@
 [shcnvcw]
   standard_name = flag_for_saving_shallow_convective_cloud_area_fraction
   long_name = flag for shallow convective cloud
-  units =
+  units = flag
   dimensions = ()
   type = logical
 [redrag]
@@ -7547,43 +7503,43 @@
 [nT2delt]
   standard_name = index_of_air_temperature_two_timesteps_back_in_xyz_dimensioned_restart_array
   long_name = the index of air temperature two timesteps back in phy f3d
-  units =
+  units = index
   dimensions = ()
   type = integer
 [nTdelt]
   standard_name = index_of_air_temperature_on_previous_timestep_in_xyz_dimensioned_restart_array
   long_name = the index of air temperature at previous timestep in phy f3d
-  units =
+  units = index
   dimensions = ()
   type = integer
 [nqv2delt]
   standard_name = index_of_specific_humidity_two_timesteps_back_in_xyz_dimensioned_restart_array
   long_name = the index of specific humidity two timesteps back in phy f3d
-  units =
+  units = index
   dimensions = ()
   type = integer
 [nqvdelt]
   standard_name = index_of_specific_humidity_on_previous_timestep_in_xyz_dimensioned_restart_array
   long_name = the index of specific humidity at previous timestep in phy f3d
-  units =
+  units = index
   dimensions = ()
   type = integer
 [nps2delt]
   standard_name = index_of_surface_air_pressure_two_timesteps_back_in_xyz_dimensioned_tracer_array
   long_name = the index of surface air pressure two timesteps back in phy f2d
-  units =
+  units = index
   dimensions = ()
   type = integer
 [npsdelt]
   standard_name = index_of_surface_air_pressure_on_previous_timestep_in_xyz_dimensioned_restart_array
   long_name = the index of surface air pressure at previous timestep in phy f2d
-  units =
+  units = index
   dimensions = ()
   type = integer
 [ncnvwind]
   standard_name = index_of_enhancement_to_wind_speed_at_surface_adjacent_layer_due_to_convection_in_xy_dimensioned_restart_array
   long_name = the index of surface wind enhancement due to convection in phy f2d
-  units =
+  units = index
   dimensions = ()
   type = integer
 [debug]
@@ -7640,13 +7596,6 @@
   units = flag
   dimensions = ()
   type = logical
-[suite_sim_data]
-  standard_name = filename_for_CCPP_suite_simulator
-  long_name = filename for cccpp suite simulator data file
-  units = none
-  dimensions = ()
-  type = character
-  kind = len=256
 [nprg_active]
   standard_name = number_of_prognostics_varaibles_in_CCPP_suite_simulator
   long_name = number of prognostic variables used in CCPP suite simulator
@@ -8012,6 +7961,7 @@
   units = 1
   dimensions = ()
   type = real
+  kind = kind_phys
 [icloud_bl]
   standard_name = control_for_sgs_cloud_radiation_coupling_in_mellor_yamamda_nakanishi_niino_pbl_scheme
   long_name = flag for coupling sgs clouds to radiation
@@ -10768,7 +10718,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  intent = inout
   active = (do_lightning_threat_index_calculations)
 [ltg2_max]
   standard_name = lightning_threat_index_2
@@ -10777,7 +10726,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  intent = inout
   active = (do_lightning_threat_index_calculations)
 [ltg3_max]
   standard_name = lightning_threat_index_3
@@ -10786,87 +10734,4 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  intent = inout
   active = (do_lightning_threat_index_calculations)
-
-########################################################################
-[ccpp-table-properties]
-  name = GFS_typedefs
-  type = module
-  dependencies_path = ../../ccpp/physics/physics
-  dependencies = hooks/machine.F,hooks/physcons.F90
-  dependencies = Radiation/RRTMG/radlw_param.f,Radiation/RRTMG/radsw_param.f
-  dependencies = MP/TEMPO/TEMPO/module_mp_tempo_params.F90
-  dependencies = photochem/module_ozphys.F90,photochem/module_h2ophys.F90
-  dependencies = SFC_Models/Land/Noahmp/lnd_iau_mod.F90
-  dependencies = Interstitials/UFS_SCM_NEPTUNE/GFS_ccpp_suite_sim_pre.F90
-
-[ccpp-arg-table]
-  name = GFS_typedefs
-  type = module
-[GFS_cldprop_type]
-  standard_name = GFS_cldprop_type
-  long_name = definition of type GFS_cldprop_type
-  units = DDT
-  dimensions = ()
-  type = GFS_cldprop_type
-[GFS_control_type]
-  standard_name = GFS_control_type
-  long_name = definition of type GFS_control_type
-  units = DDT
-  dimensions = ()
-  type = GFS_control_type
-[GFS_coupling_type]
-  standard_name = GFS_coupling_type
-  long_name = definition of type GFS_coupling_type
-  units = DDT
-  dimensions = ()
-  type = GFS_coupling_type
-[GFS_diag_type]
-  standard_name = GFS_diag_type
-  long_name = definition of type GFS_diag_type
-  units = DDT
-  dimensions = ()
-  type = GFS_diag_type
-[GFS_grid_type]
-  standard_name = GFS_grid_type
-  long_name = definition of type GFS_grid_type
-  units = DDT
-  dimensions = ()
-  type = GFS_grid_type
-[GFS_radtend_type]
-  standard_name = GFS_radtend_type
-  long_name = definition of type GFS_radtend_type
-  units = DDT
-  dimensions = ()
-  type = GFS_radtend_type
-[GFS_sfcprop_type]
-  standard_name = GFS_sfcprop_type
-  long_name = definition of type GFS_sfcprop_type
-  units = DDT
-  dimensions = ()
-  type = GFS_sfcprop_type
-[GFS_statein_type]
-  standard_name = GFS_statein_type
-  long_name = definition of type GFS_statein_type
-  units = DDT
-  dimensions = ()
-  type = GFS_statein_type
-[GFS_stateout_type]
-  standard_name = GFS_stateout_type
-  long_name = definition of type GFS_stateout_type
-  units = DDT
-  dimensions = ()
-  type = GFS_stateout_type
-[GFS_tbd_type]
-  standard_name = GFS_tbd_type
-  long_name = definition of type GFS_tbd_type
-  units = DDT
-  dimensions = ()
-  type = GFS_tbd_type
-[LTP]
-  standard_name = extra_top_layer
-  long_name = extra top layer for radiation
-  units = count
-  dimensions = ()
-  type = integer
