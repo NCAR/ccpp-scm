@@ -342,7 +342,7 @@ components.
 
       .. code:: bash
 
-         $ cmake ../src
+         $ cmake ../..
 
       By default, this option uses all supported suites. The list of
       supported suites is controlled by ``scm/src/suite_info.py`` and
@@ -366,7 +366,7 @@ components.
 
       .. code:: bash
 
-         $ cmake -DCCPP_SUITES=ALL ../src
+         $ cmake -DCCPP_SUITES=ALL ../..
 
       All suites in ``scm/src/suite_info.py``, regardless of whether they’re supported, will be
       used. This list is typically longer for the development version of
@@ -376,13 +376,13 @@ components.
 
       .. code:: bash
 
-         $ cmake -DCCPP_SUITES=SCM_GFS_v16,SCM_RAP ../src
+         $ cmake -DCCPP_SUITES=SCM_GFS_v16,SCM_RAP ../..
 
       This only compiles the listed subset of suites (which should still
       have a corresponding entry in ``scm/src/suite_info.py``)
 
    -  The statements above can be modified with the following options
-      (put before ``../src``):
+      (put before ``../..``):
 
       -  Use threading with openmp (not for macOS with clang+gfortran)
 
@@ -408,7 +408,7 @@ components.
 
       .. code:: bash
 
-         $ cmake [-DCMAKE_BUILD_TYPE ...] ../src 2>&1 | tee log.cmake
+         $ cmake [-DCMAKE_BUILD_TYPE ...] ../.. 2>&1 | tee log.cmake
 
    CMake automatically runs the CCPP prebuild script to match required
    physics variables with those available from the dycore (SCM) and to

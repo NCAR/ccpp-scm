@@ -268,7 +268,7 @@ and run the SCM using TWPICE case with the modified suite.
 .. code:: bash
 
    $ cd ccpp-scm/scm/bin
-   $ cmake ../src -DCCPP_SUITES=SCM_GFS_v16
+   $ cmake ../.. -DCCPP_SUITES=SCM_GFS_v16
    $ ./run_scm.py -c twpice -s SCM_GFS_v16
 
 .. _`Suite_with_Active_cldmp`:
@@ -310,7 +310,7 @@ and run the SCM using TWPICE case with the modified suite.
 .. code:: bash
 
    $ cd ccpp-scm/scm/bin
-   $ cmake ../src -DCCPP_SUITES=SCM_GFS_v17_p8
+   $ cmake ../.. -DCCPP_SUITES=SCM_GFS_v17_p8
    $ ./run_scm.py -c twpice -s SCM_GFS_v17_p8
 
 .. _`plotting_tools`:
