@@ -8,8 +8,8 @@
 	path = ccpp/physics
 	#url = https://github.com/NCAR/ccpp-physics
 	#branch = scm/dev
-	url = https://github.com/climbfuji/ccpp-physics
-	branch = feature/capgen-ng
+	url = https://github.com/grantfirl/ccpp-physics
+	branch = feature/capgen-ng_gjf
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules

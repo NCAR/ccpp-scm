@@ -5,7 +5,7 @@ module GFS_typedefs
 
    use module_radsw_parameters,  only: topfsw_type, sfcfsw_type, NBDSW
    use module_radlw_parameters,  only: topflw_type, sfcflw_type, NBDLW
-   use module_mp_tempo_params,   only: ty_tempo_cfg
+   use module_mp_tempo_cfgs,     only: ty_tempo_cfgs
    use module_ozphys,            only: ty_ozphys
    use module_h2ophys,           only: ty_h2ophys
    use module_ccpp_suite_simulator, only: base_physics_process
@@ -531,24 +531,14 @@ module GFS_typedefs
     real (kind=kind_phys), pointer :: sfculw(:)      => null()   !< total sky sfc upward lw flux ( w/m**2 )
 
 !--- incoming quantities
-    real (kind=kind_phys), pointer :: dusfcin_cpl(:)          => null()   !< aoi_fld%dusfcin(item,lan)
-    real (kind=kind_phys), pointer :: dvsfcin_cpl(:)          => null()   !< aoi_fld%dvsfcin(item,lan)
-    real (kind=kind_phys), pointer :: dtsfcin_cpl(:)          => null()   !< aoi_fld%dtsfcin(item,lan)
-    real (kind=kind_phys), pointer :: dqsfcin_cpl(:)          => null()   !< aoi_fld%dqsfcin(item,lan)
-    real (kind=kind_phys), pointer :: ulwsfcin_cpl(:)         => null()   !< aoi_fld%ulwsfcin(item,lan)
-!   real (kind=kind_phys), pointer :: tseain_cpl(:)           => null()   !< aoi_fld%tseain(item,lan)
-!   real (kind=kind_phys), pointer :: tisfcin_cpl(:)          => null()   !< aoi_fld%tisfcin(item,lan)
-!   real (kind=kind_phys), pointer :: ficein_cpl(:)           => null()   !< aoi_fld%ficein(item,lan)
-!   real (kind=kind_phys), pointer :: hicein_cpl(:)           => null()   !< aoi_fld%hicein(item,lan)
-    real (kind=kind_phys), pointer :: hsnoin_cpl(:)           => null()   !< aoi_fld%hsnoin(item,lan)
-!   real (kind=kind_phys), pointer :: sfc_alb_nir_dir_cpl(:)  => null()   !< sfc nir albedo for direct rad
-!   real (kind=kind_phys), pointer :: sfc_alb_nir_dif_cpl(:)  => null()   !< sfc nir albedo for diffuse rad
-!   real (kind=kind_phys), pointer :: sfc_alb_vis_dir_cpl(:)  => null()   !< sfc vis albedo for direct rad
-!   real (kind=kind_phys), pointer :: sfc_alb_vis_dif_cpl(:)  => null()   !< sfc vis albedo for diffuse rad
-    !--- only variable needed for cplwav2atm=.TRUE.
-!   real (kind=kind_phys), pointer :: zorlwav_cpl(:)          => null()   !< roughness length from wave model
+    real (kind=kind_phys), pointer :: dusfcin_cpl(:)          => null()   !< sfc u momentum flux
+    real (kind=kind_phys), pointer :: dvsfcin_cpl(:)          => null()   !< sfc v momentum flux
+    real (kind=kind_phys), pointer :: dtsfcin_cpl(:)          => null()   !< sfc sensible heat flux input
+    real (kind=kind_phys), pointer :: dqsfcin_cpl(:)          => null()   !< sfc latent heat flux
+    real (kind=kind_phys), pointer :: ulwsfcin_cpl(:)         => null()   !< sfc upwelling LW flux
+    real (kind=kind_phys), pointer :: hsnoin_cpl(:)           => null()   !< sfc snow depth over sea ice
     !--- also needed for ice/ocn coupling
-    real (kind=kind_phys), pointer :: slimskin_cpl(:)=> null()   !< aoi_fld%slimskin(item,lan)
+    real (kind=kind_phys), pointer :: slimskin_cpl(:)=> null()   !< sea/land/ice mask
     !--- variables needed for use_med_flux =.TRUE.
     real (kind=kind_phys), pointer :: dusfcin_med(:)         => null()   !< sfc u momentum flux over ocean
     real (kind=kind_phys), pointer :: dvsfcin_med(:)         => null()   !< sfc v momentum flux over ocean
@@ -792,14 +782,13 @@ module GFS_typedefs
     logical              :: cplwav          !< default no cplwav collection
     logical              :: cplwav2atm      !< default no wav->atm coupling
     logical              :: cplaqm          !< default no cplaqm collection
+    logical              :: cplcat          !< default no cplcat collection
     logical              :: cplchm          !< default no cplchm collection
     logical              :: cpllnd          !< default no cpllnd collection
     logical              :: cpllnd2atm      !< default no lnd->atm coupling
     logical              :: rrfs_sd         !< default no rrfs_sd collection
     logical              :: cpl_fire        !< default no fire_behavior collection
     logical              :: use_cice_alb    !< default .false. - i.e. don't use albedo imported from the ice model
-    logical              :: cpl_imp_mrg     !< default no merge import with internal forcings
-    logical              :: cpl_imp_dbg     !< default no write import data to file post merge
     logical              :: use_med_flux    !< default .false. - i.e. don't use atmosphere-ocean fluxes imported from mediator
 
 !--- cdeps inline parameters
@@ -839,7 +828,7 @@ module GFS_typedefs
     integer              :: tend_opt_shal_conv
     integer              :: tend_opt_mp
     integer              :: tend_opt_stoch
-    
+
     logical              :: gfs_phys_time_vary_is_init=.false. !< GFS_phys_time_vary interstitial initialization flag
 !--- radiation control parameters
     real(kind=kind_phys) :: fhswr           !< frequency for shortwave radiation (secs)
@@ -971,6 +960,10 @@ module GFS_typedefs
     logical              :: top_at_1                !< Vertical ordering flag.
     integer              :: iSFC                    !< Vertical index for surface
     integer              :: iTOA                    !< Vertical index for TOA
+    logical              :: is_init_lw_gas_optics   = .false.  !< flag to denote whether LW radiation gas optics have been initialized
+    logical              :: is_init_sw_gas_optics   = .false.  !< flag to denote whether SW radiation gas optics have been initialized
+    logical              :: is_init_lw_cloud_optics = .false.  !< flag to denote whether LW radiation cloud optics have been initialized
+    logical              :: is_init_sw_cloud_optics = .false.  !< flag to denote whether SW radiation cloud optics have been initialized
 
 !--- microphysical switch
     logical              :: convert_dry_rho = .true.       !< flag for converting mass/number concentrations from moist to dry
@@ -1076,8 +1069,10 @@ module GFS_typedefs
     real(kind=kind_phys) :: dt_inner        !< time step for the inner loop in s
     logical              :: sedi_semi       !< flag for semi Lagrangian sedi of rain
     integer              :: decfl           !< deformed CFL factor
-    type(ty_tempo_cfg)   :: tempo_cfg       !< Thompson MP configuration information.
+    logical              :: do_sat_adj      !< flag for saturation adjustment for microphysics in dynamics
+    type(ty_tempo_cfgs)  :: tempo_cfgs      !< Tempo MP configuration information.
     logical              :: thompson_mp_is_init=.false. !< Local scheme initialization flag
+    logical              :: tempo_mp_is_init=.false. !< Local scheme initialization flag
     real(kind=kind_phys) :: nt_c_l          !< prescribed cloud liquid water number concentration over land
     real(kind=kind_phys) :: nt_c_o          !< prescribed cloud liquid water number concentration over ocean
     real(kind=kind_phys) :: av_i            !< transition value of coefficient matching at crossover from cloud ice to snow
@@ -3117,22 +3112,15 @@ module GFS_typedefs
       Coupling%tsfci_cpl = clear_val
     endif
 
-!   if (Model%cplwav2atm) then
-      !--- incoming quantities
-!     allocate (Coupling%zorlwav_cpl (IM))
-
-!     Coupling%zorlwav_cpl  = clear_val
-!   endif
-
     ! -- additional coupling options for air quality
-    if (Model%cplflx .or. Model%cpllnd .or. Model%cpl_fire .or. (Model%cplaqm .and. .not.Model%cplflx)) then
+    if (Model%cplflx .or. Model%cpllnd .or. Model%cpl_fire .or. (Model%cplaqm .and. .not.Model%cplflx) .or. Model%cplcat) then
       allocate (Coupling%psurfi_cpl  (IM))
       allocate (Coupling%nswsfci_cpl (IM))
       Coupling%psurfi_cpl  = clear_val
       Coupling%nswsfci_cpl = clear_val
     endif
 
-    if (Model%cplflx .or. Model%cpl_fire .or. (Model%cplaqm .and. .not.Model%cplflx)) then
+    if (Model%cplflx .or. Model%cpl_fire .or. (Model%cplaqm .and. .not.Model%cplflx) .or. Model%cplcat) then
       allocate (Coupling%dtsfci_cpl  (IM))
       allocate (Coupling%dqsfci_cpl  (IM))
       allocate (Coupling%t2mi_cpl    (IM))
@@ -3181,15 +3169,7 @@ module GFS_typedefs
       allocate (Coupling%dtsfcin_cpl         (IM))
       allocate (Coupling%dqsfcin_cpl         (IM))
       allocate (Coupling%ulwsfcin_cpl        (IM))
-!     allocate (Coupling%tseain_cpl          (IM))
-!     allocate (Coupling%tisfcin_cpl         (IM))
-!     allocate (Coupling%ficein_cpl          (IM))
-!     allocate (Coupling%hicein_cpl          (IM))
       allocate (Coupling%hsnoin_cpl          (IM))
-!     allocate (Coupling%sfc_alb_nir_dir_cpl (IM))
-!     allocate (Coupling%sfc_alb_nir_dif_cpl (IM))
-!     allocate (Coupling%sfc_alb_vis_dir_cpl (IM))
-!     allocate (Coupling%sfc_alb_vis_dif_cpl (IM))
 
       Coupling%slimskin_cpl          = clear_val
       Coupling%dusfcin_cpl           = clear_val
@@ -3197,15 +3177,7 @@ module GFS_typedefs
       Coupling%dtsfcin_cpl           = clear_val
       Coupling%dqsfcin_cpl           = clear_val
       Coupling%ulwsfcin_cpl          = clear_val
-!     Coupling%tseain_cpl            = clear_val
-!     Coupling%tisfcin_cpl           = clear_val
-!     Coupling%ficein_cpl            = clear_val
-!     Coupling%hicein_cpl            = clear_val
       Coupling%hsnoin_cpl            = clear_val
-!     Coupling%sfc_alb_nir_dir_cpl   = clear_val
-!     Coupling%sfc_alb_nir_dif_cpl   = clear_val
-!     Coupling%sfc_alb_vis_dir_cpl   = clear_val
-!     Coupling%sfc_alb_vis_dif_cpl   = clear_val
 
       ! -- Coupling options to retrive atmosphere-ocean fluxes from mediator
       if (Model%use_med_flux) then
@@ -3385,9 +3357,17 @@ module GFS_typedefs
     endif
 
     !--- needed for Thompson's aerosol option
-    if((Model%imp_physics == Model%imp_physics_thompson .or. &
-         Model%imp_physics == Model%imp_physics_tempo) .and. &
+    if((Model%imp_physics == Model%imp_physics_thompson) .and. &
          (Model%ltaerosol .or. Model%mraerosol)) then
+      allocate (Coupling%nwfa2d (IM))
+      allocate (Coupling%nifa2d (IM))
+      Coupling%nwfa2d   = clear_val
+      Coupling%nifa2d   = clear_val
+    endif
+
+    !--- needed for Tempo's aerosol option
+    if((Model%imp_physics == Model%imp_physics_tempo) .and. &
+         (Model%ltaerosol)) then
       allocate (Coupling%nwfa2d (IM))
       allocate (Coupling%nifa2d (IM))
       Coupling%nwfa2d   = clear_val
@@ -3552,14 +3532,13 @@ module GFS_typedefs
     logical              :: cplwav         = .false.         !< default no cplwav collection
     logical              :: cplwav2atm     = .false.         !< default no cplwav2atm coupling
     logical              :: cplaqm         = .false.         !< default no cplaqm collection
+    logical              :: cplcat         = .false.         !< default no cplcat collection
     logical              :: cplchm         = .false.         !< default no cplchm collection
     logical              :: cpllnd         = .false.         !< default no cpllnd collection
     logical              :: cpllnd2atm     = .false.         !< default no cpllnd2atm coupling
     logical              :: rrfs_sd        = .false.         !< default no rrfs_sd collection
     logical              :: cpl_fire       = .false.         !< default no fire behavior colleciton
     logical              :: use_cice_alb   = .false.         !< default no cice albedo
-    logical              :: cpl_imp_mrg    = .false.         !< default no merge import with internal forcings
-    logical              :: cpl_imp_dbg    = .false.         !< default no write import data to file post merge
     logical              :: use_med_flux   = .false.         !< default no atmosphere-ocean fluxes from mediator
 
     !--- cdeps inline parameters
@@ -4264,7 +4243,7 @@ module GFS_typedefs
                                tend_opt_mp, tend_opt_stoch,                                 &
                           !--- coupling parameters
                                cplflx, cplice, cplocn2atm, cplwav, cplwav2atm, cplaqm,      &
-                               cplchm, cpllnd, cpllnd2atm, cpl_imp_mrg, cpl_imp_dbg,        &
+                               cplchm, cplcat, cpllnd, cpllnd2atm,                          &
                                cpl_fire, rrfs_sd, use_cice_alb,                             &
 #ifdef IDEA_PHYS
                                lsidea, weimer_model, f107_kp_size, f107_kp_interval,        &
@@ -4748,7 +4727,7 @@ module GFS_typedefs
     Model%tend_opt_shal_conv  = tend_opt_shal_conv
     Model%tend_opt_mp         = tend_opt_mp
     Model%tend_opt_stoch      = tend_opt_stoch
-    
+
     Model%ipr = min(minval(Model%blksz), 10)
 !--- coupling parameters
     Model%cplflx           = cplflx
@@ -4765,12 +4744,11 @@ module GFS_typedefs
     Model%cplwav           = cplwav
     Model%cplwav2atm       = cplwav2atm
     Model%cplaqm           = cplaqm
-    Model%cplchm           = cplchm .or. cplaqm
+    Model%cplcat           = cplcat
+    Model%cplchm           = cplchm .or. cplaqm .or. cplcat
     Model%cpllnd           = cpllnd
     Model%cpllnd2atm       = cpllnd2atm
     Model%use_cice_alb     = use_cice_alb
-    Model%cpl_imp_mrg      = cpl_imp_mrg
-    Model%cpl_imp_dbg      = cpl_imp_dbg
     Model%use_med_flux     = use_med_flux
 
 !--- cdeps inline parameters
@@ -5100,6 +5078,8 @@ module GFS_typedefs
     endif
     Model%sedi_semi        = sedi_semi
     Model%decfl            = decfl
+    ! TEMPO expects do_sat_adj variable to exist, but SCM never calls so set to .false.
+    Model%do_sat_adj       = .false. 
     Model%nt_c_l           = nt_c_l
     Model%nt_c_o           = nt_c_o
     Model%av_i             = av_i
@@ -5112,12 +5092,8 @@ module GFS_typedefs
 
 !--- TEMPO MP parameters
     ! DJS to Anders: Maybe we put more of these nml options into the TEMPO configuration type?
-    Model%tempo_cfg%aerosol_aware = (ltaerosol .or. mraerosol)
-    Model%tempo_cfg%hail_aware    = lthailaware
-    if (Model%ltaerosol .and. Model%mraerosol) then
-       write(0,*) 'Logic error: Only one TEMPO aerosol option can be true, either ltaerosol or mraerosol)'
-       stop
-    end if
+    Model%tempo_cfgs%aerosolaware_flag = ltaerosol
+    Model%tempo_cfgs%hailaware_flag    = lthailaware
 
 !--- F-A MP parameters
     Model%rhgrd            = rhgrd
@@ -5794,7 +5770,6 @@ module GFS_typedefs
               endif
            endif
         endif
-
 
         call label_dtend_tracer(Model,Model%index_of_temperature,'temp','temperature','K s-1')
         call label_dtend_tracer(Model,Model%index_of_x_wind,'u','x wind','m s-2')
@@ -7008,14 +6983,13 @@ module GFS_typedefs
       print *, ' cplwav            : ', Model%cplwav
       print *, ' cplwav2atm        : ', Model%cplwav2atm
       print *, ' cplaqm            : ', Model%cplaqm
+      print *, ' cplcat            : ', Model%cplcat
       print *, ' cplchm            : ', Model%cplchm
       print *, ' cpllnd            : ', Model%cpllnd
       print *, ' cpllnd2atm        : ', Model%cpllnd2atm
       print *, ' rrfs_sd           : ', Model%rrfs_sd
       print *, ' cpl_fire          : ', Model%cpl_fire
       print *, ' use_cice_alb      : ', Model%use_cice_alb
-      print *, ' cpl_imp_mrg       : ', Model%cpl_imp_mrg
-      print *, ' cpl_imp_dbg       : ', Model%cpl_imp_dbg
       print *, ' use_med_flux      : ', Model%use_med_flux
       print *, ' use_cdeps_inline  : ', Model%use_cdeps_inline
       if(Model%imfdeepcnv == Model%imfdeepcnv_gf .or.Model%imfdeepcnv == Model%imfdeepcnv_c3) then

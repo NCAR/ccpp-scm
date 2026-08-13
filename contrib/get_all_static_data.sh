@@ -10,7 +10,13 @@ print_help() {
     echo "    --help           Show this help message and exit."
 }
 
-verbose="-q"
+verbose="-v"
+wget_options=(
+    --tries=10
+    --waitretry=10
+    --retry-connrefused
+    --retry-on-http-error=429,500,502,503,504
+)
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -51,7 +57,7 @@ for file in "${data_files[@]}"; do
     mkdir -p $BASEDIR/scm/data/$file
     cd $BASEDIR/scm/data/$file
     echo "Retrieving $file"
-    wget ${verbose} https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0/${file}.tar.gz
+    wget ${verbose} "${wget_options[@]}" https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0/${file}.tar.gz
     tar -xf ${file}.tar.gz
     rm -f ${file}.tar.gz
 done

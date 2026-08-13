@@ -14,6 +14,7 @@ jobs:
     if: github.repository == 'NCAR/ccpp-scm'
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         fortran-compiler: [ifx, gfortran]#, nvfortran]
         build-type:       [Release, Debug]

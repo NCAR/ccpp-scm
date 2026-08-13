@@ -10,7 +10,13 @@ print_help() {
     echo "    --help           Show this help message and exit."
 }
 
-verbose="-q"
+verbose="-v"
+wget_options=(
+    --tries=10
+    --waitretry=10
+    --retry-connrefused
+    --retry-on-http-error=429,500,502,503,504
+)
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -46,7 +52,7 @@ BASEDIR=$MYDIR/..
 
 # Change to directory containing the physics input data, download and extract archive
 cd $BASEDIR/scm/data/physics_input_data/
-wget ${verbose} https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0/MG_INCCN_data.tar.gz
+wget ${verbose} "${wget_options[@]}" https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0/MG_INCCN_data.tar.gz
 tar -xvf MG_INCCN_data.tar.gz
 rm -f MG_INCCN_data.tar.gz
 cd $BASEDIR/

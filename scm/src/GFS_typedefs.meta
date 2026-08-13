@@ -625,6 +625,7 @@
   dimensions = (horizontal_dimension,vertical_layer_dimension)
   type = real
   kind = kind_phys
+  active = (index_of_mass_number_concentration_of_graupel_in_tracer_concentration_array > 0)
 [gq0(:,:,index_of_mass_number_concentration_of_hail_in_tracer_concentration_array)]
   standard_name = mass_number_concentration_of_hail
   long_name = number concentration of hail
@@ -2785,7 +2786,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling))
+  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling) .or. flag_for_catchem_coupling)
 [dqsfci_cpl]
   standard_name = surface_upward_latent_heat_flux_for_coupling
   long_name = instantaneous sfc latent heat flux
@@ -2793,7 +2794,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling))
+  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling) .or. flag_for_catchem_coupling)
 [dlwsfci_cpl]
   standard_name = surface_downwelling_longwave_flux_for_coupling
   long_name = instantaneous sfc downward lw flux
@@ -2857,7 +2858,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling))
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling) .or. flag_for_catchem_coupling)
 [nnirbmi_cpl]
   standard_name = surface_net_downwelling_direct_nir_shortwave_flux_for_coupling
   long_name = instantaneous net nir beam sfc downward sw flux
@@ -2897,7 +2898,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling))
+  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling) .or. flag_for_catchem_coupling)
 [q2mi_cpl]
   standard_name = specific_humidity_at_2m_for_coupling
   long_name = instantaneous Q2m
@@ -2905,7 +2906,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling))
+  active = (flag_for_surface_flux_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling) .or. flag_for_catchem_coupling)
 [u10mi_cpl]
   standard_name = x_wind_at_10m_for_coupling
   long_name = instantaneous U10m
@@ -2937,7 +2938,7 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling))
+  active = (flag_for_surface_flux_coupling .or. flag_for_land_coupling .or. do_fire_coupling .or. (flag_for_air_quality_coupling .and. .not. flag_for_surface_flux_coupling) .or. flag_for_catchem_coupling)
 [ulwsfcin_cpl]
   standard_name = surface_upwelling_longwave_flux_from_coupled_process
   long_name = surface upwelling LW flux for coupling
@@ -3780,6 +3781,12 @@
   units = flag
   dimensions = ()
   type = logical
+[cplcat]
+  standard_name = flag_for_catchem_coupling
+  long_name = flag controlling cplcat collection (default off)
+  units = flag
+  dimensions = ()
+  type = logical
 [cplchm]
   standard_name = flag_for_chemistry_coupling
   long_name = flag controlling cplchm collection (default off)
@@ -3807,18 +3814,6 @@
 [cpl_fire]
   standard_name = do_fire_coupling
   long_name = flag controlling fire_behavior collection (default off)
-  units = flag
-  dimensions = ()
-  type = logical
-[cpl_imp_mrg]
-  standard_name = flag_for_merging_imported_data
-  long_name = flag controlling cpl_imp_mrg for imported data (default off)
-  units = flag
-  dimensions = ()
-  type = logical
-[cpl_imp_dbg]
-  standard_name = flag_for_debugging_merged_imported_data
-  long_name = flag controlling cpl_imp_dbg for imported data (default off)
   units = flag
   dimensions = ()
   type = logical
@@ -4547,6 +4542,30 @@
   units = flag
   dimensions = ()
   type = integer
+[is_init_sw_gas_optics]
+  standard_name = flag_for_rrmtgp_sw_gas_optics_initialization
+  long_name = flag carrying scheme initialization status
+  units = flag
+  dimensions = ()
+  type = logical
+[is_init_sw_cloud_optics]
+  standard_name = flag_for_rrmtgp_sw_cloud_optics_initialization
+  long_name = flag carrying scheme initialization status
+  units = flag
+  dimensions = ()
+  type = logical
+[is_init_lw_gas_optics]
+  standard_name = flag_for_rrmtgp_lw_gas_optics_initialization
+  long_name = flag carrying scheme initialization status
+  units = flag
+  dimensions = ()
+  type = logical
+[is_init_lw_cloud_optics]
+  standard_name = flag_for_rrmtgp_lw_cloud_optics_initialization
+  long_name = flag carrying scheme initialization status
+  units = flag
+  dimensions = ()
+  type = logical
 [convert_dry_rho]
   standard_name = flag_for_converting_hydrometeors_from_moist_to_dry_air
   long_name = flag for converting hydrometeors from moist to dry air
@@ -5158,14 +5177,26 @@
   units = count
   dimensions = ()
   type = integer
-[tempo_cfg]
+[do_sat_adj]
+  standard_name = flag_for_saturation_adjustment_for_microphysics_in_dynamics
+  long_name = flag for saturation adjustment for microphysics in dynamics
+  units = none
+  dimensions = ()
+  type = logical
+[tempo_cfgs]
   standard_name = configuration_for_TEMPO_microphysics
   long_name = configuration information for TEMPO microphysics
   units = mixed
   dimensions = ()
-  type = ty_tempo_cfg
+  type = ty_tempo_cfgs
 [thompson_mp_is_init]
   standard_name = flag_for_thompson_mp_scheme_initialization
+  long_name = flag carrying scheme initialization status
+  units = flag
+  dimensions = ()
+  type = logical
+[tempo_mp_is_init]
+  standard_name = flag_for_tempo_mp_scheme_initialization
   long_name = flag carrying scheme initialization status
   units = flag
   dimensions = ()
