@@ -1036,17 +1036,10 @@ module scm_type_defs
       end do
     end if
     
-    if(scm_state%time_scheme == 2) then
-      physics%Stateout%gu0 => scm_state%state_u(:,:,2)
-      physics%Stateout%gv0 => scm_state%state_v(:,:,2)
-      physics%Stateout%gt0 => scm_state%state_T(:,:,2)
-      physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,2)
-    else
-      physics%Stateout%gu0 => scm_state%state_u(:,:,1)
-      physics%Stateout%gv0 => scm_state%state_v(:,:,1)
-      physics%Stateout%gt0 => scm_state%state_T(:,:,1)
-      physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,1)
-    endif
+    physics%Stateout%gu0 => scm_state%state_u(:,:,2)
+    physics%Stateout%gv0 => scm_state%state_v(:,:,2)
+    physics%Stateout%gt0 => scm_state%state_T(:,:,2)
+    physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,2)
 
     if(scm_state%sfc_flux_spec) then
       physics%Sfcprop%spec_sh_flux => scm_state%sh_flux

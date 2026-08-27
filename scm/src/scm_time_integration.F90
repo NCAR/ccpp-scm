@@ -194,12 +194,12 @@ subroutine do_time_step(scm_state, physics, in_spinup)
       write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(errmsg) // '. Exiting...'
       error stop trim(errmsg)
   end if
-
-  !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)
-  ! scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
-  ! scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
-  ! scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
-  ! scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
+  
+  !At the end of the timestep, transfer the state that has been updated by physics back to the main (timelevel = 1) state
+  scm_state%state_T(:,:,1) = scm_state%state_T(:,:,2)
+  scm_state%state_tracer(:,:,:,1) = scm_state%state_tracer(:,:,:,2)
+  scm_state%state_u(:,:,1) = scm_state%state_u(:,:,2)
+  scm_state%state_v(:,:,1) = scm_state%state_v(:,:,2)
 
   !> @}
 end subroutine
