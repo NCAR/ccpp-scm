@@ -52,7 +52,6 @@ subroutine get_config_nml(scm_state)
   integer              :: n_snow   !< number of model snow levels (currently only 3 supported)
   integer              :: n_columns !< number of columns to use
   integer              :: n_time_levels
-  integer              :: time_scheme !< 1 => forward Euler, 2 => filtered leapfrog
   character(len=character_length)    :: output_dir !< name of the output directory
   character(len=character_length)    :: output_file !< name of the output file (without the file extension)
   integer              :: thermo_forcing_type !< 1: "revealed forcing", 2: "horizontal advective forcing", 3: "relaxation forcing"
@@ -99,7 +98,6 @@ subroutine get_config_nml(scm_state)
   n_columns = 1
   case_name = 'twpice'
   dt = 600.0
-  time_scheme = 1
   runtime = 0.0
   runtime_mult = 1.0
   n_itt_out = 1
@@ -156,15 +154,7 @@ subroutine get_config_nml(scm_state)
   read(10, NML=physics_config, iostat=ioerror)
   close(10)
 
-  n_time_levels = 2
-  ! select case(time_scheme)
-  !   case(1)
-  !     n_time_levels = 1
-  !   case(2)
-  !     n_time_levels = 2
-  !   case default
-  !     n_time_levels = 2
-  ! end select
+  n_time_levels = 2 !used to hold physics initial state (level 1) and state updated by physics (level 2)
 
   call get_tracers(tracer_names, tracer_types)
 
@@ -188,7 +178,6 @@ subroutine get_config_nml(scm_state)
   scm_state%n_itt_diag = n_itt_diag
   scm_state%runtime = runtime
   scm_state%runtime_mult = runtime_mult
-  scm_state%time_scheme = time_scheme
   scm_state%init_year = year
   scm_state%init_month = month
   scm_state%init_day = day
@@ -214,7 +203,6 @@ subroutine get_config_nml(scm_state)
   deallocate(tracer_names)
 !> @}
 end subroutine get_config_nml
-
 
 !> Subroutine to read the netCDF file containing case initialization and forcing. The forcing files (netCDF4) should be located in the
 !! "processed_case_input" directory.
@@ -2820,36 +2808,6 @@ subroutine get_reference_profile(scm_state, scm_reference)
   scm_reference%ref_ozone = ozone
 
 end subroutine get_reference_profile
-
-!> Subroutine to get reference profile to use above the case data (temporarily hard-coded profile)
-subroutine get_reference_profile_old(nlev, pres, T, qv, ozone)
-  integer, intent(out)  :: nlev !< number of pressure levels in the reference profile
-  real(kind=dp), allocatable, intent(out) :: pres(:)  !< reference profile pressure (Pa)
-  real(kind=dp), allocatable, intent(out) :: T(:) !< reference profile temperature (K)
-  real(kind=dp), allocatable, intent(out) :: qv(:) !< reference profile specific humidity (kg kg^-1)
-  real(kind=dp), allocatable, intent(out) :: ozone(:) !< reference profile ozone concentration (kg kg^-1)
-
-  !> \todo write a more sophisticated reference profile subroutine (can choose between reference profiles)
-
-  !> - For the prototype, the 'McClatchey' sounding used in Jennifer Fletcher's code is hardcoded.
-  nlev = 20
-
-  allocate(pres(nlev), T(nlev), qv(nlev), ozone(nlev))
-
-  pres = (/ 1030.0, 902.0, 802.0, 710.0, 628.0, 554.0, 487.0, 426.0, 372.0, 281.0, 209.0, 130.0, 59.5, 27.7, 13.2, 6.52, 3.33, &
-    0.951, 0.0671, 0.000300 /)
-  pres = pres*100.0
-
-  T = (/ 294., 290., 285., 279., 273., 267., 261., 255., 248., 235., 222., 216., 218., 224., 234., 245., 258., 276., 218., 210. /)
-
-  qv = (/ 11.75, 8.611, 6.047, 3.877, 2.363, 1.387, 0.9388, 0.6364, 0.4019, 0.1546, 0.01976, 0.004002, 0.003999, 0.004011, &
-    0.004002, 0.004004, 0.003994, 0.003995, 0.003996, 0.004000 /)
-  qv = qv*1.0E-3
-
-  ozone = (/ 6., 6., 6., 6.2, 6.4, 6.6, 6.9, 7.5, 7.9, 9., 12., 19., 34., 30., 20., 9.2, 4.1, 0.43, 0.0086, 0.0000043 /)
-  ozone = ozone*1.0E-5
-
-end subroutine get_reference_profile_old
 
 subroutine get_tracers(tracer_names, tracer_types)
   character(len=character_length), allocatable, intent(inout), dimension(:) :: tracer_names

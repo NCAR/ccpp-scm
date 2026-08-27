@@ -55,7 +55,6 @@ module scm_type_defs
     integer                           :: itt_lwrad  !< lw radiation iteration counter
     integer                           :: itt_rad !< radition (either LW or SW) counter
     integer                           :: itt_diag !< diagnostics iteration counter
-    integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
     integer                           :: n_cols !< number of columns
     integer                           :: n_timesteps !< number of timesteps needed to integrate over runtime
     integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme (2 for leapfrog)
@@ -470,7 +469,6 @@ module scm_type_defs
     scm_state%itt_lwrad = int_zero
     scm_state%itt_rad = int_zero
     scm_state%itt_diag = int_zero
-    scm_state%time_scheme = int_zero
     scm_state%n_cols = n_columns
     scm_state%n_timesteps = int_zero
     scm_state%n_time_levels = n_time_levels
