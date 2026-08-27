@@ -156,14 +156,15 @@ subroutine get_config_nml(scm_state)
   read(10, NML=physics_config, iostat=ioerror)
   close(10)
 
-  select case(time_scheme)
-    case(1)
-      n_time_levels = 1
-    case(2)
-      n_time_levels = 2
-    case default
-      n_time_levels = 2
-  end select
+  n_time_levels = 2
+  ! select case(time_scheme)
+  !   case(1)
+  !     n_time_levels = 1
+  !   case(2)
+  !     n_time_levels = 2
+  !   case default
+  !     n_time_levels = 2
+  ! end select
 
   call get_tracers(tracer_names, tracer_types)
 
