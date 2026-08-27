@@ -57,7 +57,7 @@ module scm_type_defs
     integer                           :: itt_diag !< diagnostics iteration counter
     integer                           :: n_cols !< number of columns
     integer                           :: n_timesteps !< number of timesteps needed to integrate over runtime
-    integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme (2 for leapfrog)
+    integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme
     integer                           :: n_itt_out !< number of iterations between calls to write the output
     integer                           :: n_itt_diag !< number of iterations between diagnostics resetting to zero
     integer                           :: n_levels_smooth !< the number of levels over which the input profiles are smoothed into the reference profiles
@@ -141,7 +141,6 @@ module scm_type_defs
     real(kind=dp)                           :: output_period !< how often output is written (s)
     real(kind=dp)                           :: relax_time !< time scale for hor. wind nudging (s)
     real(kind=dp)                           :: deg_to_rad_const !< conversion constant from degrees to radians
-    real(kind=dp)                           :: c_filter !< parameter that controls the amount of damping in the leapfrog filter
 
     !> - Define the SCM state variables; variables with appended "i" are interface; variables with appended "l" are layer-centered.
     !!  - index order for grid is (horizontal, vertical);
@@ -568,7 +567,6 @@ module scm_type_defs
     scm_state%output_period = real_zero
     scm_state%relax_time = real_zero
     scm_state%deg_to_rad_const = real_zero
-    scm_state%c_filter = 0.15
 
     scm_state%init_year = int_zero
     scm_state%init_month = int_zero
