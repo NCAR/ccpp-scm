@@ -5,7 +5,7 @@ module scm_time_integration
 
 use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
-use scm_forcing, only: apply_forcing_forward_Euler, apply_forcing_DEPHY
+use scm_forcing, only: apply_forcing_DEPHY
 
 use :: scm_ccpp_cap,                  &
        only: ccpp_physics_timestep_init, &
@@ -47,12 +47,8 @@ subroutine do_time_step(scm_state, physics, in_spinup)
   !! @{
 
   !> - Call apply_forcing_* from \ref forcing. This routine updates the "input" state variables for the physics call (updates filtered values from previous timestep, if leapfrog scheme). It effectively replaces the change of the state variables due to dynamics.
-  if (scm_state%input_type == 0) then
-    call apply_forcing_forward_Euler(scm_state, in_spinup)
-  else
-    call apply_forcing_DEPHY(scm_state, in_spinup)
-  end if
-  
+  call apply_forcing_DEPHY(scm_state, in_spinup)
+
   ! Calculate total non-physics tendencies by substracting old Stateout
   ! variables from new/updated Statein variables (gives the tendencies
   ! due to anything else than physics)
