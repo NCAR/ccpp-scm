@@ -56,10 +56,6 @@ The ``case_config`` namelist expects the following parameters:
       initial conditions; the integer represents the number of grid
       points in each horizontal direction of each cube tile
 
--  ``input_type``
-
-   -  1 => DEPHY-SCM format.
-
 Optional variables (that may be overridden via run script command line
 arguments) are:
 
