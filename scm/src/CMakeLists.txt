@@ -1,7 +1,12 @@
-#
-# CCPP SCM source code
-#
+# SCM source directory check
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  message(FATAL_ERROR
+    "\n"
+    "The top-level CMakeLists.txt has moved from scm/src/ to the root of the repository.\n"
+    "Configure from there instead:  cmake <options> /path/to/repo\n")
+endif()
 
+# CCPP SCM source code
 SET(scm_source_files scm.F90
             scm_input.F90
             #scm_utils.F90
