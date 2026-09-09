@@ -21,11 +21,12 @@ RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
       nvhpc-${NVHPC_VERSION_MAJOR}-${NVHPC_VERSION_MINOR} \
  && rm -rf /var/lib/apt/lists/* \
- && for dir in comm_libs examples math_libs profilers; do \
+ && for dir in examples math_libs profilers; do \
       rm -rf "/opt/nvidia/hpc_sdk/Linux_x86_64/${NVHPC_VERSION_MAJOR}.${NVHPC_VERSION_MINOR}/${dir}"; \
     done
 
-ENV PATH="/opt/nvidia/hpc_sdk/Linux_x86_64/${NVHPC_VERSION_MAJOR}.${NVHPC_VERSION_MINOR}/compilers/bin:${PATH}"
+ENV NVHPC_HOME="/opt/nvidia/hpc_sdk/Linux_x86_64/${NVHPC_VERSION_MAJOR}.${NVHPC_VERSION_MINOR}"
+ENV PATH="${NVHPC_HOME}/comm_libs/mpi/bin:${NVHPC_HOME}/compilers/bin:${PATH}"
 
 # Set default compiler executables
 ENV FC=nvfortran CC=nvc CXX=nvc++

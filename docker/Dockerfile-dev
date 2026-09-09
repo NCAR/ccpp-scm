@@ -1,0 +1,31 @@
+#
+# Development containers
+#
+
+ARG TOOLCHAIN=gnu
+FROM add-python:${TOOLCHAIN}
+
+ARG TOOLCHAIN
+ENV TOOLCHAIN=${TOOLCHAIN}
+
+# Install additional development tools
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
+      bash-completion \
+      emacs-nox \
+      gdb \
+      less \
+      nano \
+      procps \
+      rsync \
+      strace \
+      tree \
+      vim \
+      zstd \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY docker/dev-entrypoint.sh /usr/local/bin/dev-entrypoint
+RUN chmod 755 /usr/local/bin/dev-entrypoint
+
+ENTRYPOINT ["/usr/local/bin/dev-entrypoint"]
+CMD ["bash"]

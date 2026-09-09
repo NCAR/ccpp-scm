@@ -2,8 +2,8 @@
 # Install Python3 and a small set of packages
 #
 
-ARG TOOLCHAIN
-FROM add-nceplibs:$TOOLCHAIN
+ARG TOOLCHAIN=gnu
+FROM add-nceplibs:${TOOLCHAIN}
 
 # Install Python
 RUN apt-get update \
@@ -24,4 +24,3 @@ RUN pip3 install  --break-system-packages \
 # Install packages for the validation plot generation
 RUN pip3 install  --break-system-packages \
       matplotlib
-
