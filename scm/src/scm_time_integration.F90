@@ -5,7 +5,7 @@ module scm_time_integration
 
 use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp
-use scm_forcing
+use scm_forcing, only: apply_forcing_forward_Euler, apply_forcing_DEPHY
 
 use :: scm_ccpp_cap,                  &
        only: ccpp_physics_timestep_init, &
@@ -30,32 +30,6 @@ contains
 !! @{
 !! Contains subroutines to handle the SCM time stepping.
 
-!> This subroutine performs the Robert-Asselin time filtering of the state variables.
-subroutine filter(scm_state)
-  use scm_type_defs, only: scm_state_type
-
-  type(scm_state_type), intent(inout)          :: scm_state
-
-  !> \section filter_alg Algorithm
-  !! The filtered state variables are calculated using
-  !! \f[
-  !! \overline{x^\tau}=(1-c)x^\tau + 0.5c\left(x^{\tau +1} + \overline{x^{\tau - 1}}\right)
-  !! \f]
-  !! where \f$\overline{x^\tau}\f$ is the filtered value of variable \f$x\f$ at the current iteration, \f$x^\tau\f$ is the unfiltered value of the previous time step, \f$x^{\tau +1}\f$ is the unfiltered
-  !! value that was just updated by the forcing and physics, and \f$\overline{x^{\tau - 1}}\f$ is the filtered value of the variable from the previous iteration, and \f$c\f$ is the filtering constant.
-  scm_state%state_tracer(:,:,scm_state%water_vapor_index,1) = &
-    (1.0 - scm_state%c_filter)*scm_state%temp_tracer(:,:,scm_state%water_vapor_index,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_tracer(:,:,scm_state%water_vapor_index,2) + &
-    scm_state%temp_tracer(:,:,scm_state%water_vapor_index,1))
-  scm_state%state_T(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_T(:,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_T(:,:,2) + scm_state%temp_T(:,:,1))
-  scm_state%state_u(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_u(:,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_u(:,:,2) + scm_state%temp_u(:,:,1))
-  scm_state%state_v(:,:,1) = (1.0 - scm_state%c_filter)*scm_state%temp_v(:,:,2) + &
-    0.5*scm_state%c_filter*(scm_state%state_v(:,:,2) + scm_state%temp_v(:,:,1))
-
-end subroutine
-
 !> This subroutine calls nuopc_rad_update and nuopc_rad_run in nuopc_physics.F90 (if necessary) and apply_forcing_leapfrog from \ref forcing and nuopc_phys_run, also from nuopc_physics.F90.
 !! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
 !! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
@@ -73,36 +47,12 @@ subroutine do_time_step(scm_state, physics, in_spinup)
   !! @{
 
   !> - Call apply_forcing_* from \ref forcing. This routine updates the "input" state variables for the physics call (updates filtered values from previous timestep, if leapfrog scheme). It effectively replaces the change of the state variables due to dynamics.
-  select case(scm_state%time_scheme)
-    case(1)
-      if (scm_state%input_type == 0) then
-        call apply_forcing_forward_Euler(scm_state, in_spinup)
-      else
-        call apply_forcing_DEPHY(scm_state, in_spinup)
-      end if
-    case(2)
-      if (scm_state%input_type == 0) then
-        call apply_forcing_leapfrog(scm_state)
-      else
-        error stop 'The application of forcing terms from the DEPHY file format has not been implemented for the leapfrog time scheme.'
-      end if
-
-    case default
-      if (scm_state%input_type == 0) then
-        call apply_forcing_forward_Euler(scm_state, in_spinup)
-      else
-        call apply_forcing_DEPHY(scm_state, in_spinup)
-      end if
-  end select
-
-  if (scm_state%time_scheme == 2) then
-    ! TODO UPDATE COMMENT IPD cdata points to time level 2 for updating state variables; update time level 2 state variables with those where the forcing has been applied this time step
-    scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
-    scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
-    scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
-    scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
+  if (scm_state%input_type == 0) then
+    call apply_forcing_forward_Euler(scm_state, in_spinup)
+  else
+    call apply_forcing_DEPHY(scm_state, in_spinup)
   end if
-
+  
   ! Calculate total non-physics tendencies by substracting old Stateout
   ! variables from new/updated Statein variables (gives the tendencies
   ! due to anything else than physics)
@@ -194,12 +144,12 @@ subroutine do_time_step(scm_state, physics, in_spinup)
       write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_finalize: ' // trim(errmsg) // '. Exiting...'
       error stop trim(errmsg)
   end if
-
-  !if no physics call, need to transfer state_variables(:,:,1) to state_variables (:,:,2)
-  ! scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
-  ! scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
-  ! scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
-  ! scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
+  
+  !At the end of the timestep, transfer the state that has been updated by physics back to the main (timelevel = 1) state
+  scm_state%state_T(:,:,1) = scm_state%state_T(:,:,2)
+  scm_state%state_tracer(:,:,:,1) = scm_state%state_tracer(:,:,:,2)
+  scm_state%state_u(:,:,1) = scm_state%state_u(:,:,2)
+  scm_state%state_v(:,:,1) = scm_state%state_v(:,:,2)
 
   !> @}
 end subroutine
