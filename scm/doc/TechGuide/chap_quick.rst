@@ -277,7 +277,7 @@ to modify the provided modulefiles to work with your spack-stack install, otherw
 Python requirements
 """""""""""""""""""""
 
-The SCM build system invokes the ``ccpp_prebuild.py`` script, and so the Python environment must be set up prior to building.
+The SCM build system invokes the ``ccpp_capgen.py`` script, and so the Python environment must be set up prior to building.
 As mentioned earlier, a minimum Python version of 3.10 is required. Additionally, there are a few non-default modules required for the SCM to
 function: ``f90nml`` (`documentation <https://f90nml.readthedocs.io/en/latest/index.html>`__) and
 ``netcdf4`` (`documentation <https://unidata.github.io/netcdf4-python/>`__). Users can test if these are installed using this command in
@@ -314,7 +314,7 @@ user environment as described in :numref:`Section %s <use_preconfigured_platfor
 and :numref:`Section %s <setup_supported_platforms>`.
 
 Following this step, the top level build system will use ``cmake`` to query system
-parameters, execute the CCPP prebuild script to match the physics
+parameters, execute the CCPP capgen scripts to match the physics
 variables (between what the host model – SCM – can provide and what is
 needed by physics schemes in the CCPP for the chosen suites), and build
 the physics caps needed to use them. Finally, ``make`` is used to compile the
@@ -410,23 +410,12 @@ components.
 
          $ cmake [-DCMAKE_BUILD_TYPE ...] ../.. 2>&1 | tee log.cmake
 
-   CMake automatically runs the CCPP prebuild script to match required
+   CMake automatically runs the CCPP capgen scripts to match required
    physics variables with those available from the dycore (SCM) and to
-   generate physics caps and makefile segments. It generates software
-   caps for each physics group defined in the supplied Suite Definition
-   Files (SDFs) and generates a static library that becomes part of the
-   SCM executable.
+   generate physics caps. It generates software caps for each physics 
+   group defined in the supplied Suite Definition Files (SDFs) and 
+   generates a static library that becomes part of the SCM executable.
 
-   If necessary, the CCPP prebuild script can be executed manually from
-   the top level directory (``ccpp-scm``). The basic syntax is
-
-   .. code:: bash
-
-      $ ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --suites=SCM_GFS_v16,SCM_RAP[...] --builddir=./scm/bin [--debug]
-
-   where the argument supplied via the ``--suites`` variable is a comma-separated
-   list of suite names that exist in the directory. Note that suite
-   names are the suite definition filenames minus the ``suite_`` prefix and ``.xml`` suffix.
 
 #. Compile. Add ``VERBOSE=1`` to obtain more information on the build process.
 
@@ -552,7 +541,7 @@ If using the main branch, you should run the above command to ensure you have th
 -  ``--suite [-s]``
 
    -  The suite should correspond to the name of a suite in ``../ccpp/suites`` (without the
-      ``.xml`` extension) that was supplied in the ``cmake`` or ``ccpp_prebuild`` step.
+      ``.xml`` extension) that was supplied in the ``cmake`` or ``ccpp_capgen`` step.
 
 -  ``--namelist [-n]``
 

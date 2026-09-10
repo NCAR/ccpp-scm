@@ -15,9 +15,11 @@ Setting up a suite
 
 Setting up a physics suite for use in the CCPP SCM with the CCPP
 framework involves three steps: preparing data to be made available to
-physics through the CCPP, running the ``ccpp_prebuild.py`` script to reconcile SCM-provided
+physics through the CCPP, running the Capgen scripts* to reconcile SCM-provided
 variables with physics-required variables, and preparing a suite
-definition file.
+definition file. 
+*The Capgen scripts and their use are described in chapter 8 of the `CCPP Technical
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__.
 
 Preparing data from the SCM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,20 +44,12 @@ the data. The standard names of all variables in this table must match
 with a corresponding variable within one or more of the physics schemes.
 A list of all standard names used can be found in ``ccpp/framework/doc/DevelopersGuide/CCPP_VARIABLES_SCM.pdf``.
 
-Editing and running ``ccpp_prebuild.py``
+Editing and running the Capgen scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-General instructions for configuring and running the ``ccpp_prebuild.py`` script can be found
+General instructions for configuring and running the Capgen scripts can be found
 in chapter 8 of the `CCPP Technical
-Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__. The
-script expects to be run with a host-model-dependent configuration file,
-passed as argument ``–config=path_to_config_file``. Within this configuration file are variables that
-hold paths to the variable definition files (where metadata tables can
-be found on the host model side), the scheme files (a list of paths to
-all source files containing scheme entry points), the auto-generated
-physics schemes makefile snippet, the auto-generated physics scheme caps
-makefile snippet, and the directory where the auto-generated physics
-caps should be written out to. As mentioned in :numref:`Section %s <compiling>`, this script must be run
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__. As mentioned in :numref:`Section %s <compiling>`, this script must be run
 to reconcile data provided by the SCM with data required by the physics
 schemes before compilation – this is done automatically by ``cmake``.
 
