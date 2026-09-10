@@ -25,7 +25,7 @@ Clone the source using
 
 .. code:: bash
 
-   $ git clone --recursive -b v7.0.1 https://github.com/NCAR/ccpp-scm
+   $ git clone --recursive -b v8.0.0 https://github.com/NCAR/ccpp-scm
 
 The ``--recursive`` option is required to retrieve the ccpp-physics and ccpp-framework code,
 which are stored in separate repositories and linked to the SCM repository as submodules.
@@ -277,7 +277,7 @@ to modify the provided modulefiles to work with your spack-stack install, otherw
 Python requirements
 """""""""""""""""""""
 
-The SCM build system invokes the ``ccpp_prebuild.py`` script, and so the Python environment must be set up prior to building.
+The SCM build system invokes the ``ccpp_capgen.py`` script, and so the Python environment must be set up prior to building.
 As mentioned earlier, a minimum Python version of 3.10 is required. Additionally, there are a few non-default modules required for the SCM to
 function: ``f90nml`` (`documentation <https://f90nml.readthedocs.io/en/latest/index.html>`__) and
 ``netcdf4`` (`documentation <https://unidata.github.io/netcdf4-python/>`__). Users can test if these are installed using this command in
@@ -314,7 +314,7 @@ user environment as described in :numref:`Section %s <use_preconfigured_platfor
 and :numref:`Section %s <setup_supported_platforms>`.
 
 Following this step, the top level build system will use ``cmake`` to query system
-parameters, execute the CCPP prebuild script to match the physics
+parameters, execute the CCPP capgen scripts to match the physics
 variables (between what the host model – SCM – can provide and what is
 needed by physics schemes in the CCPP for the chosen suites), and build
 the physics caps needed to use them. Finally, ``make`` is used to compile the
@@ -410,23 +410,12 @@ components.
 
          $ cmake [-DCMAKE_BUILD_TYPE ...] ../.. 2>&1 | tee log.cmake
 
-   CMake automatically runs the CCPP prebuild script to match required
+   CMake automatically runs the CCPP capgen scripts to match required
    physics variables with those available from the dycore (SCM) and to
-   generate physics caps and makefile segments. It generates software
-   caps for each physics group defined in the supplied Suite Definition
-   Files (SDFs) and generates a static library that becomes part of the
-   SCM executable.
+   generate physics caps. It generates software caps for each physics 
+   group defined in the supplied Suite Definition Files (SDFs) and 
+   generates a static library that becomes part of the SCM executable.
 
-   If necessary, the CCPP prebuild script can be executed manually from
-   the top level directory (``ccpp-scm``). The basic syntax is
-
-   .. code:: bash
-
-      $ ./ccpp/framework/scripts/ccpp_prebuild.py --config=./ccpp/config/ccpp_prebuild_config.py --suites=SCM_GFS_v16,SCM_RAP[...] --builddir=./scm/bin [--debug]
-
-   where the argument supplied via the ``--suites`` variable is a comma-separated
-   list of suite names that exist in the directory. Note that suite
-   names are the suite definition filenames minus the ``suite_`` prefix and ``.xml`` suffix.
 
 #. Compile. Add ``VERBOSE=1`` to obtain more information on the build process.
 
@@ -489,12 +478,12 @@ execute the following scripts:
 If the download step fails, make sure that your system’s firewall does
 not block access to GitHub. If it does, download the files ``comparison_data.tar.gz``,
 ``physics_input_data.tar.gz``, ``processed_case_input.tar.gz``, and ``raw_case_input.tar.gz``
-from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v7.0.1>`__ using your browser and manually extract its
+from the `SCM release page <https://github.com/NCAR/ccpp-scm/releases/tag/v8.0.0>`__ using your browser and manually extract its
 contents in the directory ``scm/data``. Similarly, do the same for
 ``thompson_tables.tar.gz`` and ``MG_INCCN_data.tar.gz`` and extract
 to ``scm/data/physics_input_data/``.
 
-New with the SCM v7 release, static data is available for running cases with GOCART climatological aerosols (where the value of ``iaer`` in the ``&gfs_physics_nml`` namelist starts with 1; see the `CCPP Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/_c_c_p_psuite_nml_desp.html>`__ for more information); one example of this is with the default namelist settings for the GFS_v17_p8_ugwpv1 scheme. This dataset is very large (~12 GB), so it is recommended only to download it if you will be using it.
+New with the SCM v7 release, static data is available for running cases with GOCART climatological aerosols (where the value of ``iaer`` in the ``&gfs_physics_nml`` namelist starts with 1; see the `CCPP Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v8.0.0/sci_doc/_c_c_p_psuite_nml_desp.html>`__ for more information); one example of this is with the default namelist settings for the GFS_v17_p8_ugwpv1 scheme. This dataset is very large (~12 GB), so it is recommended only to download it if you will be using it.
 
 .. code:: bash
 
@@ -552,7 +541,7 @@ If using the main branch, you should run the above command to ensure you have th
 -  ``--suite [-s]``
 
    -  The suite should correspond to the name of a suite in ``../ccpp/suites`` (without the
-      ``.xml`` extension) that was supplied in the ``cmake`` or ``ccpp_prebuild`` step.
+      ``.xml`` extension) that was supplied in the ``cmake`` or ``ccpp_capgen`` step.
 
 -  ``--namelist [-n]``
 
@@ -813,7 +802,7 @@ internet search.
 Building the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Dockerfile builds CCPP SCM v7.0.1 from source using the GNU
+The Dockerfile builds CCPP SCM v8.0.0 from source using the GNU
 compiler.
 
 The CCPP SCM has a number of system requirements and necessary libraries
@@ -877,7 +866,7 @@ following from the terminal where Docker is run:
 
 .. code:: bash
 
-   $ docker pull dtcenter/ccpp-scm:v7.0.1
+   $ docker pull dtcenter/ccpp-scm:v8.0.0
 
 To verify that it exists afterward, run
 
@@ -965,7 +954,7 @@ Running the Docker image
    .. note::
      If you are using a prebuilt image from Dockerhub, substitute
      the name of the image that was pulled from Dockerhub in the commands
-     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v7.0.1``.
+     above; i.e. instead of ``ccpp-scm`` above, one would have ``dtcenter/ccpp-scm:v8.0.0``.
 
 #. To use the SCM interactively, run non-default configurations, create
    plots, or even develop code, issue the following command:

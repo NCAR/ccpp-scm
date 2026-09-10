@@ -17,7 +17,7 @@ This version contains all parameterizations of NOAA’s evolved
 operational GFS v16 suite (implemented in 2021), plus additional
 developmental schemes. The schemes are grouped in five supported suites
 described in detail in the `CCPP Scientific
-Documentation <https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/>`__
+Documentation <https://dtcenter.ucar.edu/GMTB/v8.0.0/sci_doc/>`__
 (GFS_v16, GFS_v16_RRTMGP, GFS_v17_p8_ugwpv1, HRRR_gf, and WoFS_v0).
 
 This document serves as both the User and Technical Guides for this
@@ -35,51 +35,19 @@ through the CCPP infrastructure.
 Version Notes
 -------------
 
-The CCPP SCM v7.0.1 contains the following minor changes since v7.0.0.
 
--  Enhanced UFS case generation tools: Reinstated functionality to support specifying
-   i, j grid indices (from the FV3 native grid) along with a tile number in
-   UFS_case_gen.py to generate single-column cases. Also added the ability to accept
-   a list of i, j indices for batch generation of multiple cases.
-
--  Use of standardized missing values: Replaced hard coded missing values, -9999.0
-   and -9999, with the _FillValue or missing value attributes defined in the NetCDF
-   variables.
-
--  Fix area logic in the SCM: Corrected assignment of the column area from the DEPHY
-   forcing file by removing the dependency on surface forcing LSM. Also allow the
-   column_area in the configuration namelist to override the DEPHY assignment.
-
--  Enhanced documentation for 1) using the DEPHY converter script, which converts
-   forcing files from the legacy format to the DEPHY v1.0 format, and 2) including
-   expected behavior of the Near-Surface Sea Temperature (NSST) scheme within the SCM.
-
--  Added support for NOAA’s Ursa platform using spack-stack v1.9.1.
-
-The CCPP SCM v7.0.0 contains the following major and minor changes since v6.0.
+The CCPP SCM v8.0.0 contains the following major and minor changes since v7.0.
 
 Major
 
--  Ability to generate SCM cases from UFS simulations using either derived forcings
-   or native forcings from the dynamical core.
+-  Update SCM to use new CCPP framework, capgen-v1
 
--  Support for single precision physics within the SCM.
+-  Updated technical documentation.
 
 Minor
 
--  Addition of new physics schemes; RRTMGP radiation and CLM Lake Model, along with
-   updates to existing schemes.
+   N/A
 
--  CCPP SCM support for the latest operational/research physics configurations used
-   across UFS applications, including the GFS_v17_p8_ugwpv1, GFS_v16_RRTMGP, and
-   HRRR_gf suites.
-
--  New SCM cases; MOSAiC-AMPS, MOSAiC-SS, COMBLE, and a catolog of cases in the
-   `GdR-DEPHY <https://github.com/GdR-DEPHY/DEPHY-SCM>`__ repository that can be run
-   with CCPP SCM.
-
--  Updated `Scientific Documentation <https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/>`__, User's Guide, Technical Documentation, and
-   online tutorials.
 
 Limitations
 ~~~~~~~~~~~
