@@ -30,10 +30,7 @@ contains
 !! @{
 !! Contains subroutines to handle the SCM time stepping.
 
-!> This subroutine calls nuopc_rad_update and nuopc_rad_run in nuopc_physics.F90 (if necessary) and apply_forcing_leapfrog from \ref forcing and nuopc_phys_run, also from nuopc_physics.F90.
-!! The subroutine nuopc_rad_update calculates the time-dependent parameters required to run radiation, and nuopc_rad_run calculates the radiative heating rate (but does not apply it). The
-!! subroutine apply_forcing_leapfrog advances the state variables forward using the leapfrog method and nuopc_phys_run further changes the state variables using the forward method. By the end of
-!! this subroutine, the unfiltered state variables will have been stepped forward in time.
+!> By the end of this subroutine, the state variables will have been stepped forward in time.
 subroutine do_time_step(scm_state, physics, in_spinup)
   use scm_type_defs, only: scm_state_type, physics_type
 
@@ -46,7 +43,7 @@ subroutine do_time_step(scm_state, physics, in_spinup)
   !> \section do_time_step_alg Algorithm
   !! @{
 
-  !> - Call apply_forcing_* from \ref forcing. This routine updates the "input" state variables for the physics call (updates filtered values from previous timestep, if leapfrog scheme). It effectively replaces the change of the state variables due to dynamics.
+  !> - Call apply_forcing_* from \ref forcing. This routine updates the "input" state variables for the physics call. It effectively replaces the change of the state variables due to dynamics.
   if (scm_state%input_type == 0) then
     call apply_forcing_forward_Euler(scm_state, in_spinup)
   else

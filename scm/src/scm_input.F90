@@ -2730,7 +2730,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
 end subroutine get_case_init_DEPHY
 
-!> Subroutine to get reference profile to use above the case data (temporarily hard-coded profile)
+!> Subroutine to get reference profile to use above the case data
 subroutine get_reference_profile(scm_state, scm_reference)
   use scm_type_defs, only : scm_state_type, scm_reference_type
   use NetCDF_read, only: check
