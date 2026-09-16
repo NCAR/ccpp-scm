@@ -55,10 +55,9 @@ module scm_type_defs
     integer                           :: itt_lwrad  !< lw radiation iteration counter
     integer                           :: itt_rad !< radition (either LW or SW) counter
     integer                           :: itt_diag !< diagnostics iteration counter
-    integer                           :: time_scheme !< 1=> forward Euler, 2=> filtered leapfrog
     integer                           :: n_cols !< number of columns
     integer                           :: n_timesteps !< number of timesteps needed to integrate over runtime
-    integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme (2 for leapfrog)
+    integer                           :: n_time_levels !< number of time levels to keep track of for time-integration scheme
     integer                           :: n_itt_out !< number of iterations between calls to write the output
     integer                           :: n_itt_diag !< number of iterations between diagnostics resetting to zero
     integer                           :: n_levels_smooth !< the number of levels over which the input profiles are smoothed into the reference profiles
@@ -142,7 +141,6 @@ module scm_type_defs
     real(kind=dp)                           :: output_period !< how often output is written (s)
     real(kind=dp)                           :: relax_time !< time scale for hor. wind nudging (s)
     real(kind=dp)                           :: deg_to_rad_const !< conversion constant from degrees to radians
-    real(kind=dp)                           :: c_filter !< parameter that controls the amount of damping in the leapfrog filter
 
     !> - Define the SCM state variables; variables with appended "i" are interface; variables with appended "l" are layer-centered.
     !!  - index order for grid is (horizontal, vertical);
@@ -470,7 +468,6 @@ module scm_type_defs
     scm_state%itt_lwrad = int_zero
     scm_state%itt_rad = int_zero
     scm_state%itt_diag = int_zero
-    scm_state%time_scheme = int_zero
     scm_state%n_cols = n_columns
     scm_state%n_timesteps = int_zero
     scm_state%n_time_levels = n_time_levels
@@ -570,7 +567,6 @@ module scm_type_defs
     scm_state%output_period = real_zero
     scm_state%relax_time = real_zero
     scm_state%deg_to_rad_const = real_zero
-    scm_state%c_filter = 0.15
 
     scm_state%init_year = int_zero
     scm_state%init_month = int_zero
@@ -1036,17 +1032,10 @@ module scm_type_defs
       end do
     end if
     
-    if(scm_state%time_scheme == 2) then
-      physics%Stateout%gu0 => scm_state%state_u(:,:,2)
-      physics%Stateout%gv0 => scm_state%state_v(:,:,2)
-      physics%Stateout%gt0 => scm_state%state_T(:,:,2)
-      physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,2)
-    else
-      physics%Stateout%gu0 => scm_state%state_u(:,:,1)
-      physics%Stateout%gv0 => scm_state%state_v(:,:,1)
-      physics%Stateout%gt0 => scm_state%state_T(:,:,1)
-      physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,1)
-    endif
+    physics%Stateout%gu0 => scm_state%state_u(:,:,2)
+    physics%Stateout%gv0 => scm_state%state_v(:,:,2)
+    physics%Stateout%gt0 => scm_state%state_T(:,:,2)
+    physics%Stateout%gq0 => scm_state%state_tracer(:,:,:,2)
 
     if(scm_state%sfc_flux_spec) then
       physics%Sfcprop%spec_sh_flux => scm_state%sh_flux

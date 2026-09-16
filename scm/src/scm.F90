@@ -8,14 +8,14 @@ subroutine scm_main_sub()
 
   use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
-  use scm_input
-  use scm_utils
-  use scm_vgrid
-  use scm_setup
-  use scm_forcing
-  use scm_time_integration, only: do_time_step, filter
-  use scm_output
-  use scm_type_defs
+  use scm_input, only: get_config_nml, get_case_init, get_case_init_DEPHY, get_reference_profile
+  use scm_utils, only: lcm
+  use scm_vgrid, only: get_FV3_vgrid, calc_geopotential, calc_pres_exner_geopotential
+  use scm_setup, only: set_state, GFS_suite_setup
+  use scm_forcing, only: set_spinup_nudging, interpolate_forcing
+  use scm_time_integration, only: do_time_step
+  use scm_output, only: output_init, output_append
+  use scm_type_defs, only: scm_state_type, scm_input_type, scm_reference_type, physics
   use mpi_f08
 
   ! Import CCPP control variables from scm_time_integration
@@ -173,6 +173,8 @@ subroutine scm_main_sub()
 
   ! When asked to calculate 3-dim. tendencies, set Stateout variables to
   ! Statein variables here in order to capture the first call to dycore
+  
+  ! This may not be needed anymore; this is done in GFS_time_vary_pre.scm.F90/timestep_init phase
   if (physics%Model%ldiag3d) then
     physics%Stateout%gu0 = physics%Statein%ugrs
     physics%Stateout%gv0 = physics%Statein%vgrs
@@ -213,172 +215,19 @@ subroutine scm_main_sub()
   call output_append(scm_state, physics, force=.true.)
 
   !first time step (call once)
-
-  if (scm_state%time_scheme == 1) then
-     if (.not. in_spinup) then
-       scm_state%dt_now = scm_state%dt
-       scm_state%model_time = scm_state%dt_now
-     end if
-
-     call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
-
-     if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
-
-     !pass in state variables to be modified by forcing and physics
-     call do_time_step(scm_state, physics, in_spinup)
-
-  else if (scm_state%time_scheme == 2) then
-  !   !if using the leapfrog scheme, we initialize by taking one half forward time step and one half (unfiltered) leapfrog time step to get to the end of the first time step
-    if (.not. in_spinup) then
-      scm_state%dt_now = 0.5*scm_state%dt
-      scm_state%model_time = scm_state%dt_now
-    end if
-
-    !save initial state
-    scm_state%temp_tracer(:,:,:,1) = scm_state%state_tracer(:,:,:,1)
-    scm_state%temp_T(:,:,1) = scm_state%state_T(:,:,1)
-    scm_state%temp_u(:,:,1) = scm_state%state_u(:,:,1)
-    scm_state%temp_v(:,:,1) = scm_state%state_v(:,:,1)
-
-    call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
-
-    call calc_pres_exner_geopotential(1, scm_state)
-
-    if (scm_state%input_type == 0) then
-      call apply_forcing_forward_Euler(scm_state, in_spinup)
-    else
-      call apply_forcing_DEPHY(scm_state, in_spinup)
-    end if
-
-    !apply_forcing_forward_Euler updates state variables time level 1, so must copy this data to time_level 2
-    scm_state%state_T(:,:,2) = scm_state%state_T(:,:,1)
-    scm_state%state_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,1)
-    scm_state%state_u(:,:,2) = scm_state%state_u(:,:,1)
-    scm_state%state_v(:,:,2) = scm_state%state_v(:,:,1)
-
-    ! Calculate total non-physics tendencies by substracting old Stateout
-    ! variables from new/updated Statein variables (gives the tendencies
-    ! due to anything else than physics)
-    do i=1, scm_state%n_cols
-      if (physics%Model%ldiag3d) then
-        idtend = physics%Model%dtidx(physics%Model%index_of_x_wind,physics%Model%index_of_process_non_physics)
-        if(idtend>=1) then
-          physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
-                 + (physics%Statein%ugrs(i,:) - physics%Stateout%gu0(i,:))
-        endif
-
-        idtend = physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics)
-        if(idtend>=1) then
-          physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
-                 + (physics%Statein%vgrs(i,:) - physics%Stateout%gv0(i,:))
-        endif
-
-        idtend = physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_non_physics)
-        if(idtend>=1) then
-          physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
-                 + (physics%Statein%tgrs(i,:) - physics%Stateout%gt0(i,:))
-        endif
-
-        if (physics%Model%qdiag3d) then
-          do itrac=1,physics%Model%ntrac
-            idtend = physics%Model%dtidx(itrac+100,physics%Model%index_of_process_non_physics)
-            if(idtend>=1) then
-              physics%Diag%dtend(i,:,idtend) = physics%Diag%dtend(i,:,idtend) &
-                     + (physics%Statein%qgrs(i,:,itrac) - physics%Stateout%gq0(i,:,itrac))
-            endif
-          enddo
-        endif
-      endif
-    end do
-
-    call ccpp_physics_timestep_init(suite_name=scm_state%physics_suite_name, group_name='all', &
-          errmsg=errmsg, errflg=errflg, CCPP_PHYSICS_STATIC_ARGS)
-    if (errflg/=0) then
-        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_init: ' // trim(errmsg) // '. Exiting...'
-        error stop
-    end if
-
-    !--- determine if radiation diagnostics buckets need to be cleared
-    if (nint(physics%Model%fhzero*3600) >= nint(max(physics%Model%fhswr,physics%Model%fhlwr))) then
-      if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
-        call physics%Diag%rad_zero  (physics%Model)
-      endif
-    else
-      kdt_rad = nint(min(physics%Model%fhswr,physics%Model%fhlwr)/physics%Model%dtp)
-      if (mod(physics%Model%kdt,kdt_rad) == 1) then
-        call physics%Diag%rad_zero  (physics%Model)
-      endif
-    endif
-
-    !--- determine if physics diagnostics buckets need to be cleared
-    if (mod(physics%Model%kdt,physics%Model%nszero) == 1 .or. physics%Model%nszero == 1) then
-      call physics%Diag%phys_zero (physics%Model)
-    endif
-
-    !CCPP run phase
-    ! time_vary group doesn't have any run phase (omitted)
-    ! radiation group
-    call physics%Interstitial(1)%create(ixs=1, ixe=1, model=physics%Model)
-    call ccpp_physics_run(suite_name=scm_state%physics_suite_name, group_name="radiation", &
-            errmsg=errmsg, errflg=errflg, CCPP_PHYSICS_STATIC_ARGS)
-    if (errflg/=0) then
-        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group radiation: ' // trim(errmsg) // '. Exiting...'
-        error stop
-    end if
-    ! process-split physics
-    call physics%Interstitial(1)%reset(physics%Model)
-    call ccpp_physics_run(suite_name=scm_state%physics_suite_name, group_name="phys_ps", &
-            errmsg=errmsg, errflg=errflg, CCPP_PHYSICS_STATIC_ARGS)
-    if (errflg/=0) then
-        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ps: ' // trim(errmsg) // '. Exiting...'
-        error stop
-    end if
-    ! time-split physics
-    call ccpp_physics_run(suite_name=scm_state%physics_suite_name, group_name="phys_ts", &
-            errmsg=errmsg, errflg=errflg, CCPP_PHYSICS_STATIC_ARGS)
-    if (errflg/=0) then
-        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_run for group phys_ts: ' // trim(errmsg) // '. Exiting...'
-        error stop
-    end if
-
-    call ccpp_physics_timestep_final(suite_name=scm_state%physics_suite_name, group_name='all', &
-            errmsg=errmsg, errflg=errflg, CCPP_PHYSICS_STATIC_ARGS)
-    if (errflg/=0) then
-        write(error_unit,'(a,i0,a)') 'An error occurred in ccpp_physics_timestep_final: ' // trim(errmsg) // '. Exiting...'
-        error stop
-    end if
-
-    !the filter routine (called after the following leapfrog time step) expects time level 2 in temp_tracer to be the updated, unfiltered state after the previous time step
-    scm_state%temp_tracer(:,:,:,2) = scm_state%state_tracer(:,:,:,2)
-    scm_state%temp_T(:,:,2) = scm_state%state_T(:,:,2)
-    scm_state%temp_u(:,:,2) = scm_state%state_u(:,:,2)
-    scm_state%temp_v(:,:,2) = scm_state%state_v(:,:,2)
-
-    !do half a leapfrog time step to get to the end of one full time step
-    if (.not. in_spinup) then
-      scm_state%model_time = scm_state%dt
-    end if
-    call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
-
-    call calc_pres_exner_geopotential(1, scm_state)
-
-    !calling do_time_step with the leapfrog scheme active expects state variables in time level 1 to have values from 2 time steps ago, so set them equal to the initial values
-    scm_state%state_T(:,:,1) = scm_state%temp_T(:,:,1)
-    scm_state%state_u(:,:,1) = scm_state%temp_u(:,:,1)
-    scm_state%state_v(:,:,1) = scm_state%temp_v(:,:,1)
-    scm_state%state_tracer(:,:,:,1) = scm_state%temp_tracer(:,:,:,1)
-
-    !go forward one leapfrog time step
-    call do_time_step(scm_state, physics, in_spinup)
-
-    !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
-    call filter(scm_state)
-
-    !> \todo tracers besides water vapor do not need to be filtered (is this right?)
-    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,scm_state%cloud_water_index,2)
-    scm_state%state_tracer(:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,scm_state%ozone_index,2)
+  
+  if (.not. in_spinup) then
+    scm_state%dt_now = scm_state%dt
+    scm_state%model_time = scm_state%dt_now
   end if
 
+  call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
+
+  if (.not. scm_state%model_ics) call calc_pres_exner_geopotential(1, scm_state)
+
+  !pass in state variables to be modified by forcing and physics
+  call do_time_step(scm_state, physics, in_spinup)
+  
   if (.not. in_spinup) then
     call output_append(scm_state, physics)
   end if
@@ -415,14 +264,6 @@ subroutine scm_main_sub()
       physics%Model%jdat = jdat
     end if
 
-    !>  - Save previously unfiltered state as temporary for use in the time filter.
-    if(scm_state%time_scheme == 2) then
-      scm_state%temp_tracer = scm_state%state_tracer
-      scm_state%temp_T = scm_state%state_T
-      scm_state%temp_u = scm_state%state_u
-      scm_state%temp_v = scm_state%state_v
-    end if
-
     call interpolate_forcing(scm_input_instance, scm_state, in_spinup)
 
     call calc_pres_exner_geopotential(1, scm_state)
@@ -433,15 +274,6 @@ subroutine scm_main_sub()
 
     !pass in state variables to be modified by forcing and physics
     call do_time_step(scm_state, physics, in_spinup)
-
-    if (scm_state%time_scheme == 2) then
-      !for filtered-leapfrog scheme, call the filtering routine to calculate values of the state variables to save in slot 1 using slot 2 vars (updated, unfiltered) output from the physics
-      call filter(scm_state)
-
-      !> \todo tracers besides water vapor do not need to be filtered (is this right?)
-      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) = scm_state%state_tracer(:,:,scm_state%cloud_water_index,2)
-      scm_state%state_tracer(:,:,scm_state%ozone_index,1) = scm_state%state_tracer(:,:,scm_state%ozone_index,2)
-    end if
 
     write(*,*) "itt = ",scm_state%itt
     write(*,*) "model time (s) = ",scm_state%model_time
