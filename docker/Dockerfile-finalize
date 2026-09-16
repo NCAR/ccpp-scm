@@ -2,8 +2,8 @@
 # Finalize CI containers
 #
 
-ARG TOOLCHAIN
-FROM add-python:$TOOLCHAIN
+ARG TOOLCHAIN=gnu
+FROM add-python:${TOOLCHAIN}
 
 # Install additional tools
 RUN apt-get update \

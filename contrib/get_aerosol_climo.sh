@@ -11,6 +11,12 @@ print_help() {
 }
 
 verbose="-v"
+wget_options=(
+    --tries=10
+    --waitretry=10
+    --retry-connrefused
+    --retry-on-http-error=429,500,502,503,504
+)
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -51,8 +57,8 @@ mkdir -p $BASEDIR/scm/data/physics_input_data/
 cd $BASEDIR/scm/data/physics_input_data/
 for file in "${data_files[@]}"; do
     echo "Retrieving $file.tar.gz"
-    wget ${verbose} https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0/${file}.tar.gz
-    tar -xvf ${file}.tar.gz
+    wget ${verbose} "${wget_options[@]}" https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0/${file}.tar.gz
+    tar -zxf ${file}.tar.gz
     rm -f ${file}.tar.gz
 done
 

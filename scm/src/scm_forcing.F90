@@ -544,9 +544,6 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
   real(kind=dp) :: f_coriolis, grav_inv, g_over_cp, omega_plus, omega_minus, dth_dp_plus, dth_dp_minus, &
     dqv_dp_plus, dqv_dp_minus, spinup_relax_time
 
-  !> \section apply_leapfrog_forcing_alg Algorithm
-  !! @{
-
   spinup_relax_time = scm_state%dt
 
   grav_inv = 1.0/con_g
@@ -719,7 +716,6 @@ subroutine apply_forcing_forward_Euler(scm_state, in_spinup)
         scm_state%dt*(scm_state%qv_force_tend(i,k))
     end do
   end do
-  !> @}
 
 end subroutine apply_forcing_forward_Euler
 
