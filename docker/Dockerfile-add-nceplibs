@@ -2,8 +2,8 @@
 # Install NCEPlibs and its dependencies
 #
 
-ARG TOOLCHAIN
-FROM add-netcdf:$TOOLCHAIN
+ARG TOOLCHAIN=gnu
+FROM add-netcdf:${TOOLCHAIN}
 
 ENV NCEPLIBS_DIR=/opt/nceplibs
 

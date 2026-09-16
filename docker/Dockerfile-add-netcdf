@@ -2,8 +2,8 @@
 # Install NetCDF Fortran and its dependencies
 #
 
-ARG TOOLCHAIN
-FROM minimal-toolchain:$TOOLCHAIN
+ARG TOOLCHAIN=gnu
+FROM minimal-toolchain:${TOOLCHAIN}
 
 # Install the dependencies
 RUN apt-get update \

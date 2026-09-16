@@ -2,8 +2,8 @@
 # Install Parallel NetCDF Fortran and its dependencies
 #
 
-ARG TOOLCHAIN
-FROM add-netcdf:$TOOLCHAIN
+ARG TOOLCHAIN=gnu
+FROM add-netcdf:${TOOLCHAIN}
 
 ARG PNFVERSION
 ENV PNFVERSION=$PNFVERSION

@@ -58,7 +58,7 @@ for file in "${data_files[@]}"; do
     cd $BASEDIR/scm/data/$file
     echo "Retrieving $file"
     wget ${verbose} "${wget_options[@]}" https://github.com/NCAR/ccpp-scm/releases/download/v7.0.0/${file}.tar.gz
-    tar -xf ${file}.tar.gz
+    tar -zxf ${file}.tar.gz
     rm -f ${file}.tar.gz
 done
 
