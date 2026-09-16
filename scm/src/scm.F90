@@ -8,7 +8,7 @@ subroutine scm_main_sub()
 
   use iso_fortran_env, only: error_unit
   use scm_kinds, only: sp, dp, qp
-  use scm_input, only: get_config_nml, get_case_init, get_case_init_DEPHY, get_reference_profile
+  use scm_input, only: get_config_nml, get_case_init_DEPHY, get_reference_profile
   use scm_utils, only: lcm
   use scm_vgrid, only: get_FV3_vgrid, calc_geopotential, calc_pres_exner_geopotential
   use scm_setup, only: set_state, GFS_suite_setup
@@ -58,16 +58,8 @@ subroutine scm_main_sub()
   n_tasks   = 1
 
   call get_config_nml(scm_state)
-
-  select case(scm_state%input_type)
-    case(0)
-      call get_case_init(scm_state, scm_input_instance)
-    case(1)
-      call get_case_init_DEPHY(scm_state, scm_input_instance)
-    case default
-      write(error_unit,*) 'An unrecognized specification of the input_type namelist variable is being used. Exiting...'
-      error stop
-  end select
+  
+  call get_case_init_DEPHY(scm_state, scm_input_instance)
 
   call get_reference_profile(scm_state, scm_reference)
 
