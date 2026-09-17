@@ -27,7 +27,6 @@ Cubed-Sphere (FV3) dynamical core.
 | ``├── LICENSE``
 | ``├── README.md``
 | ``├── ccpp``
-| ``│   ├── config`` - Contains the CCPP prebuild configuration file
 | ``│   ├── framework`` - Contains CCPP framework submodule. See https://github.com/NCAR/ccpp-framework for contents
 | ``│   ├── physics`` - Contains CCPP physics submodule. See https://github.com/NCAR/ccpp-physics for contents
 | ``│   ├── physics_namelists`` - Contains physics namelist files associated with suites

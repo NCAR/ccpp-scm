@@ -4,7 +4,7 @@ CCPP Interface
 ==============
 
 Chapter 6 of the CCPP v7 Technical Documentation
-(https://ccpp-techdoc.readthedocs.io/en/v7.0.0/) provides a wealth of
+(https://ccpp-techdoc.readthedocs.io/en/v8.0.0/) provides a wealth of
 information on the overall process of connecting a host model to the
 CCPP framework for calling physics. This chapter describes the
 particular implementation within this SCM, including how to set up,
@@ -15,15 +15,17 @@ Setting up a suite
 
 Setting up a physics suite for use in the CCPP SCM with the CCPP
 framework involves three steps: preparing data to be made available to
-physics through the CCPP, running the ``ccpp_prebuild.py`` script to reconcile SCM-provided
+physics through the CCPP, running the Capgen scripts* to reconcile SCM-provided
 variables with physics-required variables, and preparing a suite
-definition file.
+definition file. 
+*The Capgen scripts and their use are described in chapter 8 of the `CCPP Technical
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__.
 
 Preparing data from the SCM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As described in sections 6.1 and 6.2 of the `CCPP Technical
-Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__ a host
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__ a host
 model must allocate memory and provide metadata for variables that are
 passed into and out of the schemes within the physics suite. As of this
 release, in practice this means that a host model must do this for all
@@ -33,7 +35,7 @@ schemes are allocated and documented in the file ``ccpp-scm/scm/src/scm_type_def
 within the ``physics`` derived data type. This derived data type initializes its
 component variables in a ``create`` type-bound procedure. As mentioned in section
 6.2 of the `CCPP Technical
-Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__, files
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__, files
 containing all required metadata was constructed for describing all
 variables in the derived data type. These files are ``scm/src/GFS_typedefs.meta,``, ``scm/src/CCPP_typedefs.meta``, and ``scm_physical_constants.meta``. Further, ``scm_type_defs.meta``
 exists to provide metadata for derived data type definitions and their
@@ -42,20 +44,12 @@ the data. The standard names of all variables in this table must match
 with a corresponding variable within one or more of the physics schemes.
 A list of all standard names used can be found in ``ccpp/framework/doc/DevelopersGuide/CCPP_VARIABLES_SCM.pdf``.
 
-Editing and running ``ccpp_prebuild.py``
+Editing and running the Capgen scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-General instructions for configuring and running the ``ccpp_prebuild.py`` script can be found
+General instructions for configuring and running the Capgen scripts can be found
 in chapter 8 of the `CCPP Technical
-Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__. The
-script expects to be run with a host-model-dependent configuration file,
-passed as argument ``–config=path_to_config_file``. Within this configuration file are variables that
-hold paths to the variable definition files (where metadata tables can
-be found on the host model side), the scheme files (a list of paths to
-all source files containing scheme entry points), the auto-generated
-physics schemes makefile snippet, the auto-generated physics scheme caps
-makefile snippet, and the directory where the auto-generated physics
-caps should be written out to. As mentioned in :numref:`Section %s <compiling>`, this script must be run
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__. As mentioned in :numref:`Section %s <compiling>`, this script must be run
 to reconcile data provided by the SCM with data required by the physics
 schemes before compilation – this is done automatically by ``cmake``.
 
@@ -98,7 +92,7 @@ described in sections
 respectively. A more general description of the process for performing
 suite initialization and running can also be found in sections 6.4 and
 6.5 of the `CCPP Technical
-Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__.
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__.
 
 Changing a suite
 ----------------
@@ -110,7 +104,7 @@ Prior to being able to swap a scheme within a suite, one must first add
 a CCPP-compliant scheme to the pool of available schemes in the CCPP
 physics repository. This process is described in chapter 2 of the `CCPP
 Technical
-Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__.
+Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__.
 
 Once a CCPP-compliant scheme has been added to the CCPP physics
 repository, the process for modifying an existing suite should take the
@@ -129,7 +123,7 @@ following steps into account:
    -  Do any of the new variables need to be calculated in an
       interstitial scheme? If so, one must be written and made
       CCPP-compliant itself. The `CCPP Technical
-      Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__
+      Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__
       will help in this endeavor, and the process outlined in its
       chapter 2 should be followed.
 
@@ -157,7 +151,7 @@ following steps into account:
    associated interstitial ``<scheme>`` elements and simply replacing the scheme
    names to reflect their replacements. See chapter 4 of the `CCPP
    Technical
-   Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/>`__ for
+   Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__ for
    further details.
 
 Modifying “groups” of parameterizations
@@ -236,7 +230,7 @@ would do so:
    cannot be used in a physics scheme yet. For that, you’ll need to add
    an entry in the corresponding metadata file. See section 2.2 of the
    `CCPP Technical
-   Documentation <https://ccpp-techdoc.readthedocs.io/en/v7.0.0/CompliantPhysicsParams.html#metadata-table-rules>`__
+   Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/CompliantPhysicsParams.html#metadata-table-rules>`__
    for more information regarding the format.
 
 #. On the physics scheme side, there will also be a metadata file entry
