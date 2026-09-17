@@ -2,7 +2,6 @@
     case_name = 'gabls3_ruc'
     column_area = 145000000.0
     do_spinup = .true.
-    input_type = 1
     lsm_ics = .true.
     reference_profile_choice = 2
     sfc_roughness_length_cm = 15.0

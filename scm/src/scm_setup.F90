@@ -58,13 +58,8 @@ subroutine set_state(scm_input, scm_reference, scm_state)
 
   if (.NOT. scm_state%model_ics) then ! not a model
 
-     if (scm_state%input_type == 0) then
-       !> - Calculate water vapor from total water, suspended liquid water, and suspended ice.
-       input_qv = scm_input%input_qt - scm_input%input_ql - scm_input%input_qi
-     else
-       input_qv = scm_input%input_qv
-     end if
-
+     input_qv = scm_input%input_qv
+     
      !> - For each column, interpolate the water vapor to the model grid.
      do i=1, scm_state%n_cols
        call interpolate_to_grid_centers(scm_input%input_nlev, scm_input%input_pres, input_qv, scm_state%pres_l(i,:), &
@@ -77,17 +72,11 @@ subroutine set_state(scm_input, scm_reference, scm_state)
        end if
      end do
 
-     if (scm_state%input_type == 0) then
-       !> - Calculate the input absolute temperature from input pressure, theta_il, ql, and qi.
+     if (.not. check_missing(scm_input%input_temp)) then
+       input_T = scm_input%input_temp
+     else
        input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
          (con_hfus/con_cp)*scm_input%input_qi)
-     else
-       if (.not. check_missing(scm_input%input_temp)) then
-         input_T = scm_input%input_temp
-       else
-         input_T = (scm_input%input_pres/p0)**con_rocp*(scm_input%input_thetail + (con_hvap/con_cp)*scm_input%input_ql + &
-           (con_hfus/con_cp)*scm_input%input_qi)
-       end if
      end if
 
      !> - For each column, interpolate the temperature to the model grid.

@@ -500,22 +500,13 @@ class Experiment(object):
             custom_output_dir = False
 
         #if using the DEPHY format, need to also check the case data file for the surfaceForcing global attribute for 'Flux' or 'surfaceFlux', which denotes prescribed surface fluxes
-        try:
-            input_type = case_nml['case_config']['input_type']
-            if input_type == 1:
-                surface_flux_spec = False
-                #open the case data file and read the surfaceForcing global attribute
-                nc_fid = Dataset(os.path.join(SCM_ROOT, self._case_data_dir) + '/' + self._case + '_SCM_driver.nc' , 'r')
-                surfaceForcing = nc_fid.getncattr('surface_forcing_temp')
-                nc_fid.close()
-                if (surfaceForcing.lower() == 'kinematic' or surfaceForcing.lower() == 'surface_flux'):
-                    surface_flux_spec = True
-        except KeyError:
-            # if not using DEPHY format, check to see if surface fluxes are specified in the case configuration file (default is False)
-            try:
-                surface_flux_spec = case_nml['case_config']['sfc_flux_spec']
-            except KeyError:
-                surface_flux_spec = False
+        surface_flux_spec = False
+        #open the case data file and read the surfaceForcing global attribute
+        nc_fid = Dataset(os.path.join(SCM_ROOT, self._case_data_dir) + '/' + self._case + '_SCM_driver.nc' , 'r')
+        surfaceForcing = nc_fid.getncattr('surface_forcing_temp')
+        nc_fid.close()
+        if (surfaceForcing.lower() == 'kinematic' or surfaceForcing.lower() == 'surface_flux'):
+            surface_flux_spec = True
 
         # If surface fluxes are specified for this case, use the SDF modified to use them
         if surface_flux_spec:
@@ -573,14 +564,7 @@ class Experiment(object):
         execute(cmd)
 
         # Link case data file to run directory with original name
-        try:
-            input_type = case_nml['case_config']['input_type']
-            if input_type == 1:
-                case_data_netcdf_file = self._case + '_SCM_driver.nc'
-            else:
-                case_data_netcdf_file = self._case + '.nc'
-        except KeyError:
-            case_data_netcdf_file = self._case + '.nc'
+        case_data_netcdf_file = self._case + '_SCM_driver.nc'
         logging.debug('Linking case input data file {0} to run directory'.format(case_data_netcdf_file))
         if os.path.isfile(os.path.join(SCM_RUN, case_data_netcdf_file)):
             os.remove(os.path.join(SCM_RUN, case_data_netcdf_file))

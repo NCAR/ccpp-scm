@@ -151,8 +151,7 @@ def main():
     #
     ###########################################################################
     #
-    case_config =[{"name": "input_type",  "values": str(1)},             \
-                  {"name": "dt",          "values": str(args.timestep)}, \
+    case_config =[{"name": "dt",          "values": str(args.timestep)}, \
                   {"name": "C_RES",       "values": str(args.C_RES)}]
 
     # What, if any, options neeed to be passsed to UFS_case_gen.py?

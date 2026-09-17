@@ -2461,8 +2461,7 @@ def write_SCM_nml_file(case_nml):
     #Go through existing case namelist and only add necessary items to new DEPHY-based namelist
     
     #add _dephy to case (temporary - to differentiate from old format case)
-    int_dict = {'case_name':case_nml['case_config']['case_name']+'_dephy',
-                'input_type':1}
+    int_dict = {'case_name':case_nml['case_config']['case_name']+'_dephy'}
     
     nml_keys = case_nml['case_config'].todict().keys()
     if ('npz_type' in nml_keys):
