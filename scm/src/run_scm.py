@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 from suite_info import suite, suite_list
 from netCDF4 import Dataset
 import importlib
@@ -31,6 +32,9 @@ DEFAULT_RUN_DIR = 'scm/run'
 
 # Path to default bin directory (relative to scm_root)
 DEFAULT_BIN_DIR = 'scm/bin'
+
+# CCPP datatable listing the suites compiled into the executable (relative to the bin directory)
+CCPP_DATATABLE = 'ccpp/ccpp/datatable.xml'
 
 # Default command string to run MPI apps (number of processes should be 1 since SCM is not set up to use more than 1 yet)
 DEFAULT_MPI_COMMAND = 'mpirun -np 1'
@@ -102,6 +106,17 @@ DEFAULT_DO_UGWP_V1   = False
 TAU_TARGET           = 'ugwp_c384_tau.nc'
 TAU_LINK             = 'ugwp_limb_tau.nc'
 
+# Scripts (relative to scm_root) that download the input data
+STATIC_DATA_SCRIPT   = 'contrib/get_all_static_data.sh'
+RRTMGP_DATA_SCRIPT   = 'contrib/get_rrtmgp_data.sh'
+THOMPSON_DATA_SCRIPT = 'contrib/get_thompson_tables.sh'
+
+# Physics namelist entries naming the RRTMGP data files
+RRTMGP_FILE_KEYS = ['lw_file_gas', 'lw_file_clouds', 'sw_file_gas', 'sw_file_clouds']
+
+# Thompson microphysics lookup tables; computed at startup (slowly) if absent
+THOMPSON_TABLES = ['qr_acr_qgV2.dat', 'qr_acr_qsV2.dat', 'freezeH2O.dat']
+
 ###############################################################################
 # Command line arguments                                                      #
 ###############################################################################
@@ -130,6 +145,7 @@ parser.add_argument('--stop_on_error',    help='when running multiple SCM runs, 
 parser.add_argument('-v', '--verbose',    help='set logging level to debug and write log to file', action='count', default=0)
 parser.add_argument('-f', '--file',       help='name of file where SCM runs are defined')
 parser.add_argument('--mpi_command',      help='command used to invoke the executable via MPI (including options)', required=False)
+parser.add_argument('--ls', '--list',     help='list the available cases and the suites the SCM was built with and the command to retrieve the required data', dest='list_options', action='store_true', default=False)
 
 ###############################################################################
 # Functions and subroutines                                                   #
@@ -199,8 +215,9 @@ def parse_arguments():
     timestep = args.timestep
     mpi_command = args.mpi_command
     stop_on_error = args.stop_on_error
+    list_options = args.list_options
 
-    if not case and not file:
+    if not case and not file and not list_options:
         parser.error('Either "--case" or "--file" must be specified. Use "--help" for more information.')
 
     if not sdf:
@@ -208,7 +225,7 @@ def parse_arguments():
 
     return (file, run_list, case, sdf, namelist, tracers, gdb, runtime, runtime_mult, docker, \
             verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,   \
-            n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error)
+            n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error, list_options)
 
 def find_gdb():
     """Detect gdb, abort if not found"""
@@ -823,10 +840,72 @@ def find_max_str_lengths(run_list):
     return max_str_lens
 
 
+def suite_data_status(sdf):
+    """Return the scripts that download the physics data a compiled suite is missing"""
+    # The _ps suites use the namelist of their base suite, or its optional _ps version
+    base_name = sdf[:-len('_ps')] if sdf.endswith('_ps') else sdf
+    namelist = next((s._default_namelist for s in suite_list if s._name == base_name), None)
+    if namelist is None:
+        return []
+    if sdf.endswith('_ps'):
+        ps_namelist = os.path.splitext(namelist)[0] + '_ps.nml'
+        if os.path.isfile(os.path.join(SCM_ROOT, PHYSICS_NAMELIST_DIR, ps_namelist)):
+            namelist = ps_namelist
+    physics_nml = f90nml.read(os.path.join(SCM_ROOT, PHYSICS_NAMELIST_DIR, namelist)).get('gfs_physics_nml', {})
+    schemes = {e.text.strip() for e in ET.parse(os.path.join(SCM_ROOT, PHYSICS_SUITE_DIR, 'suite_' + sdf + '.xml')).iter('scheme')}
+
+    # (files, script that downloads them)
+    needs = []
+    static_files = []
+    if physics_nml.get('oz_phys_2015', DEFAULT_OZ_PHYS_2015):
+        static_files.append(OZ_PHYS_2015_TARGET)
+    elif physics_nml.get('oz_phys', DEFAULT_OZ_PHYS):
+        static_files.append(OZ_PHYS_TARGET)
+    if physics_nml.get('do_ugwp_v1', DEFAULT_DO_UGWP_V1):
+        static_files.append(TAU_TARGET)
+    needs.append((static_files, STATIC_DATA_SCRIPT))
+    # Namelists may name RRTMGP files without the suite using RRTMGP
+    if any(scheme.startswith('rrtmgp') for scheme in schemes):
+        needs.append(([physics_nml[key] for key in RRTMGP_FILE_KEYS if key in physics_nml], RRTMGP_DATA_SCRIPT))
+    # Optional: the Thompson microphysics computes its tables at startup if they are absent
+    if 'mp_thompson' in schemes:
+        needs.append((THOMPSON_TABLES, THOMPSON_DATA_SCRIPT))
+
+    return [script for files, script in needs
+            if any(not os.path.isfile(os.path.join(SCM_ROOT, PHYSICS_DATA_DIR, f)) for f in files)]
+
+def list_cases_and_suites(case_data_dir):
+    """Print the cases that can be run and the suites compiled into the SCM, and whether their input data is present"""
+    case_dir = os.path.join(SCM_ROOT, CASE_NAMELIST_DIR)
+    cases = sorted((os.path.splitext(f)[0] for f in os.listdir(case_dir) if f.endswith('.nml')), key=str.lower)
+    width = max(len(case) for case in cases) + 2
+    print('Cases (use with -c/--case):')
+    print('  {0:<{1}}{2}'.format('Case', width, 'Get missing data'))
+    print('  {0:<{1}}{2}'.format('-' * len('Case'), width, '-' * len('Get missing data')))
+    n_ok = 0
+    for case in cases:
+        ok = os.path.isfile(os.path.join(SCM_ROOT, case_data_dir, case + '_SCM_driver.nc'))
+        n_ok += ok
+        print('  {0:<{1}}{2}'.format(case, width, '' if ok else STATIC_DATA_SCRIPT).rstrip())
+    print('  {0} of {1} cases have input data in {2}'.format(n_ok, len(cases), os.path.join(SCM_ROOT, case_data_dir)))
+
+    print()
+    datatable = os.path.join(SCM_BIN, CCPP_DATATABLE)
+    if not os.path.isfile(datatable):
+        print('Suites: none found, {0} does not exist. Has the SCM been built?'.format(datatable))
+        return
+    suites = sorted((s.get('name') for s in ET.parse(datatable).getroot().iterfind('api/suites/suite')), key=str.lower)
+    width = max(len(sdf) for sdf in suites) + 2
+    print('Suites built into {0} (use with -s/--suite):'.format(SCM_BIN))
+    print('  {0:<9}{1:<{2}}{3}'.format('Default', 'Suite', width, 'Get missing data'))
+    print('  {0:<9}{1:<{2}}{3}'.format('-' * len('Default'), '-' * len('Suite'), width, '-' * len('Get missing data')))
+    for sdf in suites:
+        print('  {0:<9}{1:<{2}}{3}'.format('default' if sdf == DEFAULT_SUITE else '', sdf, width, ' '.join(suite_data_status(sdf))).rstrip())
+
 def main():
     (file, run_list_name, case, sdf, namelist, tracers, use_gdb, runtime, runtime_mult, docker, \
      verbose, levels, npz_type, vert_coord_file, case_data_dir, n_itt_out,       \
-     n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error \
+     n_itt_diag, run_dir, bin_dir, timestep, mpi_command, stop_on_error, list_options \
      ) = parse_arguments()
 
     setup_logging(verbose)
@@ -844,6 +923,10 @@ def main():
         SCM_BIN = bin_dir
     else:
         SCM_BIN = os.path.join(SCM_ROOT, DEFAULT_BIN_DIR)
+
+    if list_options:
+        list_cases_and_suites(case_data_dir if case_data_dir else DEFAULT_CASE_DATA_DIR)
+        return
 
     global SCM_RUN
     if run_dir:
