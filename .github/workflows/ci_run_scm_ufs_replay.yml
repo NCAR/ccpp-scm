@@ -15,6 +15,9 @@ jobs:
     env:
       dir_rt_cache: /home/runner/ufs_rts
       SCM_ROOT:     ${{ github.workspace }}
+      rt_bucket:    noaa-ufs-regtests-pds
+      rt_test:      control_c192_intel                   # UWM RT whose output is replayed
+      rt_input:     FV3_input_data192/INPUT_L127_gfsv17  # ICs/grid that control_c192 is run from
 
     steps:
 
@@ -51,20 +54,62 @@ jobs:
     # Create UFS-replay case for SCM using UWM Regression Tests
     #######################################################################################
 
+    - name: Find latest UWM regression test data on AWS S3.
+      id: rt
+      run: |
+        s3ls() { aws s3 ls "s3://${rt_bucket}/$1" --no-sign-request; }
+ 
+        # Pick the newest develop-YYYYMMDD that actually contains output
+        # for ${rt_test} (skips partial uploads).
+        rt_dir=""
+        for d in $(s3ls | awk '$1=="PRE"{print $2}' | tr -d / \
+                   | grep -E '^develop-[0-9]{8}$' | sort -r); do
+          if s3ls "${d}/${rt_test}/" | grep -q 'atmf024.nc'; then
+            rt_dir=${d}; break
+          fi
+        done
+        if [ -z "${rt_dir}" ]; then
+          echo "::error::No develop-YYYYMMDD directory with ${rt_test} output found in s3://${rt_bucket}"
+          exit 1
+        fi
+ 
+        # Matching input data: newest input-data-YYYYMMDD not newer than the RT date.
+        rt_date=${rt_dir#develop-}
+        input_dir=$(s3ls | awk '$1=="PRE"{print $2}' | tr -d / \
+                    | grep -E '^input-data-[0-9]{8}$' \
+                    | awk -F- -v d="${rt_date}" '$3<=d' | sort | tail -1)
+        if [ -z "${input_dir}" ]; then
+          echo "::error::No input-data-YYYYMMDD directory on or before ${rt_date}"
+          exit 1
+        fi
+ 
+        echo "Using s3://${rt_bucket}/${rt_dir}/${rt_test}"
+        echo "Using s3://${rt_bucket}/${input_dir}/${rt_input}"
+        echo "rt_dir=${rt_dir}"       >> "$GITHUB_OUTPUT"
+        echo "input_dir=${input_dir}" >> "$GITHUB_OUTPUT"
+
     - name: Cache UWM regression test output.
       uses: actions/cache@v6
       with:
         path: ${dir_rt_cache}
-        key: ufs-rt-files
+        key: ufs-rt-files-${{ steps.rt.outputs.rt_dir }}-${{ steps.rt.outputs.input_dir }}
 
     - name: Download UWM regression test output, if not cached.
       run: |
-        if test ! -d "${dir_rt_cache}"; then
-          mkdir -p ${dir_rt_cache} && cd ${dir_rt_cache}
-          wget -q https://github.com/NCAR/ccpp-scm/releases/download/v7.0.1/ufs_rts_scmreplay_ci.tar.gz
-          tar -xvf ufs_rts_scmreplay_ci.tar.gz
-          ls ${dir_rt_cache}/data_new
-        fi
+        dest=${dir_rt_cache}/data_new
+        mkdir -p ${dest}/INPUT
+ 
+        # Model history output (netCDF only; GRIB files are not used by the case generator).
+        aws s3 cp --no-sign-request --recursive --only-show-errors \
+            --exclude "*" --include "*.nc" \
+            "s3://${rt_bucket}/${{ steps.rt.outputs.rt_dir }}/${rt_test}/" ${dest}/
+ 
+        # Initial conditions, grid and orography the RT was run from.
+        aws s3 cp --no-sign-request --recursive --only-show-errors \
+            "s3://${rt_bucket}/${{ steps.rt.outputs.input_dir }}/${rt_input}/" ${dest}/INPUT/
+ 
+        ls -l ${dest} ${dest}/INPUT
+        df -h ${dir_rt_cache}
 
     - name: Create UFS-replay case.
       run: |
