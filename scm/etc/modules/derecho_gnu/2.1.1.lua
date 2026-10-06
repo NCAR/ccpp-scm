@@ -6,10 +6,9 @@ the CISL machine Derecho (Cray) using GNU 13.3.1
 whatis([===[Loads spack-stack libraries needed for building the CCPP SCM on Derecho with GNU compilers]===])
 
 
-local spack_root = "/glade/work/epicufsrt/contrib/spack-stack/derecho/spack-stack-2.1.0/envs/ue-gcc-13.3.1/"
+local spack_root = "/glade/work/epicufsrt/contrib/spack-stack/derecho/spack-stack-2.1.1/envs/ue-gcc-13.3.1/"
 prepend_path("MODULEPATH", pathJoin(spack_root, "modules/Core/"))
 append_path("MODULEPATH", "/glade/u/apps/derecho/modules/25.10/Core")
-prepend_path("LD_LIBRARY_PATH", pathJoin(spack_root, "install/gcc/13.3.1/openssl-3.4.1-a3zr655/lib64"))
 
 load("stack-gcc/13.3.1")
 load("stack-cray-mpich/8.1.32")
