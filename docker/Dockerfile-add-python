@@ -8,6 +8,7 @@ FROM add-nceplibs:${TOOLCHAIN}
 # Install Python
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
+      libxml2-utils \
       python-is-python3 \
       python3 \
       python3-pip \
@@ -23,4 +24,5 @@ RUN pip3 install  --break-system-packages \
 
 # Install packages for the validation plot generation
 RUN pip3 install  --break-system-packages \
+      configobj \
       matplotlib

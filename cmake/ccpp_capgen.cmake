@@ -266,6 +266,9 @@ function(ccpp_capgen)
                   COMMAND_ECHO STDOUT)
 
   message(STATUS "ccpp-capgen stdout: ${CAPGEN_OUT}")
+  if(NOT RES EQUAL 0)
+    message(FATAL_ERROR "CCPP cap generation FAILED: result = ${RES}")
+  endif()
 
 endfunction()
 

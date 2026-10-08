@@ -412,8 +412,8 @@ components.
 
    CMake automatically runs the CCPP capgen scripts to match required
    physics variables with those available from the dycore (SCM) and to
-   generate physics caps. It generates software caps for each physics 
-   group defined in the supplied Suite Definition Files (SDFs) and 
+   generate physics caps. It generates software caps for each physics
+   group defined in the supplied Suite Definition Files (SDFs) and
    generates a static library that becomes part of the SCM executable.
 
 
@@ -631,6 +631,10 @@ If using the main branch, you should run the above command to ensure you have th
    -  Provide argument to define the MPI command that will be invoked.
       Default MPI command is ``mpirun -np 1``.
       (Note: to run on a Derecho login node the empty argument ``--mpi_command ''`` is required.)
+
+-  ``--ls, --list``
+
+   - List the available cases and the suites the SCM was built with and the command to retrieve the required data
 
 -  ``--verbose [-v]``
 

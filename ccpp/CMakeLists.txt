@@ -142,7 +142,19 @@ ccpp_source_files(HOST_FORTRAN_FILES ${HOST_METADATA_FILES})
 message(INFO "${HOST_METADATA_FILES} --> ${HOST_FORTRAN_FILES}")
 
 set(SUITE_FILES_DIR "${CMAKE_SOURCE_DIR}/ccpp/suites")
-if(DEFINED CCPP_SUITES)
+if(NOT DEFINED CCPP_SUITES)
+  # By default build the supported suites listed in scm/src/suite_info.py;
+  # -DCCPP_SUITES=ALL builds every suite, -DCCPP_SUITES=<SDF>,<SDF> a selection
+  find_package(Python3 COMPONENTS Interpreter REQUIRED)
+  execute_process(COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scm/src/suite_info.py" --fc "${CMAKE_Fortran_COMPILER_ID}"
+                  OUTPUT_VARIABLE CCPP_SUITES
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  RESULT_VARIABLE RES)
+  if(NOT RES EQUAL 0 OR NOT CCPP_SUITES)
+    message(FATAL_ERROR "Could not get the supported suites from scm/src/suite_info.py")
+  endif()
+endif()
+if(NOT CCPP_SUITES STREQUAL "ALL")
   # Take comma seperated string containing SDF names <CCPP_SUITES>,
   # append <SUITE_FILES_DIR> as file prefix, append ".xml" file suffix,
   # and replace "," with ";"

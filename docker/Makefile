@@ -5,8 +5,11 @@ COMPILER := gnu
 # COMPILER := oneapi
 # COMPILER := nvhpc
 FINAL_IMAGE ?= scm-$(COMPILER):latest
+RELEASE_VERSION ?= v8.0.0-rc.1
+SOURCE_REVISION ?= $(shell git -C $(CONTEXT) rev-parse HEAD)
+RELEASE_IMAGE = dtcenter/ccpp-scm:$(RELEASE_VERSION)
 
-.PHONY: all build minimal netcdf nceplibs python finalize run clean
+.PHONY: all build minimal netcdf nceplibs python finalize release-check release run clean
 
 all: build
 
@@ -47,6 +50,26 @@ finalize: python
 		-t $(FINAL_IMAGE) \
 		$(CONTEXT)
 
+release-check:
+	@test "$$(git -C $(CONTEXT) rev-parse HEAD)" = "$(SOURCE_REVISION)" || { \
+		printf '%s\n' 'SOURCE_REVISION must match the checked-out commit.' >&2; \
+		exit 1; \
+	}
+	@test -z "$$(git -C $(CONTEXT) status --porcelain)" || { \
+		printf '%s\n' 'Release images must be built from a clean checkout.' >&2; \
+		git -C $(CONTEXT) status --short >&2; \
+		exit 1; \
+	}
+
+release: release-check python
+	$(DOCKER) build \
+		-f Dockerfile-release \
+		--build-arg TOOLCHAIN=$(COMPILER) \
+		--build-arg RELEASE_VERSION=$(RELEASE_VERSION) \
+		--build-arg SOURCE_REVISION=$(SOURCE_REVISION) \
+		-t $(RELEASE_IMAGE) \
+		$(CONTEXT)
+
 dev: python
 	$(DOCKER) build \
 		-f Dockerfile-dev \
@@ -60,12 +83,20 @@ run:
 	@echo "$$ docker run --rm -it --user "$$(id -u):$$(id -g)" --env HOME=/tmp -v "$${PWD}/../:/src" -w /src scm-$(COMPILER):latest"
 	@echo " - Image for SCM development"
 	@echo "$$ docker run --rm -it --user "$$(id -u):$$(id -g)" --env HOME=/tmp -v "$${PWD}/../:/src" -w /src scm-$(COMPILER):dev"
+	@echo " - Image for SCM Release"
+	@echo "$$ docker run --rm -it $(RELEASE_IMAGE)"
 
 clean:
-	$(DOCKER) image rm \
+	@for img in \
 		$(FINAL_IMAGE) \
+		$(RELEASE_IMAGE) \
 		scm-$(COMPILER):dev \
 		add-python:$(COMPILER) \
 		add-nceplibs:$(COMPILER) \
 		add-netcdf:$(COMPILER) \
-		minimal-toolchain:$(COMPILER)
+		minimal-toolchain:$(COMPILER); \
+	do \
+		if $(DOCKER) image inspect $$img > /dev/null 2>&1; then \
+			$(DOCKER) image rm $$img; \
+		fi; \
+	done
