@@ -126,8 +126,8 @@ DEPHY_CASES = ['AMMA_REF', 'ARMCU_E3SM', 'ARMCU_MESONH', 'ARMCU_REF', 'AYOTTE_00
                'DYNAMO_NSA3a', 'DYNAMO_NSA3a_D1', 'GABLS1_REF', 'IHOP_REF', 'MAGIC_LEG04A', 'MPACE_REF',
                'RICO_MESONH', 'SANDU_FAST', 'SANDU_REF', 'SANDU_SLOW', 'SCMS_REF']
 
-# Cases with no published input data (templates or user-generated input)
-CASES_WITHOUT_DATA = ['default', 'fv3_model_point_noah']
+# Case configurations left out of --ls: a template and a case needing user-generated input
+CASES_NOT_LISTED = ['default', 'fv3_model_point_noah']
 
 ###############################################################################
 # Command line arguments                                                      #
@@ -889,7 +889,8 @@ def suite_data_status(sdf):
 def list_cases_and_suites(case_data_dir):
     """Print the cases that can be run and the suites compiled into the SCM, and whether their input data is present"""
     case_dir = os.path.join(SCM_ROOT, CASE_NAMELIST_DIR)
-    cases = sorted((os.path.splitext(f)[0] for f in os.listdir(case_dir) if f.endswith('.nml')), key=str.lower)
+    cases = sorted((os.path.splitext(f)[0] for f in os.listdir(case_dir)
+                    if f.endswith('.nml') and os.path.splitext(f)[0] not in CASES_NOT_LISTED), key=str.lower)
     width = max(len(case) for case in cases) + 2
     print('Cases (use with -c/--case):')
     print('  {0:<{1}}{2}'.format('Case', width, 'Get missing data'))
@@ -909,8 +910,6 @@ def list_cases_and_suites(case_data_dir):
             else:
                 dephy_missing = True
                 note = 'DEPHY-SCM (see below)'
-        elif case in CASES_WITHOUT_DATA:
-            note = 'no published data'
         else:
             note = STATIC_DATA_SCRIPT
         print('  {0:<{1}}{2}'.format(case, width, note).rstrip())
