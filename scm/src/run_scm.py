@@ -2,6 +2,7 @@
 
 import argparse
 import f90nml
+import glob
 import logging
 import numpy as np
 import os
@@ -116,6 +117,17 @@ RRTMGP_FILE_KEYS = ['lw_file_gas', 'lw_file_clouds', 'sw_file_gas', 'sw_file_clo
 
 # Thompson microphysics lookup tables; computed at startup (slowly) if absent
 THOMPSON_TABLES = ['qr_acr_qgV2.dat', 'qr_acr_qsV2.dat', 'freezeH2O.dat']
+
+# Cases whose input data is not in the DTC data from STATIC_DATA_SCRIPT, but in the
+# external DEPHY-SCM repository as <case>/<subcase>/<case>_<subcase>_SCM_driver.nc
+DEPHY_SCM_URL = 'https://github.com/GdR-DEPHY/DEPHY-SCM'
+DEPHY_SCM_DIR = 'scm/data/DEPHY-SCM'
+DEPHY_CASES = ['AMMA_REF', 'ARMCU_E3SM', 'ARMCU_MESONH', 'ARMCU_REF', 'AYOTTE_00SC', 'BOMEX_REF',
+               'DYNAMO_NSA3a', 'DYNAMO_NSA3a_D1', 'GABLS1_REF', 'IHOP_REF', 'MAGIC_LEG04A', 'MPACE_REF',
+               'RICO_MESONH', 'SANDU_FAST', 'SANDU_REF', 'SANDU_SLOW', 'SCMS_REF']
+
+# Cases with no published input data (templates or user-generated input)
+CASES_WITHOUT_DATA = ['default', 'fv3_model_point_noah']
 
 ###############################################################################
 # Command line arguments                                                      #
@@ -883,11 +895,29 @@ def list_cases_and_suites(case_data_dir):
     print('  {0:<{1}}{2}'.format('Case', width, 'Get missing data'))
     print('  {0:<{1}}{2}'.format('-' * len('Case'), width, '-' * len('Get missing data')))
     n_ok = 0
+    dephy_missing = False
     for case in cases:
-        ok = os.path.isfile(os.path.join(SCM_ROOT, case_data_dir, case + '_SCM_driver.nc'))
-        n_ok += ok
-        print('  {0:<{1}}{2}'.format(case, width, '' if ok else STATIC_DATA_SCRIPT).rstrip())
-    print('  {0} of {1} cases have input data in {2}'.format(n_ok, len(cases), os.path.join(SCM_ROOT, case_data_dir)))
+        note = ''
+        if os.path.isfile(os.path.join(SCM_ROOT, case_data_dir, case + '_SCM_driver.nc')):
+            n_ok += 1
+        elif case in DEPHY_CASES:
+            # DEPHY-SCM data is used in place, so show where it was found
+            dephy_files = glob.glob(os.path.join(SCM_ROOT, DEPHY_SCM_DIR, '*', '*', case + '_SCM_driver.nc'))
+            if dephy_files:
+                n_ok += 1
+                note = '--case_data_dir {0}'.format(os.path.relpath(os.path.dirname(dephy_files[0]), SCM_ROOT))
+            else:
+                dephy_missing = True
+                note = 'DEPHY-SCM (see below)'
+        elif case in CASES_WITHOUT_DATA:
+            note = 'no published data'
+        else:
+            note = STATIC_DATA_SCRIPT
+        print('  {0:<{1}}{2}'.format(case, width, note).rstrip())
+    print('  {0} of {1} cases have input data'.format(n_ok, len(cases)))
+    if dephy_missing:
+        print('  DEPHY-SCM cases: git clone {0} {1}'.format(DEPHY_SCM_URL, os.path.join(SCM_ROOT, DEPHY_SCM_DIR)))
+        print('  then run them with the --case_data_dir shown here by --ls')
 
     print()
     datatable = os.path.join(SCM_BIN, CCPP_DATATABLE)
