@@ -74,8 +74,6 @@ CCPP Physics
 -  Newer code base for the parameterizations and suites supported in CCPP
    v7
   
--  Updated technical documentation.
-
 CCPP SCM
 
 -  SCM code cleanup: Removed unsupported code and eliminated
@@ -84,6 +82,8 @@ CCPP SCM
 -  New SCM Case: Atlantic Tradewind Ocean-Atmosphere Mesoscale
    Interaction Campaign (ATOMIC) for January/February 2020 marine shallow
    convection. The ATOMIC test case consists of seven 33-hour periods.
+
+Updated technical documentation
 
 Limitations
 ~~~~~~~~~~~

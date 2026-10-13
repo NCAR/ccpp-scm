@@ -613,14 +613,14 @@ Examples to run from within the ``scm/etc/scripts`` directory to create SCM case
 with the output from a UFS Weather Model regression test(s) are below.
 
 UFS Weather Model Regression Test data for running the examples can be found on `AWS
-<https://noaa-ufs-regtests-pds.s3.amazonaws.com/index.html>`__. The following files are needed for example
+<https://noaa-ufs-regtests-pds.s3.amazonaws.com/index.html>`__. The following files are needed, for example,
 for UFS C192:
 
 - UFS history files: develop-{latest_date}/*.nc
 - Input data: input-data-{latest_date}/FV3_input_data192/INPUT_L127_gfsv17
 
 To run the examples using the ``UFS_forcing_ensemble_generator.py``, pull the necessary RT data from AWS and
-organize the RT data into an single directory, replacing 'latest_date' with the latest date stamps available.
+organize it into a single directory, replacing 'latest_date' with the latest date stamps available.
 For example:
 
 .. code:: bash
@@ -672,7 +672,7 @@ Example 2: UFS-caseGen for list of points
 UFS regression test, ``control_c384``, for multiple points assuming the same forcing method as above:
 
    .. note::
-      The control_c384 RT data will need to be pulled using similar commands from the control_c192 as shown
+      The control_c384 RT data will need to be pulled using similar commands as the control_c192 example
       in :numref:`Section %s <ufscasegenexamples>`
 
 .. code:: bash
