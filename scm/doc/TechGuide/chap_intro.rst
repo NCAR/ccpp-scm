@@ -36,18 +36,54 @@ Version Notes
 -------------
 
 
-The CCPP SCM v8.0.0 contains the following major and minor changes since v7.0.
+The CCPP SCM v8.0.0 contains the following changes since v7.0.
 
-Major
+CCPP Framework
 
 -  Update SCM to use new CCPP framework, capgen-v1
 
+   -  Flipping of arrays, e.g. for cases in which the physics is
+      oriented bottom to top and the host model top to bottom.
+   -  Kind transformations e.g., double to single precision, creating
+      flexibility in connections between host and physics.
+   -  Superior memory management: suite-owned variables do not need to
+      be allocated by the host model.
+   -  Introspection. Capgen provides a data file containing all
+      necessary scheme and host files, required dependencies, and all
+      variable lists needed by host-model. This can be used directly by
+      the build-system, or for debugging purposes.
+   -  Integer state machine. Allows physics working precision to be
+      build-time configurable. Currently this is hardcoded and included
+      as part of the CCPP Physics library.
+   -  Registered scalar-index dimensions for threading and ensembles.
+      This allows for host configurability for multi-threaded and
+      multi-instance implementations.
+   -  Write-if-changed build integration. Facilitates quicker model
+      build time and debugging.
+   -  Enhanced error-checking: a Fortran-vs-metadata validator tool
+      identifies inconsistencies and prompts the developer to address it
+      at build-time.
+   -  Handling of constituents array for the flexible management of
+      atmospheric tracers (like moisture, aerosols, or chemical species).
+   -  Ease of code inspection, since the code does not involve a static
+      driver with conditional statements.
+   -  Improved computational performance.
+
+CCPP Physics
+
+-  Newer code base for the parameterizations and suites supported in CCPP
+   v7
+  
 -  Updated technical documentation.
 
-Minor
+CCPP SCM
 
-   N/A
+-  SCM code cleanup: Removed unsupported code and eliminated
+   nonfunctional or unimplemented components.
 
+-  New SCM Case: Atlantic Tradewind Ocean-Atmosphere Mesoscale
+   Interaction Campaign (ATOMIC) for January/February 2020 marine shallow
+   convection. The ATOMIC test case consists of seven 33-hour periods.
 
 Limitations
 ~~~~~~~~~~~

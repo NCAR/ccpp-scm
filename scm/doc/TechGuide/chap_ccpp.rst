@@ -3,7 +3,7 @@
 CCPP Interface
 ==============
 
-Chapter 6 of the CCPP v7 Technical Documentation
+Chapter 6 of the CCPP v8 Technical Documentation
 (https://ccpp-techdoc.readthedocs.io/en/v8.0.0/) provides a wealth of
 information on the overall process of connecting a host model to the
 CCPP framework for calling physics. This chapter describes the
