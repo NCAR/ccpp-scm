@@ -604,6 +604,8 @@ Optional arguments:
 
 #. ``--geostrophic (-geos)``: flag to turn on geostrophic wind forcing
 
+.. _`ufscasegenexamples`:
+
 UFS-CaseGen Examples
 ~~~~~~~~~~~~~~~~~~~
 
@@ -617,26 +619,28 @@ for UFS C192:
 - UFS history files: develop-{latest_date}/*.nc
 - Input data: input-data-{latest_date}/FV3_input_data192/INPUT_L127_gfsv17
 
-To run the examples using the UFS_forcing_ensemble_generator.py, organize the RT data into an single directory:
+To run the examples using the ``UFS_forcing_ensemble_generator.py``, pull the necessary RT data from AWS and
+organize the RT data into an single directory, replacing 'latest_date' with the latest date stamps available.
+For example:
 
 .. code:: bash
 
    aws s3 cp \
-    s3://noaa-ufs-regtests-pds/develop-20260921/control_c192_intel/ \
-    ./control_c192_intel/ \
-    --recursive \
-    --exclude "*" \
-    --include "atm*.nc" \
-    --include "sfc*.nc" \
-    --no-sign-request
+    s3://noaa-ufs-regtests-pds/develop-{latest_date}/control_c192_intel/ \
+     ./control_c192_intel/ \
+     --recursive \
+     --exclude "*" \
+     --include "atm*.nc" \
+     --include "sfc*.nc" \
+     --no-sign-request
 
-    cd control_c192_intel
+   cd control_c192_intel
 
    aws s3 cp \
-    s3://noaa-ufs-regtests-pds/input-data-20260621/FV3_input_data192/INPUT_L127_gfsv17/ \
-    INPUT/ \
-    --recursive \
-    --no-sign-request
+     s3://noaa-ufs-regtests-pds/input-data-{lastest_date}/FV3_input_data192/INPUT_L127_gfsv17/ \
+     INPUT/ \
+     --recursive \
+     --no-sign-request
 
 .. _`example1`:
 
@@ -666,6 +670,10 @@ Example 2: UFS-caseGen for list of points
 """""""""""""""""""""""""""""""""""""""""
 
 UFS regression test, ``control_c384``, for multiple points assuming the same forcing method as above:
+
+   .. note::
+      The control_c384 RT data will need to be pulled using similar commands from the control_c192 as shown
+      in :numref:`Section %s <ufscasegenexamples>`
 
 .. code:: bash
 
