@@ -83,8 +83,8 @@ RUN mkdir -p $NCEPLIBS_DIR/src && cd $NCEPLIBS_DIR/src \
    && make install
 
 RUN cd $NCEPLIBS_DIR/src \
-  && git clone -b v2.3.3 --depth 1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-sp \
-  && mkdir NCEPLIBS-sp/build && cd NCEPLIBS-sp/build \
+  && git clone -b v5.4.1 --depth 1 --recursive https://github.com/NOAA-EMC/NCEPLIBS-ip \
+  && mkdir NCEPLIBS-ip/build && cd NCEPLIBS-ip/build \
   && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR .. \
   && make VERBOSE=$VERBOSE -j \
   && make install
@@ -97,7 +97,7 @@ RUN cd $NCEPLIBS_DIR/src \
   && make install
 
 ENV bacio_ROOT=/comsoftware/nceplibs
-ENV sp_ROOT=/comsoftware/nceplibs
+ENV ip_ROOT=/comsoftware/nceplibs
 ENV w3emc_ROOT=/comsoftware/nceplibs
 
 # Obtain CCPP SCM source code, build code, and download static data

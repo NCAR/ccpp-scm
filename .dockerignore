@@ -1,0 +1,22 @@
+# Keep host build artifacts and local data out of the Docker build context
+scm/bin/
+scm/run*/
+scm/data/*
+!scm/data/vert_coord_data/
+scm/doc/_build/
+scm/doc/html/
+scm/doc/latex/
+**/*.o
+**/*.mod
+**/*.pyc
+**/__pycache__/
+
+# Version control and repo metadata (the revision is recorded in the image label)
+.git
+**/.git
+.github/
+
+# Docker build files and documentation sources are not needed in the image
+docker/
+!docker/dev-entrypoint.sh
+scm/doc/

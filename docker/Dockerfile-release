@@ -1,0 +1,42 @@
+# Build a versioned CCPP SCM image from the checked-out source tree.
+
+ARG TOOLCHAIN=gnu
+FROM add-python:${TOOLCHAIN}
+
+ARG RELEASE_VERSION
+ARG SOURCE_REVISION
+
+LABEL org.opencontainers.image.title="CCPP SCM" \
+      org.opencontainers.image.description="Common Community Physics Package Single Column Model" \
+      org.opencontainers.image.source="https://github.com/NCAR/ccpp-scm" \
+      org.opencontainers.image.version="${RELEASE_VERSION}" \
+      org.opencontainers.image.revision="${SOURCE_REVISION}"
+
+ENV SCM_WORK=/comsoftware \
+    SCM_ROOT=/comsoftware/ccpp-scm
+
+# Build and run as the base image's non-root user (UID 1000), since OpenMPI
+# refuses to run as root. --chown avoids a chown -R layer duplicating the tree.
+COPY --chown=ubuntu:ubuntu . ${SCM_ROOT}
+USER ubuntu
+
+# Build only the supported suites for this toolchain (same lists CI uses)
+ARG TOOLCHAIN
+RUN set -eu \
+ && case "${TOOLCHAIN}" in \
+      gnu)    fc=gfortran ;; \
+      oneapi) fc=ifx ;; \
+      nvhpc)  fc=nvhpc ;; \
+      *) echo "Unknown TOOLCHAIN '${TOOLCHAIN}'" >&2; exit 1 ;; \
+    esac \
+ && suites=$(cd ${SCM_ROOT}/test && python3 get_sdfs_for_run_list.py --sdf_list suites_supported_${fc}) \
+ && echo "Building supported suites: ${suites}" \
+ && cmake -S ${SCM_ROOT} \
+          -B ${SCM_ROOT}/scm/bin \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCCPP_SUITES=${suites} \
+ && cmake --build ${SCM_ROOT}/scm/bin --parallel \
+ && ln -s ../../contrib ${SCM_ROOT}/scm/bin/contrib
+
+WORKDIR ${SCM_ROOT}/scm/bin
+CMD ["bash"]

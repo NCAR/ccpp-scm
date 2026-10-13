@@ -21,10 +21,12 @@ RUN apt-get update \
       m4 \
       tcsh \
       time \
+      mg \
       vim \
       file \
       libxml2 \
       gh \
-      jq
+      jq \
+ && rm -rf /var/lib/apt/lists/*
 
 ENV FC=mpif90 CC=mpicc CXX=mpicxx
