@@ -18,13 +18,17 @@ RUN mkdir -p $NCEPLIBS_DIR/src && cd $NCEPLIBS_DIR/src \
   && cd $NCEPLIBS_DIR/src && rm -rf NCEPLIBS-bacio
 
 # Install IP-library
-ENV IP_VERSION=5.4.1
+# NCEPLIBS-ip v5.4.1 rejects NVHPC; use the develop commit that merges
+# NOAA-EMC/NCEPLIBS-ip#316 (NVHPC support) until a release includes it
+ENV IP_COMMIT=6e63cec4b5106530b7474ba7ca109e49669c04d5
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get --yes install --no-install-recommends \
        liblapack-dev \
   && rm -rf /var/lib/apt/lists/* \
   && cd $NCEPLIBS_DIR/src \
-  && git clone --depth 1 --shallow-submodules -b v${IP_VERSION} --recursive https://github.com/NOAA-EMC/NCEPLIBS-ip \
+  && git init NCEPLIBS-ip \
+  && git -C NCEPLIBS-ip fetch --depth 1 https://github.com/NOAA-EMC/NCEPLIBS-ip ${IP_COMMIT} \
+  && git -C NCEPLIBS-ip checkout FETCH_HEAD \
   && mkdir NCEPLIBS-ip/build && cd NCEPLIBS-ip/build \
   && cmake -DCMAKE_INSTALL_PREFIX=$NCEPLIBS_DIR -DBUILD_TESTING=OFF .. \
   && make VERBOSE=1 -j$(nproc) \
