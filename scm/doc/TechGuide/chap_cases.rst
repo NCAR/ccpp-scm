@@ -604,19 +604,48 @@ Optional arguments:
 
 #. ``--geostrophic (-geos)``: flag to turn on geostrophic wind forcing
 
+.. _`ufscasegenexamples`:
+
+UFS-CaseGen Examples
+~~~~~~~~~~~~~~~~~~~~
+
 Examples to run from within the ``scm/etc/scripts`` directory to create SCM cases starting
-with the output from a UFS Weather Model regression test(s):
+with the output from a UFS Weather Model regression test(s) are below.
 
-On the supported platforms Derecho (NCAR) and Hera (NOAA), there are
-staged UWM RTs located at:
+UFS Weather Model Regression Test data for running the examples can be found on `AWS
+<https://noaa-ufs-regtests-pds.s3.amazonaws.com/index.html>`__. The following files are needed, for example,
+for UFS C192:
 
--  Derecho ``/glade/scratch/epicufsrt/GMTB/CCPP-SCM/UFS_RTs``
--  Hera ``/scratch1/BMC/gmtb/CCPP-SCM/UFS_RTs``
+- UFS history files: ``develop-{latest_date}/*.nc``
+- Input data: ``input-data-{latest_date}/FV3_input_data192/INPUT_L127_gfsv17``
+
+To run the examples using the ``UFS_forcing_ensemble_generator.py``, pull the necessary RT data from AWS and
+organize it into a single directory, replacing 'latest_date' with the latest date stamps available.
+For example:
+
+.. code:: bash
+
+   aws s3 cp \
+    s3://noaa-ufs-regtests-pds/develop-{latest_date}/control_c192_intel/ \
+     ./control_c192_intel/ \
+     --recursive \
+     --exclude "*" \
+     --include "atm*.nc" \
+     --include "sfc*.nc" \
+     --no-sign-request
+
+   cd control_c192_intel
+
+   aws s3 cp \
+     s3://noaa-ufs-regtests-pds/input-data-{latest_date}/FV3_input_data192/INPUT_L127_gfsv17/ \
+     INPUT/ \
+     --recursive \
+     --no-sign-request
 
 .. _`example1`:
 
 Example 1: UFS-caseGen for single point
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""""""""""""""""""""
 
 UFS regression test, ``control_c192``, for a single point using calculated horizontal advective tendencies,
 supplying the vertical velocity for the vertical advective terms and nudging the horizontal winds:
@@ -638,9 +667,13 @@ The file ``scm_ufsens_control_c192.py`` is created in ``ccpp-scm/scm/bin/``, whe
 .. _`example2`:
 
 Example 2: UFS-caseGen for list of points
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""""""""""""""""""""""
 
 UFS regression test, ``control_c384``, for multiple points assuming the same forcing method as above:
+
+   .. note::
+      The control_c384 RT data will need to be pulled using similar commands as the control_c192 example
+      in :numref:`Section %s <ufscasegenexamples>`
 
 .. code:: bash
 
@@ -668,7 +701,7 @@ number of points provided. The contents of the file should look like:
 .. _`example3`:
 
 Example 3: UFS-caseGen for an ensemble of points
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""""""""""""""""""
 
 UFS regression test, ``control_p8``, for an ensemble (10) of randomly selected points
 over a specified longitude (:math:`300-320^oW`) and latitude
