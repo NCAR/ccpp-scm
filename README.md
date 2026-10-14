@@ -12,4 +12,4 @@ The SCM is a tool for developing physics suites and diagnosing their performance
 ## Documentation
 - [SCM readthedocs](https://ccpp-scm.readthedocs.io)
 - [CCPP readthedocs](https://ccpp-techdoc.readthedocs.io)
-- [Scientific documentation](https://dtcenter.ucar.edu/GMTB/v7.0.0/sci_doc/index.html)
+- [Scientific documentation](https://ncar.github.io/ccpp-physics/)
