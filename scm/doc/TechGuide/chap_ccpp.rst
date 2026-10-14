@@ -19,8 +19,8 @@ physics through the CCPP, running the Capgen scripts [#]_ to reconcile SCM-provi
 variables with physics-required variables, and preparing a suite
 definition file.
  
-.. [#] The Capgen scripts and their use are described in chapter 8 of the `CCPP Technical
-Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__.
+.. [#] The Capgen scripts and their use are described in chapter 8 of the
+   `CCPP Technical Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__.
 
 Preparing data from the SCM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
