@@ -1,6 +1,6 @@
 # Single Column Model (SCM)
 
-[![Build Status](https://github.com/NCAR/ccpp-scm/actions/workflows/ci_scm_ccpp_prebuild.yml/badge.svg?branch=main)](https://github.com/NCAR/ccpp-scm/actions/workflows/ci_scm_ccpp_prebuild.yml)
+[![CI Status](https://img.shields.io/github/check-suites/NCAR/ccpp-scm/main?label=build)](https://github.com/NCAR/ccpp-scm/actions)
 [![Release](https://img.shields.io/github/release/NCAR/ccpp-scm.svg)](https://github.com/NCAR/ccpp-scm/releases/latest)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13156711.svg)](https://doi.org/10.5281/zenodo.13156711)
 <!-- v7.0.0 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13738129.svg)](https://doi.org/10.5281/zenodo.13738129) -->
