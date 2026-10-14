@@ -17,7 +17,8 @@ Setting up a physics suite for use in the CCPP SCM with the CCPP
 framework involves three steps: preparing data to be made available to
 physics through the CCPP, running the Capgen scripts [#]_ to reconcile SCM-provided
 variables with physics-required variables, and preparing a suite
-definition file. 
+definition file.
+ 
 .. [#] The Capgen scripts and their use are described in chapter 8 of the `CCPP Technical
 Documentation <https://ccpp-techdoc.readthedocs.io/en/v8.0.0/>`__.
 
