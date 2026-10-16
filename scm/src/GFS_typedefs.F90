@@ -3438,7 +3438,8 @@ module GFS_typedefs
                                  cny, gnx, gny, ak, bk, hydrostatic)
 
 !--- modules
-    use physcons,         only: con_rerth, con_pi, con_p0, rhowater
+    use scm_physical_constants, only: con_rerth, con_pi, con_p0, rhowater, &
+         con_rocp
     use mersenne_twister, only: random_setseed, random_number
     use GFS_ccpp_suite_sim_pre, only: load_ccpp_suite_sim
 !
@@ -5079,7 +5080,7 @@ module GFS_typedefs
     Model%sedi_semi        = sedi_semi
     Model%decfl            = decfl
     ! TEMPO expects do_sat_adj variable to exist, but SCM never calls so set to .false.
-    Model%do_sat_adj       = .false. 
+    Model%do_sat_adj       = .false.
     Model%nt_c_l           = nt_c_l
     Model%nt_c_o           = nt_c_o
     Model%av_i             = av_i
@@ -6064,7 +6065,8 @@ module GFS_typedefs
        endif
     else
        !--- Climatological ozone
-       err_message = Model%ozphys%load_o3clim('global_o3prdlos.f77',kozc)
+       err_message = Model%ozphys%load_o3clim('global_o3prdlos.f77',kozc, &
+            con_rocp)
     end if
 
     !--- NRL h2o photochemistry physics.
