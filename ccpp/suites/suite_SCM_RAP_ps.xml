@@ -33,7 +33,7 @@
       <scheme>dcyc2t3</scheme>
       <scheme>GFS_suite_interstitial_2</scheme>
       <scheme>mynnedmf_wrapper</scheme>
-      <scheme>mynnedmf_wrapper_post</scheme>
+      <scheme>GFS_PBL_generic_post</scheme>
       <scheme>GFS_GWD_generic_pre</scheme>
       <scheme>drag_suite</scheme>
       <scheme>GFS_GWD_generic_post</scheme>
