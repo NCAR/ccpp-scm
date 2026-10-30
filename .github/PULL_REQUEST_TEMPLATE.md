@@ -29,7 +29,11 @@ Associated ufs/dev PR:
 Associated ufsatm PR:
 - NOAA-EMC/ufsatm#
 
+Associated ufs wm PR:
+- ufs-community/ufs-weather-model#
+
 Associated NCAR PR:
+ - NCAR/ccpp-scm#
  - NCAR/ccpp-physics#
 
 ---
