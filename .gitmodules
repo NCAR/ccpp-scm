@@ -8,7 +8,7 @@
 	path = ccpp/physics
 	# url = https://github.com/NCAR/ccpp-physics
 	# branch = scm/dev
-        url = git@github.com:matusmartini/ccpp-physics.git
+        url = https://github.com/matusmartini/ccpp-physics.git
         branch = prevsq-and-prevst-in-post-schemes
 [submodule "CMakeModules"]
 	path = CMakeModules
