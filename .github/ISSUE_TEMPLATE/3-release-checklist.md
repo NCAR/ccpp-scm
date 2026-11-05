@@ -11,10 +11,11 @@ Release version: vX.Y.Z  <!-- replace everywhere, including the title -->
 - [ ] Merge final PRs
    - [ ] #<PR number>
    - [ ] NCAR/ccpp-physics#<PR number>
-- [ ] Create list of new feature for release
-- [ ] Update tests
+- [ ] Create list of new features for release
+- [ ] Update CI tests if applicable
 - [ ] Update documentation
-  - [ ] Update user guides
+  - [ ] Update user guide
+  - [ ] Update scientific documentation
   - [ ] Check for broken links
 - [ ] Update Docker Images
 - [ ] Create `Release Notes`
@@ -48,13 +49,13 @@ $ sha256sum vX.Y.Z.zip > vX.Y.Z.zip.sha256
    - [ ] Add tarball
    - [ ] Add zip file
    - [ ] See [v8.0.0 release](https://github.com/NCAR/ccpp-scm/releases#release-v8.0.0) for full list
-   - [ ] tutorial_files.tar.gz
-- [ ] [DTC website](https://dtcenter.org/software-tools/common-community-physics-package-ccpp/download): update information from previous `vX.Y.Z` to new `vX.Y.Z`
+   - [ ] tutorial_files.tar.gz if applicable
+- [ ] [DTC website](https://dtcenter.org/software-tools/common-community-physics-package-ccpp): update information from previous `vX.Y.Z` to new `vX.Y.Z`
 - [ ] Tag Framework [ccpp-scm_vX.Y.Z](https://github.com/NCAR/ccpp-framework/releases/tag/ccpp-scm_vX.Y.Z)
 - [ ] Tag Techdoc [vX.Y.Z](https://github.com/NCAR/ccpp-doc) and add [readthedocs version](https://app.readthedocs.org/projects/ccpp-techdoc/)
 
 ## After release
 - [ ] Verify new Zenodo DOI
-- [ ] Update training lessons to `vX.Y.Z`
+- [ ] Update [training/tutorial material](https://dtcenter.org/software-tools/common-community-physics-package-ccpp/previous-tutorials) for `vX.Y.Z` release if applicable
 - [ ] Make sure CCPP-Physics release also occurred
 - [ ] Push Docker image `vX.Y.Z`
