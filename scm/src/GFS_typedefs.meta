@@ -998,6 +998,7 @@
   dimensions = (horizontal_dimension,vertical_layer_dimension)
   type = real
   kind = kind_phys
+  active = ( index_of_turbulent_kinetic_energy_in_tracer_concentration_array > 0 )
 [ten_u]
   standard_name = tendency_of_x_wind
   long_name = tendency of x wind calculated by one physics scheme
@@ -6533,6 +6534,34 @@
   standard_name = tuning_param_for_deep_cu
   long_name = tuning param for deep cu in case prognostic closure is used
   units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[lbb1]
+  standard_name = tuning_parameter_for_updraft_velocity_entrainment_term
+  long_name = tuning parameter for updraft velocity entrainment term
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[lbb2]
+  standard_name = tuning_parameter_for_updraft_velocity_buoyancy_term
+  long_name = tuning parameter for updraft velocity buoyancy term
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[lbb3]
+  standard_name = tuning_parameter_for_updraft_velocity_shear_term
+  long_name = tuning parameter for updraft velocity shear term
+  units = 1
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[dt_decay]
+  standard_name = tuning_parameter_for_updraft_decay_time
+  long_name = tuning parameter for updraft decay time
+  units = 1
   dimensions = ()
   type = real
   kind = kind_phys
