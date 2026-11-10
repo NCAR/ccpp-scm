@@ -90,20 +90,14 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: del_gz(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: delr(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: dlength(:)         => null()  !<
-    real (kind=kind_phys), pointer      :: dqdt(:,:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dqsfc1(:)          => null()  !<
     real (kind=kind_phys), pointer      :: drain(:)           => null()  !<
-    real (kind=kind_phys), pointer      :: dtdt(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: dtsfc1(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dtzm(:)            => null()  !<
     real (kind=kind_phys), pointer      :: dt_mf(:,:)         => null()  !<
-    real (kind=kind_phys), pointer      :: dudt(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: dusfcg(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dusfc1(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dvdftra(:,:,:)     => null()  !<
-    real (kind=kind_phys), pointer      :: ten_t_pbl(:,:)     => null()  !<
-    real (kind=kind_phys), pointer      :: ten_q_pbl(:,:)     => null()  !<
-    real (kind=kind_phys), pointer      :: dvdt(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: dvsfcg(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dvsfc1(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dzlyr(:,:)         => null()  !<
@@ -261,10 +255,6 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: stress_land(:)     => null()  !<
     real (kind=kind_phys), pointer      :: stress_water(:)    => null()  !<
     real (kind=kind_phys), pointer      :: t2mmp(:)           => null()  !<
-    real (kind=kind_phys), pointer      :: ten_q(:,:,:)       => null()
-    real (kind=kind_phys), pointer      :: ten_t(:,:)         => null()
-    real (kind=kind_phys), pointer      :: ten_u(:,:)         => null()
-    real (kind=kind_phys), pointer      :: ten_v(:,:)         => null()
     real (kind=kind_phys), pointer      :: theta(:)           => null()  !<
     real (kind=kind_phys), pointer      :: tlvl(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: tkeh(:,:)          => null()  !< vertical turbulent kinetic energy (m2/s2) at the model layer interfaces
@@ -475,19 +465,13 @@ contains
     allocate (Interstitial%del_gz          (ixs:ixe,Model%levs+1))
     allocate (Interstitial%delr            (ixs:ixe,Model%levr+LTP))
     allocate (Interstitial%dlength         (ixs:ixe))
-    allocate (Interstitial%dqdt            (ixs:ixe,Model%levs,Model%ntrac))
     allocate (Interstitial%dqsfc1          (ixs:ixe))
     allocate (Interstitial%drain           (ixs:ixe))
-    allocate (Interstitial%dtdt            (ixs:ixe,Model%levs))
     allocate (Interstitial%dtsfc1          (ixs:ixe))
     allocate (Interstitial%dt_mf           (ixs:ixe,Model%levs))
     allocate (Interstitial%dtzm            (ixs:ixe))
-    allocate (Interstitial%dudt            (ixs:ixe,Model%levs))
     allocate (Interstitial%dusfcg          (ixs:ixe))
     allocate (Interstitial%dusfc1          (ixs:ixe))
-    allocate (Interstitial%dvdt            (ixs:ixe,Model%levs))
-    allocate (Interstitial%ten_t_pbl       (ixs:ixe,Model%levs))
-    allocate (Interstitial%ten_q_pbl       (ixs:ixe,Model%levs))
     allocate (Interstitial%dvsfcg          (ixs:ixe))
     allocate (Interstitial%dvsfc1          (ixs:ixe))
     allocate (Interstitial%dvdftra         (ixs:ixe,Model%levs,Interstitial%nvdiff))
@@ -608,10 +592,6 @@ contains
     allocate (Interstitial%stress_ice      (ixs:ixe))
     allocate (Interstitial%stress_land     (ixs:ixe))
     allocate (Interstitial%stress_water    (ixs:ixe))
-    allocate (Interstitial%ten_q           (ixs:ixe,Model%levs,Model%ntrac))
-    allocate (Interstitial%ten_t           (ixs:ixe,Model%levs))
-    allocate (Interstitial%ten_u           (ixs:ixe,Model%levs))
-    allocate (Interstitial%ten_v           (ixs:ixe,Model%levs))
     allocate (Interstitial%theta           (ixs:ixe))
     allocate (Interstitial%tkeh            (ixs:ixe,Model%levs+1)) !Vertical turbulent kinetic energy at model layer interfaces
     allocate (Interstitial%tlvl            (ixs:ixe,Model%levr+1+LTP))
@@ -836,22 +816,16 @@ contains
     deallocate (Interstitial%del_gz)
     deallocate (Interstitial%delr)
     deallocate (Interstitial%dlength)
-    deallocate (Interstitial%dqdt)
     deallocate (Interstitial%dqsfc1)
     deallocate (Interstitial%drain)
-    deallocate (Interstitial%dtdt)
     deallocate (Interstitial%dtsfc1)
     deallocate (Interstitial%dt_mf)
     deallocate (Interstitial%dtzm)
-    deallocate (Interstitial%dudt)
     deallocate (Interstitial%dusfcg)
     deallocate (Interstitial%dusfc1)
-    deallocate (Interstitial%dvdt)
     deallocate (Interstitial%dvsfcg)
     deallocate (Interstitial%dvsfc1)
     deallocate (Interstitial%dvdftra)
-    deallocate (Interstitial%ten_t_pbl)
-    deallocate (Interstitial%ten_q_pbl)
     deallocate (Interstitial%dzlyr)
     deallocate (Interstitial%elvmax)
     deallocate (Interstitial%ep1d)
@@ -969,10 +943,6 @@ contains
     deallocate (Interstitial%stress_ice)
     deallocate (Interstitial%stress_land)
     deallocate (Interstitial%stress_water)
-    deallocate (Interstitial%ten_q)
-    deallocate (Interstitial%ten_t)
-    deallocate (Interstitial%ten_u)
-    deallocate (Interstitial%ten_v)
     deallocate (Interstitial%theta)
     deallocate (Interstitial%tkeh)
     deallocate (Interstitial%tlvl)
@@ -1390,22 +1360,16 @@ contains
     Interstitial%del_gz          = clear_val
     Interstitial%delr            = clear_val
     Interstitial%dlength         = clear_val
-    Interstitial%dqdt            = clear_val
     Interstitial%dqsfc1          = clear_val
     Interstitial%drain           = clear_val
-    Interstitial%dtdt            = clear_val
     Interstitial%dtsfc1          = clear_val
     Interstitial%dt_mf           = clear_val
     Interstitial%dtzm            = clear_val
-    Interstitial%dudt            = clear_val
     Interstitial%dusfcg          = clear_val
     Interstitial%dusfc1          = clear_val
-    Interstitial%dvdt            = clear_val
     Interstitial%dvsfcg          = clear_val
     Interstitial%dvsfc1          = clear_val
     Interstitial%dvdftra         = clear_val
-    Interstitial%ten_t_pbl       = clear_val
-    Interstitial%ten_q_pbl       = clear_val
     Interstitial%dzlyr           = clear_val
     Interstitial%elvmax          = clear_val
     Interstitial%ep1d            = clear_val
@@ -1534,10 +1498,6 @@ contains
     Interstitial%stress_ice      = Model%huge
     Interstitial%stress_land     = Model%huge
     Interstitial%stress_water    = Model%huge
-    Interstitial%ten_q           = clear_val
-    Interstitial%ten_t           = clear_val
-    Interstitial%ten_u           = clear_val
-    Interstitial%ten_v           = clear_val
     Interstitial%theta           = clear_val
     Interstitial%tkeh            = 0
     Interstitial%tlvl            = clear_val

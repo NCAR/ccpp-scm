@@ -51,7 +51,7 @@
       <scheme>sfc_diag_post</scheme>
       <scheme>GFS_surface_generic_post</scheme>
       <scheme>mynnedmf_wrapper</scheme>
-      <scheme>mynnedmf_wrapper_post</scheme>
+      <scheme>GFS_PBL_generic_post</scheme>
       <scheme>GFS_GWD_generic_pre</scheme>
       <scheme>drag_suite</scheme>
       <scheme>GFS_GWD_generic_post</scheme>
