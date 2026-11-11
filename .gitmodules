@@ -6,8 +6,8 @@
 	branch = feature/capgen-v1
 [submodule "ccpp-physics"]
 	path = ccpp/physics
-	url = https://github.com/NCAR/ccpp-physics
-	branch = scm/dev
+	url = https://github.com/hertneky/ccpp-physics
+	branch = ufs-dev-PR384
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
