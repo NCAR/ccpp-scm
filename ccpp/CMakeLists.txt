@@ -223,7 +223,7 @@ else()
 )
 endif()
 message(STATUS "Compiling the following SDFs: ${SUITE_FILES}")
- 
+
 set(HOST "scm")
 
 set(CCPP_VERBOSITY "2" CACHE STRING "Verbosity level of output (default: 0)")
@@ -296,13 +296,13 @@ else()
   message(FATAL_ERROR
     "bacio found but expected target not exported (bacio::bacio or bacio::bacio_4)")
 endif()
-target_link_libraries(scm-ccpp ${BACIO_TARGET})
 if(ip_FOUND)
   target_link_libraries(scm-ccpp ip::ip_d)
 else()
   target_link_libraries(scm-ccpp sp::sp_d)
 endif()
 target_link_libraries(scm-ccpp w3emc::w3emc_d)
+target_link_libraries(scm-ccpp ${BACIO_TARGET})
 
 set_target_properties(scm-ccpp PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
 target_include_directories(scm-ccpp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}>)
