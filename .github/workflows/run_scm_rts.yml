@@ -25,11 +25,11 @@ jobs:
         include:
         # Set container images for each compiler
         - fortran-compiler: ifx
-          image: dustinswales/ccpp-scm-ci:oneapi
+          image: dtcenter/ccpp-scm:oneapi
         - fortran-compiler: gfortran
-          image: dustinswales/ccpp-scm-ci:gnu
+          image: dtcenter/ccpp-scm:gnu
 #        - fortran-compiler: nvfortran
-#          image: dustinswales/ccpp-scm-ci:nvhpc
+#          image: dtcenter/ccpp-scm:nvhpc
     container:
       image: ${{ matrix.image }}
     # Environmental variables
