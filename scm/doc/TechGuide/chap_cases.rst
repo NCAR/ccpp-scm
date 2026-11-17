@@ -402,7 +402,7 @@ should still be possible to create the same environment manually:
 .. code:: bash
 
   $ conda create --name env_ufscasegen
-  $ conda install -n env_ufscasegen --channel=conda-forge python=3.8.5
+  $ conda install -n env_ufscasegen --channel=conda-forge python=3.13
   $ conda install -n env_ufscasegen --channel=conda-forge netcdf4
   $ conda install -n env_ufscasegen --channel=conda-forge f90nml
   $ conda install -n env_ufscasegen --channel=conda-forge xarray
