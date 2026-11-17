@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         build-type:       [Release, Debug]
-        py-version:       [3.11]
+        py-version:       ['3.13']
 
     # Environmental variables
     env:

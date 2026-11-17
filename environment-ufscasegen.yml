@@ -2,7 +2,7 @@ name: env_ufscasegen
 channels:
   - conda-forge
 dependencies:
-  - conda-forge::python=3.8.5
+  - conda-forge::python=3.13
   - conda-forge::netcdf4
   - conda-forge::f90nml
   - conda-forge::xarray
