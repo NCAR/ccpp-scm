@@ -6721,8 +6721,7 @@ module GFS_typedefs
 !--- END CODE FROM GLOOPR
 
 !--- BEGIN CODE FROM GLOOPB
-!--- set up random number seed needed for RAS and old SAS and when cal_pre=.true.
-!    Model%imfdeepcnv < 0 when Model%ras = .true.
+!--- set up random number seed needed for old SAS and when cal_pre=.true.
 
     if (xr_con > 0.0 .and. xr_exp > 0.0) then !values have been read in from namelist, so set them to read values
       Model%xr_con = xr_con
