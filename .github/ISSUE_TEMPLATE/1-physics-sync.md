@@ -1,6 +1,6 @@
 ---
 name: ufs-dev CCPP-Physics synchronization
-about:
+about: "Coordinate the syncing of ufs/dev ccpp-physics changes"
 title: "Sync: ufs-dev PR#xyz Descriptive Title"
 ---
 
